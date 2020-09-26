@@ -684,6 +684,13 @@ references with other text inside of a single field (e.g., by writing
 references need to be by themselves inside of `{% raw %}{{ }}{% endraw
 %}` brackets.
 
+Note that the paragraph spacing of the paragraph into which you insert
+an image may affect the appearance of the image.  For example, if the
+line spacing of the paragraph is fixed, the image that you insert will
+be cropped if it is taller than the line spacing.  To prevent the
+image from being cropped, select a flexible line spacing like "single"
+or "double."
+
 Because of a limitation in the [`python-docx-template`] package,
 images cannot be inserted into headers, footers, or footnotes.
 

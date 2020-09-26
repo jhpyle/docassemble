@@ -430,8 +430,8 @@ question: |
   Waiting for signature
 subquestion: |
   Open your e-mail on a touchscreen device.
-  
-  You should get an e-mail soon asking you 
+
+  You should get an e-mail soon asking you
   to provide a signature.  Click the link
   in the e-mail.
 reload: 5
@@ -496,7 +496,7 @@ to the attorney's e-mail address.
 
 {% include demo-side-by-side.html demo="sign" %}
 
-[Here](https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/signdoc.yml) 
+[Here](https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/signdoc.yml)
 is a more complex version that handles multiple documents in Word
 or PDF format and integrates with the Legal Server case management
 system.  It requires login and expects the [Configuration] to contain
@@ -1266,7 +1266,7 @@ when all signatures have been provided.
 
 {% include demo-side-by-side.html demo="demo-multi-sign" %}
 
-This interview uses [`include`] to bring in the contents of 
+This interview uses [`include`] to bring in the contents of
 [`docassemble.demo:data/questions/sign.yml`].  This [YAML] file
 disabled server-side encryption by setting [`multi_user`] to `True`,
 and loads the `SigningProcess` class from the
@@ -1406,8 +1406,8 @@ content: |
   I would greatly appreciate it if you would sign the
   Declaration of Favorite Fruit for ${ user } by
   [clicking here](${ sign.url(i) }).
-  
-  If you are not willing to sign, please 
+
+  If you are not willing to sign, please
   call me at 555-555-2929.
 {% endhighlight %}
 
@@ -1833,6 +1833,16 @@ options for the ways that questions are asked:
 
 When making use of these strategies, make sure you understand [how
 **docassemble** finds questions for variables].
+
+# <a name="preview"></a>Showing a partial preview of document assembly
+
+This example uses the `[TARGET]`
+[feature]({{ site.baseurl }}/docs/background.html#target)
+to show a document assembly preview in the `right` portion of the
+screen that continually updates as the user enters information into
+fields.
+
+{% include demo-side-by-side.html demo="preview" %}
 
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if

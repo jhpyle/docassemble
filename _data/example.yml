@@ -13286,6 +13286,20 @@
     % else:
     It is not tasty.
     % endif
+"preview": "question: |\n  The food section\nright: |\n  <div class=\"da-page-header\"\
+  >\n    <h1 class=\"h3\">Preview</h1>\n  </div>\n  \n  [TARGET food_section_text]\n\
+  fields:\n  - Favorite fruit: favorite_fruit\n  - Favorite vegetable: favorite_vegetable\n\
+  \  - Like mushrooms: likes_mushrooms\n    datatype: yesnoradio\n  - Favorite mushroom:\
+  \ favorite_mushroom\n  - Favorite dessert: favorite_dessert\n    choices:\n    \
+  \  - Pie: pie\n      - Cake: cake\ncheck in: question_food\n---\ntemplate: question_food\n\
+  content: |\n  I am a really big fan of \n  ${ action_argument('favorite_fruit')\
+  \ or \"[BLANK]\" }.\n  With dinner I like to have a side of\n  ${ action_argument('favorite_vegetable')\
+  \ or \"[BLANK]\" }.\n  % if action_argument('likes_mushrooms'):\n  And I usually\
+  \ can't resist adding sauteed \n  ${ action_argument('favorite_mushroom') or \"\
+  [BLANK]\" }\n  to my\n  ${ action_argument('favorite_vegetable') or \"[BLANK]\"\
+  \ }.\n  % endif\n  [BR][BR]\n  My favorite part of the meal is dessert,\n  when\
+  \ I can have a nice big slice of\n  ${ action_argument('favorite_dessert') or \"\
+  [BLANK]\" }.\ntarget: food_section_text"
 "progressive-disclosure": "modules:\n  - .progressivedisclosure\n---\nfeatures:\n\
   \  css: progressivedisclosure.css\n---\ntemplate: fruit_explanation\nsubject: |\n\
   \  Tell me more about fruit\ncontent: |\n  ##### What is a fruit?\n  \n  A fruit\
