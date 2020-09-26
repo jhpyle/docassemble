@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.79] - 2020-09-26
+### Fixed
+- Problem with using `[TARGET]` inside of `right`.
+
 ## [1.1.78] - 2020-09-25
 ### Fixed
 - Issue with `get_info()`.

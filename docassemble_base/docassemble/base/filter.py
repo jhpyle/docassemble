@@ -662,7 +662,7 @@ def map_string(encoded_text, status):
 def target_html(match):
     target = match.group(1)
     target = re.sub(r'[^A-Za-z0-9\_]', r'', str(target))
-    return '<span id="datarget' + target + '"></span>'
+    return '<span class="datarget' + target + '"></span>'
 
 def pdf_two_col(match, add_line=False):
     firstcol = clean_markdown_to_latex(match.group(1))

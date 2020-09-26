@@ -9002,7 +9002,7 @@ def index(action_argument=None, refer=None):
                 }
                 for (i = 0; i < assignments.length; ++i){
                   var assignment = assignments[i];
-                  $('#datarget' + assignment.target.replace(/[^A-Za-z0-9\_]/g)).html(assignment.content);
+                  $('.datarget' + assignment.target.replace(/[^A-Za-z0-9\_]/g)).prop('innerHTML', assignment.content);
                 }
                 //console.log("Triggering daCheckIn");
                 $(document).trigger('daCheckIn', [command.action, command.value]);
