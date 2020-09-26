@@ -7090,6 +7090,12 @@ class Interview:
                                 continue
                     if question.question_type == 'fields':
                         field_id = safeid(missing_var)
+                        if is_generic:
+                            if the_x != 'None':
+                                exec("x = " + the_x, user_dict)
+                        if len(iterators):
+                            for indexno in range(len(iterators)):
+                                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
                         skip_question = None
                         for field in question.fields:
                             if hasattr(field, 'showif_code') and hasattr(field, 'saveas') and field.saveas == field_id:

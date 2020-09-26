@@ -884,7 +884,7 @@ def interview_url_action_as_qr(action, **kwargs):
 
 def get_info(att):
     """Used to retrieve the values of global variables set through set_info()."""
-    if hasattr(this_thread, att):
+    if hasattr(this_thread.global_vars, att):
         return getattr(this_thread.global_vars, att)
     return None
 

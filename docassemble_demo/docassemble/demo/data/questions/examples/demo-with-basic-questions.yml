@@ -1,0 +1,51 @@
+include:
+  - docassemble.demo:data/questions/demo-basic-questions.yml
+---
+objects:
+  - client: Individual
+  - advocate: Individual
+  - antagonist: Individual
+---
+initial: True
+code: |
+  set_info(user=client)
+---
+code: |
+  client.ask_email_with_name = True
+  client.ask_about_homelessness = True
+  client.email_required = False
+  advocate.ask_email_with_name = True
+  antagonist.name.default_first = "Brutus"
+  antagonist.name.default_last = "Morpheus"
+---
+mandatory: True
+code: |
+  client.name.uses_parts = False
+comment: |
+  This block is mandatory because .name.uses_parts is defined
+  automatically by the class definition; thus to override it we need
+  to force this code to run.  The other "settings" are undefined by
+  default and their definitions will be sought out, so we can use
+  non-mandatory blocks to provide their definitions.
+---
+template: client.description
+content: petitioner
+---
+template: advocate.description
+content: the lawyer
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  % for person in (client, advocate, antagonist):
+  ${ person.description } is:
+
+  ${ person.name.full() } [BR]
+  % if person.ask_about_homelessness and person.address.homeless:
+  ${ person.address.city }, ${ person.address.state }
+  % else:
+  ${ person.address.block() }
+  % endif
+
+  % endfor
