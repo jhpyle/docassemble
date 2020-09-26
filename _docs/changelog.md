@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.78](https://github.com/jhpyle/docassemble/releases/tag/v1.1.78) - 2020-09-25
+
+### Fixed
+- Issue with `get_info()`.
+- Issue with `show if` `code` and generic objects/iterators.
+
 ## [1.1.77](https://github.com/jhpyle/docassemble/releases/tag/v1.1.77) - 2020-09-22
 
 ### Fixed

@@ -600,7 +600,7 @@ re-use it in two questions to offer a multiple-choice list.
 In [Python], the variable `fruits` is this:
 
 {% highlight python %}
-[u'Apple', u'Orange', u'Peach', u'Pear']
+['Apple', 'Orange', 'Peach', 'Pear']
 {% endhighlight %}
 
 You can also use the `data` block to create more complex data

@@ -1568,6 +1568,277 @@ Note that when the user starts the session in the second interview,
 the interview already knows the object `user` and already knows the
 value of `favorite_fruit`.
 
+# <a name="basic"></a>Making generic questions customizable
+
+If you have a lot of questions in your interviews that are very
+similar, such as questions that ask for names and addresses, you might
+want to create a YAML file that contains [`generic object`]
+questions and then include that YAML file in all of your interviews.
+This is a way to ensure consistency across your interviews without
+having to maintain the same information in multiple places across your
+YAML files.
+
+Having a common set of [`generic object`] questions does not inhibit
+your ability to customize [`question`] blocks when you need to; you
+can always override the [`generic object`] question with a more
+specific question if you would like to ask a question a different way
+if you have a special case.
+
+It is also possible to customize your [`generic object`] questions
+without overriding.  This recipe demonstrates a method of designing
+[`generic object`] questions that allows for the customization of
+specific details of questions.
+
+Here is an example of an interview that gathers names, e-mail
+addresses, and addresses of three [`Individual`]s while relying
+entirely on [`generic object`] questions to gather the information.
+
+{% include demo-side-by-side.html demo="demo-with-basic-questions" %}
+
+The interview starts by including [`demo-basic-questions.yml`].  This
+is a parent YAML file for including other YAML files.  Its full
+contents are:
+
+{% highlight yaml %}
+include:
+  - demo-basic-questions-name.yml
+  - demo-basic-questions-address.yml
+{% endhighlight %}
+
+The contents of [`demo-basic-questions-name.yml`] are as follows.
+
+{% highlight yaml %}
+generic object: Individual
+question: |
+  ${ x.ask_name_template.subject }
+subquestion: |
+  ${ x.ask_name_template.content }
+fields:
+  - First name: x.name.first
+    required: x.first_name_required
+    show if:
+      code: x.name.uses_parts
+    default: ${ x.name.default_first }
+  - Middle name: x.name.middle
+    required: x.middle_name_required
+    show if:
+      code: x.name.uses_parts and x.ask_middle_name
+    default: ${ x.name.default_middle }
+  - Last name: x.name.last
+    required: x.last_name_required
+    show if:
+      code: x.name.uses_parts
+    default: ${ x.name.default_last }
+  - Name: x.name.text
+    show if:
+      code: not x.name.uses_parts
+  - E-mail: x.email
+    datatype: email
+    required: x.email_required
+    show if:
+      code: x.ask_email_with_name
+---
+generic object: Individual
+question: |
+  ${ x.ask_email_template.subject }
+subquestion: |
+  ${ x.ask_email_template.content }
+fields:
+  - E-mail: x.email
+    datatype: email
+---
+generic object: Individual
+template: x.ask_name_template
+subject: |
+  % if get_info('user') is x:
+  What is your name?
+  % else:
+  What is the name of ${ x.description }?
+  % endif
+content: ""
+---
+generic object: Individual
+if: x.ask_email_with_name
+template: x.ask_name_template
+subject: |
+  % if x is get_info('user'):
+  What is your name and e-mail address?
+  % else:
+  What is the name and e-mail address of ${ x.description }?
+  % endif
+content: ""
+---
+generic object: Individual
+template: x.ask_email_template
+subject: |
+  % if x is get_info('user'):
+  What is your e-mail address?
+  % else:
+  What is the e-mail address of ${ x.description }?
+  % endif
+content: ""
+---
+generic object: Individual
+code: |
+  x.description = x.object_name()
+---
+generic object: Individual
+code: |
+  if user_logged_in() and user_info().first_name:
+    x.name.default_first = user_info().first_name
+  else:
+    x.name.default_first = ''
+---
+generic object: Individual
+code: |
+  if user_logged_in() and user_info().last_name:
+    x.name.default_last = user_info().last_name
+  else:
+    x.name.default_last = ''
+---
+generic object: Individual
+code: |
+  x.name.default_middle = ''
+---
+generic object: Individual
+code: |
+  x.first_name_required = True
+---
+generic object: Individual
+code: |
+  x.last_name_required = True
+---
+generic object: Individual
+code: |
+  x.email_required = True
+---
+generic object: Individual
+code: |
+  x.ask_middle_name = False
+---
+generic object: Individual
+code: |
+  x.middle_name_required = False
+---
+generic object: Individual
+code: |
+  x.ask_email_with_name = False
+{% endhighlight %}
+
+The contents of [`demo-basic-questions-address.yml`] are as follows.
+
+{% highlight yaml %}
+generic object: Individual
+question: |
+  ${ x.ask_address_template.subject }
+subquestion: |
+  ${ x.ask_address_template.content }
+fields:
+  - "Street address": x.address.address
+    address autocomplete: True
+  - 'Unit': x.address.unit
+    required: x.address_unit_required
+  - 'City': x.address.city
+  - 'State': x.address.state
+    code: states_list()
+  - 'Zip code': x.address.zip
+    required: x.address_zip_code_required
+---
+if: x.ask_about_homelessness
+generic object: Individual
+question: |
+  ${ x.ask_address_template.subject }
+subquestion: |
+  ${ x.ask_address_template.content }
+fields:
+  - label: |
+      % if get_info('user') is x:
+      I am
+      % else:
+      ${ x } is
+      % endif
+      experiencing homelessness.
+    field: x.address.homeless
+    datatype: yesno
+  - "Street address": x.address.address
+    address autocomplete: True
+    hide if: x.address.homeless
+  - 'Unit': x.address.unit
+    required: x.address_unit_required
+    hide if: x.address.homeless
+  - 'City': x.address.city
+  - 'State': x.address.state
+    code: states_list()
+  - 'Zip code': x.address.zip
+    required: x.address_zip_code_required
+    hide if: x.address.homeless
+---
+generic object: Individual
+template: x.ask_address_template
+subject: |
+  % if get_info('user') is x:
+  Where do you live?
+  % else:
+  What is the address of ${ x }?
+  % endif
+content: ""
+---
+generic object: Individual
+code: |
+  x.address_zip_code_required = True
+---
+generic object: Individual
+code: |
+  x.address_unit_required = False
+---
+generic object: Individual
+code: |
+  x.ask_about_homelessness = False
+{% endhighlight %}
+
+Note that all of the blocks in these YAML files are [`generic object`]
+blocks.  There are  [`question`] blocks that define questions to be
+used.  These [`question`] blocks make reference to a lot of different
+object attributes that function as "settings."  After the [`question`]
+blocks, there are [`template`] blocks and [`code`] blocks that
+set default values for these settings.
+
+This means that in your own interviews, you have the option of
+overriding any of those settings simply by including a block that
+sets a value for one of the settings.  For example, the default value
+of the `.ask_about_homelessness` attriute is `False`, but in the
+example interview, this was overridden for the object `client`:
+
+{% highlight yaml %}
+code: |
+  client.ask_about_homelessness = True
+{% endhighlight %}
+
+Note the strategies that are being used in the
+[`demo-basic-questions-name.yml`] file and the
+[`demo-basic-questions-address.yml`] file to provide a variety of
+options for the ways that questions are asked:
+
+* Using [`template`]s to specify the `question` and `subquestion`
+  text, using the `subject` part and the `content` part of the
+  template.  Alternatively, you could use separate templates for the
+  `question` and `subquestion`, so that your interviews could override
+  the `question` part without overriding the `subquestion` part, and
+  vice-versa.
+* Specifying multiple [`question`] blocks and using the [`if`]
+  modifier to choose which one is applicable, depending on the values
+  of "settings."
+* Using the `code` variant of [`show if`] to select or deselect fields
+  in a list of fields, depending on the values of settings.
+
+When making use of these strategies, make sure you understand [how
+**docassemble** finds questions for variables].
+
+[how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
+[`show if`]: {{ site.baseurl }}/docs/fields.html#show if
+[`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml
+[`demo-basic-questions-name.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions-name.yml
+[`demo-basic-questions-address.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions-address.yml
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
@@ -1632,6 +1903,7 @@ value of `favorite_fruit`.
 [mail merge example]: #mail merge
 [generic-document.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/generic-document.docx
 [`generic object` modifier]: {{ site.baseurl }}/docs/modifiers.html#generic object
+[`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
 [`force_ask()`]: {{ site.baseurl }}/docs/force_ask.html#force_ask
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
 [`docassemble.demo:data/questions/sign.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/sign.yml
