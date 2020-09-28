@@ -2311,6 +2311,7 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
         if template.subject is not None:
             body_html += markdown_to_html(template.subject, external=True)
         body_html += markdown_to_html(template.content, external=True) + '</body></html>'
+        body_html = re.sub(r'\n', ' ', body_html)
         body = BeautifulSoup(body_html, "html.parser").get_text('\n')
     if body is None:
         body = word("blank message")

@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.1.79] - 2020-09-26
+## [1.1.79] - 2020-09-28
 ### Fixed
 - Problem with using `[TARGET]` inside of `right`.
 
