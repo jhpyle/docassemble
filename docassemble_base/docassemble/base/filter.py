@@ -554,10 +554,10 @@ def html_filter(text, status=None, question=None, embedder=None, default_image_w
     #     text = re.sub(r'\[FIELD ([^\]]+)\]', 'ERROR: FIELD cannot be used here', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', target_html, text)
     if docassemble.base.functions.this_thread.evaluation_context != 'docx':
-        text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question, external=external), text)
-        text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_url_string(x, question=question, external=external), text)
-        text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question, external=external), text)
-        text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question, default_image_width=default_image_width, external=external), text)
+        text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question, external=external, status=status), text)
+        text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_url_string(x, question=question, external=external, status=status), text)
+        text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question, external=external, status=status), text)
+        text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question, default_image_width=default_image_width, external=external, status=status), text)
         text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', qr_url_string, text)
         text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_url_string, text)
         text = re.sub(r'\[QR ([^,\]]+)\]', qr_url_string, text)
@@ -755,6 +755,8 @@ def image_as_rtf(match, question=None):
     if width == 'full':
         width_supplied = False
     file_reference = match.group(1)
+    if question and file_reference in question.interview.images:
+        file_reference = question.interview.images[file_reference].get_reference()
     file_info = server.file_finder(file_reference, convert={'svg': 'png', 'gif': 'png'}, question=question)
     if 'path' not in file_info:
         return ''
@@ -903,7 +905,7 @@ def pixels_in(length):
     logmessage("Could not read " + str(length) + "\n")
     return(300)
 
-def image_url_string(match, emoji=False, question=None, playground=False, default_image_width=None, external=False):
+def image_url_string(match, emoji=False, question=None, playground=False, default_image_width=None, external=False, status=None):
     file_reference = match.group(1)
     try:
         width = match.group(2)
@@ -922,9 +924,13 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
             alt_text = ''
     else:
         alt_text = ''
-    return image_url(file_reference, alt_text, width, emoji=emoji, question=question, playground=playground, external=external)
+    return image_url(file_reference, alt_text, width, emoji=emoji, question=question, playground=playground, external=external, status=status)
 
-def image_url(file_reference, alt_text, width, emoji=False, question=None, playground=False, external=False):
+def image_url(file_reference, alt_text, width, emoji=False, question=None, playground=False, external=False, status=None):
+    if question and file_reference in question.interview.images:
+        if status and question.interview.images[file_reference].attribution is not None:
+            status.attributions.add(question.interview.images[file_reference].attribution)
+        file_reference = question.interview.images[file_reference].get_reference()
     file_info = server.file_finder(file_reference, question=question)
     if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^audio', file_info['mimetype']):
@@ -1024,6 +1030,8 @@ def convert_pixels(match):
 
 def image_include_string(match, emoji=False, question=None):
     file_reference = match.group(1)
+    if question and file_reference in question.interview.images:
+        file_reference = question.interview.images[file_reference].get_reference()
     try:
         width = match.group(2)
         assert width != 'None'
@@ -1057,6 +1065,8 @@ def image_include_string(match, emoji=False, question=None):
 
 def image_include_docx(match, question=None):
     file_reference = match.group(1)
+    if question and file_reference in question.interview.images:
+        file_reference = question.interview.images[file_reference].get_reference()
     try:
         width = match.group(2)
         assert width != 'None'
@@ -1612,6 +1622,8 @@ def replace_fields(string, status=None, embedder=None):
 
 def image_include_docx_template(match, question=None):
     file_reference = match.group(1)
+    if question and file_reference in question.interview.images:
+        file_reference = question.interview.images[file_reference].get_reference()
     try:
         width = match.group(2)
         assert width != 'None'

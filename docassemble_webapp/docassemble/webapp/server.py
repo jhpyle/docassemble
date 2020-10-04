@@ -40,6 +40,7 @@ STRICT_MODE = daconfig.get('restrict input variables', False)
 PACKAGE_PROTECTION = daconfig.get('package protection', True)
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
+GITHUB_BRANCH = daconfig.get('github default branch name', 'main')
 request_active = True
 
 default_playground_yaml = """metadata:
@@ -2872,10 +2873,10 @@ def install_zip_package(packagename, file_number):
     db.session.commit()
     return
 
-def install_git_package(packagename, giturl, branch=None):
+def install_git_package(packagename, giturl, branch):
     #logmessage("install_git_package: " + packagename + " " + str(giturl))
     if branch is None or str(branch).lower().strip() in ('none', ''):
-        branch = 'master'
+        branch = GITHUB_BRANCH
     if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).with_for_update().first() is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git', upload=None, limitation=None, gitbranch=branch)
@@ -9480,7 +9481,10 @@ def index(action_argument=None, refer=None):
             $(this).addClass("dainvisible");
             $(".da-first-delete").removeClass("dainvisible");
             rationalizeListCollect();
-            $('div[data-collectnum="' + num + '"]').find('input, textarea, select').first().focus();
+            var elem = $('div[data-collectnum="' + num + '"]').find('input, textarea, select').first();
+            if ($(elem).visible()){
+              $(elem).focus();
+            }
           }
           return false;
         });
@@ -9794,7 +9798,7 @@ def index(action_argument=None, refer=None):
         if (!daJsEmbed){
           setTimeout(function(){
             var firstInput = $("#daform .da-field-container").not(".da-field-container-note").first().find("input, textarea, select").filter(":visible").first();
-            if (firstInput.length > 0){
+            if (firstInput.length > 0 && $(firstInput).visible()){
               $(firstInput).focus();
               var inputType = $(firstInput).attr('type');
               if ($(firstInput).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number" && inputType != "date" && inputType != "time"){
@@ -9811,7 +9815,7 @@ def index(action_argument=None, refer=None):
             }
             else {
               var firstButton = $("#danavbar-collapse .nav-link").filter(':visible').first();
-              if (firstButton.length > 0){
+              if (firstButton.length > 0 && $(firstButton).visible()){
                 setTimeout(function(){
                   $(firstButton).focus();
                   $(firstButton).blur();
@@ -13976,6 +13980,15 @@ def update_package():
         del session['taskwait']
     #pip.utils.logging._log_state = threading.local()
     #pip.utils.logging._log_state.indentation = 0
+    if request.method == 'GET' and app.config['USE_GITHUB'] and r.get('da:using_github:userid:' + str(current_user.id)) is not None:
+        storage = RedisCredStorage(app='github')
+        credentials = storage.get()
+        if not credentials or credentials.invalid:
+            state_string = random_string(16)
+            session['github_next'] = json.dumps(dict(state=state_string, path='playground_packages', arguments=request.args))
+            flow = get_github_flow()
+            uri = flow.step1_get_authorize_url(state=state_string)
+            return redirect(uri)
     form = UpdatePackageForm(request.form)
     form.gitbranch.choices = [('', "Not applicable")]
     if form.gitbranch.data:
@@ -14002,9 +14015,9 @@ def update_package():
                         db.session.commit()
                     if existing_package.type == 'git' and existing_package.giturl is not None:
                         if existing_package.gitbranch:
-                            install_git_package(target, existing_package.giturl, branch=existing_package.gitbranch)
+                            install_git_package(target, existing_package.giturl, existing_package.gitbranch)
                         else:
-                            install_git_package(target, existing_package.giturl)
+                            install_git_package(target, existing_package.giturl, get_master_branch(existing_package.giturl))
                     elif existing_package.type == 'pip':
                         if existing_package.name == 'docassemble.webapp' and existing_package.limitation and not limitation:
                             existing_package.limitation = None
@@ -14044,6 +14057,8 @@ def update_package():
             if form.giturl.data:
                 giturl = form.giturl.data.strip()
                 branch = form.gitbranch.data.strip()
+                if not branch:
+                    branch = get_master_branch(giturl)
                 packagename = re.sub(r'/*$', '', giturl)
                 packagename = re.sub(r'^git+', '', packagename)
                 packagename = re.sub(r'#.*', '', packagename)
@@ -14051,10 +14066,7 @@ def update_package():
                 packagename = re.sub(r'.*/', '', packagename)
                 packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
-                    if branch:
-                        install_git_package(packagename, giturl, branch=branch)
-                    else:
-                        install_git_package(packagename, giturl)
+                    install_git_package(packagename, giturl, branch)
                     result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                     session['taskwait'] = result.id
                     return redirect(url_for('update_package_wait'))
@@ -14083,7 +14095,7 @@ def update_package():
     form.giturl.data = None
     extra_js = """
     <script>
-      var default_branch = """ + json.dumps(branch if branch else 'master') + """;
+      var default_branch = """ + json.dumps(branch if branch else 'null') + """;
       function get_branches(){
         var elem = $("#gitbranch");
         elem.empty();
@@ -14100,11 +14112,22 @@ def update_package():
           if (data.success){
             var n = data.result.length;
             if (n > 0){
+              var default_to_use = default_branch;
+              var to_try = [default_branch, """ + json.dumps(GITHUB_BRANCH) + """, 'master', 'main'];
+            outer:
+              for (var j = 0; j < 4; j++){
+                for (var i = 0; i < n; i++){
+                  if (data.result[i].name == to_try[j]){
+                    default_to_use = to_try[j];
+                    break outer;
+                  }
+                }
+              }
               elem.empty();
               for (var i = 0; i < n; i++){
                 opt = $("<option><\/option>");
                 opt.attr("value", data.result[i].name).text(data.result[i].name);
-                if (data.result[i].name == default_branch){
+                if (data.result[i].name == default_to_use){
                   opt.prop('selected', true);
                 }
                 $(elem).append(opt);
@@ -14155,6 +14178,12 @@ def update_package():
     response = make_response(render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name.startswith('docassemble') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade, limitation=limitation), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
+
+def get_master_branch(giturl):
+    try:
+        return get_repo_info(giturl).get('default_branch', GITHUB_BRANCH)
+    except:
+        return GITHUB_BRANCH
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
@@ -14213,6 +14242,7 @@ def create_playground_package():
         branch_is_new = True
     else:
         branch_is_new = False
+    force_branch_creation = False
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
@@ -14437,13 +14467,14 @@ def create_playground_package():
                 git_prefix = "GIT_SSH=" + ssh_script.name + " "
                 ssh_url = commit_repository.get('ssh_url', None)
                 github_url = commit_repository.get('html_url', None)
+                commit_branch = commit_repository.get('default_branch', GITHUB_BRANCH)
                 if ssh_url is None:
                     raise DAError("create_playground_package: could not obtain ssh_url for package")
                 output = ''
                 if branch:
                     branch_option = '-b ' + str(branch) + ' '
                 else:
-                    branch_option = '-b master '
+                    branch_option = '-b ' + commit_branch + ' '
                 tempbranch = 'playground' + random_string(5)
                 packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
                 the_user_name = str(current_user.first_name) + " " + str(current_user.last_name)
@@ -14471,6 +14502,7 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git config user.email.  " + output)
+                    output += "Doing git add README.MD\n"
                     try:
                         output += subprocess.check_output(["git", "add", "README.md"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                     except subprocess.CalledProcessError as err:
@@ -14482,15 +14514,21 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git commit -m \"first commit\".  " + output)
+                    output += "Doing git branch -M " + commit_branch + "\n"
+                    try:
+                        output += subprocess.check_output(["git", "branch", "-M", commit_branch], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git branch -M " + commit_branch + ".  " + output)
                     output += "Doing git remote add origin " + ssh_url + "\n"
                     try:
                         output += subprocess.check_output(["git", "remote", "add", "origin", ssh_url], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git remote add origin.  " + output)
-                    output += "Doing " + git_prefix + "git push -u origin master\n"
+                    output += "Doing " + git_prefix + "git push -u origin " + commit_branch + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git push -u origin master", cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(git_prefix + "git push -u origin " + commit_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running first git push.  " + output)
@@ -14529,6 +14567,13 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git config user.email.  " + output)
+                    output += "Trying git checkout " + commit_branch + "\n"
+                    try:
+                        output += subprocess.check_output(["git", "checkout", commit_branch], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += commit_branch + " is a new branch\n"
+                        force_branch_creation = True
+                        branch = commit_branch
                 output += "Doing git checkout -b " + tempbranch + "\n"
                 try:
                     output += subprocess.check_output(git_prefix + "git checkout -b " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
@@ -14556,8 +14601,8 @@ def create_playground_package():
                 if branch:
                     the_branch = branch
                 else:
-                    the_branch = 'master'
-                if branch_is_new and the_branch != 'master':
+                    the_branch = commit_branch
+                if force_branch_creation or (branch_is_new and the_branch != commit_branch):
                     output += "Doing git checkout -b " + the_branch + "\n"
                     try:
                         output += subprocess.check_output(git_prefix + "git checkout -b " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
@@ -14565,24 +14610,18 @@ def create_playground_package():
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git checkout.  " + output)
                 else:
-                    output += "Doing git checkout " + the_branch + "\n"
-                    try:
-                        output += subprocess.check_output(git_prefix + "git checkout " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
-                    except subprocess.CalledProcessError as err:
-                        output += err.output.decode()
-                        raise DAError("create_playground_package: error running git checkout.  " + output)
                     output += "Doing git merge --squash " + tempbranch + "\n"
                     try:
                         output += subprocess.check_output(git_prefix + "git merge --squash " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
-                        raise DAError("create_playground_package: error running git merge.  " + output)
+                        raise DAError("create_playground_package: error running git merge --squash " + tempbranch + ".  " + output)
                     output += "Doing git commit\n"
                     try:
                         output += subprocess.check_output(["git", "commit", "-am", str(commit_message)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
-                        raise DAError("create_playground_package: error running git commit.  " + output)
+                        raise DAError("create_playground_package: error running git commit -am " + str(commit_message) + ".  " + output)
                 if False:
                     try:
                         output += subprocess.check_output(["git", "remote", "add", "origin", ssh_url], cwd=packagedir, stderr=subprocess.STDOUT).decode()
@@ -16971,7 +17010,7 @@ def pull_playground_package():
     branch = request.args.get('branch')
     extra_js = """
     <script>
-      var default_branch = """ + json.dumps(branch if branch else 'master') + """;
+      var default_branch = """ + json.dumps(branch if branch else GITHUB_BRANCH) + """;
       function get_branches(){
         var elem = $("#github_branch");
         elem.empty();
@@ -16988,11 +17027,22 @@ def pull_playground_package():
           if (data.success){
             var n = data.result.length;
             if (n > 0){
+              var default_to_use = default_branch;
+              var to_try = [default_branch, """ + json.dumps(GITHUB_BRANCH) + """, 'master', 'main'];
+            outer:
+              for (var j = 0; j < 4; j++){
+                for (var i = 0; i < n; i++){
+                  if (data.result[i].name == to_try[j]){
+                    default_to_use = to_try[j];
+                    break outer;
+                  }
+                }
+              }
               elem.empty();
               for (var i = 0; i < n; i++){
                 opt = $("<option><\/option>");
                 opt.attr("value", data.result[i].name).text(data.result[i].name);
-                if (data.result[i].name == default_branch){
+                if (data.result[i].name == default_to_use){
                   opt.prop('selected', true);
                 }
                 $(elem).append(opt);
@@ -17011,19 +17061,8 @@ def pull_playground_package():
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
-@app.route('/get_git_branches', methods=['GET'])
-@login_required
-@roles_required(['developer', 'admin'])
-def get_git_branches():
-    if not app.config['ENABLE_PLAYGROUND']:
-        return ('File not found', 404)
-    if 'url' not in request.args:
-        return ('File not found', 404)
-    if app.config['USE_GITHUB']:
-        github_auth = r.get('da:using_github:userid:' + str(current_user.id))
-    else:
-        github_auth = None
-    repo_name = re.sub(r'/*$', '', request.args['url'].strip())
+def get_branches_of_repo(giturl):
+    repo_name = re.sub(r'/*$', '', giturl)
     m = re.search(r'//(.+):x-oauth-basic@github.com', repo_name)
     if m:
         access_token = m.group(1)
@@ -17032,41 +17071,89 @@ def get_git_branches():
     repo_name = re.sub(r'^http.*github.com/', '', repo_name)
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
-    try:
-        if github_auth and access_token is None:
-            storage = RedisCredStorage(app='github')
-            credentials = storage.get()
-            if not credentials or credentials.invalid:
-                return jsonify(dict(success=False, reason="bad credentials"))
-            http = credentials.authorize(httplib2.Http())
-        else:
+    if app.config['USE_GITHUB']:
+        github_auth = r.get('da:using_github:userid:' + str(current_user.id))
+    else:
+        github_auth = None
+    if github_auth and access_token is None:
+        storage = RedisCredStorage(app='github')
+        credentials = storage.get()
+        if not credentials or credentials.invalid:
             http = httplib2.Http()
-        the_url = "https://api.github.com/repos/" + repo_name + '/branches'
-        branches = list()
-        if access_token:
-            resp, content = http.request(the_url, "GET", headers=dict(Authorization="token " + access_token))
         else:
-            resp, content = http.request(the_url, "GET")
-        if int(resp['status']) == 200:
-            branches.extend(json.loads(content.decode()))
-            while True:
-                next_link = get_next_link(resp)
-                if next_link:
-                    if access_token:
-                        resp, content = http.request(next_link, "GET", headers=dict(Authorization="token " + access_token))
-                    else:
-                        resp, content = http.request(next_link, "GET")
-                    if int(resp['status']) != 200:
-                        return jsonify(dict(success=False, reason=repo_name + " fetch failed"))
-                    else:
-                        branches.extend(json.loads(content.decode()))
+            http = credentials.authorize(httplib2.Http())
+    else:
+        http = httplib2.Http()
+    the_url = "https://api.github.com/repos/" + repo_name + '/branches'
+    branches = list()
+    if access_token:
+        resp, content = http.request(the_url, "GET", headers=dict(Authorization="token " + access_token))
+    else:
+        resp, content = http.request(the_url, "GET")
+    if int(resp['status']) == 200:
+        branches.extend(json.loads(content.decode()))
+        while True:
+            next_link = get_next_link(resp)
+            if next_link:
+                if access_token:
+                    resp, content = http.request(next_link, "GET", headers=dict(Authorization="token " + access_token))
                 else:
-                    break
-            return jsonify(dict(success=True, result=branches))
-        return jsonify(dict(success=False, reason=the_url + " fetch failed on first try; got " + str(resp['status'])))
+                    resp, content = http.request(next_link, "GET")
+                if int(resp['status']) != 200:
+                    raise Exception(repo_name + " fetch failed")
+                else:
+                    branches.extend(json.loads(content.decode()))
+            else:
+                break
+        return branches
+    raise Exception(the_url + " fetch failed on first try; got " + str(resp['status']))
+
+def get_repo_info(giturl):
+    repo_name = re.sub(r'/*$', '', giturl)
+    m = re.search(r'//(.+):x-oauth-basic@github.com', repo_name)
+    if m:
+        access_token = m.group(1)
+    else:
+        access_token = None
+    repo_name = re.sub(r'^http.*github.com/', '', repo_name)
+    repo_name = re.sub(r'.*@github.com:', '', repo_name)
+    repo_name = re.sub(r'.git$', '', repo_name)
+    if app.config['USE_GITHUB']:
+        github_auth = r.get('da:using_github:userid:' + str(current_user.id))
+    else:
+        github_auth = None
+    if github_auth and access_token is None:
+        storage = RedisCredStorage(app='github')
+        credentials = storage.get()
+        if not credentials or credentials.invalid:
+            http = httplib2.Http()
+        else:
+            http = credentials.authorize(httplib2.Http())
+    else:
+        http = httplib2.Http()
+    the_url = "https://api.github.com/repos/" + repo_name
+    branches = list()
+    if access_token:
+        resp, content = http.request(the_url, "GET", headers=dict(Authorization="token " + access_token))
+    else:
+        resp, content = http.request(the_url, "GET")
+    if int(resp['status']) == 200:
+        return(json.loads(content.decode()))
+    raise Exception(the_url + " fetch failed on first try; got " + str(resp['status']))
+
+@app.route('/get_git_branches', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def get_git_branches():
+    if not app.config['ENABLE_PLAYGROUND']:
+        return ('File not found', 404)
+    if 'url' not in request.args:
+        return ('File not found', 404)
+    giturl = request.args['url'].strip()
+    try:
+        return jsonify(dict(success=True, result=get_branches_of_repo(giturl)))
     except Exception as err:
         return jsonify(dict(success=False, reason=str(err)))
-    return jsonify(dict(success=False))
 
 def get_user_repositories(http):
     repositories = list()
@@ -17190,6 +17277,15 @@ def playground_packages():
             can_publish_to_github = False
     else:
         can_publish_to_github = None
+    if can_publish_to_github and request.method == 'GET':
+        storage = RedisCredStorage(app='github')
+        credentials = storage.get()
+        if not credentials or credentials.invalid:
+            state_string = random_string(16)
+            session['github_next'] = json.dumps(dict(state=state_string, path='playground_packages', arguments=request.args))
+            flow = get_github_flow()
+            uri = flow.step1_get_authorize_url(state=state_string)
+            return redirect(uri)
     show_message = true_or_false(request.args.get('show_message', True))
     github_message = None
     pypi_message = None
@@ -18014,10 +18110,16 @@ def playground_packages():
         branch_choices.append((br['name'], br['name']))
     if branch and branch in branch_names:
         form.github_branch.data = branch
+        default_branch = branch
     elif 'master' in branch_names:
         form.github_branch.data = 'master'
+        default_branch = 'master'
+    elif 'main' in branch_names:
+        form.github_branch.data = 'main'
+        default_branch = 'main'
+    else:
+        default_branch = GITHUB_BRANCH
     form.github_branch.choices = branch_choices
-    default_branch = branch if branch else 'master'
     if form.author_name.data in ('', None) and current_user.first_name and current_user.last_name:
         form.author_name.data = current_user.first_name + " " + current_user.last_name
     if form.author_email.data in ('', None) and current_user.email:
@@ -19558,7 +19660,7 @@ def playground_css_bundle():
 def js_bundle():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = ''
-    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -19588,7 +19690,7 @@ def js_admin_bundle():
 def js_bundle_wrap():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = '(function($) {'
-    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -19599,7 +19701,7 @@ def js_bundle_wrap():
 def js_bundle_no_query():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = ''
-    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -23953,9 +24055,9 @@ def api_package():
             if existing_package is not None:
                 if existing_package.type == 'git' and existing_package.giturl is not None:
                     if existing_package.gitbranch:
-                        install_git_package(target, existing_package.giturl, branch=existing_package.gitbranch)
+                        install_git_package(target, existing_package.giturl, existing_package.gitbranch)
                     else:
-                        install_git_package(target, existing_package.giturl)
+                        install_git_package(target, existing_package.giturl, get_master_branch(existing_package.giturl))
                 elif existing_package.type == 'pip':
                     if existing_package.name == 'docassemble.webapp' and existing_package.limitation:
                         existing_package.limitation = None
@@ -23966,6 +24068,8 @@ def api_package():
         if 'github_url' in post_data:
             github_url = post_data['github_url']
             branch = post_data.get('branch', None)
+            if branch is None:
+                branch = get_master_branch(github_url)
             packagename = re.sub(r'/*$', '', github_url)
             packagename = re.sub(r'^git+', '', packagename)
             packagename = re.sub(r'#.*', '', packagename)
@@ -23973,10 +24077,7 @@ def api_package():
             packagename = re.sub(r'.*/', '', packagename)
             packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
             if user_can_edit_package(giturl=github_url) and user_can_edit_package(pkgname=packagename):
-                if branch:
-                    install_git_package(packagename, github_url, branch=branch)
-                else:
-                    install_git_package(packagename, github_url)
+                install_git_package(packagename, github_url, branch)
                 result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                 return jsonify_task(result)
             else:

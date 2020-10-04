@@ -1054,7 +1054,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     for key in ('minlength', 'maxlength'):
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                             #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
-                            validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
+                            validation_rules['rules'][the_saveas][key] = int(float(status.extras[key][field.number]))
                             if key == 'minlength':
                                 validation_rules['messages'][the_saveas][key] = field.validation_message(key, status, word("You must type at least %s characters."), parameters=tuple([status.extras[key][field.number]]))
                             elif key == 'maxlength':
@@ -1082,7 +1082,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                                     checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', status, word("Please select one."))
                                 else:
                                     checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', status, word("Please select at least %s."), parameters=tuple([status.extras['minlength'][field.number]]))
-                                if int(status.extras['minlength'][field.number]) > 0:
+                                if int(float(status.extras['minlength'][field.number])) > 0:
                                     if 'nota' not in status.extras:
                                         status.extras['nota'] = dict()
                                     status.extras['nota'][field.number] = False
@@ -2437,9 +2437,9 @@ def input_for(status, field, wide=False, embedded=False):
             maximagesize = ''
             if 'max_image_size' in status.extras:
                 if status.extras['max_image_size']:
-                    maximagesize = 'data-maximagesize="' + str(int(status.extras['max_image_size'])) + '" '
+                    maximagesize = 'data-maximagesize="' + str(int(float(status.extras['max_image_size']))) + '" '
             elif status.question.interview.max_image_size:
-                maximagesize = 'data-maximagesize="' + str(int(status.question.interview.max_image_size)) + '" '
+                maximagesize = 'data-maximagesize="' + str(int(float(status.question.interview.max_image_size))) + '" '
             imagetype = ''
             if 'image_type' in status.extras:
                 if status.extras['image_type']:
@@ -2489,7 +2489,7 @@ def input_for(status, field, wide=False, embedded=False):
                 output += '</span>'
         elif hasattr(field, 'inputtype') and field.inputtype == 'ajax':
             if defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)):
-                if field.datatype in ('currency', 'number') and hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(status.extras['step'][field.number]) == float(status.extras['step'][field.number]):
+                if field.datatype in ('currency', 'number') and hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(float(status.extras['step'][field.number])) == float(status.extras['step'][field.number]):
                     defaultvalue = int(float(defaultvalue))
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
                 default_val = defaultvalue
@@ -2528,7 +2528,7 @@ def input_for(status, field, wide=False, embedded=False):
                     the_date = format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm')
                     if the_date != word("Bad date"):
                         defaultvalue = the_date
-                elif field.datatype in ('currency', 'number') and hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(status.extras['step'][field.number]) == float(status.extras['step'][field.number]):
+                elif field.datatype in ('currency', 'number') and hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(float(status.extras['step'][field.number])) == float(status.extras['step'][field.number]):
                     defaultvalue = int(float(defaultvalue))
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
             elif isinstance(defaultvalue, datetime.datetime):

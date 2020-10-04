@@ -1280,6 +1280,9 @@ class Name(DAObject):
     def lastfirst(self):
         """This method is included for compatibility with other types of names."""
         return(self.text)
+    def middle_initial(self, with_period=True):
+        """This method is included for compatibility with other types of names."""
+        return('')
     def defined(self):
         """Returns True if the name has been defined.  Otherwise, returns False."""
         return hasattr(self, 'text')
@@ -1310,12 +1313,14 @@ class IndividualName(Name):
         if not self.uses_parts:
             return super().full()
         names = [self.first]
-        if hasattr(self, 'middle') and len(self.middle):
+        if hasattr(self, 'middle'):
             if middle is False or middle is None:
                 pass
             elif middle == 'initial':
-                names.append(self.middle[0] + '.')
-            else:
+                initial = self.middle_initial()
+                if initial:
+                    names.append(initial)
+            elif len(self.middle):
                 names.append(self.middle)
         if hasattr(self, 'last') and len(self.last):
             names.append(self.last)
@@ -1344,6 +1349,14 @@ class IndividualName(Name):
         if hasattr(self, 'middle') and self.middle:
             output += " " + self.middle[0] + '.'
         return output
+    def middle_initial(self, with_period=True):
+        """Returns the middle initial, or the empty string if the name does not have a middle component."""
+        if len(self.middle) == 0:
+            return ''
+        if with_period:
+            return self.middle[0] + '.'
+        else:
+            return self.middle[0] + '.'
 
 class Address(DAObject):
     """A geographic address."""

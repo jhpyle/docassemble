@@ -2274,3 +2274,13 @@ tr:first-child .datableup, tr:last-child .databledown {
 body.da-pad-for-footer {
   margin-bottom: 60px;
 }
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
