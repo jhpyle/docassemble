@@ -1573,7 +1573,7 @@ order in which they were found.
 
 ## <a name="send_email"></a>send_email()
 
-The `send_email()` function sends an e-mail using [Flask-Mail].
+The `send_email()` function sends an e-mail.
 
 {% include side-by-side.html demo="send-email" %}
 
@@ -1630,8 +1630,9 @@ All of the arguments to `send_email()` are [keyword arguments]:
   sure that all of the variables `send_email()` needs are defined
   before you actually send the e-mail.  The default is `False`.
 
-It uses the `name` and `email` attributes of the listed [`Individual`]s
-to form e-mail addresses.
+If you use [`Individual`] objects as recipients, `send_email()` will
+use the `name` and `email` attributes of the listed [`Individual`]s to
+form e-mail addresses.
 
 `send_email()` returns `False` if an error prevented the e-mail from
 being delivered to the mail server; otherwise it returns `True`.  Note

@@ -204,6 +204,21 @@ bracket.  If you need to use the right bracket in [alt text], use one
 of the other methods of inserting images, such as creating a
 [`DAStaticFile`] object.
 
+Instead of referring to a file name, you can refer to the name of an
+image that is defined in an [`image sets`] or [`images`] block.
+
+{% highlight text %}
+images:
+  bills: money146.svg
+  children: children2.svg
+---
+mandatory: True
+question: Do you have children?
+subquestion: |
+  [FILE children, 100%]
+yesno: has_children
+{% endhighlight %}
+
 <a name="inserting uploaded images"></a>To insert an image that has
 been uploaded, or created using a [signature field], simply refer to
 the variable using [Mako].  For example:

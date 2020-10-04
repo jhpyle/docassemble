@@ -3759,19 +3759,23 @@ common way of referring to the names of these objects.
 <a name="Name.full"></a>
 <a name="Name.firstlast"></a>
 <a name="Name.lastfirst"></a>
+<a name="Name.middle_initial"></a>
 <a name="Name.familiar"></a>
 The [`Name`] and [`IndividualName`] objects support the following methods:
 
-* `.full()` - e.g., "John Smith, Jr."
+* `.full()` - e.g., "John E. Smith, Jr."
 * `.firstlast()` - e.g., "John Smith, Jr."
 * `.lastfirst()` - e.g., "Smith, John Jr."
+* `.middle_initial()` - e.g., "E."
+* `.middle_initial(with_period=False)` - e.g., "E"
 * `.familiar()` - e.g., "John"
 
-Applied to an [`IndividualName`] object, these methods return different
-useful expressions of the name.  Applied to a [`Name`] object, these
-methods all return the same thing -- the `.text` attribute.  This is
-useful because you can write things like this, which lists the names
-of the parties in a bullet-point list:
+Applied to an [`IndividualName`] object, these methods return
+different useful expressions of the name.  Applied to a [`Name`]
+object, these methods all return the same thing -- the `.text`
+attribute (except for `middle_initial()`, which returns the empty
+string).  This is useful because you can write things like this, which
+lists the names of the parties in a bullet-point list:
 
 {% include side-by-side.html demo="lastfirst" %}
 

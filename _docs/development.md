@@ -468,6 +468,8 @@ the link
 `/updatepackage?action=update&package=docassemble.debtconsult` on your
 server.
 
+Note that the URL cannot have a trailing slash.
+
 # <a name="localediting"></a>Editing Playground files in a text editor on a local machine
 
 ## <a name="editingwithoutdocker"></a>Not using Docker

@@ -4,6 +4,25 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.80](https://github.com/jhpyle/docassemble/releases/tag/v1.1.80) - 2020-10-04
+
+### Added
+- The `middle_initial()` method of `Name`.
+
+### Changed
+- First input element on the screen is focused only if visible in the
+  viewport.
+- `[FILE ...]` can now be used with images declared in `images` or
+  `image sets`.
+
+### Fixed
+- Issue with floating point/integer numbers and input validation.
+
+## [1.1.79](https://github.com/jhpyle/docassemble/releases/tag/v1.1.79) - 2020-09-28
+
+### Fixed
+- Problem with using `[TARGET]` inside of `right`.
+
 ## [1.1.78](https://github.com/jhpyle/docassemble/releases/tag/v1.1.78) - 2020-09-25
 
 ### Fixed
