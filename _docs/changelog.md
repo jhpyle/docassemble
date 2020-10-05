@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.81](https://github.com/jhpyle/docassemble/releases/tag/v1.1.81) - 2020-10-05
+
+### Fixed
+- Tweak to focusing on first element.
+
 ## [1.1.80](https://github.com/jhpyle/docassemble/releases/tag/v1.1.80) - 2020-10-04
 
 ### Added
