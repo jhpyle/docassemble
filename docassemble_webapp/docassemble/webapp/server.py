@@ -10287,7 +10287,7 @@ def index(action_argument=None, refer=None):
             else{
               window.scrollTo(0, 1);
             }
-          }, 10);
+          }, 20);
         }
         if (daShowingSpinner){
           daHideSpinner();
