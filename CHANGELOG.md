@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.81] - 2020-10-05
+### Fixed
+- Tweak to focusing on first element.
+
 ## [1.1.80] - 2020-10-04
 ### Added
 - The `middle_initial()` method of `Name`.
