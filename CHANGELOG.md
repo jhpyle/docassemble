@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.82] - 2020-10-06
+### Fixed
+- GitHub commit error.
+
 ## [1.1.81] - 2020-10-05
 ### Fixed
 - Tweak to focusing on first element.

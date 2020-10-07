@@ -14602,13 +14602,19 @@ def create_playground_package():
                     the_branch = branch
                 else:
                     the_branch = commit_branch
-                if force_branch_creation or (branch_is_new and the_branch != commit_branch):
+                output += "Trying git checkout " + the_branch + "\n"
+                try:
+                    output += subprocess.check_output(git_prefix + "git checkout " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    branch_exists = True
+                except subprocess.CalledProcessError as err:
+                    branch_exists = False
+                if not branch_exists:
                     output += "Doing git checkout -b " + the_branch + "\n"
                     try:
                         output += subprocess.check_output(git_prefix + "git checkout -b " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
-                        raise DAError("create_playground_package: error running git checkout.  " + output)
+                        raise DAError("create_playground_package: error running git checkout -b " + the_branch + ".  " + output)
                 else:
                     output += "Doing git merge --squash " + tempbranch + "\n"
                     try:
