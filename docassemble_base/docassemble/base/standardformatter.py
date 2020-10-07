@@ -1789,7 +1789,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     <div class="input-group">
                       <label for="daMessage" class="sr-only">""" + word("Chat message you want to send") + """</label>
                       <input type="text" class="form-control daChatMessage" id="daMessage" placeholder=""" + fix_double_quote(word("Type your message here.")) + """>
-                      <button class="btn """ + BUTTON_STYLE + """-secondary daChatButton" id="daSend" type="button">""" + word("Send") + """</button>
+                      <button class="btn """ + BUTTON_STYLE + """secondary daChatButton" id="daSend" type="button">""" + word("Send") + """</button>
                     </div>
                   </div>
                 </div>

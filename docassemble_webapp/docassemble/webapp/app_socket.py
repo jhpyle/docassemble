@@ -38,7 +38,11 @@ def create_app():
     docassemble.webapp.db_object.db = db
     #import flask_login
     docassemble.webapp.db_object.UserMixin = object
-    socketio = SocketIO(app, async_mode='eventlet', verify=False, logger=True, engineio_logger=True, cors_allowed_origins=[daconfig.get('url root', '*')])
+    if 'cross site domains' in daconfig and isinstance(daconfig['cross site domains'], list) and len(daconfig['cross site domains']) > 0:
+        origins = daconfig['cross site domains']
+    else:
+        origins = [daconfig.get('url root', '*')]
+    socketio = SocketIO(app, async_mode='eventlet', verify=False, logger=True, engineio_logger=True, cors_allowed_origins=origins)
     return app, db, socketio
 
 app, db, socketio = create_app()
