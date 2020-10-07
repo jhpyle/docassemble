@@ -14554,6 +14554,10 @@ def create_playground_package():
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
                 docassemble.webapp.files.make_package_dir(pkgname, info, author_info, the_timezone, directory=directory, current_project=current_project)
+                if branch:
+                    the_branch = branch
+                else:
+                    the_branch = commit_branch
                 if not is_empty:
                     output += "Doing git config user.email " + json.dumps(github_email) + "\n"
                     try:
@@ -14567,13 +14571,13 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git config user.email.  " + output)
-                    output += "Trying git checkout " + commit_branch + "\n"
+                    output += "Trying git checkout " + the_branch + "\n"
                     try:
-                        output += subprocess.check_output(["git", "checkout", commit_branch], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                        output += subprocess.check_output(["git", "checkout", the_branch], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                     except subprocess.CalledProcessError as err:
-                        output += commit_branch + " is a new branch\n"
+                        output += the_branch + " is a new branch\n"
                         force_branch_creation = True
-                        branch = commit_branch
+                        branch = the_branch
                 output += "Doing git checkout -b " + tempbranch + "\n"
                 try:
                     output += subprocess.check_output(git_prefix + "git checkout -b " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
@@ -14598,10 +14602,6 @@ def create_playground_package():
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("create_playground_package: error running git commit.  " + output)
-                if branch:
-                    the_branch = branch
-                else:
-                    the_branch = commit_branch
                 output += "Trying git checkout " + the_branch + "\n"
                 try:
                     output += subprocess.check_output(git_prefix + "git checkout " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
