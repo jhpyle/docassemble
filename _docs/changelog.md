@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.82](https://github.com/jhpyle/docassemble/releases/tag/v1.1.82) - 2020-10-06
+
+### Fixed
+- GitHub commit error.
+
 ## [1.1.81](https://github.com/jhpyle/docassemble/releases/tag/v1.1.81) - 2020-10-05
 
 ### Fixed
