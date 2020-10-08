@@ -423,6 +423,16 @@ file is `myinterview.yml`, your users can access the interview at:
 
 > https://interview.example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
 
+If your interview is in the [Playground], the name of the interview
+will be something like `docassemble.playground1:myinterview.yml` where
+`1` is your user ID.  Or, if your interview is in a "project" inside
+your Playground, and the project is called `testing`, the name of the
+interview will be something like
+`docassemble.playground1testing:myinterview.yml`.  You can see the
+name of the interview in the URL while you are testing the interview,
+or in the URL available using the "Share" button in the Playground.
+The interview file name is the `i` parameter in the URL.
+
 Note that while you are using an interview, the URL in the location
 bar will change.  It will end with `#page1`, then `#page2`, then
 `#page3`, etc., as the interview progresses.  These tags have no

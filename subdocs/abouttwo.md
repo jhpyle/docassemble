@@ -70,4 +70,4 @@ of conferences on law and technology.
 [Markdown]: https://daringfireball.net/projects/markdown/syntax
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [YAML]: https://en.wikipedia.org/wiki/YAML
-[**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
+[**docassemble** Slack group]: {{ site.slackurl }}

@@ -132,7 +132,7 @@ data.  The following procedure will avoid these problems:
    doing `docker stop`, `docker rm`, `docker pull`, and `docker run`.
 
 [`recursive_fix_pickle()`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/fixpickle.py
-[Slack]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
+[Slack]: {{ site.slackurl }}
 [GitHub]: https://github.com/jhpyle/docassemble/issues
 [`docker volume inspect`]: https://docs.docker.com/engine/reference/commandline/volume_inspect/
 [data storage]: {{ site.baseurl }}/docs/docker.html#data storage

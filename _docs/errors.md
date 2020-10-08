@@ -172,7 +172,7 @@ If you encounter an error that you think is a problem with
 out the problem.
 
 [docassemble mailing list]: https://mail.python.org/mm3/mailman3/lists/docassemble.python.org/
-[**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
+[**docassemble** Slack group]: {{ site.slackurl }}
 [issues page]: {{ site.github.repository_url }}/issues
 [variable name]: {{ site.baseurl }}/docs/fields.html#variable names
 [reserved variable names]: {{ site.baseurl }}/docs/special.html#reserved

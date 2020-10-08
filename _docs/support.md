@@ -66,8 +66,8 @@ is a good idea to ask a question about the error message first.
 [Slack]: https://slack.com
 [submit an issue on GitHub]: https://github.com/jhpyle/docassemble/issues
 [docassemble mailing list]: https://mail.python.org/mm3/mailman3/lists/docassemble.python.org/
-[**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
-[Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
+[**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/zt-i1z6eg4j-_HFpFnuui_4EtHvKOmSb3A
+[Slack group]: https://join.slack.com/t/docassemble/shared_invite/zt-i1z6eg4j-_HFpFnuui_4EtHvKOmSb3A
 [Quinten Steenhuis]: https://www.nonprofittechy.com/blog/
 [Rina Padua]: https://github.com/Rinapadua
 [Greater Boston Legal Services]: https://www.gbls.org/

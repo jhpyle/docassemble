@@ -278,4 +278,4 @@ to decide to ask that question.
 [evaluate user input]: {{ site.baseurl }}/docs/background.html#check in
 [when the user is not logged in]: {{ site.baseurl }}/docs/background.html#scheduled
 [e-mail]: {{ site.baseurl }}/docs/functions.html#send_email
-[Slack]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
+[Slack]: {{ site.slackurl }}

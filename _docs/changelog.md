@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.83](https://github.com/jhpyle/docassemble/releases/tag/v1.1.83) - 2020-10-07
+
+### Fixed
+- GitHub commit issue.
+
+## [1.1.83](https://github.com/jhpyle/docassemble/releases/tag/v1.1.83) - 2020-10-07
+
+### Fixed
+- `cross site domains` was not being used by CORS for web sockets.
+
 ## [1.1.82](https://github.com/jhpyle/docassemble/releases/tag/v1.1.82) - 2020-10-06
 
 ### Fixed

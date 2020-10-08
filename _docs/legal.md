@@ -236,7 +236,7 @@ similar to Drupal and Wordpress, in which a small number of developers
 work on the "core," while a large number of developers work on
 "modules."  Modules depend on other modules.
 
-[**docassemble** Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
+[**docassemble** Slack group]: {{ site.slackurl }}
 [Python list]: https://docs.python.org/3/tutorial/datastructures.html
 [Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [`legal.py`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py

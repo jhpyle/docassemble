@@ -30,4 +30,4 @@ field.
 [Merlin Legal Open Source Foundation]: https://www.merlinfoundation.org
 [add-on package]: {{ site.baseurl }}/packages.html
 [Docacon]: https://docacon.com
-[Slack]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
+[Slack]: {{ site.slackurl }}

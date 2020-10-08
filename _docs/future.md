@@ -49,4 +49,4 @@ the top priorities are:
 [`docx`]: https://python-docx.readthedocs.io/en/latest/
 [Docusign integration]: https://github.com/radiant-law/docassemble-docusign
 [Spot API integration]: https://github.com/jhpyle/docassemble-spot
-[Slack]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
+[Slack]: {{ site.slackurl }}

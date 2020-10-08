@@ -136,5 +136,5 @@ will make an effort to delete the mailing list.
 [python.org]: https://mail.python.org/archives/
 [Docacon]: https://docacon.com
 [mailing list]: https://mail.python.org/mm3/mailman3/lists/docassemble.python.org/
-[Slack group]: https://join.slack.com/t/docassemble/shared_invite/enQtMjQ0Njc1NDk0NjU2LTUyOGIxMDcxYzg1NGZhNDY5NDI2ZTVkMDhlOGJlNTgzZTUwYzNhYTJiMTJmMDYzYjQ0YWNmNjFiOTE5NmQzMjc
+[Slack group]: {{ site.slackurl }}
 [MIT License]: {{ site.baseurl }}/docs/license.html

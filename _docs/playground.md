@@ -408,6 +408,20 @@ Playground is a development environment.  If you want to share a link
 that will be stable, install a package and share a link to the
 interview in that package.
 
+If you look at the URL available from the "Share" link, you will see
+that it points to the `/interview` endpoint on your server and
+includes an `i` parameter.  The `i` parameter (`i` for "interview")
+refers to the name of your YAML file.  It will be something like
+`docassemble.playground1:myinterview.yml` where `1` is your user ID.
+If your interview is in a "project" inside your Playground, and the
+project is called `testing`, the name of the interview will be
+something like `docassemble.playground1testing:myinterview.yml`.  If
+you you put your interview into a [package] called
+`docassemble.missouri`, the `i` parameter will be something like
+`docassemble.missouri:data/questions/myinterview.yml`.  The
+`data/questions` refers to a subdirectory inside of the
+`docassemble.missouri` [package].
+
 ## <a name="examples"></a>The examples area
 
 ![example area]({{ site.baseurl }}/img/playground-example-area.png){: .maybe-full-width }
