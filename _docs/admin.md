@@ -561,6 +561,26 @@ overview of how **docassemble** operates in order to help
 administrators appreciate, at a high level, what is going on under the
 hood-->
 
+# <a name="endpoints"></a>Endpoints for monitoring
+
+If you call `/health_check`, it will return the text `OK` if the web
+app is operating.  If you call `/health_check?ready=1`, it will return
+the text `OK` only if the web app is operating and the [Docker]
+initialization process has completed, meaning that associated services
+have been started.  If the initialized process has not completed, a
+400 response will be returned.
+
+If you call `/health_status`, it will return a JSON object with the
+following keys:
+
+* `ok` - indicates that the [Docker] initialization process has
+  completed.
+* `server_start_time` - indicates the timestamp (in epoch seconds) at
+  which the web app last started.  This changes after each server
+  restart.
+* `version` - indicates the version of **docassemble** running on the
+  system.
+
 # <a name="troubleshooting"></a>Troubleshooting
 
 For tips on troubleshooting your **docassemble** system, see the

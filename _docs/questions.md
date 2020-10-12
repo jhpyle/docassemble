@@ -48,6 +48,18 @@ The optional `under` specifier adds text underneath the buttons.
 
 {% include side-by-side.html demo="under" %}
 
+# <a name="pre"></a>The `pre` specifier
+
+The optional `pre` specifier adds text before the `question`.
+
+{% include side-by-side.html demo="pre" %}
+
+# <a name="post"></a>The `post` specifier
+
+The optional `post` specifier adds text after the `question`.
+
+{% include side-by-side.html demo="post" %}
+
 # <a name="right"></a>The `right` specifier
 
 The optional `right` specifier adds text on the right-hand side of the
@@ -67,6 +79,16 @@ The optional `css class` specifier can be used to set a [CSS] class
 for the `<body>` of the screen of a question.
 
 {% include side-by-side.html demo="css-class" %}
+
+# <a name="table css class"></a>The `table css class` specifier
+
+The optional `table css class` specifier can be used to set the [CSS]
+class of any [Markdown]-generated tables that appear in the question.
+There is no feature in [Markdown] for specifying a class of a table.
+The class of tables can be customized at the `question` level, or at
+the interview level with [`default screen parts`], or you can set a
+server-wide default with the `table css class` [Configuration]
+directive.
 
 # <a name="question metadata"></a>The `question metadata` specifier
 
@@ -440,6 +462,15 @@ results with different screen sizes.
   enabled.
 * The `corner back button label` is the label for the back button that
   appears in the upper-left corner.
+* The `css class` will be added to the classes of the `<body>` of the
+  question.
+* The `table css class` will be the class of any `<table>` elements
+  created based on [Markdown] tables.  You can set this to `table
+  table-bordered` for a Bootstrap "bordered" table.  You can also use
+  `table css class` to specify a class for the `<thead>` within the
+  table.  If you set `table css class` to `table table-bordered,
+  thead-dark`, then the `<table>` will have the class `table
+  table-bordered` and the `<thead>` will have the class `thead-dark`.
 
 There are a variety of ways that you can specify what content should
 appear in these areas.  These ways range from question-specific

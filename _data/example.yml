@@ -8459,6 +8459,19 @@
   \ task has been \n  performed yet.\nfields:\n  - Fruit: favorite_fruit\n---\nevent:\
   \ final_screen\nquestion: |\n  You like ${ favorite_fruit }\nsubquestion: |\n  Press\
   \ the Back button and \n  then notice whether the task \n  has been performed."
+"post": |-
+  question: |
+    What is the airspeed velocity of an
+    unladen swallow?
+  fields:
+    - Velocity: swallow_velocity
+  under: |
+    Note: if you did not catch this
+    movie reference, you need to
+    improve your cultural literacy.
+  post: |
+    This is the `post`, which comes
+    after `under`.
 "postpopulate-list": |-
   objects:
     - user: Individual
@@ -8515,6 +8528,17 @@
   question: |
     Your favorite things are
     ${ user.favorite_things }.
+"pre": |-
+  question: |
+    What is the airspeed velocity of an
+    unladen swallow?
+  fields:
+    - Velocity: swallow_velocity
+  pre: |
+    Note: if you do not catch the
+    movie reference in this question,
+    you need to improve your cultural
+    literacy.
 "prepopulate-list": |-
   objects:
     - user: Individual
@@ -13652,6 +13676,10 @@
     - label: Try again
       action: new_version
       color: primary
+"report-version": |-
+  mandatory: True
+  code: |
+    json_response({'version': docassemble.demo.__version__})
 "run-python-module": |-
   code: |
     output, return_code = run_python_module('hello.py')

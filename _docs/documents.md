@@ -539,6 +539,10 @@ following text:
 
 ![letter template source]({{ site.baseurl }}/img/letter_template_source.png){: .maybe-full-width }
 
+If you give `docx template file` a [YAML] list of files, the files
+will be concatenated and then assembled.  (Note that some DOCX
+features can be lost in the process of concatenation.)
+
 The `docx template file` feature relies heavily on the [Python]
 package known as [`python-docx-template`].  This package uses the
 [Jinja2] templating system to indicate fields in the DOCX file and
@@ -1285,6 +1289,38 @@ undefined.  You can also set `skip undefined` to a Python expression
 that evaluates to a true or false value.  This setting also works with
 `docx template file` when `field code`, `code`, or `field variables`
 is used.
+
+The `skip undefined` setting should only be used if the document does
+not need to be robust.  For example, it could be used to show the user
+an intermediate draft of a PDF document.  It should not be used as a
+crutch for allowing users to generate documents even though there are
+bugs in the interview logic.  Whether a variable happens to be defined
+at the time a document is produced is not a good rationale for
+omitting information from a document.  The real question is whether
+the substantive logic requires it to be defined; if the variable
+should be defined, its definition should be obtained.  The default
+behavior of `skip undefined: False` imposes rigor to your interview
+logic, ensuring that errors will surface.
+
+In general, you should never rely upon defined-ness to control
+anything important.  Especially when your users can edit their answers
+with `review` screens, a variable may be defined but may be
+inapplicable because of another variable.  For example, if you ask "Do
+you want to include your cell phone number?" and then you ask "What is
+your cell phone number," the user's cell phone number will be defined.
+If the user then changes the answer to the "Do you want to include
+your cell phone number?" question, then you will have a situation
+where the user's cell phone number is defined but it should not be
+used.  If you relied on `skip undefined: True` to omit the user's cell
+phone from the document, this would only work in situations when the
+user did not change their mind.  If the user initially said "no" to
+the "Do you want to include your cell phone number?" question but then
+later changed their mind and changed the answer to "yes," then `skip
+undefined: True` might result in the cell phone number not being
+included in the document even though it should be included.
+Defined-ness is an unreliable indicator of whether information is
+relevant.  Your logic should always be based on substantive facts, not
+defined-ness.
 
 ## <a name="list field names"></a>How to get a list of field names in a PDF file
 

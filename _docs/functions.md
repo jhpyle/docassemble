@@ -39,17 +39,69 @@ templates refer to a variable that is not yet defined, **docassemble**
 will stop what it is doing to ask a question or run code in an attempt
 to obtain a definition for that variable.
 
-Sometimes, this is not what you want **docassemble** to do.  For
-example, you might just want to check to see if a variable has been
-defined yet.
+If you need to check to see if a variable has been defined yet without
+triggering the process of defining it, you can use `defined()`.
 
-The `defined()` function checks to see if a variable has been
-defined.  You give it a name of a variable.
+The `defined()` function takes as its argument the name of a variable.
 
 {% include side-by-side.html demo="defined" %}
 
 It is essential that you use quotation marks around the name of the
 variable.  If you don't, it is as if you are referring to the variable.
+
+You should only use `defined()` in situations where it is absolutely
+necessary.  Your [interview logic] should be based on the values of
+real variables, not the defined-ness of a variable.  For example,
+suppose you have an interview like this:
+
+{% highlight yaml %}
+question: Are you married?
+yesno: married
+---
+question: |
+  Key dates
+fields:
+  - "Birth date": date_of_birth
+  - "Marriage date": date_of_marriage
+    datatype: date
+    show if: 
+      code: married
+{% endhighlight %}
+
+You might be tempted to write something like this in a DOCX template:
+
+> {% raw %}{% if defined('date_of_marriage') %}{% endraw %}Plaintiff is married and was 
+> married on {% raw %}{{ date_of_marriage }}.{% endif %}{% endraw %}
+
+This will work if your interview does not allow the user to go back
+and edit answers.  But if you allow the user to edit answers, what if
+the user initially answered "Yes" to "Are you married?" and filled out
+"Marriage date," but then went back and changed the answer to the
+"Are you married?" question to "No"?  Now the value of
+`date_of_marriage` is obsolete, but it is still exists.  Because the
+logic of your document is based on the defined-ness of a variable,
+rather than the true fact of whether the user is married, it contains
+an error.
+
+The solution is to always base your logic off of actual facts:
+
+> {% raw %}{% if married %}{% endraw %}Plaintiff is married and was 
+> married on {% raw %}{{ date_of_marriage }}.{% endif %}{% endraw %}
+
+By analogy, suppose that a lawyer worked on a case and wrote on a
+notepad: "we are still within the statute of limitations period; ok to
+bring tort claim."  Then, some time later, the lawyer is drafting a
+complaint, and wonders if he can raise a tort claim.  Would he look at
+his notepad and see the words "ok to bring tort claim" and then
+conclude that he can bring a tort claim?  No, he would analyze the
+facts _as they currently stand_ and evaluate whether it was ok to
+bring a tort claim.  The fact that something was once written on a
+notepad is not legally significant.  What is legally significant is
+reality.
+
+So, the `defined()` function is available, but using it is not
+advisable unless it is impossible to substitute real facts for your
+conditional statement.
 
 ## <a name="value"></a>value()
 
@@ -79,6 +131,13 @@ entirely different.  The first will treat the value of the
 `meaning_of_life` variable as a variable name.  So if you set
 `meaning_of_life = 'chocolate'`, then `value(meaning_of_life)` will
 attempt to find the value of the variable `chocolate`.
+
+The `value()` function is relatively inefficient.  If you can use
+regular Python expressions instead of `value()`, you should do so.
+`value()` can be particularly helpful when called from a function
+within a module.  However, if you can rewrite your code so that the
+variable's value is passed to the function, or is available as an
+object attribute, you should do so.
 
 ## <a name="define"></a>define()
 
@@ -6596,6 +6655,24 @@ the sub-documents contain calls to `include_docx_template()`, a third
 pass will be done, and so on, until the document is fully assembled.
 (The number of passes is limited to 10 in order to protect against
 accidentally creating an infinite loop of document inclusion.)
+
+<a name="include_docx_template_inline"></a>As discussed above,
+`include_docx_template()` needs to be used with {% raw %}{%p ... %}{%
+endraw %} because it returns the paragraphs from the included
+document.  If you would like to include "inline" text from a secondary
+DOCX file, you can do so by setting the `_inline` keyword parameter.
+You can create a DOCX file called (for example) `statement.docx` that
+only contains one paragraph, and then include something like the
+following in your main document:
+
+> I state the following: {% raw %}{{r include_docx_template('statement.docx', _inline=True) }}{% endraw %}`
+
+Note the use of {% raw %}{{r{% endraw %}; this is necessary because
+when `include_docx_template()` is called with `_inline=True`, it
+returns character-level content.  (Similarly, when you use the
+`inline_markdown` filter, you need to use {% raw %}{{r{% endraw %}.)
+When you use `_inline=True`, only the first paragraph of the included
+document matters; other paragraphs will be ignored.
 
 ## <a name="raw"></a>raw()
 

@@ -4,7 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [1.1.83](https://github.com/jhpyle/docassemble/releases/tag/v1.1.83) - 2020-10-07
+## [1.1.85](https://github.com/jhpyle/docassemble/releases/tag/v1.1.85) - 2020-10-12
+
+### Added
+- The `table css class` screen part.
+- The `show_as_markdown()` method for `template`s.
+- The `_inline` option for `include_docx_template()`.
+- Ability to list multiple files under `docx template file`.
+- Ability to set the `pre` and `post` screen parts directly on a
+  `question`.
+- The `enable if`, `disable if`, `js enable if`, and `js disable if`
+  field modifiers.
+
+## [1.1.84](https://github.com/jhpyle/docassemble/releases/tag/v1.1.84) - 2020-10-07
 
 ### Fixed
 - GitHub commit issue.

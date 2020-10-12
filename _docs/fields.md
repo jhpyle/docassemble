@@ -1416,6 +1416,12 @@ field instead of showing it.
 
 {% include side-by-side.html demo="hideif-boolean" %}
 
+## <a name="enable if"></a><a name="disable if"></a>`enable if` and `disable if`
+
+The `enable if` and `disable if` field modifiers work just like `show
+if` and `hide if`, except that instead of visibly hiding the fields
+and labels, it disables the input elements.
+
 ## <a name="js show if"></a>`js show if`
 
 Sometimes you might want to do more complicated evaluations with
@@ -1451,6 +1457,12 @@ triggered, even though [`val()`] would return the appropriate value.
 
 This works just like [`js show if`](#js show if), except that it hides
 the field instead of showing it.
+
+## <a name="js enable if"></a><a name="js disable if"></a>`js enable if` and `js disable if`
+
+The `js enable if` and `js disable if` field modifiers work just like
+`js show if` and `js hide if`, except that instead of visibly hiding
+the fields and labels, it disables the input elements.
 
 ## <a name="disable others"></a>`disable others`
 

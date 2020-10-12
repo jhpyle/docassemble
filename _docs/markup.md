@@ -409,6 +409,9 @@ try to make the header row blank with the following trick.
 
 {% include side-by-side.html demo="table-markdown-noheader" %}
 
+The styling of tables converted from [Markdown] to [HTML] can be
+customized using [`table css class`].
+
 If you want a very specific type of table, you can use [raw HTML] for
 a table that displays in a question or [raw LaTeX] for a table that
 displays in a PDF-only [`attachment`].
@@ -492,3 +495,4 @@ information about this feature, see the section on
 [`include_docx_template()`]: {{ site.baseurl }}/docs/functions.html#include_docx_template
 [alt text]: https://moz.com/learn/seo/alt-text
 [`DAStaticFile`]: {{ site.baseurl }}/docs/objects.html#DAStaticFile
+[`table css class`]: {{ site.baseurl }}/docs/questions.html#table css class

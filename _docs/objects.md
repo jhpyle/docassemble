@@ -2095,6 +2095,15 @@ attributes (`.`).
 
 {% include side-by-side.html demo="template-show" %}
 
+If called from within a DOCX file, `show()` returns paragraph-level
+text converted from Markdown.
+
+The `show_as_markdown()` method works just like `show()`, except that
+when called from a DOCX file, it does not return paragraph-level text.
+You can pass the results through the `markdown` filter or the
+`inline_markdown` filter depending on how you want the results
+formatted.
+
 <a name="DALazyTemplate.subject_as_html"></a><a
 name="DALazyTemplate.content_as_html"></a>If you write Python modules
 that generate [HTML], you may wish to use

@@ -945,6 +945,25 @@ button size: small
 
 The default value is `medium`.
 
+## <a name="table css class"></a>Default CSS class for Markdown tables
+
+By default, when a [Markdown] table is converted to HTML, `<table>`
+elements will be given the [CSS] class `table table-striped`.  This
+can be varied by setting the [`table css class`] specifier on the
+[`question`] (or using the [`default screen parts`] or [`metadata`]).
+If you want to set a global default for this setting, you can set
+`table css class` in the [Configuration]:
+
+{% highlight yaml %}
+table css class: table table-bordered
+{% endhighlight %}
+
+You can also use `table css class` to specify a class for the
+`<thead>` within the table.  If you set `table css class` to `table
+table-bordered, thead-dark`, then the `<table>` will have the class
+`table table-bordered` and the `<thead>` will have the class
+`thead-dark`.
+
 ## <a name="default icons"></a>Using standard sets of icons
 
 [Font Awesome] is enabled on all pages. **docassemble** includes the
@@ -4535,3 +4554,5 @@ and Facebook API keys.
 [JSONB]: https://www.postgresql.org/docs/current/functions-json.html
 [user list]: {{ site.baseurl }}/docs/admin.html#user list
 [My Interviews]: {{ site.baseurl }}/docs/admin.html#my interviews
+[`table css class`]: {{ site.baseurl }}/docs/questions.html#table css class
+[`default screen parts`]: {{ site.baseurl }}/docs/initial.html#default screen parts
