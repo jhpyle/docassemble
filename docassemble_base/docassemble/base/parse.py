@@ -687,7 +687,7 @@ class InterviewStatus:
                 result[param] = getattr(self, param).rstrip()
         if 'menu_items' in self.extras and isinstance(self.extras['menu_items'], list):
             result['menu_items'] = self.extras['menu_items']
-        for param in ('rightText', 'underText', 'cssClass', 'back_button_label', 'css', 'script'):
+        for param in ('rightText', 'underText', 'cssClass', 'tableCssClass', 'back_button_label', 'css', 'script'):
             if param in self.extras and isinstance(self.extras[param], str):
                 result[param] = self.extras[param].rstrip()
         if 'questionMetadata' in self.extras:
@@ -818,7 +818,7 @@ class InterviewStatus:
                     the_field['show_if_var'] = from_safeid(field.extras['show_if_var'])
                     the_field['show_if_val'] = self.extras['show_if_val'][field.number]
                 if 'show_if_js' in field.extras:
-                    the_field['show_if_js'] = dict(expression=field.extras['show_if_js']['expression'].text(the_user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
+                    the_field['show_if_js'] = dict(expression=field.extras['show_if_js']['expression'].text(the_user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'], mode=field.extras['show_if_js']['mode'])
             if hasattr(field, 'datatype'):
                 if 'note' in self.extras and field.number in self.extras['note']:
                     the_field['note'] = self.extras['note'][field.number]
@@ -1332,6 +1332,8 @@ class FileInPackage:
                 if len(the_user_dict) == 0:
                     raise Exception("FileInPackage.path: called with empty dict")
                 the_file_ref = eval(self.code, the_user_dict)
+                if isinstance(the_file_ref, list) and len(the_file_ref):
+                    the_file_ref = the_file_ref[0]
                 if the_file_ref.__class__.__name__ == 'DAFile':
                     the_file_ref = the_file_ref.path()
                 elif the_file_ref.__class__.__name__ == 'DAFileList' and len(the_file_ref.elements) > 0:
@@ -1350,6 +1352,41 @@ class FileInPackage:
                 return the_file_ref
             else:
                 return docassemble.base.functions.package_template_filename(self.fileref, package=self.package)
+    def paths(self, the_user_dict=dict()):
+        if self.area == 'template':
+            result = []
+            if self.is_code:
+                if len(the_user_dict) == 0:
+                    raise Exception("FileInPackage.path: called with empty dict")
+                the_file_refs = eval(self.code, the_user_dict)
+                if not isinstance(the_file_refs, list):
+                    the_file_refs = [the_file_refs]
+                for the_file_ref in the_file_refs:
+                    if the_file_ref.__class__.__name__ == 'DAFile':
+                        result.append(the_file_ref.path())
+                    elif the_file_ref.__class__.__name__ == 'DAFileList' and len(the_file_ref.elements) > 0:
+                        for item in the_file_ref.elements:
+                            result.append(item.path())
+                    elif the_file_ref.__class__.__name__ == 'DAStaticFile':
+                        result.append(the_file_ref.path())
+                    elif re.search(r'^https?://', str(the_file_ref)):
+                        temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
+                        try:
+                            urlretrieve(url_sanitize(str(the_file_ref)), temp_template_file.name)
+                        except Exception as err:
+                            raise DAError("FileInPackage: error downloading " + str(the_file_ref) + ": " + str(err))
+                        result.append(temp_template_file.name)
+                    else:
+                        result.append(the_file_ref)
+            else:
+                result.append(docassemble.base.functions.package_template_filename(self.fileref, package=self.package))
+            final_result = []
+            for the_file_ref in result:
+                if not str(the_file_ref).startswith('/'):
+                    final_result.append(docassemble.base.functions.package_template_filename(str(the_file_ref), package=self.package))
+                else:
+                    final_result.append(the_file_ref)
+            return final_result
 
 class FileOnServer:
     def __init__(self, fileref, question):
@@ -1431,7 +1468,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list'):
                     logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -2470,6 +2507,10 @@ class Question:
             if 'question' not in data:
                 raise DAError("A css class can only accompany a question." + self.idebug(data))
             self.css_class = TextObject(definitions + str(data['css class']), question=self)
+        if 'table css class' in data:
+            if 'question' not in data:
+                raise DAError("A table css class can only accompany a question." + self.idebug(data))
+            self.table_css_class = TextObject(definitions + str(data['table css class']), question=self)
         if 'question' in data:
             self.content = TextObject(definitions + str(data['question']), question=self)
         if 'subquestion' in data:
@@ -2578,6 +2619,10 @@ class Question:
             self.question_metadata = recursive_textobject_or_primitive(data['question metadata'], self)
         if 'under' in data:
             self.undertext = TextObject(definitions + str(data['under']), question=self)
+        if 'pre' in data:
+            self.pretext = TextObject(definitions + str(data['pre']), question=self)
+        if 'post' in data:
+            self.posttext = TextObject(definitions + str(data['post']), question=self)
         if 'right' in data:
             self.righttext = TextObject(definitions + str(data['right']), question=self)
         if 'check in' in data:
@@ -3113,6 +3158,21 @@ class Question:
                                     js_info['sign'] = True
                                 else:
                                     js_info['sign'] = False
+                                js_info['mode'] = 0
+                                js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
+                                js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                field_info['extras']['show_if_js'] = js_info
+                            elif key == 'js disable if' or key == 'js enable if':
+                                if not isinstance(field[key], str):
+                                    raise DAError("A js disable if or js enable if expression must be a string" + self.idebug(data))
+                                js_info = dict()
+                                if key == 'js enable if':
+                                    js_info['sign'] = True
+                                else:
+                                    js_info['sign'] = False
+                                js_info['mode'] = 1
                                 js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
                                 js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
                                 if 'extras' not in field_info:
@@ -3126,6 +3186,8 @@ class Question:
                                     if 'variable' in field[key] and 'is' in field[key]:
                                         if 'js show if' in field or 'js hide if' in field:
                                             raise DAError("You cannot mix js show if and non-js show if" + self.idebug(data))
+                                        if 'js disable if' in field or 'js enable if' in field:
+                                            raise DAError("You cannot mix js disable if and non-js show if" + self.idebug(data))
                                         field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
                                         if isinstance(field[key]['is'], str):
                                             field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
@@ -3149,6 +3211,41 @@ class Question:
                                     field_info['extras']['show_if_sign'] = 1
                                 else:
                                     field_info['extras']['show_if_sign'] = 0
+                                field_info['extras']['show_if_mode'] = 0
+                            elif key == 'disable if' or key == 'enable if':
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                if isinstance(field[key], dict):
+                                    showif_valid = False
+                                    if 'variable' in field[key] and 'is' in field[key]:
+                                        if 'js show if' in field or 'js hide if' in field:
+                                            raise DAError("You cannot mix js show if and non-js disable if" + self.idebug(data))
+                                        if 'js disable if' in field or 'js enable if' in field:
+                                            raise DAError("You cannot mix js disable if and non-js disable if" + self.idebug(data))
+                                        field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
+                                        if isinstance(field[key]['is'], str):
+                                            field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
+                                        else:
+                                            field_info['extras']['show_if_val'] = TextObject(str(field[key]['is']))
+                                        showif_valid = True
+                                    if 'code' in field[key]:
+                                        field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
+                                        self.find_fields_in(field[key]['code'])
+                                        showif_valid = True
+                                    if not showif_valid:
+                                        raise DAError("The keys of '" + key + "' must be 'variable' and 'is,' or 'code.'" + self.idebug(data))
+                                elif isinstance(field[key], list):
+                                    raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
+                                elif isinstance(field[key], str):
+                                    field_info['extras']['show_if_var'] = safeid(field[key].strip())
+                                    field_info['extras']['show_if_val'] = TextObject('True')
+                                else:
+                                    raise DAError("Invalid variable name in disable if/enable if")
+                                if key == 'enable if':
+                                    field_info['extras']['show_if_sign'] = 1
+                                else:
+                                    field_info['extras']['show_if_sign'] = 0
+                                field_info['extras']['show_if_mode'] = 1
                             elif key == 'default' or key == 'hint' or key == 'help':
                                 if not isinstance(field[key], dict) and not isinstance(field[key], list):
                                     field_info[key] = TextObject(definitions + str(field[key]), question=self)
@@ -4006,39 +4103,59 @@ class Question:
                             raise DAError('Valid formats cannot include "rtf to docx" when "docx template file" is used' + self.idebug(target))
                     else:
                         target['valid formats'] = ['docx', 'pdf']
-                if not isinstance(target[template_type + ' template file'], (str, dict)):
-                    raise DAError(template_type + ' template file supplied to attachment must be a string or a dict' + self.idebug(target))
+                if template_type == 'docx':
+                    if not isinstance(target['docx template file'], (str, dict, list)):
+                        raise DAError(template_type + ' template file supplied to attachment must be a string, dict, or list' + self.idebug(target))
+                    if not isinstance(target['docx template file'], list):
+                        target[template_type + ' template file'] = [target['docx template file']]
+                else:
+                    if not isinstance(target[template_type + ' template file'], (str, dict)):
+                        raise DAError(template_type + ' template file supplied to attachment must be a string or dict' + self.idebug(target))
                 if field_mode == 'auto':
                     options['fields'] = 'auto'
                 elif not isinstance(target['fields'], (list, dict)):
                     raise DAError('fields supplied to attachment must be a list or dictionary' + self.idebug(target))
                 target['content'] = ''
-                options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
-                if template_type == 'docx' and isinstance(target[template_type + ' template file'], str):
-                    the_docx_path = options['docx_template_file'].path()
-                    if not os.path.isfile(the_docx_path):
-                        raise DAError("Missing docx template file " + os.path.basename(the_docx_path))
-                    try:
-                        docx_template = docassemble.base.file_docx.DocxTemplate(the_docx_path)
-                        the_env = custom_jinja_env()
-                        the_xml = docx_template.get_xml()
-                        the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
-                        the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
-                        the_xml = docx_template.patch_xml(the_xml)
-                        parsed_content = the_env.parse(the_xml)
-                    except TemplateError as the_error:
-                        if the_error.filename is None:
-                            try:
-                                the_error.filename = os.path.basename(options['docx_template_file'].path())
-                            except:
-                                pass
-                        if hasattr(the_error, 'lineno') and the_error.lineno is not None:
-                            line_number = max(the_error.lineno - 4, 0)
-                            the_error.docx_context = map(lambda x: re.sub(r'<[^>]+>', '', x), the_xml.splitlines()[line_number:(line_number + 7)])
-                        raise the_error
-                    for key in jinja2meta.find_undeclared_variables(parsed_content):
-                        if not key.startswith('_'):
-                            self.mako_names.add(key)
+                if template_type == 'docx':
+                    options[template_type + '_template_file'] = [FileInPackage(item, 'template', package=self.package) for item in target['docx template file']]
+                    for item in target['docx template file']:
+                        if not isinstance(item, (str, dict)):
+                            raise DAError('docx template file supplied to attachment must be a string or dict' + self.idebug(target))
+                    template_files = []
+                    for template_file in options['docx_template_file']:
+                        if not template_file.is_code:
+                            the_docx_path = template_file.path()
+                            if not os.path.isfile(the_docx_path):
+                                raise DAError("Missing docx template file " + os.path.basename(the_docx_path))
+                            template_files.append(the_docx_path)
+                    if len(template_files):
+                        if len(template_files) == 1:
+                            the_docx_path = template_files[0]
+                        else:
+                            the_docx_path = docassemble.base.file_docx.concatenate_files(template_files)
+                        try:
+                            docx_template = docassemble.base.file_docx.DocxTemplate(the_docx_path)
+                            the_env = custom_jinja_env()
+                            the_xml = docx_template.get_xml()
+                            the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
+                            the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
+                            the_xml = docx_template.patch_xml(the_xml)
+                            parsed_content = the_env.parse(the_xml)
+                        except TemplateError as the_error:
+                            if the_error.filename is None:
+                                try:
+                                    the_error.filename = os.path.basename(options['docx_template_file'].path())
+                                except:
+                                    pass
+                            if hasattr(the_error, 'lineno') and the_error.lineno is not None:
+                                line_number = max(the_error.lineno - 4, 0)
+                                the_error.docx_context = map(lambda x: re.sub(r'<[^>]+>', '', x), the_xml.splitlines()[line_number:(line_number + 7)])
+                            raise the_error
+                        for key in jinja2meta.find_undeclared_variables(parsed_content):
+                            if not key.startswith('_'):
+                                self.mako_names.add(key)
+                else:
+                    options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
                 if field_mode == 'manual':
                     options['fields'] = recursive_textobject(target['fields'], self)
                     if 'code' in target:
@@ -4286,8 +4403,16 @@ class Question:
             extras['cssClass'] = user_dict['_internal']['css class']
         elif self.language in self.interview.default_screen_parts and 'css class' in self.interview.default_screen_parts[self.language]:
             extras['cssClass'] = self.interview.default_screen_parts[self.language]['css class'].text(user_dict)
-        elif 'css_class' in the_default_titles:
+        elif 'css class' in the_default_titles:
             extras['cssClass'] = the_default_titles['css class']
+        if hasattr(self, 'table_css_class') and self.table_css_class is not None:
+            extras['tableCssClass'] = self.table_css_class.text(user_dict)
+        elif 'table css class' in user_dict['_internal'] and user_dict['_internal']['table css class'] is not None:
+            extras['tableCssClass'] = user_dict['_internal']['table css class']
+        elif self.language in self.interview.default_screen_parts and 'table css class' in self.interview.default_screen_parts[self.language]:
+            extras['tableCssClass'] = self.interview.default_screen_parts[self.language]['table css class'].text(user_dict)
+        elif 'table css class' in the_default_titles:
+            extras['tableCssClass'] = the_default_titles['table css class']
         if hasattr(self, 'undertext') and self.undertext is not None:
             extras['underText'] = self.undertext.text(user_dict)
         elif 'under' in user_dict['_internal'] and user_dict['_internal']['under'] is not None:
@@ -4296,6 +4421,22 @@ class Question:
             extras['underText'] = self.interview.default_screen_parts[self.language]['under'].text(user_dict)
         elif 'under' in the_default_titles:
             extras['underText'] = the_default_titles['under']
+        if hasattr(self, 'pretext') and self.pretext is not None:
+            extras['pre text'] = self.pretext.text(user_dict)
+        elif 'pre' in user_dict['_internal'] and user_dict['_internal']['pre'] is not None:
+            extras['pre text'] = user_dict['_internal']['pre']
+        elif self.language in self.interview.default_screen_parts and 'pre' in self.interview.default_screen_parts[self.language]:
+            extras['pre text'] = self.interview.default_screen_parts[self.language]['pre'].text(user_dict)
+        elif 'pre' in the_default_titles:
+            extras['pre text'] = the_default_titles['pre']
+        if hasattr(self, 'posttext') and self.posttext is not None:
+            extras['post text'] = self.posttext.text(user_dict)
+        elif 'post' in user_dict['_internal'] and user_dict['_internal']['post'] is not None:
+            extras['post text'] = user_dict['_internal']['post']
+        elif self.language in self.interview.default_screen_parts and 'post' in self.interview.default_screen_parts[self.language]:
+            extras['post text'] = self.interview.default_screen_parts[self.language]['post'].text(user_dict)
+        elif 'post' in the_default_titles:
+            extras['post text'] = the_default_titles['post']
         if hasattr(self, 'righttext') and self.righttext is not None:
             extras['rightText'] = self.righttext.text(user_dict)
         elif 'right' in user_dict['_internal'] and user_dict['_internal']['right'] is not None:
@@ -4304,12 +4445,12 @@ class Question:
             extras['rightText'] = self.interview.default_screen_parts[self.language]['right'].text(user_dict)
         elif 'right' in the_default_titles:
             extras['rightText'] = the_default_titles['right']
-        for screen_part in ('pre', 'post', 'footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window'):
+        for screen_part in ('footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window'):
             if screen_part in user_dict['_internal'] and user_dict['_internal'][screen_part] is not None:
                 extras[screen_part + ' text'] = user_dict['_internal'][screen_part]
         if self.language in self.interview.default_screen_parts:
             for screen_part in self.interview.default_screen_parts[self.language]:
-                if screen_part in ('pre', 'post', 'footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window') and (screen_part + ' text') not in extras:
+                if screen_part in ('footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window') and (screen_part + ' text') not in extras:
                     extras[screen_part + ' text'] = self.interview.default_screen_parts[self.language][screen_part].text(user_dict)
         for key, val in the_default_titles.items():
             if key in ('pre', 'post', 'footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window') and (key + ' text') not in extras:
@@ -4540,7 +4681,7 @@ class Question:
                     if 'show_if_js' in field.extras:
                         if 'show_if_js' not in extras:
                             extras['show_if_js'] = dict()
-                        extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=copy.deepcopy(field.extras['show_if_js']['vars']), sign=field.extras['show_if_js']['sign'])
+                        extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=copy.deepcopy(field.extras['show_if_js']['vars']), sign=field.extras['show_if_js']['sign'], mode=field.extras['show_if_js']['mode'])
                     if 'field metadata' in field.extras:
                         if 'field metadata' not in extras:
                             extras['field metadata'] = dict()
@@ -5040,7 +5181,7 @@ class Question:
                         if 'show_if_js' in field.extras:
                             if 'show_if_js' not in extras:
                                 extras['show_if_js'] = dict()
-                            extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=copy.deepcopy(field.extras['show_if_js']['vars']), sign=field.extras['show_if_js']['sign'])
+                            extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=copy.deepcopy(field.extras['show_if_js']['vars']), sign=field.extras['show_if_js']['sign'], mode=field.extras['show_if_js']['mode'])
                         if 'field metadata' in field.extras:
                             if 'field metadata' not in extras:
                                 extras['field metadata'] = dict()
@@ -5414,7 +5555,11 @@ class Question:
 
                         except TemplateError as the_error:
                             if (not hasattr(the_error, 'filename')) or the_error.filename is None:
-                                the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path(the_user_dict=the_user_dict))
+                                docx_paths = []
+                                for item in attachment['options']['docx_template_file']:
+                                    for subitem in item.paths(the_user_dict=the_user_dict):
+                                        docx_paths.append(os.path.basename(subitem))
+                                the_error.filename = ', '.join(docx_paths)
                             #logmessage("TemplateError:\n" + traceback.format_exc())
                             raise the_error
                         docassemble.base.functions.reset_context()
@@ -5685,7 +5830,17 @@ class Question:
                     float_formatter = None
                 if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
                     if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
-                        result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path(the_user_dict=the_user_dict))
+                        docx_paths = []
+                        for docx_reference in attachment['options']['docx_template_file']:
+                            for docx_path in docx_reference.paths(the_user_dict=the_user_dict):
+                                if not os.path.isfile(docx_path):
+                                    raise DAError("Missing docx template file " + os.path.basename(docx_path))
+                                docx_paths.append(docx_path)
+                        if len(docx_paths) == 1:
+                            docx_path = docx_paths[0]
+                        else:
+                            docx_path = docassemble.base.file_docx.concatenate_files(docx_paths)
+                        result['template'] = docassemble.base.file_docx.DocxTemplate(docx_path)
                         if result['hyperlink_style'] and result['hyperlink_style'] in result['template'].docx.styles:
                             result['template'].da_hyperlink_style = result['hyperlink_style']
                         elif 'Hyperlink' in result['template'].docx.styles:
@@ -6181,7 +6336,7 @@ class Interview:
     def get_title(self, the_user_dict, status=None, converter=None):
         if converter is None:
             converter = lambda y: y
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'), ('css class', 'css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
         title = dict()
         for title_name, title_abb in mapping:
             if '_internal' in the_user_dict and title_name in the_user_dict['_internal'] and the_user_dict['_internal'][title_name] is not None:
@@ -6397,7 +6552,7 @@ class Interview:
                     recursive_update(self.consolidated_metadata[key], val)
                 else:
                     self.consolidated_metadata[key] = val
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
         self.default_title = {'*': dict()}
         for metadata in self.metadata:
             for title_name, title_abb in mapping:

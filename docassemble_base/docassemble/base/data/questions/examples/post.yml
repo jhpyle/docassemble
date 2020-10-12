@@ -1,0 +1,20 @@
+metadata:
+  title: Text after the question
+  documentation: "https://docassemble.org/docs/questions.html#post"
+---
+question: |
+  What is the airspeed velocity of an
+  unladen swallow?
+fields:
+  - Velocity: swallow_velocity
+under: |
+  Note: if you did not catch this
+  movie reference, you need to
+  improve your cultural literacy.
+post: |
+  This is the `post`, which comes
+  after `under`.
+---
+question: |
+  The velocity is ${ swallow_velocity }.
+mandatory: True

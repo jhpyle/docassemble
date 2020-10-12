@@ -137,6 +137,11 @@ def include_docx_template(template_file, **kwargs):
         template_path = package_template_filename(template_file, package=this_thread.current_package)
     sd = this_thread.misc['docx_template'].new_subdoc()
     sd.subdocx = Document(template_path)
+    if '_inline' in kwargs:
+        single_paragraph = True
+        del kwargs['_inline']
+    else:
+        single_paragraph = False
 
     # We need to keep a copy of the subdocs so we can fix up the master template in the end (in parse.py)
     # Given we're half way through processing the template, we can't fix the master template here
@@ -158,6 +163,8 @@ def include_docx_template(template_file, **kwargs):
     if 'docx_include_count' not in this_thread.misc:
         this_thread.misc['docx_include_count'] = 0
     this_thread.misc['docx_include_count'] += 1
+    if single_paragraph:
+        return re.sub(r'<w:p[^>]*>\s*(.*)</w:p>\s*', r'\1', str(first_paragraph._p.xml), flags=re.DOTALL)
     return sd
 
 def get_children(descendants, parsed):

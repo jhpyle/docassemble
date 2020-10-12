@@ -3937,6 +3937,9 @@ class DATemplate(DAObject):
     def show(self, **kwargs):
         """Displays the contents of the template."""
         return str(self)
+    def show_as_markdown(self, **kwargs):
+        """Displays the contents of the template."""
+        return str(self.content)
     def __str__(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             #return str(self.content)
@@ -4084,18 +4087,20 @@ class DALazyTemplate(DAObject):
         the_args['question'] = docassemble.base.functions.this_thread.current_question
         return docassemble.base.filter.markdown_to_html(self.content, **the_args)
     @property
-    def subject(self):
+    def subject(self, **kwargs):
         if not hasattr(self, 'source_subject'):
             raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)
+        user_dict_copy.update(kwargs)
         return self.source_subject.text(user_dict_copy).rstrip()
     @property
-    def content(self):
+    def content(self, **kwargs):
         if not hasattr(self, 'source_content'):
             raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)
+        user_dict_copy.update(kwargs)
         return self.source_content.text(user_dict_copy).rstrip()
     @property
     def decorations(self):
@@ -4116,6 +4121,14 @@ class DALazyTemplate(DAObject):
             content = re.sub(r'\\_', r'\\\\_', content)
             return str(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
         return content
+    def show_as_markdown(self, **kwargs):
+        """Displays the contents of the template as Markdown, even in the DOCX context."""
+        if not hasattr(self, 'source_content'):
+            raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
+        user_dict_copy = copy.copy(self.userdict)
+        user_dict_copy.update(self.tempvars)
+        user_dict_copy.update(kwargs)
+        return self.source_content.text(user_dict_copy).rstrip()
     def __str__(self):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             content = self.content

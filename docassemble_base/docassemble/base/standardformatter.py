@@ -903,15 +903,23 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if 'ml_train' in field.extras:
                         ml_info[field.saveas]['train'] = status.extras['ml_train'][field.number]
                 if 'show_if_var' in field.extras and 'show_if_val' in status.extras:
-                    if hasattr(field, 'saveas'):
-                        fieldlist.append('                <div style="display: none;" class="dashowif" data-saveas="' + escape_id(field.saveas) + '" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(str(status.extras['show_if_val'][field.number])) + '>\n')
+                    if field.extras['show_if_mode'] == 0:
+                        display_style = 'style="display: none;" '
                     else:
-                        fieldlist.append('                <div style="display: none;" class="dashowif" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(str(status.extras['show_if_val'][field.number])) + '>\n')
+                        display_style = ''
+                    if hasattr(field, 'saveas'):
+                        fieldlist.append('                <div ' + display_style + 'class="dashowif" data-saveas="' + escape_id(field.saveas) + '" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-mode="' + str(field.extras['show_if_mode']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(str(status.extras['show_if_val'][field.number])) + '>\n')
+                    else:
+                        fieldlist.append('                <div ' + display_style + 'class="dashowif" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-mode="' + str(field.extras['show_if_mode']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(str(status.extras['show_if_val'][field.number])) + '>\n')
                 if 'show_if_js' in field.extras:
-                    if hasattr(field, 'saveas'):
-                        fieldlist.append('                <div style="display: none;" class="dajsshowif" data-saveas="' + escape_id(field.saveas) + '" data-jsshowif=' + myb64doublequote(json.dumps(status.extras['show_if_js'][field.number])) + '>\n')
+                    if status.extras['show_if_js'][field.number]['mode'] == 0:
+                        display_style = 'style="display: none;" '
                     else:
-                        fieldlist.append('                <div style="display: none;" class="dajsshowif" data-jsshowif=' + myb64doublequote(json.dumps(status.extras['show_if_js'][field.number])) + '>\n')
+                        display_style = ''
+                    if hasattr(field, 'saveas'):
+                        fieldlist.append('                <div ' + display_style + 'class="dajsshowif" data-saveas="' + escape_id(field.saveas) + '" data-jsshowif=' + myb64doublequote(json.dumps(status.extras['show_if_js'][field.number])) + '>\n')
+                    else:
+                        fieldlist.append('                <div ' + display_style + 'class="dajsshowif" data-jsshowif=' + myb64doublequote(json.dumps(status.extras['show_if_js'][field.number])) + '>\n')
             if hasattr(field, 'datatype'):
                 if field.datatype in custom_types:
                     field_class = ' da-field-container ' + custom_types[field.datatype]['container_class']

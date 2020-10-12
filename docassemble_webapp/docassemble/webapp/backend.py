@@ -274,6 +274,14 @@ def get_info_from_file_number_with_uids(*pargs, **kwargs):
     return get_info_from_file_number(*pargs, **kwargs)
 
 
+classes = daconfig['table css class'].split(',')
+DEFAULT_TABLE_CLASS = json.dumps(classes[0].strip())
+if len(classes) > 1:
+    DEFAULT_THEAD_CLASS = json.dumps(classes[1].strip())
+else:
+    DEFAULT_THEAD_CLASS = None
+del classes
+
 docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
                                          default_dialect=DEFAULT_DIALECT,
@@ -299,7 +307,9 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          server_sql_set=sql_set,
                                          server_sql_delete=sql_delete,
                                          server_sql_keys=sql_keys,
-                                         alchemy_url=docassemble.webapp.user_database.alchemy_url)
+                                         alchemy_url=docassemble.webapp.user_database.alchemy_url,
+                                         default_table_class=DEFAULT_TABLE_CLASS,
+                                         default_thead_class=DEFAULT_THEAD_CLASS)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()

@@ -1258,10 +1258,22 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                         #logmessage("string is now " + str(a) + "\n")
     a = html_filter(str(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width, external=external)
     #logmessage("before: " + a)
+    if status and status.extras.get('tableCssClass', None):
+        classes = status.extras['tableCssClass'].split(',')
+        table_class = json.dumps(classes[0].strip())
+        if len(classes) > 1:
+            thead_class = json.dumps(classes[1].strip())
+        else:
+            thead_class = None
+    else:
+        table_class = server.default_table_class
+        thead_class = server.default_thead_class
+    a = re.sub(r'<(/?)table', r'<\1TABLE', a)
+    a = re.sub(r'<thead>', r'<THEAD>', a)
     if use_pandoc:
         converter = pandoc.MyPandoc()
         converter.output_format = 'html'
-        converter.input_content = str(a)
+        converter.input_content = a
         converter.convert(question)
         result = converter.output_content
     else:
@@ -1270,10 +1282,14 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         except:
             # Try again because sometimes it fails randomly and maybe trying again will work.
             result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
-    result = re.sub(r'<table>', r'<table class="table table-striped">', result)
+    result = re.sub(r'<table>', r'<div class="table-responsive"><table class=' + table_class + '>', result)
+    if thead_class:
+        result = re.sub(r'<thead>', r'<thead class=' + thead_class + '>', result)
+    result = re.sub(r'</table>', r'</table></div>', result)
+    result = re.sub(r'<(/?)TABLE', r'<\1table', result)
+    result = re.sub(r'<THEAD>', r'<thead>', result)
     result = re.sub(r'<(t[dh]) align="(right|left|center)">', r'<\1 class="text-\2">', result)
     result = re.sub(r'<blockquote>', r'<blockquote class="blockquote">', result)
-    #result = re.sub(r'<table>', r'<table class="datable">', result)
     result = re.sub(r'<a href="(.*?)"', lambda x: link_rewriter(x, status), result)
     if do_terms and question is not None and term_start.search(result):
         lang = docassemble.base.functions.get_language()

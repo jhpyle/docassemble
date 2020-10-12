@@ -499,6 +499,8 @@ def load(**kwargs):
         daconfig['root'] = '/'
     if 'web server' not in daconfig or not daconfig['web server']:
         daconfig['web server'] = 'nginx'
+    if 'table css class' not in daconfig or not isinstance(daconfig['table css class'], str):
+        daconfig['table css class'] = 'table table-striped'
     if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
         messages = list()
         for env_var, key in (('DBPREFIX', 'prefix'), ('DBNAME', 'name'), ('DBUSER', 'user'), ('DBPASSWORD', 'password'), ('DBHOST', 'host'), ('DBPORT', 'port'), ('DBTABLEPREFIX', 'table prefix'), ('DBBACKUP', 'backup')):

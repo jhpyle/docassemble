@@ -851,6 +851,8 @@ from bs4 import BeautifulSoup
 import collections
 import pandas
 
+START_TIME = time.time()
+
 import importlib
 def import_necessary():
     modules_to_import = daconfig.get('preloaded modules', None)
@@ -5067,6 +5069,14 @@ def cleanup_sessions():
     return render_template('base_templates/blank.html')
 
 ready_file = os.path.join(os.path.dirname(WEBAPP_PATH), 'ready')
+
+@app.route("/health_status", methods=['GET'])
+def health_status():
+    ok = True
+    if request.args.get('ready', False):
+        if not os.path.isfile(ready_file):
+            ok = False
+    return jsonify({'ok': ok, 'server_start_time': START_TIME, 'version': da_version})
 
 @app.route("/health_check", methods=['GET'])
 def health_check():
@@ -9970,6 +9980,7 @@ def index(action_argument=None, refer=None):
           var showIfDiv = this;
           var jsInfo = JSON.parse(atob($(this).data('jsshowif')));
           var showIfSign = jsInfo['sign'];
+          var showIfMode = jsInfo['mode'];
           var jsExpression = jsInfo['expression'];
           var n = jsInfo['vars'].length;
           for (var i = 0; i < n; ++i){
@@ -10004,7 +10015,9 @@ def index(action_argument=None, refer=None):
                 var resultt = eval(jsExpression);
                 if(resultt){
                   if (showIfSign){
-                    $(showIfDiv).show(speed);
+                    if (showIfMode == 0){
+                      $(showIfDiv).show(speed);
+                    }
                     $(showIfDiv).data('isVisible', '1');
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
@@ -10012,7 +10025,9 @@ def index(action_argument=None, refer=None):
                     });
                   }
                   else{
-                    $(showIfDiv).hide(speed);
+                    if (showIfMode == 0){
+                      $(showIfDiv).hide(speed);
+                    }
                     $(showIfDiv).data('isVisible', '0');
                     $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                     $(showIfDiv).find('input.combobox').each(function(){
@@ -10022,7 +10037,9 @@ def index(action_argument=None, refer=None):
                 }
                 else{
                   if (showIfSign){
-                    $(showIfDiv).hide(speed);
+                    if (showIfMode == 0){
+                      $(showIfDiv).hide(speed);
+                    }
                     $(showIfDiv).data('isVisible', '0');
                     $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                     $(showIfDiv).find('input.combobox').each(function(){
@@ -10030,7 +10047,9 @@ def index(action_argument=None, refer=None):
                     });
                   }
                   else{
-                    $(showIfDiv).show(speed);
+                    if (showIfMode == 0){
+                      $(showIfDiv).show(speed);
+                    }
                     $(showIfDiv).data('isVisible', '1');
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
@@ -10067,6 +10086,7 @@ def index(action_argument=None, refer=None):
         $(".dashowif").each(function(){
           var showIfVars = [];
           var showIfSign = $(this).data('showif-sign');
+          var showIfMode = parseInt($(this).data('showif-mode'));
           var initShowIfVar = $(this).data('showif-var');
           var varName = atob(initShowIfVar);
           var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
@@ -10136,7 +10156,9 @@ def index(action_argument=None, refer=None):
               //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
               if(daShowIfCompare(theVal, showIfVal)){
                 if (showIfSign){
-                  $(showIfDiv).show(speed);
+                  if (showIfMode == 0){
+                    $(showIfDiv).show(speed);
+                  }
                   $(showIfDiv).data('isVisible', '1');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                   $(showIfDiv).find('input.combobox').each(function(){
@@ -10144,7 +10166,9 @@ def index(action_argument=None, refer=None):
                   });
                 }
                 else{
-                  $(showIfDiv).hide(speed);
+                  if (showIfMode == 0){
+                    $(showIfDiv).hide(speed);
+                  }
                   $(showIfDiv).data('isVisible', '0');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                   $(showIfDiv).find('input.combobox').each(function(){
@@ -10154,7 +10178,9 @@ def index(action_argument=None, refer=None):
               }
               else{
                 if (showIfSign){
-                  $(showIfDiv).hide(speed);
+                  if (showIfMode == 0){
+                    $(showIfDiv).hide(speed);
+                  }
                   $(showIfDiv).data('isVisible', '0');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                   $(showIfDiv).find('input.combobox').each(function(){
@@ -10162,7 +10188,9 @@ def index(action_argument=None, refer=None):
                   });
                 }
                 else{
-                  $(showIfDiv).show(speed);
+                  if (showIfMode == 0){
+                    $(showIfDiv).show(speed);
+                  }
                   $(showIfDiv).data('isVisible', '1');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                   $(showIfDiv).find('input.combobox').each(function(){
@@ -13899,11 +13927,11 @@ def update_package_wait():
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package_ajax():
-    if 'taskwait' not in session:
+    if 'taskwait' not in session or 'serverstarttime' not in session:
         return jsonify(success=False)
     setup_translation()
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
-    if result.ready():
+    if result.ready() and START_TIME > session['serverstarttime']:
         #if 'taskwait' in session:
         #    del session['taskwait']
         the_result = result.get()
@@ -13978,6 +14006,8 @@ def update_package():
         return ('File not found', 404)
     if 'taskwait' in session:
         del session['taskwait']
+    if 'serverstarttime' in session:
+        del session['serverstarttime']
     #pip.utils.logging._log_state = threading.local()
     #pip.utils.logging._log_state.indentation = 0
     if request.method == 'GET' and app.config['USE_GITHUB'] and r.get('da:using_github:userid:' + str(current_user.id)) is not None:
@@ -14025,6 +14055,7 @@ def update_package():
                         install_pip_package(existing_package.name, existing_package.limitation)
         result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
         session['taskwait'] = result.id
+        session['serverstarttime'] = START_TIME
         return redirect(url_for('update_package_wait'))
     if request.method == 'POST' and form.validate_on_submit():
         #use_pip_cache = form.use_cache.data
@@ -23983,7 +24014,7 @@ def jsonify_task(result):
         if r.get(the_key) is None:
             break
     pipe = r.pipeline()
-    pipe.set(the_key, result.id)
+    pipe.set(the_key, json.dumps({'id': result.id, 'server_start_time': START_TIME}))
     pipe.expire(the_key, 3600)
     pipe.execute()
     return jsonify({'task_id': code})
@@ -24133,11 +24164,12 @@ def api_package_update_status():
     if code is None:
         return jsonify_with_status("Missing task_id", 400)
     the_key = 'da:install_status:' + str(code)
-    task_id = r.get(the_key)
-    if task_id is None:
+    task_data = r.get(the_key)
+    if task_data is None:
         return jsonify({'status': 'unknown'})
-    result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_id)
-    if result.ready():
+    task_info = json.loads(task_data.decode())
+    result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_info['id'])
+    if result.ready() and START_TIME > task_info['server_start_time']:
         r.delete(the_key)
         the_result = result.get()
         if isinstance(the_result, ReturnValue):
