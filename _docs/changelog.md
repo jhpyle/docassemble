@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.87](https://github.com/jhpyle/docassemble/releases/tag/v1.1.87) - 2020-10-14
+
+### Fixed
+- False error messages on package update screen.
+
 ## [1.1.86](https://github.com/jhpyle/docassemble/releases/tag/v1.1.86) - 2020-10-13
 
 ### Changed
