@@ -14082,6 +14082,7 @@ def update_package():
                     install_zip_package(pkgname, file_number)
                     result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                     session['taskwait'] = result.id
+                    session['serverstarttime'] = START_TIME
                     return redirect(url_for('update_package_wait'))
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
@@ -14103,6 +14104,7 @@ def update_package():
                     install_git_package(packagename, giturl, branch)
                     result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                     session['taskwait'] = result.id
+                    session['serverstarttime'] = START_TIME
                     return redirect(url_for('update_package_wait'))
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
@@ -14119,6 +14121,7 @@ def update_package():
                     install_pip_package(packagename, limitation)
                     result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                     session['taskwait'] = result.id
+                    session['serverstarttime'] = START_TIME
                     return redirect(url_for('update_package_wait'))
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
@@ -14735,6 +14738,7 @@ def create_playground_package():
                 install_zip_package('docassemble.' + pkgname, file_number)
                 result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                 session['taskwait'] = result.id
+                session['serverstarttime'] = START_TIME
                 return redirect(url_for('update_package_wait', next=url_for('playground_packages', project=current_project, file=current_package)))
                 #return redirect(url_for('playground_packages', file=current_package))
             else:

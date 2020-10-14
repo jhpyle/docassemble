@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.87] - 2020-10-14
+### Fixed
+- False error messages on package update screen.
+
 ## [1.1.86] - 2020-10-13
 ### Changed
 - Monitor disabled when `checkin interval` is zero.
