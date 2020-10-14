@@ -104,3 +104,4 @@ if 'session lifetime seconds' in daconfig:
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=daconfig['session lifetime seconds'])
 app.config['SOCIAL'] = daconfig['social']
 app.config['OG_LOCALE'] = re.sub(r'\..*', '', daconfig.get('locale', 'en_US.utf8'))
+app.config['ENABLE_MONITOR'] = daconfig.get('enable monitor', True)

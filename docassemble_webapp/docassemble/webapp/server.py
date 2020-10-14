@@ -28,6 +28,7 @@ from docassemble.base.config import daconfig, hostname, in_celery
 
 STATS = daconfig.get('collect statistics', False)
 DEBUG = daconfig.get('debug', False)
+
 if DEBUG:
     PREVENT_DEMO = False
 elif daconfig.get('allow demo', False):
@@ -2686,7 +2687,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                 if not status.question.interview.options.get('hide standard menu', False):
                     if current_user.has_role('admin', 'developer'):
                         navbar += source_menu_item
-                    if current_user.has_role('admin', 'advocate'):
+                    if current_user.has_role('admin', 'advocate') and app.config['ENABLE_MONITOR']:
                         navbar += '<a class="dropdown-item" href="' + url_for('monitor') + '">' + word('Monitor') + '</a>'
                     if current_user.has_role('admin', 'developer', 'trainer'):
                         navbar += '<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
@@ -12674,6 +12675,8 @@ def decode_dict(the_dict):
 @login_required
 @roles_required(['admin', 'advocate'])
 def monitor():
+    if not app.config['ENABLE_MONITOR']:
+        return ('File not found', 404)
     setup_translation()
     if request.method == 'GET' and needs_to_change_password():
         return redirect(url_for('user.change_password', next=url_for('monitor')))
@@ -15090,7 +15093,7 @@ def get_gd_flow():
         scope='https://www.googleapis.com/auth/drive',
         redirect_uri=url_for('google_drive_callback', _external=True),
         access_type='offline',
-        approval_prompt='force')
+        prompt='consent')
     return flow
 
 def get_gd_folder():

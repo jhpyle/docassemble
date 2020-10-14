@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.86] - 2020-10-13
+### Changed
+- Monitor disabled when `checkin interval` is zero.
+### Fixed
+- Potential OAuth2 issue with Google Drive.
+
 ## [1.1.85] - 2020-10-12
 ### Added
 - The `table css class` screen part.
