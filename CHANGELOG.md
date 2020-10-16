@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.1.88] - 2020-10-16
+### Added
+- The `required privileges for initiating` specifier under `metadata`.
+### Changed
+- The JSON format of questions now includes analytics information.
+### Fixed
+- The `delete_variables` feature of `/api/session` did not work when
+  passing the request in JSON format.
+
 ## [1.1.87] - 2020-10-14
 ### Fixed
 - False error messages on package update screen.
@@ -1017,7 +1026,7 @@
 ### Added
 - The `help generator` and `image generator` field modifiers.
 ### Fixed
-- Error when `code` was used with `content file` and the code 
+- Error when `code` was used with `content file` and the code
   returned a list.
 - Backup of Redis database when password is used.
 

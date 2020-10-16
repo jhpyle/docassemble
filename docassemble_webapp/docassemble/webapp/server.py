@@ -4842,6 +4842,8 @@ def github_configure():
         return redirect(uri)
     http = credentials.authorize(httplib2.Http())
     found = False
+    resp, content = http.request("https://api.github.com/repos/jhpyle/docassemble/pulls/302", "GET")
+    raise DAError(content)
     resp, content = http.request("https://api.github.com/user/emails", "GET")
     if int(resp['status']) == 200:
         user_info_list = json.loads(content.decode())
@@ -5763,11 +5765,17 @@ def index(action_argument=None, refer=None):
             if reset_interview and session_info is not None:
                 reset_user_dict(session_info['uid'], yaml_filename)
             if current_user.is_anonymous:
+                if not interview.allowed_to_initiate(is_anonymous=True):
+                    delete_session_for_interview(yaml_filename)
+                    raise DAError(word("You are not allowed to access this interview."), code=403)
                 if not interview.allowed_to_access(is_anonymous=True):
                     delete_session_for_interview(yaml_filename)
                     flash(word("You need to be logged in to access this interview."), "info")
                     sys.stderr.write("Redirecting to login because anonymous user not allowed to access this interview.\n")
                     return redirect(url_for('user.login', next=url_for('index', **request.args)))
+            elif not interview.allowed_to_initiate(has_roles=[role.name for role in current_user.roles]):
+                delete_session_for_interview(yaml_filename)
+                raise DAError(word("You are not allowed to access this interview."), code=403)
             elif not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
                 raise DAError(word('You are not allowed to access this interview.'), code=403)
             unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
@@ -23238,7 +23246,7 @@ def api_session():
                 file_variables = json.loads(post_data.get('file_variables', '{}'))
             except:
                 return jsonify_with_status("Malformed list of file variables.", 400)
-        if 'del_variables' in post_data and isinstance(post_data['delete_variables'], list):
+        if 'delete_variables' in post_data and isinstance(post_data['delete_variables'], list):
             del_variables = post_data['delete_variables']
         else:
             try:
@@ -23555,9 +23563,13 @@ def api_session_new():
 def create_new_interview(yaml_filename, secret, url_args=None, req=None):
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     if current_user.is_anonymous:
+        if not interview.allowed_to_initiate(is_anonymous=True):
+            raise Exception('Insufficient permissions to run this interview.')
         if not interview.allowed_to_access(is_anonymous=True):
             raise Exception('Insufficient permissions to run this interview.')
     else:
+        if (not current_user.has_role('admin')) and (not interview.allowed_to_initiate(has_roles=[role.name for role in current_user.roles])):
+            raise Exception('Insufficient permissions to run this interview.')
         if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
             raise Exception('Insufficient permissions to run this interview.')
     if req is None:

@@ -692,6 +692,12 @@ class InterviewStatus:
                 result[param] = self.extras[param].rstrip()
         if 'questionMetadata' in self.extras:
             result['question_metadata'] = self.extras['questionMetadata']
+        if 'segment' in self.extras:
+            result['segment'] = self.extras['segment']
+        if 'ga_id' in self.extras:
+            result['ga_id'] = self.extras['ga_id']
+        if hasattr(self.question, 'id'):
+            result['id'] = self.question.id
         if hasattr(self, 'audiovideo') and self.audiovideo is not None:
             audio_result = docassemble.base.filter.get_audio_urls(self.audiovideo)
             video_result = docassemble.base.filter.get_video_urls(self.audiovideo)
@@ -6385,6 +6391,37 @@ class Interview:
                     require_login = True if metadata['require login'] else False
             if require_login:
                 return False
+        return True
+    def allowed_to_initiate(self, is_anonymous=False, has_roles=None):
+        if not self.allowed_to_access(is_anonymous=is_anonymous, has_roles=has_roles):
+            return False
+        roles = set()
+        is_none = False
+        for metadata in self.metadata:
+            if 'required privileges for initiating' in metadata:
+                roles = set()
+                is_none = False
+                privs = metadata['required privileges for initiating']
+                if isinstance(privs, list) or (hasattr(privs, 'instanceName') and hasattr(privs, 'elements') and isinstance(privs.elements, list)):
+                    if len(privs) == 0:
+                        is_none = True
+                    else:
+                        for priv in privs:
+                            if isinstance(priv, str):
+                                roles.add(priv)
+                elif isinstance(privs, str):
+                    roles.add(privs)
+                elif isinstance(privs, NoneType):
+                    is_none = True
+        if is_none:
+            return False
+        if len(roles):
+            if is_anonymous:
+                if 'anonymous' in roles:
+                    return True
+                return False
+            if has_roles is not None:
+                return len(set(roles).intersection(set(has_roles))) > 0
         return True
     def allowed_to_see_listed(self, is_anonymous=False, has_roles=None):
         if not self.allowed_to_access(is_anonymous=is_anonymous, has_roles=has_roles):
