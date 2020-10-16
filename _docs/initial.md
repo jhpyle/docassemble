@@ -186,6 +186,17 @@ specifier also controls whether the interview will be listed.  For
 more information about the `/list` page, see the documentation for the
 [`dispatch`] configuration directive.
 
+<a name="required privileges for initiating"></a>The `required
+privileges for initiating` metadata specifier controls whether the
+user is allowed to initiate a new session.  If you set `required
+privileges for initiating: admin`, then only users with the `admin`
+privilege will be able to start a new session by visiting the URL for
+the interview.  You may want to use this if you use the [API] to
+initiate sessions and you want the [API] to be the exclusive means of
+initiating a new session.  If you set `required privileges for
+initiating: None`, then not even the administrator will be able to
+initiate a session of the interview (except by using the [API]).
+
 <a name="require login"></a>If you set `require login` to `True`, then
 a non-logged-in user will be denied access to the interview.  However,
 if `anonymous` is one of the `required privileges`, a non-logged-in
@@ -2398,3 +2409,4 @@ available as the [JavaScript] variable `daQuestionData`.
 [GitHub Pages]: https://pages.github.com/
 [GitHub repository]: {{ site.github.repository_url }}
 [`/api/session/question` API endpoint]: {{ site.baseurl}}/docs/api.html#session_question
+[API]: {{ site.baseurl}}/docs/api.html
