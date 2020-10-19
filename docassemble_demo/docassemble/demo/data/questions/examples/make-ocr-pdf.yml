@@ -1,0 +1,28 @@
+metadata:
+  title: OCR PDF
+  documentation: "https://docassemble.org/docs/objects/DAFile.make_ocr_pdf"
+  example start: 1
+  example end: 4
+---
+mandatory: True
+code: |
+  ocr_finished
+  final_screen
+---
+code: |
+  uploaded_file.make_ocr_pdf() 
+  ocr_finished = True
+---
+question: |
+  Upload a PDF file or image.
+subquestion: |
+  I will convert it to a searchable PDF.
+fields:
+  - File: uploaded_file
+    datatype: files
+---
+event: final_screen
+question: |
+  Your OCR PDF
+subquestion: |
+  ${ uploaded_file }

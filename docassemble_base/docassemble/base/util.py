@@ -2606,7 +2606,7 @@ def ocr_file_in_background(*pargs, **kwargs):
         ui_notification = pargs[1]
     else:
         ui_notification = None
-    args = dict(yaml_filename=this_thread.current_info['yaml_filename'], user=this_thread.current_info['user'], user_code=this_thread.current_info['session'], secret=this_thread.current_info['secret'], url=this_thread.current_info['url'], url_root=this_thread.current_info['url_root'], language=language, psm=psm, x=x, y=y, W=W, H=H, extra=ui_notification, message=message)
+    args = dict(yaml_filename=this_thread.current_info['yaml_filename'], user=this_thread.current_info['user'], user_code=this_thread.current_info['session'], secret=this_thread.current_info['secret'], url=this_thread.current_info['url'], url_root=this_thread.current_info['url_root'], language=language, psm=psm, x=x, y=y, W=W, H=H, extra=ui_notification, message=message, pdf=False, preserve_color=False)
     collector = server.ocr_finalize.s(**args)
     todo = list()
     for item in docassemble.base.ocr.ocr_page_tasks(image_file, **args):
@@ -2636,35 +2636,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
     ocr_resolution = get_config("ocr dpi")
     if ocr_resolution is None:
         ocr_resolution = '300'
-    langs = docassemble.base.ocr.get_available_languages()
-    if language is None:
-        language = get_language()
-    ocr_langs = get_config("ocr languages")
-    if ocr_langs is None:
-        ocr_langs = dict()
-    if language in langs:
-        lang = language
-    else:
-        if language in ocr_langs and ocr_langs[language] in langs:
-            lang = ocr_langs[language]
-        else:
-            try:
-                pc_lang = pycountry.languages.get(alpha_2=language)
-                lang_three_letter = pc_lang.alpha_3
-                if lang_three_letter in langs:
-                    lang = lang_three_letter
-                else:
-                    if 'eng' in langs:
-                        lang = 'eng'
-                    else:
-                        lang = langs[0]
-                    logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
-            except Exception as the_error:
-                if 'eng' in langs:
-                    lang = 'eng'
-                else:
-                    lang = langs[0]
-                logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang) + "; error was " + str(the_error))
+    lang = docassemble.base.ocr.get_ocr_language(language)
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     temp_directory_list = list()

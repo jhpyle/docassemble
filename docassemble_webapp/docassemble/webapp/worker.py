@@ -803,33 +803,101 @@ def ocr_page(**kwargs):
     sys.stderr.write("ocr_page started in worker\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
-    url = url_root + 'interview'
+    url_root = kwargs.get('url_root', daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/'))
+    url = kwargs.get('url', url_root + 'interview')
     with worker_controller.flaskapp.app_context():
         with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
             worker_controller.functions.reset_local_variables()
             worker_controller.functions.set_uid(kwargs['user_code'])
+            user_info = kwargs['user']
+            if not str(user_info['the_user_id']).startswith('t'):
+                user_object = worker_controller.get_user_object(user_info['theid'])
+                worker_controller.login_user(user_object, remember=False)
+            worker_controller.set_request_active(False)
             return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.ocr.ocr_page(**kwargs))
+
+def error_object(err):
+    sys.stderr.write("Error: " + str(err.__class__.__name__) + ": " + str(err))
+    error_type = err.__class__.__name__
+    error_message = str(err)
+    error_trace = None
+    worker_controller.error_notification(err, message=error_message, trace=error_trace)
+    return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace))
 
 @workerapp.task
 def ocr_finalize(*pargs, **kwargs):
     sys.stderr.write("ocr_finalize started in worker\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
-    url = url_root + 'interview'
+    url_root = kwargs.get('url_root', daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/'))
+    url = kwargs.get('url', url_root + 'interview')
     with worker_controller.flaskapp.app_context():
         with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
-            #worker_controller.functions.set_uid(kwargs['user_code'])
+            worker_controller.functions.set_uid(kwargs['user_code'])
+            user_info = kwargs['user']
+            if not str(user_info['the_user_id']).startswith('t'):
+                user_object = worker_controller.get_user_object(user_info['theid'])
+                worker_controller.login_user(user_object, remember=False)
+            worker_controller.set_request_active(False)
             if 'message' in kwargs and kwargs['message']:
                 message = kwargs['message']
             else:
                 message = worker_controller.functions.word("OCR succeeded")
-            with worker_controller.flaskapp.app_context():
-                try:
-                    return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.ocr.ocr_finalize(*pargs), extra=kwargs.get('extra', None))
-                except Exception as the_error:
-                    return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
+            try:
+                if kwargs.get('pdf', False):
+                    try:
+                        (target, dafilelist) = worker_controller.ocr.ocr_finalize(*pargs, **kwargs)
+                    except Exception as e:
+                        return error_object(e)
+                    user_info = kwargs['user']
+                    yaml_filename = kwargs['yaml_filename']
+                    session_code = kwargs['user_code']
+                    secret = kwargs['secret']
+                    if not str(user_info['the_user_id']).startswith('t'):
+                        user_object = worker_controller.get_user_object(user_info['theid'])
+                        worker_controller.login_user(user_object, remember=False)
+                    #sys.stderr.write("ocr_finalize: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
+                    worker_controller.set_request_active(False)
+                    worker_controller.obtain_lock_patiently(session_code, yaml_filename)
+                    try:
+                        steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
+                    except Exception as the_err:
+                        worker_controller.release_lock(session_code, yaml_filename)
+                        error_message = "ocr_finalize: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err)
+                        sys.stderr.write(error_message + "\n")
+                        return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=DAError))
+                    if user_dict is None:
+                        worker_controller.release_lock(session_code, yaml_filename)
+                        error_message = "ocr_finalize: dictionary could not be found"
+                        sys.stderr.write(error_message + "\n")
+                        return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=DAError))
+                    user_dict['__PDF_OCR_OBJECT'] = target
+                    try:
+                        assert worker_controller.functions.illegal_variable_name(target.instanceName) is not True
+                        for attribute in ('number', 'file_info', 'filename', 'has_specific_filename', 'ok', 'extension', 'mimetype', 'page_task', 'screen_task'):
+                            if hasattr(target, attribute):
+                                exec(target.instanceName + '.' + attribute + ' = __PDF_OCR_OBJECT.' + attribute, user_dict)
+                            else:
+                                exec(target.instanceName + '.delattr(' + repr(attribute) + ')', user_dict)
+                        if dafilelist:
+                            assert worker_controller.functions.illegal_variable_name(dafilelist) is not True
+                            exec(dafilelist.instanceName + '.elements = [' + dafilelist.instanceName + '.elements[0]]', user_dict)
+                    except Exception as the_err:
+                        worker_controller.release_lock(session_code, yaml_filename)
+                        error_message = "ocr_pdf: could not save file object: " + str(the_err.__class__.__name__) + ": " + str(the_err)
+                        sys.stderr.write(error_message + "\n")
+                        return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=DAError))
+                    del user_dict['__PDF_OCR_OBJECT']
+                    if str(user_info.get('the_user_id', None)).startswith('t'):
+                        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
+                    else:
+                        worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
+                    worker_controller.release_lock(session_code, yaml_filename)
+                    return worker_controller.functions.ReturnValue(ok=True, value=True)
+                return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.ocr.ocr_finalize(*pargs, **kwargs), extra=kwargs.get('extra', None))
+            except Exception as the_error:
+                sys.stderr.write("Error in ocr_finalize: " + the_error.__class__.__name__ + ': ' + str(the_error) + "\n")
+                return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
 
 @workerapp.task
 def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):

@@ -29,6 +29,7 @@ import copy
 import random
 #import tablib
 import pandas
+import subprocess
 from PIL import Image
 NoneType = type(None)
 
@@ -1251,9 +1252,15 @@ class DAList(DAObject):
                 item._set_instance_name_recursively(self.instanceName + '[' + str(indexno) + ']', matching=self.instanceName + '[')
             indexno += 1
     def sort(self, *pargs, **kwargs):
-        """Reorders the elements of the list and returns the object."""
+        """Reorders the elements of the list in place and returns the object."""
         self._trigger_gather()
         self.elements = sorted(self.elements, **kwargs)
+        self._reset_instance_names()
+        return self
+    def reverse(self, *pargs, **kwargs):
+        """Reverse the order of the elements of the list in place and returns the object."""
+        self._trigger_gather()
+        self.elements.reverse()
         self._reset_instance_names()
         return self
     def sort_elements(self, *pargs, **kwargs):
@@ -1324,6 +1331,15 @@ class DAList(DAObject):
         self._reset_instance_names()
         if list_truncated and hasattr(self, '_necessary_length'):
             del self._necessary_length
+    def insert(self, *pargs):
+        """Inserts an item at the given position."""
+        result = self.elements.insert(*pargs)
+        self._reset_instance_names()
+        self.there_are_any = True
+    def count(self, item):
+        """Returns the number of times item appears in the list."""
+        self._trigger_gather()
+        return self.elements.count(*pargs)
     def extend(self, the_list):
         """Adds each of the elements of the given list to the end of the list."""
         self.elements.extend(the_list)
@@ -1750,7 +1766,7 @@ class DAList(DAObject):
         index = the_args.pop(0)
         output = ''
         if kwargs.get('reorder', False):
-            output += '<a href="#" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'info btn-darevisit datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fas fa-arrow-up"></i><span class="sr-only">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'info btn-darevisit databledown"><i class="fas fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="sr-only">' + word("Move down") + '</span></a> '
+            output += '<a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + 'info btn-darevisit datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fas fa-arrow-up"></i><span class="sr-only">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + 'info btn-darevisit databledown"><i class="fas fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="sr-only">' + word("Move down") + '</span></a> '
         if self.minimum_number is not None and len(self.elements) <= self.minimum_number:
             can_delete = False
         else:
@@ -1779,13 +1795,13 @@ class DAList(DAObject):
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             if ensure_complete:
                 items += [dict(action='_da_list_ensure_complete', arguments=dict(group=self.instanceName))]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'secondary btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'secondary btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'danger btn-darevisit' + areyousure +'"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'danger btn-darevisit' + areyousure +'"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):
@@ -1829,7 +1845,7 @@ class DAList(DAObject):
             message = word(str(message))
         if url_only:
             return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
-        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' ' + docassemble.base.functions.server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
+        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
     def hook_on_gather(self):
         pass
     def hook_after_gather(self):
@@ -2595,13 +2611,13 @@ class DADict(DAObject):
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             if ensure_complete:
                 items += [dict(action='_da_dict_ensure_complete', arguments=dict(group=self.instanceName))]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'secondary btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'secondary btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + docassemble.base.functions.server.button_class_prefix + 'danger btn-darevisit' + areyousure + '"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'danger btn-darevisit' + areyousure + '"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_dict_edit', items=items)
         if kwargs.get('delete_url_only', False):
@@ -2645,7 +2661,7 @@ class DADict(DAObject):
             message = word(str(message))
         if url_only:
             return docassemble.base.functions.url_action('_da_dict_add', list=self.instanceName)
-        return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn' + size + block + ' ' + docassemble.base.functions.server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
+        return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
     def _new_elements(self):
         return dict()
     def hook_on_gather(self):
@@ -3216,6 +3232,24 @@ class DAFile(DAObject):
     def initialize(self, **kwargs):
         """Creates the file on the system if it does not already exist, and ensures that the file is ready to be used."""
         #logmessage("initialize")
+        to_delete = []
+        for key, val in kwargs.items():
+            if val is None:
+                to_delete.append(key)
+        for key in to_delete:
+            del kwargs[key]
+        if kwargs.get('reinitialize', False):
+            if hasattr(self, 'filename'):
+                del self.filename
+            if hasattr(self, 'number'):
+                del self.number
+            self.ok = False
+            self.has_specific_filename = False
+            if hasattr(self, 'file_info'):
+                del self.file_info
+            for prefix in ('page', 'screen'):
+                if hasattr(self, '_task' + prefix):
+                    delattr(self, '_task' + prefix)
         if 'filename' in kwargs and kwargs['filename']:
             self.filename = kwargs['filename']
             self.has_specific_filename = True
@@ -3229,7 +3263,7 @@ class DAFile(DAObject):
             self.markdown = kwargs['markdown']
         if 'alt_text' in kwargs:
             self.alt_text = kwargs['alt_text']
-        if 'number' in kwargs and kwargs['number'] is not None:
+        if 'number' in kwargs:
             self.number = kwargs['number']
             self.ok = True
         if not hasattr(self, 'filename'):
@@ -3265,7 +3299,7 @@ class DAFile(DAObject):
         else:
             self.file_info = server.file_number_finder(self.number)
         if 'path' not in self.file_info:
-            raise Exception("Could not retrieve file")
+            raise Exception("Could not retrieve file: " + repr(self.file_info))
         self.extension = self.file_info.get('extension', None)
         self.mimetype = self.file_info.get('mimetype', None)
         self.persistent = self.file_info['persistent']
@@ -3315,6 +3349,98 @@ class DAFile(DAObject):
         self.retrieve()
         shutil.copyfile(filepath, self.file_info['path'])
         self.retrieve()
+    def bates_number(self, *pargs, **kwargs):
+        """Makes the contents of the file a Bates-numbered of the file or, if provided, another file."""
+        docs = []
+        all_pdf = True
+        for other_file in pargs:
+            if isinstance(other_file, DAFileList):
+                for other_file_sub in other_file.elements:
+                    if not other_file._is_pdf():
+                        all_pdf = False
+                    docs.append(other_file_sub)
+            elif isinstance(other_file, DAFileCollection):
+                if not hasattr(other_file, 'pdf'):
+                    raise DAError('bates_number: DAFileCollection object did not have pdf attribute.')
+                docs.append(other_file.pdf)
+            elif isinstance(other_file, DAStaticFile):
+                if not other_file._is_pdf():
+                    all_pdf = False
+                docs.append(other_file)
+            else:
+                all_pdf = False
+                docs.append(other_file)
+        if len(docs) == 0:
+            if not other_file._is_pdf():
+                all_pdf = False
+            docs.append(self)
+        if not all_pdf:
+            import docassemble.base.util
+            docs = [docassemble.base.util.pdf_concatenate(docs).path()]
+        filename = kwargs.get('filename', None)
+        prefix = kwargs.get('prefix', 'TEST')
+        digits = kwargs.get('digits', 5)
+        start = kwargs.get('start', 1)
+        area = kwargs.get('area', None)
+        if area is None:
+            area = 'BOTTOM_RIGHT'
+        if area not in ('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT'):
+            raise DAError("bates_number: area must be one of TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, or BOTTOM_LEFT")
+        if filename is None:
+            filename = 'file.pdf'
+        args = [os.path.join(server.daconfig['modules'], 'bin', 'python'), '-m', 'docassemble.base.bates', '--prefix', str(prefix), '--digits', str(digits), '--start', str(start), '--area', area]
+        for doc in docs:
+            if isinstance(doc, str):
+                args.append(doc)
+            else:
+                args.append(doc.path())
+        the_dir = tempfile.mkdtemp()
+        try:
+            result = subprocess.run(args, cwd=the_dir, timeout=300).returncode
+        except subprocess.TimeoutExpired:
+            logmessage("bates_number: took too long")
+            result = 1
+        if result != 0:
+            raise DAError("bates_number: failure during processing; return value " + str(result) + " after " + ' '.join(args))
+        outfiles = [os.path.join(the_dir, f) for f in os.listdir(the_dir) if f.endswith('.pdf')]
+        if len(outfiles) == 0:
+            raise DAError("bates_number: no files found in " + the_dir)
+        self.initialize(filename=filename, extension='pdf', mimetype='application/pdf', reinitialize=True)
+        if len(outfiles) > 1:
+            from docassemble.base.util import pdf_concatenate
+            shutil.copyfile(pdf_concatenate(sorted(outfiles)).path(), self.file_info['path'])
+        else:
+            shutil.copyfile(outfiles[0], self.file_info['path'])
+        del self.file_info
+        self._make_pdf_thumbnail(1)
+        self.commit()
+        self.retrieve()
+    def make_ocr_pdf(self, *pargs, **kwargs):
+        """Makes the contents of the file an OCRed PDF of the file or, if provided, another file."""
+        import docassemble.base.ocr
+        lang = docassemble.base.ocr.get_ocr_language(kwargs.get('language', None))
+        docassemble.base.ocr.ocr_pdf(pargs, target=self, filename=kwargs.get('filename', None), lang=lang, psm=kwargs.get('psm', None))
+    def make_ocr_pdf_in_background(self, *pargs, **kwargs):
+        """In the background, makes the contents of the file an OCRed PDF of the file or, if provided, another file."""
+        import docassemble.base.ocr
+        lang = docassemble.base.ocr.get_ocr_language(kwargs.get('language', None))
+        args = dict(yaml_filename=docassemble.base.functions.this_thread.current_info['yaml_filename'], user=docassemble.base.functions.this_thread.current_info['user'], user_code=docassemble.base.functions.this_thread.current_info['session'], secret=docassemble.base.functions.this_thread.current_info['secret'], url=docassemble.base.functions.this_thread.current_info['url'], url_root=docassemble.base.functions.this_thread.current_info['url_root'], language=lang, psm=kwargs.get('psm', None), x=None, y=None, W=None, H=None, extra=None, message=None, pdf=True, preserve_color=kwargs.get('preserve_color', False), target=self, dafilelist=kwargs.get('dafilelist', None), filename=kwargs.get('filename', None))
+        collector = server.ocr_finalize.s(**args)
+        todo = list()
+        for image_file in pargs:
+            for item in docassemble.base.ocr.ocr_page_tasks(image_file, **args):
+                todo.append(server.ocr_page.s(**item))
+        if len(todo) == 0:
+            for item in docassemble.base.ocr.ocr_page_tasks(self, **args):
+                todo.append(server.ocr_page.s(**item))
+        the_chord = server.chord(todo)(collector)
+        return the_chord
+    def _is_pdf(self):
+        if hasattr(self, 'extension') and self.extension.lower() == 'pdf':
+            return True
+        if hasattr(self, 'mimetype') and self.mimetype == 'application/pdf':
+            return True
+        return False
     def get_docx_variables(self):
         """Returns a list of variables used by the Jinja2 templating of a DOCX template file."""
         import docassemble.base.parse
@@ -3340,7 +3466,7 @@ class DAFile(DAObject):
         c.setopt(c.URL, url)
         c.setopt(c.FOLLOWLOCATION, True)
         c.setopt(c.WRITEDATA, f)
-        c.setopt(pycurl.USERAGENT, docassemble.base.functions.server.daconfig.get('user agent', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36'))
+        c.setopt(pycurl.USERAGENT, server.daconfig.get('user agent', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36'))
         c.setopt(pycurl.COOKIEFILE, cookiefile.name)
         c.perform()
         c.close()
@@ -3350,7 +3476,7 @@ class DAFile(DAObject):
         if not hasattr(self, 'file_info'):
             self.retrieve()
         return self.file_info.get('encrypted', False)
-    def _make_pdf_thumbnail(self, page):
+    def _make_pdf_thumbnail(self, page, both_formats=False):
         """Creates a page image for the first page of a PDF file."""
         if not hasattr(self, 'file_info'):
             self.retrieve()
@@ -3359,12 +3485,48 @@ class DAFile(DAObject):
         the_path = self.file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
         if not os.path.isfile(the_path):
             server.fg_make_png_for_pdf(self, 'screen', page=page)
+        if both_formats:
+            the_path = self.file_info['path'] + 'page-' + (formatter % int(page)) + '.png'
+            if not os.path.isfile(the_path):
+                server.fg_make_png_for_pdf(self, 'page', page=page)
     def pngs_ready(self):
         """Creates page images for a PDF file."""
         self._make_pngs_for_pdf()
         if server.task_ready(self._taskscreen) and server.task_ready(self._taskpage):
             return True
         return False
+    def _delete_pngs(self):
+        self.retrieve()
+        did_something = False
+        for prefix in ('page', 'screen'):
+            test_path = self.file_info['path'] + prefix + '-in-progress'
+            if os.path.isfile(test_path):
+                while (os.path.isfile(test_path) and time.time() - os.stat(test_path)[stat.ST_MTIME]) < 30:
+                    logmessage("Waiting for test path to go away")
+                    if not os.path.isfile(test_path):
+                        break
+                    time.sleep(1)
+            if os.path.isfile(test_path) and hasattr(self, '_task' + prefix):
+                server.wait_for_task(getattr(self, '_task' + prefix))
+            if os.path.isfile(test_path):
+                did_something = True
+                os.remove(test_path)
+            if hasattr(self, '_task' + prefix):
+                delattr(self, '_task' + prefix)
+            the_dir = os.path.dirname(self.file_info['path'])
+            to_remove = []
+            for f in os.listdir(the_dir):
+                the_path = os.path.join(the_dir, f)
+                if the_path.endswith('.png') and the_path.startswith(self.file_info['path'] + prefix + '-'):
+                    to_remove.append(the_path)
+            for file_to_remove in to_remove:
+                try:
+                    os.remove(file_to_remove)
+                    did_something = True
+                except:
+                    logmessage("Unable to remove png file " + file_to_remove)
+        if did_something:
+            self.commit()
     def _make_pngs_for_pdf(self):
         if not hasattr(self, '_taskscreen'):
             setattr(self, '_taskscreen', server.make_png_for_pdf(self, 'screen'))
@@ -3384,6 +3546,13 @@ class DAFile(DAObject):
             return self.file_info['pages']
         else:
             return 1
+    def _pdf_page_path(self, page):
+        if not hasattr(self, 'number'):
+            raise Exception("Cannot get path of file without a file number.")
+        self.retrieve()
+        if 'fullpath' not in self.file_info:
+            raise Exception("fullpath not found.")
+        return self.file_info['path'] + 'page' + str(page) + '.pdf'
     def page_path(self, page, prefix, wait=True):
         """Returns a path and filename at which a PDF page image can be accessed."""
         if not hasattr(self, 'number'):
@@ -3392,7 +3561,7 @@ class DAFile(DAObject):
         if 'fullpath' not in self.file_info:
             raise Exception("fullpath not found.")
         if 'pages' not in self.file_info:
-            raise Exception("number of pages not found.")
+            raise Exception("number of pages not found. " + repr(self.file_info))
         test_path = self.file_info['path'] + prefix + '-in-progress'
         #logmessage("Test path is " + test_path)
         if wait and os.path.isfile(test_path):
@@ -3649,6 +3818,21 @@ class DAFileCollection(DAObject):
             if isinstance(the_file, InlineImage) or isinstance(the_file, Subdoc):
                 return the_file
         return ' '.join(the_files)
+    def bates_number(self, **kwargs):
+        """Makes the contents of the pdf file a Bates-numbered PDF."""
+        if not hasattr(self, 'pdf'):
+            raise DAError("Cannot call bates_number() on a DAFileCollection object without a pdf attribute.")
+        self.pdf.bates_number(**kwargs)
+    def make_ocr_pdf(self, **kwargs):
+        """Makes the contents of the pdf file an OCRed PDF."""
+        if not hasattr(self, 'pdf'):
+            raise DAError("Cannot call make_ocr_pdf() on a DAFileCollection object without a pdf attribute.")
+        self.pdf.make_ocr_pdf(**kwargs)
+    def make_ocr_pdf_in_background(self, **kwargs):
+        """In the background, makes the contents of the pdf file an OCRed PDF."""
+        if not hasattr(self, 'pdf'):
+            raise DAError("Cannot call make_ocr_pdf_in_background() on a DAFileCollection object without a pdf attribute.")
+        return self.pdf.make_ocr_pdf_in_background(**kwargs)
     def __str__(self):
         return str(self._first_file())
 
@@ -3747,6 +3931,33 @@ class DAFileList(DAList):
         for element in sorted(self.elements):
             if element.ok:
                 element.privilege_access(*pargs, **kwargs)
+    def bates_number(self, **kwargs):
+        """Makes the contents of the first file a Bates-numbered PDF of the list of files."""
+        if len(self.elements) == 0:
+            return None
+        if len(self.elements) > 1:
+            self.elements[0].bates_number(self, **kwargs)
+            self.elements = [self.elements[0]]
+        else:
+            self.elements[0].bates_number(self.elements[0], **kwargs)
+    def make_ocr_pdf(self, **kwargs):
+        """Makes the contents of the first file an OCRed PDF of the list of files."""
+        if len(self.elements) == 0:
+            return None
+        if len(self.elements) > 1:
+            self.elements[0].make_ocr_pdf(self, **kwargs)
+            self.elements = [self.elements[0]]
+        else:
+            self.elements[0].make_ocr_pdf(**kwargs)
+    def make_ocr_pdf_in_background(self, **kwargs):
+        """Makes the contents of the first file an OCRed PDF of the list of files."""
+        if len(self.elements) == 0:
+            return None
+        if len(self.elements) > 1:
+            kwargs['dafilelist'] = self
+            return self.elements[0].make_ocr_pdf_in_background(self, **kwargs)
+        else:
+            return self.elements[0].make_ocr_pdf_in_background(**kwargs)
 
 class DAStaticFile(DAObject):
     def init(self, *pargs, **kwargs):
@@ -3850,6 +4061,12 @@ class DAStaticFile(DAObject):
             del the_args['attachment']
         the_args['_question'] = docassemble.base.functions.this_thread.current_question
         return server.url_finder(self.filename, **the_args)
+    def _is_pdf(self):
+        if hasattr(self, 'extension') and self.extension.lower() == 'pdf':
+            return True
+        if hasattr(self, 'mimetype') and self.mimetype == 'application/pdf':
+            return True
+        return False
     def __str__(self):
         return str(self.show())
 
