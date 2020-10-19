@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.89](https://github.com/jhpyle/docassemble/releases/tag/v1.1.89) - 2020-10-19
+
+### Added
+- The `make_ocr_pdf()` and `make_ocr_pdf_in_background()`, and
+  `bates_number()` methods of `DAFile` and `DAFileList`.
+- The `reverse()`, `insert()`, and `count()` methods of `DAList`.
+
 ## [1.1.88](https://github.com/jhpyle/docassemble/releases/tag/v1.1.88) - 2020-10-16
 
 ### Added

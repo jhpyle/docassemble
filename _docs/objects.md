@@ -288,6 +288,14 @@ Other methods available on a `DAList` are:
   found.
 * <a name="DAList.pop"></a>`pop()` - removes an item from the list.
   Just like the [Python list] method of the same name.
+* <a name="DAList.insert"></a>`insert()` - inserts an item into the
+  list.  Just like the [Python list] method of the same name.
+* <a name="DAList.reverse"></a>`insert()` - reverses the order of
+  elements in the list.  Just like the [Python list] method of the
+  same name.
+* <a name="DAList.count"></a>`count()` - returns the number of times a
+  given item appears in the list.  Just like the [Python list] method
+  of the same name.
 * <a name="DAList.first"></a>`first()` - returns the first item of
   the list; error triggered if list is empty.
 * <a name="DAList.last"></a>`last()` - returns the last item of the
@@ -1562,7 +1570,71 @@ Then use [`code`] to initialize the object and set the contents:
 code: |
   pdf_file.initialize(extension="pdf")
   pdf_file.from_url("https://example.com/the_file.pdf")
+  pdf_file.created = True
 {% endhighlight %}
+
+<a name="DAFile.make_ocr_pdf"></a>The `.make_ocr_pdf()` method overwrites
+any existing contents of the file with an [OCR]ed [PDF] of a given file.
+
+{% include demo-side-by-side.html demo="make-ocr-pdf" %}
+
+The `make_ocr_pdf()` method accepts the following optional keyword
+arguments:
+
+* `filename`: the filename of the new PDF file that is created.
+* `preserve_color`: whether to preserve the color of the document.  By
+  default, this is `False` because the [OCR] is more accurate if the
+  document is converted to grayscale.
+* `language`: the language to use for the [OCR] (e.g., `'en'`,
+  `'fr'`).  If not specified, the language returned by
+  `get_language()` is used.  The language must be a lowercase
+  [ISO-639-1]/[ISO-639-3] code or a language code that [Tesseract]
+  uses.
+* `psm` indicates the [Tesseract] page segmentation mode.  The default
+is 6 ("assume a uniform block of text").  The choices are:
+    * 0: Orientation and script detection (OSD) only.
+    * 1: Automatic page segmentation with OSD.
+    * 2: Automatic page segmentation, but no OSD, or OCR.
+    * 3: Fully automatic page segmentation, but no OSD.
+    * 4: Assume a single column of text of variable sizes.
+    * 5: Assume a single uniform block of vertically aligned text.
+    * 6: Assume a single uniform block of text. (Default)
+    * 7: Treat the image as a single text line.
+    * 8: Treat the image as a single word.
+    * 9: Treat the image as a single word in a circle.
+    * 10: Treat the image as a single character.
+
+If you do not want to edit the file in place, you can create a new
+`DAFile` with an `objects` block and pass files that you want to OCR
+as positional parameters to `make_ocr_pdf()`.
+
+Since the [OCR] process can take a long time, you might want to use
+the `make_ocr_pdf_in_background()` method instead.
+
+{% include demo-side-by-side.html demo="make-ocr-pdf-in-background" %}
+
+<a name="DAFile.bates_number"></a>The `.bates_number()` method overwrites
+any existing contents of the file with a [Bates numbered] PDF of the
+file.
+
+{% include demo-side-by-side.html demo="bates-number" %}
+
+The `bates_number()` method accepts the following optional keyword
+arguments:
+
+* `filename`: the filename of the new PDF file that is created.
+* `prefix`: the prefix for the Bates numbers.
+* `digits`: the number of digits of your Bates numbers.
+* `start`: the number at which Bates numbering should start (default
+  is 1).
+* `area`: the area of the page where the Bates numbers should be
+  positioned.  The choices are `'TOP_LEFT'`, `'TOP_RIGHT'`,
+  `'BOTTOM_RIGHT'`, and `'BOTTOM_LEFT'`.  The default is
+  `'BOTTOM_LEFT'`.
+
+If you do not want to edit the file in place, you can create a new
+`DAFile` with an `objects` block and pass files that you want to OCR
+as positional parameters to `bates_number()`.
 
 <a name="DAFile.commit"></a>The `.commit()` method ensures that
 changes to the file are stored permanently.  Under normal
@@ -6317,3 +6389,11 @@ the `_uid` of the table rather than the `id`.
 [`verb_present()`]: {{ site.baseurl }}/docs/functions.html#verb_present
 [SpaceX]: https://www.spacex.com/
 [task-related functions]: {{ site.baseurl }}/docs/functions.html#tasks
+[background action]: {{ site.baseurl }}/docs/background.html#background
+[OCR]: https://en.wikipedia.org/wiki/Optical_character_recognition
+[PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
+[ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+[ISO-639-2]: https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
+[ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
+[Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
+[Bates numbered]: https://en.wikipedia.org/wiki/Bates_numbering

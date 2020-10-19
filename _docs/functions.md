@@ -5232,10 +5232,10 @@ is 6 ("assume a uniform block of text").  The choices are:
     * 0: Orientation and script detection (OSD) only.
     * 1: Automatic page segmentation with OSD.
     * 2: Automatic page segmentation, but no OSD, or OCR.
-    * 3: Fully automatic page segmentation, but no OSD. (Default)
+    * 3: Fully automatic page segmentation, but no OSD.
     * 4: Assume a single column of text of variable sizes.
     * 5: Assume a single uniform block of vertically aligned text.
-    * 6: Assume a single uniform block of text.
+    * 6: Assume a single uniform block of text.  (Default)
     * 7: Treat the image as a single text line.
     * 8: Treat the image as a single word.
     * 9: Treat the image as a single word in a circle.
@@ -5258,6 +5258,9 @@ In addition, the following optional parameters, which are passed to
   in pixels (default is 0).
 * `H`: for cropping PDF pages.  Indicates the height of the crop area
   in pixels (default is 0).
+
+If you want a [PDF] with embedded OCRed text, see the [`make_ocr_pdf()`]
+method of [`DAFile`].
 
 ## <a name="ocr_file_in_background"></a>ocr_file_in_background()
 
@@ -5344,6 +5347,9 @@ be found in the attribute `.error_message`.  When you put the output
 of `.get()` inside of a `${ ... }` [Mako] tag, the object is forced to
 be text, in which case either `.content` or `.error_message` is used,
 depending on the success of the OCR process.
+
+If you want a [PDF] with embedded OCRed text, see the
+[`make_ocr_pdf_in_background()`] method of [`DAFile`].
 
 ### Advantages of [`ocr_file_in_background()`] over [`ocr_file()`]
 
@@ -7819,3 +7825,5 @@ $(document).on('daPageLoad', function(){
 [`DAEmailRecipient`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipient
 [recipe on the topic]: {{ site.baseurl }}/docs/recipes.html#python to javascript
 [`num2words`]: https://github.com/savoirfairelinux/num2words
+[`make_ocr_pdf()`]: {{ site.baseurl }}/docs/objects.html#DAFile.make_ocr_pdf
+[`make_ocr_pdf_in_background()`]: {{ site.baseurl }}/docs/objects.html#DAFile.make_ocr_pdf_in_background

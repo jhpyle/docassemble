@@ -11777,6 +11777,22 @@
   question: |\n  The answer is ${ answer }.\nsubquestion: |\n  #### Message log\n\
   \  \n  <ul class=\"list-group\" id=\"logMessages\">\n  % for message in messages:\n\
   \    <li class=\"list-group-item\">${ message }</li>\n  % endfor\n  </ul>"
+"bates-number": |-
+  question: |
+    Upload a file
+  fields:
+    - File: the_file
+      datatype: file
+  ---
+  mandatory: True
+  code: |
+    the_file.bates_number(prefix='FRUIT')
+  ---
+  mandatory: True
+  question: |
+    Your file
+  subquestion: |
+    ${ the_file }
 "bootstrap-theme": |-
   features:
     bootstrap theme: lumen.min.css
@@ -12511,6 +12527,38 @@
     name: Team
     filename: team_summary
     docx template file: team.docx
+"make-ocr-pdf": "mandatory: True\ncode: |\n  ocr_finished\n  final_screen\n---\ncode:\
+  \ |\n  uploaded_file.make_ocr_pdf() \n  ocr_finished = True\n---\nquestion: |\n\
+  \  Upload a PDF file or image.\nsubquestion: |\n  I will convert it to a searchable\
+  \ PDF.\nfields:\n  - File: uploaded_file\n    datatype: files\n---\nevent: final_screen\n\
+  question: |\n  Your OCR PDF\nsubquestion: |\n  ${ uploaded_file }"
+"make-ocr-pdf-in-background": |-
+  mandatory: True
+  code: |
+    if not ocr_task.ready():
+      waiting_screen
+    final_screen
+  ---
+  code: |
+    ocr_task = uploaded_file.make_ocr_pdf_in_background()
+  ---
+  question: |
+    Upload a PDF file or image.
+  subquestion: |
+    I will convert it to a searchable PDF.
+  fields:
+    - File: uploaded_file
+      datatype: files
+  ---
+  event: waiting_screen
+  question: Please wait . . .
+  reload: True
+  ---
+  event: final_screen
+  question: |
+    Your OCR PDF
+  subquestion: |
+    ${ uploaded_file }
 "markdown-template": "template: the_template\ncontent: |\n  This is *italic text*.\n\
   \  This is **bold text**.\n  This is __some *bold italic* text__.\n\n  **bold**\
   \ at beginning of paragraph.\n\n  *italic* at beginning of paragraph.\n\n  > This\
