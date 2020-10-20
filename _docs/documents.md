@@ -985,6 +985,43 @@ into a manual line break and any `\a` character will be converted into
 a paragraph break.  When using `RichText`, you must always use the `r`
 prefix, `{% raw %}{{r ... }}{% endraw %}`.
 
+## <a name="filters"></a>Jinja2 filters
+
+[Jinja2] does not allow you to write every kind Python expression, the
+way that [Mako] does; there are limitations, such as not being able to
+refer to certain built-in names like `None`.  [Jinja2] allows you to
+do sophisticated things, however, but it encourages the use of
+"filters" rather than the writing of [Python] code.  There are a
+number of [built-in filters] in [Jinja2] that you can use.  In
+addition, there are some **docassemble**-specific filters, which are
+either discussed above or are the names of [functions].
+
+* `RichText`
+* `add_separators`
+* `alpha`
+* `capitalize`
+* `comma_and_list`
+* `comma_list`
+* `country_name`
+* `currency`
+* `fix_punctuation`
+* `inline_markdown`
+* `manual_line_breaks`
+* `markdown`
+* `nice_number`
+* `ordinal_number`
+* `ordinal`
+* `paragraphs`
+* `phone_number_formatted`
+* `phone_number_in_e164`
+* `redact`
+* `roman`
+* `salutation`
+* `single_paragraph`
+* `title_case`
+* `verbatim`
+* `word`
+
 ## <a name="macros"></a>Inserting blocks of text more than once in a document
 
 [Jinja2] supports the use of "[macros]," which are like [Python]
@@ -1958,8 +1995,8 @@ interview, see the [`cache documents` feature].
 [`single_to_double_newlines()`]: {{ site.baseurl }}/docs/functions.html#single_to_double_newlines
 [`new markdown to docx`]: {{ site.baseurl }}/docs/config.html#new markdown to docx
 [inserting multi-line or formatted text into a single field in a DOCX file]: #markdown to docx
-[macro]: https://jinja.palletsprojects.com/en/2.10.x/templates/#macros
-[macros]: https://jinja.palletsprojects.com/en/2.10.x/templates/#macros
+[macro]: https://jinja.palletsprojects.com/en/2.11.x/templates/#macros
+[macros]: https://jinja.palletsprojects.com/en/2.11.x/templates/#macros
 [`team.docx`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/templates/team.docx
 [Markdown-formatted text]: #markdown to docx
 [`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
@@ -1969,3 +2006,4 @@ interview, see the [`cache documents` feature].
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
+[built-in filters]: https://jinja.palletsprojects.com/en/2.11.x/templates/#filters
