@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.90] - 2020-10-20
+### Changed
+- Enabled a variety of functions to operate as Jinja2 filters.
+### Fixed
+- Corrected operation of `selectattr` Jinja2 filter.
+
 ## [1.1.89] - 2020-10-19
 ### Added
 - The `make_ocr_pdf()` and `make_ocr_pdf_in_background()`, and

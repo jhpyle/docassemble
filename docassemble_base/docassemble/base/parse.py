@@ -8378,7 +8378,32 @@ def custom_jinja_env():
     env.filters['paragraphs'] = docassemble.base.functions.single_to_double_newlines
     env.filters['manual_line_breaks'] = docassemble.base.functions.manual_line_breaks
     env.filters['RichText'] = docassemble.base.file_docx.RichText
+    env.filters['selectattr'] = selectattr_filter
+    env.filters['nice_number'] = docassemble.base.functions.nice_number
+    env.filters['ordinal'] = docassemble.base.functions.ordinal
+    env.filters['ordinal_number'] = docassemble.base.functions.ordinal_number
+    env.filters['currency'] = docassemble.base.functions.currency
+    env.filters['comma_list'] = docassemble.base.functions.comma_list
+    env.filters['comma_and_list'] = docassemble.base.functions.comma_and_list
+    env.filters['capitalize'] = docassemble.base.functions.capitalize
+    env.filters['salutation'] = docassemble.base.functions.salutation
+    env.filters['alpha'] = docassemble.base.functions.alpha
+    env.filters['roman'] = docassemble.base.functions.roman
+    env.filters['word'] = docassemble.base.functions.word
+    env.filters['title_case'] = docassemble.base.functions.title_case
+    env.filters['single_paragraph'] = docassemble.base.functions.single_paragraph
+    env.filters['phone_number_formatted'] = docassemble.base.functions.phone_number_formatted
+    env.filters['phone_number_in_e164'] = docassemble.base.functions.phone_number_in_e164
+    env.filters['country_name'] = docassemble.base.functions.country_name
+    env.filters['fix_punctuation'] = docassemble.base.functions.fix_punctuation
+    env.filters['redact'] = docassemble.base.functions.redact
+    env.filters['verbatim'] = docassemble.base.functions.verbatim
     return env
+
+def selectattr_filter(array, attr_name):
+    for item in array:
+        if getattr(item, attr_name):
+            yield item
 
 def markdown_filter(text):
     return docassemble.base.file_docx.markdown_to_docx(str(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
