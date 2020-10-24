@@ -783,11 +783,46 @@ whether in curly brackets or not, use `auto terms`.
 
 {% include side-by-side.html demo="auto-terms" %}
 
-You can also use `terms` and `auto terms` as [question modifiers], in which
-case the terms will apply only to the question, not to the interview
-as a whole.  When you use `terms` and `auto terms` as initial blocks,
-you cannot use [Mako] templating in the definitions, but when you use
-them as [question modifiers], you can use [Mako] templating.
+Using `auto terms` can lead to ambiguities, so it is generally better
+to use `terms` if you can.  If you have two terms, `green apple` and
+`apple`, then `auto terms` will try to make a term within a term,
+which will lead to unpredictable behavior.
+
+If you want to refer to a term but you want the text of the hyperlink
+to be different from the name of the term, you can use the pipe
+character `|` and write the alternate text after the `|`.
+
+{% include side-by-side.html demo="terms-alternate" %}
+
+Alternatively, in your definition of the terms, you can specify that
+multiple phrases should be associated with a single definition.  You
+write your terms as a list of dictionaries, and if a dictionary has
+two keys, `phrases` and `definition`, where `phrases` refers to a list
+of terms and `definition` refers to a definition, that definition will
+be used for each of the phrases:
+
+{% highlight yaml %}
+terms:
+  - phrases:
+      - charged creeper
+      - creeper
+    definition: |
+      A tall green creature that explodes if
+      you get too close.
+  - zombie pigman: |
+      A harmless creature who carries a gold
+      sword.
+{% endhighlight %}
+
+You can also use [`terms`] and [`auto terms`] as [question modifiers], in
+which case the terms will apply only to the question, not to the
+interview as a whole.  When you use `terms` and `auto terms` as
+initial blocks, you cannot use [Mako] templating in the definitions,
+but when you use them as [question modifiers], you can use [Mako]
+templating.
+
+If you want to define terms using [Python] code, you can use the
+[`update_terms()`] function.
 
 # <a name="template"></a>The `template` block
 
@@ -2218,52 +2253,52 @@ available as the [JavaScript] variable `daQuestionData`.
 [setting variables]: {{ site.baseurl }}/docs/fields.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [def]: http://docs.makotemplates.org/en/latest/defs.html
-[roles]: {{ site.baseurl}}/docs/roles.html
-[`progress`]: {{ site.baseurl}}/docs/modifiers.html#progress
-[`language` modifier]: {{ site.baseurl}}/docs/modifiers.html#language
+[roles]: {{ site.baseurl }}/docs/roles.html
+[`progress`]: {{ site.baseurl }}/docs/modifiers.html#progress
+[`language` modifier]: {{ site.baseurl }}/docs/modifiers.html#language
 [`include`]: #include
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`my-functions.js`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/static/my-functions.js
 [`my-styles.css`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/static/my-styles.css
-[`set_info()`]: {{ site.baseurl}}/docs/functions.html#set_info
+[`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
 [YAML]: https://en.wikipedia.org/wiki/YAML
-[`code` block]: {{ site.baseurl}}/docs/code.html
-[`code` blocks]: {{ site.baseurl}}/docs/code.html
-[`reconsider` modifier]: {{ site.baseurl}}/docs/logic.html#reconsider
+[`code` block]: {{ site.baseurl }}/docs/code.html
+[`code` blocks]: {{ site.baseurl }}/docs/code.html
+[`reconsider` modifier]: {{ site.baseurl }}/docs/logic.html#reconsider
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [`css`]: {{ site.baseurl }}/docs/modifiers.html#css
 [`script`]: {{ site.baseurl }}/docs/modifiers.html#script
-[`objects_from_file()` function]: {{ site.baseurl}}/docs/functions.html#objects_from_file
+[`objects_from_file()` function]: {{ site.baseurl }}/docs/functions.html#objects_from_file
 [sources folder]: {{ site.baseurl }}/docs/playground.html#sources
 [machine learning]: {{ site.baseurl }}/docs/ml.html#howtouse
 [Training]: {{ site.baseurl }}/docs/ml.html#train
 [Sources folder]: {{ site.baseurl }}/docs/playground.html#sources
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [packaging your training sets]: {{ site.baseurl }}/docs/ml.html#packaging
-[`nav.show_sections()`]: {{ site.baseurl}}/docs/functions.html#DANav.show_sections
-[`section`]: {{ site.baseurl}}/docs/modifiers.html#section
-[`nav.set_section()`]: {{ site.baseurl}}/docs/functions.html#DANav.set_section
+[`nav.show_sections()`]: {{ site.baseurl }}/docs/functions.html#DANav.show_sections
+[`section`]: {{ site.baseurl }}/docs/modifiers.html#section
+[`nav.set_section()`]: {{ site.baseurl }}/docs/functions.html#DANav.set_section
 [`sections`]: #sections
 [`navigation`]: #navigation bar
-[Python names]: {{ site.baseurl}}/docs/fields.html#variable names
-[`event`]: {{ site.baseurl}}/docs/fields.html#event
-[`review`]: {{ site.baseurl}}/docs/fields.html#review
+[Python names]: {{ site.baseurl }}/docs/fields.html#variable names
+[`event`]: {{ site.baseurl }}/docs/fields.html#event
+[`review`]: {{ site.baseurl }}/docs/fields.html#review
 [`navigation bar`]: #navigation bar
-[`nav.set_sections()`]: {{ site.baseurl}}/docs/functions.html#DANav.set_sections
-[action]: {{ site.baseurl}}/docs/functions.html#actions
+[`nav.set_sections()`]: {{ site.baseurl }}/docs/functions.html#DANav.set_sections
+[action]: {{ site.baseurl }}/docs/functions.html#actions
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
-[`dispatch`]: {{ site.baseurl}}/docs/config.html#dispatch
-[configuration]: {{ site.baseurl}}/docs/config.html
+[`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
+[configuration]: {{ site.baseurl }}/docs/config.html
 [`maximum image size` in a field definition]: {{ site.baseurl }}/docs/fields.html#maximum image size
 [`maximum image size` in the configuration]: {{ site.baseurl }}/docs/config.html#maximum image size
 [`maximum image size` field modifier]: {{ site.baseurl }}/docs/fields.html#maximum image size
-[document caching feature]: {{ site.baseurl}}/docs/documents.html#caching
-[`id` and `supersedes`]: {{ site.baseurl}}/docs/modifiers.html#precedence
-[`id`]: {{ site.baseurl}}/docs/modifiers.html#precedence
+[document caching feature]: {{ site.baseurl }}/docs/documents.html#caching
+[`id` and `supersedes`]: {{ site.baseurl }}/docs/modifiers.html#precedence
+[`id`]: {{ site.baseurl }}/docs/modifiers.html#precedence
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`code`]: {{ site.baseurl }}/docs/code.html#code
@@ -2276,39 +2311,39 @@ available as the [JavaScript] variable `daQuestionData`.
 [`inverse navbar` configuration directive]: {{ site.baseurl }}/docs/config.html#inverse navbar
 [`bootstrap theme` configuration directive]: {{ site.baseurl }}/docs/config.html#bootstrap theme
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
-[`objects_from_file()` function]: {{ site.baseurl}}/docs/functions.html#objects_from_file
+[`objects_from_file()` function]: {{ site.baseurl }}/docs/functions.html#objects_from_file
 [`data`]: #data
-[`set_parts()` function]: {{ site.baseurl}}/docs/functions.html#set_parts
+[`set_parts()` function]: {{ site.baseurl }}/docs/functions.html#set_parts
 [`show login` configuration directive]: {{ site.baseurl }}/docs/config.html#show login
-[`url_of()`]: {{ site.baseurl}}/docs/functions.html#url_of
-[`menu_items` special variable]: {{ site.baseurl}}/docs/special.html#menu_items
-[background tasks]: {{ site.baseurl}}/docs/background.html#background
-[`word()`]: {{ site.baseurl}}/docs/functions.html#word
-[`prevent_going_back()`]: {{ site.baseurl}}/docs/functions.html#prevent_going_back
-[`prevent going back`]: {{ site.baseurl}}/docs/modifiers.html#prevent going back
+[`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
+[`menu_items` special variable]: {{ site.baseurl }}/docs/special.html#menu_items
+[background tasks]: {{ site.baseurl }}/docs/background.html#background
+[`word()`]: {{ site.baseurl }}/docs/functions.html#word
+[`prevent_going_back()`]: {{ site.baseurl }}/docs/functions.html#prevent_going_back
+[`prevent going back`]: {{ site.baseurl }}/docs/modifiers.html#prevent going back
 [`interview help`]: #interview help
-[`help`]: {{ site.baseurl}}/docs/modifiers.html#help
+[`help`]: {{ site.baseurl }}/docs/modifiers.html#help
 [`question help button`]: #question help button
 [`main page pre`]: {{ site.baseurl }}/docs/config.html#main page pre
 [`main page submit`]: {{ site.baseurl }}/docs/config.html#main page submit
 [`main page post`]: {{ site.baseurl }}/docs/config.html#main page post
 [`metadata`]: #metadata
-[`set_parts()`]: {{ site.baseurl}}/docs/functions.html#set_parts
-[`set_language()`]: {{ site.baseurl}}/docs/functions.html#set_language
-[`set_progress()`]: {{ site.baseurl}}/docs/functions.html#set_progress
+[`set_parts()`]: {{ site.baseurl }}/docs/functions.html#set_parts
+[`set_language()`]: {{ site.baseurl }}/docs/functions.html#set_language
+[`set_progress()`]: {{ site.baseurl }}/docs/functions.html#set_progress
 [chart.js]: https://www.chartjs.org/
 [Google Charts]: https://developers.google.com/chart/
 [`javascript`]: #javascript
-[`error help`]: {{ site.baseurl}}/docs/config.html#error help
-[Configuration]: {{ site.baseurl}}/docs/config.html
-[`debug` directive]: {{ site.baseurl}}/docs/config.html#debug
+[`error help`]: {{ site.baseurl }}/docs/config.html#error help
+[Configuration]: {{ site.baseurl }}/docs/config.html
+[`debug` directive]: {{ site.baseurl }}/docs/config.html#debug
 [Markdown]: https://daringfireball.net/projects/markdown/
-[`back button`]: {{ site.baseurl}}/docs/modifiers.html#back button
+[`back button`]: {{ site.baseurl }}/docs/modifiers.html#back button
 [`show login` metadata specifier]: #show login
-[`show login`]: {{ site.baseurl}}/docs/config.html#show login
-[`reconsider()`]: {{ site.baseurl}}/docs/functions.html#reconsider
+[`show login`]: {{ site.baseurl }}/docs/config.html#show login
+[`reconsider()`]: {{ site.baseurl }}/docs/functions.html#reconsider
 [jQuery Validation Plugin]: http://jqueryvalidation.org
-[`words`]: {{ site.baseurl}}/docs/config.html#words
+[`words`]: {{ site.baseurl }}/docs/config.html#words
 [`yesno`]: {{ site.baseurl }}/docs/fields.html#fields yesno
 [`uncheck others`]: {{ site.baseurl }}/docs/fields.html#uncheck others
 [`minlength`]: {{ site.baseurl }}/docs/fields.html#minlength
@@ -2328,14 +2363,14 @@ available as the [JavaScript] variable `daQuestionData`.
 [privilege]: {{ site.baseurl }}/docs/users.html
 [privileges]: {{ site.baseurl }}/docs/users.html
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
-[`defined()`]: {{ site.baseurl}}/docs/functions.html#defined
-[`docx template file`]: {{ site.baseurl}}/docs/documents.html#docx template file
+[`defined()`]: {{ site.baseurl }}/docs/functions.html#defined
+[`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [`error help`]: #error help
-[`verbose error messages`]: {{ site.baseurl}}/docs/config.html#verbose error messages
+[`verbose error messages`]: {{ site.baseurl }}/docs/config.html#verbose error messages
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`modules`]: #modules
 [`imports`]: #imports
-[`process_action`]: {{ site.baseurl}}/docs/functions.html#process_action
+[`process_action`]: {{ site.baseurl }}/docs/functions.html#process_action
 [`template`]: #template
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
@@ -2351,7 +2386,7 @@ available as the [JavaScript] variable `daQuestionData`.
 [Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [label and field]: {{ site.baseurl }}/docs/fields.html#label
 [variable name]: {{ site.baseurl }}/docs/fields.html#variable names
-[`send_email()`]: {{ site.baseurl}}/docs/functions.html#send_email
+[`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
 [`docassemble.demo:data/templates/hello_template.md`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/templates/hello_template.md
 [`docassemble.base:data/questions/examples/template-file.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/examples/template-file.yml
 [`docassemble.base:data/templates/disclaimer.md`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/disclaimer.md
@@ -2372,41 +2407,44 @@ available as the [JavaScript] variable `daQuestionData`.
 [sources]: {{ site.baseurl }}/docs/playground.html#sources
 [Download an interview phrase translation file]: {{ site.baseurl }}/docs/admin.html#translation file
 [Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
-[`new markdown to docx`]: {{ site.baseurl}}/docs/config.html#new markdown to docx
+[`new markdown to docx`]: {{ site.baseurl }}/docs/config.html#new markdown to docx
 [`DAContext`]: {{ site.baseurl }}/docs/objects.html#DAContext
 [`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime
 [`.format_date()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_date
 [`.format_time()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_time
 [`.format_datetime()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_datetime
 [`use objects`]: #use objects
-[`session_tags()`]: {{ site.baseurl}}/docs/functions.html#session_tags
+[`session_tags()`]: {{ site.baseurl }}/docs/functions.html#session_tags
 [interview]: {{ site.baseurl }}/docs/interviews.html
 [section on questions]: {{ site.baseurl }}/docs/questions.html
 [standard]: https://getbootstrap.com/docs/4.0/components/forms/#form-groups
 [horizontal form]: https://getbootstrap.com/docs/4.0/components/forms/#horizontal-form
-[`exitpage`]: {{ site.baseurl}}/docs/config.html#exitpage
+[`exitpage`]: {{ site.baseurl }}/docs/config.html#exitpage
 [special pages]: {{ site.baseurl }}/docs/questions.html#special buttons
-[`command()`]: {{ site.baseurl}}/docs/functions.html#command
-[`format_date()`]: {{ site.baseurl}}/docs/functions.html#format_date
-[`format_datetime()`]: {{ site.baseurl}}/docs/functions.html#format_datetime
-[`format_time()`]: {{ site.baseurl}}/docs/functions.html#format_time
+[`command()`]: {{ site.baseurl }}/docs/functions.html#command
+[`format_date()`]: {{ site.baseurl }}/docs/functions.html#format_date
+[`format_datetime()`]: {{ site.baseurl }}/docs/functions.html#format_datetime
+[`format_time()`]: {{ site.baseurl }}/docs/functions.html#format_time
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [Google Analytics]: https://analytics.google.com
 [Segment]: https://segment.com/
-[`segment id`]: {{ site.baseurl}}/docs/config.html#segment id
-[`analytics id`]: {{ site.baseurl}}/docs/config.html#analytics id
-[`google`]: {{ site.baseurl}}/docs/config.html#google
+[`segment id`]: {{ site.baseurl }}/docs/config.html#segment id
+[`analytics id`]: {{ site.baseurl }}/docs/config.html#analytics id
+[`google`]: {{ site.baseurl }}/docs/config.html#google
 [Font Awesome]: https://fontawesome.com
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
-[`undefine()`]: {{ site.baseurl}}/docs/functions.html#undefine
-[`invalidate()`]: {{ site.baseurl}}/docs/functions.html#invalidate
+[`undefine()`]: {{ site.baseurl }}/docs/functions.html#undefine
+[`invalidate()`]: {{ site.baseurl }}/docs/functions.html#invalidate
 [meta tags]: https://en.wikipedia.org/wiki/Meta_element
-[`social`]: {{ site.baseurl}}/docs/config.html#social
-[`brandname`]: {{ site.baseurl}}/docs/config.html#brandname
-[`locale`]: {{ site.baseurl}}/docs/config.html#locale
-[`allow robots`]: {{ site.baseurl}}/docs/config.html#allow robots
+[`social`]: {{ site.baseurl }}/docs/config.html#social
+[`brandname`]: {{ site.baseurl }}/docs/config.html#brandname
+[`locale`]: {{ site.baseurl }}/docs/config.html#locale
+[`allow robots`]: {{ site.baseurl }}/docs/config.html#allow robots
 [Jekyll]: https://jekyllrb.com/
 [GitHub Pages]: https://pages.github.com/
 [GitHub repository]: {{ site.github.repository_url }}
-[`/api/session/question` API endpoint]: {{ site.baseurl}}/docs/api.html#session_question
-[API]: {{ site.baseurl}}/docs/api.html
+[`/api/session/question` API endpoint]: {{ site.baseurl }}/docs/api.html#session_question
+[API]: {{ site.baseurl }}/docs/api.html
+[`terms`]: {{ site.baseurl }}/docs/modifiers.html#terms
+[`auto terms`]: {{ site.baseurl }}/docs/modifiers.html#auto terms
+[`update_terms()`]: {{ site.baseurl }}/docs/functions.html#update_terms

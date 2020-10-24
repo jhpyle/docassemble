@@ -2477,6 +2477,27 @@ question: |
 
 If a setting has not been set, the function returns `None`.
 
+## <a name="update_terms"></a>update_terms()
+
+The `update_terms()` function allows you to define or override
+interview-wide [`terms`] or [`auto terms`] using [Python] code.
+
+{% include side-by-side.html demo="update-terms" %}
+
+`update_terms()` has one required parameter, a [Python dictionary]
+that maps terms to definitions.  It also accepts two optional keyword
+parameters:
+
+* `auto`: whether to update `auto terms` or `terms`.  Set to `True`
+  for `auto terms`.  The default behavior of `update_terms()` is to
+  update the interview-wide `terms`, not the interview-wide `auto terms`.
+* `language`: the language to update.  For example, to update the
+  French translations of terms, set `language` to `fr`.  If you leave
+  `language` unset, the terms you will update are the terms associated
+  with the default language `*`.  If your interview uses a [`default
+  language`] initial block or uses the [`language`] modifier, you
+  should set a specific `language` when you call `update_terms()`.
+
 # <a name="browser"></a>Functions for determining information about the browser
 
 ## <a name="language_from_browser"></a>language_from_browser()
@@ -7826,3 +7847,7 @@ $(document).on('daPageLoad', function(){
 [`num2words`]: https://github.com/savoirfairelinux/num2words
 [`make_ocr_pdf()`]: {{ site.baseurl }}/docs/objects.html#DAFile.make_ocr_pdf
 [`make_ocr_pdf_in_background()`]: {{ site.baseurl }}/docs/objects.html#DAFile.make_ocr_pdf_in_background
+[`terms`]: {{ site.baseurl }}/docs/initial.html#terms
+[`auto terms`]: {{ site.baseurl }}/docs/initial.html#auto terms
+[`default language`]: {{ site.baseurl }}/docs/initial.html#default language
+[`language`]: {{ site.baseurl }}/docs/modifiers.html#language

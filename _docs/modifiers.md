@@ -370,14 +370,43 @@ Alternatively, you can define the vocabulary terms using `auto terms`,
 in which case you do not need to use curly brackets, and the terms
 will be highlighted in green every time they appear in the question.
 
-If you want the terms to be highlighted every time they are used,
-whether in curly brackets or not, use `auto terms`.
-
 {% include side-by-side.html demo="question-autoterms" %}
+
+Using `auto terms` can lead to ambiguities, so it is generally better
+to use `terms` if you can.  If you have two terms, `green apple` and
+`apple`, then `auto terms` will try to make a term within a term,
+which will lead to unpredictable behavior.
+
+If you want to refer to a term but you want the text of the hyperlink
+to be different from the name of the term, you can use the pipe
+character `|` and write the alternate text after the `|`.
+
+{% include side-by-side.html demo="question-terms-alternate" %}
+
+Alternatively, in your definition of the terms, you can specify that
+multiple phrases should be associated with a single definition.  You
+write your terms as a list of dictionaries, and if a dictionary has
+two keys, `phrases` and `definition`, where `phrases` refers to a list
+of terms and `definition` refers to a definition, that definition will
+be used for each of the phrases:
+
+{% highlight yaml %}
+terms:
+  - phrases:
+      - charged creeper
+      - creeper
+    definition: |
+      A tall green creature that explodes if
+      you get too close.
+  - zombie pigman: |
+      A harmless creature who carries a gold
+      sword.
+{% endhighlight %}
 
 If you want vocabulary terms to be highlighted throughout the
 interview, not just for a specific question, you can use `terms` and
-`auto terms` as [initial blocks].
+`auto terms` as [initial blocks].  You can also define interview-wide
+terms using [Python] code by calling the [`update_terms()`] function.
 
 # <a name="language"></a>The `language` of the question
 
@@ -1075,3 +1104,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
 [`undefine`]: {{ site.baseurl }}/docs/logic.html#undefine
 [`restrict input variables`]: {{ site.baseurl }}/docs/config.html#restrict input variables
+[`update_terms()`]: {{ site.baseurl }}/docs/functions.html#update_terms

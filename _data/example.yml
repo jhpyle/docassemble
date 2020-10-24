@@ -8847,6 +8847,20 @@
     zombie pigman: |
       A harmless creature who carries a gold
       sword.
+"question-terms-alternate": |-
+  question: Have you ever met a {creeper}?
+  subquestion: |
+    If you have met a
+    {zombie pigman|zombified pigman},
+    you have almost certainly met a creeper.
+  yesno: met_a_creeper
+  terms:
+    creeper: |
+      A tall ${ creeper_color } creature
+      that explodes if you get too close.
+    zombie pigman: |
+      A harmless creature who carries a gold
+      sword.
 "questionless": |-
   mandatory: True
   code: |
@@ -11114,6 +11128,13 @@
     If you have met a {zombie pigman}, you
     have almost certainly met a creeper.
   yesno: met_a_creeper
+"terms-alternate": |-
+  question: Have you ever met a {creeper}?
+  subquestion: |
+    If you have met a
+    {zombie pigman|zombified pigman}, you
+    have almost certainly met a creeper.
+  yesno: met_a_creeper
 "testage2": |-
   objects:
     - user: Individual
@@ -11314,6 +11335,18 @@
     Note: if you did not catch this
     movie reference, you need to
     improve your cultural literacy.
+"update-terms": |-
+  terms:
+    - creeper: |
+        A tall green creature that explodes if
+        you get too close.
+    - zombie pigman: |
+        A harmless creature who carries a gold
+        sword.
+  ---
+  mandatory: True
+  code: |
+    update_terms({'zombie pigman': 'A nether dweller', 'nether': 'The underworld'})
 "upload": "question: |\n  Please upload a picture of yourself.\nfields:\n  - Picture:\
   \ user_picture\n    datatype: file\n---\nquestion: |\n  You're so adorable, Fran\xE7\
   ois!\nsubquestion: |\n  ${ user_picture }\nmandatory: True"
