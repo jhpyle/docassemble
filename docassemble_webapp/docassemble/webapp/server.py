@@ -4842,8 +4842,6 @@ def github_configure():
         return redirect(uri)
     http = credentials.authorize(httplib2.Http())
     found = False
-    resp, content = http.request("https://api.github.com/repos/jhpyle/docassemble/pulls/302", "GET")
-    raise DAError(content)
     resp, content = http.request("https://api.github.com/user/emails", "GET")
     if int(resp['status']) == 200:
         user_info_list = json.loads(content.decode())

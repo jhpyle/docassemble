@@ -85,7 +85,10 @@ connect_string = docassemble.webapp.database.connection_string()
 alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
 app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
-app.config['MAILGUN_API_URL'] = daconfig['mail'].get('mailgun api url', 'https://api.mailgun.net/v3/%s/messages.mime') % daconfig['mail'].get('mailgun domain', 'NOT_USING_MAILGUN')
+try:
+    app.config['MAILGUN_API_URL'] = daconfig['mail'].get('mailgun api url', 'https://api.mailgun.net/v3/%s/messages.mime') % daconfig['mail'].get('mailgun domain', 'NOT_USING_MAILGUN')
+except:
+    app.config['MAILGUN_API_URL'] = 'https://api.mailgun.net/v3/%s/messages.mime' % (daconfig['mail'].get('mailgun domain', 'NOT_USING_MAILGUN'),)
 app.config['MAILGUN_API_KEY'] = daconfig['mail'].get('mailgun api key', None)
 app.config['SENDGRID_API_KEY'] = daconfig['mail'].get('sendgrid api key', None)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True

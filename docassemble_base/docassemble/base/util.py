@@ -1351,12 +1351,12 @@ class IndividualName(Name):
         return output
     def middle_initial(self, with_period=True):
         """Returns the middle initial, or the empty string if the name does not have a middle component."""
-        if len(self.middle) == 0:
+        if len(self.middle.strip()) == 0:
             return ''
         if with_period:
-            return self.middle[0] + '.'
+            return self.middle[0].strip() + '.'
         else:
-            return self.middle[0] + '.'
+            return self.middle[0].strip() + '.'
 
 class Address(DAObject):
     """A geographic address."""

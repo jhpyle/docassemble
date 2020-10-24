@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.91] - 2020-10-21
+### Fixed
+- Bug in GitHub configuration.
+
 ## [1.1.90] - 2020-10-20
 ### Changed
 - Enabled a variety of functions to operate as Jinja2 filters.
