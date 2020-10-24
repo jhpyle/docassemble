@@ -1971,10 +1971,9 @@ The data come from the [`pycountry` package].
 
 ## <a name="states_list"></a><a name="state_name"></a>states_list() and state_name()
 
-The `states_list()` function returns a list of dictionaries, where
-each dictionary contains a single key-value pair mapping a state
-abbreviation to the name of a state.  This function is primarily
-useful when asking a user to specify his or her state.
+The `states_list()` function returns a dictionary that maps state
+abbreviations to state names.  This function is primarily useful when
+asking a user to specify his or her state.
 
 The function takes an optional keyword argument `country`, which is
 expected to be a country abbreviation ([ISO 3166-1 alpha-2], e.g.,
