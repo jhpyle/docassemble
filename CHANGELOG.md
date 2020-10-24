@@ -1,6 +1,16 @@
 # Change Log
 
-## [1.1.91] - 2020-10-21
+## [1.1.92] - 2020-10-24
+### Added
+- The `update_terms()` function.
+### Changed
+- When using `terms`, you can specify that text other than the term
+  name should be displayed using `|`.
+- When specifying `terms` and `auto terms`, you can use `phrases` and
+  `definition` to indicate that multiple terms are associated with a
+  single definition.
+
+## [1.1.91] - 2020-10-24
 ### Fixed
 - Bug in GitHub configuration.
 

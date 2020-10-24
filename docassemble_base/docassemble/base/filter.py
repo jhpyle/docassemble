@@ -30,7 +30,7 @@ import PIL
 DEFAULT_PAGE_WIDTH = '6.5in'
 
 term_start = re.compile(r'\[\[')
-term_match = re.compile(r'\[\[([^\]]*)\]\]', re.DOTALL)
+term_match = re.compile(r'\[\[([^\]\|]*)(\|[^\]]*)?\]\]', re.DOTALL)
 noquote_match = re.compile(r'"')
 lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
@@ -1211,6 +1211,11 @@ def link_rewriter(m, status):
     status.linkcounter += 1
     return '<a data-linknum="' + str(status.linkcounter) + '" ' + action_data + target + js_data + 'href="' + m.group(1) + '"'
 
+def sub_term(m):
+    if m.group(2):
+        return '[[' + m.group(1) + m.group(2) + ']]'
+    return '[[' + m.group(1) + ']]'
+
 def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None, embedder=None, default_image_width=None, external=False):
     a = str(a)
     if question is None and status is not None:
@@ -1222,9 +1227,9 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                     lang = docassemble.base.functions.get_language()
                     for term in question.terms:
                         if lang in question.terms[term]['re']:
-                            a = question.terms[term]['re'][lang].sub(r'[[\1]]', a)
+                            a = question.terms[term]['re'][lang].sub(sub_term, a)
                         else:
-                            a = question.terms[term]['re'][question.language].sub(r'[[\1]]', a)
+                            a = question.terms[term]['re'][question.language].sub(sub_term, a)
                 if len(question.autoterms):
                     lang = docassemble.base.functions.get_language()
                     for term in question.autoterms:
@@ -1232,29 +1237,40 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                             a = question.autoterms[term]['re'][lang].sub(r'[[\1]]', a)
                         else:
                             a = question.autoterms[term]['re'][question.language].sub(r'[[\1]]', a)
-            if len(question.interview.terms):
+                if 'interview_terms' in status.extras:
+                    interview_terms = status.extras['interview_terms']
+                else:
+                    interview_terms = question.interview.terms
+                if 'interview_autoterms' in status.extras:
+                    interview_autoterms = status.extras['interview_autoterms']
+                else:
+                    interview_autoterms = question.interview.autoterms
+            else:
+                interview_terms = question.interview.terms
+                interview_autoterms = question.interview.autoterms
+            if len(interview_terms):
                 lang = docassemble.base.functions.get_language()
-                if lang in question.interview.terms and len(question.interview.terms[lang]) > 0:
-                    for term in question.interview.terms[lang]:
+                if lang in interview_terms and len(interview_terms[lang]) > 0:
+                    for term in interview_terms[lang]:
                         #logmessage("Searching for term " + term + " in " + a + "\n")
-                        a = question.interview.terms[lang][term]['re'].sub(r'[[\1]]', a)
+                        a = interview_terms[lang][term]['re'].sub(sub_term, a)
                         #logmessage("string is now " + str(a) + "\n")
-                elif question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0:
-                    for term in question.interview.terms[question.language]:
+                elif question.language in interview_terms and len(interview_terms[question.language]) > 0:
+                    for term in interview_terms[question.language]:
                         #logmessage("Searching for term " + term + " in " + a + "\n")
-                        a = question.interview.terms[question.language][term]['re'].sub(r'[[\1]]', a)
+                        a = interview_terms[question.language][term]['re'].sub(sub_term, a)
                         #logmessage("string is now " + str(a) + "\n")
-            if len(question.interview.autoterms):
+            if len(interview_autoterms):
                 lang = docassemble.base.functions.get_language()
-                if lang in question.interview.autoterms and len(question.interview.autoterms[lang]) > 0:
-                    for term in question.interview.autoterms[lang]:
+                if lang in interview_autoterms and len(interview_autoterms[lang]) > 0:
+                    for term in interview_autoterms[lang]:
                         #logmessage("Searching for term " + term + " in " + a + "\n")
-                        a = question.interview.autoterms[lang][term]['re'].sub(r'[[\1]]', a)
+                        a = interview_autoterms[lang][term]['re'].sub(r'[[\1]]', a)
                         #logmessage("string is now " + str(a) + "\n")
-                elif question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]) > 0:
-                    for term in question.interview.autoterms[question.language]:
+                elif question.language in interview_autoterms and len(interview_autoterms[question.language]) > 0:
+                    for term in interview_autoterms[question.language]:
                         #logmessage("Searching for term " + term + " in " + a + "\n")
-                        a = question.interview.autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
+                        a = interview_autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
                         #logmessage("string is now " + str(a) + "\n")
     a = html_filter(str(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width, external=external)
     #logmessage("before: " + a)
@@ -1295,17 +1311,28 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         lang = docassemble.base.functions.get_language()
         if status is not None:
             if len(question.terms):
-                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'], status=status, question=question)), result)
+                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'], label=x.group(2), status=status, question=question)), result)
             if len(question.autoterms):
-                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'], status=status, question=question)), result)
-        if lang in question.interview.terms and len(question.interview.terms[lang]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[lang], status=status, question=question)), result)
-        elif question.language in question.interview.terms and len(question.interview.terms[question.language]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language], status=status, question=question)), result)
-        if lang in question.interview.autoterms and len(question.interview.autoterms[lang]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[lang], status=status, question=question)), result)
-        elif question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language], status=status, question=question)), result)
+                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'], label=x.group(2), status=status, question=question)), result)
+            if 'interview_terms' in status.extras:
+                interview_terms = status.extras['interview_terms']
+            else:
+                interview_terms = question.interview.terms
+            if 'interview_autoterms' in status.extras:
+                interview_autoterms = status.extras['interview_autoterms']
+            else:
+                interview_autoterms = question.interview.autoterms
+        else:
+            interview_terms = question.interview.terms
+            interview_autoterms = question.interview.autoterms
+        if lang in interview_terms and len(interview_terms[lang]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), interview_terms[lang], label=x.group(2), status=status, question=question)), result)
+        elif question.language in interview_terms and len(interview_terms[question.language]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), interview_terms[question.language], label=x.group(2), status=status, question=question)), result)
+        if lang in interview_autoterms and len(interview_autoterms[lang]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), interview_autoterms[lang], label=x.group(2), status=status, question=question)), result)
+        elif question.language in interview_autoterms and len(interview_autoterms[question.language]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), interview_autoterms[question.language], label=x.group(2), status=status, question=question)), result)
     if status is not None and question.interview.scan_for_emojis:
         result = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status, question=question)), result)
     if trim:
@@ -1349,10 +1376,14 @@ def add_terms_mako(termname, terms, status=None, question=None):
     #logmessage(lower_termname + " is not in terms dictionary\n")
     return '[[' + termname + ']]'
 
-def add_terms(termname, terms, status=None, question=None):
+def add_terms(termname, terms, label=None, status=None, question=None):
+    if label is None:
+        label = str(termname)
+    else:
+        label = re.sub(r'^\|', '', label)
     lower_termname = re.sub(r'\s+', ' ', termname.lower())
     if lower_termname in terms:
-        return('<a tabindex="0" class="daterm" data-toggle="popover" data-container="body" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + str(termname) + '</a>')
+        return('<a tabindex="0" class="daterm" data-toggle="popover" data-container="body" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + label + '</a>')
     #logmessage(lower_termname + " is not in terms dictionary\n")
     return '[[' + termname + ']]'
 
