@@ -41,7 +41,7 @@ install_requires = [
     "CherryPy==18.3.0",
     "Click==7.0",
     "convertapi==1.1.0",
-    "cryptography==2.8",
+    "cryptography==3.2",
     "dnspython==1.16.0",
     "docutils==0.15.2",
     "docxcompose==1.0.2",
