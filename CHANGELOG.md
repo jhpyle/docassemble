@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.93] - 2020-10-27
+### Fixed
+- Markdown in popover field help.
+
 ## [1.1.92] - 2020-10-24
 ### Added
 - The `update_terms()` function.
