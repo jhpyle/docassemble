@@ -1366,11 +1366,12 @@ hidden under certain conditions.  There are three methods of using
 `show if`, which have different syntax.
 
 Using the first method, the field will appear or disappear in the web
-browser depending on the value of another field in the [`fields`] list.
-Under this method, `show if` refers to a [YAML] dictionary with two
-keys: `variable` and `is`, where `variable` refers to the variable
-name of the other field, and `is` refers to the value of the other
-field that will cause this field to be shown.
+browser depending on the value of another field in the [`fields`] list
+that is visible on the screen.  Under this method, `show if` refers to
+a [YAML] dictionary with two keys: `variable` and `is`, where
+`variable` refers to the variable name of the other field, and `is`
+refers to the value of the other field that will cause this field to
+be shown.
 
 This can be useful when you have a multiple-choice field that has an
 "other" option, where you want to capture a text field but only if the

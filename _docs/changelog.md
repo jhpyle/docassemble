@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.93](https://github.com/jhpyle/docassemble/releases/tag/v1.1.93) - 2020-10-27
+
+### Fixed
+- Markdown in popover field help.
+
 ## [1.1.92](https://github.com/jhpyle/docassemble/releases/tag/v1.1.92) - 2020-10-24
 
 ### Added
