@@ -457,6 +457,11 @@ be understood as a date.
 
 {% include side-by-side.html demo="date-default" %}
 
+Likewise, to set limits, you can set `min` and/or `max` to a string
+that can be recognized as a date.
+
+{% include side-by-side.html demo="date-default" %}
+
 ## <a name="time"></a>Times
 
 `datatype: time` provides an input box for times.  The style of the
@@ -540,7 +545,7 @@ the [`currency()`] function.
 If the currency symbol defined by the locale is not the currency you
 want to use, you can include an [`initial`] block that calls
 [`set_locale()`] with the `currency_symbol` keyword parameter set to
-the symbol you want to use.  This will set a default value for 
+the symbol you want to use.  This will set a default value for
 `datatype: currency` fields and for the [`currency()`] function.
 
 Keep in mind that the variable stored by a `datatype: currency` field
@@ -1408,8 +1413,106 @@ the field will be shown.
 With all of these methods, if any field is not visible on the screen
 when the user presses the Continue button, no variable will be set to
 anything for that field; it as if the field was never part of the
-`question`.
+`question`.  Therefore, you should always make sure that your
+[interview logic] (including a document that your [interview logic]
+assembles) does not expect these hidden fields to have a definition.
 
+For example, suppose you have this question:
+
+{% highlight yaml %}
+question: What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    choices:
+      - Apple
+      - Orange
+      - Peach
+  - Favorite apple: favorite_apple
+    show if:
+      variable: favorite_fruit
+      is: Apple
+{% endhighlight %}
+
+Suppose your interview assembles a document that contains this
+content:
+
+> Favorite fruit: {% raw %}{{ favorite_fruit }}{% endraw %}
+>
+> Favorite apple: {% raw %}{{ favorite_apple }}{% endraw %}
+
+In this case, you may find that when `favorite_fruit` is `Orange` or
+`Peach` and you press Continue, you will end up back at the same
+screen again.  This is because your document is requiring a definition
+of `favorite_apple`.  You may have assumed that `favorite_apple` will
+be defined as the empty string, but that is not how it works.
+
+The way to fix this is to put your logic into the document:
+
+> Favorite fruit: {% raw %}{{ favorite_fruit }}{% endraw %}
+>
+> Favorite apple: {% raw %}{% if favorite_fruit == 'Apple' %}{{ favorite_apple }}{% else %}N/A{% endif %}{% endraw %}
+
+This way, your [interview logic] will not include the value of
+`favorite_apple` unless it is applicable.
+
+You may be tempted to write something like this:
+
+> Favorite apple: {% raw %}{% if defined('favorite_apple') %}{{ favorite_apple }}{% else %}N/A{% endif %}{% endraw %}
+
+However, this is a bad practice that will lead to problems.  For
+example, if your users revise their answers, the interview answers
+could reach a state in which `favorite_apple` is defined but
+`favorite_fruit` is not `Apple`, in which case it would be
+inappropriate to display the `favorite_apple` in the document.  Or,
+the user might change `favorite_fruit` from `Orange` to `Apple`, in
+which case `favorite_apple` would be undefined even though it should
+be defined.  If you weren't using [`defined()`], the assembly of your
+document would have ensured that the `favorite_apple` question would
+be asked.  Always base your [interview logic] on actual facts, not the
+defined-ness of variables.
+
+If you need to set a default value of a field that could be hidden by
+a `show if`, you can specify a `code` block following the `question`:
+
+{% highlight yaml %}
+question: What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    choices:
+      - Apple
+      - Orange
+      - Peach
+  - Favorite apple: favorite_apple
+    show if:
+      variable: favorite_fruit
+      is: Apple
+---
+code: |
+  if favorite_fruit != 'Apple':
+    favorite_apple = 'N/A'
+depends on:
+  - favorite_fruit
+{% endhighlight %}
+
+The [`depends on`] modifier will ensure that `favorite_apple` is
+invalidated if and when the value of `favorite_fruit` changes.
+
+Note that the first and second methods (as well as the `js show if`
+methods discussed below) are [JavaScript]-based ("client side"), while
+the third is [Python]-based ("server side").  The client-side
+[JavaScript] code context is only aware of fields that exist on the
+screen in the user's web browser, not the variables in the interview
+answers; the user's browser does not know the values of all the Python
+variables in the interview answers.  Conversely, the server-side
+[Python] context is only aware of the interview answers, and is not
+aware of the values of fields on the screen.
+
+The `show if` field modifer is not intended to be used as a primary
+mechanism of controlling [interview logic]; it is more of a feature
+for customizing the user interface.  Thus whatever logic you express
+in `show if` will probably have to be repeated elsewhere.  If instead
+of using `show if` you gathered the field in a separate `question`,
+you would only need to specify the logic in one place.
 ## <a name="hide if"></a>`hide if`
 
 This works just like [`show if`](#show if), except that it hides the
@@ -1698,11 +1801,11 @@ see if the value does not validate.  If 4 does divide the input value
 by a whole number, the function returns `True`, which indicates that
 the input is valid.
 
-Instead of creating a separate module file, you can also use an anonymous 
+Instead of creating a separate module file, you can also use an anonymous
 ([Lambda](https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions))
 function as the value of the `validate` field modifier. This may be useful if your
 `validate` function is very simple. It is common to use `x` as the variable name in
-a Lambda expression, but note that this is a reserved name in docassemble, so you 
+a Lambda expression, but note that this is a reserved name in docassemble, so you
 should use a different variable name, such as `y`.
 
 {% highlight yaml %}
@@ -1714,7 +1817,7 @@ fields:
     validate: |
       lambda y: True if not y.isnumeric() else validation_error("Please include a unit. E.g., 180 pounds")
   - Height: height
-      lambda y: True if not y.isnumeric() else validation_error("Please include a unit. E.g., 6 feet 1 inch")  
+      lambda y: True if not y.isnumeric() else validation_error("Please include a unit. E.g., 6 feet 1 inch")
 {% endhighlight %}
 
 Note that the `validate` field modifier is not available for use with
@@ -2911,6 +3014,7 @@ why this needs to be done manually as opposed to automatically:
 [`.privilege_access()`]: {{ site.baseurl }}/docs/objects.html#DAFile.privilege_access
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [`define()`]: {{ site.baseurl }}/docs/functions.html#define
+[`defined()`]: {{ site.baseurl }}/docs/functions.html#defined
 [jQuery Validation Plugin]: http://jqueryvalidation.org
 [jQuery.validator.addMethod()]: https://jqueryvalidation.org/jQuery.validator.addMethod/
 [`validation messages`]: #validation messages
@@ -2918,3 +3022,4 @@ why this needs to be done manually as opposed to automatically:
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [`.object_name()`]: {{ site.baseurl }}/docs/objects.html#DAObject.object_name
 [Python special methods]: https://docs.python.org/3.6/reference/datamodel.html#special-method-names
+[`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on

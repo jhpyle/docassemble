@@ -1433,7 +1433,7 @@ The `url_of()` function also has a few special uses.
   on-going interviews of a signed-in user.
 * `url_of('dispatch')` returns a URL to the page listing the
   interviews defined in the [`dispatch`] directive of the [Configuration].
-* `url_of('manage') returns a URL to a page where the user can delete
+* `url_of('manage')` returns a URL to a page where the user can delete
   his or her account data.
 * `url_of('config')` returns a URL to the [Configuration] page.
 * `url_of('playground')` returns a URL to the [Playground].
@@ -2296,6 +2296,8 @@ attributes describing the current user:
 * `package` the package of the current filename
 * `question_id` the `id` of the current `question`, or `None` if there is
   no current `question` or the `question` does not have an `id`.
+* `variable` the name of the last variable to be sought, or
+  `None` if there was no variable being sought.
 * `language` the user's language, if set (an [ISO-639-1] or
   [ISO-639-3] code)
 * `timezone` the user's time zone, in a format like `America/New_York`

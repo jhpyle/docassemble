@@ -280,6 +280,12 @@ Other methods available on a `DAList` are:
   name="DADict.gathering_started"></a>`gathering_started()` - this
   returns `True` if the gathering process has started, or is complete;
   otherwise it returns `False`.
+* <a name="DAList.set_object_type"></a><a
+  name="DADict.set_object_type"></a>`set_object_type()` - when you
+  use [Python] code to define the `object_type` attribute, call
+  `.set_object_type()` instead of simply setting the `object_type`
+  attribute.  `.set_object_type()` takes a single parameter, which can
+  be the name of the class or a class name modified by `.using()`.
 * <a name="DAList.extend"></a>`extend(extension_list)` - adds the
   items in the `extension_list` to the end of the list.  Just like the
   [Python list] method of the same name.
@@ -4073,6 +4079,23 @@ expressed as one line of text:
 If this is used on an `Address` that already has populated attributes,
 the attributes of the existing address will be overwritten.
 
+Normally, calling `geolocate()` on an object (without an `address`
+parameter) after geolocation has been performed has no effect.  This
+allows you to safely insert a call to `geolocate()` in your interview
+logic without running up a large bill for your [Google API] usage.
+However, if you call `geolocate(reset=True)`, the old geolocation
+information will be deleted and the geolocation will be performed
+again.  If your interview allows the user to edit an address after it
+has been geolocated, you will want to make sure that your interview
+logic will re-run the geolocation after the address is edited.  The
+`reset=True` parameter can help you ensure that this geolocation is
+redone.
+
+{% include side-by-side.html demo="geolocate-reset" %}
+
+You can also use the [`.reset_geolocation()`] method to delete the
+geolocation information.
+
 <a name="Address.normalize"></a>
 The `.normalize()` method uses the results of `.geolocate()` to
 standardize the formatting of the parts of the address.  This will
@@ -4089,6 +4112,12 @@ you can simply run `.geolocate()` and then, if it is successful,
 access the `.norm` attribute or the `.norm_long` attribute, both of
 which will be fully populated [`Address`] objects, with normalized
 attributes.
+
+<a name="Address.reset_geolocation"></a>
+If you need to redo the geolocation after the original address is
+edited, you can call `.reset_geolocation()` on the `Address` object
+and all of the geolocation information will be deleted.  This has the
+same effect as calling `geolocate()` with `reset=True`.
 
 <a name="Address.line_one"></a>
 The `.line_one()` method returns the first line of the address,
@@ -6397,3 +6426,4 @@ the `_uid` of the table rather than the `id`.
 [ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
 [Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
 [Bates numbered]: https://en.wikipedia.org/wiki/Bates_numbering
+[`.reset_geolocation()`]: #Address.reset_geolocation

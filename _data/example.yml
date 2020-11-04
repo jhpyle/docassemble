@@ -5547,9 +5547,9 @@
       required: False
       code: |
         name_suffix()
-"geolocate": "objects:\n  - the_address: Address\n---\nquestion: |\n  Enter an address\n\
-  fields:\n  - Address: the_address.address\n  - Unit: the_address.unit\n    required:\
-  \ False\n  - City: the_address.city\n  - State: the_address.state\n  - Zip: the_address.zip\n\
+"geolocate": "question: |\n  Enter an address\nfields:\n  - Address: the_address.address\n\
+  \  - Unit: the_address.unit\n    required: False\n  - City: the_address.city\n \
+  \ - State: the_address.state\n    code: states_list()\n  - Zip: the_address.zip\n\
   \    required: False\n---\nmandatory: True\ncode: |\n  the_address.geolocate()\n\
   ---\nmandatory: True\nquestion: |\n  Information about your address\nsubquestion:\
   \ |\n  The address you provided is:\n    \n  ${ the_address }\n\n  As JSON, this\
@@ -5571,6 +5571,18 @@
   \ is:\n    \n  ${ the_address }\n\n  The address is located in\n  ${ the_address.city\
   \ }.\n\n  The latitude and longitude are\n  ${ the_address.location.latitude }\n\
   \  and\n  ${ the_address.location.longitude }."
+"geolocate-reset": "objects:\n  - the_address: Address\n---\nmandatory: True\ncode:\
+  \ |\n  saw_address\n  saw_address_again\n  final_screen\n---\nundefine:\n  - the_address.county\n\
+  question: |\n  Enter an address\nfields:\n  - Address: the_address.address\n  -\
+  \ Unit: the_address.unit\n    required: False\n  - City: the_address.city\n  - State:\
+  \ the_address.state\n    code: states_list()\n  - Zip: the_address.zip\n    required:\
+  \ False\n---\nquestion: |\n  In what county is ${ the_address }\n  located?\nfields:\n\
+  \  - County: the_address.county\n---\nsets: the_address.county\ncode: |\n  the_address.geolocate(reset=True)\n\
+  ---\nquestion: |\n  Information about your address\nsubquestion: |\n  The address\
+  \ you provided is:\n    \n  ${ the_address }\n\n  The address is located in\n  ${\
+  \ the_address.county }.\ncontinue button field: saw_address\n---\ncode: |\n  saw_address_again\
+  \ = True\n  undefine('saw_address')\n  force_ask('the_address.address')\n---\nevent:\
+  \ final_screen\nquestion: |\n  Done with the interview"
 "get-default-timezone": |-
   question: |
     The default time zone is
@@ -13810,11 +13822,42 @@
   \    show if: wants_email\nunder: \"\"\n---\ntemplate: save_resume_template\nsubject:\
   \ |\n  Your interview\ncontent: |\n  To resume your interview, \n  [click here](${\
   \ interview_url() })."
-"sign": |-
-  mandatory: True
-  code: |
-    multi_user = True
-    signature = '(Your signature will go here)'
+"sign": "mandatory: True\ncode: |\n  multi_user = True\n---\nmandatory: True\ncode:\
+  \ |\n  multi_user = True\n  signature = '(Your signature will go here)'\n---\nmandatory:\
+  \ True\ncode: |\n  intro_seen\n  email_address\n  template_file\n  notified_of_url\n\
+  \  agrees_to_sign\n  signature_reset\n  signature\n  document_emailed\n  final_screen\n\
+  ---\ncode: |\n  notified_of_url = True\n  prevent_going_back()\n  force_ask('screen_with_link')\n\
+  ---\nquestion: |\n  What is your e-mail address?\nsubquestion: |\n  The signed document\
+  \ will be e-mailed to this address.\nfields:\n  - E-mail: email_address\n---\nevent:\
+  \ screen_with_link\nquestion: |\n  Share this link with the signer.\nsubquestion:\
+  \ |\n  Suggested content for e-mailing to the signer:\n    \n  > I need you to sign\
+  \ a document.  You can\n  > sign it using a touchscreen or with a\n  > mouse.  To\
+  \ see the document and start\n  > the signing process, [click here].\n\n  [click\
+  \ here]: ${ interview_url() }\n---\nsignature: signature\nquestion: Sign your name\n\
+  ---\nquestion: |\n  Do you agree to sign this document?\nsubquestion: |\n  Click\
+  \ the document image below to read the document\n  before signing it.\n  \n  ${\
+  \ draft_document.pdf }\nfield: agrees_to_sign\ncontinue button label: I agree to\
+  \ sign\n---\nattachment:\n  name: Document\n  filename: signed_document\n  variable\
+  \ name: draft_document\n  docx template file:\n    code: template_file\n---\nquestion:\
+  \ |\n  Collect an electronic signature\nsubquestion: |\n  If you provide your e-mail\
+  \ address and upload a document,\n  you can get a link that you can give to someone,\
+  \ where\n  they can click the link, sign their name, and then the\n  signed document\
+  \ will be e-mailed to you.\n\n  The document you upload needs to be in .docx format.\n\
+  \n  In the place where you want the signature to be, you need to\n  include the\
+  \ word \"signature\" surrounded by double curly brackets.\n  For example:\n\n  >\
+  \ I swear that the above is true and correct.\n  >\n  > {{ signature }}\n  >\n \
+  \ > Angela Washington\n\n  If you do not include \"{{ signature }}\" in exactly\
+  \ this way,\n  a signature will not be inserted.\nfield: intro_seen\n---\nquestion:\
+  \ |\n  Please upload the document you want to be signed.\nfields:\n  - Document:\
+  \ template_file\n    datatype: file\n    accept: |\n      \"application/vnd.openxmlformats-officedocument.wordprocessingml.document\"\
+  \n---\ncode: |\n  del signature\n  signature_reset = True\n---\nattachment:\n  name:\
+  \ Document\n  filename: signed_document\n  variable name: signed_document\n  valid\
+  \ formats:\n    - pdf\n  docx template file:\n    code: template_file\n---\nevent:\
+  \ final_screen\nprevent going back: True\nquestion: |\n  Here is your signed document.\n\
+  attachment code: signed_document\n---\ntemplate: email_template\nsubject: Signed\
+  \ document\ncontent: |\n  The attached document has been signed.\n---\ncode: |\n\
+  \  send_email(to=email_address, template=email_template, attachments=signed_document.pdf)\n\
+  \  document_emailed = True"
 "signature-diversion": |-
   question: |
     Sign your name
