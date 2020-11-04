@@ -5762,6 +5762,12 @@ def index(action_argument=None, refer=None):
                     message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
             if reset_interview and session_info is not None:
                 reset_user_dict(session_info['uid'], yaml_filename)
+            unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
+            if unique_sessions is not False and not current_user.is_authenticated:
+                delete_session_for_interview(yaml_filename)
+                flash(word("You need to be logged in to access this interview."), "info")
+                sys.stderr.write("Redirecting to login because sessions are unique.\n")
+                return redirect(url_for('user.login', next=url_for('index', **request.args)))
             if current_user.is_anonymous:
                 if not interview.allowed_to_initiate(is_anonymous=True):
                     delete_session_for_interview(yaml_filename)
@@ -5776,12 +5782,6 @@ def index(action_argument=None, refer=None):
                 raise DAError(word("You are not allowed to access this interview."), code=403)
             elif not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
                 raise DAError(word('You are not allowed to access this interview.'), code=403)
-            unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
-            if unique_sessions is not False and not current_user.is_authenticated:
-                delete_session_for_interview(yaml_filename)
-                flash(word("You need to be logged in to access this interview."), "info")
-                sys.stderr.write("Redirecting to login because sessions are unique.\n")
-                return redirect(url_for('user.login', next=url_for('index', **request.args)))
             session_id = None
             if reset_interview == 2:
                 delete_session_sessions()
@@ -17430,6 +17430,7 @@ def playground_packages():
     github_author_name = None
     github_url_from_file = None
     pypi_package_from_file = None
+    expected_name = 'unknown'
     if request.method == 'GET' and the_file != '':
         if the_file != '' and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
             filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)
@@ -17642,7 +17643,7 @@ def playground_packages():
                                 extracted[m.group(1)] = the_list
                         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
                         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
-                        package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
+                        package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
                         with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
                             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
                             fp.write(str(the_yaml))
@@ -17684,6 +17685,9 @@ def playground_packages():
         if 'github_url' in request.args:
             github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github_url'])
             if github_url.startswith('git@') and can_publish_to_github and github_user_name and github_email:
+                expected_name = re.sub(r'.*/', '', github_url)
+                expected_name = re.sub(r'\.git', '', expected_name)
+                expected_name = re.sub(r'docassemble-', '', expected_name)
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
@@ -17700,6 +17704,9 @@ def playground_packages():
                     output += err.output.decode()
                     raise DAError("playground_packages: error running git clone.  " + output)
             else:
+                expected_name = re.sub(r'.*/', '', github_url)
+                expected_name = re.sub(r'\.git', '', expected_name)
+                expected_name = re.sub(r'docassemble-', '', expected_name)
                 try:
                     if branch is not None:
                         output += subprocess.check_output(['git', 'clone', '-b', branch, github_url], cwd=directory, stderr=subprocess.STDOUT).decode()
@@ -17822,7 +17829,7 @@ def playground_packages():
         info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
         info_dict['dependencies'] = [x for x in info_dict['dependencies'] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
         #output += "info_dict is set\n"
-        package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
+        package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
         # if not user_can_edit_package(pkgname='docassemble.' + package_name):
         #     index = 1
         #     orig_package_name = package_name

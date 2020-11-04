@@ -3229,10 +3229,19 @@ class Question:
                                     field_info['extras']['show_if_val'] = TextObject('True')
                                 else:
                                     raise DAError("Invalid variable name in show if/hide if")
-                                if key == 'show if':
-                                    field_info['extras']['show_if_sign'] = 1
-                                else:
-                                    field_info['extras']['show_if_sign'] = 0
+                                exclusive = False
+                                if isinstance(field[key], dict) and 'code' in field[key]:
+                                    if len(field[key]) == 1:
+                                        exclusive = True
+                                    if key == 'show if':
+                                        field_info['extras']['show_if_sign_code'] = 1
+                                    else:
+                                        field_info['extras']['show_if_sign_code'] = 0
+                                if not exclusive:
+                                    if key == 'show if':
+                                        field_info['extras']['show_if_sign'] = 1
+                                    else:
+                                        field_info['extras']['show_if_sign'] = 0
                                 field_info['extras']['show_if_mode'] = 0
                             elif key == 'disable if' or key == 'enable if':
                                 if 'extras' not in field_info:
@@ -3263,10 +3272,19 @@ class Question:
                                     field_info['extras']['show_if_val'] = TextObject('True')
                                 else:
                                     raise DAError("Invalid variable name in disable if/enable if")
-                                if key == 'enable if':
-                                    field_info['extras']['show_if_sign'] = 1
-                                else:
-                                    field_info['extras']['show_if_sign'] = 0
+                                exclusive = False
+                                if isinstance(field[key], dict) and 'code' in field[key]:
+                                    if len(field[key]) == 1:
+                                        exclusive = True
+                                    if key == 'enable if':
+                                        field_info['extras']['show_if_sign_code'] = 1
+                                    else:
+                                        field_info['extras']['show_if_sign_code'] = 0
+                                if not exclusive:
+                                    if key == 'enable if':
+                                        field_info['extras']['show_if_sign'] = 1
+                                    else:
+                                        field_info['extras']['show_if_sign'] = 0
                                 field_info['extras']['show_if_mode'] = 1
                             elif key == 'default' or key == 'hint' or key == 'help':
                                 if not isinstance(field[key], dict) and not isinstance(field[key], list):
@@ -5081,7 +5099,7 @@ class Question:
                     docassemble.base.functions.this_thread.misc['current_field'] = field.number
                     if hasattr(field, 'showif_code'):
                         result = eval(field.showif_code, user_dict)
-                        if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
+                        if hasattr(field, 'extras') and 'show_if_sign_code' in field.extras and field.extras['show_if_sign_code'] == 0:
                             if result:
                                 extras['ok'][field.number] = False
                                 continue
@@ -7322,7 +7340,7 @@ class Interview:
                             if hasattr(field, 'showif_code') and hasattr(field, 'saveas') and field.saveas == field_id:
                                 docassemble.base.functions.this_thread.misc['current_field'] = field.number
                                 result = eval(field.showif_code, user_dict)
-                                if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
+                                if hasattr(field, 'extras') and 'show_if_sign_code' in field.extras and field.extras['show_if_sign_code'] == 0:
                                     if result:
                                         if skip_question is not False:
                                             skip_question = True
@@ -8427,12 +8445,59 @@ def custom_jinja_env():
     env.filters['fix_punctuation'] = docassemble.base.functions.fix_punctuation
     env.filters['redact'] = docassemble.base.functions.redact
     env.filters['verbatim'] = docassemble.base.functions.verbatim
+    env.filters['map'] = map_filter
     return env
 
-def selectattr_filter(array, attr_name):
-    for item in array:
-        if getattr(item, attr_name):
-            yield item
+def selectattr_filter(*pargs, **kwargs):
+    if len(pargs) > 2:
+        array = pargs[0]
+        attr_name = pargs[1]
+        func_name = pargs[2]
+        env = custom_jinja_env()
+        func = lambda item: env.call_test(func_name, item, pargs[3:], kwargs)
+        for item in array:
+            if func(getattr(item, attr_name)):
+                yield item
+    else:
+        for item in pargs[0]:
+            if getattr(item, pargs[1]):
+                yield item
+
+def map_filter(*pargs, **kwargs):
+    if len(pargs) >= 2:
+        array = pargs[0]
+        the_filter = pargs[1]
+        env = custom_jinja_env()
+        if the_filter not in env.filters:
+            raise DAError('filter passed to map() does not exist')
+        for item in array:
+            yield env.call_filter(the_filter, item, pargs[2:], kwargs)
+    else:
+        if 'attribute' in kwargs:
+            if 'default' in kwargs:
+                for item in pargs[0]:
+                    yield getattr(item, kwargs['attribute'], kwargs['default'])
+            else:
+                for item in pargs[0]:
+                    yield getattr(item, kwargs['attribute'])
+        elif 'index' in kwargs:
+            if 'default' in kwargs:
+                for item in pargs[0]:
+                    yield item.get(kwargs['index'], kwargs['default'])
+            else:
+                for item in pargs[0]:
+                    yield item[kwargs['index']]
+        elif 'function' in kwargs:
+            the_kwargs = kwargs.get('kwargs', dict())
+            the_pargs = kwargs.get('pargs', list())
+            if not isinstance(the_kwargs, dict):
+                raise DAError('kwargs passed to map() must be a dictionary')
+            if not isinstance(the_pargs, list):
+                raise DAError('pargs passed to map() must be a list')
+            for item in pargs[0]:
+                yield kwargs['function'](item, *the_pargs, **the_kwargs)
+        else:
+            raise DAError('map() must refer to a function, index, attribute, or filter')
 
 def markdown_filter(text):
     return docassemble.base.file_docx.markdown_to_docx(str(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))

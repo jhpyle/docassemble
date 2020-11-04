@@ -450,6 +450,10 @@ def user_info():
         user.question_id = this_thread.current_question.id
     except:
         user.question_id = None
+    try:
+        user.variable = this_thread.current_variable[-1]
+    except:
+        user.variable = None
     return user
 
 def action_arguments():

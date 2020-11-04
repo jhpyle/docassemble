@@ -1087,6 +1087,14 @@ class DAList(DAObject):
         self[index] = newobject
         self.there_are_any = True
         return newobject
+    def set_object_type(self, object_type):
+        """Sets the object_type of the DAList"""
+        if isinstance(object_type, DAObjectPlusParameters):
+            self.object_type = object_type.object_type
+            self.object_type_parameters = object_type.parameters
+        else:
+            self.object_type = object_type
+            self.object_type_parameters = dict()
     def gathered_and_complete(self):
         """Ensures all items in the list are complete and then returns True."""
         if not hasattr(self, 'doing_gathered_and_complete'):
@@ -1900,6 +1908,14 @@ class DADict(DAObject):
                 self.new(kwargs['keys'])
             del kwargs['keys']
         return super().init(*pargs, **kwargs)
+    def set_object_type(self, object_type):
+        """Sets the object_type of the DADict"""
+        if isinstance(object_type, DAObjectPlusParameters):
+            self.object_type = object_type.object_type
+            self.object_type_parameters = object_type.parameters
+        else:
+            self.object_type = object_type
+            self.object_type_parameters = dict()
     def _trigger_gather(self):
         """Triggers the gathering process."""
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:

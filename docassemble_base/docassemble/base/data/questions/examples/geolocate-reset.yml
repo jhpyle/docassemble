@@ -1,0 +1,59 @@
+metadata:
+  title: Geolocate address
+  short title: Geolocate
+  documentation: "https://docassemble.org/docs/objects.html#Address.geolocate"
+  example start: 1
+  example end: 8
+---
+objects:
+  - the_address: Address
+---
+mandatory: True
+code: |
+  saw_address
+  saw_address_again
+  final_screen
+---
+undefine:
+  - the_address.county
+question: |
+  Enter an address
+fields:
+  - Address: the_address.address
+  - Unit: the_address.unit
+    required: False
+  - City: the_address.city
+  - State: the_address.state
+    code: states_list()
+  - Zip: the_address.zip
+    required: False
+---
+question: |
+  In what county is ${ the_address }
+  located?
+fields:
+  - County: the_address.county
+---
+sets: the_address.county
+code: |
+  the_address.geolocate(reset=True)
+---
+question: |
+  Information about your address
+subquestion: |
+  The address you provided is:
+    
+  ${ the_address }
+
+  The address is located in
+  ${ the_address.county }.
+continue button field: saw_address
+---
+code: |
+  saw_address_again = True
+  undefine('saw_address')
+  force_ask('the_address.address')
+---
+event: final_screen
+question: |
+  Done with the interview

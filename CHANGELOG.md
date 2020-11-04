@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.1.94] - 2020-11-03
+### Added
+- The `set_object_type()` method of `DAList` and `DADict`.
+- The `variable` attribute of the return value of `user_info()`.
+- The `reset_geolocation()` method of `Address` and the `reset`
+  keyword parameter of the `geolocate()` method.
+### Fixed
+- The `map` Jinja2 filter looked up dictionary items instead of
+  attributes.
+- Could not mix a Python-based `show if` with a JavaScript-based `hide
+  if` or vice-versa.
+
 ## [1.1.93] - 2020-10-27
 ### Fixed
 - Markdown in popover field help.

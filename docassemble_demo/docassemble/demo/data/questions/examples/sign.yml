@@ -1,3 +1,9 @@
+metadata:
+  title: Signature
+  documentation: "https://docassemble.org/docs/recipes.html#document signing"
+  example start: 1
+  example end: 16
+---
 mandatory: True
 code: |
   multi_user = True
@@ -90,7 +96,6 @@ field: intro_seen
 ---
 question: |
   Please upload the document you want to be signed.
-subquestion: |
 fields:
   - Document: template_file
     datatype: file
