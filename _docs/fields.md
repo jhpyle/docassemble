@@ -1255,7 +1255,7 @@ variable.
 Adding `code` to a field makes it a multiple-choice question.  The
 `code` itself refers to [Python] code that generates a list of
 possible options for a multiple choice field.  The `code` field
-modifier is used in place of a [`choices`] field modifer, which you
+modifier is used in place of a [`choices`](#choices) field modifer, which you
 would use to specify the choices manually.
 
 {% include side-by-side.html demo="fields-mc" %}
