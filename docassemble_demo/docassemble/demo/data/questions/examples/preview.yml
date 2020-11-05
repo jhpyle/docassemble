@@ -30,7 +30,7 @@ content: |
   ${ action_argument('favorite_fruit') or "[BLANK]" }.
   With dinner I like to have a side of
   ${ action_argument('favorite_vegetable') or "[BLANK]" }.
-  % if action_argument('likes_mushrooms'):
+  % if action_argument('likes_mushrooms') == 'True':
   And I usually can't resist adding sauteed 
   ${ action_argument('favorite_mushroom') or "[BLANK]" }
   to my
