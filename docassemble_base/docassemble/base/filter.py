@@ -1397,7 +1397,7 @@ def audio_control(files, preload="metadata", title_text=None):
         title_text = " title=" + json.dumps(title_text)
     output = '<audio' + title_text + ' class="daaudio-control" controls="controls" preload="' + preload + '">' + "\n"
     for d in files:
-        if type(d) is list:
+        if isinstance(d, list):
             output += '  <source src="' + d[0] + '"'
             if d[1] is not None:
                 output += ' type="' + d[1] + '"/>'
@@ -1489,7 +1489,7 @@ def get_audio_urls(the_audio, question=None):
             if 'fullpath' in file_info:
                 url = server.url_finder(full_file, _question=question)
                 output.append([url, mimetype])
-    return output
+    return [item for item in output if item[0] is not None]
 
 def get_video_urls(the_video, question=None):
     output = list()

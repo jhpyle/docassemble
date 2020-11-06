@@ -17886,13 +17886,12 @@ def playground_packages():
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
                 if form.pypi.data and pypi_version is not None:
-                    versions = pypi_version.split(".")
-                    while True:
+                    if not new_info['version']:
+                        new_info['version'] = pypi_version
+                    while 'releases' in pypi_info['info'] and new_info['version'] in pypi_info['info']['releases'].keys():
+                        versions = new_info['version'].split(".")
                         versions[-1] = str(int(versions[-1]) + 1)
                         new_info['version'] = ".".join(versions)
-                        if 'releases' not in pypi_info['info'] or new_info['version'] not in pypi_info['info']['releases'].keys():
-                            break
-                        versions = new_info['version'].split(".")
                 filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)
                 if os.path.isfile(filename):
                     with open(filename, 'rU', encoding='utf-8') as fp:

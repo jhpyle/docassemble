@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.1.95] - 2020-11-06
+### Fixed
+- Unnecessary incrementing of PyPI version.
+- Recent installations (since June 25, 2020, possibly) contained a
+  Debian security update that disabled ImageMagick's ability to inject
+  signature images onto PDFs.  Running `docker stop` and `docker
+  start` is required to enable the PDF signature image feature.
+
 ## [1.1.94] - 2020-11-03
 ### Added
 - The `set_object_type()` method of `DAList` and `DADict`.
