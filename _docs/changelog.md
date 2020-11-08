@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.96](https://github.com/jhpyle/docassemble/releases/tag/v1.1.96) - 2020-11-08
+
+### Added
+- The `lang` URL parameter for non-interview screens.
+
 ## [1.1.95](https://github.com/jhpyle/docassemble/releases/tag/v1.1.95) - 2020-11-06
 
 ### Fixed
