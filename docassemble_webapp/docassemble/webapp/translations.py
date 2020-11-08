@@ -7,9 +7,11 @@ DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 def setup_translation():
     language = None
     if current_user.is_authenticated:
-        language = current_user.language 
+        language = current_user.language
     if not language:
-        if 'language' in session:
+        if 'lang' in request.args and request.args['lang']:
+            language = request.args['lang']
+        elif 'language' in session:
             language = session['language']
         elif 'Accept-Language' in request.headers:
             langs = parse_accept_language(request.headers['Accept-Language'])
@@ -21,4 +23,3 @@ def setup_translation():
             language = DEFAULT_LANGUAGE
     session['language'] = language
     set_language(language)
-

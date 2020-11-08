@@ -657,6 +657,8 @@ class InterviewStatus:
             result['validation_messages'] = copy.copy(self.question.interview.default_validation_messages[self.question.language])
         else:
             result['validation_messages'] = dict()
+        if 'reload_after' in self.extras:
+            result['reload'] = 1000 * int(self.extras['reload_after'])
         lang = docassemble.base.functions.get_language()
         if len(self.question.terms) or len(self.question.interview.terms):
             result['terms'] = dict()

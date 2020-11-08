@@ -219,12 +219,6 @@ else:
 def _call_or_get(function_or_property):
     return function_or_property() if callable(function_or_property) else function_or_property
 
-def _endpoint_url(endpoint):
-    url = '/'
-    if endpoint:
-        url = url_for(endpoint)
-    return url
-
 def _get_safe_next_param(param_name, default_endpoint):
     if param_name in request.args:
         #safe_next = current_app.user_manager.make_safe_url_function(unquote(request.args[param_name]))
@@ -484,6 +478,7 @@ def custom_login():
     """ Prompt for username/email and password and sign the user in."""
     #sys.stderr.write("In custom_login\n")
     #logmessage("Doing custom_login")
+
     if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
         is_json = True
     else:
@@ -502,6 +497,8 @@ def custom_login():
             url_parts[4] = urlencode(query)
             safe_next = urlunparse(url_parts)
         return add_secret_to(redirect(safe_next))
+
+    setup_translation()
 
     login_form = user_manager.login_form(request.form)
     register_form = user_manager.register_form()
@@ -603,7 +600,12 @@ def logout():
     #     secret = str(secret)
     #     set_cookie = False
     user_manager = current_app.user_manager
-    next = request.args.get('next', _endpoint_url(user_manager.after_logout_endpoint))
+    if 'next' in request.args:
+        next = request.args['next']
+    elif session.get('language', None) and session['language'] != DEFAULT_LANGUAGE:
+        next = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
+    else:
+        next = _endpoint_url(user_manager.after_logout_endpoint)
     if current_user.is_authenticated and current_user.social_id.startswith('auth0$') and 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and 'domain' in daconfig['oauth']['auth0']:
         if next.startswith('/'):
             next = get_base_url() + next
@@ -2794,10 +2796,10 @@ def reset_session(yaml_filename, secret):
     update_session(yaml_filename, uid=user_code)
     return(user_code, user_dict)
 
-def _endpoint_url(endpoint):
+def _endpoint_url(endpoint, **kwargs):
     url = url_for('index')
     if endpoint:
-        url = url_for(endpoint)
+        url = url_for(endpoint, **kwargs)
     return url
 
 def user_can_edit_package(pkgname=None, giturl=None):
