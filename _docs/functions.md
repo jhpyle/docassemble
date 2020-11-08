@@ -4343,14 +4343,13 @@ are optional:
 
  - `country`: user's country code ([ISO 3166-1 alpha-2] format).
  - `first_name`: user's first name.
- - `language`: user's language code.
  - `last_name`: user's last name.
+ - `language` the user's language (an [ISO-639-1] or [ISO-639-3]
+   code).
  - `organization`: user's organization
  - `subdivisionfirst`: user's state.
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
- - `language` the user's language (an [ISO-639-1] or [ISO-639-3]
-   code).
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
  - `password`: user's password.
  - `account_type`: the type of login the user used.  This is `local`

@@ -94,6 +94,37 @@ The language and locale settings have the following effects:
   you defined values for multiple languages, **docassemble** will use
   the value for the current language.
 
+On pages other than interviews, the language that is used for
+translation purposes is determined as follows:
+
+* If the user is logged in, the user has a "profile" that includes a
+  field called `language`.  If the `language` field in the user's
+  profile is defined, this language will be used for translations.
+  When a user first registers, this `language` field is blank.  You
+  can use logic in an interview to set it to something.  In
+  interviews, you can read this profile by calling [`get_user_info()`]
+  and change it by calling [`set_user_info()`].
+* If the user is not logged in, or the user does not have a `language`
+  defined in their profile, **docassemble** will look for a URL
+  parameter `lang`.  For example, if you have a web site and you want
+  to put a link on that web site to direct the user to log in to your
+  **docassemble** server, you could use a URL like
+  `https://docassemble.example.com/user/sign-in?lang=es` and the user
+  will see a login screen that is in Spanish.  Other URLs with which
+  you might want to use the `lang` parameter are `/user/register` and
+  `/list`.
+* If there is no `lang` parameter in the URL, **docassemble** will
+  look for an `Accept-Language` header in the request from the user's
+  browser.  This is typically set by the user's web browser to
+  whatever language is defined in the web browser settings.  So if the
+  user is a German speaker who is using a web browser that is set up
+  to use the language `de`, then the language `de` will be used for
+  translations.  In interviews, you can read this language by calling
+  [`language_from_browser()`].
+* If a language cannot be found in the `Accept-Language` header, the
+  language defined by the [`language`] directive in the
+  [Configuration] is used.
+
 # <a name="bpsingle"></a>Best practices for single-language interviews
 
 If your interview only works in one language, do not set the
@@ -107,17 +138,142 @@ simply make sure that the default [`language`] and [`locale`] in the
 If you have an interview that needs to function in multiple languages,
 you will need to have [`initial`] code that calls [`set_language()`].
 **docassemble** does not remember the active language from one screen
-to the next (in a multi-user interview, the language could depend on
-who the user is), but the [`initial`] code will make sure that it is
+to the next , but the [`initial`] code will make sure that it is
 always set to the correct value.
 
 {% highlight yaml %}
----
-include:
-  - basic-questions.yml
+objects:
+  - user: Individual
 ---
 initial: True
 code: |
+  set_language(user.language)
+---
+question: |
+  What language do you speak?
+field: user.language
+choices:
+  - "English": en
+  - "Español": es
+{% endhighlight %}
+
+Note that when a user is logged in, they have a user profile, and a
+`language` field is part of their user profile.  The value of this
+field will determine what language is used when a user logs in and
+visits a page like `/interviews`.  When a user registers, this field
+is left unset, and users do not have the ability to change their
+language.  You can set the `language` field in the user profile
+during an interview, using code like this:
+
+{% highlight yaml %}
+objects:
+  - user: Individual
+---
+initial: True
+code: |
+  set_language(user.language)
+---
+mandatory: True
+code: |
+  if user_logged_in() and not get_user_info()['language']:
+    set_user_info(language=user.language)
+---
+question: |
+  What language do you speak?
+field: user.language
+choices:
+  - "English": en
+  - "Español": es
+{% endhighlight %}
+
+If you want to avoid asking the user for their language in situations
+where the `language` field of the user profile has already been
+defined, you can use a `code` block to set `user.language` without
+asking a `question`:
+
+{% highlight yaml %}
+objects:
+  - user: Individual
+---
+initial: True
+code: |
+  set_language(user.language)
+---
+mandatory: True
+code: |
+  if user_logged_in() and not get_user_info()['language']:
+    set_user_info(language=user.language)
+---
+question: |
+  What language do you speak?
+field: user.language
+choices:
+  - "English": en
+  - "Español": es
+---
+code: |
+  if user_logged_in() and get_user_info()['language'] in ('en', 'es'):
+    user.language = get_user_info()['language']
+{% endhighlight %}
+
+You can also avoid asking the user for their language by assuming that
+they speak whatever language their web browser is set up to use, which
+you can determine by calling [`language_from_browser()`].
+
+{% highlight yaml %}
+objects:
+  - user: Individual
+---
+initial: True
+code: |
+  set_language(user.language)
+---
+mandatory: True
+code: |
+  if user_logged_in() and not get_user_info()['language']:
+    set_user_info(language=user.language)
+---
+question: |
+  What language do you speak?
+field: user.language
+choices:
+  - "English": en
+  - "Español": es
+---
+code: |
+  if user_logged_in() and get_user_info()['language'] in ('en', 'es'):
+    user.language = get_user_info()['language']
+  elif language_from_browser('en', 'es'):
+    user.language = language_from_browser('en', 'es')
+{% endhighlight %}
+
+**docassemble** does not handle language selection automatically
+because there is no one-size-fits-all solution.  For example, suppose
+a user's primary language was French, but you had some interviews on
+your system that were only available in English and German.  You would
+want to give the user a chance to select whether they saw the
+interview in English or German.  Handling language selection in the
+interview logic allows interview developers to customize the way that
+the applicable language is determined.
+
+The reason for using an `initial` block to set the language is based
+on the fact that an interview session can have multiple users, who
+might speak different languages.  For example, you might have a legal
+advice interview where the user may be Spanish-speaking but the
+advocate may be English-speaking.  Here is an interview where the
+`user` object is different depending on whether the active user is the
+client or the advocate:
+
+{% highlight yaml %}
+objects:
+  - client: Individual
+  - advocate: Individual
+---
+initial: True
+  if user_logged_in() and user_has_privilege('advocate'):
+    user = advocate
+  else:
+    user = client
   set_language(user.language)
 ---
 generic object: Individual
@@ -153,10 +309,6 @@ and all files reside in a folder called `bestnumber` within the
 The contents of `code.yml` are:
 
 {% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
 initial: True
 code: |
   set_language(user_language)
@@ -165,19 +317,17 @@ code: |
 question: |
   What language do you speak?  (¿Qué idioma habla?)
 choices:
-  - English: en
-  - Español: es
+  - "English": en
+  - "Español": es
 field: user_language
 ---
 code: |
   best_number = favorite_number + 1
----
 {% endhighlight %}
 
 The contents of `en.yml` are:
 
 {% highlight yaml %}
----
 default language: en
 ---
 terms:
@@ -197,13 +347,11 @@ subquestion: |
   but ${ best_number }.
 buttons:
   - Restart: restart
----
 {% endhighlight %}
 
 The contents of `es.yml` are:
 
 {% highlight yaml %}
----
 default language: es
 ---
 terms:
@@ -223,21 +371,18 @@ subquestion: |
   no ${ favorite_number }.
 buttons:
   - Reanudar: restart
----
 {% endhighlight %}
 
 Finally, the contents of `interview.yml` are:
 
 {% highlight yaml %}
----
 include:
   - code.yml
   - en.yml
   - es.yml
----
 {% endhighlight %}
 
-([Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/bestnumber/interview.yml){:target="_blank"}.)
+[Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/bestnumber/interview.yml){:target="_blank"}.
 
 # <a name="translators"></a>Working with third-party translators
 
@@ -245,9 +390,11 @@ While it is generally a good thing that **docassemble** allows you to
 write complicated [`question`]s that make heavy use of [Mako]
 templating, [Markdown], and embedded Python code, a downside is that
 all of this "code" can make the translation process more complicated.
-Translators may be confused by all of the code.  They may ask you to
-convert your code to Microsoft Word, putting a great deal of
-conversion work on you, or they may translate variable names when they
+Translators may be confused by all of the code, even when you give
+them an [interview phrase translation file] in Excel format.  They may
+ask you to convert your code to Microsoft Word, putting a great deal
+of conversion work on you.  Or they may translate what you give them
+incorrectly, for example by translating variable names when they
 shouldn't.
 
 You may be tempted to change the way that you code interviews to
@@ -446,6 +593,7 @@ docassemble.base.functions.update_language_function('fr', 'currency_symbol', lam
 [`post`]: {{ site.baseurl }}/docs/initial.html#post
 [`submit`]: {{ site.baseurl }}/docs/initial.html#submit
 [Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
+[interview phrase translation file]: {{ site.baseurl }}/docs/admin.html#translation file
 [Download an interview phrase translation file]: {{ site.baseurl }}/docs/admin.html#translation file
 [`sections`]: {{ site.baseurl }}/docs/initial.html#sections
 [utility]: {{ site.baseurl }}/docs/admin.html#utilities
@@ -460,3 +608,6 @@ docassemble.base.functions.update_language_function('fr', 'currency_symbol', lam
 [`update_nice_numbers()`]: {{ site.baseurl }}/docs/functions.html#update_nice_numbers
 [`currency_symbol()`]: {{ site.baseurl }}/docs/functions.html#currency_symbol
 [`currency()`]: {{ site.baseurl }}/docs/functions.html#currency
+[`get_user_info()`]: {{ site.baseurl }}/docs/functions.html#get_user_info
+[`set_user_info()`]: {{ site.baseurl }}/docs/functions.html#set_user_info
+[`language_from_browser()`]: {{ site.baseurl }}/docs/functions.html#language_from_browser
