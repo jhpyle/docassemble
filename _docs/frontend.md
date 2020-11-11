@@ -338,16 +338,6 @@ interview file will be re-read from the disk.  This is how the
 intensive task, so **docassemble** keeps interviews in memory whenever
 it can.)
 
-If you are sending HTTP requests to **docassemble** using your own
-software, you only need to worry about URL parameters when sending a
-GET request to start an interview session or switch to a different
-session.  (If you send a GET request in order to start a new session,
-you might want to always include the `reset=1` parameter along with
-the `i` parameter, because then you don't need to worry about what
-might be in the [Flask] session data.)  Most of the requests you send
-can simply be POST requests to `/`.  The `session` cookie unlocks all
-of the stored information that is used to handle every HTTP request.
-
 While the web browser sends POST requests with `ajax=1`, a custom
 front end would probably not be interested in the information returned
 from such requests.  Instead, a custom front end would send POST

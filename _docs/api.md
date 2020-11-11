@@ -1902,6 +1902,30 @@ Response on success: [204]
 
 Body of response: empty.
 
+## <a name="clear_cache"></a>Clear the interview cache
+
+Description: Clears the interview cache, causing the [YAML] of each
+interview to be re-read the next time the interview is requested.
+
+Path: `/api/clear_cache`
+
+Method: [POST]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an
+   `X-API-Key` cookie or header).
+
+Required privileges: `admin`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate or the
+   required privileges are not present.
+
+Response on success: [204]
+
+Body of response: empty.
+
 ## <a name="config_read"></a>Get the server configuration
 
 Description: Returns the [Configuration] in [JSON] format.

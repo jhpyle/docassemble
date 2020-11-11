@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.97](https://github.com/jhpyle/docassemble/releases/tag/v1.1.97) - 2020-11-10
+
+### Added
+- The `/api/clear_cache` endpoint.
+
 ## [1.1.96](https://github.com/jhpyle/docassemble/releases/tag/v1.1.96) - 2020-11-08
 
 ### Added
