@@ -24280,6 +24280,16 @@ def api_resume_url():
     pipe.execute()
     return jsonify(url_for('launch', c=code, _external=True))
 
+@app.route('/api/clear_cache', methods=['POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
+def api_clear_cache():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    for key in r.keys('da:interviewsource:*'):
+        r.incr(key.decode())
+    return ('', 204)
+
 @app.route('/api/config', methods=['GET', 'POST'])
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'HEAD'], automatic_options=True)
