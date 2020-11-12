@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.98] - 2020-11-12
+### Fixed
+- Bug in `bates_number()`.
+
 ## [1.1.97] - 2020-11-10
 ### Added
 - The `/api/clear_cache` endpoint.

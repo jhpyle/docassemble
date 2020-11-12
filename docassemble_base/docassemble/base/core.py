@@ -3387,7 +3387,7 @@ class DAFile(DAObject):
                 all_pdf = False
                 docs.append(other_file)
         if len(docs) == 0:
-            if not other_file._is_pdf():
+            if not self._is_pdf():
                 all_pdf = False
             docs.append(self)
         if not all_pdf:
