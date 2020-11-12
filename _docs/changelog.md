@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.98](https://github.com/jhpyle/docassemble/releases/tag/v1.1.98) - 2020-11-12
+
+### Fixed
+- Bug in `bates_number()`.
+
 ## [1.1.97](https://github.com/jhpyle/docassemble/releases/tag/v1.1.97) - 2020-11-10
 
 ### Added
