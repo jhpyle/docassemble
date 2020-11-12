@@ -1,7 +1,7 @@
 metadata:
   title: Table export
   short title: Export
-  documentation: "https://docassemble.org/docs/template.html#table"
+  documentation: "https://docassemble.org/docs/initial.html#table"
   example start: 1
   example end: 4
 ---

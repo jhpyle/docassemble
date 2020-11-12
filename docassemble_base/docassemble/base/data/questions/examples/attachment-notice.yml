@@ -1,0 +1,13 @@
+metadata:
+  title: Attachment parts
+  documentation: "https://docassemble.org/docs/documents.html#include attachment notice"
+---
+question: Here is your document.
+attachments:
+  - name: Praecipe to discontinue
+    docx template file: praecipe_discontinue.docx
+    valid formats:
+      - pdf
+include attachment notice: False
+include download tab: False
+mandatory: True

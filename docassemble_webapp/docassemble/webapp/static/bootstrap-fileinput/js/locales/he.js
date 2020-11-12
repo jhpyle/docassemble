@@ -28,12 +28,13 @@
         msgNoFilesSelected: 'לא נבחרו קבצים',
         msgPaused: 'Paused',
         msgCancelled: 'מבוטל',
-        msgPlaceholder: 'בחר {files}...',
+        msgPlaceholder: 'בחר {files} ...',
         msgZoomModalHeading: 'תצוגה מקדימה מפורטת',
         msgSizeTooSmall: 'קובץ "{name}" (<b>{size} KB</b>) קטן מדי וחייב להיות גדול מ <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'קובץ "{name}" (<b>{size} KB</b>) חורג מהגודל המרבי המותר להעלאה של <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'עליך לבחור לפחות <b>{n}</b> {files} להעלאה.',
         msgFilesTooMany: 'מספר הקבצים שנבחרו להעלאה <b>({n})</b> חורג מהמגבלה המרבית המותרת של <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'קובץ "{name}" לא נמצא!',
         msgFileSecured: 'הגבלות אבטחה מונעות קריאת הקובץ "{name}".',
         msgFileNotReadable: 'קובץ "{name}" לא קריא.',
@@ -53,10 +54,10 @@
             'object': 'אובייקט'
         },
         msgUploadAborted: 'העלאת הקובץ בוטלה',
-        msgUploadThreshold: 'מעבד...',
-        msgUploadBegin: 'מאתחל ...',
+        msgUploadThreshold: 'מעבד &hellip;',
+        msgUploadBegin: 'מאתחל &hellip;',
         msgUploadEnd: 'בוצע',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'אין נתונים זמינים להעלאה.',
         msgValidationError: 'שגיאת אימות',
         msgLoading: 'טוען קובץ {index} של {files} &hellip;',
@@ -92,7 +93,7 @@
             indicatorSuccessTitle: 'הועלה',
             indicatorErrorTitle: 'שגיאת העלאה',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'מעלה...'
+            indicatorLoadingTitle:  'מעלה &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'הצגת את הקובץ הקודם',

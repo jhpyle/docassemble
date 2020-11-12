@@ -1,0 +1,18 @@
+server {
+    listen 8082;
+    server_tokens off;
+    server_name {{DAHOSTNAME}};
+    client_max_body_size {{DAMAXCONTENTLENGTH}};
+
+    location / {
+        root /var/www/html/log;
+	index /listlog;
+    }
+
+    location /listlog { try_files $uri @docassemblelog; }
+    location @docassemblelog {
+        include uwsgi_params;
+        uwsgi_pass unix:/var/run/uwsgi/docassemblelog.sock;    
+    }
+
+}

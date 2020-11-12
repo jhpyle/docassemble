@@ -32,7 +32,9 @@ do
          "$file" = "help" ]
     then
 	echo -e -n "\n    And I wait 6 seconds\n    And I set the window size to 650x1136\n    And I wait 2 seconds\n    And I save a screenshot to \"$tempfile\"\n    And I set the window size to 1005x9999\n    And I wait 2 seconds" >> $featurefile
-    elif [ "$file" = "radio-list-mobile" ]
+    elif [ "$file" = "radio-list-mobile" -o \
+	   "$file" = "sections-small-screen-dropdown" -o \
+	   "$file" = "sections-small-screen-false" ]
     then
 	echo -e -n "\n    And I wait 6 seconds\n    And I set the window size to 385x1136\n    And I wait 2 seconds\n    And I save a screenshot to \"$tempfile\"\n    And I set the window size to 1005x9999\n    And I wait 2 seconds" >> $featurefile
     elif [ "$file" = "table" -o "$file" = "table-alt" -o "$file" = "table-mako" -o "$file" = "table-reorder" ]
@@ -72,7 +74,7 @@ do
     elif [ "$file" = "table-read-only" -o "$file" = "table-read-only-2" ]
     then
 	echo -e -n "\n    Then I should see the phrase \"Do you want to add another fruit to the list?\"\n    And I click the button \"Yes\"\n    Then I should see the phrase \"Tell me about the fruit.\"\n    And I set \"Name\" to \"Grape\"\n    And I set \"Seeds\" to \"0\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Do you want to add another fruit to the list?\"\n    And I click the button \"Yes\"\n    Then I should see the phrase \"Tell me about the fruit.\"\n    And I set \"Name\" to \"Watermelon\"\n    And I set \"Seeds\" to \"43\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Do you want to add another fruit to the list?\"\n    And I click the button \"No\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile    
-    elif [ "$file" = "table-dict-edit" -o "$file" = "table-dict-edit-minimum-number" -o "$file" = "table-dict-edit-delete-buttons" -o "$file" = "table-dict-delete-buttons" ]
+    elif [ "$file" = "table-dict-edit" -o "$file" = "table-dict-edit-minimum-number" -o "$file" = "table-dict-edit-delete-buttons" -o "$file" = "table-dict-delete-buttons" -o "$file" = "table-dict-confirm" ]
     then
 	echo -e -n "\n    And I click the option \"Yes\" under \"Do you get income from benefits?\"\n    And I wait 1 second\n    And I set \"How much do you get from benefits?\" to \"434\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Income from employment\"\n    And I click the option \"No\" under \"Do you get income from employment?\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Income from interest\"\n    And I click the option \"Yes\" under \"Do you get income from interest?\"\n    And I wait 1 second\n    And I set \"How much do you get from interest?\" to \"532\"\n    And I click the button \"Continue\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
     elif [ "$file" = "review-edit-list-table" ]
@@ -94,7 +96,7 @@ do
 done
 
 cd tests
-lettuce -v 3 -r --failfast features/Screenshots.feature
+aloe --verbosity=3 --color -x -d features/Screenshots.feature
 if [ $? -ne 0 ]
 then
     echo "Failure while making screenshots"
@@ -145,16 +147,20 @@ do
          "$file" = "sections-keywords-review" -o \
          "$file" = "sections-keywords-set-sections" -o \
 	 "$file" = "sections-non-progressive" -o \
+         "$file" = "sections-auto-open" -o \
          "$file" = "centered" -o \
          "$file" = "mainpage-demo-parts" -o \
          "$file" = "setparts-demo" -o \
+         "$file" = "preview" -o \
          "$file" = "default-screen-parts-override" -o \
          "$file" = "metadata-screen-parts" -o \
          "$file" = "default-screen-parts" -o \
          "$file" = "set-parts" ]
     then
 	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 -resize 478x9999 docassemble_webapp/docassemble/webapp/static/examples/$file.png
-    elif [ "$file" = "radio-list-mobile" ]
+    elif [ "$file" = "radio-list-mobile" -o \
+           "$file" = "sections-small-screen-dropdown" -o \
+	   "$file" = "sections-small-screen-false" ]
     then
 	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "markdown" -o "$file" = "allow-emailing-true" -o "$file" = "allow-emailing-false" -o "$file" = "markdown-demo" -o "$file" = "document-links" -o "$file" = "document-links-limited" -o "$file" = "allow-downloading-true" ]

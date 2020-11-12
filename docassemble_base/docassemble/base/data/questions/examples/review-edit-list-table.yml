@@ -60,7 +60,7 @@ review:
       % else:
       There are no people.
 
-      ${ person.add_action(message="I would like to add one.") }
+      ${ person.add_action("I would like to add one.") }
       % endif
 ---
 table: person.table

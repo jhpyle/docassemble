@@ -5,9 +5,6 @@ metadata:
   example start: 2
   example end: 5
 ---
-imports:
-  - json
----
 objects:
   - the_address: Address
 ---
@@ -19,6 +16,7 @@ fields:
     required: False
   - City: the_address.city
   - State: the_address.state
+    code: states_list()
   - Zip: the_address.zip
     required: False
 ---

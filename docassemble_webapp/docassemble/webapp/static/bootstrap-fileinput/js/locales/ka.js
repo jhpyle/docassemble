@@ -28,13 +28,14 @@
         msgNoFilesSelected: 'ფაილები არ არის არჩეული',
         msgPaused: 'Paused',
         msgCancelled: 'გაუქმებულია',
-        msgPlaceholder: 'აირჩიეთ {files}...',
+        msgPlaceholder: 'აირჩიეთ {files} ...',
         msgZoomModalHeading: 'დეტალურად ნახვა',
         msgFileRequired: 'ატვირთვისთვის აუცილებელია ფაილის არჩევა.',
         msgSizeTooSmall: 'ფაილი "{name}" (<b>{size} KB</b>) არის ძალიან პატარა. მისი ზომა უნდა იყოს არანაკლებ <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'ფაილი "{name}" (<b>{size} KB</b>) აჭარბებს მაქსიმალურ დასაშვებ ზომას <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'უნდა აირჩიოთ მინიმუმ <b>{n}</b> {file} ატვირთვისთვის.',
         msgFilesTooMany: 'არჩეული ფაილების რაოდენობა <b>({n})</b> აჭარბებს დასაშვებ ლიმიტს <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'ფაილი "{name}" არ მოიძებნა!',
         msgFileSecured: 'უსაფრთხოებით გამოწვეული შეზღუდვები კრძალავს ფაილის "{name}" წაკითხვას.',
         msgFileNotReadable: 'ფაილის "{name}" წაკითხვა შეუძლებელია.',
@@ -54,10 +55,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'ფაილის ატვირთვა შეწყდა',
-        msgUploadThreshold: 'მუშავდება...',
-        msgUploadBegin: 'ინიციალიზაცია...',
+        msgUploadThreshold: 'მუშავდება &hellip;',
+        msgUploadBegin: 'ინიციალიზაცია &hellip;',
         msgUploadEnd: 'დასრულებულია',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'ატვირთვისთვის დაუშვებელი მონაცემები.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -98,7 +99,7 @@
             indicatorSuccessTitle: 'ატვირთულია',
             indicatorErrorTitle: 'ატვირთვის შეცდომა',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'ატვირთვა ...'
+            indicatorLoadingTitle:  'ატვირთვა &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'წინა ფაილის ნახვა',

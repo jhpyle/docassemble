@@ -90,8 +90,7 @@ while iterations:
             data = {'key': key, 'i': i, 'secret': secret, 'session': session, 'variables': json.dumps(variables)}
         if len(file_variables):
             data = {'key': key, 'i': i, 'secret': secret, 'session': session}
-        if info.get('mandatory', False):
-            data['question_name'] = info['questionName']
+        data['question_name'] = info['questionName']
         if 'event_list' in info:
             data['event_list'] = json.dumps(info['event_list'])
         if len(file_uploads):

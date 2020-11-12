@@ -1,35 +1,42 @@
 from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, dbtableprefix
+from docassemble.webapp.database import dbprefix
 from sqlalchemy import true, false
-
-class Attachments(db.Model):
-    __tablename__ = dbtableprefix + "attachments"
-    id = db.Column(db.Integer(), primary_key=True)
-    key = db.Column(db.String(250), index=True)
-    dictionary = db.Column(db.Text())
-    question = db.Column(db.Integer())
-    filename = db.Column(db.Text(), index=True)
-    encrypted = db.Column(db.Boolean(), nullable=False, server_default=true())
+import docassemble.webapp.users.models
+from sqlalchemy.dialects.postgresql.json import JSONB
 
 class Uploads(db.Model):
     __tablename__ = dbtableprefix + "uploads"
     indexno = db.Column(db.Integer(), primary_key=True)
     key = db.Column(db.String(250), index=True)
-    filename = db.Column(db.Text(), index=True)
-    yamlfile = db.Column(db.Text())
+    filename = db.Column(db.String(255), index=True)
+    yamlfile = db.Column(db.String(255), index=True)
     private = db.Column(db.Boolean(), nullable=False, server_default=true())
     persistent = db.Column(db.Boolean(), nullable=False, server_default=false())
+
+class UploadsUserAuth(db.Model):
+    __tablename__ = dbtableprefix + "uploadsuserauth"
+    id = db.Column(db.Integer(), primary_key=True)
+    uploads_indexno = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
+    temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'), index=True)
+
+class UploadsRoleAuth(db.Model):
+    __tablename__ = dbtableprefix + "uploadsroleauth"
+    id = db.Column(db.Integer(), primary_key=True)
+    uploads_indexno = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'), nullable=False, index=True)
+    role_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'role.id', ondelete='CASCADE'), nullable=False, index=True)
 
 class ObjectStorage(db.Model):
     __tablename__ = dbtableprefix + "objectstorage"
     id = db.Column(db.Integer(), primary_key=True)
-    key = db.Column(db.Text(), index=True)
+    key = db.Column(db.String(1024), index=True)
     value = db.Column(db.Text())
 
 class SpeakList(db.Model):
     __tablename__ = dbtableprefix + "speaklist"
     id = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.Text(), index=True)
+    filename = db.Column(db.String(255), index=True)
     key = db.Column(db.String(250), index=True)
     phrase = db.Column(db.Text())
     question = db.Column(db.Integer())
@@ -51,8 +58,8 @@ class Supervisors(db.Model):
 class MachineLearning(db.Model):
     __tablename__ = dbtableprefix + "machinelearning"
     id = db.Column(db.Integer(), primary_key=True)
-    group_id = db.Column(db.Text())
-    key = db.Column(db.Text(), index=True)
+    group_id = db.Column(db.String(1024))
+    key = db.Column(db.String(1024), index=True)
     independent = db.Column(db.Text())
     dependent = db.Column(db.Text())
     info = db.Column(db.Text())
@@ -64,11 +71,11 @@ class Shortener(db.Model):
     __tablename__ = dbtableprefix + "shortener"
     id = db.Column(db.Integer(), primary_key=True)
     short = db.Column(db.String(250), nullable=False, unique=True)
-    filename = db.Column(db.Text(), index=True)
+    filename = db.Column(db.String(255), index=True)
     uid = db.Column(db.String(250))
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
     temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
-    key = db.Column(db.Text(), index=True)
+    key = db.Column(db.String(255), index=True)
     index = db.Column(db.Integer())
     modtime = db.Column(db.DateTime(), server_default=db.func.now())
 
@@ -103,8 +110,21 @@ class EmailAttachment(db.Model):
 class GlobalObjectStorage(db.Model):
     __tablename__ = dbtableprefix + "globalobjectstorage"
     id = db.Column(db.Integer(), primary_key=True)
-    key = db.Column(db.Text(), index=True)
+    key = db.Column(db.String(1024), index=True)
     value = db.Column(db.Text())
     encrypted = db.Column(db.Boolean(), nullable=False, server_default=true())
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
     temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
+
+class JsonStorage(db.Model):
+    __tablename__ = dbtableprefix + "jsonstorage"
+    id = db.Column(db.Integer(), primary_key=True)
+    filename = db.Column(db.String(255), index=True)
+    key = db.Column(db.String(250), index=True)
+    if dbprefix.startswith('postgresql'):
+        data = db.Column(JSONB)
+    else:
+        data = db.Column(db.Text())
+    tags = db.Column(db.Text())
+    modtime = db.Column(db.DateTime(), server_default=db.func.now())
+    persistent = db.Column(db.Boolean(), nullable=False, server_default=false())

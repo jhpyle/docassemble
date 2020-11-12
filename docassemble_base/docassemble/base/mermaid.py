@@ -3,7 +3,6 @@ import sys
 import tempfile
 import re
 import subprocess
-from six import string_types, text_type
 
 from os.path import expanduser
 from docassemble.base.functions import get_config
@@ -14,10 +13,10 @@ __all__ = ['mmdc']
 def mmdc(input_text, file_format='svg', flags=dict()):
     if not isinstance(flags, dict):
         raise Exception("mmdc: flags not a dictionary")
-    if not isinstance(file_format, string_types) or re.search(r'[^a-z]', file_format) or len(file_format) == 0:
+    if not isinstance(file_format, str) or re.search(r'[^a-z]', file_format) or len(file_format) == 0:
         raise Exception("mmdc: invalid file format")
-    if not isinstance(input_text, string_types):
-        input_text = text_type(input_text)
+    if not isinstance(input_text, str):
+        input_text = str(input_text)
     sys.stderr.write("Writing:\n" + input_text + "\n")
     input_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="w", suffix=".mmd", delete=False)
     input_file.write(input_text)

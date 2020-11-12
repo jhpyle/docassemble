@@ -1,5 +1,4 @@
 import os
-from six import string_types, text_type, PY2
 import re
 import copy
 import sys
@@ -16,12 +15,11 @@ import docassemble.base.pdftk
 import shutil
 import datetime
 import types
-from io import open
 TypeType = type(type(None))
 
 __all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'oneline']
 
-always_defined = set(["False", "None", "True", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x", "nav", "PY2", "string_types"])
+always_defined = set(["False", "None", "True", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x", "nav"])
 replace_square_brackets = re.compile(r'\\\[ *([^\\]+)\\\]')
 start_spaces = re.compile(r'^ +')
 end_spaces = re.compile(r' +$')
@@ -33,42 +31,42 @@ remove_u = re.compile(r'^u')
 
 class DADecoration(DAObject):
     def init(self, **kwargs):
-        return super(DADecoration, self).init(**kwargs)
+        return super().init(**kwargs)
 
 class DADecorationDict(DADict):
     def init(self, **kwargs):
-        super(DADecorationDict, self).init(**kwargs)
+        super().init(**kwargs)
         self.object_type = DADecoration
         self.auto_gather = False
         self.there_are_any = True
 
 class DAAttachment(DAObject):
     def init(self, **kwargs):
-        return super(DAAttachment, self).init(**kwargs)
+        return super().init(**kwargs)
 
 class DAAttachmentList(DAList):
     def init(self, **kwargs):
-        super(DAAttachmentList, self).init(**kwargs)
+        super().init(**kwargs)
         self.object_type = DAAttachment
         self.auto_gather = False
-    def url_list(self):
+    def url_list(self, project='default'):
         output_list = list()
         for x in self.elements:
             if x.type == 'md':
-                output_list.append('[`' + x.markdown_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.markdown_filename) + ')')
+                output_list.append('[`' + x.markdown_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.markdown_filename, project=project) + ')')
             elif x.type == 'pdf':
-                output_list.append('[`' + x.pdf_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.pdf_filename) + ')')
+                output_list.append('[`' + x.pdf_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", project=project) + ')')
             elif x.type == 'docx':
-                output_list.append('[`' + x.docx_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.docx_filename) + ')')
+                output_list.append('[`' + x.docx_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", project=project) + ')')
         return docassemble.base.functions.comma_and_list(output_list)
 
 class DAUploadMultiple(DAObject):
     def init(self, **kwargs):
-        return super(DAUploadMultiple, self).init(**kwargs)
+        return super().init(**kwargs)
 
 class DAUpload(DAObject):
     def init(self, **kwargs):
-        return super(DAUpload, self).init(**kwargs)
+        return super().init(**kwargs)
 
 class DAInterview(DAObject):
     def init(self, **kwargs):
@@ -77,7 +75,7 @@ class DAInterview(DAObject):
         self.final_screen = DAQuestion()
         self.decorations = DADecorationDict()
         self.target_variable = None
-        return super(DAInterview, self).init(**kwargs)
+        return super().init(**kwargs)
     def has_decorations(self):
         if self.decorations.gathered and len(self.decorations) > 0:
             return True
@@ -126,7 +124,7 @@ class DAInterview(DAObject):
         for block in self.all_blocks():
             block.demonstrated
     def source(self):
-        return u"---\n".join(map(lambda x: x.source(), self.all_blocks()))
+        return "---\n".join(map(lambda x: x.source(), self.all_blocks()))
     def known_source(self, skip=None):
         output = list()
         for block in self.all_blocks():
@@ -140,17 +138,15 @@ class DAInterview(DAObject):
 
 class DAField(DAObject):
     def init(self, **kwargs):
-        return super(DAField, self).init(**kwargs)
+        return super().init(**kwargs)
 
 class DAFieldList(DAList):
     def init(self, **kwargs):
         self.object_type = DAField
         self.auto_gather = False
         self.gathered = True
-        return super(DAFieldList, self).init(**kwargs)
+        return super().init(**kwargs)
     def __str__(self):
-        return text_type(self).encode('utf-8')
-    def __unicode__(self):
         return docassemble.base.functions.comma_and_list(map(lambda x: '`' + x.variable + '`', self.elements))
 
 class DAQuestion(DAObject):
@@ -158,7 +154,7 @@ class DAQuestion(DAObject):
         self.field_list = DAFieldList()
         self.templates_used = set()
         self.static_files_used = set()
-        return super(DAQuestion, self).init(**kwargs)
+        return super().init(**kwargs)
     def names_reduced(self):
         varsinuse = Playground().variables_from(self.interview.known_source(skip=self))
         var_list = sorted([field.variable for field in self.field_list])
@@ -168,9 +164,9 @@ class DAQuestion(DAObject):
         var_list = sorted([field.variable for field in self.field_list])
         return [var for var in sorted(varsinuse['undefined_names']) if var not in var_list and var != self.interview.target_variable]
     def source(self, follow_additional_fields=True):
-        content = u''
+        content = ''
         if hasattr(self, 'is_mandatory') and self.is_mandatory:
-            content += u"mandatory: True\n"
+            content += "mandatory: True\n"
         if self.type == 'question':
             done_with_content = False
             if follow_additional_fields and len(self.other_variables()):
@@ -184,124 +180,125 @@ class DAQuestion(DAObject):
                             self.interview.questions[addl_field] = self
             content += "question: |\n" + indent_by(self.question_text, 2)
             if self.subquestion_text != "":
-                content += u"subquestion: |\n" + indent_by(self.subquestion_text, 2)
+                content += "subquestion: |\n" + indent_by(self.subquestion_text, 2)
             if len(self.field_list) == 1:
                 if self.field_list[0].field_type == 'yesno':
-                    content += u"yesno: " + varname(self.field_list[0].variable) + "\n"
+                    content += "yesno: " + varname(self.field_list[0].variable) + "\n"
                     done_with_content = True
                 elif self.field_list[0].field_type == 'yesnomaybe':
-                    content += u"yesnomaybe: " + varname(self.field_list[0].variable) + "\n"
+                    content += "yesnomaybe: " + varname(self.field_list[0].variable) + "\n"
                     done_with_content = True
             if self.field_list[0].field_type == 'end_attachment':
-                content += u"buttons:\n  - Exit: exit\n  - Restart: restart\n"
+                content += "buttons:\n  - Exit: exit\n  - Restart: restart\n"
                 if self.attachments.gathered and len(self.attachments):
-                    content += u"attachments:\n"
+                    content += "attachments:\n"
                     for attachment in self.attachments:
-                        content += u"  - name: " + oneline(attachment.name) + "\n"
-                        content += u"    filename: " + varname(attachment.name) + "\n"
+                        content += "  - name: " + oneline(attachment.name) + "\n"
+                        content += "    filename: " + varname(attachment.name) + "\n"
                         if attachment.type == 'md':
-                            content += u"    content: " + oneline(attachment.content) + "\n"
+                            content += "    content: " + oneline(attachment.content) + "\n"
                         elif attachment.type == 'pdf':
-                            content += u"    pdf template file: " + oneline(attachment.pdf_filename) + "\n"
+                            content += "    pdf template file: " + oneline(attachment.pdf_filename) + "\n"
                             self.templates_used.add(attachment.pdf_filename)
-                            content += u"    fields: " + "\n"
-                            for field, default, pageno, rect, field_type in attachment.fields:
-                                content += u'      "' + field + '": ${ ' + varname(field).lower() + " }\n"
+                            content += "    fields: " + "\n"
+                            for field, default, pageno, rect, field_type, export_type in attachment.fields:
+                                content += '      "' + field + '": ${ ' + varname(field).lower() + " }\n"
                         elif attachment.type == 'docx':
-                            content += u"    docx template file: " + oneline(attachment.docx_filename) + "\n"
+                            content += "    docx template file: " + oneline(attachment.docx_filename) + "\n"
                             self.templates_used.add(attachment.docx_filename)
                 done_with_content = True
             if not done_with_content:
-                content += u"fields:\n"
+                content += "fields:\n"
                 for field in self.field_list:
                     if field.has_label:
-                        content += u"  - " + repr_str(field.label) + ": " + varname(field.variable) + "\n"
+                        content += "  - " + repr_str(field.label) + ": " + varname(field.variable) + "\n"
                     else:
-                        content += u"  - no label: " + varname(field.variable) + "\n"
+                        content += "  - no label: " + varname(field.variable) + "\n"
                     if field.field_type == 'yesno':
-                        content += u"    datatype: yesno\n"
+                        content += "    datatype: yesno\n"
                     elif field.field_type == 'yesnomaybe':
-                        content += u"    datatype: yesnomaybe\n"
+                        content += "    datatype: yesnomaybe\n"
                     elif field.field_type == 'area':
-                        content += u"    datatype: area\n"
+                        content += "    input type: area\n"
                     elif field.field_type == 'file':
-                        content += u"    datatype: file\n"
+                        content += "    datatype: file\n"
                     elif field.field_data_type == 'integer':
-                        content += u"    datatype: integer\n"
+                        content += "    datatype: integer\n"
                     elif field.field_data_type == 'number':
-                        content += u"    datatype: number\n"
+                        content += "    datatype: number\n"
                     elif field.field_data_type == 'currency':
-                        content += u"    datatype: currency\n"
+                        content += "    datatype: currency\n"
                     elif field.field_data_type == 'date':
-                        content += u"    datatype: date\n"
+                        content += "    datatype: date\n"
                     elif field.field_data_type == 'email':
-                        content += u"    datatype: email\n"
+                        content += "    datatype: email\n"
                     elif field.field_data_type == 'range':
-                        content += u"    datatype: range\n"
-                        content += u"    min: " + field.range_min + "\n"
-                        content += u"    max: " + field.range_max + "\n"
-                        content += u"    step: " + field.range_step + "\n"
+                        content += "    datatype: range\n"
+                        content += "    min: " + field.range_min + "\n"
+                        content += "    max: " + field.range_max + "\n"
+                        content += "    step: " + field.range_step + "\n"
             if self.interview.has_decorations() and self.decoration and self.decoration != 'None':
-                content += u"decoration: " + str(self.decoration) + "\n"
+                content += "decoration: " + str(self.decoration) + "\n"
         elif self.type == 'signature':
-            content += u"signature: " + varname(self.field_list[0].variable) + "\n"
+            content += "signature: " + varname(self.field_list[0].variable) + "\n"
             self.under_text
-            content += u"question: |\n" + indent_by(self.question_text, 2)
+            content += "question: |\n" + indent_by(self.question_text, 2)
             if self.subquestion_text != "":
-                content += u"subquestion: |\n" + indent_by(self.subquestion_text, 2)
+                content += "subquestion: |\n" + indent_by(self.subquestion_text, 2)
             if self.under_text:
-                content += u"under: |\n" + indent_by(self.under_text, 2)
+                content += "under: |\n" + indent_by(self.under_text, 2)
         elif self.type == 'code':
-            content += u"code: |\n" + indent_by(self.code, 2)
+            content += "code: |\n" + indent_by(self.code, 2)
         elif self.type == 'text_template':
-            content += u"template: " + varname(self.field_list[0].variable) + "\n"
+            content += "template: " + varname(self.field_list[0].variable) + "\n"
             if hasattr(self, 'template_subject') and self.template_subject:
-                content += u"subject: " + oneline(self.template_subject) + "\n"
+                content += "subject: " + oneline(self.template_subject) + "\n"
             if self.template_type == 'file':
-                content += u"content file: " + oneline(self.template_file) + "\n"
+                content += "content file: " + oneline(self.template_file) + "\n"
             else:
-                content += u"content: |\n" + indent_by(self.template_body, 2)
+                content += "content: |\n" + indent_by(self.template_body, 2)
         elif self.type == 'template':
-            content += u"template: " + varname(self.field_list[0].variable) + "\n"
-            content += u"content file: " + oneline(self.template_file) + "\n"
+            content += "template: " + varname(self.field_list[0].variable) + "\n"
+            content += "content file: " + oneline(self.template_file) + "\n"
             self.templates_used.add(self.template_file)
         elif self.type == 'metadata':
-            content += u"metadata:\n"
-            content += u"  title: " + oneline(self.title) + "\n"
-            content += u"  short title: " + oneline(self.short_title) + "\n"
+            content += "metadata:\n"
+            content += "  title: " + oneline(self.title) + "\n"
+            content += "  short title: " + oneline(self.short_title) + "\n"
         elif self.type == 'modules':
-            content += u"modules:\n"
+            content += "modules:\n"
             for module in self.modules:
-                content += u" - " + str(module) + "\n"
+                content += " - " + str(module) + "\n"
         elif self.type == 'images':
-            content += u"images:\n"
+            content += "images:\n"
             for key, value in self.interview.decorations.items():
-                content += u"  " + repr_str(key) + ": " + oneline(value.filename) + "\n"
+                content += "  " + repr_str(key) + ": " + oneline(value.filename) + "\n"
                 self.static_files_used.add(value.filename)
         #sys.stderr.write(content)
         return content
 
 class DAQuestionDict(DADict):
     def init(self, **kwargs):
-        super(DAQuestionDict, self).init(**kwargs)
+        super().init(**kwargs)
         self.object_type = DAQuestion
         self.auto_gather = False
         self.gathered = True
         self.is_mandatory = False
 
 class PlaygroundSection(object):
-    def __init__(self, section=''):
+    def __init__(self, section='', project='default'):
         if docassemble.base.functions.this_thread.current_info['user']['is_anonymous']:
             raise DAError("Users must be logged in to create Playground objects")
         self.user_id = docassemble.base.functions.this_thread.current_info['user']['theid']
         self.current_info = docassemble.base.functions.this_thread.current_info
         self.section = section
+        self.project = project
         self._update_file_list()
     def get_area(self):
         return SavedFile(self.user_id, fix=True, section='playground' + self.section)
     def _update_file_list(self):
-        area = self.get_area()
-        self.file_list = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+        the_directory = directory_for(self.get_area(), self.project)
+        self.file_list = sorted([f for f in os.listdir(the_directory) if f != '.placeholder' and os.path.isfile(os.path.join(the_directory, f))])
     def image_file_list(self):
         out_list = list()
         for the_file in self.file_list:
@@ -314,7 +311,10 @@ class PlaygroundSection(object):
         out_list = [f for f in self.file_list if os.path.splitext(f)[1].lower() in ['.md', '.pdf', '.docx'] or os.path.splitext(f)[0].lower() + '.md' not in lower_list]
         return out_list            
     def get_file(self, filename):
-        return os.path.join(self.get_area().directory, filename)
+        return os.path.join(directory_for(self.get_area(), self.project), filename)
+    def get_mimetype(self, filename):
+        extension, mimetype = get_ext_and_mimetype(filename)
+        return mimetype
     def file_exists(self, filename):
         path = self.get_file(filename)
         if os.path.isfile(path):
@@ -322,7 +322,10 @@ class PlaygroundSection(object):
         return False
     def delete_file(self, filename):
         area = self.get_area()
-        area.delete_file(filename)
+        the_filename = filename
+        if self.project != 'default':
+            the_filename = os.path.join(self.project, the_filename)
+        area.delete_file(the_filename)
     def read_file(self, filename):
         path = self.get_file(filename)
         if path is None:
@@ -333,7 +336,8 @@ class PlaygroundSection(object):
         return None
     def write_file(self, filename, content, binary=False):
         area = self.get_area()
-        path = os.path.join(area.directory, filename)
+        the_directory = directory_for(area, self.project)
+        path = os.path.join(the_directory, filename)
         if binary:
             with open(path, 'wb') as ifile:
                 ifile.write(content)
@@ -411,14 +415,11 @@ class PlaygroundSection(object):
 
 class Playground(PlaygroundSection):
     def __init__(self):
-        return super(Playground, self).__init__()
+        return super().__init__()
     def interview_url(self, filename):
-        return self.current_info['url'] + '?i=docassemble.playground' + str(self.user_id) + ":" + filename
+        return docassemble.base.functions.url_of('interview', i='docassemble.playground' + str(self.user_id) + project_name(self.project) + ":" + filename)
     def write_package(self, pkgname, info):
-        if PY2:
-            the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|').decode()
-        else:
-            the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|')
+        the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|')
         pg_packages = PlaygroundSection('packages')
         pg_packages.write_file(pkgname, the_yaml)
     def get_package_as_zip(self, pkgname):
@@ -442,10 +443,11 @@ class Playground(PlaygroundSection):
         file_number, extension, mimetype = docassemble.base.parse.save_numbered_file('docassemble-' + str(pkgname) + '.zip', zip_file.name)
         return file_number
     def variables_from(self, content):
-        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=self.get_area().directory, path="docassemble.playground" + str(self.user_id) + ":_temp.yml", package='docassemble.playground' + str(self.user_id), testing=True)
+        the_directory = directory_for(self.get_area(), self.project)
+        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, path="docassemble.playground" + str(self.user_id) + project_name(self.project) + ":_temp.yml", package='docassemble.playground' + str(self.user_id) + project_name(self.project), testing=True)
         interview = interview_source.get_interview()
         temp_current_info = copy.deepcopy(self.current_info)
-        temp_current_info['yaml_filename'] = "docassemble.playground" + str(self.user_id) + ":_temp.yml"
+        temp_current_info['yaml_filename'] = "docassemble.playground" + str(self.user_id) + project_name(self.project) + ":_temp.yml"
         interview_status = docassemble.base.parse.InterviewStatus(current_info=temp_current_info)
         user_dict = docassemble.base.parse.get_initial_dict()
         user_dict['_internal']['starttime'] = datetime.datetime.utcnow()
@@ -465,7 +467,8 @@ class Playground(PlaygroundSection):
         names_used = set()
         names_used.update(interview.names_used)
         area = SavedFile(self.user_id, fix=True, section='playgroundmodules')
-        avail_modules = set([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+        the_directory = directory_for(area, self.project)
+        avail_modules = set([re.sub(r'.py$', '', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f))])
         for question in interview.questions_list:
             names_used.update(question.mako_names)
             names_used.update(question.names_used)
@@ -543,3 +546,12 @@ def docx_variable_fix(variable):
     variable = re.sub(r'\\', '', variable)
     variable = re.sub(r'^([A-Za-z\_][A-Za-z\_0-9]*).*', r'\1', variable)
     return variable
+
+def directory_for(area, current_project):
+    if current_project == 'default':
+        return area.directory
+    else:
+        return os.path.join(area.directory, current_project)
+
+def project_name(name):
+    return '' if name == 'default' else name

@@ -1,6 +1,7 @@
 ---
 graphics: true
 subparagraph: true
+numbersections: true
 standard-header-includes:
   - \usepackage{setspace}
   - \usepackage{xhfill}

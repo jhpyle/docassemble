@@ -1,0 +1,37 @@
+metadata:
+  title: Add separators
+  short: Separators
+  example start: 5
+  example end: 5
+  documentation: "https://docassemble.org/docs/functions.html#add_separators"
+---
+objects:
+  - fruit: DAList
+---
+question: |
+  Are there any fruit that you like?
+yesno: fruit.there_are_any
+---
+question: |
+  What is the ${ ordinal(i) } fruit
+  that you like?
+fields:
+  - Fruit: fruit[i]
+---
+question: |
+  Are there any other fruit that you like?
+yesno: fruit.there_is_another
+---
+mandatory: True
+question: |
+  Fruits
+subquestion: |
+  You like:
+    
+  % for item in add_separators(fruit):
+  * ${ item }
+  % endfor
+attachment:
+  docx template file: add-separators.docx
+buttons:
+  - Try another: restart

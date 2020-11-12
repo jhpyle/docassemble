@@ -1,0 +1,88 @@
+metadata:
+  title: Dependencies
+  documentation: "https://docassemble.org/docs/logic.html#depends on"
+  example start: 1
+  example end: 11
+---
+objects:
+  - people: DAList.using(object_type=Individual, there_are_any=True, complete_attribute='complete')
+---
+question: |
+  How much does ${ people[i] }
+  get paid per pay period?
+fields:
+  - Amount: people[i].income
+    datatype: currency
+depends on:
+  - people[i].pay_period
+---
+question: |
+  How frequently does
+  ${ people[i] } get paid?
+fields:
+  - no label: people[i].pay_period
+    datatype: number
+    choices:
+      - Monthly: 12.0
+      - Biweekly: 26.0
+      - Semi-monthly: 24.0
+      - Weekly: 52.0
+---
+code: |
+  people[i].annual_income = people[i].income * people[i].pay_period
+depends on:
+  - people[i].pay_period
+  - people[i].income
+---
+question: |
+  What is the name of the
+  ${ ordinal(i) } person?
+fields:
+  - First name: people[i].name.first
+  - Last name: people[i].name.last
+---
+code: |
+  people[i].name.first
+  people[i].annual_income
+  people[i].complete = True
+---
+question: |
+  Is there another person?
+yesno: people.there_is_another
+---
+field: review_screen
+question: Review
+subquestion: |
+  ${ people.table }
+
+  ${ people.add_action() }
+---
+table: people.table
+rows: people
+columns:
+  - Name: row_item.name
+  - Annual income: currency(row_item.annual_income)
+edit:
+  - name.first
+  - pay_period
+---
+event: final_screen
+question: Summary
+subquestion: |
+  % for person in people:
+  ${ person }
+  makes
+  ${ currency(person.income) }
+  ${ nice_number(person.pay_period) }
+  times per year, for an annual income of
+  ${ currency(person.annual_income) }.
+
+  % endfor
+
+  [Review](${ url_action('review_screen') })
+---
+mandatory: True
+code: |
+  people.gather()
+  people.table
+  final_screen

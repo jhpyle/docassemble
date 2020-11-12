@@ -1,0 +1,46 @@
+metadata:
+  title: Dependency satisfaction
+  short title: Dependency
+  documentation: "https://docassemble.org/docs/objects.html#prevent_dependency_satisfaction"
+  example start: 1
+  example end: 4
+---
+modules:
+  .legume
+---
+objects:
+  - bean: Legume
+---
+mandatory: True
+code: |
+  bean.sweet_index
+  final_screen
+---
+event: final_screen
+question: |
+  % if bean.is_tasty():
+  It is tasty.
+  % else:
+  It is not tasty.
+  % endif
+---
+question: |
+  How tasty is it?
+subquestion: |
+  Choose a value below 6 to see the error message.
+fields:
+  - Sweetness: bean.sweet_index
+    datatype: range
+    min: 0
+    max: 10
+    step: 1
+---
+question: |
+  How savory is it?
+fields:
+  - Sweetness: bean.savory_index
+    datatype: range
+    min: 0
+    max: 10
+    step: 1
+    

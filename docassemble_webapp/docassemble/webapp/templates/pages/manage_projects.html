@@ -1,0 +1,96 @@
+{%- extends 'base_templates/page_base_half_wider.html' %}
+{%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_select_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
+{%- block top %}
+{%- endblock %}
+{%- block content %}
+        <div class="row">
+            <div class="col-sm-9 col-md-7 col-lg-7 col-xl-7">
+                {%- if mode == 'standard' %}
+                {%- if description %}
+                <div class="card">
+                    <div class="card-body">
+                        {{ description }}
+                    </div>
+                </div>
+                {%- endif %}
+                <ul class="nav nav-pills">
+                    <li class="nav-item">
+                        <a class="nav-link" title="{{ word('Create a new project') }}" href="{{ url_for('playground_project', new='1', project=current_project) }}"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add a New Project') }}</a>
+                    </li>
+                </ul>
+                <table class="table table-striped mt-2">
+                    <thead>
+                        <tr>
+                            <th>{{ word("Project") }}</th>
+                            <th style="text-align:right;">{{ word("Action") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {%- for project in projects %}
+                        <tr>
+                            <td><a href="{{ url_for('playground_page', project=project) }}">{{ project }}</a></td>
+                            <td style="text-align:right;"><a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}success btn-sm" href="{{ url_for('playground_project', rename='1', project=project) }}">{{ word('Rename') }}</a>&nbsp;<a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}danger btn-sm" href="{{ url_for('playground_project', delete='1', project=project) }}">{{ word('Delete') }}</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {%- elif mode == 'new' %}
+                {%- if description %}
+                <div class="card">
+                    <div class="card-body">
+                        {{ description }}
+                    </div>
+                </div>
+                {%- endif %}
+                <form action="{{ url_for('playground_project', new='1', project=current_project) }}" method="POST" role="form" class="form">
+                    {{ form.csrf_token }}
+                    {{ render_field(form.name) }}
+                    <div class="form-actions">
+                        {{ render_submit_field(form.submit) }}
+                        <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
+                    </div>
+                </form>
+                {%- elif mode == 'rename' %}
+                {%- if description %}
+                <div class="card">
+                    <div class="card-body">
+                        {{ description }}
+                    </div>
+                </div>
+                {%- endif %}
+                <form action="{{ url_for('playground_project', rename='1', project=current_project) }}" method="POST" role="form" class="form">
+                    {{ form.csrf_token }}
+                    {{ render_field(form.name) }}
+                    <div class="form-actions">
+                        {{ render_submit_field(form.submit) }}
+                        <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
+                    </div>
+                </form>
+                {%- elif mode == 'delete' %}
+                {%- if description %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        {{ description }}
+                    </div>
+                </div>
+                {%- endif %}
+                <form action="{{ url_for('playground_project', delete='1', project=current_project) }}" method="POST" role="form" class="form">
+                    {{ form.csrf_token }}
+                    <div class="form-actions">
+                        {{ render_submit_field(form.submit) }}
+                        <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
+                    </div>
+                </form>
+                {%- endif %}
+                {%- if after_text %}
+                <p>{{ after_text }}</p>
+                {%- endif %}
+            </div>
+        </div>
+{%- endblock %}
+{%- block bottom %}
+      {%- if mode == 'standard' %}
+      <div class="mt-2"><p><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
+      {%- endif %}
+{%- endblock %}
+

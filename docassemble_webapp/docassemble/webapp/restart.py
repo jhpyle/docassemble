@@ -1,8 +1,7 @@
 import sys
 import os
-import re
 import docassemble.base.config
-from io import open
+from docassemble.base.config import daconfig
 
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
@@ -10,11 +9,16 @@ if __name__ == "__main__":
 def main():
     from docassemble.base.config import daconfig
     container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
-    if re.search(r':(all|cron):', container_role):
+    if ':all:' in container_role or ':cron:' in container_role:
         import docassemble.webapp.fix_postgresql_tables
         docassemble.webapp.fix_postgresql_tables.main()
         import docassemble.webapp.create_tables
         docassemble.webapp.create_tables.main()
+        if ':cron:' in container_role:
+            import redis
+            (redis_host, redis_port, redis_password, redis_offset, redis_cli) = docassemble.base.config.parse_redis_uri()
+            r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password)
+            r.delete('da:cron_restart')
 
     webapp_path = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
     import docassemble.webapp.cloud

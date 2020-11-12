@@ -5,7 +5,7 @@ __all__ = ['GoogleAuth']
 
 class GoogleAuth(DAOAuth):
     def init(self, *pargs, **kwargs):
-        super(GoogleAuth, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.appname = 'mygoogle'
         self.token_uri = "https://www.googleapis.com/oauth2/v4/token"
         self.auth_uri = "https://accounts.google.com/o/oauth2/v2/auth"

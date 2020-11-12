@@ -1,7 +1,7 @@
 import sys
 from docassemble.base.config import daconfig
 from docassemble.webapp.app_object import app
-from flask_kvsession import KVSessionExtension
+from docassemblekvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
 import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)

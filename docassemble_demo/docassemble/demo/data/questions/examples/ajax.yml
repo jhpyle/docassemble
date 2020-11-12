@@ -1,0 +1,66 @@
+metadata:
+  title: Ajax
+  documentation: "https://docassemble.org/docs/recipes.html#ajax"
+  example start: 1
+  example end: 3
+---
+code: |
+  favorite_fruit = "apples"
+---
+id: guess favorite fruit
+mandatory: True
+question: |
+  Guess my favorite fruit.
+fields:
+  - Your guess: guess
+  - note: |
+      ${ action_button_html("#", id_tag="getFavoriteFruit", label="Verify", size="md", color="primary") }
+script: |
+  <script>
+    $(document).on('daPageLoad', function(){
+      // hide the Continue button
+      // and disable the form for
+      // this question
+      if ($(".question-guess-favorite-fruit").length > 0){
+        $(".da-field-buttons").remove();
+        $("#daform").off().on('submit', function(event){
+          event.preventDefault();
+          return false;
+        });
+      };
+    });
+    $("#getFavoriteFruit").click(function(event){
+      event.preventDefault();
+      if (!/\S/.test(val("guess"))){
+        flash("You need to guess something!", "danger", true);
+        return false;
+      }
+      flash("Verifying . . .", "info", true);
+      action_call("verify_favorite_fruit", {"fruit": val("guess")}, function(data){
+        if (data.success){
+          flash("You're right!", "info", true);
+        }
+        else {
+          flash("You're totally wrong.  I actually like " + data.fruit + ".", "danger", true);
+        }
+      });
+      return false;
+    });
+  </script>
+---
+event: verify_favorite_fruit
+code: |
+  # No need to save the interview
+  # answers after this action.
+  set_save_status('ignore')
+  
+  # Pretend we have to think
+  # about the answer.
+  import time
+  time.sleep(1)
+  
+  if favorite_fruit.lower() == action_argument('fruit').lower():
+    success = True
+  else:
+    success = False
+  json_response(dict(success=success, fruit=favorite_fruit))

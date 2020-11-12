@@ -27,13 +27,14 @@
         msgNoFilesSelected: 'No hay archivos seleccionados',
         msgPaused: 'Paused',
         msgCancelled: 'Cancelado',
-        msgPlaceholder: 'Seleccionar {files}...',
+        msgPlaceholder: 'Seleccionar {files} ...',
         msgZoomModalHeading: 'Vista previa detallada',
         msgFileRequired: 'Debes seleccionar un archivo para subir.',
         msgSizeTooSmall: 'El archivo "{name}" (<b>{size} KB</b>) es demasiado pequeño y debe ser mayor de <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'El archivo "{name}" (<b>{size} KB</b>) excede el tamaño máximo permitido de <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Debe seleccionar al menos <b>{n}</b> {files} a cargar.',
         msgFilesTooMany: 'El número de archivos seleccionados a cargar <b>({n})</b> excede el límite máximo permitido de <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Archivo "{name}" no encontrado.',
         msgFileSecured: 'No es posible acceder al archivo "{name}" porque está siendo usado por otra aplicación o no tiene permisos de lectura.',
         msgFileNotReadable: 'No es posible acceder al archivo "{name}".',
@@ -53,10 +54,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'La carga de archivos se ha cancelado',
-        msgUploadThreshold: 'Procesando...',
-        msgUploadBegin: 'Inicializando...',
+        msgUploadThreshold: 'Procesando &hellip;',
+        msgUploadBegin: 'Inicializando &hellip;',
         msgUploadEnd: 'Hecho',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'No existen datos válidos para el envío.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -97,7 +98,7 @@
             indicatorSuccessTitle: 'Subido',
             indicatorErrorTitle: 'Error al subir',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Subiendo...'
+            indicatorLoadingTitle:  'Subiendo &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Anterior',

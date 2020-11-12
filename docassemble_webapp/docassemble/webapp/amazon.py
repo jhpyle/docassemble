@@ -6,17 +6,16 @@ import mimetypes
 import sys
 import datetime
 import pytz
-from six import text_type, PY2
 epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
 
 class s3object(object):
     def __init__(self, s3_config):
         if 'access key id' in s3_config and s3_config['access key id'] is not None:
-            self.conn = boto3.resource('s3', region_name=s3_config.get('region', None), aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'])
-            self.client = boto3.client('s3', region_name=s3_config.get('region', None), aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'])
+            self.conn = boto3.resource('s3', region_name=s3_config.get('region', None), aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'], endpoint_url=s3_config.get('endpoint url', None))
+            self.client = boto3.client('s3', region_name=s3_config.get('region', None), aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'], endpoint_url=s3_config.get('endpoint url', None))
         else:
-            self.conn = boto3.resource('s3', region_name=s3_config.get('region', None))
-            self.client = boto3.client('s3', region_name=s3_config.get('region', None))
+            self.conn = boto3.resource('s3', region_name=s3_config.get('region', None), endpoint_url=s3_config.get('endpoint url', None))
+            self.client = boto3.client('s3', region_name=s3_config.get('region', None), endpoint_url=s3_config.get('endpoint url', None))
         self.bucket = self.conn.Bucket(s3_config['bucket'])
         self.bucket_name = s3_config['bucket']
     def get_key(self, key_name):
@@ -28,14 +27,11 @@ class s3object(object):
         return None
     def list_keys(self, prefix):
         output = list()
-        for obj in self.bucket.objects.filter(Prefix=prefix, Delimiter='/'):
+        for obj in self.bucket.objects.filter(Prefix=prefix):
             new_key = s3key(self, obj)
             new_key.size = obj.size
             new_key.last_modified = obj.last_modified
             output.append(new_key)
-        # else:
-        #     for obj in self.bucket.objects.filter(Prefix=prefix, Delimiter='/'):
-        #         output.append(s3key(self, self.conn.Object(self.bucket_name, obj.key), load=True))
         return output
 
 class s3key(object):
@@ -67,12 +63,8 @@ class s3key(object):
     def get_epoch_modtime(self):
         return (self.key_obj.last_modified - epoch).total_seconds()
     def get_contents_to_filename(self, filename):
-        #try:
         self.s3_object.conn.Bucket(self.s3_object.bucket_name).download_file(self.name, filename)
-        #except ClientError as e:
-        #    raise
         secs = (self.key_obj.last_modified - epoch).total_seconds()
-        #secs = time.mktime(self.last_modified.timetuple())
         os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
         if hasattr(self, 'content_type') and self.content_type is not None:
@@ -89,21 +81,17 @@ class s3key(object):
         os.utime(filename, (secs, secs))        
     def set_contents_from_string(self, text):
         if hasattr(self, 'content_type') and self.content_type is not None:
-            if PY2:
-                self.key_obj.put(Body=bytes(text), ContentType=self.content_type)
-            else:
-                self.key_obj.put(Body=bytes(text, encoding='utf-8'), ContentType=self.content_type)
+            self.key_obj.put(Body=bytes(text, encoding='utf-8'), ContentType=self.content_type)
         else:
-            if PY2:
-                self.key_obj.put(Body=bytes(text))
-            else:
-                self.key_obj.put(Body=bytes(text, encoding='utf-8'))
-    def generate_url(self, expires, content_type=None, display_filename=None):
+            self.key_obj.put(Body=bytes(text, encoding='utf-8'))
+    def generate_url(self, expires, content_type=None, display_filename=None, inline=False):
         params = dict(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
         if content_type is not None:
             params['ResponseContentType'] = content_type
         if display_filename is not None:
             params['ResponseContentDisposition'] = "attachment; filename=" + display_filename
+        if inline:
+            params['ResponseContentDisposition'] = "inline"
         return self.s3_object.client.generate_presigned_url(
             ClientMethod='get_object',
             Params=params,

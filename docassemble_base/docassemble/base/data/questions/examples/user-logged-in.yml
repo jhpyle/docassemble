@@ -2,18 +2,33 @@ metadata:
   title: Require user to log in
   short title: Log in
   documentation: "https://docassemble.org/docs/functions.html#user_logged_in"
+  example start: 1
+  example end: 4
 ---
-initial: True
+mandatory: True
 code: |
-  if not user_logged_in():
-    command('leave', url=url_of('login', next=interview_url()))
+  favorite_fruit
+  ok_to_finish
+  final_screen
 ---
 question: |
   What is your favorite fruit?
 fields:
   - Fruit: favorite_fruit
 ---
-mandatory: True
+code: |
+  if not user_logged_in():
+    require_login_screen
+  ok_to_finish = True
+---
+event: require_login_screen
+question: |
+  You need to log in to finish this interview.
+buttons:
+  - Log in: leave
+    url: ${ url_of('login', next=interview_url()) }
+---
+event: final_screen
 question: |
   Your favorite fruit is
   ${ favorite_fruit }.

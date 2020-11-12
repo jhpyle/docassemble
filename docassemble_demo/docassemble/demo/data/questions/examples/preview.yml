@@ -1,0 +1,66 @@
+metadata:
+  title: Preview
+  documentation: "https://docassemble.org/docs/recipes.html#preview"
+  example start: 1
+  example end: 2
+---
+question: |
+  The food section
+right: |
+  <div class="da-page-header">
+    <h1 class="h3">Preview</h1>
+  </div>
+  
+  [TARGET food_section_text]
+fields:
+  - Favorite fruit: favorite_fruit
+  - Favorite vegetable: favorite_vegetable
+  - Like mushrooms: likes_mushrooms
+    datatype: yesnoradio
+  - Favorite mushroom: favorite_mushroom
+  - Favorite dessert: favorite_dessert
+    choices:
+      - Pie: pie
+      - Cake: cake
+check in: question_food
+---
+template: question_food
+content: |
+  I am a really big fan of 
+  ${ action_argument('favorite_fruit') or "[BLANK]" }.
+  With dinner I like to have a side of
+  ${ action_argument('favorite_vegetable') or "[BLANK]" }.
+  % if action_argument('likes_mushrooms') == 'True':
+  And I usually can't resist adding sauteed 
+  ${ action_argument('favorite_mushroom') or "[BLANK]" }
+  to my
+  ${ action_argument('favorite_vegetable') or "[BLANK]" }.
+  % endif
+  [BR][BR]
+  My favorite part of the meal is dessert,
+  when I can have a nice big slice of
+  ${ action_argument('favorite_dessert') or "[BLANK]" }.
+target: food_section_text
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  name: Food
+  filename: food
+  content: |
+    # The food section
+    
+    I am a really big fan of 
+    ${ favorite_fruit }.
+    With dinner I like to have a side of
+    ${ favorite_vegetable }.
+    % if likes_mushrooms:
+    And I usually can't resist adding sauteed 
+    ${ favorite_mushroom }
+    to my
+    ${ favorite_vegetable }.
+    % endif
+    
+    My favorite part of the meal is dessert, when I can have a nice
+    big slice of ${ favorite_dessert }.

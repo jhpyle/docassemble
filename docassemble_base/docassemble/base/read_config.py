@@ -1,26 +1,26 @@
 import sys
 import os
 import re
-from six import string_types, text_type, PY2
 separator = re.compile(r' *[,;] *')
 
 if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
-    from docassemble.base.config import daconfig
+    from docassemble.base.config import daconfig, parse_redis_uri
     if 'timezone' in daconfig and daconfig['timezone'] is not None:
         print('export TIMEZONE="' + str(daconfig['timezone']) + '"')
     if 'os locale' in daconfig and daconfig['os locale'] is not None:
         print('export LOCALE="' + str(daconfig['os locale']) + '"')
-    if PY2:
-        print('export DAPYTHONVERSION="2"')
+    print('export DAPYTHONVERSION="3"')
+    if 'web server' in daconfig and isinstance(daconfig['web server'], str):
+        print('export DAWEBSERVER="' + daconfig['web server'] + '"')
     else:
-        print('export DAPYTHONVERSION="3"')
+        print('export DAWEBSERVER="nginx"')
     if 'other os locales' in daconfig and type(daconfig['other os locales']) is list:
         print('declare -a OTHERLOCALES')
         print('export OTHERLOCALES')
         indexno = 0
-        for locale in daconfig['other locales']:
+        for locale in daconfig['other os locales']:
             print('OTHERLOCALES[' + str(indexno) + ']=' + repr(str(locale)))
             indexno += 1
     else:
@@ -32,6 +32,14 @@ if __name__ == "__main__":
             for locale in map(lambda x: x.strip(), separator.split(other_locales_variable)):
                 print('OTHERLOCALES[' + str(indexno) + ']=' + repr(str(locale)))
                 indexno += 1
+    max_content_length = daconfig.get('maximum content length', 16 * 1024 * 1024)
+    if isinstance(max_content_length, (int, type(None))):
+        if max_content_length is None or max_content_length <= 0:
+            print('DAMAXCONTENTLENGTH=0')
+        else:
+            print('DAMAXCONTENTLENGTH=' + str(max_content_length))
+    else:
+        print('DAMAXCONTENTLENGTH=' + str(16 * 1024 * 1024))
     if 'debian packages' in daconfig and type(daconfig['debian packages']) is list:
         print('declare -a PACKAGES')
         print('export PACKAGES')
@@ -85,20 +93,31 @@ if __name__ == "__main__":
             print('export DBPORT="' + str(daconfig['db']['port']) + '"')
         if 'table prefix' in daconfig['db'] and daconfig['db']['table prefix'] is not None:
             print('export DBTABLEPREFIX="' + str(daconfig['db']['table prefix']) + '"')
-    if 'update on start' in daconfig and daconfig['update on start'] is False:
-        print('export DAUPDATEONSTART=false')
+        if 'backup' in daconfig['db'] and daconfig['db']['backup'] is not None:
+            print('export DBBACKUP="' + ('true' if daconfig['db']['backup'] else 'false') + '"')
+    if 'update on start' in daconfig:
+        if daconfig['update on start'] is False:
+            print('export DAUPDATEONSTART=false')
+        elif daconfig['update on start'] == 'initial':
+            print('export DAUPDATEONSTART=initial')
+    if 'allow updates' in daconfig and daconfig['allow updates'] is False:
+        print('export DAALLOWUPDATES=false')
     if 'expose websockets' in daconfig and daconfig['expose websockets']:
         print('export DAEXPOSEWEBSOCKETS=true')
     if 'websockets ip' in daconfig and daconfig['websockets ip']:
         print('export DAWEBSOCKETSIP="' + str(daconfig['websockets ip']) + '"')
-    else:
-        print('export DAWEBSOCKETSIP="127.0.0.1"')
+    if 'stable version' in daconfig and daconfig['stable version']:
+        print('export DASTABLEVERSION=true')
+    if 'nginx ssl protocols' in daconfig and daconfig['nginx ssl protocols']:
+        print('export DASSLPROTOCOLS=' + str(daconfig['nginx ssl protocols']))
     if 'websockets port' in daconfig and daconfig['websockets port']:
         print('export DAWEBSOCKETSPORT=' + str(daconfig['websockets port']))
     else:
         print('export DAWEBSOCKETSPORT=5000')
     if 'redis' in daconfig and daconfig['redis'] is not None:
         print('export REDIS="' + str(daconfig['redis']) + '"')
+        (redis_host, redis_port, redis_password, redis_offset, redis_cli) = parse_redis_uri()
+        print('export REDISCLI="' + str(redis_cli) + '"')
     if 'rabbitmq' in daconfig and daconfig['rabbitmq'] is not None:
         print('export RABBITMQ="' + str(daconfig['rabbitmq']) + '"')
     if 'backup days' in daconfig:
@@ -118,13 +137,18 @@ if __name__ == "__main__":
         if 'access key id' in daconfig['s3'] and daconfig['s3']['access key id'] is not None:
             print('export S3ACCESSKEY="' + str(daconfig['s3']['access key id']) + '"')
             print('export AWS_ACCESS_KEY_ID="' + str(daconfig['s3']['access key id']) + '"')
+            print('export S3_ACCESS_KEY="' + str(daconfig['s3']['access key id']) + '"')
         if 'secret access key' in daconfig['s3'] and daconfig['s3']['secret access key'] is not None:
             print('export S3SECRETACCESSKEY="' + str(daconfig['s3']['secret access key']) + '"')
             print('export AWS_SECRET_ACCESS_KEY="' + str(daconfig['s3']['secret access key']) + '"')
+            print('export S3_SECRET_KEY="' + str(daconfig['s3']['secret access key']) + '"')
         if 'bucket' in daconfig['s3'] and daconfig['s3']['bucket'] is not None:
             print('export S3BUCKET="' + str(daconfig['s3']['bucket']) + '"')
         if 'region' in daconfig['s3'] and daconfig['s3']['region'] is not None:
             print('export S3REGION="' + str(daconfig['s3']['region']) + '"')
+        if 'endpoint url' in daconfig['s3'] and daconfig['s3']['endpoint url'] is not None:
+            print('export S3ENDPOINTURL="' + str(daconfig['s3']['endpoint url']) + '"')
+            print('export S4CMD_OPTS="--endpoint-url=\\"' + str(daconfig['s3']['endpoint url']) + '\\""')
     if 'azure' in daconfig:
         if 'enable' in daconfig['azure'] and daconfig['azure']['enable']:
             print('export AZUREENABLE=true')
@@ -138,16 +162,34 @@ if __name__ == "__main__":
             print('export AZURECONTAINER="' + str(daconfig['azure']['container']) + '"')
     if 'ec2' in daconfig and daconfig['ec2']:
         print('export EC2=true')
+    if 'collect statistics' in daconfig and daconfig['collect statistics']:
+        print('export COLLECTSTATISTICS=true')
+    if 'kubernetes' in daconfig and daconfig['kubernetes']:
+        print('export KUBERNETES=true')
     if 'log server' in daconfig and daconfig['log server'] is not None:
         print('export LOGSERVER="' + str(daconfig['log server']) + '"')
     if 'log' in daconfig and daconfig['log'] is not None:
         print('export LOGDIRECTORY="' + str(daconfig['log']) + '"')
     if 'use https' in daconfig and daconfig['use https']:
         print('export USEHTTPS=true')
+    else:
+        print('export USEHTTPS=false')
+    if 'use cloud urls' in daconfig and daconfig['use cloud urls']:
+        print('export USECLOUDURLS=true')
+    else:
+        print('export USECLOUDURLS=false')
+    if 'use minio' in daconfig and daconfig['use minio']:
+        print('export USEMINIO=true')
+    else:
+        print('export USEMINIO=false')
     if 'use lets encrypt' in daconfig and daconfig['use lets encrypt']:
         print('export USELETSENCRYPT=true')
+    else:
+        print('export USELETSENCRYPT=false')
     if 'behind https load balancer' in daconfig and daconfig['behind https load balancer']:
         print('export BEHINDHTTPSLOADBALANCER=true')
+    else:
+        print('export BEHINDHTTPSLOADBALANCER=false')
     if 'lets encrypt email' in daconfig and daconfig['lets encrypt email'] is not None:
         print('export LETSENCRYPTEMAIL="' + str(daconfig['lets encrypt email']) + '"')
     if 'external hostname' in daconfig and daconfig['external hostname'] is not None:

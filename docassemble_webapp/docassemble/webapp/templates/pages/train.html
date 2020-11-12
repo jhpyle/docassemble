@@ -78,11 +78,11 @@
     </li>
   </ol>
 </nav>
-<a class="btn btn-secondary damldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
+<a class="btn {{ config['BUTTON_STYLE'] }}secondary damldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
 
 <p>
-  <a class="btn btn-success" href="#" id="showimport">Show import controls</a>
-  <a class="btn btn-danger" href="#" id="hideimport" style="display: none">Hide import controls</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}success" href="#" id="showimport">{{ word("Show import controls") }}</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}danger" href="#" id="hideimport" style="display: none">{{ word("Hide import controls") }}</a>
 </p>
 <form method="POST" class="form" role="form" enctype="multipart/form-data" id="importcontrols" style="display: none">
   {{ uploadform.hidden_tag() }}
@@ -126,7 +126,7 @@
         </label>
       </div>
       <div class="mt-2">
-        {{ render_submit_field(uploadform.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
+        {{ render_submit_field(uploadform.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
       </div>
     </div>
   </div>
@@ -138,7 +138,7 @@
   {%- endfor %}
 </div>
 {%- else %}
-<p>No models were found.</p>
+<p>{{ word("No models were found.") }}</p>
 {%- endif %}
 {%- endif %}
 {%- if show_entry_list %}
@@ -217,8 +217,8 @@
     </div>
   </div>
   <div class="mt-2">
-    {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
-    {{ render_submit_field(form.cancel, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
   </div>
   {%- endif %}
   {%- if entry_list|length > 0 %}
@@ -256,12 +256,12 @@
         <label>{{ word("Prediction") }}</label>
         <div>
           {%- for prediction, probability in entry.predictions[0:1] %}
-          <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn btn-success btn-sm prediction" type="button">
+          <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn {{ config['BUTTON_STYLE'] }}success btn-sm prediction" type="button">
             {{ prediction }} <span class="badge badge-pill badge-dark">{{ probability }}</span>
           </button>
           {%- endfor %}
           {%- for prediction, probability in entry.predictions[1:] %}
-          <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn btn-primary btn-sm prediction" type="button">
+          <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn {{ config['BUTTON_STYLE'] }}primary btn-sm prediction" type="button">
             {{ prediction }} <span class="badge badge-pill badge-dark">{{ probability }}</span>
           </button>
           {%- endfor %}
@@ -289,8 +289,8 @@
   </div>
   {%- endfor %}
   <div class="mt-2">
-    {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS']) }}
-    {{ render_submit_field(form.cancel, class="btn btn-secondary " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
   </div>
   {%- endif %}
 </form>

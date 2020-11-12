@@ -1,0 +1,32 @@
+metadata:
+  title: Stage two
+  documentation: "https://docassemble.org/docs/recipes.html#passing"
+  example start: 5
+  example end: 5
+---
+objects:
+  - user: Individual
+---
+question: |
+  What is your name?
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  ${ user }, I know you like
+  ${ favorite_fruit },
+  but what is your favorite
+  vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+mandatory: True
+question: |
+  You like ${ favorite_fruit } and
+  ${ favorite_vegetable }.

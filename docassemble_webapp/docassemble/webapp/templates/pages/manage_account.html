@@ -1,0 +1,19 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_field, render_submit_field %}
+<h1>{{ title }}</h1>
+
+<p>{{ description }}</p>
+
+<form action="{{ url_for('manage_account') }}" method="POST" role="form" class="form">
+{{ form.csrf_token }}
+<div class="form-actions">
+  {{ render_field(form.confirm) }}
+  {{ render_submit_field(form.delete, id='delete', class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS']) }}
+  {%- if logged_in %}
+  <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user.profile') }}">Cancel</a>
+  {%- endif %}
+</div>
+</form>
+{% endblock %}

@@ -39,7 +39,7 @@ columns:
   - Fruit Name: row_item.name
   - Seeds: row_item.seeds
 edit:
-  - name
+  - name.text
 allow reordering: True
 ---
 code: |

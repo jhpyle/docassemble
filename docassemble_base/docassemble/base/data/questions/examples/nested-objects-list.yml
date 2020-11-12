@@ -1,0 +1,70 @@
+metadata:
+  title: Reordered
+---
+objects:
+  - fruit: DAList.using(object_type=Thing, auto_gather=False)
+  - vegetable: DAList.using(object_type=Thing, auto_gather=False)
+  - people: DAList.using(object_type=Individual, there_are_any=True, complete_attribute='complete')
+---
+code: |
+  fruit.clear()
+  fruit.appendObject()
+  fruit[-1].name.text = 'apple'
+  fruit.appendObject()
+  fruit[-1].name.text = 'orange'
+  fruit.appendObject()
+  fruit[-1].name.text = 'pear'
+  fruit.gathered = True
+---
+code: |
+  vegetable.clear()
+  vegetable.appendObject()
+  vegetable[-1].name.text = 'potato'
+  vegetable.appendObject()
+  vegetable[-1].name.text = 'turnip'
+  vegetable.appendObject()
+  vegetable[-1].name.text = 'broccoli'
+  vegetable.gathered = True
+---
+code: |
+  people[i].name.first
+  people[i].favorite
+  people[i].complete = True
+---
+question: |
+  What is the name of the ${ ordinal(i) } person?
+fields:
+  - First name: people[i].name.first
+  - Last name: people[i].name.last
+---
+question: |
+  What is ${ people[i] }'s favorite food?
+fields:
+  - Favorite: people[i].favorite
+    datatype: object_radio
+    choices:
+      - fruit
+      - vegetable
+---
+question: |
+  Are there any more people?
+yesno: people.there_is_another
+---
+table: people.table
+rows: people
+columns:
+  - Name: |
+      row_item
+  - Favorite: |
+      row_item.favorite
+edit:
+  - name.first
+  - favorite
+---
+mandatory: True
+question: |
+  Here are the people.
+subquestion: |
+  ${ people.table }
+
+  ${ people.add_action() }

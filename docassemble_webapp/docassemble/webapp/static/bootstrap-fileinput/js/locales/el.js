@@ -27,13 +27,14 @@
         msgNoFilesSelected: 'Δεν επιλέχθηκαν αρχεία',
         msgPaused: 'Paused',
         msgCancelled: 'Ακυρώθηκε',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'Λεπτομερής Προεπισκόπηση',
         msgFileRequired: 'You must select a file to upload.',
         msgSizeTooSmall: 'Το "{name}" (<b>{size} KB</b>) είναι πολύ μικρό, πρέπει να είναι μεγαλύτερο από <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'Το αρχείο "{name}" (<b>{size} KB</b>) υπερβαίνει το μέγιστο επιτρεπόμενο μέγεθος μεταφόρτωσης <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Πρέπει να επιλέξετε τουλάχιστον <b>{n}</b> {files} για να ξεκινήσει η μεταφόρτωση.',
         msgFilesTooMany: 'Ο αριθμός των αρχείων που έχουν επιλεγεί για μεταφόρτωση <b>({n})</b> υπερβαίνει το μέγιστο επιτρεπόμενο αριθμό <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Το αρχείο "{name}" δεν βρέθηκε!',
         msgFileSecured: 'Περιορισμοί ασφαλείας εμπόδισαν την ανάγνωση του αρχείου "{name}".',
         msgFileNotReadable: 'Το αρχείο "{name}" δεν είναι αναγνώσιμο.',
@@ -53,10 +54,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'Η μεταφόρτωση του αρχείου ματαιώθηκε',
-        msgUploadThreshold: 'Μεταφόρτωση ...',
-        msgUploadBegin: 'Initializing...',
+        msgUploadThreshold: 'Μεταφόρτωση &hellip;',
+        msgUploadBegin: 'Initializing &hellip;',
         msgUploadEnd: 'Done',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'No valid data available for upload.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -97,7 +98,7 @@
             indicatorSuccessTitle: 'Μεταφορτώθηκε',
             indicatorErrorTitle: 'Σφάλμα Μεταφόρτωσης',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Μεταφόρτωση ...'
+            indicatorLoadingTitle:  'Μεταφόρτωση &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Προηγούμενο αρχείο',

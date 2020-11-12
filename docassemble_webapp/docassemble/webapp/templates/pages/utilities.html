@@ -4,6 +4,9 @@
 {%- if fields %}
 <h3 class="da-page-header">{{ word('Fields from %s template' % (file_type.upper(),)) }}</h3>
 <p>{{ word('Here is the start of a question you can use to assemble the %s template.' % (file_type.upper(),)) }}</p>
+{%- if file_type == 'docx' %}
+<p>{{ word("Note that you can use a DOCX template file directly; 'fields' is only necessary in the rare case when the variable names in your DOCX file do not correspond with the variable names in your interview.") }}</p>
+{%- endif %}
 <pre>
 {{ fields }}
 </pre>
@@ -34,7 +37,7 @@
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form">
   {{ form.hidden_tag() }}
   <div class="form-group">
-    {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">List of ISO-639-1 language codes</a>') }}
+    {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">' + word("List of ISO-639-1 language codes") + '</a>') }}
   </div>
   <div class="form-actions">
     {{ render_submit_field(form.language_submit) }}

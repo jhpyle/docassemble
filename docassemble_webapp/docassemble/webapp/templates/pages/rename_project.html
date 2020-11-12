@@ -1,0 +1,26 @@
+{%- extends 'base_templates/page_base_half_wider.html' %}
+{%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_select_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
+{%- block top %}
+{%- endblock %}
+{%- block content %}
+        <form action="{{ url_for('playground_packages') }}" method="POST" class="form" role="form" id="form" autocomplete="off">
+            <div class="row">
+                <div class="col-sm-9 col-md-7 col-lg-7 col-xl-7">
+                    {{ form.hidden_tag() }}
+                    {{ myrender_hidden_field(form.original_name, value=current_project) }}
+                    {{ render_field(form.name) }}
+                </div>
+            </div>
+            <div class="form-actions">
+                {{ render_submit_field(form.submit, class="btn {{ config['BUTTON_STYLE'] }}primary " + config['BUTTON_CLASS'], title=word('Save your changes')) }}
+                <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user.profile') }}">{{ word('Cancel') }}</a>
+            </div>
+        </form>
+        {%- if after_text %}
+        <p>{{ after_text }}</p>
+        {%- endif %}
+{%- endblock %}
+{%- block bottom %}
+      <div class="mt-2"><p><a href="{{ url_for('playground_page') }}" class="btn {{ config['BUTTON_STYLE'] }}info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
+{%- endblock %}
+

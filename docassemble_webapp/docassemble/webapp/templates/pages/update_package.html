@@ -3,13 +3,14 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_select_field, render_submit_field, render_checkbox_field with context %}
 
+{%- if allowed_to_upgrade %}
 <h2>{{ word('Upgrade docassemble') }}</h2>
-
 <p class="h6">{{ version }}</p>
 
 <div>
-  <a class="btn btn-primary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', limitation=limitation, action='update') }}">{{ word('Upgrade') }}</a>
 </div>
+{%- endif %}
 
 <h2>{{ word('Install or update a package') }}</h2>
 
@@ -42,7 +43,7 @@
   {% for package in package_list %}
     <tr>
       <td>{{ package.package.name }}{% if package.package.packageversion %} <span class="text-muted">{{ package.package.packageversion }}</span>{% endif %}{% if package.package.gitbranch %} ({{ package.package.gitbranch }}){% endif %}</td>
-      <td style="text-align:right;">{% if package.can_update %}<a class="btn btn-secondary btn-sm" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn btn-warning btn-sm" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
+      <td style="text-align:right;">{% if package.can_update %}<a class="btn {{ config['BUTTON_STYLE'] }}secondary btn-sm" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn {{ config['BUTTON_STYLE'] }}warning btn-sm" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
     </tr>
 {% endfor %}
   </tbody>

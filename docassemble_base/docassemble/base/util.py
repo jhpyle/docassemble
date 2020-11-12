@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import copy
 import httplib2
@@ -7,31 +6,28 @@ import time
 import pytz
 import yaml
 import zipfile
-from six import string_types, text_type, PY2
-if PY2:
-    import collections as abc
-else:
-    import collections.abc as abc
+import collections.abc as abc
 from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pycountry
 import docassemble.base.ocr
-if PY2:
-    import cPickle as pickle
-else:
-    import pickle
+import pickle
 from docassemble.base.logger import logmessage
-from docassemble.base.error import DAError, DAValidationError
+from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError
+from jinja2.runtime import UndefinedError
+from jinja2.exceptions import TemplateError
+
 import docassemble.base.pandoc
 import docassemble.base.pdftk
 import docassemble.base.file_docx
 from docassemble.base.file_docx import include_docx_template
-from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines
-from docassemble.base.core import DAObject, DAList, DADict, DAOrderedDict, DASet, DAFile, DAFileCollection, DAStaticFile, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file, RelationshipTree, DAContext
+from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms
+from docassemble.base.core import DAObject, DAList, DADict, DAOrderedDict, DASet, DAFile, DAFileCollection, DAStaticFile, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file, RelationshipTree, DAContext, DACatchAll, DALazyTemplate
 from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
 from docassemble.base.filter import markdown_to_html, to_text, ensure_valid_filename
+from docassemble.base.generate_key import random_alphanumeric
 
 #file_finder, url_finder, da_send_mail
 
@@ -48,13 +44,264 @@ import tempfile
 import os
 import shutil
 import subprocess
-from io import open
 from bs4 import BeautifulSoup
 import types
+import requests
+from requests.auth import HTTPDigestAuth, HTTPBasicAuth
+from requests.exceptions import RequestException
+import i18naddress
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'define', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Event', 'Person', 'Thing', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'send_fax', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'returning_user', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'dow_of', 'format_date', 'format_datetime', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'background_error_action', 'us', 'DARedis', 'DACloudStorage', 'DAGoogleAPI', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'RandomForestMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'ocr_file_in_background', 'read_qr', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'run_python_module', 'undefine', 'dispatch', 'yesno', 'noyes', 'split', 'showif', 'showifdef', 'phone_number_part', 'pdf_concatenate', 'set_parts', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'include_docx_template', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'start_time', 'zip_file', 'validation_error', 'DAValidationError', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'action_button_html', 'url_ask', 'overlay_pdf', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_title', 'set_save_status', 'single_to_double_newlines', 'RelationshipTree', 'DAContext', 'DAOAuth', 'DAStore', 'explain', 'clear_explanations', 'explanation', 'set_status', 'get_status']
+__all__ = [
+    'alpha',
+    'roman',
+    'item_label',
+    'ordinal',
+    'ordinal_number',
+    'comma_list',
+    'word',
+    'get_language',
+    'set_language',
+    'get_dialect',
+    'set_country',
+    'get_country',
+    'get_locale',
+    'set_locale',
+    'comma_and_list',
+    'need',
+    'nice_number',
+    'quantity_noun',
+    'currency_symbol',
+    'verb_past',
+    'verb_present',
+    'noun_plural',
+    'noun_singular',
+    'indefinite_article',
+    'capitalize',
+    'space_to_underscore',
+    'force_ask',
+    'force_gather',
+    'period_list',
+    'name_suffix',
+    'currency',
+    'static_image',
+    'title_case',
+    'url_of',
+    'process_action',
+    'url_action',
+    'get_info',
+    'set_info',
+    'get_config',
+    'prevent_going_back',
+    'qr_code',
+    'action_menu_item',
+    'from_b64_json',
+    'defined',
+    'define',
+    'value',
+    'message',
+    'response',
+    'json_response',
+    'command',
+    'single_paragraph',
+    'quote_paragraphs',
+    'location_returned',
+    'location_known',
+    'user_lat_lon',
+    'interview_url',
+    'interview_url_action',
+    'interview_url_as_qr',
+    'interview_url_action_as_qr',
+    'LatitudeLongitude',
+    'RoleChangeTracker',
+    'Name',
+    'IndividualName',
+    'Address',
+    'City',
+    'Event',
+    'Person',
+    'Thing',
+    'Individual',
+    'ChildList',
+    'FinancialList',
+    'PeriodicFinancialList',
+    'Income',
+    'Asset',
+    'Expense',
+    'Value',
+    'PeriodicValue',
+    'OfficeList',
+    'Organization',
+    'objects_from_file',
+    'send_email',
+    'send_sms',
+    'send_fax',
+    'map_of',
+    'selections',
+    'DAObject',
+    'DAList',
+    'DADict',
+    'DAOrderedDict',
+    'DASet',
+    'DAFile',
+    'DAFileCollection',
+    'DAFileList',
+    'DAStaticFile',
+    'DAEmail',
+    'DAEmailRecipient',
+    'DAEmailRecipientList',
+    'DATemplate',
+    'DAEmpty',
+    'DALink',
+    'last_access_time',
+    'last_access_delta',
+    'last_access_days',
+    'last_access_hours',
+    'last_access_minutes',
+    'returning_user',
+    'action_arguments',
+    'action_argument',
+    'timezone_list',
+    'as_datetime',
+    'current_datetime',
+    'date_difference',
+    'date_interval',
+    'year_of',
+    'month_of',
+    'day_of',
+    'dow_of',
+    'format_date',
+    'format_datetime',
+    'format_time',
+    'today',
+    'get_default_timezone',
+    'user_logged_in',
+    'interface',
+    'user_privileges',
+    'user_has_privilege',
+    'user_info',
+    'task_performed',
+    'task_not_yet_performed',
+    'mark_task_as_performed',
+    'times_task_performed',
+    'set_task_counter',
+    'background_action',
+    'background_response',
+    'background_response_action',
+    'background_error_action',
+    'us',
+    'DARedis',
+    'DACloudStorage',
+    'DAGoogleAPI',
+    'MachineLearningEntry',
+    'SimpleTextMachineLearner',
+    'SVMMachineLearner',
+    'RandomForestMachineLearner',
+    'set_live_help_status',
+    'chat_partners_available',
+    'phone_number_in_e164',
+    'phone_number_formatted',
+    'phone_number_is_valid',
+    'countries_list',
+    'country_name',
+    'write_record',
+    'read_records',
+    'delete_record',
+    'variables_as_json',
+    'all_variables',
+    'ocr_file',
+    'ocr_file_in_background',
+    'read_qr',
+    'get_sms_session',
+    'initiate_sms_session',
+    'terminate_sms_session',
+    'language_from_browser',
+    'device',
+    'interview_email',
+    'get_emails',
+    'plain',
+    'bold',
+    'italic',
+    'path_and_mimetype',
+    'states_list',
+    'state_name',
+    'subdivision_type',
+    'indent',
+    'raw',
+    'fix_punctuation',
+    'set_progress',
+    'get_progress',
+    'referring_url',
+    'run_python_module',
+    'undefine',
+    'invalidate',
+    'dispatch',
+    'yesno',
+    'noyes',
+    'split',
+    'showif',
+    'showifdef',
+    'phone_number_part',
+    'pdf_concatenate',
+    'set_parts',
+    'log',
+    'encode_name',
+    'decode_name',
+    'interview_list',
+    'interview_menu',
+    'server_capabilities',
+    'session_tags',
+    'include_docx_template',
+    'get_chat_log',
+    'get_user_list',
+    'get_user_info',
+    'set_user_info',
+    'get_user_secret',
+    'create_user',
+    'create_session',
+    'get_session_variables',
+    'set_session_variables',
+    'go_back_in_session',
+    'manage_privileges',
+    'start_time',
+    'zip_file',
+    'validation_error',
+    'DAValidationError',
+    'redact',
+    'forget_result_of',
+    're_run_logic',
+    'reconsider',
+    'action_button_html',
+    'url_ask',
+    'overlay_pdf',
+    'get_question_data',
+    'set_title',
+    'set_save_status',
+    'single_to_double_newlines',
+    'RelationshipTree',
+    'DAContext',
+    'DAOAuth',
+    'DAStore',
+    'explain',
+    'clear_explanations',
+    'explanation',
+    'set_status',
+    'get_status',
+    'verbatim',
+    'add_separators',
+    'DAWeb',
+    'DAWebError',
+    'json',
+    're',
+    'iso_country',
+    'assemble_docx',
+    'docx_concatenate',
+    'store_variables_snapshot',
+    'stash_data',
+    'retrieve_stashed_data',
+    'update_terms'
+]
 
 #knn_machine_learner = DummyObject
 
@@ -64,7 +311,7 @@ __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_l
 class DAStore(DAObject):
     """A class used to save objects to SQL."""
     def init(self, *pargs, **kwargs):
-        super(DAStore, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def is_encrypted(self):
         """Returns True if the storage object is using encryption, otherwise returns False."""
         if hasattr(self, 'encrypted'):
@@ -73,6 +320,8 @@ class DAStore(DAObject):
             if self.base == 'interview':
                 return False
             if self.base == 'user':
+                return True
+            if self.base == 'session':
                 return True
             if self.base == 'global':
                 return False
@@ -83,11 +332,13 @@ class DAStore(DAObject):
             if self.base == 'interview':
                 return 'da:i:' + this_thread.current_info.get('yaml_filename', '')
             if self.base == 'user':
-                return 'da:userid:' + text_type(this_thread.current_info['user']['the_user_id'])
+                return 'da:userid:' + str(this_thread.current_info['user']['the_user_id'])
+            if self.base == 'session':
+                return 'da:uid:' + get_uid() + ':i:' + this_thread.current_info.get('yaml_filename', '')
             if self.base == 'global':
                 return 'da:global'
-            return text_type(self.base)
-        return 'da:userid:' + text_type(this_thread.current_info['user']['the_user_id'])
+            return str(self.base)
+        return 'da:userid:' + str(this_thread.current_info['user']['the_user_id'])
     def defined(self, key):
         """Returns True if the key exists in the data store, otherwise returns False."""
         the_key = self._get_base_key() + ':' + key
@@ -104,6 +355,255 @@ class DAStore(DAObject):
         """Deletes an object from the data store"""
         the_key = self._get_base_key() + ':' + key
         server.server_sql_delete(the_key)
+    def keys(self):
+        return server.server_sql_keys(self._get_base_key() + ':')
+
+class DAWeb(DAObject):
+    """A class used to call external APIs"""
+    def _get_base_url(self):
+        if hasattr(self, 'base_url'):
+            base_url = self.base_url
+            if not isinstance(self.base_url, str):
+                raise Exception("DAWeb.call: the base url must be a string")
+            if not base_url.endswith('/'):
+                base_url += '/'
+            return base_url
+        return self.base_url
+    def _get_on_failure(self, on_failure):
+        if on_failure is None and hasattr(self, 'on_failure'):
+            on_failure = self.on_failure
+        return on_failure
+    def _get_success_code(self, success_code):
+        if success_code is None and hasattr(self, 'success_code'):
+            success_code = self.success_code
+        return success_code
+    def _get_on_success(self, on_success):
+        if on_success is None and hasattr(self, 'on_success'):
+            on_success = self.on_success
+        return on_success
+    def _get_task(self, task):
+        if task is None and hasattr(self, 'task'):
+            task = self.task
+        if task is None:
+            return None
+        if not isinstance(task, str):
+            raise Exception("DAWeb.call: task must be a string")
+        return task
+    def _get_task_persistent(self, task_persistent):
+        if task_persistent is None and hasattr(self, 'task_persistent'):
+            task_persistent = self.task_persistent
+        if task_persistent is None:
+            return False
+        if not isinstance(task, bool):
+            raise Exception("DAWeb.call: task_persistent must be boolean")
+        return task_persistent
+    def _get_auth(self, auth):
+        if auth is None and hasattr(self, 'auth'):
+            auth = self.auth
+        if isinstance(auth, (dict, DADict)):
+            if auth.get('type', 'basic') == 'basic':
+                return HTTPBasicAuth(auth['username'], auth['password'])
+            elif auth['type'] == 'digest':
+                return HTTPDigestAuth(auth['username'], auth['password'])
+        return auth
+    def _get_headers(self, new_headers):
+        if hasattr(self, 'headers'):
+            headers = self.headers
+            if isinstance(headers, DADict):
+                headers = headers.elements
+            if not isinstance(headers, dict):
+                raise Exception("DAWeb.call: the headers must be a dictionary")
+            headers.update(new_headers)
+            return headers
+        return new_headers
+    def _get_cookies(self, new_cookies):
+        if hasattr(self, 'cookies'):
+            cookies = self.cookies
+            if isinstance(cookies, DADict):
+                cookies = cookies.elements
+            if not isinstance(cookies, dict):
+                raise Exception("DAWeb.call: the cookies must be a dictionary")
+            cookies.update(new_cookies)
+            return cookies
+        return new_cookies
+    def _get_json_body(self, json_body):
+        if json_body is not None:
+            return True if json_body else False
+        if hasattr(self, 'json_body'):
+            return True if self.json_body else False
+        return True
+    def _call(self, url, method=None, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, task=None, task_persistent=None, files=None, cookies=None, success_code=None):
+        task = self._get_task(task)
+        task_persistent = self._get_task_persistent(task_persistent)
+        auth = self._get_auth(auth)
+        json_body = self._get_json_body(json_body)
+        on_failure = self._get_on_failure(on_failure)
+        on_success = self._get_on_success(on_success)
+        success_code = self._get_success_code(success_code)
+        if isinstance(success_code, str):
+            success_code = [int(success_code.strip())]
+        elif isinstance(success_code, (abc.Iterable, DASet, DAList)):
+            new_success_code = list()
+            for code in success_code:
+                if not isinstance(code, int):
+                    raise Exception("DAWeb.call: success codes must be integers")
+                new_success_code.append(code)
+            success_code = new_success_code
+        elif isinstance(success_code, int):
+            success_code = [success_code]
+        elif success_code is not None:
+            raise Exception("DAWeb.call: success_code must be an integer or a list of integers")
+        if method is None:
+            method = 'GET'
+        if not isinstance(method, str):
+            raise Exception("DAWeb.call: the method must be a string")
+        method = method.upper().strip()
+        if method not in ('POST', 'GET', 'PATCH', 'PUT', 'HEAD', 'DELETE', 'OPTIONS'):
+            raise Exception("DAWeb.call: invalid method")
+        if not isinstance(url, str):
+            raise Exception("DAWeb.call: the url must be a string")
+        if not re.search(r'^https?://', url):
+            url = self._get_base_url() + re.sub(r'^/*', '', url)
+        if data is None:
+            data = dict()
+        if isinstance(data, DADict):
+            data = data.elements
+        if json_body is False and not isinstance(data, dict):
+            raise Exception("DAWeb.call: data must be a dictionary")
+        if params is None:
+            params = dict()
+        if isinstance(params, DADict):
+            params = params.elements
+        if not isinstance(params, dict):
+            raise Exception("DAWeb.call: params must be a dictionary")
+        if headers is None:
+            headers = dict()
+        if isinstance(headers, DADict):
+            headers = headers.elements
+        if not isinstance(headers, dict):
+            raise Exception("DAWeb.call: the headers must be a dictionary")
+        headers = self._get_headers(headers)
+        if len(headers) == 0:
+            headers = None
+        if cookies is None:
+            cookies = dict()
+        if isinstance(cookies, DADict):
+            cookies = cookies.elements
+        if not isinstance(cookies, dict):
+            raise Exception("DAWeb.call: the cookies must be a dictionary")
+        cookies = self._get_cookies(cookies)
+        if len(cookies) == 0:
+            cookies = None
+        if isinstance(data, dict) and len(data) == 0:
+            data = None
+        if files is not None:
+            if not isinstance(files, dict):
+                raise Exception("DAWeb.call: files must be a dictionary")
+            new_files = dict()
+            for key, val in files.items():
+                if not isinstance(key, str):
+                    raise Exception("DAWeb.call: files must be a dictionary of string keys")
+                try:
+                    path = server.path_from_reference(val)
+                    logmessage("path is " + str(path))
+                    assert path is not None
+                except:
+                    raise Exception("DAWeb.call: could not load the file")
+                new_files[key] = open(path, 'rb')
+            files = new_files
+            if len(files):
+                json_body = False
+        try:
+            if method == 'POST':
+                if json_body:
+                    r = requests.post(url, json=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+                else:
+                    r = requests.post(url, data=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+            elif method == 'PUT':
+                if json_body:
+                    r = requests.put(url, json=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+                else:
+                    r = requests.put(url, data=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+            elif method == 'PATCH':
+                if json_body:
+                    r = requests.patch(url, json=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+                else:
+                    r = requests.patch(url, data=data, params=params, headers=headers, auth=auth, cookies=cookies, files=files)
+            elif method == 'GET':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.get(url, params=params, headers=headers, auth=auth, cookies=cookies)
+            elif method == 'DELETE':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.delete(url, params=params, headers=headers, auth=auth, cookies=cookies)
+            elif method == 'OPTIONS':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.options(url, params=params, headers=headers, auth=auth, cookies=cookies)
+            elif method == 'HEAD':
+                if len(params) == 0:
+                    params = data
+                    data = None
+                r = requests.head(url, params=params, headers=headers, auth=auth, cookies=cookies)
+        except RequestException as err:
+            if on_failure == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=-1, response_text='', response_json=None, response_headers=dict(), exception_type=err.__class__.__name__, exception_text=str(err), cookies_before=cookies, cookies_after=None)
+            else:
+                return on_failure
+        if success_code is None:
+            if r.status_code >= 200 and r.status_code < 300:
+                success = True
+            else:
+                success = False
+        else:
+            if r.status_code in success_code:
+                success = True
+            else:
+                success = False
+        if hasattr(self, 'cookies'):
+            self.cookies = dict(r.cookies)
+        try:
+            json_response = r.json()
+        except:
+            json_response = None
+        if success and task is not None:
+            mark_task_as_performed(task, persistent=task_persistent)
+        if not success:
+            if on_failure == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
+            else:
+                return on_failure
+        if success and on_success is not None:
+            if on_success == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
+            else:
+                return on_success
+        return(json_response if json_response is not None else r.text)
+    def get(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, task_persistent=None):
+        """Makes a GET request"""
+        return self._call(url, method='GET', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, task_persistent=task_persistent)
+    def post(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, task_persistent=None, files=None):
+        """Makes a POST request"""
+        return self._call(url, method='POST', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, task_persistent=task_persistent, files=files)
+    def put(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, task_persistent=None, files=None):
+        """Makes a PUT request"""
+        return self._call(url, method='PUT', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, task_persistent=task_persistent, files=files)
+    def patch(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, task_persistent=None, files=None):
+        """Makes a PATCH request"""
+        return self._call(url, method='PATCH', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, task_persistent=task_persistent, files=files)
+    def delete(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, task_persistent=None):
+        """Makes a DELETE request"""
+        return self._call(url, method='DELETE', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, task_persistent=task_persistent)
+    def options(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, task_persistent=None):
+        """Makes an OPTIONS request"""
+        return self._call(url, method='OPTIONS', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, task_persistent=task_persistent)
+    def head(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, task_persistent=None):
+        """Makes a HEAD request"""
+        return self._call(url, method='HEAD', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, task_persistent=task_persistent)
 
 class DARedis(DAObject):
     """A class used to interact with the redis server."""
@@ -148,7 +648,7 @@ class DACloudStorage(DAObject):
             server.cloud_custom(self.provider, self.config)
         else:
             self.custom = False
-        return super(DACloudStorage, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     @property
     def conn(self):
         """This property returns a boto3.resource('s3') or BlockBlobService() object."""
@@ -211,10 +711,7 @@ def run_python_module(module, arguments=None):
         module = this_thread.current_package + '.' + re.sub(r'\.py$', '', module)
     elif re.search(r'^\.', module):
         module = this_thread.current_package + module
-    if PY2:
-        commands = [re.sub(r'/lib/python.*', '/bin/python', docassemble.base.ocr.__file__), '-m', module]
-    else:
-        commands = [re.sub(r'/lib/python.*', '/bin/python3', docassemble.base.ocr.__file__), '-m', module]
+    commands = [re.sub(r'/lib/python.*', '/bin/python3', docassemble.base.ocr.__file__), '-m', module]
     if arguments:
         if not isinstance(arguments, list):
             raise DAError("run_python_module: the arguments parameter must be in the form of a list")
@@ -239,6 +736,11 @@ def today(timezone=None, format=None):
     else:
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
 
+def babel_language(language):
+    if 'babel dates map' not in server.daconfig:
+        return language
+    return server.daconfig['babel dates map'].get(language, language)
+
 def month_of(the_date, as_word=False, language=None):
     """Interprets the_date as a date and returns the month.
     Set as_word to True if you want the month as a word."""
@@ -251,7 +753,7 @@ def month_of(the_date, as_word=False, language=None):
         else:
             date = dateutil.parser.parse(the_date)
         if as_word:
-            return(babel.dates.format_date(date, format='MMMM', locale=language))
+            return(babel.dates.format_date(date, format='MMMM', locale=babel_language(language)))
         return(int(date.strftime('%m')))
     except:
         return word("Bad date")
@@ -279,7 +781,7 @@ def dow_of(the_date, as_word=False, language=None):
         else:
             date = dateutil.parser.parse(the_date)
         if as_word:
-            return(babel.dates.format_date(date, format='EEEE', locale=language))
+            return(babel.dates.format_date(date, format='EEEE', locale=babel_language(language)))
         else:
             return(int(date.strftime('%u')))
     except:
@@ -297,59 +799,74 @@ def year_of(the_date, language=None):
     except:
         return word("Bad date")
 
-def format_date(the_date, format='long', language=None):
+def interview_default(the_part, default_value, language):
+    result = None
+    if the_part in this_thread.internal and this_thread.internal[the_part] is not None:
+         return this_thread.internal[the_part]
+    for lang in (language, get_language(), '*'):
+        if lang is not None:
+            if lang in this_thread.interview.default_title:
+                if the_part in this_thread.interview.default_title[lang]:
+                    return this_thread.interview.default_title[lang][the_part]
+    return default_value
+
+def format_date(the_date, format=None, language=None):
     """Interprets the_date as a date and returns the date formatted for the current locale."""
     ensure_definition(the_date, format, language)
-    if language is None:
-        language = get_language()
     if isinstance(the_date, DAEmpty):
         return ""
+    if language is None:
+        language = get_language()
+    if format is None:
+        format = interview_default('date format', 'long', language)
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return babel.dates.format_date(date, format=format, locale=language)
+        return babel.dates.format_date(date, format=format, locale=babel_language(language))
     except:
         return word("Bad date")
 
-def format_datetime(the_date, format='long', language=None):
+def format_datetime(the_date, format=None, language=None):
     """Interprets the_date as a date/time and returns the date/time formatted for the current locale."""
     ensure_definition(the_date, format, language)
-    if language is None:
-        language = get_language()
     if isinstance(the_date, DAEmpty):
         return ""
+    if language is None:
+        language = get_language()
+    if format is None:
+        format = interview_default('datetime format', 'long', language)
     try:
         if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return babel.dates.format_datetime(date, format=format, locale=language)
+        return babel.dates.format_datetime(date, format=format, locale=babel_language(language))
     except:
         return word("Bad date")
 
-def format_time(the_time, format='short', language=None):
+def format_time(the_time, format=None, language=None):
     """Interprets the_time as a date/time and returns the time formatted for the current locale."""
     ensure_definition(the_time, format, language)
-    if language is None:
-        language = get_language()
     if isinstance(the_time, DAEmpty):
         return ""
+    if language is None:
+        language = get_language()
+    if format is None:
+        format = interview_default('time format', 'short', language)
     try:
         if isinstance(the_time, datetime.datetime) or isinstance(the_time, datetime.date) or isinstance(the_time, datetime.time):
             time = the_time
         else:
             time = dateutil.parser.parse(the_time)
-        return babel.dates.format_time(time, format=format, locale=language)
+        return babel.dates.format_time(time, format=format, locale=babel_language(language))
     except Exception as errmess:
-        return word("Bad date: " + text_type(errmess))
+        return word("Bad date: " + str(errmess))
 
-class DateTimeDelta(object):
+class DateTimeDelta:
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.describe())
+        return str(self.describe())
     def describe(self, **kwargs):
         specificity = kwargs.get('specificity', None)
         output = list()
@@ -370,13 +887,13 @@ class DateTimeDelta(object):
             return comma_and_list(["%d %s" % y for y in output])
 
 class DADateTime(datetime.datetime):
-    def format(self, format='long', language=None):
+    def format(self, format=None, language=None):
         return format_date(self, format=format, language=language)
-    def format_date(self, format='long', language=None):
+    def format_date(self, format=None, language=None):
         return format_date(self, format=format, language=language)
-    def format_datetime(self, format='long', language=None):
+    def format_datetime(self, format=None, language=None):
         return format_datetime(self, format=format, language=language)
-    def format_time(self, format='short', language=None):
+    def format_time(self, format=None, language=None):
         return format_time(self, format=format, language=language)
     def replace_time(self, time):
         return self.replace(hour=time.hour, minute=time.minute, second=time.second, microsecond=time.microsecond)
@@ -394,19 +911,17 @@ class DADateTime(datetime.datetime):
     def minus(self, **kwargs):
         return dd(dt(self) - date_interval(**kwargs))
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(format_date(self))
+        return str(format_date(self))
     def __add__(self, other):
-        if isinstance(other, string_types):
-            return text_type(self) + other
+        if isinstance(other, str):
+            return str(self) + other
         val = dt(self) + other
         if isinstance(val, datetime.date):
             return dd(val)
         return val
     def __radd__(self, other):
-        if isinstance(other, string_types):
-            return other + text_type(self)
+        if isinstance(other, str):
+            return other + str(self)
         return dd(dt(self) + other)
     def __sub__(self, other):
         val = dt(self) - other
@@ -527,14 +1042,14 @@ def phone_string(person, country=None):
 def email_string(persons, include_name=None, first=False):
     if persons is None:
         return None
-    if not (isinstance(persons, (DAList, DASet, abc.Iterable)) and not isinstance(persons, string_types)):
+    if not (isinstance(persons, (DAList, DASet, abc.Iterable)) and not isinstance(persons, str)):
         persons = [persons]
     result = []
     for person in persons:
         if isinstance(person, Person) or isinstance(person, DAEmailRecipient):
             result.append(person.email_address(include_name=include_name))
         else:
-            result.append(text_type(person))
+            result.append(str(person))
     result = [x for x in result if x is not None and x != '']
     if first:
         if len(result):
@@ -579,7 +1094,7 @@ def returning_user(minutes=None, hours=None, days=None):
     return False
 
 def last_access_delta(*pargs, **kwargs):
-    """Returns a datatime.timedelta object expressing the length of
+    """Returns a datetime.timedelta object expressing the length of
     time that has passed since the last time the interview was accessed."""
     last_time = last_access_time(*pargs, **kwargs)
     if last_time is None:
@@ -669,7 +1184,7 @@ class LatitudeLongitude(DAObject):
         self.gathered = False
         self.known = False
         # self.description = ""
-        return super(LatitudeLongitude, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def status(self):
         """Returns True or False depending on whether an attempt has yet been made
         to gather the latitude and longitude."""
@@ -697,16 +1212,14 @@ class LatitudeLongitude(DAObject):
                 self.known = False
                 #logmessage("known is false")
             self.gathered = True
-            self.description = text_type(self)
+            self.description = str(self)
         return
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
         if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
-            return text_type(self.latitude) + ', ' + text_type(self.longitude)
+            return str(self.latitude) + ', ' + str(self.longitude)
         elif hasattr(self, 'error'):
-            return text_type(self.error)
-        return u'Unknown'
+            return str(self.error)
+        return 'Unknown'
 
 class RoleChangeTracker(DAObject):
     """Used within an interview to facilitate changes in the active role
@@ -759,19 +1272,23 @@ class Name(DAObject):
     def full(self):
         """Returns the full name."""
         return(self.text)
+    def familiar(self):
+        """Returns the familiar name."""
+        return(self.text)
     def firstlast(self):
         """This method is included for compatibility with other types of names."""
         return(self.text)
     def lastfirst(self):
         """This method is included for compatibility with other types of names."""
         return(self.text)
+    def middle_initial(self, with_period=True):
+        """This method is included for compatibility with other types of names."""
+        return('')
     def defined(self):
         """Returns True if the name has been defined.  Otherwise, returns False."""
         return hasattr(self, 'text')
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return(text_type(self.full()))
+        return(str(self.full()))
 #    def __repr__(self):
 #        return(repr(self.full()))
 
@@ -780,24 +1297,31 @@ class IndividualName(Name):
     def init(self, *pargs, **kwargs):
         if 'uses_parts' not in kwargs:
             self.uses_parts = True
-        return super(IndividualName, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def defined(self):
         """Returns True if the name has been defined.  Otherwise, returns False."""
         if not self.uses_parts:
-            return super(IndividualName, self).defined()
+            return super().defined()
         return hasattr(self, 'first')
+    def familiar(self):
+        """Returns the familiar name."""
+        if not self.uses_parts:
+            return self.full()
+        return self.first
     def full(self, middle='initial', use_suffix=True):
         """Returns the full name.  Has optional keyword arguments middle
         and use_suffix."""
         if not self.uses_parts:
-            return super(IndividualName, self).full()
+            return super().full()
         names = [self.first]
-        if hasattr(self, 'middle') and len(self.middle):
+        if hasattr(self, 'middle'):
             if middle is False or middle is None:
                 pass
             elif middle == 'initial':
-                names.append(self.middle[0] + '.')
-            else:
+                initial = self.middle_initial()
+                if initial:
+                    names.append(initial)
+            elif len(self.middle):
                 names.append(self.middle)
         if hasattr(self, 'last') and len(self.last):
             names.append(self.last)
@@ -812,13 +1336,13 @@ class IndividualName(Name):
     def firstlast(self):
         """Returns the first name followed by the last name."""
         if not self.uses_parts:
-            return super(IndividualName, self).firstlast()
+            return super().firstlast()
         return(self.first + " " + self.last)
     def lastfirst(self):
         """Returns the last name followed by a comma, followed by the
         last name, followed by the suffix (if a suffix exists)."""
         if not self.uses_parts:
-            return super(IndividualName, self).lastfirst()
+            return super().lastfirst()
         output = self.last
         if hasattr(self, 'suffix') and self.suffix:
             output += " " + self.suffix
@@ -826,6 +1350,14 @@ class IndividualName(Name):
         if hasattr(self, 'middle') and self.middle:
             output += " " + self.middle[0] + '.'
         return output
+    def middle_initial(self, with_period=True):
+        """Returns the middle initial, or the empty string if the name does not have a middle component."""
+        if len(self.middle.strip()) == 0:
+            return ''
+        if with_period:
+            return self.middle[0].strip() + '.'
+        else:
+            return self.middle[0].strip() + '.'
 
 class Address(DAObject):
     """A geographic address."""
@@ -836,41 +1368,38 @@ class Address(DAObject):
             self.geolocated = False
         if not hasattr(self, 'city_only'):
             self.city_only = False
-        return super(Address, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return(text_type(self.block()))
-    def on_one_line(self, include_unit=False, omit_default_country=True, language=None):
+        return(str(self.block()))
+    def on_one_line(self, include_unit=True, omit_default_country=True, language=None, show_country=None):
         """Returns a one-line address.  Primarily used internally for geolocation."""
         output = ""
         if self.city_only is False:
             if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
-                output += text_type(self.street_number) + " " + text_type(self.street)
+                output += str(self.street_number) + " " + str(self.street)
             else:
-                output += text_type(self.address)
+                output += str(self.address)
             if include_unit:
                 the_unit = self.formatted_unit(language=language)
                 if the_unit != '':
                     output += ", " + the_unit
             output += ", "
         #if hasattr(self, 'sublocality') and self.sublocality:
-        #    output += text_type(self.sublocality) + ", "
+        #    output += str(self.sublocality) + ", "
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
             if not (hasattr(self, 'street_number') and self.street_number == self.sublocality_level_1):
-                output += text_type(self.sublocality_level_1) + ", "
-        output += text_type(self.city)
+                output += str(self.sublocality_level_1) + ", "
+        output += str(self.city)
         if hasattr(self, 'state') and self.state:
-            output += ", " + text_type(self.state)
+            output += ", " + str(self.state)
         if hasattr(self, 'zip') and self.zip:
-            output += " " + text_type(self.zip)
+            output += " " + str(self.zip)
         elif hasattr(self, 'postal_code') and self.postal_code:
-            output += " " + text_type(self.postal_code)
-        if hasattr(self, 'country') and self.country:
-            if (not omit_default_country) or get_country() != self.country:
-                output += ", " + country_name(self.country)
-        elif omit_default_country is False:
-            output += ", " + country_name(get_country())
+            output += " " + str(self.postal_code)
+        if show_country is None and hasattr(self, 'country') and self.country and ((not omit_default_country) or get_country() != self.country):
+            show_country = True
+        if show_country:
+            output += ", " + country_name(self._get_country())
         return output
     def _map_info(self):
         if (self.location.gathered and self.location.known) or self.geolocate():
@@ -883,12 +1412,14 @@ class Address(DAObject):
                 result['icon'] = self.icon
             return [result]
         return None
-    def geolocate(self, address=None):
+    def geolocate(self, address=None, reset=False):
         """Determines the latitude and longitude of the location from its components.  If an address is supplied, the address fields that are not already populated will be populated with the result of the geolocation of the selected address."""
+        if reset:
+            self.reset_geolocation()
         if address is None:
             if self.geolocated:
                 return self.geolocate_success
-            the_address = self.on_one_line(include_unit=True, omit_default_country=False)
+            the_address = self.on_one_line(omit_default_country=False)
         else:
             the_address = address
         #logmessage("geolocate: trying to geolocate " + str(the_address))
@@ -905,7 +1436,7 @@ class Address(DAObject):
                 results = my_geocoder.geocode(the_address)
                 success = True
             except Exception as the_err:
-                logmessage(text_type(the_err))
+                logmessage(str(the_err))
                 try_number += 1
                 time.sleep(try_number)
         self.geolocated = True
@@ -940,7 +1471,7 @@ class Address(DAObject):
                     'locality': ('city', 'long_name'),
                     'neighborhood': ('neighborhood', 'long_name'),
                     'post_box': ('post_box', 'long_name'),
-                    'postal_code': ('zip', 'long_name'),
+                    'postal_code': ('postal_code', 'long_name'),
                     'postal_code_prefix': ('postal_code_prefix', 'long_name'),
                     'postal_code_suffix': ('postal_code_suffix', 'long_name'),
                     'postal_town': ('postal_town', 'long_name'),
@@ -976,7 +1507,7 @@ class Address(DAObject):
                     'locality': 'city',
                     'neighborhood': 'neighborhood',
                     'post_box': 'post_box',
-                    'postal_code': 'zip',
+                    'postal_code': 'postal_code',
                     'postal_code_prefix': 'postal_code_prefix',
                     'postal_code_suffix': 'postal_code_suffix',
                     'postal_town': 'postal_town',
@@ -1005,9 +1536,9 @@ class Address(DAObject):
                                     if addr_type != geo_type:
                                         setattr(self.norm_long, geo_type, component['long_name'])
                 if hasattr(self.norm, 'unit'):
-                    self.norm.unit = '#' + text_type(self.norm.unit)
+                    self.norm.unit = '#' + str(self.norm.unit)
                 if hasattr(self.norm_long, 'unit'):
-                    self.norm_long.unit = '#' + text_type(self.norm_long.unit)
+                    self.norm_long.unit = '#' + str(self.norm_long.unit)
                 if hasattr(self.norm, 'street_number') and hasattr(self.norm, 'street'):
                     self.norm.address = self.norm.street_number + " " + self.norm.street
                 if hasattr(self.norm_long, 'street_number') and hasattr(self.norm_long, 'street'):
@@ -1069,31 +1600,75 @@ class Address(DAObject):
         self.norm = the_norm
         self.norm_long = the_norm_long
         return True
-    def block(self, language=None):
+    def reset_geolocation(self):
+        """Resets the geolocation information"""
+        self.delattr('norm', 'geolocate_success', 'geolocate_response', 'norm_long', 'one_line')
+        self.geolocated = False
+        self.location.delattr('gathered', 'known', 'latitude', 'longitude', 'description')
+    def block(self, language=None, international=False, show_country=None):
         """Returns the address formatted as a block, as in a mailing."""
-        output = ""
         if this_thread.evaluation_context == 'docx':
             line_breaker = '</w:t><w:br/><w:t xml:space="preserve">'
         else:
             line_breaker = " [NEWLINE] "
+        if international:
+            i18n_address = {}
+            if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
+                i18n_address['street_address'] = str(self.street_number) + " " + str(self.street)
+            else:
+                i18n_address['street_address'] = str(self.address)
+            the_unit = self.formatted_unit(language=language)
+            if the_unit != '':
+                i18n_address['street_address'] += '\n' + the_unit
+            if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
+                i18n_address['city_area'] = str(self.sublocality_level_1)
+            i18n_address['city'] = str(self.city)
+            if hasattr(self, 'state') and self.state:
+                i18n_address['country_area'] = str(self.state)
+            if hasattr(self, 'zip') and self.zip:
+                i18n_address['postal_code'] = str(self.zip)
+            elif hasattr(self, 'postal_code') and self.postal_code:
+                i18n_address['postal_code'] = str(self.postal_code)
+            i18n_address['country_code'] = self._get_country()
+            return i18naddress.format_address(i18n_address).replace('\n', line_breaker)
+        output = ""
         if self.city_only is False:
             if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
-                output += text_type(self.street_number) + " " + text_type(self.street) + line_breaker
+                output += str(self.street_number) + " " + str(self.street) + line_breaker
             else:
-                output += text_type(self.address) + line_breaker
+                output += str(self.address) + line_breaker
             the_unit = self.formatted_unit(language=language)
             if the_unit != '':
                 output += the_unit + line_breaker
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
-            output += text_type(self.sublocality_level_1) + line_breaker
-        output += text_type(self.city)
+            output += str(self.sublocality_level_1) + line_breaker
+        output += str(self.city)
         if hasattr(self, 'state') and self.state:
-            output += ", " + text_type(self.state)
-        if hasattr(self, 'zip'):
-            output += " " + text_type(self.zip)
+            output += ", " + str(self.state)
+        if hasattr(self, 'zip') and self.zip:
+            output += " " + str(self.zip)
         elif hasattr(self, 'postal_code') and self.postal_code:
-            output += " " + text_type(self.postal_code)
+            output += " " + str(self.postal_code)
+        if show_country is None and hasattr(self, 'country') and self.country and get_country() != self.country:
+            show_country = True
+        if show_country:
+            output += line_breaker + country_name(self._get_country())
         return(output)
+    def _get_country(self):
+        if hasattr(self, 'country') and isinstance(self.country, str):
+            country = self.country
+        else:
+            country = None
+        if not country:
+            country = get_country()
+        if not country:
+            country = 'US'
+        try:
+            country = iso_country(country)
+        except:
+            logmessage("Invalid country code " + repr(country))
+            country = 'US'
+        return country
     def formatted_unit(self, language=None, require=False):
         """Returns the unit, formatted appropriately"""
         if not hasattr(self, 'unit') and not hasattr(self, 'floor') and not hasattr(self, 'room'):
@@ -1102,14 +1677,14 @@ class Address(DAObject):
             else:
                 return ''
         if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-            if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', text_type(self.unit), flags=re.IGNORECASE):
-                return word("Unit", language=language) + " " + text_type(self.unit)
+            if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', str(self.unit), flags=re.IGNORECASE):
+                return word("Unit", language=language) + " " + str(self.unit)
             else:
-                return text_type(self.unit)
+                return str(self.unit)
         elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
-            return word("Floor", language=language) + " " + text_type(self.floor)
+            return word("Floor", language=language) + " " + str(self.floor)
         elif hasattr(self, 'room') and self.room != '' and self.room is not None:
-            return word("Room", language=language) + " " + text_type(self.room)
+            return word("Room", language=language) + " " + str(self.room)
         return ''
     def line_one(self, language=None):
         """Returns the first line of the address, including the unit
@@ -1117,9 +1692,9 @@ class Address(DAObject):
         if self.city_only:
             return ''
         if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
-            output += text_type(self.street_number) + " " + text_type(self.street)
+            output += str(self.street_number) + " " + str(self.street)
         else:
-            output = text_type(self.address)
+            output = str(self.address)
         the_unit = self.formatted_unit(language=language)
         if the_unit != '':
             output += ", " + the_unit
@@ -1129,44 +1704,66 @@ class Address(DAObject):
         state and zip code."""
         output = ""
         #if hasattr(self, 'sublocality') and self.sublocality:
-        #    output += text_type(self.sublocality) + ", "
+        #    output += str(self.sublocality) + ", "
         if hasattr(self, 'sublocality_level_1') and self.sublocality_level_1:
-            output += text_type(self.sublocality_level_1) + ", "
-        output += text_type(self.city)
+            output += str(self.sublocality_level_1) + ", "
+        output += str(self.city)
         if hasattr(self, 'state') and self.state:
-            output += ", " + text_type(self.state)
+            output += ", " + str(self.state)
         if hasattr(self, 'zip') and self.zip:
-            output += " " + text_type(self.zip)
+            output += " " + str(self.zip)
         elif hasattr(self, 'postal_code') and self.postal_code:
-            output += " " + text_type(self.postal_code)
+            output += " " + str(self.postal_code)
         return(output)
+
+def iso_country(country, part='alpha_2'):
+    """Returns a best-guess ISO 3166-1 country information given a country
+    name.  The optional keyword parameter "part" can be alpha_2,
+    alpha_3, name, or official_name.  The default "part" is alpha_2.
+
+    """
+    try:
+        guess = pycountry.countries.search_fuzzy(country)
+        assert len(guess) > 0
+    except:
+        raise DAError("Invalid country: " + str(country))
+    if part == 'alpha_2':
+        return guess[0].alpha_2
+    elif part == 'alpha_3':
+        return guess[0].alpha_3
+    elif part == 'name':
+        return guess[0].name
+    elif part == 'numeric':
+        return guess[0].numeric
+    elif part == 'official_name':
+        return guess[0].official_name
+    else:
+        raise DAError('iso_country: unknown part')
 
 class City(Address):
     """A geographic address specific only to a city."""
     def init(self, *pargs, **kwargs):
         self.city_only = True
-        return super(City, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
 
 class Thing(DAObject):
     """Represents something with a name."""
     def init(self, *pargs, **kwargs):
         if not hasattr(self, 'name') and 'name' not in kwargs:
             self.name = Name()
-        if 'name' in kwargs and isinstance(kwargs['name'], string_types):
+        if 'name' in kwargs and isinstance(kwargs['name'], str):
             if not hasattr(self, 'name'):
                 self.name = Name()
             self.name.text = kwargs['name']
             del kwargs['name']
-        return super(Thing, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def __setattr__(self, attrname, value):
-        if attrname == 'name' and isinstance(value, string_types):
+        if attrname == 'name' and isinstance(value, str):
             self.name.text = value
         else:
-            return super(Thing, self).__setattr__(attrname, value)
-    def __unicode__(self):
-        return text_type(self.name.full())
+            return super().__setattr__(attrname, value)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
+        return str(self.name.full())
 
 class Event(DAObject):
     """A DAObject with pre-set attributes address, which is a City, and
@@ -1178,29 +1775,27 @@ class Event(DAObject):
             self.address = City()
         if 'location' not in kwargs:
             self.initializeAttribute('location', LatitudeLongitude)
-        return super(Event, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.address)
+        return str(self.address)
 
 class Person(DAObject):
     """Represents a legal or natural person."""
     def init(self, *pargs, **kwargs):
         if not hasattr(self, 'name') and 'name' not in kwargs:
-            self.name = Name()
+            self.initializeAttribute('name', Name)
         if 'address' not in kwargs:
             self.initializeAttribute('address', Address)
         if 'location' not in kwargs:
             self.initializeAttribute('location', LatitudeLongitude)
-        if 'name' in kwargs and isinstance(kwargs['name'], string_types):
+        if 'name' in kwargs and isinstance(kwargs['name'], str):
             if not hasattr(self, 'name'):
-                self.name = Name()
+                self.initializeAttribute('name', Name)
             self.name.text = kwargs['name']
             del kwargs['name']
         # if 'roles' not in kwargs:
         #     self.roles = set()
-        return super(Person, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def _map_info(self):
         if not self.location.known:
             if (self.address.location.gathered and self.address.location.known) or self.address.geolocate():
@@ -1225,14 +1820,12 @@ class Person(DAObject):
             return True
         return False
     def __setattr__(self, attrname, value):
-        if attrname == 'name' and isinstance(value, string_types):
+        if attrname == 'name' and isinstance(value, str):
             self.name.text = value
         else:
-            return super(Person, self).__setattr__(attrname, value)
+            return super().__setattr__(attrname, value)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.name.full())
+        return str(self.name.full())
     def pronoun_objective(self, **kwargs):
         """Returns "it" or "It" depending on the value of the optional
         keyword argument "capitalize." """
@@ -1247,20 +1840,20 @@ class Person(DAObject):
         if self is this_thread.global_vars.user:
             return your(target, **kwargs)
         else:
-            return possessify(self.name, target, **kwargs)
+            return possessify(self, target, **kwargs)
     def object_possessive(self, target, **kwargs):
         """Given a word, returns a phrase indicating possession, but
         uses the variable name rather than the object's actual name."""
         if self is this_thread.global_vars.user:
             return your(target, **kwargs)
-        return super(Person, self).object_possessive(target, **kwargs)
+        return super().object_possessive(target, **kwargs)
     def is_are_you(self, **kwargs):
         """Returns "are you" if the object is the user, otherwise returns
         "is" followed by the object name."""
         if self is this_thread.global_vars.user:
             output = word('are you', **kwargs)
         else:
-            output = is_word(self.name.full(), **kwargs)
+            output = is_word(str(self), **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -1274,21 +1867,22 @@ class Person(DAObject):
             return(self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block(language=language))
         else:
             return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block(language=language))
-    def sms_number(self):
+    def sms_number(self, country=None):
         """Returns the person's mobile_number, if defined, otherwise the phone_number."""
         if hasattr(self, 'mobile_number'):
             the_number = self.mobile_number
             if hasattr(self, 'uses_whatsapp'):
-                the_number = 'whatsapp:' + text_type(self.mobile_number)
+                the_number = 'whatsapp:' + str(self.mobile_number)
         else:
             the_number = self.phone_number
-        if hasattr(self, 'country'):
-            the_country = self.country
-        elif hasattr(self, 'address') and hasattr(self.address, 'country'):
-            the_country = self.address.country
-        else:
-            the_country = get_country()
-        return phone_number_in_e164(the_number, country=the_country)
+        if country is None:
+            if hasattr(self, 'country'):
+                country = self.country
+            elif hasattr(self, 'address') and hasattr(self.address, 'country'):
+                country = self.address.country
+            else:
+                country = get_country()
+        return phone_number_in_e164(the_number, country=country)
     def facsimile_number(self, country=None):
         """Returns the person's fax_number, formatted appropriately."""
         the_number = self.fax_number
@@ -1325,14 +1919,14 @@ class Person(DAObject):
         if self == this_thread.global_vars.user:
             return(do_you(the_verb, **kwargs))
         else:
-            return(does_a_b(self.name, the_verb, **kwargs))
+            return(does_a_b(self, the_verb, **kwargs))
     def did_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "did you eat" or "did John Smith eat,"
         depending on whether the person is the user."""
         if self == this_thread.global_vars.user:
             return did_you(the_verb, **kwargs)
         else:
-            return did_a_b(self.name, the_verb, **kwargs)
+            return did_a_b(self, the_verb, **kwargs)
     def were_question(self, the_target, **kwargs):
         """Given a target like "married", returns "were you married" or "was
         John Smith married," depending on whether the person is the
@@ -1340,7 +1934,7 @@ class Person(DAObject):
         if self == this_thread.global_vars.user:
             return were_you(the_target, **kwargs)
         else:
-            return was_a_b(self.name, the_target, **kwargs)
+            return was_a_b(self, the_target, **kwargs)
     def have_question(self, the_target, **kwargs):
         """Given a target like "", returns "have you married" or "has
         John Smith married," depending on whether the person is the
@@ -1348,12 +1942,12 @@ class Person(DAObject):
         if self == this_thread.global_vars.user:
             return have_you(the_target, **kwargs)
         else:
-            return has_a_b(self.name, the_target, **kwargs)
+            return has_a_b(self, the_target, **kwargs)
     def does_verb(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "eat" or "eats"
         depending on whether the person is the user."""
         if self == this_thread.global_vars.user:
-            tense = '1sg'
+            tense = '2sg'
         else:
             tense = '3sg'
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
@@ -1374,7 +1968,7 @@ class Person(DAObject):
         if self == this_thread.global_vars.user:
             output = word('you', **kwargs)
         else:
-            output = text_type(self)
+            output = str(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -1384,7 +1978,7 @@ class Individual(Person):
     """Represents a natural person."""
     def init(self, *pargs, **kwargs):
         if 'name' not in kwargs and not hasattr(self, 'name'):
-            self.name = IndividualName()
+            self.initializeAttribute('name', IndividualName)
         # if 'child' not in kwargs and not hasattr(self, 'child'):
         #     self.child = ChildList()
         # if 'income' not in kwargs and not hasattr(self, 'income'):
@@ -1393,11 +1987,14 @@ class Individual(Person):
         #     self.asset = Asset()
         # if 'expense' not in kwargs and not hasattr(self, 'expense'):
         #     self.expense = Expense()
-        if (not hasattr(self, 'name')) and 'name' in kwargs and isinstance(kwargs['name'], string_types):
-            self.name = IndividualName()
+        if (not hasattr(self, 'name')) and 'name' in kwargs and isinstance(kwargs['name'], str):
+            self.initializeAttribute('name', IndividualName)
             self.name.uses_parts = False
             self.name.text = kwargs['name']
-        return super(Individual, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
+    def familiar(self):
+        """Returns the individual's familiar name."""
+        return self.name.familiar()
     def get_parents(self, tree, create=False):
         return self.get_relation('child', tree, create=create)
     def get_spouse(self, tree, create=False):
@@ -1498,30 +2095,34 @@ class Individual(Person):
         if self == this_thread.global_vars.user:
             output = word('yourself', **kwargs)
         else:
-            output = self.name.full()
+            output = str(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
             return(output)
     def __setattr__(self, attrname, value):
-        if attrname == 'name' and isinstance(value, string_types):
+        if attrname == 'name' and isinstance(value, str):
             if isinstance(self.name, IndividualName):
                 self.name.uses_parts = False
             self.name.text = value
         else:
-            return super(Individual, self).__setattr__(attrname, value)
+            return super().__setattr__(attrname, value)
+    def __str__(self):
+        if hasattr(self, 'use_familiar') and self.use_familiar and isinstance(self.name, IndividualName) and self.name.uses_parts:
+            return str(self.name.first)
+        return super().__str__()
 
 class ChildList(DAList):
     """Represents a list of children."""
     def init(self, *pargs, **kwargs):
         self.object_type = Individual
-        return super(ChildList, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
 
 class FinancialList(DADict):
     """Represents a set of currency amounts."""
     def init(self, *pargs, **kwargs):
         self.object_type = Value
-        return super(FinancialList, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def total(self):
         """Returns the total value in the list, gathering the list items if necessary."""
         self._trigger_gather()
@@ -1539,17 +2140,15 @@ class FinancialList(DADict):
         if hasattr(self, 'new_item_value'):
             self.elements[self.new_item_name].value = self.new_item_value
             del self.new_item_value
-        return super(FinancialList, self)._new_item_init_callback()
+        return super()._new_item_init_callback()
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.total())
+        return str(self.total())
 
 class PeriodicFinancialList(FinancialList):
     """Represents a set of currency items, each of which has an associated period."""
     def init(self, *pargs, **kwargs):
         self.object_type = PeriodicValue
-        return super(FinancialList, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def total(self, period_to_use=1):
         """Returns the total periodic value in the list, gathering the list items if necessary."""
         self._trigger_gather()
@@ -1564,7 +2163,7 @@ class PeriodicFinancialList(FinancialList):
         if hasattr(self, 'new_item_period'):
             self.elements[self.new_item_name].period = self.new_item_period
             del self.new_item_period
-        return super(PeriodicFinancialList, self)._new_item_init_callback()
+        return super()._new_item_init_callback()
 
 class Income(PeriodicFinancialList):
     """A PeriodicFinancialList representing a person's income."""
@@ -1586,9 +2185,7 @@ class Value(DAObject):
             return 0
         return (Decimal(self.value))
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.amount())
+        return str(self.amount())
     def __float__(self):
         return float(self.amount())
     def __int__(self):
@@ -1607,6 +2204,8 @@ class Value(DAObject):
         return self.value == (other.value if isinstance(other, Value) else other)
     def __ne__(self, other):
         return self.value != (other.value if isinstance(other, Value) else other)
+    def __hash__(self):
+        return hash((self.instanceName,))
 
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""
@@ -1622,7 +2221,7 @@ class OfficeList(DAList):
     """Represents a list of offices of a company or organization."""
     def init(self, *pargs, **kwargs):
         self.object_type = Address
-        return super(OfficeList, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
 
 class Organization(Person):
     """Represents a company or organization."""
@@ -1635,7 +2234,7 @@ class Organization(Person):
                         new_office = self.office.appendObject(Address, **office)
                         new_office.geolocate()
             del kwargs['offices']
-        return super(Organization, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def will_handle(self, problem=None, county=None):
         """Returns True or False depending on whether the organization
         serves the given county and/or handles the given problem."""
@@ -1707,7 +2306,7 @@ def send_sms_invite(to=None, body='question', config='default'):
     #logmessage("Sending message " + str(message) + " to " + str(phone_number))
     send_sms(to=phone_number, body=message, config=config)
 
-def send_sms(to=None, body=None, template=None, task=None, attachments=None, config='default'):
+def send_sms(to=None, body=None, template=None, task=None, task_persistent=False, attachments=None, config='default', dry_run=False):
     """Sends a text message and returns whether sending the text was successful."""
     if server.twilio_config is None:
         logmessage("send_sms: ignoring because Twilio not enabled")
@@ -1731,12 +2330,12 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
     if template is not None and body is None:
         body_html = '<html><body>'
         if template.subject is not None:
-            body_html += markdown_to_html(template.subject)
-        body_html += markdown_to_html(template.content) + '</body></html>'
+            body_html += markdown_to_html(template.subject, external=True)
+        body_html += markdown_to_html(template.content, external=True) + '</body></html>'
+        body_html = re.sub(r'\n', ' ', body_html)
         body = BeautifulSoup(body_html, "html.parser").get_text('\n')
     if body is None:
         body = word("blank message")
-    url_start = docassemble.base.functions.get_url_start()
     success = True
     media = list()
     for attachment in attachments:
@@ -1760,7 +2359,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
             attachment_list.append(attachment)
         elif isinstance(attachment, DAFileList):
             attachment_list.extend(attachment.elements)
-        elif isinstance(attachment, string_types) and re.search(r'^https?://', attachment):
+        elif isinstance(attachment, str) and re.search(r'^https?://', attachment):
             attachment_list.append(attachment)
         else:
             logmessage("send_sms: attachment " + repr(attachment) + " is not valid.")
@@ -1772,10 +2371,12 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
                     media.append(the_attachment.url_for(_external=True))
                 if type(the_attachment) is DAStaticFile:
                     media.append(the_attachment.url_for(_external=True))
-                elif isinstance(the_attachment, string_types):
+                elif isinstance(the_attachment, str):
                     media.append(the_attachment)
     if len(media) > 10:
         logmessage("send_sms: more than 10 attachments were provided; not sending message")
+        success = False
+    if dry_run:
         success = False
     if success:
         twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
@@ -1792,14 +2393,13 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
                     else:
                         message = twilio_client.messages.create(to=phone_number, from_=from_number, body=body)
                 except Exception as errstr:
-                    logmessage("send_sms: failed to send message from " + from_number + " to " + phone_number + ": " + text_type(errstr))
+                    logmessage("send_sms: failed to send message from " + from_number + " to " + phone_number + ": " + str(errstr))
                     return False
     if success and task is not None:
-        mark_task_as_performed(task)
+        mark_task_as_performed(task, persistent=task_persistent)
     return True
 
-
-class FaxStatus(object):
+class FaxStatus:
     def __init__(self, sid):
         self.sid = sid
     def status(self):
@@ -1810,6 +2410,14 @@ class FaxStatus(object):
             return 'no-information'
         info = json.loads(the_json)
         return info['FaxStatus']
+    def pages(self):
+        if self.sid is None:
+            return 0
+        the_json = server.server_redis.get('da:faxcallback:sid:' + self.sid)
+        if the_json is None:
+            return 0
+        info = json.loads(the_json)
+        return info.get('NumPages', 0)
     def info(self):
         if self.sid is None:
             return dict(FaxStatus='not-configured')
@@ -1822,7 +2430,7 @@ class FaxStatus(object):
         the_status = self.status()
         if the_status in ('no-information', 'not-configured'):
             return None
-        if the_status == 'received':
+        if the_status in ('received', 'delivered'):
             return True
         else:
             return False
@@ -1840,11 +2448,11 @@ def send_fax(fax_number, file_object, config='default', country=None):
         return FaxStatus(None)
     return FaxStatus(server.send_fax(fax_string(fax_number, country=country), file_object, config))
 
-def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=None):
+def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, task_persistent=False, attachments=None, mailgun_variables=None, dry_run=False):
     """Sends an e-mail and returns whether sending the e-mail was successful."""
     if attachments is None:
         attachments = []
-    if not isinstance(attachments, (list, DAList, set, DASet, tuple)):
+    if (not isinstance(attachments, (DAList, DASet, abc.Iterable))) or isinstance(attachments, str):
         attachments = [attachments]
     from flask_mail import Message
     if type(to) is not list:
@@ -1854,7 +2462,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     if template is not None:
         if subject is None or subject == '':
             subject = template.subject
-        body_html = '<html><body>' + markdown_to_html(template.content) + '</body></html>'
+        body_html = '<html><body>' + template.content_as_html(external=True) + '</body></html>'
         if body is None:
             body = BeautifulSoup(body_html, "html.parser").get_text('\n')
         if html is None:
@@ -1863,11 +2471,17 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
         body = ""
     subject = re.sub(r'[\n\r]+', ' ', subject)
     sender_string = email_stringer(sender, first=True, include_name=True)
+    reply_to_string = email_stringer(reply_to, first=True, include_name=True)
     to_string = email_stringer(to)
     cc_string = email_stringer(cc)
     bcc_string = email_stringer(bcc)
     #logmessage("Sending mail to: " + repr(dict(subject=subject, recipients=to_string, sender=sender_string, cc=cc_string, bcc=bcc_string, body=body, html=html)))
-    msg = Message(subject, sender=sender_string, recipients=to_string, cc=cc_string, bcc=bcc_string, body=body, html=html)
+    msg = Message(subject, sender=sender_string, reply_to=reply_to_string, recipients=to_string, cc=cc_string, bcc=bcc_string, body=body, html=html)
+    if mailgun_variables is not None:
+        if isinstance(mailgun_variables, dict):
+            msg.mailgun_variables = mailgun_variables
+        else:
+            logmessage("send_email: mailgun_variables must be a dict")
     filenames_used = set()
     success = True
     for attachment in attachments:
@@ -1890,9 +2504,9 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
             attachment_list.append(attachment)
         elif isinstance(attachment, DAFileList):
             attachment_list.extend(attachment.elements)
-        elif isinstance(attachment, string_types):
+        elif isinstance(attachment, str):
             file_info = server.file_finder(attachment)
-            if 'fullpath' in file_info:
+            if 'fullpath' in file_info and file_info['fullpath'] is not None:
                 failed = True
                 with open(file_info['fullpath'], 'rb') as fp:
                     msg.attach(attachment_name(file_info['filename'], filenames_used), file_info['mimetype'], fp.read())
@@ -1918,7 +2532,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
                         file_info = server.file_finder(str(the_attachment.number), filename=the_attachment.filename)
                     else:
                         file_info = server.file_finder(str(the_attachment.number))
-                    if 'fullpath' in file_info:
+                    if 'fullpath' in file_info and file_info['fullpath'] is not None:
                         failed = True
                         with open(file_info['fullpath'], 'rb') as fp:
                             msg.attach(attachment_name(the_attachment.filename, filenames_used), file_info['mimetype'], fp.read())
@@ -1927,16 +2541,18 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
                             success = False
                     else:
                         success = False
+    if dry_run:
+        success = False
     if success:
         try:
             logmessage("send_email: starting to send")
             server.send_mail(msg)
             logmessage("send_email: finished sending")
         except Exception as errmess:
-            logmessage("send_email: sending mail failed with error of " + " type " + str(errmess.__class__.__name__) + ": " + text_type(errmess))
+            logmessage("send_email: sending mail failed with error of " + " type " + str(errmess.__class__.__name__) + ": " + str(errmess))
             success = False
     if success and task is not None:
-        mark_task_as_performed(task)
+        mark_task_as_performed(task, persistent=task_persistent)
     return(success)
 
 def attachment_name(filename, filenames):
@@ -1969,7 +2585,7 @@ def map_of(*pargs, **kwargs):
                     if 'icon' in marker and not isinstance(marker['icon'], dict):
                         marker['icon'] = {'url': server.url_finder(marker['icon'])}
                     if 'info' in marker and marker['info']:
-                        marker['info'] = markdown_to_html(marker['info'], trim=True)
+                        marker['info'] = markdown_to_html(marker['info'], trim=True, external=True)
                     the_map['markers'].append(marker)
     if 'center' in kwargs:
         the_center = kwargs['center']
@@ -1980,7 +2596,7 @@ def map_of(*pargs, **kwargs):
     if 'center' not in the_map and len(the_map['markers']):
         the_map['center'] = the_map['markers'][0]
     if len(the_map['markers']) or 'center' in the_map:
-        return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode().replace('\n', '') + ']'
+        return '[MAP ' + re.sub(r'\n', '', codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode()) + ']'
     return word('(Unable to display map)')
 
 def ocr_file_in_background(*pargs, **kwargs):
@@ -1998,7 +2614,7 @@ def ocr_file_in_background(*pargs, **kwargs):
         ui_notification = pargs[1]
     else:
         ui_notification = None
-    args = dict(yaml_filename=this_thread.current_info['yaml_filename'], user=this_thread.current_info['user'], user_code=this_thread.current_info['session'], secret=this_thread.current_info['secret'], url=this_thread.current_info['url'], url_root=this_thread.current_info['url_root'], language=language, psm=psm, x=x, y=y, W=W, H=H, extra=ui_notification, message=message)
+    args = dict(yaml_filename=this_thread.current_info['yaml_filename'], user=this_thread.current_info['user'], user_code=this_thread.current_info['session'], secret=this_thread.current_info['secret'], url=this_thread.current_info['url'], url_root=this_thread.current_info['url_root'], language=language, psm=psm, x=x, y=y, W=W, H=H, extra=ui_notification, message=message, pdf=False, preserve_color=False)
     collector = server.ocr_finalize.s(**args)
     todo = list()
     for item in docassemble.base.ocr.ocr_page_tasks(image_file, **args):
@@ -2028,35 +2644,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
     ocr_resolution = get_config("ocr dpi")
     if ocr_resolution is None:
         ocr_resolution = '300'
-    langs = docassemble.base.ocr.get_available_languages()
-    if language is None:
-        language = get_language()
-    ocr_langs = get_config("ocr languages")
-    if ocr_langs is None:
-        ocr_langs = dict()
-    if language in langs:
-        lang = language
-    else:
-        if language in ocr_langs and ocr_langs[language] in langs:
-            lang = ocr_langs[language]
-        else:
-            try:
-                pc_lang = pycountry.languages.get(alpha_2=language)
-                lang_three_letter = pc_lang.alpha_3
-                if lang_three_letter in langs:
-                    lang = lang_three_letter
-                else:
-                    if 'eng' in langs:
-                        lang = 'eng'
-                    else:
-                        lang = langs[0]
-                    logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
-            except Exception as the_error:
-                if 'eng' in langs:
-                    lang = 'eng'
-                else:
-                    lang = langs[0]
-                logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang) + "; error was " + str(the_error))
+    lang = docassemble.base.ocr.get_ocr_language(language)
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     temp_directory_list = list()
@@ -2084,7 +2672,11 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
                 if H is not None:
                     args.extend(['-H', str(H)])
                 args.extend(['-png', path, prefix])
-                result = subprocess.call(args)
+                try:
+                    result = subprocess.run(args, timeout=3600).returncode
+                except subprocess.TimeoutExpired:
+                    result = 1
+                    logmessage("ocr_file: call to pdftoppm took too long")
                 if result > 0:
                     return word("(Unable to extract images from PDF file)")
                 file_list.extend(sorted([os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]))
@@ -2148,7 +2740,11 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
                 if H is not None:
                     args.extend(['-H', str(H)])
                 args.extend(['-png', path, prefix])
-                result = subprocess.call(args)
+                try:
+                    result = subprocess.run(args, timeout=3600).returncode
+                except subprocess.TimeoutExpired:
+                    result = 1
+                    logmessage("read_qr: call to pdftoppm took too long")
                 if result > 0:
                     return word("(Unable to extract images from PDF file)")
                 file_list.extend(sorted([os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]))
@@ -2156,12 +2752,9 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
             file_list.append(path)
     codes = list()
     for page in file_list:
-        if PY2:
-            raise Exception("QR reading is not supported in the Python 2.7 version of docassemble.")
-        else:
-            from pyzbar.pyzbar import decode
-            for result in decode(Image.open(page)):
-                codes.append(result.data.decode())
+        from pyzbar.pyzbar import decode
+        for result in decode(Image.open(page)):
+            codes.append(result.data.decode())
     return codes
 
 def path_and_mimetype(file_ref):
@@ -2183,7 +2776,7 @@ def path_and_mimetype(file_ref):
     file_info = server.file_finder(file_ref)
     return file_info.get('fullpath', None), file_info.get('mimetype', None)
 
-class DummyObject(object):
+class DummyObject:
     def __init__(self, *pargs, **kwargs):
         pass
 
@@ -2242,11 +2835,9 @@ class DAModel(DAObject):
         if 'text' in kwargs:
             self.text = kwargs['text']
             self.predict()
-        return super(DAModel, self).init(*pargs, **kwargs)
+        return super().init(*pargs, **kwargs)
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
-        return text_type(self.prediction)
+        return str(self.prediction)
     def predict(self):
         if self.use_for_training:
             self.entry_id = self.learner.save_for_classification(self.text, key=self.key)
@@ -2257,6 +2848,34 @@ class DAModel(DAObject):
         else:
             self.prediction = None
             self.probability = 1.0
+
+def docx_concatenate(*pargs, **kwargs):
+    """Concatenates DOCX files together and returns a DAFile representing
+    the new DOCX file.
+
+    """
+    paths = list()
+    get_docx_paths([x for x in pargs], paths)
+    if len(paths) == 0:
+        raise DAError("docx_concatenate: no valid files to concatenate")
+    docx_path = docassemble.base.file_docx.concatenate_files(paths)
+    docx_file = DAFile()._set_instance_name_for_function()
+    docx_file.initialize(filename=kwargs.get('filename', 'file.docx'))
+    docx_file.copy_into(docx_path)
+    docx_file.retrieve()
+    docx_file.commit()
+    return docx_file
+
+def get_docx_paths(target, paths):
+    if isinstance(target, DAFileCollection) and hasattr(target, 'docx'):
+        paths.append(target.docx.path())
+    elif isinstance(target, DAFileList) or isinstance(target, DAList) or (isinstance(target, abc.Iterable) and not isinstance(target, str)):
+        for the_file in target:
+            get_docx_paths(the_file, paths)
+    elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):
+        paths.append(target.path())
+    elif isinstance(target, str) and os.path.isfile(target):
+        paths.append(target)
 
 def pdf_concatenate(*pargs, **kwargs):
     """Concatenates PDF files together and returns a DAFile representing
@@ -2278,11 +2897,13 @@ def pdf_concatenate(*pargs, **kwargs):
 def get_pdf_paths(target, paths):
     if isinstance(target, DAFileCollection) and hasattr(target, 'pdf'):
         paths.append(target.pdf.path())
-    elif isinstance(target, DAFileList) or isinstance(target, list):
+    elif isinstance(target, DAFileList) or isinstance(target, DAList) or (isinstance(target, abc.Iterable) and not isinstance(target, str)):
         for the_file in target:
             get_pdf_paths(the_file, paths)
     elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):
         paths.append(target.path())
+    elif isinstance(target, str) and os.path.isfile(target):
+        paths.append(target)
 
 def recurse_zip_params(param, root, files):
     if isinstance(param, dict):
@@ -2316,7 +2937,30 @@ def zip_file(*pargs, **kwargs):
     zip_file = DAFile()._set_instance_name_for_function()
     zip_file.initialize(filename=kwargs.get('filename', 'file.zip'))
     zf = zipfile.ZipFile(zip_file.path(), mode='w')
+    seen = dict()
     for zip_path, path in files:
+        if zip_path not in seen:
+            seen[zip_path] = 0
+        seen[zip_path] += 1
+    revised_files = list()
+    count = dict()
+    for zip_path, path in files:
+        if seen[zip_path] > 1:
+            if zip_path not in count:
+                count[zip_path] = 0
+            while True:
+                count[zip_path] += 1
+                suffix = ('%0' + str(len(str(seen[zip_path]))) + 'd') % count[zip_path]
+                new_zip_path = re.sub(r'(\.[^\.]+)$', r'_' + suffix + r'\1', zip_path)
+                if new_zip_path == zip_path:
+                    new_zip_path = zip_path + '_' + suffix
+                if new_zip_path not in seen:
+                    seen[new_zip_path] = 1
+                    break
+            revised_files.append((new_zip_path, path))
+        else:
+            revised_files.append((zip_path, path))
+    for zip_path, path in revised_files:
         info = zipfile.ZipInfo(zip_path)
         info.compress_type = zipfile.ZIP_DEFLATED
         info.external_attr = 0o644 << 16
@@ -2328,12 +2972,15 @@ def zip_file(*pargs, **kwargs):
     zip_file.commit()
     return zip_file
 
-def validation_error(message):
-    """Raises a validation error with a given message"""
-    raise DAValidationError(message)
+def validation_error(message, field=None):
+    """Raises a validation error with a given message, optionally
+    associated with a field.
+
+    """
+    raise DAValidationError(message, field=field)
 
 def invalid_variable_name(varname):
-    if not isinstance(varname, string_types):
+    if not isinstance(varname, str):
         return True
     if re.search(r'[\n\r\(\)\{\}\*\^\#]', varname):
         return True
@@ -2350,7 +2997,7 @@ def url_ask(data):
         data = [data]
     variables = []
     for the_saveas in data:
-        if isinstance(the_saveas, dict) and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas or 'follow up' in the_saveas):
+        if isinstance(the_saveas, dict) and len(the_saveas) == 1 and ('undefine' in the_saveas or 'invalidate' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas or 'follow up' in the_saveas):
             if 'set' in the_saveas:
                 if not isinstance(the_saveas['set'], list):
                     raise DAError("url_ask: the set statement must refer to a list.  " + repr(data))
@@ -2359,7 +3006,7 @@ def url_ask(data):
                     if not isinstance(the_dict, dict):
                         raise DAError("url_ask: a set command must refer to a list of dicts.  " + repr(data))
                     for the_var, the_val in the_dict.items():
-                        if not isinstance(the_var, string_types):
+                        if not isinstance(the_var, str):
                             raise DAError("url_ask: a set command must refer to a list of dicts with keys as variable names.  " + repr(data))
                         the_var_stripped = the_var.strip()
                     if invalid_variable_name(the_var_stripped):
@@ -2372,7 +3019,7 @@ def url_ask(data):
                 if not isinstance(the_saveas['follow up'], list):
                     raise DAError("url_ask: the follow up statement must refer to a list.  " + repr(data))
                 for var in the_saveas['follow up']:
-                    if not isinstance(var, string_types):
+                    if not isinstance(var, str):
                         raise DAError("url_ask: invalid variable name in follow up " + command + ".  " + repr(data))
                     var_saveas = var.strip()
                     if invalid_variable_name(var_saveas):
@@ -2380,14 +3027,14 @@ def url_ask(data):
                     if contains_volatile.search(var):
                         raise DAError("url_ask cannot be used with a generic object or a variable iterator")
                     variables.append(dict(action=var, arguments=dict()))
-            for command in ('undefine', 'recompute'):
+            for command in ('undefine', 'invalidate', 'recompute'):
                 if command not in the_saveas:
                     continue
                 if not isinstance(the_saveas[command], list):
                     raise DAError("url_ask: the " + command + " statement must refer to a list.  " + repr(data))
                 clean_list = []
                 for undef_var in the_saveas[command]:
-                    if not isinstance(undef_var, string_types):
+                    if not isinstance(undef_var, str):
                         raise DAError("url_ask: invalid variable name " + repr(undef_var) + " in " + command + ".  " + repr(data))
                     undef_saveas = undef_var.strip()
                     if invalid_variable_name(undef_saveas):
@@ -2395,7 +3042,10 @@ def url_ask(data):
                     if contains_volatile.search(undef_saveas):
                         raise DAError("url_ask cannot be used with a generic object or a variable iterator")
                     clean_list.append(undef_saveas)
-                variables.append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
+                if command == 'invalidate':
+                    variables.append(dict(action='_da_invalidate', arguments=dict(variables=clean_list)))
+                else:
+                    variables.append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
                 if command == 'recompute':
                     variables.append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
             continue
@@ -2405,7 +3055,7 @@ def url_ask(data):
             if contains_volatile.search(the_saveas['action']):
                 raise DAError("url_ask cannot be used with a generic object or a variable iterator")
             variables.append(dict(action=the_saveas['action'], arguments=the_saveas['arguments']))
-        if not isinstance(the_saveas, string_types):
+        if not isinstance(the_saveas, str):
             raise DAError("url_ask: invalid variable name " + repr(the_saveas) + ".  " + repr(data))
         the_saveas = the_saveas.strip()
         if invalid_variable_name(the_saveas):
@@ -2418,7 +3068,7 @@ def url_ask(data):
 
 def action_button_html(url, icon=None, color='success', size='sm', block=False, label='Edit', classname=None, new_window=True, id_tag=None):
     """Returns HTML for a button that visits a particular URL."""
-    if not isinstance(label, string_types):
+    if not isinstance(label, str):
         label = 'Edit'
     if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
         color = 'dark'
@@ -2435,8 +3085,8 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
     if classname is None:
         classname = ''
     else:
-        classname = ' ' + text_type(classname)
-    if isinstance(icon, string_types):
+        classname = ' ' + str(classname)
+    if isinstance(icon, str):
         icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
         if not re.search(r'^fa[a-z] fa-', icon):
             icon = 'fas fa-' + icon
@@ -2448,12 +3098,12 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
     elif new_window is False:
         target = 'target="_self" '
     else:
-        target = 'target="' + text_type(new_window) + '" '
+        target = 'target="' + str(new_window) + '" '
     if id_tag is None:
         id_tag = ''
     else:
         id_tag = ' id=' + json.dumps(id_tag)
-    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' btn-' + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
+    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
 
 def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None):
     """Overlays a page from a PDF file on top of the pages of another PDF file."""
@@ -2461,7 +3111,7 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
         main_file = main_pdf.pdf.path()
     elif isinstance(main_pdf, DAFile) or isinstance(main_pdf, DAFileList):
         main_file = main_pdf.path()
-    elif isinstance(main_pdf, string_types):
+    elif isinstance(main_pdf, str):
         main_file = main_pdf
     else:
         raise Exception("overlay_pdf: bad main filename")
@@ -2469,7 +3119,7 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
         logo_file = logo_pdf.pdf.path()
     elif isinstance(logo_pdf, DAFile) or isinstance(logo_pdf, DAFileList):
         logo_file = logo_pdf.path()
-    elif isinstance(logo_pdf, string_types):
+    elif isinstance(logo_pdf, str):
         logo_file = logo_pdf
     else:
         raise Exception("overlay_pdf: bad logo filename")
@@ -2519,4 +3169,189 @@ def get_status(setting):
         return None
     return this_thread.internal['misc'].get(setting, None)
 
+def prevent_dependency_satisfaction(f):
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
+            raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed")
+        # Python 3 version:
+        # try:
+        #     return f(*args, **kwargs)
+        # except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
+        #     raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed") from err
+    return wrapper
+
+def assemble_docx(input_file, fields=None, output_path=None, output_format='docx', return_content=False, pdf_options=None):
+    import docassemble.base.parse
+    input_file = path_and_mimetype(input_file)[0]
+    if not (isinstance(input_file, str) and os.path.isfile(input_file)):
+        raise DAError("assemble_docx: input file did not exist")
+    if output_format not in ('docx', 'pdf', 'md'):
+        raise DAError("assemble_docx: invalid output format")
+    if output_path is None:
+        using_temporary_file = True
+        output_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + output_format, delete=False)
+        output_path = output_file.name
+    else:
+        using_temporary_file = False
+    the_fields = copy.copy(docassemble.base.functions.get_user_dict())
+    if isinstance(fields, dict):
+        the_fields.update(fields)
+    try:
+        docx_template = docassemble.base.file_docx.DocxTemplate(input_file)
+        docassemble.base.functions.set_context('docx', template=docx_template)
+        the_env = docassemble.base.parse.custom_jinja_env()
+        the_xml = docx_template.get_xml()
+        the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
+        the_xml = re.sub(r'({[\%\{].*?[\%\}]})', docassemble.base.parse.fix_quotes, the_xml)
+        the_xml = docx_template.patch_xml(the_xml)
+        parsed_content = the_env.parse(the_xml)
+        while True:
+            old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
+            docx_template.render(the_fields, jinja_env=docassemble.base.parse.custom_jinja_env())
+            if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
+                new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+                docx_template.save(new_template_file.name)
+                docx_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
+                docassemble.base.functions.this_thread.misc['docx_template'] = docx_template
+            else:
+                break
+        subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', [])
+        the_template_docx = docx_template.docx
+        for subdoc in subdocs:
+            docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
+    except TemplateError as the_error:
+        if (not hasattr(the_error, 'filename')) or the_error.filename is None:
+            the_error.filename = os.path.basename(input_file)
+            raise the_error
+    docassemble.base.functions.reset_context()
+    if output_format == 'docx':
+        docx_template.save(output_path)
+    elif output_format == 'pdf':
+        temp_file = tempfile.NamedTemporaryFile()
+        docx_template.save(temp_file.name)
+        if not isinstance(pdf_options, dict):
+            pdf_options = dict()
+        result = docassemble.base.pandoc.word_to_pdf(temp_file.name, 'docx', output_path, pdfa=pdf_options.get('pdfa', False), password=pdf_options.get('password', None), update_refs=pdf_options.get('update_refs', False), tagged=pdf_options.get('tagged', False))
+        if not result:
+            raise DAError("Error converting to PDF")
+    elif output_format == 'md':
+        temp_file = tempfile.NamedTemporaryFile()
+        docx_template.save(temp_file.name)
+        result = docassemble.base.pandoc.word_to_markdown(temp_file.name, 'docx')
+        if not result:
+            raise DAError("Unable to convert docx to Markdown")
+        shutil.copyfile(result.name, output_path)
+    if return_content:
+        if output_format == 'md':
+            with open(output_path, 'r', encoding='utf-8') as fp:
+                output = fp.read()
+        else:
+            with open(output_path, 'rb') as fp:
+                output = fp.read()
+        if using_temporary_file:
+            try:
+                output_file.close()
+                os.unlink(output_file.name)
+            except:
+                logmessage("assemble_docx: could not delete temporary file")
+        return output
+    if using_temporary_file:
+        return output_path
+
 from docassemble.base.oauth import DAOAuth
+
+def variables_snapshot_connection():
+    return server.variables_snapshot_connection()
+
+def get_persistent_task_store(persistent):
+    if persistent is True:
+        base = 'session'
+    else:
+        base = persistent
+    if base == 'session':
+        encrypted = this_thread.current_info.get('encrypted', True)
+        store = DAStore('store', base=base, encrypted=encrypted)
+    else:
+        store = DAStore('store', base=base)
+    if not store.defined('tasks'):
+        store.set('tasks', dict())
+    return store
+
+def task_performed(task, persistent=False):
+    """Returns True if the task has been performed at least once, otherwise False."""
+    ensure_definition(task)
+    if persistent:
+        store = get_persistent_task_store(persistent)
+        tasks = store.get('tasks')
+        if task in tasks and tasks[task]:
+            return True
+        return False
+    if task in this_thread.internal['tasks'] and this_thread.internal['tasks'][task]:
+        return True
+    return False
+
+def task_not_yet_performed(task, persistent=False):
+    """Returns True if the task has never been performed, otherwise False."""
+    ensure_definition(task)
+    if task_performed(task, persistent=persistent):
+        return False
+    return True
+
+def mark_task_as_performed(task, persistent=False):
+    """Increases by 1 the number of times the task has been performed."""
+    ensure_definition(task)
+    if persistent:
+        store = get_persistent_task_store(persistent)
+        tasks = store.get('tasks')
+        if not task in tasks:
+            tasks[task] = 0
+        tasks[task] += 1
+        store.set('tasks', tasks)
+        return tasks[task]
+    if not task in this_thread.internal['tasks']:
+        this_thread.internal['tasks'][task] = 0
+    this_thread.internal['tasks'][task] += 1
+    return this_thread.internal['tasks'][task]
+
+def times_task_performed(task, persistent=False):
+    """Returns the number of times the task has been performed."""
+    ensure_definition(task)
+    if persistent:
+        store = get_persistent_task_store(persistent)
+        tasks = store.get('tasks')
+        if not task in tasks:
+            return 0
+        return tasks[task]
+    if not task in this_thread.internal['tasks']:
+        return 0
+    return this_thread.internal['tasks'][task]
+
+def set_task_counter(task, times, persistent=False):
+    """Allows you to manually set the number of times the task has been performed."""
+    ensure_definition(task, times)
+    if persistent:
+        store = get_persistent_task_store(persistent)
+        tasks = store.get('tasks')
+        tasks[task] = times
+        store.set('tasks', tasks)
+        return
+    this_thread.internal['tasks'][task] = times
+
+def stash_data(data, expire=None):
+    """Stores data in an encrypted form and returns a key and a decryption secret."""
+    if expire is None:
+        expire = 60*60*24*90
+    try:
+        expire = int(expire)
+        assert expire > 0
+    except:
+        raise DAError("Invalid expire value")
+    return server.stash_data(data, expire)
+
+def retrieve_stashed_data(stash_key, secret, delete=False, refresh=False):
+    """Retrieves data stored with stash_data()."""
+    if refresh and not (isinstance(refresh, int) and refresh > 0):
+        refresh = 60*60*24*90
+    return server.retrieve_stashed_data(stash_key, secret, delete=delete, refresh=refresh)

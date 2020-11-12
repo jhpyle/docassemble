@@ -3,7 +3,7 @@ mandatory: True
 question: You came from the ${ url_args.get('from', 'unknown') }.
 subquestion: |
   % if url_args.get('fruit', 'apple') == 'apple':
-  I think your favorite fruit is an apple, but [click here](?fruit=orange)
+  I think your favorite fruit is an apple, but [click here](?fruit=orange&i=${ user_info().filename })
   if you disagree.
   % else:
   I see that your favorite fruit is not an apple.

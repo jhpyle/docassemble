@@ -1,0 +1,13 @@
+[uwsgi]
+master = true
+enable-threads = true
+processes = 1
+threads = 6
+vhost = true
+socket = /var/run/uwsgi/docassemble.sock
+manage-script-name = true
+mount = {{DAWSGIROOT}}=docassemble.webapp.run:application
+venv = {{DA_PYTHON}}
+pidfile = /var/run/uwsgi/uwsgi.pid
+buffer-size = 32768
+touch-reload = {{DA_ROOT}}/webapp/docassemble.wsgi

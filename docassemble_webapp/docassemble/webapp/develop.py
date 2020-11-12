@@ -1,9 +1,14 @@
 from flask_wtf import FlaskForm
-from docassemble.base.functions import word
+from docassemble.base.functions import LazyWord as word
 from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField, BooleanField
 import re
 import sys
-from six import string_types
+
+def validate_project_name(form, field):
+    if re.search('^[0-9]', field.data):
+        raise ValidationError(word('Project name cannot begin with a number'))
+    if re.search('[^A-Za-z0-9]', field.data):
+        raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9'))
 
 def validate_name(form, field):
     if re.search('[^A-Za-z0-9\-]', field.data):
@@ -36,6 +41,7 @@ class ConfigForm(FlaskForm):
     cancel = SubmitField(word('Cancel'))
 
 class PlaygroundForm(FlaskForm):
+    status = StringField('Status')
     original_playground_name = StringField(word('Original Name'))
     playground_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
     playground_content = TextAreaField(word('Playground YAML'))
@@ -64,11 +70,13 @@ class Utilities(FlaskForm):
     officeaddin_submit = SubmitField(word('Download'))
     
 class PlaygroundFilesForm(FlaskForm):
+    purpose = StringField('Purpose')
     section = StringField(word('Section'))
     uploadfile = FileField(word('File to upload'))
     submit = SubmitField(word('Upload'))
 
 class PlaygroundFilesEditForm(FlaskForm):
+    purpose = StringField('Purpose')
     section = StringField(word('Section'))
     original_file_name = StringField(word('Original Name'))
     file_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
@@ -77,6 +85,19 @@ class PlaygroundFilesEditForm(FlaskForm):
     active_file = StringField(word('Active File'))
     submit = SubmitField(word('Save'))
     delete = SubmitField(word('Delete'))
+
+class RenameProject(FlaskForm):
+    name = StringField(word('New Name'), validators=[
+        validators.Required(word('Project name is required')), validate_project_name])
+    submit = SubmitField(word('Rename'))
+
+class DeleteProject(FlaskForm):
+    submit = SubmitField(word('Delete'))
+
+class NewProject(FlaskForm):
+    name = StringField(word('Name'), validators=[
+        validators.Required(word('Project name is required')), validate_project_name])
+    submit = SubmitField(word('Save'))
 
 class PullPlaygroundPackage(FlaskForm):
     github_url = StringField(word('GitHub URL'))
@@ -103,7 +124,10 @@ class PlaygroundPackagesForm(FlaskForm):
     sources_files = SelectMultipleField(word('Source files'))
     readme = TextAreaField(word('README file'), default='')
     github_branch = SelectField(word('Branch'))
+    github_branch_new = StringField(word('Name of new branch'))
     commit_message = StringField(word('Commit message'), default="")
+    pypi_also = BooleanField(word('Publish on PyPI also'))
+    install_also = BooleanField(word('Install package on this server also'))
     submit = SubmitField(word('Save'))
     download = SubmitField(word('Download'))
     install = SubmitField(word('Install'))
@@ -123,9 +147,12 @@ class OneDriveForm(FlaskForm):
     cancel = SubmitField(word('Cancel'))
 
 class GitHubForm(FlaskForm):
+    shared = BooleanField(word('Access shared repositories'))
+    orgs = BooleanField(word('Access organizational repositories'))
+    save = SubmitField(word('Save changes'))
     configure = SubmitField(word('Configure'))
     unconfigure = SubmitField(word('Disable'))
-    cancel = SubmitField(word('Cancel'))
+    cancel = SubmitField(word('Back to profile'))
 
 class TrainingForm(FlaskForm):
     the_package = HiddenField()
@@ -144,7 +171,7 @@ class TrainingUploadForm(FlaskForm):
 class AddinUploadForm(FlaskForm):
     content = HiddenField()
     filename = HiddenField()
-    
+
 class APIKey(FlaskForm):
     action = HiddenField()
     key = HiddenField()
@@ -161,10 +188,10 @@ class APIKey(FlaskForm):
             return False
         has_error = False
         if self.action.data in ('edit', 'new'):
-            if (not isinstance(self.name.data, string_types)) or not re.search(r'[A-Za-z0-9]', self.name.data):
+            if (not isinstance(self.name.data, str)) or not re.search(r'[A-Za-z0-9]', self.name.data):
                 self.name.errors.append(word("The name must be filled in."))
                 has_error = True
-            if (not isinstance(self.method.data, string_types)) or self.method.data not in ('referer', 'ip', 'none'):
+            if (not isinstance(self.method.data, str)) or self.method.data not in ('referer', 'ip', 'none'):
                 self.name.errors.append(word("You must select an option."))
                 has_error = True
         if has_error:

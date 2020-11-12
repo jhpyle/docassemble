@@ -25,6 +25,7 @@ class UserModel(db.Model, UserMixin):
     pypi_username = db.Column(db.String(255), nullable=True)
     pypi_password = db.Column(db.String(255), nullable=True)
     modified_at = db.Column(db.DateTime())
+    last_login = db.Column(db.DateTime())
     #email_is_phone_number = db.Column(db.Boolean(), nullable=True, server_default='0')
 
 class UserAuthModel(db.Model, UserMixin):
@@ -51,7 +52,7 @@ class UserRoles(db.Model):
 class UserDict(db.Model):
     __tablename__ = dbtableprefix + "userdict"
     indexno = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.Text(), index=True)
+    filename = db.Column(db.String(255), index=True)
     key = db.Column(db.String(250), index=True)
     dictionary = db.Column(db.Text())
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
@@ -63,19 +64,12 @@ db.Index(dbtableprefix + 'ix_userdict_key_filename', UserDict.key, UserDict.file
 class UserDictKeys(db.Model):
     __tablename__ = dbtableprefix + "userdictkeys"
     indexno = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.Text(), index=True)
+    filename = db.Column(db.String(255), index=True)
     key = db.Column(db.String(250), index=True)
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
     temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'), index=True)
 
 db.Index(dbtableprefix + 'ix_userdictkeys_key_filename', UserDict.key, UserDict.filename)
-
-# class UserDictLock(db.Model):
-#     __tablename__ = dbtableprefix + "userdictlock"
-#     indexno = db.Column(db.Integer(), primary_key=True)
-#     filename = db.Column(db.Text())
-#     key = db.Column(db.String(250))
-#     #locktime = db.Column(db.DateTime(), server_default=db.func.now())
 
 class TempUser(db.Model):
     __tablename__ = dbtableprefix + 'tempuser'
@@ -84,7 +78,7 @@ class TempUser(db.Model):
 class ChatLog(db.Model):
     __tablename__ = dbtableprefix + "chatlog"
     id = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.Text(), index=True)
+    filename = db.Column(db.String(255), index=True)
     key = db.Column(db.String(250), index=True)
     message = db.Column(db.Text())
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))

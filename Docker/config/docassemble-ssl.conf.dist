@@ -4,7 +4,7 @@
         ServerName ${DAHOSTNAME}
         SSLEngine on
         SSLCertificateFile /etc/ssl/docassemble/apache.crt
-        SSLCertificateKeyFile /etc/ssl/docassemble/apache.key 
+        SSLCertificateKeyFile /etc/ssl/docassemble/apache.key
         SSLCertificateChainFile /etc/ssl/docassemble/apache.ca.pem
         XSendFile on
         XSendFilePath /usr

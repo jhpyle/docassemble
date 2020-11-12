@@ -1,4 +1,6 @@
 debug: True
+enable playground: True
+allow demo: True
 exitpage: https://docassemble.org
 db:
   prefix: postgresql+psycopg2://
@@ -43,9 +45,6 @@ server administrator email: support@example.com
 default interview: docassemble.base:data/questions/default-interview.yml
 language: en
 locale: en_US.utf8
-default admin account:
-  email: admin@admin.com
-  password: password
 voicerss:
   enable: False
   key: ae8734983948ebc98239e9898f998432
@@ -75,3 +74,4 @@ root: /
 words:
   - docassemble.base:data/sources/us-words.yml
 allow non-idempotent questions: False
+new markdown to docx: True

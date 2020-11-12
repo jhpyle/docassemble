@@ -1,0 +1,63 @@
+metadata:
+  title: Manual list
+  short title: Manual
+  documentation: "https://docassemble.org/docs/groups.html#editing"
+  example start: 1
+  example end: 3
+---
+objects:
+  - person: DAList.using(object_type=Individual,
+                         complete_attribute='complete')
+---
+mandatory: True
+code: |
+  person[0]
+  person[1]
+  for item in person.elements:
+    item.complete
+  person.gathered = True
+---
+code: |
+  person[i].name.first
+  person[i].favorite_fruit
+  person[i].complete = True
+---
+question: |
+  Who is the ${ ordinal(i) } person?
+fields:
+  - First Name: person[i].name.first
+  - Last Name: person[i].name.last
+---
+question: |
+  What is ${ person[i].possessive('favorite fruit') }?
+fields:
+  - Fruit: person[i].favorite_fruit
+---
+question: |
+  Who is your favorite person?
+fields:
+  - Favorite: favorite
+    code: person
+---
+mandatory: True
+question: |
+  All done
+subquestion: |
+  The people are ${ person }.
+
+  Your favorite is ${ favorite }.
+  
+  ${ person.table }
+  
+  ${ person.add_action() }
+---
+table: person.table
+rows: person
+columns:
+  - Name: |
+      row_item.name.full()
+  - Fruit: |
+      row_item.favorite_fruit
+edit:
+  - name.first
+  - favorite_fruit

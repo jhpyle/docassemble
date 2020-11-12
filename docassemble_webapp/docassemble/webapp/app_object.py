@@ -36,4 +36,8 @@ def create_app():
         CORS(app, origins=daconfig['cross site domains'], supports_credentials=True)
     return app, csrf, babel
 
-app, csrf, flaskbabel = create_app()
+import docassemble.base.functions
+if docassemble.base.functions.server_context.context == 'websockets':
+    from docassemble.webapp.app_socket import app
+else:
+    app, csrf, flaskbabel = create_app()

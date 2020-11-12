@@ -6,7 +6,7 @@ question: |
   Tell me the story of your life.
 fields:
   - Life Story: target_variable
-    datatype: area
+    input type: area
 ---
 question: Result of question
 subquestion: |

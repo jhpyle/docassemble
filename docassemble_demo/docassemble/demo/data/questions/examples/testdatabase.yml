@@ -1,0 +1,70 @@
+metadata:
+  title: SQL Mirror
+  documentation: "https://docassemble.org/docs/objects.html#SQLObject"
+  example start: 1
+  example end: 9
+---
+modules:
+  - .demodb
+---
+objects:
+  - customer: Customer
+  - bank: Bank
+---
+question: |
+  What is the customer's SSN?
+fields:
+  - SSN: customer.ssn
+    default: 023-43-2412
+validation code: |
+  customer.db_read()
+---
+question: |
+  What is the bank's routing number?
+fields:
+  - SSN: bank.routing
+    default: "234234223"
+validation code: |
+  bank.db_read()
+---
+question: |
+  What is the name of the bank?
+fields:
+  - Name: bank.name.text
+---
+question: |
+  What is the customer's name?
+fields:
+  - First Name: customer.name.first
+  - Last Name: customer.name.last
+---
+question: |
+  What is the customer's address?
+fields:
+  - Address: customer.address.address
+    address autocomplete: True
+  - City: customer.address.city
+  - State: customer.address.state
+    code: |
+      states_list()
+  - Zip: customer.address.zip
+    required: False
+  - County: customer.address.county
+---
+mandatory: True
+code: |
+  customer.ssn
+  customer.name.first
+  customer.address.address
+  bank.routing
+  bank.name.text
+  bank.add_customer(customer)
+---
+mandatory: True
+question: |
+  The bank is
+  ${ bank }
+  and the customer is
+  ${ customer }.
+buttons:
+  - Restart: restart

@@ -1,4 +1,3 @@
-from six import string_types, text_type, PY2
 from docassemble.webapp.core.models import MachineLearning
 from docassemble.base.core import DAObject, DAList, DADict
 from docassemble.webapp.db_object import db
@@ -11,11 +10,7 @@ import numpy as np
 import re
 import random
 import codecs
-from io import open
-if PY2:
-    import cPickle as pickle
-else:
-    import pickle
+import pickle
 import datetime
 import os
 import yaml
@@ -157,7 +152,7 @@ class MachineLearner(object):
         else:
             existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, key=key, independent=codecs.encode(pickle.dumps(indep), 'base64').decode()).first()
         if existing_entry is not None:
-            logmessage("entry is already there")
+            #logmessage("entry is already there")
             return existing_entry.id
         new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(indep), 'base64').decode(), create_time=datetime.datetime.utcnow(), active=False, key=key, info=codecs.encode(pickle.dumps(info), 'base64').decode() if info is not None else None)
         db.session.add(new_entry)
@@ -290,7 +285,7 @@ class SimpleTextMachineLearner(MachineLearner):
             need_to_reset = True
         if hasattr(self, 'group_id') and (self.group_id not in learners or need_to_reset):
             learners[self.group_id] = self._learner()
-        return super(SimpleTextMachineLearner, self)._initialize(reset=need_to_reset)
+        return super()._initialize(reset=need_to_reset)
     def _train(self, indep, depend):
         """Trains the machine learner given an independent variable and a corresponding dependent variable."""
         if indep is None:
@@ -375,49 +370,49 @@ class SimpleTextMachineLearner(MachineLearner):
         return ret_val
     def reset(self):
         """Clears the cache of the machine learner"""
-        return super(SimpleTextMachineLearner, self).reset()
+        return super().reset()
     def delete_training_set(self):
         """Deletes all of the training data in the database"""
-        return super(SimpleTextMachineLearner, self).delete_training_set()
+        return super().delete_training_set()
     def delete_by_key(self, key):
         """Deletes all of the training data in the database that was added with a given key"""
-        return super(SimpleTextMachineLearner, self).delete_training_set(key)
+        return super().delete_training_set(key)
     def delete_by_id(self, the_id):
         """Deletes the entry in the training data with the given ID"""
-        return super(SimpleTextMachineLearner, self).delete_by_id(the_id)
+        return super().delete_by_id(the_id)
     def set_dependent_by_id(self, the_id, depend):
         """Sets the dependent variable for the entry in the training data with the given ID"""
-        return super(SimpleTextMachineLearner, self).set_dependent_by_id(the_id, depend)
+        return super().set_dependent_by_id(the_id, depend)
     def classified_entries(self, key=None):
         """Returns a list of entries in the data that have been classified."""
-        return super(SimpleTextMachineLearner, self).classified_entries(key=key)
+        return super().classified_entries(key=key)
     def unclassified_entries(self, key=None):
         """Returns a list of entries in the data that have not yet been classified."""
-        return super(SimpleTextMachineLearner, self).unclassified_entries(key=key)
+        return super().unclassified_entries(key=key)
     def one_unclassified_entry(self, key=None):
         """Returns the first entry in the data that has not yet been classified, or None if all entries have been classified."""
-        return super(SimpleTextMachineLearner, self).one_unclassified_entry(key=key)
+        return super().one_unclassified_entry(key=key)
     def retrieve_by_id(self, the_id):
         """Returns the entry in the data that has the given ID."""
-        return super(SimpleTextMachineLearner, self).retrieve_by_id(the_id)
+        return super().retrieve_by_id(the_id)
     def save_for_classification(self, indep, key=None, info=None):
         """Creates a not-yet-classified entry in the data for the given independent variable and returns the ID of the entry."""
-        return super(SimpleTextMachineLearner, self).save_for_classification(indep, key=key, info=info)
+        return super().save_for_classification(indep, key=key, info=info)
     def add_to_training_set(self, indep, depend, key=None, info=None):
         """Creates an entry in the data for the given independent and dependent variable and returns the ID of the entry."""
-        return super(SimpleTextMachineLearner, self).add_to_training_set(indep, depend, key=key, info=info)
+        return super().add_to_training_set(indep, depend, key=key, info=info)
     def is_empty(self):
         """Returns True if no data have been defined, otherwise returns False."""
-        return super(SimpleTextMachineLearner, self).is_empty()
+        return super().is_empty()
     def dependent_in_use(self, key=None):
         """Returns a sorted list of unique dependent variables in the data."""
-        return super(SimpleTextMachineLearner, self).dependent_in_use(key=key)
+        return super().dependent_in_use(key=key)
     def export_training_set(self, output_format='json'):
         """Returns the classified entries in the data as JSON or YAML."""
-        return super(SimpleTextMachineLearner, self).export_training_set(output_format=output_format)
+        return super().export_training_set(output_format=output_format)
     def new_entry(self, **kwargs):
         """Creates a new entry in the data."""
-        return super(SimpleTextMachineLearner, self).new_entry(**kwargs)
+        return super().new_entry(**kwargs)
     
 class SVMMachineLearner(SimpleTextMachineLearner):
     """Machine Learning object using the Symmetric Vector Machine method"""
@@ -426,7 +421,7 @@ class SVMMachineLearner(SimpleTextMachineLearner):
 
 class RandomForestMachineLearner(MachineLearner):
     def _learner(self):
-        return RandomForestClassifier(n_jobs=2)
+        return RandomForestClassifier()
     def feature_importances(self):
         """Returns the importances of each of the features"""
         if not self._train_from_db():
@@ -438,7 +433,7 @@ class RandomForestMachineLearner(MachineLearner):
             need_to_reset = True
         if hasattr(self, 'group_id') and (self.group_id not in learners or need_to_reset):
             learners[self.group_id] = dict(learner=self._learner(), dep_type=None, indep_type=dict(), indep_categories=dict(), dep_categories=None)
-        return super(RandomForestMachineLearner, self)._initialize(reset=need_to_reset)
+        return super()._initialize(reset=need_to_reset)
     def _train_from_db(self):
         #logmessage("Doing train_from_db")
         self._initialize()
@@ -450,7 +445,7 @@ class RandomForestMachineLearner(MachineLearner):
             indep_var = fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
             depend_var = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
             if type(depend_var) is str:
-                depend_var = text_type(depend_var)
+                depend_var = str(depend_var)
             if learners[self.group_id]['dep_type'] is not None:
                 if type(depend_var) is not learners[self.group_id]['dep_type']:
                     if type(depend_var) is int and learners[self.group_id]['dep_type'] is float:
@@ -460,7 +455,7 @@ class RandomForestMachineLearner(MachineLearner):
                     else:
                         raise Exception("RandomForestMachineLearner: dependent variable type was not consistent")
             else:
-                if not isinstance(depend_var, (string_types, int, bool, float)):
+                if not isinstance(depend_var, (str, int, bool, float)):
                     raise Exception("RandomForestMachineLearner: dependent variable type for key " + repr(key) + " was not a standard variable type")
                 learners[self.group_id]['dep_type'] = type(depend_var)
             depend_data.append(depend_var)
@@ -470,7 +465,7 @@ class RandomForestMachineLearner(MachineLearner):
                 raise Exception("RandomForestMachineLearner: independent variable was not a dictionary")
             for key, val in indep_var.items():
                 if type(val) is str:
-                    val = text_type(val)
+                    val = str(val)
                 if key in learners[self.group_id]['indep_type']:
                     if type(val) is not learners[self.group_id]['indep_type'][key]:
                         if type(val) is int and learners[self.group_id]['indep_type'][key] is float:
@@ -480,7 +475,7 @@ class RandomForestMachineLearner(MachineLearner):
                         else:
                             raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not consistent")
                 else:
-                    if not isinstance(val, (string_types, int, bool, float)):
+                    if not isinstance(val, (str, int, bool, float)):
                         raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not a standard variable type")
                     learners[self.group_id]['indep_type'][key] = type(val)
             data.append(indep_var)
@@ -488,11 +483,11 @@ class RandomForestMachineLearner(MachineLearner):
         if success:
             df = pd.DataFrame(data)
             for key, val in learners[self.group_id]['indep_type'].items():
-                if val is text_type:
+                if val is str:
                     df[key] = pd.Series(df[key], dtype="category")
                     learners[self.group_id]['indep_categories'][key] = df[key].cat.categories
             df = pd.get_dummies(df, dummy_na=True)
-            if learners[self.group_id]['dep_type'] is text_type:
+            if learners[self.group_id]['dep_type'] is str:
                 y = pd.Series(depend_data, dtype="category")
                 learners[self.group_id]['dep_categories'] = y.cat.categories
             else:
@@ -513,7 +508,7 @@ class RandomForestMachineLearner(MachineLearner):
         for key, val in indep.items():
             if key in learners[self.group_id]['indep_type']:
                 if type(val) is str:
-                    val = text_type(val)
+                    val = str(val)
                 if type(val) is not learners[self.group_id]['indep_type'][key]:
                     if type(val) is int and learners[self.group_id]['indep_type'][key] is float:
                         val = float(val)
@@ -523,13 +518,13 @@ class RandomForestMachineLearner(MachineLearner):
                         raise Exception("RandomForestMachineLearner: the independent variable type for key " + repr(key) + " was not consistent.  Stored was " + str(learners[self.group_id]['indep_type'][key]) + " and type was " + str(type(val)))
             else:
                 raise Exception("RandomForestMachineLearner: independent variable key " + repr(key) + " was not recognized")
-            if isinstance(val, string_types):
+            if isinstance(val, str):
                 if val not in learners[self.group_id]['indep_categories'][key]:
                     val = np.nan
             indep_to_use[key] = val
         df = pd.DataFrame([indep_to_use])
         for key, val in indep_to_use.items():
-            if learners[self.group_id]['indep_type'][key] is text_type:
+            if learners[self.group_id]['indep_type'][key] is str:
                 #df[key] = pd.Series(df[key]).astype('category', categories=learners[self.group_id]['indep_categories'][key])
                 df[key] = pd.Series(df[key]).astype(CategoricalDtype(learners[self.group_id]['indep_categories'][key]))
         df = pd.get_dummies(df, dummy_na=True)
@@ -545,51 +540,51 @@ class RandomForestMachineLearner(MachineLearner):
         return [x[0] for x in result]
     def reset(self):
         """Clears the cache of the machine learner"""
-        return super(RandomForestMachineLearner, self).reset()
+        return super().reset()
     def delete_training_set(self):
         """Deletes all of the training data in the database"""
-        return super(RandomForestMachineLearner, self).delete_training_set()
+        return super().delete_training_set()
     def delete_by_key(self, key):
         """Deletes all of the training data in the database that was added with a given key"""
-        return super(RandomForestMachineLearner, self).delete_training_set(key)
+        return super().delete_training_set(key)
     def delete_by_id(self, the_id):
         """Deletes the entry in the training data with the given ID"""
-        return super(RandomForestMachineLearner, self).delete_by_id(the_id)
+        return super().delete_by_id(the_id)
     def set_dependent_by_id(self, the_id, depend):
         """Sets the dependent variable for the entry in the training data with the given ID"""
-        return super(RandomForestMachineLearner, self).set_dependent_by_id(the_id, depend)
+        return super().set_dependent_by_id(the_id, depend)
     def classified_entries(self, key=None):
         """Returns a list of entries in the data that have been classified."""
-        return super(RandomForestMachineLearner, self).classified_entries(key=key)
+        return super().classified_entries(key=key)
     def unclassified_entries(self, key=None):
         """Returns a list of entries in the data that have not yet been classified."""
-        return super(RandomForestMachineLearner, self).unclassified_entries(key=key)
+        return super().unclassified_entries(key=key)
     def one_unclassified_entry(self, key=None):
         """Returns the first entry in the data that has not yet been classified, or None if all entries have been classified."""
-        return super(RandomForestMachineLearner, self).one_unclassified_entry(key=key)
+        return super().one_unclassified_entry(key=key)
     def retrieve_by_id(self, the_id):
         """Returns the entry in the data that has the given ID."""
-        return super(RandomForestMachineLearner, self).retrieve_by_id(the_id)
+        return super().retrieve_by_id(the_id)
     def save_for_classification(self, indep, key=None, info=None):
         """Creates a not-yet-classified entry in the data for the given independent variable and returns the ID of the entry."""
         indep = process_independent_data(indep)
-        return super(RandomForestMachineLearner, self).save_for_classification(indep, key=key, info=info)
+        return super().save_for_classification(indep, key=key, info=info)
     def add_to_training_set(self, indep, depend, key=None, info=None):
         """Creates an entry in the data for the given independent and dependent variable and returns the ID of the entry."""
         indep = process_independent_data(indep)
-        return super(RandomForestMachineLearner, self).add_to_training_set(indep, depend, key=key, info=info)
+        return super().add_to_training_set(indep, depend, key=key, info=info)
     def is_empty(self):
         """Returns True if no data have been defined, otherwise returns False."""
-        return super(RandomForestMachineLearner, self).is_empty()
+        return super().is_empty()
     def dependent_in_use(self, key=None):
         """Returns a sorted list of unique dependent variables in the data."""
-        return super(RandomForestMachineLearner, self).dependent_in_use(key=key)
+        return super().dependent_in_use(key=key)
     def export_training_set(self, output_format='json'):
         """Returns the classified entries in the data as JSON or YAML."""
-        return super(RandomForestMachineLearner, self).export_training_set(output_format=output_format)
+        return super().export_training_set(output_format=output_format)
     def new_entry(self, **kwargs):
         """Creates a new entry in the data."""
-        return super(RandomForestMachineLearner, self).new_entry(**kwargs)
+        return super().new_entry(**kwargs)
     
     
 # def export_training_sets(prefix, output_format='json'):
@@ -610,11 +605,11 @@ def process_independent_data(data):
     for key, val in data.items():
         if isinstance(val, DADict) or type(val) is dict:
             for subkey, subval in val.items():
-                if not isinstance(subval, (string_types, bool, int, float)):
+                if not isinstance(subval, (str, bool, int, float)):
                     raise Exception('RandomForestMachineLearner: invalid data type ' + subval.__class__.__name__ + ' in data')
                 result[key + '_' + subkey] = subval
         else:
-            if not isinstance(val, (string_types, bool, int, float)):
+            if not isinstance(val, (str, bool, int, float)):
                 raise Exception('RandomForestMachineLearner: invalid data type ' + subval.__class__.__name__ + ' in data')
             result[key] = val
     return result

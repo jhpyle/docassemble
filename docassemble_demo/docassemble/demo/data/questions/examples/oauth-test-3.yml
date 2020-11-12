@@ -1,0 +1,60 @@
+metadata:
+  title: OAuth with Google
+  short: OAuth
+  documentation: "https://docassemble.org/docs/objects.html#DAOAuth"
+  example start: 2
+  example end: 2
+---
+modules:
+  .oauthsheets
+---
+objects:
+  - google: GoogleAuth.using(url_args=url_args, use_random_unique_id=True)
+---
+mandatory: True
+code: |
+  intro_screen
+---
+question: |
+  You need to connect with Google Sheets.
+subquestion: |
+  Press Continue to connect.
+field: intro_screen
+---
+code: |
+  if google.active():
+    intro_screen = True
+---
+initial: True
+code: |
+  menu_items = [ action_menu_item('Manage Credentials', 'manage_credentials') ]
+---
+mandatory: True
+question: |
+  Here is some data.
+subquestion: |
+  `${ google.test() }`
+---
+question: |
+  Manage credentials
+subquestion: |
+  You do not have any stored credentials.
+field: manage_credentials
+continue button label: Resume
+---
+if: google.active()
+question: |
+  Manage credentials
+subquestion: |
+  If you want to delete your credentials, you can do so.
+
+  ${ action_button_html(url_action('delete_credentials'), label="Delete credentials", color="danger") }
+
+  Otherwise, you can go back to the interview.
+continue button label: Resume
+field: manage_credentials
+---
+event: delete_credentials
+code: |
+  google.delete_credentials()
+  undefine('intro_screen')

@@ -1,0 +1,33 @@
+metadata:
+  title: Customizing e-mailing
+  documentation: "https://docassemble.org/docs/documents.html#email template"
+  example start: 1
+  example end: 3
+---
+mandatory: True
+question: Your document is ready.
+email template: hello_email
+email address default: |
+  ${ user_email }
+attachment:
+  - name: A hello world document
+    filename: Hello_World
+    description: |
+      A document with a classic message
+    content: |
+      Hello, world!
+    valid formats:
+      - pdf
+      - docx
+always include editable files: True
+---
+template: hello_email
+subject: |
+  Your hello world document
+content: |
+  Dear sir or madam,
+
+  Your hello world document is attached hereto for your perusal.
+---
+code: |
+  user_email = 'user@aol.com'

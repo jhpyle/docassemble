@@ -1,0 +1,12 @@
+modules:
+  - .ssn
+---
+mandatory: True
+question: |
+  Your SSN is ${ user_ssn }.
+---
+question: |
+  What is your SSN?
+fields:
+  - SSN: user_ssn
+    datatype: ssn

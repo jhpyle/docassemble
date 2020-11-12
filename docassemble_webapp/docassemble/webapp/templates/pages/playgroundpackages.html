@@ -14,7 +14,7 @@
             {%- endif %}
             <ul class="nav nav-pills">
               <li class="nav-item">
-                <a class="nav-link" title="{{ word('Create a new package') }}" href="?new=1"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
+                <a class="nav-link" title="{{ word('Create a new package') }}" href="{{ url_for('playground_packages', project=current_project, new='1') }}"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
               </li>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another package')}}">
@@ -28,7 +28,7 @@
                     <i class="fas fa-file fa-fw" aria-hidden="true"></i>&nbsp;{{ file['name'] }}
                   </a>
                   {%- else %}
-                  <a class="dropdown-item" href="?file={{ file['name'] }}">
+                  <a class="dropdown-item" href="{{ url_for('playground_packages', file=file['name'], project=current_project) }}">
                     <span style="opacity: {{ file['opacity'] }}"><i class="fas fa-file fa-fw" aria-hidden="true"></i></span>&nbsp;{{ file['name'] }}
                   </a>
                   {%- endif %}
@@ -40,16 +40,9 @@
                   {%- endif %}
                 </div>
               </li>
-              {%- if current_file != '' %}
-              <li class="nav-item">
-                <a tabindex="6" class="nav-link" href="{{ url_for('create_playground_package', package=current_file) }}" title="{{ word('Download the current package') }}">
-                  <i class="fas fa-download" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Download") }}
-                </a>
-              </li>
-              {%- endif %}
               <li class="nav-item">
                 <a tabindex="5" class="nav-link" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a package ZIP file to the Playground') }}">
-                  <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
+                  <form action="{{ url_for('playground_packages', project=current_project) }}" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
                     {{ fileform.hidden_tag() }}
                     <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
                       <i class="fas fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Upload") }}
@@ -61,14 +54,14 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', github=github_url, branch=branch) if github_url else url_for('pull_playground_package', pypi=pypi_package_name) if pypi_package_name else url_for('pull_playground_package') }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
+                <a class="nav-link" tabindex="7" id="daPull" href="{{ url_for('pull_playground_package', project=current_project, github=github_url, branch=branch) if github_url else url_for('pull_playground_package', project=current_project, pypi=pypi_package_name) if pypi_package_name else url_for('pull_playground_package', project=current_project) }}" title="{{ word('Pull a package from GitHub or PyPI into the Playground') }}">
                   <i class="fas fa-cloud-download-alt" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Pull") }}
                 </a>
               </li>
             </ul>
           </div>
         </div>
-        <form action="{{ url_for('playground_packages') }}" method="POST" class="form" role="form" id="form" autocomplete="off">
+        <form action="{{ url_for('playground_packages', project=current_project) }}" method="POST" class="form" role="form" id="form" autocomplete="off">
           <div class="row">
             <div class="col-sm-9 col-md-7 col-lg-7 col-xl-7">
               {{ form.hidden_tag() }}
@@ -125,24 +118,50 @@
               {%- endif %}
               {%- if can_publish_to_github %}
               <div id="commit_message_div" style="display:none">
-                {{ render_select_field(form.github_branch) }}
-                {{ render_field(form.commit_message) }}    
+                <div id="github_branch_div">
+                  {{ render_select_field(form.github_branch) }}
+                  <div id="new_branch_div" style="display:none">
+                    {{ render_field(form.github_branch_new) }}
+                  </div>
+                </div>
+                {{ render_field(form.commit_message) }}
+                {%- if can_publish_to_pypi %}
+                <div class="form-check">
+                    {{ form.pypi_also(type='checkbox', class='form-check-input') }}
+                    <label class="form-check-label" for="{{ form.pypi_also.id }}">{{ form.pypi_also.label }}</label>
+                </div>
+                {%- endif %}
+                <div class="form-check">
+                    {{ form.install_also(type='checkbox', class='form-check-input') }}
+                    <label class="form-check-label" for="{{ form.install_also.id }}">{{ form.install_also.label }}</label>
+                </div>
+              </div>
+              {%- endif %}
+              {%- if can_publish_to_pypi %}
+              <div id="pypi_message_div" style="display:none">
+                <p>{{ word("Press the Publish button to publish the package on PyPI.") }}</p>
+                <div class="form-check">
+                    {{ form.install_also(type='checkbox', class='form-check-input') }}
+                    <label class="form-check-label" for="{{ form.install_also.id }}">{{ form.install_also.label }}</label>
+                </div>
               </div>
               {%- endif %}
               <div class="form-actions">
-                {{ render_submit_field(form.submit, class="btn btn-primary " + config['BUTTON_CLASS'], title=word('Save your changes to the package information')) }}
+                {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], title=word('Save your changes to the package information')) }}
                 {%- if current_file != '' %}
-                {{ render_submit_field(form.install, class="btn btn-success " + config['BUTTON_CLASS'], title=word('Install package on this server')) }}
+                {{ render_submit_field(form.install, class="btn " + config['BUTTON_STYLE'] + "success " + config['BUTTON_CLASS'], title=word('Install package on this server')) }}
                 {%- if can_publish_to_pypi %}
-                {{ render_submit_field(form.pypi, id="daPyPI", class="btn btn-warning " + config['BUTTON_CLASS'], title=word('Publish on PyPI')) }}
+                {{ render_submit_field(form.pypi, id="daPyPI", class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS'], title=word('Publish on PyPI')) }}
+                {{ render_submit_field(form.cancel, id="daCancelPyPI", class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS'], style="display:none") }}
                 {%- endif %}
                 {%- if can_publish_to_github %}
-                {{ render_submit_field(form.github, id="daGitHub", class="btn btn-warning " + config['BUTTON_CLASS'], title=word('Push a commit to GitHub')) }}
-                {{ render_submit_field(form.cancel, id="daCancel", class="btn btn-secondary " + config['BUTTON_CLASS'], style="display:none") }}
+                {{ render_submit_field(form.github, id="daGitHub", class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS'], title=word('Push a commit to GitHub')) }}
+                {{ render_submit_field(form.cancel, id="daCancelGitHub", class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS'], style="display:none") }}
                 {%- endif %}
-                {{ render_submit_field(form.delete, id="daDelete", class="btn btn-danger " + config['BUTTON_CLASS'], title=word('Delete this package from the Playground')) }}
+                <a class="btn {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_CLASS'] }}" href="{{ url_for('create_playground_package', project=current_project, package=current_file) }}" title="{{ word('Download the current package') }}">{{ word('Download') }}</a>
+                {{ render_submit_field(form.delete, id="daDelete", class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS'], title=word('Delete this package from the Playground')) }}
                 {%- else %}
-                <a class="btn btn-secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_packages') }}">{{ word('Cancel') }}</a>
+                <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_packages', project=current_project) }}">{{ word('Cancel') }}</a>
                 {%- endif %}
               </div>
             </div>
@@ -153,5 +172,5 @@
         {%- endif %}
 {%- endblock %}
 {%- block bottom %}
-      <div class="mt-2"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
+      <div class="mt-2"><p><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
 {%- endblock %}

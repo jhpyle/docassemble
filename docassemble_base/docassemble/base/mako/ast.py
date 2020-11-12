@@ -17,13 +17,16 @@ class PythonCode(object):
     """represents information about a string containing Python code"""
 
     def __init__(self, code, **exception_kwargs):
-        myvisitor = myvisitnode()
-        t = base_ast.parse(code.strip())
-        myvisitor.visit(t)
-        self.names_used = set()
-        for item in myvisitor.names.keys():
-            self.names_used.add(item)
-
+        if isinstance(code, str):
+            myvisitor = myvisitnode()
+            t = base_ast.parse(code.strip())
+            myvisitor.visit(t)
+            self.names_used = set()
+            for item in myvisitor.names.keys():
+                self.names_used.add(item)
+            self.names_set = set()
+            for item in myvisitor.targets.keys():
+                self.names_set.add(item)
         self.code = code
 
         # represents all identifiers which are assigned to at some point in

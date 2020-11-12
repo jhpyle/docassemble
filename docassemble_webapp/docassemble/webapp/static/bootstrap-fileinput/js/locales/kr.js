@@ -27,13 +27,14 @@
         msgNoFilesSelected: '선택한 파일이 없습니다',
         msgPaused: 'Paused',
         msgCancelled: '취소되었습니다',
-        msgPlaceholder: '{files} 선택...',
+        msgPlaceholder: '{files} 선택 &hellip;',
         msgZoomModalHeading: '세부 정보',
         msgFileRequired: '업로드를 위해 반드시 파일을 선택해야 합니다.',
         msgSizeTooSmall: '파일 "{name}" (<b>{size} KB</b>)이 너무 작습니다. <b>{minSize} KB</b>보다 용량이 커야 합니다..',
         msgSizeTooLarge: '파일 "{name}" (<b>{size} KB</b>)이 너무 큽니다. 허용 파일 사이즈는 <b>{maxSize} KB</b>.입니다.',
         msgFilesTooLess: '업로드하기 위해 최소 <b>{n}</b> {files}개의 파일을 선택해야 합니다.',
         msgFilesTooMany: '선택한 파일의 수 <b>({n})</b>가 업로드 허용 최고치인 <b>{m}</b>를 넘었습니다..',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: '파일 "{name}"을 찾을 수 없습니다.!',
         msgFileSecured: '보안상의 이유로 "{name}"을/를 읽을 수 없습니다..',
         msgFileNotReadable: '"{name}"은/는 읽을 수 없습니다.',
@@ -53,10 +54,10 @@
             'object': 'object'
         },
         msgUploadAborted: '파일 업로드가 중단되었습니다',
-        msgUploadThreshold: '처리하는 중...',
-        msgUploadBegin: '초기화 중...',
+        msgUploadThreshold: '처리하는 중 &hellip;',
+        msgUploadBegin: '초기화 중 &hellip;',
         msgUploadEnd: '완료',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: '업로드 가능한 데이터가 존재하지 않습니다.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -97,7 +98,7 @@
             indicatorSuccessTitle: '업로드 성공',
             indicatorErrorTitle: '업로드 중 에러 발생',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  '업로드 중 ...'
+            indicatorLoadingTitle:  '업로드 중 &hellip;'
         },
         previewZoomButtonTitles: {
             prev: '이전 파일',

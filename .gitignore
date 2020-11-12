@@ -1,4 +1,5 @@
 *~
+.#*
 *.pyc
 en
 */auto
@@ -51,3 +52,6 @@ tests/features/Temp.feature
 tests/features/Screenshots.feature
 fix-seq.sql
 rtftest.py
+tests/.noseids
+Docker/config/extract_words_flask.sh
+cleanup.sh

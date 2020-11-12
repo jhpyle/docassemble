@@ -28,13 +28,14 @@
         msgNoFilesSelected: '',
         msgPaused: 'Paused',
         msgCancelled: 'Dibatalkan',
-        msgPlaceholder: 'Pilih {files}...',
+        msgPlaceholder: 'Pilih {files} ...',
         msgZoomModalHeading: 'Pratinjau terperinci',
         msgFileRequired: 'Anda harus memilih berkas untuk diunggah.',
         msgSizeTooSmall: 'Berkas "{name}" (<b>{size} KB</b>) terlalu kecil dan harus lebih besar dari <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'Berkas "{name}" (<b>{size} KB</b>) melebihi ukuran unggah maksimal yaitu <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Anda harus memilih setidaknya <b>{n}</b> {files} untuk diunggah.',
         msgFilesTooMany: '<b>({n})</b> berkas yang dipilih untuk diunggah melebihi ukuran unggah maksimal yaitu <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Berkas "{name}" tak ditemukan!',
         msgFileSecured: 'Sistem keamanan mencegah untuk membaca berkas "{name}".',
         msgFileNotReadable: 'Berkas "{name}" tak dapat dibaca.',
@@ -54,10 +55,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'Proses Unggah berkas dibatalkan',
-        msgUploadThreshold: 'Memproses...',
-        msgUploadBegin: 'Menyiapkan...',
+        msgUploadThreshold: 'Memproses &hellip;',
+        msgUploadBegin: 'Menyiapkan &hellip;',
         msgUploadEnd: 'Selesai',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'Tidak ada data valid yang tersedia untuk diunggah.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -98,7 +99,7 @@
             indicatorSuccessTitle: 'Sudah diunggah',
             indicatorErrorTitle: 'Kesalahan dalam mengungah',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Mengunggah ...'
+            indicatorLoadingTitle:  'Mengunggah &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Lihat berkas sebelumnya',

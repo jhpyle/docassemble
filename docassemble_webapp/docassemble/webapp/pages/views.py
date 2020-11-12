@@ -4,7 +4,7 @@
 
 from docassemble.webapp.app_and_db import app
 from flask import render_template, current_app
-from flask_user import login_required, roles_required
+from docassemble_flask_user import login_required, roles_required
 
 # The Member page is accessible to authenticated users (users that have logged in)
 @app.route('/member')

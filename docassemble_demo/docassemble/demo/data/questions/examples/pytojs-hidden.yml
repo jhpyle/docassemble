@@ -1,0 +1,39 @@
+metadata:
+  title: Hidden
+  documentation: "https://docassemble.org/docs/recipes.html#python to javascript"
+  example start: 1
+  example end: 4
+---
+imports:
+  - json
+---
+question: |
+  What is your favorite color?
+fields:
+  - Color: favorite_color
+---
+question: |
+  What is your favorite fruit?
+subquestion: |
+  <input type="hidden"
+         name="${ encode_name('favorite_color') }"
+         value=${ json.dumps(favorite_color) }>
+fields:
+  - Fruit: favorite_fruit
+script: |
+  <script>
+    var myColor = val('favorite_color');
+    console.log("You said you liked " + myColor);
+    setField('favorite_color', 'dark ' + myColor);
+    console.log("But now you like " + val('favorite_color'));
+  </script>
+---
+mandatory: True
+question: |
+  Your favorites
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+
+  Your favorite color is
+  ${ favorite_color }.

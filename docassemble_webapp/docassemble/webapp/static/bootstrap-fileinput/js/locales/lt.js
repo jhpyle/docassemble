@@ -28,13 +28,14 @@
         msgNoFilesSelected: 'Nepasirinkta jokių failų',
         msgPaused: 'Paused',
         msgCancelled: 'Atšaukta',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'Detali Peržiūra',
         msgFileRequired: 'Pasirinkite failą įkėlimui.',
         msgSizeTooSmall: 'Failas "{name}" (<b>{size} KB</b>) yra per mažas ir turi būti didesnis nei <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'Failas "{name}" (<b>{size} KB</b>) viršija maksimalų leidžiamą įkeliamo failo dydį <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Turite pasirinkti bent <b>{n}</b> failus įkėlimui.',
         msgFilesTooMany: 'Įkėlimui pasirinktų failų skaičius <b>({n})</b> viršija maksimalų leidžiamą limitą <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Failas "{name}" nerastas!',
         msgFileSecured: 'Saugumo apribojimai neleidžia perskaityti failo "{name}".',
         msgFileNotReadable: 'Failas "{name}" neperskaitomas.',
@@ -54,10 +55,10 @@
             'object': 'objektas'
         },
         msgUploadAborted: 'Failo įkėlimas buvo nutrauktas',
-        msgUploadThreshold: 'Vykdoma...',
-        msgUploadBegin: 'Inicijuojama...',
+        msgUploadThreshold: 'Vykdoma &hellip;',
+        msgUploadBegin: 'Inicijuojama &hellip;',
         msgUploadEnd: 'Baigta',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'Nėra teisingų duomenų įkėlimui.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -97,7 +98,7 @@
             indicatorSuccessTitle: 'Įkelta',
             indicatorErrorTitle: 'Įkėlimo Klaida',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Įkeliama ...'
+            indicatorLoadingTitle:  'Įkeliama &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Peržiūrėti ankstesnį failą',

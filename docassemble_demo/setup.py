@@ -7,7 +7,7 @@ from distutils.util import convert_path
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
+standard_exclude = ('*.pyc', '*~', '.*', '*.bak', '*.swp*')
 standard_exclude_directories = ('.*', 'CVS', '_darcs', os.path.join('.', 'build'), os.path.join('.', 'dist'), 'EGG-INFO', '*.egg-info')
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
@@ -46,7 +46,8 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.demo',
-      version='0.4.66',
+      version='1.1.97',
+      python_requires='>=3.5',
       description=('A demonstration package for docassemble.'),
       long_description=read("README.md"),
       long_description_content_type='text/markdown',
@@ -54,10 +55,9 @@ setup(name='docassemble.demo',
       author_email='jhpyle@gmail.com',
       license='MIT',
       url='https://docassemble.org',
-      download_url='https://download.docassemble.org/docassemble-demo.tar.gz',
       packages=find_packages(),
       namespace_packages = ['docassemble'],
-      install_requires = ['docassemble==0.4.66', 'docassemble.base==0.4.66', 'python-dateutil'],
+      install_requires = ['docassemble==1.1.97', 'docassemble.base==1.1.97'],
       zip_safe = False,
       package_data=find_package_data(where=os.path.join('docassemble', 'demo', ''), package='docassemble.demo'),
   )

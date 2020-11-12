@@ -27,13 +27,14 @@
         msgNoFilesSelected: '',
         msgPaused: 'Paused',
         msgCancelled: 'Geannuleerd',
-        msgPlaceholder: 'Selecteer {files}...',
+        msgPlaceholder: 'Selecteer {files} ...',
         msgZoomModalHeading: 'Gedetailleerd voorbeeld',
         msgFileRequired: 'U moet een bestand kiezen om te uploaden.',
         msgSizeTooSmall: 'Bestand "{name}" (<b>{size} KB</b>) is te klein en moet groter zijn dan <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'Bestand "{name}" (<b>{size} KB</b>) is groter dan de toegestane <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'U moet minstens <b>{n}</b> {files} selecteren om te uploaden.',
         msgFilesTooMany: 'Aantal geselecteerde bestanden <b>({n})</b> is meer dan de toegestane <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Bestand "{name}" niet gevonden!',
         msgFileSecured: 'Bestand kan niet gelezen worden in verband met beveiligings redenen "{name}".',
         msgFileNotReadable: 'Bestand "{name}" is niet leesbaar.',
@@ -53,10 +54,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'Het uploaden van bestanden is afgebroken',
-        msgUploadThreshold: 'Verwerken...',
-        msgUploadBegin: 'Initialiseren...',
+        msgUploadThreshold: 'Verwerken &hellip;',
+        msgUploadBegin: 'Initialiseren &hellip;',
         msgUploadEnd: 'Gedaan',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'Geen geldige data beschikbaar voor upload.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -97,7 +98,7 @@
             indicatorSuccessTitle: 'geupload',
             indicatorErrorTitle: 'fout uploaden',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'uploaden ...'
+            indicatorLoadingTitle:  'uploaden &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Toon vorig bestand',

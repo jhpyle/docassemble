@@ -28,13 +28,14 @@
         msgNoFilesSelected: 'هیچ فایلی انتخاب نشده است',
         msgPaused: 'Paused',
         msgCancelled: 'لغو شد',
-        msgPlaceholder: 'انتخاب {files}...',
+        msgPlaceholder: 'انتخاب {files} ...',
         msgZoomModalHeading: 'نمایش با جزییات',
         msgFileRequired: 'شما باید یک فایل برای بارگذاری انتخاب نمایید.',
         msgSizeTooSmall: 'فایل "{name}" (<b>{size} کیلوبایت</b>) خیلی کوچک است و باید از <b>{minSize} کیلوبایت بزرگتر باشد</b>.',
         msgSizeTooLarge: 'فایل "{name}" (<b>{size} کیلوبایت</b>) از حداکثر مجاز <b>{maxSize} کیلوبایت</b> بزرگتر است.',
         msgFilesTooLess: 'شما باید حداقل <b>{n}</b> {files} فایل برای بارگذاری انتخاب کنید.',
         msgFilesTooMany: 'تعداد فایل‌های انتخاب شده برای بارگذاری <b>({n})</b> از حداکثر مجاز عبور کرده است <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'فایل "{name}" یافت نشد!',
         msgFileSecured: 'محدودیت های امنیتی مانع خواندن فایل "{name}" است.',
         msgFileNotReadable: 'فایل "{name}" قابل نوشتن نیست.',
@@ -54,10 +55,10 @@
             'object': 'دیگر'
         },
         msgUploadAborted: 'بارگذاری فایل به مشکل خورد.',
-        msgUploadThreshold: 'در حال پردازش...',
-        msgUploadBegin: 'در حال شروع...',
+        msgUploadThreshold: 'در حال پردازش &hellip;',
+        msgUploadBegin: 'در حال شروع &hellip;',
         msgUploadEnd: 'انجام شد',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'هیچ داده معتبری برای بارگذاری موجود نیست.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -98,7 +99,7 @@
             indicatorSuccessTitle: 'آپلود شده',
             indicatorErrorTitle: 'بارگذاری خطا',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'آپلود ...'
+            indicatorLoadingTitle:  'آپلود &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'مشاهده فایل قبلی',

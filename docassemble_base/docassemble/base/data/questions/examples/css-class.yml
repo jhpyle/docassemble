@@ -1,0 +1,10 @@
+metadata:
+  title: CSS class for question
+  short title: CSS
+  documentation: "https://docassemble.org/docs/questions.html#css class"
+---
+css class: first-question
+mandatory: True
+question: |
+  View the source and look for
+  the word `first-question`.

@@ -1,17 +1,10 @@
 import sys
-from six import string_types, text_type, PY2
 import os
 import re
 import json
 import pytz
 import shutil
 import requests
-from io import open
-if PY2:
-    from urllib import urlencode, urlretrieve
-else:
-    from urllib.request import urlretrieve
-    from urllib.parse import urlencode
 import pycurl
 import tempfile
 import mimetypes
@@ -30,8 +23,32 @@ cloud = docassemble.webapp.cloud.get_cloud()
 
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
 
-class SavedFile(object):
-    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file'):
+def listfiles(directory):
+    result = list()
+    directory = directory.rstrip(os.sep)
+    trimstart = len(directory) + 1
+    for root, dirs, files in os.walk(directory):
+        for filename in files:
+            result.append(os.path.join(root, filename)[trimstart:])
+    return result
+
+def listdirs(directory):
+    result = list()
+    directory = directory.rstrip(os.sep)
+    trimstart = len(directory) + 1
+    for root, dirs, files in os.walk(directory):
+        for subdir in dirs:
+            result.append(os.path.join(root, subdir)[trimstart:])
+    return result
+
+def path_to_key(path):
+    return '/'.join(str(path).split(os.sep))
+
+def url_sanitize(url):
+    return re.sub(r'\s', ' ', url)
+
+class SavedFile:
+    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file', project=None, subdir=None):
         file_number = int(file_number)
         section = str(section)
         if section not in docassemble.base.functions.this_thread.saved_files:
@@ -39,20 +56,20 @@ class SavedFile(object):
         if file_number in docassemble.base.functions.this_thread.saved_files[section]:
             # sys.stderr.write("SavedFile: using cache for " + section + '/' + str(file_number) + "\n")
             sf = docassemble.base.functions.this_thread.saved_files[section][file_number]
-            for attribute in ['file_number', 'fixed', 'section', 'filename', 'extension', 'directory', 'path', 'modtimes', 'keydict']:
+            for attribute in ['file_number', 'fixed', 'section', 'filename', 'extension', 'directory', 'path', 'modtimes', 'keydict', 'subdir']:
                 if hasattr(sf, attribute):
                     setattr(self, attribute, getattr(sf, attribute))
             self.extension = extension
             self.filename = filename
-            self.path = os.path.join(self.directory, self.filename)
+            self.subdir = subdir
         else:
             # sys.stderr.write("SavedFile: not using cache for " + section + '/' + str(file_number) + "\n")
-            docassemble.base.functions.this_thread.saved_files[section][file_number] = self
             self.fixed = False
             self.file_number = file_number
             self.section = section
             self.extension = extension
             self.filename = filename
+            self.subdir = subdir
             if cloud is None:
                 if self.section == 'files':
                     parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
@@ -61,6 +78,10 @@ class SavedFile(object):
                     self.directory = os.path.join(UPLOAD_DIRECTORY, str(self.section), str(file_number))
             else:
                 self.directory = os.path.join(tempfile.gettempdir(), str(self.section), str(self.file_number))
+        docassemble.base.functions.this_thread.saved_files[section][file_number] = self
+        if self.subdir and self.subdir != '' and self.subdir != 'default':
+            self.path = os.path.join(self.directory, self.subdir, self.filename)
+        else:
             self.path = os.path.join(self.directory, self.filename)
         if fix:
             self.fix()
@@ -69,42 +90,57 @@ class SavedFile(object):
             return
         # sys.stderr.write("fix: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
         if cloud is not None:
+            dirs_in_use = set()
             self.modtimes = dict()
             self.keydict = dict()
             if not os.path.isdir(self.directory):
-                os.makedirs(self.directory)        
+                os.makedirs(self.directory)
             #self.directory = tempfile.mkdtemp(prefix='SavedFile')
             #docassemble.base.functions.this_thread.temporary_resources.add(self.directory)
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             #sys.stderr.write("fix: prefix is " + prefix + "\n")
             for key in cloud.list_keys(prefix):
-                filename = re.sub(r'.*/', '', key.name)
+                filename = os.path.join(*key.name[len(prefix):].split('/'))
                 fullpath = os.path.join(self.directory, filename)
+                fulldir = os.path.dirname(fullpath)
+                dirs_in_use.add(fulldir)
+                if not os.path.isdir(fulldir):
+                    os.makedirs(fulldir)
                 server_time = key.get_epoch_modtime()
                 if not os.path.isfile(fullpath):
                     key.get_contents_to_filename(fullpath)
                 else:
                     local_time = os.path.getmtime(fullpath)
-                    if not (local_time == server_time and time.time() - local_time < 5400):
-                        key.get_contents_to_filename(fullpath)
+                    access_time = os.path.getatime(fullpath)
+                    if self.section == 'files':
+                        if local_time != server_time:
+                            key.get_contents_to_filename(fullpath)
+                        update_access_time(fullpath)
+                    else:
+                        if not (local_time == server_time):
+                            key.get_contents_to_filename(fullpath)
                 self.modtimes[filename] = server_time
+
                 #logmessage("cloud modtime for file " + filename + " is " + str(key.last_modified))
                 self.keydict[filename] = key
-            self.path = os.path.join(self.directory, self.filename)
-            to_delete = list()
-            for filename in os.listdir(self.directory):
+            if self.subdir and self.subdir != '' and self.subdir != 'default':
+                self.path = os.path.join(self.directory, self.subdir, self.filename)
+            else:
+                self.path = os.path.join(self.directory, self.filename)
+            for filename in listfiles(self.directory):
                 if filename not in self.modtimes:
-                    to_delete.append(filename)
-            for filename in to_delete:
-                os.remove(os.path.join(self.directory, filename))
+                    os.remove(os.path.join(self.directory, filename))
+            for subdir in listdirs(self.directory):
+                if subdir not in dirs_in_use and os.path.isdir(subdir):
+                    shutil.rmtree(subdir)
         else:
             if not os.path.isdir(self.directory):
-                os.makedirs(self.directory)        
+                os.makedirs(self.directory)
         self.fixed = True
         # sys.stderr.write("fix: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
     def delete_file(self, filename):
         if cloud is not None:
-            prefix = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+            prefix = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
             to_delete = list()
             for key in cloud.list_keys(prefix):
                 to_delete.append(key)
@@ -113,9 +149,25 @@ class SavedFile(object):
                     key.delete()
                 except:
                     pass
-        the_path = os.path.join(self.directory, filename)
-        if hasattr(self, 'directory') and os.path.isdir(self.directory) and os.path.isfile(the_path):
-            os.remove(the_path)
+        if hasattr(self, 'directory') and os.path.isdir(self.directory):
+            the_path = os.path.join(self.directory, filename)
+            if os.path.isfile(the_path):
+                os.remove(the_path)
+    def delete_directory(self, directory):
+        if cloud is not None:
+            prefix = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(directory)
+            to_delete = list()
+            for key in cloud.list_keys(prefix):
+                to_delete.append(key)
+            for key in to_delete:
+                try:
+                    key.delete()
+                except:
+                    pass
+        if hasattr(self, 'directory') and os.path.isdir(self.directory):
+            the_path = os.path.join(self.directory, directory)
+            if os.path.isdir(the_path):
+                shutil.rmtree(the_path)
     def delete(self):
         if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
@@ -153,37 +205,23 @@ class SavedFile(object):
         c.perform()
         c.close()
         cookiefile.close()
-        # cookiejar = cookielib.LWPCookieJar()
-        # opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-        # response = opener.open(url)
-        # f = open(os.path.join(self.directory, filename), 'wb')
-        # block_sz = 8192
-        # while True:
-        #     buffer = u.read(block_sz)
-        #     if not buffer:
-        #         break
-
-        #     f.write(buffer)
-        # f.close()
-        #urllib.urlretrieve(url, os.path.join(self.directory, filename))
         self.save()
         return
     def fetch_url_post(self, url, post_args, **kwargs):
         filename = kwargs.get('filename', self.filename)
         self.fix()
-        r = requests.post(url, data=post_args)
+        r = requests.post(url_sanitize(url), data=post_args)
         if r.status_code != 200:
             raise DAError('fetch_url_post: retrieval from ' + url + 'failed')
         with open(os.path.join(self.directory, filename), 'wb') as fp:
             for block in r.iter_content(1024):
                 fp.write(block)
-        #urlretrieve(url, os.path.join(self.directory, filename), None, urlencode(post_args))
         self.save()
         return
     def size_in_bytes(self, **kwargs):
         filename = kwargs.get('filename', self.filename)
         if cloud is not None and not self.fixed:
-            key = cloud.search_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
+            key = cloud.search_key(str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename))
             if key is None or not key.does_exist:
                 raise DAError("size_in_bytes: file " + filename + " in " + self.section + " did not exist")
             return key.size
@@ -194,24 +232,35 @@ class SavedFile(object):
         if cloud is not None and not self.fixed:
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             for key in cloud.list_keys(prefix):
-                output.append(re.sub(r'.*/', '', key.name))
+                output.append(os.path.join(*key.name[len(prefix):].split('/')))
         else:
             if os.path.isdir(self.directory):
-                for filename in os.listdir(self.directory):
+                for filename in listfiles(self.directory):
                     output.append(filename)
         return sorted(output)
+    def list_of_dirs(self):
+        dir_list = set()
+        for path in self.list_of_files():
+            parts = path.split(os.sep)
+            if len(parts) > 1:
+                dir_list.add(parts[0])
+        return sorted(list(dir_list))
     def copy_from(self, orig_path, **kwargs):
         filename = kwargs.get('filename', self.filename)
         self.fix()
         #logmessage("Saving to " + os.path.join(self.directory, filename))
-        shutil.copyfile(orig_path, os.path.join(self.directory, filename))
+        new_file = os.path.join(self.directory, filename)
+        new_file_dir = os.path.dirname(new_file)
+        if not os.path.isdir(new_file_dir):
+            os.path.makedirs(new_file_dir)
+        shutil.copyfile(orig_path, new_file)
         if 'filename' not in kwargs:
             self.save()
     def get_modtime(self, **kwargs):
         filename = kwargs.get('filename', self.filename)
         #logmessage("Get modtime called with filename " + str(filename))
         if cloud is not None and not self.fixed:
-            key_name = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+            key_name = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
             key = cloud.search_key(key_name)
             if key is None or not key.does_exist:
                 raise DAError("get_modtime: file " + filename + " in " + self.section + " did not exist")
@@ -239,26 +288,28 @@ class SavedFile(object):
         filename = kwargs.get('filename', self.filename)
         self.fix()
         #logmessage("write_as_json: writing to " + os.path.join(self.directory, filename))
-        with open(os.path.join(self.directory, filename), 'wb') as ifile:
+        with open(os.path.join(self.directory, filename), 'w', encoding='utf-8') as ifile:
             json.dump(obj, ifile, sort_keys=True, indent=2)
         if kwargs.get('save', True):
             self.save()
         return
     def temp_url_for(self, **kwargs):
+        if kwargs.get('_attachment', False):
+            suffix = 'download'
+        else:
+            suffix = ''
         filename = kwargs.get('filename', self.filename)
         seconds = kwargs.get('seconds', None)
         if type(seconds) is float:
             seconds = int(seconds)
         if type(seconds) is not int:
             seconds = 30
-        if cloud is not None:
-            keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+        if cloud is not None and daconfig.get('use cloud urls', False):
+            keyname = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
             key = cloud.get_key(keyname)
+            inline = False if kwargs.get('_attachment', False) else True
             if key.does_exist:
-                if 'display_filename' in kwargs:
-                    return key.generate_url(seconds, display_filename=kwargs['display_filename'])
-                else:
-                    return key.generate_url(seconds)
+                return key.generate_url(seconds, display_filename=kwargs.get('display_filename', None), inline=inline, content_type=kwargs.get('content_type', None))
             else:
                 sys.stderr.write("key " + str(keyname) + " did not exist\n")
                 return('about:blank')
@@ -269,13 +320,17 @@ class SavedFile(object):
             if r.setnx(keyname, str(self.section) + '^' + str(self.file_number)):
                 r.expire(keyname, seconds)
                 break
-        return docassemble.base.functions.get_url_root() + '/tempfile/' + code + '/' + kwargs.get('display_filename', self.filename)
+        use_external = kwargs.get('_external', True if 'jsembed' in docassemble.base.functions.this_thread.misc else False)
+        from flask import url_for
+        url = url_for('rootindex', _external=use_external).rstrip('/')
+        url += '/tempfile' + suffix + '/' + code + '/' + path_to_key(kwargs.get('display_filename', filename))
+        return(url)
     def cloud_path(self, filename=None):
         if cloud is None:
             return None
         if filename is None:
             filename = self.filename
-        return str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+        return str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
     def url_for(self, **kwargs):
         if 'ext' in kwargs and kwargs['ext'] is not None:
             extn = kwargs['ext']
@@ -283,9 +338,8 @@ class SavedFile(object):
         else:
             extn = None
         filename = kwargs.get('filename', self.filename)
-        use_external = kwargs.get('_external', True if 'jsembed' in docassemble.base.functions.this_thread.misc else False)
-        if cloud is not None and not (self.section == 'files' and 'page' in kwargs and kwargs['page']):
-            keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+        if cloud is not None and not (self.section == 'files' and 'page' in kwargs and kwargs['page']) and daconfig.get('use cloud urls', False):
+            keyname = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
             page = kwargs.get('page', None)
             if page:
                 size = kwargs.get('size', 'page')
@@ -297,45 +351,47 @@ class SavedFile(object):
             elif extn:
                 keyname += '.' + extn
             key = cloud.get_key(keyname)
+            inline = False if kwargs.get('_attachment', False) else True
             if key.does_exist:
-                if 'display_filename' in kwargs:
-                    return key.generate_url(3600, display_filename=kwargs['display_filename'])
-                else:
-                    return key.generate_url(3600)
+                return key.generate_url(3600, display_filename=kwargs.get('display_filename', None), inline=inline, content_type=kwargs.get('content_type', None))
             else:
                 #logmessage("Key " + str(keyname) + " did not exist")
                 #why not serve right from uploadedpage in this case?
                 sys.stderr.write("key " + str(keyname) + " did not exist\n")
                 return('about:blank')
         else:
+            if kwargs.get('_attachment', False):
+                suffix = 'download'
+            else:
+                suffix = ''
+            use_external = kwargs.get('_external', True if 'jsembed' in docassemble.base.functions.this_thread.misc else False)
+            from flask import url_for
+            base_url = url_for('rootindex', _external=use_external).rstrip('/')
             if extn is None:
                 extn = ''
             else:
                 extn = '.' + extn
-            root = daconfig.get('root', '/')
-            fileroot = daconfig.get('fileserver', root)
             if 'display_filename' in kwargs:
                 filename = kwargs['display_filename']
             if self.section == 'files':
                 if 'page' in kwargs and kwargs['page']:
                     page = re.sub(r'[^0-9]', '', str(kwargs['page']))
                     size = kwargs.get('size', 'page')
-                    url = fileroot + 'uploadedpage'
+                    url = base_url + '/uploadedpage'
                     if size == 'screen':
                         url += 'screen'
+                    url += suffix
                     url += '/' + str(self.file_number) + '/' + str(page)
                 else:
                     if re.search(r'\.', str(filename)):
-                        url = fileroot + 'uploadedfile/' + str(self.file_number) + '/' + str(filename)
+                        url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number) + '/' + path_to_key(filename)
                     elif extn != '':
-                        url = fileroot + 'uploadedfile/' + str(self.file_number) + '/' + str(filename) + extn
+                        url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number) + '/' + path_to_key(filename) + extn
                     else:
-                        url = fileroot + 'uploadedfile/' + str(self.file_number)
+                        url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number)
             else:
                 sys.stderr.write("section " + section + " was wrong\n")
                 url = 'about:blank'
-            if use_external and url.startswith('/'):
-                url = docassemble.base.functions.get_url_root() + url
             return(url)
     def finalize(self):
         #sys.stderr.write("finalize: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
@@ -343,9 +399,7 @@ class SavedFile(object):
             return
         if not self.fixed:
             raise DAError("SavedFile: finalize called before fix")
-        existing_files = list()
-        for filename in os.listdir(self.directory):
-            existing_files.append(filename)
+        for filename in listfiles(self.directory):
             fullpath = os.path.join(self.directory, filename)
             #logmessage("Found " + fullpath)
             if os.path.isfile(fullpath):
@@ -355,7 +409,7 @@ class SavedFile(object):
                     if self.modtimes[filename] == os.path.getmtime(fullpath):
                         save = False
                 else:
-                    key = cloud.get_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
+                    key = cloud.get_key(str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename))
                 if save:
                     if self.extension is not None and filename == self.filename:
                         extension, mimetype = get_ext_and_mimetype(filename + '.' + self.extension)
@@ -363,18 +417,23 @@ class SavedFile(object):
                         extension, mimetype = get_ext_and_mimetype(filename)
                     key.content_type = mimetype
                     #sys.stderr.write("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
-                    key.set_contents_from_filename(fullpath)
-                    self.modtimes[filename] = key.get_epoch_modtime()
+                    if not os.path.isfile(fullpath):
+                        continue
+                    try:
+                        key.set_contents_from_filename(fullpath)
+                        self.modtimes[filename] = key.get_epoch_modtime()
+                    except FileNotFoundError:
+                        sys.stderr.write("finalize: error while saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "; path " + str(fullpath) + " disappeared\n")
         for filename, key in self.keydict.items():
-            if filename not in existing_files:
-                sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
+            if not os.path.isfile(os.path.join(self.directory, filename)):
+                sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename) + "\n")
                 try:
                     key.delete()
                 except:
                     pass
         #sys.stderr.write("finalize: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
         return
-        
+
 def get_ext_and_mimetype(filename):
     mimetype, encoding = mimetypes.guess_type(filename)
     extension = filename.lower()
@@ -389,10 +448,10 @@ def get_ext_and_mimetype(filename):
         mimetype = 'text/plain'
     return(extension, mimetype)
 
-def publish_package(pkgname, info, author_info, tz_name):
+def publish_package(pkgname, info, author_info, tz_name, current_project='default'):
     from flask_login import current_user
     #raise Exception("email is " + repr(current_user.email) + " and pypi is " + repr(current_user.pypi_username))
-    directory = make_package_dir(pkgname, info, author_info, tz_name)
+    directory = make_package_dir(pkgname, info, author_info, tz_name, current_project=current_project)
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     output = "Publishing docassemble." + pkgname + " to PyPI . . .\n\n"
     try:
@@ -401,8 +460,10 @@ def publish_package(pkgname, info, author_info, tz_name):
         output += err.output.decode()
     dist_file = None
     dist_dir = os.path.join(packagedir, 'dist')
+    had_error = False
     if not os.path.isdir(dist_dir):
         output += "dist directory " + str(dist_dir) + " did not exist after calling sdist"
+        had_error = True
     else:
         # for f in os.listdir(dist_dir):
         #     try:
@@ -417,14 +478,15 @@ def publish_package(pkgname, info, author_info, tz_name):
             output += subprocess.check_output(['twine', 'upload', '--repository', 'pypi', '--username', str(current_user.pypi_username), '--password', str(current_user.pypi_password), os.path.join('dist', '*')], cwd=packagedir, stderr=subprocess.STDOUT).decode()
         except subprocess.CalledProcessError as err:
             output += "Error calling twine upload.\n"
-            output += err.output
+            output += err.output.decode()
+            had_error = True
     output = re.sub(r'\n', '<br>', output)
     shutil.rmtree(directory)
     logmessage(output)
-    return output
+    return had_error, output
 
-def make_package_zip(pkgname, info, author_info, tz_name):
-    directory = make_package_dir(pkgname, info, author_info, tz_name)
+def make_package_zip(pkgname, info, author_info, tz_name, current_project='default'):
+    directory = make_package_dir(pkgname, info, author_info, tz_name, current_project=current_project)
     trimlength = len(directory) + 1
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
@@ -443,22 +505,22 @@ def make_package_zip(pkgname, info, author_info, tz_name):
     shutil.rmtree(directory)
     return temp_zip
 
-def make_package_dir(pkgname, info, author_info, tz_name, directory=None):
+def make_package_dir(pkgname, info, author_info, tz_name, directory=None, current_project='default'):
     the_timezone = pytz.timezone(tz_name)
     area = dict()
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
     dependencies = ", ".join(map(lambda x: repr(x), sorted(info['dependencies'])))
-    initpy = u"""\
+    initpy = """\
 try:
     __import__('pkg_resources').declare_namespace(__name__)
 except ImportError:
     __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
 """
-    licensetext = text_type(info['license'])
+    licensetext = str(info['license'])
     if re.search(r'MIT License', licensetext):
-        licensetext += u'\n\nCopyright (c) ' + text_type(datetime.datetime.now().year) + ' ' + text_type(author_info['first name']) + u" " + text_type(author_info['last name']) + u"""
+        licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(info.get('author_name', '')) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -479,24 +541,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
     if info['readme'] and re.search(r'[A-Za-z]', info['readme']):
-        readme = text_type(info['readme'])
+        readme = str(info['readme'])
     else:
-        readme = u'# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + u"\n\n"
-    manifestin = u"""\
+        readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + "\n\n"
+    manifestin = """\
 include README.md
 """
-    setupcfg = u"""\
+    setupcfg = """\
 [metadata]
 description-file = README.md
 """
-    setuppy = u"""\
+    setuppy = """\
 import os
 import sys
 from setuptools import setup, find_packages
 from fnmatch import fnmatchcase
 from distutils.util import convert_path
 
-standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
+standard_exclude = ('*.pyc', '*~', '.*', '*.bak', '*.swp*')
 standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info')
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
@@ -535,7 +597,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 """
-    setuppy += u"setup(name='docassemble." + str(pkgname) + "',\n" + """\
+    setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version=""" + repr(info.get('version', '')) + """,
       description=(""" + repr(info.get('description', '')) + """),
       long_description=""" + repr(readme) + """,
@@ -552,22 +614,21 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
      )
 
 """
-    templatereadme = u"""\
+    templatereadme = """\
 # Template directory
 
-If you want to use non-standard document templates with pandoc,
-put template files in this directory.
+If you want to use templates for document assembly, put them in this directory.
 """
-    staticreadme = u"""\
+    staticreadme = """\
 # Static file directory
 
 If you want to make files available in the web app, put them in
 this directory.
 """
-    sourcesreadme = u"""\
+    sourcesreadme = """\
 # Sources directory
 
-This directory is used to store word translation files, 
+This directory is used to store word translation files,
 machine learning training files, and other source files.
 """
     if directory is None:
@@ -587,26 +648,41 @@ machine learning training files, and other source files.
         os.makedirs(staticdir)
     if not os.path.isdir(sourcesdir):
         os.makedirs(sourcesdir)
+    dir_questions = directory_for(area['playground'], current_project)
+    dir_template = directory_for(area['playgroundtemplate'], current_project)
+    dir_modules = directory_for(area['playgroundmodules'], current_project)
+    dir_static = directory_for(area['playgroundstatic'], current_project)
+    dir_sources = directory_for(area['playgroundsources'], current_project)
     for the_file in info['interview_files']:
-        orig_file = os.path.join(area['playground'].directory, the_file)
+        orig_file = os.path.join(dir_questions, the_file)
         if os.path.exists(orig_file):
             shutil.copy2(orig_file, os.path.join(questionsdir, the_file))
+        else:
+            logmessage("failure on " + orig_file)
     for the_file in info['template_files']:
-        orig_file = os.path.join(area['playgroundtemplate'].directory, the_file)
+        orig_file = os.path.join(dir_template, the_file)
         if os.path.exists(orig_file):
             shutil.copy2(orig_file, os.path.join(templatesdir, the_file))
+        else:
+            logmessage("failure on " + orig_file)
     for the_file in info['module_files']:
-        orig_file = os.path.join(area['playgroundmodules'].directory, the_file)
+        orig_file = os.path.join(dir_modules, the_file)
         if os.path.exists(orig_file):
             shutil.copy2(orig_file, os.path.join(maindir, the_file))
+        else:
+            logmessage("failure on " + orig_file)
     for the_file in info['static_files']:
-        orig_file = os.path.join(area['playgroundstatic'].directory, the_file)
+        orig_file = os.path.join(dir_static, the_file)
         if os.path.exists(orig_file):
             shutil.copy2(orig_file, os.path.join(staticdir, the_file))
+        else:
+            logmessage("failure on " + orig_file)
     for the_file in info['sources_files']:
-        orig_file = os.path.join(area['playgroundsources'].directory, the_file)
+        orig_file = os.path.join(dir_sources, the_file)
         if os.path.exists(orig_file):
             shutil.copy2(orig_file, os.path.join(sourcesdir, the_file))
+        else:
+            logmessage("failure on " + orig_file)
     with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
         the_file.write(readme)
     os.utime(os.path.join(packagedir, 'README.md'), (info['modtime'], info['modtime']))
@@ -626,7 +702,7 @@ machine learning training files, and other source files.
         the_file.write(initpy)
     os.utime(os.path.join(packagedir, 'docassemble', '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
-        the_file.write(u'')
+        the_file.write("__version__ = " + repr(info.get('version', '')) + "\n")
     os.utime(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(templatesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
         the_file.write(templatereadme)
@@ -638,3 +714,14 @@ machine learning training files, and other source files.
         the_file.write(sourcesreadme)
     os.utime(os.path.join(sourcesdir, 'README.md'), (info['modtime'], info['modtime']))
     return directory
+
+def directory_for(area, current_project):
+    if current_project == 'default':
+        return area.directory
+    else:
+        return os.path.join(area.directory, current_project)
+
+def update_access_time(filepath):
+    with open(filepath, "rb") as fp:
+        fp.seek(0, 0)
+        first_byte = fp.read(1)

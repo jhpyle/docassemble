@@ -95,6 +95,26 @@ class myvisitnode(ast.NodeVisitor):
         #ast.NodeVisitor.generic_visit(self, node)
         self.generic_visit(node)
         self.depth -= 1
+    def visit_AugAssign(self, node):
+        for key, val in ast.iter_fields(node):
+            if key == 'target':
+                crawler = myextract()
+                crawler.visit(val)
+                self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
+        self.depth += 1
+        #ast.NodeVisitor.generic_visit(self, node)
+        self.generic_visit(node)
+        self.depth -= 1
+    def visit_AnnAssign(self, node):
+        for key, val in ast.iter_fields(node):
+            if key == 'target':
+                crawler = myextract()
+                crawler.visit(val)
+                self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
+        self.depth += 1
+        #ast.NodeVisitor.generic_visit(self, node)
+        self.generic_visit(node)
+        self.depth -= 1
     def visit_FunctionDef(self, node):
         if hasattr(node, 'name'):
             self.targets[node.name] = 1
@@ -118,9 +138,22 @@ class myvisitnode(ast.NodeVisitor):
                 self.targets[the_name] = 1
                 the_name = re.sub(r'\.[^\.]+$', '', the_name)
             self.targets[the_name] = 1
+    def visit_ListComp(self, node):
+        for comp in node.generators:
+            if isinstance(comp.target, ast.Name):
+                self.targets[comp.target.id] = 1
+            elif isinstance(comp.target, ast.Tuple):
+                for subtarget in comp.target.elts:
+                    if isinstance(subtarget, ast.Name):
+                        self.targets[subtarget.id] = 1
+        self.generic_visit(node)
     def visit_For(self, node):
-        if hasattr(node.target, 'id'):
+        if isinstance(node.target, ast.Name):
             self.targets[node.target.id] = 1
+        elif isinstance(node.target, ast.Tuple):
+            for subtarget in node.target.elts:
+                if isinstance(subtarget, ast.Name):
+                    self.targets[subtarget.id] = 1
         self.generic_visit(node)
     def visit_Name(self, node):
         self.names[node.id] = 1

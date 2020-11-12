@@ -6,7 +6,7 @@ metadata:
   example end: 2
 ---
 code: |
-  people = objects_from_file("contacts.yml")
+  people = objects_from_file("contacts.yml", use_objects=True)
 ---
 mandatory: true
 question: |

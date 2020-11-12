@@ -1,0 +1,293 @@
+metadata:
+  title: Companies
+  documentation: "https://docassemble.org/docs/objects.html#SQLObject"
+---
+modules:
+  - .companydb
+---
+# Since the SQL database is not changed by the interview's "Back" button,
+# it would be confusing to enable it.
+features:
+  navigation back button: False
+---
+objects:
+# We use a single object, "state," to keep track of the state of the session.
+# Using a single object makes it easy to delete all of the variables at once
+# when going back to the first screen.
+  - state: DAObject.using(subtask=None)
+  - state.new_company: Company
+  - state.company: Company.using(id=state.selected_company_id)
+# A StandardRelationshipList is just a DAList with special SQL-friendly properties;
+# it is also marked as gathered by default.  The attribute "co_share_list" is an
+# abbreviation for "company shareholder list."  The "co_share_list" is a list of
+# CompanyShareholder objects.  These objects represent the relationship between
+# a company and a shareholder.
+  - state.co_share_list: StandardRelationshipList.using(object_type=CompanyShareholder, parent=state.company)
+  - state.co_lawsuit_list: StandardRelationshipList.using(object_type=CompanyLawsuit, parent=state.company)
+  - state.lawsuit: Lawsuit.using(id=state.selected_lawsuit_id)
+  - state.lawsuit_document_list: StandardRelationshipList.using(object_type=LawsuitDocument, parent=state.lawsuit)
+---
+# When an interview is less like an actual interview and more like a traditional web application,
+# it is helpful to express the "interview logic" as an infinite "while" loop, where the logic
+# is based on what the current "task" or "subtask" is.
+mandatory: True
+scan for variables: False
+code: |
+  while True:
+    if state.task == 'view company':
+      if state.subtask == 'lawsuit':
+        view_lawsuit
+      view_company
+    if state.task == 'create new company':
+      state.new_company.name.text
+      state.new_company.ready()
+    undefine('state')
+---
+sets: state.task
+question: |
+  Companies
+subquestion: |
+  ${ state.companies_table }
+
+  ${ action_button_html(url_action('create_new_company'), icon='plus-circle', label='Add a company') }
+---
+table: state.companies_table
+rows: Company.all()
+columns:
+  - Company: |
+      action_button_html(url_action('select_company', company_id=row_item.id),
+                         label=row_item.name.text,
+                         color='link')
+  - Action: |
+      action_button_html(url_action('delete_company', company_id=row_item.id),
+                         label='Delete',
+                         icon='trash',
+                         color='danger')
+show if empty: |
+  No companies have been defined yet.
+---
+event: create_new_company
+code: |
+  reconsider('state')
+  state.task = 'create new company'
+---
+event: select_company
+code: |
+  reconsider('state')
+  state.task = 'view company'
+  state.selected_company_id = int(action_argument('company_id'))
+---
+event: delete_company
+code: |
+  reconsider('state')
+  Company.delete_by_id(int(action_argument('company_id')))
+---
+code: |
+  main_menu_button = action_button_html(url_action('main_menu'), icon='chevron-left', label='Back', color='secondary', size='md')
+  cancel_subtask_button = action_button_html(url_action('cancel_subtask'), icon='chevron-left', label='Back', color='secondary', size='md')
+---
+event: main_menu
+code: |
+  reconsider('state')
+---
+event: cancel_subtask
+code: |
+  state.subtask = None
+---
+event: lawsuit_subtask
+code: |
+  state.subtask = 'lawsuit'
+  state.selected_lawsuit_id = int(action_argument('lawsuit_id'))
+---
+event: view_company
+question: |
+  Information about ${ state.company }
+  ${ action_button_html(url_action('state.company.name.text'), label='[edit name]', color='link') }
+subquestion: |
+  #### Shareholders
+  
+  ${ state.co_share_list.table }
+
+  ${ state.co_share_list.add_action('Add shareholder') }
+
+  #### Lawsuits
+  
+  ${ state.co_lawsuit_list.table }
+
+  ${ state.co_lawsuit_list.add_action('Add lawsuit') }
+  
+  ${ main_menu_button }
+---
+event: view_lawsuit
+question: |
+  Information about lawsuit
+  ${ state.lawsuit.docket_number } in
+  ${ state.lawsuit.court }.
+subquestion: |
+  #### Documents
+  
+  ${ state.lawsuit_document_list.table }
+
+  ${ state.lawsuit_document_list.add_action('Add document') }
+
+  ${ cancel_subtask_button }
+---
+question: |
+  What is the company's name?
+fields:
+  - Name: state.company.name.text
+---
+question: |
+  What is the new company's name?
+fields:
+  - Name: state.new_company.name.text
+---
+question: |
+  What is the shareholder's name and SSN?
+fields:
+  - First Name: state.co_share_list[i].shareholder.name.first
+  - Last Name: state.co_share_list[i].shareholder.name.last
+  - SSN: state.co_share_list[i].shareholder.ssn
+validation code: |
+  # Immediately after setting the SSN, we see if the shareholder already
+  # exists in the database, and if so, we use the existing object.
+  state.co_share_list[i].shareholder.db_save()
+---
+question: |
+  What is ${ state.co_share_list[i].shareholder.possessive('address') }?
+fields:
+  - Address: state.co_share_list[i].shareholder.address.address
+    address autocomplete: True
+  - City: state.co_share_list[i].shareholder.address.city
+  - State: state.co_share_list[i].shareholder.address.state
+    code: |
+      states_list()
+  - Zip: state.co_share_list[i].shareholder.address.zip
+    required: False
+---
+question: |
+  How many shares does ${ state.co_share_list[i].shareholder } own?
+fields:
+  - Number of shares: state.co_share_list[i].shareholder.shares
+    datatype: integer
+---
+question: |
+  When did ${ state.co_share_list[i].shareholder } become a shareholder?
+fields:
+  - Start date: state.co_share_list[i].shareholder.start_date
+    datatype: date
+  - "Still a shareholder?": state.co_share_list[i].shareholder.active
+    datatype: yesnoradio
+    default: True
+  - Last day as shareholder: state.co_share_list[i].shareholder.end_date
+    datatype: date
+    hide if: state.co_share_list[i].shareholder.active
+# It is important to delete the end_date attribute if the shareholder is active.
+# The "active" attribute is not stored in the SQL database; it is inferred from
+# whether the end_date is null.  To make sure that the end_date becomes null in
+# the SQL database after having been non-null, we need to make sure that the Python
+# attribute is non-existent if the user says the shareholder is active.
+validation code: |
+  if state.co_share_list[i].shareholder.active:
+    state.co_share_list[i].shareholder.delattr('end_date')
+---
+table: state.co_share_list.table
+rows: state.co_share_list
+columns:
+  - Name: row_item.shareholder
+edit:
+  - shareholder.name.first
+  - shareholder.address.address
+  - shareholder.shares
+  - shareholder.start_date
+show if empty: |
+  No shareholders are known.
+---
+code: |
+  state.co_share_list[i].shareholder.name.first
+  state.co_share_list[i].shareholder.address.address
+  state.co_share_list[i].shareholder.shares
+  state.co_share_list[i].shareholder.start_date
+  state.co_share_list[i].complete = True
+---
+question: |
+  Tell me about the lawsuit.
+fields:
+  - Court: state.co_lawsuit_list[i].lawsuit.court
+  - Docket number: state.co_lawsuit_list[i].lawsuit.docket_number
+  - Date filed: state.co_lawsuit_list[i].lawsuit.filing_date
+    datatype: date
+validation code: |
+  # Immediately after setting the court and docket number, we see if the
+  # lawsuit already exists in the database, and if so, we use the existing object.
+  state.co_lawsuit_list[i].lawsuit.db_save()
+---
+question: |
+  Who is the plaintiff in lawsuit
+  ${ state.co_lawsuit_list[i].lawsuit.docket_number }?
+fields:
+  - First name: state.co_lawsuit_list[i].lawsuit.plaintiff.name.first
+  - Last name: state.co_lawsuit_list[i].lawsuit.plaintiff.name.last
+---
+code: |
+  state.co_lawsuit_list[i].lawsuit.court
+  state.co_lawsuit_list[i].lawsuit.docket_number
+  state.co_lawsuit_list[i].lawsuit.filing_date
+  state.co_lawsuit_list[i].lawsuit.plaintiff.name.first
+  state.co_lawsuit_list[i].lawsuit.plaintiff.name.last
+  state.co_lawsuit_list[i].complete = True
+---
+table: state.co_lawsuit_list.table
+rows: state.co_lawsuit_list
+columns:
+  - Docket number: |
+      action_button_html(url_action('lawsuit_subtask', lawsuit_id=row_item.lawsuit.id), label=row_item.lawsuit.docket_number, color='link')
+  - Court: row_item.lawsuit.court
+edit:
+  - lawsuit.court
+  - lawsuit.plaintiff.name.first
+show if empty: |
+  No lawsuits yet.
+---
+question: |
+  Tell me about the ${ ordinal(i) } document related to
+  the lawsuit with docket number
+  ${ state.lawsuit_document_list[i].lawsuit.docket_number }
+  in
+  ${ state.lawsuit_document_list[i].lawsuit.court }.
+fields:
+  - Document name: state.lawsuit_document_list[i].document.name.text
+  - Date: state.lawsuit_document_list[i].document.date
+    datatype: date
+---
+question: |
+  Please upload the document
+  ${ state.lawsuit_document_list[i].document }
+  filed in the lawsuit with docket number
+  ${ state.lawsuit_document_list[i].lawsuit.docket_number }
+  in
+  ${ state.lawsuit_document_list[i].lawsuit.court }.
+fields:
+  - File: state.lawsuit_document_list[i].document.upload
+    datatype: file
+---
+code: |
+  state.lawsuit_document_list[i].document.name.text
+  state.lawsuit_document_list[i].document.date
+  # It is important to make the uploaded file "persistent," or else it would be deleted when
+  # the interview session is deleted.
+  state.lawsuit_document_list[i].document.upload.set_attributes(persistent=True)
+  state.lawsuit_document_list[i].complete = True
+---
+table: state.lawsuit_document_list.table
+rows: state.lawsuit_document_list
+columns:
+  - Name: |
+      action_button_html(str(row_item.document.upload.url_for()),
+                         label=str(row_item.document.name.text),
+                         color='link')
+  - Date: row_item.document.date
+edit:
+  - document.name.text
+show if empty: |
+  No lawsuits yet.

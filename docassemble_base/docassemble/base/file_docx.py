@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 import re
 import os
 from copy import deepcopy
-from six import string_types, text_type, PY2
 from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
-from docx.shared import Mm, Inches, Pt
+from docx.shared import Mm, Inches, Pt, Cm, Twips
 import docx.opc.constants
 from docxcompose.composer import Composer # For fixing up images, etc when including docx files within templates
 from docx.oxml.section import CT_SectPr # For figuring out if an element is a section or not
@@ -16,7 +14,11 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 from collections import deque
 import PyPDF2
 import codecs
-from io import open
+import time
+import stat
+import mimetypes
+import tempfile
+from docassemble.base.error import DAError
 
 NoneType = type(None)
 
@@ -40,6 +42,10 @@ def image_for_docx(fileref, question, tpl, width=None):
                 the_width = Pt(amount)
             elif units in ['mm', 'millimeter', 'millimeters']:
                 the_width = Mm(amount)
+            elif units in ['cm', 'centimeter', 'centimeters']:
+                the_width = Cm(amount)
+            elif units in ['twp', 'twip', 'twips']:
+                the_width = Twips(amount)
             else:
                 the_width = Pt(amount)
         else:
@@ -51,30 +57,35 @@ def image_for_docx(fileref, question, tpl, width=None):
 def transform_for_docx(text, question, tpl, width=None):
     if type(text) in (int, float, bool, NoneType):
         return text
-    text = text_type(text)
-    m = re.search(r'\[FILE ([^,\]]+), *([0-9\.]) *([A-Za-z]+) *\]', text)
-    if m:
-        amount = m.group(2)
-        units = m.group(3).lower()
-        if units in ['in', 'inches', 'inch']:
-            the_width = Inches(amount)
-        elif units in ['pt', 'pts', 'point', 'points']:
-            the_width = Pt(amount)
-        elif units in ['mm', 'millimeter', 'millimeters']:
-            the_width = Mm(amount)
-        else:
-            the_width = Pt(amount)
-        file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
-        if 'fullpath' not in file_info:
-            return '[FILE NOT FOUND]'
-        return InlineImage(tpl, file_info['fullpath'], the_width)
-    m = re.search(r'\[FILE ([^,\]]+)\]', text)
-    if m:
-        file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
-        if 'fullpath' not in file_info:
-            return '[FILE NOT FOUND]'
-        return InlineImage(tpl, file_info['fullpath'], Inches(2))
-    return docassemble.base.filter.docx_template_filter(text, question=question)
+    text = str(text)
+    # m = re.search(r'\[FILE ([^,\]]+), *([0-9\.]) *([A-Za-z]+) *\]', text)
+    # if m:
+    #     amount = m.group(2)
+    #     units = m.group(3).lower()
+    #     if units in ['in', 'inches', 'inch']:
+    #         the_width = Inches(amount)
+    #     elif units in ['pt', 'pts', 'point', 'points']:
+    #         the_width = Pt(amount)
+    #     elif units in ['mm', 'millimeter', 'millimeters']:
+    #         the_width = Mm(amount)
+    #     elif units in ['cm', 'centimeter', 'centimeters']:
+    #         the_width = Cm(amount)
+    #     elif units in ['twp', 'twip', 'twips']:
+    #         the_width = Twips(amount)
+    #     else:
+    #         the_width = Pt(amount)
+    #     file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
+    #     if 'fullpath' not in file_info:
+    #         return '[FILE NOT FOUND]'
+    #     return InlineImage(tpl, file_info['fullpath'], the_width)
+    # m = re.search(r'\[FILE ([^,\]]+)\]', text)
+    # if m:
+    #     file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
+    #     if 'fullpath' not in file_info:
+    #         return '[FILE NOT FOUND]'
+    #     return InlineImage(tpl, file_info['fullpath'], Inches(2))
+    #return docassemble.base.filter.docx_template_filter(text, question=question)
+    return text
 
 def create_hyperlink(url, anchor_text, tpl):
     return InlineHyperlink(tpl, url, anchor_text)
@@ -87,8 +98,6 @@ class InlineHyperlink(object):
     def _insert_link(self):
         ref = self.tpl.docx._part.relate_to(self.url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
         return '</w:t></w:r><w:hyperlink r:id="%s"><w:r><w:rPr><w:rStyle w:val="InternetLink"/></w:rPr><w:t>%s</w:t></w:r></w:hyperlink><w:r><w:rPr></w:rPr><w:t xml:space="preserve">' % (ref, html_escape(self.anchor_text))
-    def __unicode__(self):
-        return self._insert_link()
     def __str__(self):
         return self._insert_link()
 
@@ -128,6 +137,11 @@ def include_docx_template(template_file, **kwargs):
         template_path = package_template_filename(template_file, package=this_thread.current_package)
     sd = this_thread.misc['docx_template'].new_subdoc()
     sd.subdocx = Document(template_path)
+    if '_inline' in kwargs:
+        single_paragraph = True
+        del kwargs['_inline']
+    else:
+        single_paragraph = False
 
     # We need to keep a copy of the subdocs so we can fix up the master template in the end (in parse.py)
     # Given we're half way through processing the template, we can't fix the master template here
@@ -149,100 +163,9 @@ def include_docx_template(template_file, **kwargs):
     if 'docx_include_count' not in this_thread.misc:
         this_thread.misc['docx_include_count'] = 0
     this_thread.misc['docx_include_count'] += 1
+    if single_paragraph:
+        return re.sub(r'<w:p[^>]*>\s*(.*)</w:p>\s*', r'\1', str(first_paragraph._p.xml), flags=re.DOTALL)
     return sd
-
-def add_to_rt(tpl, rt, parsed):
-    list_tab = False
-    block_tab = False
-    ordered_list = 0
-    while (len(list(parsed)) > 0):
-        html_names =    {
-            'em': False,
-            'code': False,
-            'strong': False,
-            'h1': False,
-            'h2': False,
-            'h3': False,
-            'h4': False,
-            'u': False,
-            'a': False,
-            'strike': False,
-            'ol': False,
-            'ul': False,
-            'li': False,
-            'blockquote': False
-        }
-        href = ''
-        html_out = parsed.popleft()
-        for parent in html_out.parents:
-            for html_key, html_value in html_names.items():
-                if (parent.name ==  html_key):
-                    html_names[html_key] = True
-                    if (html_key == 'a'):
-                        href = parent.get('href')
-        rtf_pretext = ''
-        if (html_names['code']):
-            html_names['em'] = True
-        if (html_names['ol'] or html_names['ul']):
-            if (html_out == '\n'):
-                list_tab = True
-            elif (list_tab == True):
-                if (html_names['ol']):
-                    ordered_list += 1
-                    rt.add('\t' + str(ordered_list) + '. ')
-                else:
-                    rt.add('\t- ')
-                list_tab = False
-        else:
-            list_tab = False
-        if (html_names['blockquote']):
-            if (html_out == '\n'):
-                block_tab = True
-            elif (block_tab == True):
-                rt.add('\t')
-                block_tab = False
-        else:
-            block_tab = False
-        if (html_names['a']):
-            rt.add(rtf_pretext + html_out, italic=html_names['em'],
-                bold=html_names['strong'], underline=True, strike=html_names['strike'],
-                url_id=tpl.build_url_id(href))
-        elif (html_names['h1']):
-            if (html_names['a']):
-                rt.add(rtf_pretext + html_out, italic=html_names['em'],
-                    bold=True, underline=True, strike=html_names['strike'],
-                    url_id=tpl.build_url_id(href), size=60)
-            else:
-                rt.add(rtf_pretext + html_out, italic=html_names['em'],
-                    bold=True, underline=html_names['u'], strike=html_names['strike'], size=60)
-        elif (html_names['h2']):
-            if (html_names['a']):
-                rt.add(rtf_pretext + html_out, italic=html_names['em'],
-                    bold=True, underline=True, strike=html_names['strike'],
-                    url_id=tpl.build_url_id(href), size=40)
-            else:
-                rt.add(rtf_pretext + html_out, italic=html_names['em'],
-                    bold=True, underline=html_names['u'], strike=html_names['strike'], size=40)
-        elif (html_names['h3']):
-            if (html_names['a']):
-                rt.add(rtf_pretext + html_out, italic=html_names['em'],
-                    bold=True, underline=True, strike=html_names['strike'],
-                    url_id=tpl.build_url_id(href), size=30)
-            else:
-                rt.add(rtf_pretext + html_out, italic=html_names['em'],
-                    bold=True, underline=html_names['u'], strike=html_names['strike'], size=30)
-        elif (html_names['h4']):
-            if (html_names['a']):
-                rt.add(rtf_pretext + html_out, italic=html_names['em'],
-                    bold=True, underline=True, strike=html_names['strike'],
-                    url_id=tpl.build_url_id(href), size=20)
-            else:
-                rt.add(rtf_pretext + html_out, italic=html_names['em'],
-                    bold=True, underline=html_names['u'], strike=html_names['strike'], size=20)
-        else:
-            rt.add(rtf_pretext + html_out, italic=html_names['em'],
-                bold=html_names['strong'], underline=html_names['u'], strike=html_names['strike'])
-    return rt
 
 def get_children(descendants, parsed):
     subelement = False
@@ -291,38 +214,38 @@ class SoupParser(object):
         self.style = 'p'
         self.still_new = True
         self.size = None
+        self.charstyle = None
+        self.color = None
         self.tpl = tpl
     def new_paragraph(self):
         if self.still_new:
-            # logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + text_type(self.indentation))
+            # logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + str(self.indentation))
             self.current_paragraph['params']['style'] = self.style
             self.current_paragraph['params']['indentation'] = self.indentation
             return
-        # logmessage("new_paragraph where style is " + self.style + " and indentation is " + text_type(self.indentation))
+        # logmessage("new_paragraph where style is " + self.style + " and indentation is " + str(self.indentation))
         self.current_paragraph = dict(params=dict(style=self.style, indentation=self.indentation), runs=[RichText('')])
         self.paragraphs.append(self.current_paragraph)
         self.run = self.current_paragraph['runs'][-1]
         self.still_new = True
     def __str__(self):
-        return self.__unicode__().encode('utf-8') if PY2 else self.__unicode__()
-    def __unicode__(self):
         output = ''
         list_number = 1
         for para in self.paragraphs:
-            # logmessage("Got a paragraph where style is " + para['params']['style'] + " and indentation is " + text_type(para['params']['indentation']))
+            # logmessage("Got a paragraph where style is " + para['params']['style'] + " and indentation is " + str(para['params']['indentation']))
             output += '<w:p><w:pPr><w:pStyle w:val="Normal"/>'
             if para['params']['style'] in ('ul', 'ol', 'blockquote'):
-                output += '<w:ind w:left="' + text_type(36*para['params']['indentation']) + '" w:right="0" w:hanging="0"/>'
+                output += '<w:ind w:left="' + str(36*para['params']['indentation']) + '" w:right="0" w:hanging="0"/>'
             output += '<w:rPr></w:rPr></w:pPr>'
             if para['params']['style'] == 'ul':
-                output += text_type(RichText("•\t"))
+                output += str(RichText("•\t"))
             if para['params']['style'] == 'ol':
-                output += text_type(RichText(text_type(list_number) + ".\t"))
+                output += str(RichText(str(list_number) + ".\t"))
                 list_number += 1
             else:
                 list_number = 1
             for run in para['runs']:
-                output += text_type(run)
+                output += str(run)
             output += '</w:p>'
         return output
     def start_link(self, url):
@@ -340,10 +263,10 @@ class SoupParser(object):
     def traverse(self, elem):
         for part in elem.contents:
             if isinstance(part, NavigableString):
-                self.run.add(text_type(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
                 self.still_new = False
             elif isinstance(part, Tag):
-                # logmessage("Part name is " + text_type(part.name))
+                # logmessage("Part name is " + str(part.name))
                 if part.name == 'p':
                     self.new_paragraph()
                     self.traverse(part)
@@ -401,14 +324,149 @@ class SoupParser(object):
                     self.size = oldsize
                 elif part.name == 'a':
                     self.start_link(part['href'])
-                    self.underline = True
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = self.tpl.da_hyperlink_style
+                    else:
+                        self.underline = True
+                        self.color = '#0000ff'
                     self.traverse(part)
-                    self.underline = False
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = None
+                    else:
+                        self.underline = False
+                        self.color = None
                     self.end_link()
+                elif part.name == 'br':
+                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
+                    self.still_new = False
             else:
                 logmessage("Encountered a " + part.__class__.__name__)
 
-def markdown_to_docx(text, tpl):
+class InlineSoupParser(object):
+    def __init__(self, tpl):
+        self.runs = [RichText('')]
+        self.run = self.runs[-1]
+        self.bold = False
+        self.italic = False
+        self.underline = False
+        self.indentation = 0
+        self.style = 'p'
+        self.strike = False
+        self.size = None
+        self.charstyle = None
+        self.color = None
+        self.tpl = tpl
+        self.at_start = True
+        self.list_number = 1
+    def new_paragraph(self):
+        if self.at_start:
+            self.at_start = False
+        else:
+            self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
+        if self.indentation:
+            self.run.add("\t" * self.indentation)
+        if self.style == 'ul':
+            self.run.add("•\t")
+        if self.style == 'ol':
+            self.run.add(str(self.list_number) + ".\t")
+            self.list_number += 1
+        else:
+            self.list_number = 1
+    def __str__(self):
+        output = ''
+        for run in self.runs:
+            output += str(run)
+        return output
+    def start_link(self, url):
+        ref = self.tpl.docx._part.relate_to(url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
+        self.runs.append('<w:hyperlink r:id="%s">' % (ref, ))
+        self.new_run()
+    def end_link(self):
+        self.runs.append('</w:hyperlink>')
+        self.new_run()
+    def new_run(self):
+        self.runs.append(RichText(''))
+        self.run = self.runs[-1]
+    def traverse(self, elem):
+        for part in elem.contents:
+            if isinstance(part, NavigableString):
+                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
+            elif isinstance(part, Tag):
+                if part.name in ('p', 'blockquote'):
+                    self.new_paragraph()
+                    self.traverse(part)
+                elif part.name == 'li':
+                    self.new_paragraph()
+                    self.traverse(part)
+                elif part.name == 'ul':
+                    oldstyle = self.style
+                    self.style = 'ul'
+                    self.indentation += 1
+                    self.traverse(part)
+                    self.indentation -= 1
+                    self.style = oldstyle
+                elif part.name == 'ol':
+                    oldstyle = self.style
+                    self.style = 'ol'
+                    self.indentation += 1
+                    self.traverse(part)
+                    self.indentation -= 1
+                    self.style = oldstyle
+                elif part.name == 'strong':
+                    self.bold = True
+                    self.traverse(part)
+                    self.bold = False
+                elif part.name == 'em':
+                    self.italic = True
+                    self.traverse(part)
+                    self.italic = False
+                elif part.name == 'strike':
+                    self.strike = True
+                    self.traverse(part)
+                    self.strike = False
+                elif part.name == 'u':
+                    self.underline = True
+                    self.traverse(part)
+                    self.underline = False
+                elif re.match(r'h[1-6]', part.name):
+                    oldsize = self.size
+                    self.size = 60 - ((int(part.name[1]) - 1) * 10)
+                    self.bold = True
+                    self.traverse(part)
+                    self.bold = False
+                    self.size = oldsize
+                elif part.name == 'a':
+                    self.start_link(part['href'])
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = self.tpl.da_hyperlink_style
+                    else:
+                        self.underline = True
+                        self.color = '#0000ff'
+                    self.traverse(part)
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = None
+                    else:
+                        self.underline = False
+                        self.color = None
+                    self.end_link()
+                elif part.name == 'br':
+                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
+            else:
+                logmessage("Encountered a " + part.__class__.__name__)
+
+def inline_markdown_to_docx(text, question, tpl):
+    source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
+    source_code = re.sub("\n", ' ', source_code)
+    source_code = re.sub(">\s+<", '><', source_code)
+    soup = BeautifulSoup('<html>' + source_code + '</html>', 'html.parser')
+    parser = InlineSoupParser(tpl)
+    for elem in soup.find_all(recursive=False):
+        parser.traverse(elem)
+    output = str(parser)
+    # logmessage(output)
+    return docassemble.base.filter.docx_template_filter(output, question=question)
+
+def markdown_to_docx(text, question, tpl):
     if get_config('new markdown to docx', False):
         source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
         source_code = re.sub("\n", ' ', source_code)
@@ -417,20 +475,11 @@ def markdown_to_docx(text, tpl):
         parser = SoupParser(tpl)
         for elem in soup.find_all(recursive=False):
             parser.traverse(elem)
-        output = text_type(parser)
+        output = str(parser)
         # logmessage(output)
-        return output
+        return docassemble.base.filter.docx_template_filter(output, question=question)
     else:
-        source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
-        source_code = re.sub(r'(?<!\>)\n', ' ', source_code)
-        #source_code = re.sub("\n", ' ', source_code)
-        #source_code = re.sub(">\s+<", '><', source_code)
-        rt = RichText('')
-        soup = BeautifulSoup(source_code, 'lxml')
-        html_parsed = deque()
-        html_parsed = html_linear_parse(soup)
-        rt = add_to_rt(tpl, rt, html_parsed)
-        return rt
+        return inline_markdown_to_docx(text, question, tpl)
 
 def pdf_pages(file_info, width):
     output = ''
@@ -446,7 +495,7 @@ def pdf_pages(file_info, width):
         except:
             file_info['pages'] = 1
     max_pages = 1 + int(file_info['pages'])
-    formatter = '%0' + text_type(len(text_type(max_pages))) + 'd'
+    formatter = '%0' + str(len(str(max_pages))) + 'd'
     for page in range(1, max_pages):
         page_file = dict()
         test_path = file_info['path'] + 'page-in-progress'
@@ -461,9 +510,37 @@ def pdf_pages(file_info, width):
         if not os.path.isfile(page_file['fullpath']):
             server.fg_make_png_for_pdf_path(file_info['path'] + '.pdf', 'page')
         if os.path.isfile(page_file['fullpath']):
-            output += text_type(image_for_docx(docassemble.base.functions.DALocalFile(page_file['fullpath']), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
+            output += str(image_for_docx(docassemble.base.functions.DALocalFile(page_file['fullpath']), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
         else:
             output += "[Error including page image]"
         output += ' '
     return(output)
 
+def concatenate_files(path_list):
+    import docassemble.base.pandoc
+    import docx
+    new_path_list = list()
+    for path in path_list:
+        mimetype, encoding = mimetypes.guess_type(path)
+        if mimetype in ('application/rtf', 'application/msword', 'application/vnd.oasis.opendocument.text'):
+            new_docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+            if mimetype == 'application/rtf':
+                ext = 'rtf'
+            elif mimetype == 'application/msword':
+                ext = 'doc'
+            elif mimetype == 'application/vnd.oasis.opendocument.text':
+                ext = 'odt'
+            docassemble.base.pandoc.convert_file(path, new_docx_file.name, ext, 'docx')
+            new_path_list.append(new_docx_file.name)
+        elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+            new_path_list.append(path)
+    if len(new_path_list) == 0:
+        raise DAError("concatenate_files: no valid files to concatenate")
+    if len(new_path_list) == 1:
+        return new_path_list[0]
+    composer = Composer(docx.Document(new_path_list[0]))
+    for indexno in range(1, len(new_path_list)):
+        composer.append(docx.Document(new_path_list[indexno]))
+    docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+    composer.save(docx_file.name)
+    return docx_file.name

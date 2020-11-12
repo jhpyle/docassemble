@@ -1,0 +1,11 @@
+{% extends 'flask_user/emails/base_message.txt' %}
+
+{% block message %}
+{{ word('An attempt was made to register an account on %s using your e-mail address.' % (app_name,)) }}.
+
+{{ word('If you initiated this registration, please visit the link below to sign in to your existing account:') }}
+    {{ sign_in_link }}
+
+{{ word('If you did not initiate this registration, you may safely ignore this email.') }}
+
+{% endblock %}

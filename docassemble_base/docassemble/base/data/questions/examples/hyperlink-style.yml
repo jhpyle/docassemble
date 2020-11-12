@@ -1,0 +1,29 @@
+metadata:
+  title: Hyperlink style
+  short: Hyperlink
+  documentation: "https://docassemble.org/docs/documents.html#hyperlink style"
+  example start: 1
+  example end: 2
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  docx template file: resource_guide.docx
+  hyperlink style: CustomStyle
+---
+code: |
+  if legal_issue == 'family':
+    the_link = "the [Family Law Information Portal](https://familylawinfo.com)"
+  else:
+    the_link = "your [local law library](https://lawlibrarydirectory.org), which may be able to help you"
+---
+question: |
+  What is your legal issue?
+field: legal_issue
+choices:
+  - Family law: family
+  - Wills: wills
+  - Admiralty: admiralty
+  
+    

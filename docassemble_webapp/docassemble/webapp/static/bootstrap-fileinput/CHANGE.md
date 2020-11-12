@@ -1,10 +1,148 @@
 Change Log: `bootstrap-fileinput`
 =================================
 
+## version 5.1.3
+
+**Date**: _under development_
+
+- (enh #1612, #1614): Remove unsupported script-inline from template and CSP buffer.
+
+## version 5.1.2
+
+**Date**: 15-Jul-2020
+
+- (enh #1604): Correct upload stats time calculation for sync uploads.
+- (enh #1603): Add Serbian Latin Translations.
+- (enh #1602): Enhance zoom cache sanitization by parsing all inputs.
+- (enh #1595): Enhance styling for drop zone to maintain consistent size during file selections.
+- (bug #1594): Correct `removeThumb` validation for in readFiles `throwError` method.
+- (enh #1593): Correct resumable test upload validation.
+- (enh #1591): Parse arguments as an array via vanilla JS.
+- (enh #1589): Correct msgPlaceholder for de & uz translations.
+- (enh #1588): Enhance duplicate validation for recently uploaded thumbs.
+
+## version 5.1.1
+
+**Date:** 20-Jun-2020
+
+- (enh #1587): Enhance resumable ajax error trapping.
+- (bug #1585): Correct file sorting and zoom cache handling.
+
+## version 5.1.0
+
+**Date:** 11-Jun-2020
+
+- (enh #1584): Revamp Krajee Explorer Themes.
+- (bug #1583): Correct cspBuffer stash html content store.
+- (enh #1582): Set `showConsoleLogs` to `false` as default.
+- (enh #1581): Enhance Sortable Behavior & Styles.
+    - Update to use latest release of Rubaxa Sortable Plugin
+    - Fix errors in sortable init
+    - Update drag handle styles to show correct grab cursor
+- (enh #1580): Validate drop zone title by correctly checking if native input has files.
+- (enh #1578): Enhance progress bar styling.
+- (enh #1577): Use `&hellip;` instead of three dots.
+- (enh #1576): Update French Translations.
+
+## version 5.0.9
+
+**Date:** 02-Jun-2020
+
+- (enh #1574): Enhance filezoom events to fire correctly only once for the source file input.
+    - fixes issue when multiple file input plugins are initialized on the same page
+- (enh #1573): Update French Translations.
+- (enh #1572): Correct image auto orientation based on browser support.
+- (bug #1565, #1571): Implement CSP compliance for HTML markup via templates.
+- (bug #1569): Correctly validate persistent file validation errors and display them.
+- (enh #1568): Correct timeout and resumable validation for async uploads.
+- (enh #1536, #1567): Parse response as string in `_parseError` function.
+- (enh #1525, #1566): Handle `filebeforeload` event abort when returning `false`.
+- (enh #1563): Update Català Translations.
+- (enh #1561): Correct triggering of events for cancelled & paused scenarios.
+- (enh #1557, #1559): Enhance and fix resumable and ajax queues.
+- (enh #1552, #1553): More correct full screen exit.
+- (bug #1551): Correct MIME Type detection for PNG.
+- (enh #1548): Correct `filebatchselected` trigger for single file uploads.
+- (enh #1545, #1546): Enhance file path for folder drag.
+- (enh #1540): Better validation of `required` property.
+- (bug #1518, #1522): Initial preview rendering correction when preview returned by server immediately after upload.
+
+## version 5.0.8
+
+**Date:** 13-Dec-2019
+
+- (enh #1514): Enhancements to duplicate file selection.
+    - New event `fileduplicateerror` will be triggered after every duplicate file detected.
+    - Duplicate error container can be closed by clicking the `close` icon.
+    - New property `fadeDelay` used in fade out / fade in animations of error containers.    
+- (enh #1513): New `filebeforeload` event (only for ajax uploads). Can be used to abort loading of specific files at runtime.
+*Usage:*
+```
+    $('#input').on('filebeforeload', function(event, file, index, reader) {
+        // perform your validations based on the 'file' or other parameters
+        if (file.name === 'UNAPPROVED_FILE.txt') {
+            return false; // will abort the file loading for the selected file
+        }
+    });
+```    
+- (enh #1512): Include parameter to include initial preview files in `getFilesCount` method.
+- (bug #1510): Lock browse button correctly when disable method is called.
+- (bug #1509): Correct zoom slideshow to show only files with zoom enabled via `showZoom`.
+- (bug #1508): Correct file caption after files are uploaded.
+- (enh #1503): Correct Mozilla PDF rendering bug.
+- (bug #1499, #1502): Correct duplicate file check error rendering.
+- (enh #1497): Better validation of progress display when `showPreview` is `false`.
+- (bug #1482): Validate `initialPreviewShowDelete` setting correctly.
+- (bug #1480): Correct preview content setting after validation error.
+ 
+## version 5.0.7
+
+**Date:** 17-Nov-2019
+
+- (enh #1496): Correct isEmpty check for functions.
+- (enh #1485): Update Portugese Brazilian Translations.
+- (enh #1479): Methods updated:
+   - Include `addToStack` method.
+   - Remove `updateStack` method
+   - Rename `clearStack` to `clearFileStack` method
+- (enh #1478): Update Slovak Translations.
+- (enh #1477): Update Czech Translations.
+- (enh #1476): Update Hungarian Translations.
+- (enh #1475): Prevent invalid thumb validation when `showPreview` is `false`.
+- (enh #1474): Hide upload icon for file validation errors.
+- (enh #1471): Improve pt-PT and pt-BR translations.
+- (enh #1468): Update Uzbek Translations.
+- (enh #1467): Update Czekh Translations.
+- (enh #1466): Update Slovak Translations.
+- (bug #1465): Correct content.length parsing issue in preview cache.
+- (enh #1461): Allow two different max file count checks.
+    - `maxFileCount` and `msgFilesTooMany` for files being selected before upload
+    - `maxTotalFileCount` and `msgTotalFilesTooMany` for total files selected and files included in initial preview
+- (enh #1448): New boolean properties `focusCaptionOnBrowse` and `focusCaptionOnClear` which default to `true`.
+  
+## version 5.0.6
+
+**Date:** 11-Sep-2019
+
+- (enh #1464): Correct preview frame float styling issues.
+- (bug #1463): Correct file input unlock after file validation errors (for non-ajax mode).
+- (bug #1460): Correct `filebatchselected` event trigger.
+- (bug #1459): Upload Async does not recognize initialPreview correctly for ajax response immediately sent with uploadUrl.
+- (bug #1457): Correct `removeFromPreviewOnError` validation.
+- (enh #1455): Default preview template to `other` when invalid file type is passed.
+
 ## version 5.0.5
 
-**Date:** _under development_
+**Date:** 23-Aug-2019
 
+- (enh #1450): Update Russian Translations.
+- (enh #1449): Lock file input while files are being read for preview.
+- (enh #1446): New property `showConsoleLogs` to control display of plugin console messages.
+- (enh #1445): Correct invalid thumb frame log errors.
+- (enh #1442): Implement `.npmignore` to clean unwanted files for NPM package.
+- (enh #1438): Activating Open Collective.
+- (enh #1436): Improve Portuguese translations.
+- (enh #1435): Handle special characters in file thumb id attribute.
 - (enh #1429): Enhance thumbnail preview identifiers.
 
 ## version 5.0.4

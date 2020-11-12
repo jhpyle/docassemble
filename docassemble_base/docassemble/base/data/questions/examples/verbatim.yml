@@ -1,0 +1,23 @@
+metadata:
+  title: Verbatim
+  documentation: "https://docassemble.org/docs/functions.html#verbatim"
+  example start: 1
+  example end: 2
+---
+question: |
+  Provide some text.
+subquestion: |
+  Try inserting Markdown or HTML characters.
+fields:
+  no label: user_input
+  input type: area
+---
+mandatory: True
+question: |
+  This content should be devoid
+  of formatting.
+subquestion: |
+  ${ verbatim(user_input) }
+attachment:
+  content: |
+    ${ verbatim(user_input) }

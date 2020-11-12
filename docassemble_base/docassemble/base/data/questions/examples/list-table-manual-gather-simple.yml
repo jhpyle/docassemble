@@ -1,0 +1,36 @@
+metadata:
+  title: Manual list
+  short title: Manual
+  documentation: "https://docassemble.org/docs/groups.html#editing"
+  example start: 1
+  example end: 2
+---
+objects:
+  - person: DAList
+---
+mandatory: True
+code: |
+  person[0]
+  person[1]
+  person.gathered = True
+---
+question: |
+  Who is the ${ ordinal(i) } person?
+fields:
+  - Name: person[i]
+---
+mandatory: True
+question: |
+  All done
+subquestion: |
+  The people are ${ person }.
+  
+  ${ person.table }
+  
+  ${ person.add_action() }
+---
+table: person.table
+rows: person
+columns:
+  - Name: row_item
+edit: True

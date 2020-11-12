@@ -1,0 +1,17 @@
+/var/log/nginx/*.log {
+	missingok
+	rotate 7
+	notifempty
+	create 640 root adm
+	sharedscripts
+	postrotate
+                if /etc/init.d/nginx status > /dev/null ; then \
+                    /etc/init.d/nginx reload > /dev/null; \
+                fi;
+	endscript
+	prerotate
+		if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+			run-parts /etc/logrotate.d/httpd-prerotate; \
+		fi; \
+	endscript
+}

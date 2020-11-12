@@ -1,5 +1,4 @@
 import re
-from six import string_types, text_type
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
@@ -14,15 +13,17 @@ class DAError(Exception):
         self.value = value
         self.error_code = code
     def __str__(self):
-        return text_type(self.value)
+        return str(self.value)
 
 class DAValidationError(Exception):
     """This is an Exception object that is used when raising an exception inside input validation code."""
-    pass
+    def __init__(self, *pargs, field=None):
+        self.field = field
+        return super().__init__(*pargs)
 
 class CodeExecute(Exception):
     def __init__(self, compute, question):
-        if type(compute) is list:
+        if isinstance(compute, list):
             self.compute = "\n".join(compute)
         else:
             self.compute = compute
@@ -35,7 +36,7 @@ class LazyNameError(NameError):
     pass
 
 def invalid_variable_name(varname):
-    if not isinstance(varname, string_types):
+    if not isinstance(varname, str):
         return True
     if re.search(r'[\n\r\(\)\{\}\*\^\#]', varname):
         return True
@@ -54,34 +55,29 @@ class ForcedNameError(NameError):
         for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
             if var_name in the_user_dict:
                 the_context[var_name] = the_user_dict[var_name]
-        if type(the_args[0]) is dict:
-            if 'action' in the_args[0] and (len(the_args[0]) == 1 or 'arguments' in the_args[0]):
-                self.name = the_args[0]['action']
-                self.arguments = the_args[0].get('arguments', dict())
-                self.context = the_context
+        if isinstance(the_args[0], str):
+            first_is_plain = True
         else:
-            self.name = the_args[0]
-            self.arguments = None
-            self.context = the_context
-        if kwargs.get('gathering', False):
-            self.next_action = None
-            return
+            first_is_plain = False
         self.next_action = list()
         while len(the_args):
             arg = the_args.pop(0)
-            if type(arg) is dict:
+            if isinstance(arg, dict):
                 if (len(arg.keys()) == 2 and 'action' in arg and 'arguments' in arg) or (len(arg.keys()) == 1 and 'action' in arg):
+                    arg['context'] = dict()
                     self.set_action(arg)
-                elif len(arg) == 1 and ('undefine' in arg or 'recompute' in arg or 'set' in arg or 'follow up' in arg):
+                elif len(arg) == 1 and ('undefine' in arg or 'invalidate' in arg or 'recompute' in arg or 'set' in arg or 'follow up' in arg):
                     if 'set' in arg:
-                        if type(arg['set']) is not list:
+                        if isinstance(arg['set'], dict):
+                            arg['set'] = [arg['set']]
+                        if not isinstance(arg['set'], list):
                             raise DAError("force_ask: the set statement must refer to a list.")
                         clean_list = []
                         for the_dict in arg['set']:
-                            if type(the_dict) is not dict:
+                            if not isinstance(the_dict, dict):
                                 raise DAError("force_ask: a set command must refer to a list of dicts.")
                             for the_var, the_val in the_dict.items():
-                                if not isinstance(the_var, string_types):
+                                if not isinstance(the_var, str):
                                     raise DAError("force_ask: a set command must refer to a list of dicts with keys as variable names.  ")
                                 the_var_stripped = the_var.strip()
                             if invalid_variable_name(the_var_stripped):
@@ -89,35 +85,46 @@ class ForcedNameError(NameError):
                             clean_list.append([the_var_stripped, the_val])
                         self.set_action(dict(action='_da_set', arguments=dict(variables=clean_list), context=the_context))
                     if 'follow up' in arg:
-                        if type(arg['follow up']) is not list:
+                        if isinstance(arg['follow up'], str):
+                            arg[command] = [arg['follow up']]
+                        if not isinstance(arg['follow up'], list):
                             raise DAError("force_ask: the follow up statement must refer to a list.")
                         for var in arg['follow up']:
-                            if not isinstance(var, string_types):
+                            if not isinstance(var, str):
                                 raise DAError("force_ask: invalid variable name " + repr(var) + " in follow up.")
                             var_saveas = var.strip()
                             if invalid_variable_name(var_saveas):
-                                raise DAError("force_ask: missing or invalid variable name " + repr(var_saveas) + " .  " + repr(data))
+                                raise DAError("force_ask: missing or invalid variable name " + repr(var_saveas) + ".")
                             self.set_action(dict(action=var, arguments=dict(), context=the_context))
-                    for command in ('undefine', 'recompute'):
+                    for command in ('undefine', 'invalidate', 'recompute'):
                         if command not in arg:
                             continue
-                        if type(arg[command]) is not list:
-                            raise DAError("force_ask: the " + command + " statement must refer to a list.  " + repr(data))
+                        if isinstance(arg[command], str):
+                            arg[command] = [arg[command]]
+                        if not isinstance(arg[command], list):
+                            raise DAError("force_ask: the " + command + " statement must refer to a list.  ")
                         clean_list = []
                         for undef_var in arg[command]:
-                            if not isinstance(undef_var, string_types):
-                                raise DAError("force_ask: invalid variable name " + repr(undef_var) + " in " + command + ".  " + repr(data))
+                            if not isinstance(undef_var, str):
+                                raise DAError("force_ask: invalid variable name " + repr(undef_var) + " in " + command + ".")
                             undef_saveas = undef_var.strip()
                             if invalid_variable_name(undef_saveas):
-                                raise DAError("force_ask: missing or invalid variable name " + repr(undef_saveas) + " .  " + repr(data))
+                                raise DAError("force_ask: missing or invalid variable name " + repr(undef_saveas) + ".")
                             clean_list.append(undef_saveas)
-                        self.next_action.append(dict(action='_da_undefine', arguments=dict(variables=clean_list), context=the_context))
+                        if command == 'invalidate':
+                            self.set_action(dict(action='_da_invalidate', arguments=dict(variables=clean_list), context=the_context))
+                        else:
+                            self.set_action(dict(action='_da_undefine', arguments=dict(variables=clean_list), context=the_context))
                         if command == 'recompute':
                             self.set_action(dict(action='_da_compute', arguments=dict(variables=clean_list), context=the_context))
                 else:
                     raise DAError("Dictionaries passed to force_ask must have keys of 'action' and 'argument' only.")
             else:
                 self.set_action(dict(action=arg, arguments=dict(), context=the_context))
+        if kwargs.get('gathering', False):
+            self.next_action = None
+        if first_is_plain:
+            self.arguments = None
     def set_action(self, data):
         if not hasattr(self, 'name'):
             if isinstance(data, dict) and 'action' in data and (len(data) == 1 or 'arguments' in data):
@@ -144,7 +151,7 @@ class MandatoryQuestion(Exception):
     def __init__(self):
         self.value = 'Mandatory Question'
     def __str__(self):
-        return text_type(self.value)
+        return str(self.value)
 
 class QuestionError(Exception):
     def __init__(self, *pargs, **kwargs):
@@ -199,6 +206,8 @@ class BackgroundResponseError(Exception):
             self.backgroundresponse = pargs[0]
         else:
             self.backgroundresponse = kwargs
+        if 'sleep' in kwargs:
+            self.sleep = kwargs['sleep'];
     def __str__(self):
         if hasattr(self, 'backgroundresponse'):
             return str(self.backgroundresponse)
@@ -234,6 +243,10 @@ class ResponseError(Exception):
             self.url = kwargs['url'];
         elif 'null' in kwargs:
             self.nullresponse = kwargs['null'];
+        if 'response_code' in kwargs and kwargs['response_code'] is not None:
+            self.response_code = kwargs['response_code']
+        if 'sleep' in kwargs:
+            self.sleep = kwargs['sleep'];
         if 'all_variables' in kwargs:
             self.all_variables = kwargs['all_variables'];
             if 'include_internal' in kwargs:
@@ -254,5 +267,11 @@ class CommandError(Exception):
         else:
             self.return_type = "exit"
         self.url = kwargs.get('url', '');
+        self.sleep = kwargs.get('sleep', None)
     def __str__(self):
         return str(self.return_type)
+
+class DAWebError(Exception):
+    def __init__(self, **kwargs):
+        for key, val in kwargs.items():
+            setattr(self, key, val)

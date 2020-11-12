@@ -238,7 +238,7 @@ function receiveMessage(event) {
 }
 
 function showIframe() {
-    $("#server").attr('src', daFullServer + "/officeaddin?nm=1");
+    $("#server").attr('src', daFullServer + "/officeaddin?nm=1&project=" + currentProject);
     $("#iframeDiv").show();
 }
 

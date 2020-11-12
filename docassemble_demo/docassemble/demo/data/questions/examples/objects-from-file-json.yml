@@ -1,0 +1,19 @@
+metadata:
+  title: Objects from JSON
+  short title: Import
+  documentation: "https://docassemble.org/docs/functions.html#objects_from_file"
+  example start: 1
+  example end: 2
+---
+code: |
+  people = objects_from_file("contacts.json")
+---
+mandatory: true
+question: |
+  How to contact us
+subquestion: |
+  % for person in people:
+  You can e-mail ${ person } at
+  ${ person.email }.
+  
+  % endfor
