@@ -3066,7 +3066,7 @@ def url_ask(data):
             raise DAError("url_ask cannot be used with a generic object or a variable iterator")
     return url_action('_da_force_ask', variables=variables)
 
-def action_button_html(url, icon=None, color='success', size='sm', block=False, label='Edit', classname=None, new_window=True, id_tag=None):
+def action_button_html(url, icon=None, color='success', size='sm', block=False, label='Edit', classname=None, new_window=None, id_tag=None):
     """Returns HTML for a button that visits a particular URL."""
     if not isinstance(label, str):
         label = 'Edit'
@@ -3094,11 +3094,13 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
     else:
         icon = ''
     if new_window is True:
-        target = ''
+        target = 'target="_blank"'
     elif new_window is False:
         target = 'target="_self" '
-    else:
+    elif new_window:
         target = 'target="' + str(new_window) + '" '
+    else:
+        target = ''
     if id_tag is None:
         id_tag = ''
     else:

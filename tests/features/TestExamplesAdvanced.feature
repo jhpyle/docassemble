@@ -61,7 +61,7 @@ Feature: Example interviews
     Then I should see the phrase "Enter an address"
     And I set "Address" to "211 S 11th St"
     And I set "City" to "Philadelphia"
-    And I set "State" to "PA"
+    And I select "Pennsylvania" as the "State"
     And I click the button "Continue"
     Then I should see the phrase "Philadelphia, PA 19107"
 

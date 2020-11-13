@@ -1190,16 +1190,29 @@ def emoji_insert(text, status=None, images=None):
         return(":" + str(text) + ":")
 
 def link_rewriter(m, status):
-    if re.search(r'^[/\?]', m.group(1)) or ('jsembed' in docassemble.base.functions.this_thread.misc and 'url_root' in docassemble.base.functions.this_thread.misc and m.group(1).startswith(docassemble.base.functions.this_thread.current_info['url_root'])):
-        target = ''
+    the_path = None
+    if m.group(1).startswith('/'):
+        the_path = m.group(1)
+    elif 'url_root' in docassemble.base.functions.this_thread.current_info and m.group(1).startswith(docassemble.base.functions.this_thread.current_info['url_root']):
+        the_path = '/' + m.group(1)[len(docassemble.base.functions.this_thread.current_info['url_root']):]
+    if the_path:
+        if re.search(r'^/(packagestatic|storedfile|tempfile|uploadedfile|uploadedpage|playgroundstatic|playgrounddownload)', the_path):
+            target = 'target="_blank" '
+        else:
+            target = ''
     else:
         target = 'target="_blank" '
-    action_search = re.search(r'\?action=([^\&]+)', m.group(1))
-    if action_search:
-        action_data = 'data-embaction="' + action_search.group(1) + '" '
-        target = ''
+    if the_path or m.group(1).startswith('?'):
+        action_search = re.search(r'[\?\&]action=([^\&]+)', m.group(1))
+        if action_search:
+            action_data = 'data-embaction="' + action_search.group(1) + '" '
+            target = ''
+        else:
+            action_data = ''
     else:
         action_data = ''
+    if m.group(1).startswith('?'):
+        target = ''
     js_search = re.search(r'^javascript:(.*)', m.group(1))
     if js_search:
         js_data = 'data-js="' + js_search.group(1) + '" '

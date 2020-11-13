@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.99] - 2020-11-12
+### Changed
+- Different logic for whether hyperlinks open in the same tab or a
+  different tab.
+
 ## [1.1.98] - 2020-11-12
 ### Fixed
 - Bug in `bates_number()`.

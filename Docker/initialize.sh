@@ -53,11 +53,11 @@ fi
 
 PANDOC_VERSION=`pandoc --version | head -n1`
 
-if [ "${PANDOC_VERSION}" != "pandoc 2.7.3" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
+if [ "${PANDOC_VERSION}" != "pandoc 2.11.1" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
    cd /tmp \
-   && wget -q https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb \
-   && dpkg -i pandoc-2.7.3-1-amd64.deb \
-   && rm pandoc-2.7.3-1-amd64.deb
+   && wget -q https://github.com/jgm/pandoc/releases/download/2.11.1.1/pandoc-2.11.1.1-1-amd64.deb \
+   && dpkg -i pandoc-2.11.1.1-1-amd64.deb \
+   && rm pandoc-2.11.1.1-1-amd64.deb
 fi
 
 echo "2" >&2
