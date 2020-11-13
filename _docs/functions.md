@@ -4045,7 +4045,7 @@ dictionary are:
   to be decrypted.
 
 The second item in the tuple is a code that is used for pagination.
-Since the list of users may be very long, `interview_list()` uses
+Since the list of sessions may be very long, `interview_list()` uses
 pagination.  When you first call `interview_list()`, up to 100 records
 are returned in the first item in the tuple (configurable using the
 [`pagination limit`] Configuration directive).  If additional records
