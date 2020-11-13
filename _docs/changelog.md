@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.100](https://github.com/jhpyle/docassemble/releases/tag/v1.1.100) - 2020-11-13
+
+### Fixed
+- Translation of phrases on registration page.
+
 ## [1.1.99](https://github.com/jhpyle/docassemble/releases/tag/v1.1.99) - 2020-11-12
 
 ### Changed
