@@ -293,6 +293,8 @@ def custom_register():
             safe_next = urlunparse(url_parts)
         return add_secret_to(redirect(safe_next))
 
+    setup_translation()
+
     # Initialize form
     login_form = user_manager.login_form()                      # for login_or_register.html
     register_form = user_manager.register_form(request.form)    # for register.html
@@ -716,18 +718,18 @@ def password_validator(form, field):
         if 'error message' in rules:
             error_message = str(rules['error message'])
         else:
-            error_message = 'Password must be at least ' + docassemble.base.functions.quantity_noun(rules.get('length', 6), 'character') + ' long'
+            error_message = 'Password must be at least ' + docassemble.base.functions.quantity_noun(rules.get('length', 6), 'character', language='en') + ' long'
             standards = list()
             if rules.get('lowercase', 1) > 0:
-                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('lowercase', 1), 'lowercase letter'))
+                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('lowercase', 1), 'lowercase letter', language='en'))
             if rules.get('uppercase', 1) > 0:
-                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('uppercase', 1), 'uppercase letter'))
+                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('uppercase', 1), 'uppercase letter', language='en'))
             if rules.get('digits', 1) > 0:
-                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('digits', 1), 'number'))
+                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('digits', 1), 'number', language='en'))
             if rules.get('punctuation', 0) > 0:
-                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('punctuation', 1), 'punctuation character'))
+                standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('punctuation', 1), 'punctuation character', language='en'))
             if len(standards):
-                error_message += ' with ' + docassemble.base.functions.comma_and_list(standards)
+                error_message += ' with ' + docassemble.base.functions.comma_and_list_en(standards)
             error_message += '.'
         raise wtforms.ValidationError(word(error_message))
 
