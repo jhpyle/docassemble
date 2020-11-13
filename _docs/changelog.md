@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.99](https://github.com/jhpyle/docassemble/releases/tag/v1.1.99) - 2020-11-12
+
+### Changed
+- Different logic for whether hyperlinks open in the same tab or a
+  different tab.
+
 ## [1.1.98](https://github.com/jhpyle/docassemble/releases/tag/v1.1.98) - 2020-11-12
 
 ### Fixed

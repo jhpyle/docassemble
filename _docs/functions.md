@@ -1538,9 +1538,10 @@ It accepts the following optional keyword arguments:
 * `classname` - set this to one or more class names (separated by a
   space) if you want to add additional [CSS] classes to the button.
 * `new_window` - set this to `False` if you don't want the button to
-  open a new tab.  The default value is `True`, which means external
-  links will open in a new tab.  If you use a value other than `True`
-  or `False`, it will be used as the `target` of the hyperlink.
+  open a new tab.  By default, internal links open in the same tab,
+  except for links to files, which open in a new tab. If you use a
+  value other than `True` or `False`, it will be used as the `target`
+  of the hyperlink.
 * `id_tag` - if you want your button to have an `id` so that you can
   manipulate it with [JavaScript], set `id_tag` to the `id` you want
   to use.  For example, if you don't want the button to actually visit

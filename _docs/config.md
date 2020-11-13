@@ -2098,6 +2098,7 @@ ocr dpi: 500
 
 ## <a name="retype password"></a>Controlling whether registering users need to retype their passwords
 
+
 By default, users when registering must type in their passwords twice.
 To allow users to register after only typing the password once, you
 can set the `retype password` directive to `False`.
