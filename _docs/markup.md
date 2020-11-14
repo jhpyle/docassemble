@@ -27,6 +27,22 @@ All of these types of markup will format text in questions as well as
 text in assembled documents (with the exception of the `!` image
 insertion command, which does not work within PDF and RTF documents).
 
+When [Markdown] is converted to [HTML], external hyperlinks (as well
+as internal hyperlinks to documents) will open in a separate tab, but
+internal links will open in the same tab.  To force an internal link
+to open in a separate tab, you can write the links this way:
+
+{% highlight text %}
+Check out [other interviews](${ url_of('dispatch') }){:target="_blank"}.
+{% endhighlight %}
+
+If you want to force an external hyperlink to open in the same window,
+write raw HTML like this instead of a [Markdown] hyperlink:
+
+{% highlight text %}
+Check out <a target="_self" href="https://docassemble.org">the web site</a>
+{% endhighlight %}
+
 # <a name="mako"></a>Using Mako for logic and generated text
 
 **docassemble** uses a templating system called [Mako] to allow
