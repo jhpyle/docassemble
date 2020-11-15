@@ -602,8 +602,10 @@ def interview_url(**kwargs):
                 url = url_of('run_new', **args)
             else:
                 url = url_of('run', **args)
-    else:
+    elif 'style' not in args and args['i'] == this_thread.current_info['yaml_filename']:
         url = url_of('flex_interview', **args)
+    else:
+        url = url_of('interview', **args)
     if 'temporary' in args:
         if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
             expire_seconds = int(args['temporary'] * 60 * 60)
@@ -835,8 +837,10 @@ def interview_url_action(action, **kwargs):
                 url = url_of('run_new', **args)
             else:
                 url = url_of('run', **args)
-    else:
+    elif 'style' not in args and args['i'] == this_thread.current_info['yaml_filename']:
         url = url_of('flex_interview', **args)
+    else:
+        url = url_of('interview', **args)
     if 'temporary' in kwargs:
         args['temporary'] = kwargs['temporary']
     if 'once_temporary' in kwargs:

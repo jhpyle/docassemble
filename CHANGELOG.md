@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.101] - 2020-11-14
+### Fixed
+- Issue with `interview_url()` and `interview_url_action()` with `i`
+  parameter when short URL is in use.
+
 ## [1.1.100] - 2020-11-13
 ### Fixed
 - Translation of phrases on registration page.
