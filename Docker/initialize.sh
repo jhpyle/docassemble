@@ -765,7 +765,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
     fi
     dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='${DBNAME:-docassemble}'\"" postgres`
     if [ -z "$dbexists" ]; then
-        echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}";" | su -c psql postgres || exit 1
+        echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}" encoding UTF8;" | su -c psql postgres || exit 1
     fi
 elif [ "$PGRUNNING" = false ] && [ "$DBTYPE" == "postgresql" ]; then
     export PGHOST="${DBHOST}"

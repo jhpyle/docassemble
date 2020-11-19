@@ -2,17 +2,15 @@ metadata:
   title: Set variable to list of objects
   short title: Object
   documentation: "https://docassemble.org/docs/fields.html#object_checkboxes"
-  example start: 2
-  example end: 4
+  example start: 1
+  example end: 6
 ---
 modules:
   - docassemble.base.legal
 ---
-mandatory: True
 objects:
   protagonist: Individual
   antagonist: Individual
-  villain: PartyList.using(auto_gather=False)
 ---
 mandatory: True
 code: |
@@ -20,9 +18,7 @@ code: |
   protagonist.name.last = "Potter"
   antagonist.name.first = "Tom"
   antagonist.name.last = "Riddle"
-  villain.append(antagonist)
 ---
-mandatory: True
 question: Who are the villains, if any?
 fields:
   no label: villain
@@ -31,7 +27,9 @@ fields:
     - protagonist
     - antagonist
 ---
-mandatory: True
+objects:
+  villain: PartyList.using(auto_gather=False)
+---
 question: |
   % if villain.number() == 0:
   There are no villains here.
@@ -40,3 +38,7 @@ question: |
   ${ villain.does_verb("include") }
   ${ villain }.
   % endif
+subquestion: |
+  The class name of `villain` is
+  `${ villain.__class__.__name__ }`.
+mandatory: True

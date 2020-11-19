@@ -5738,394 +5738,399 @@ class Question:
             docassemble.base.functions.set_language(attachment['options']['language'])
         else:
             old_language = None
-        the_name = attachment['name'].text(the_user_dict).strip()
-        the_filename = attachment['filename'].text(the_user_dict).strip()
-        if the_filename == '':
-            the_filename = docassemble.base.functions.space_to_underscore(the_name)
-        result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': attachment['valid_formats']}
-        if attachment['content'] is None and 'content file code' in attachment['options']:
-            raw_content = ''
-            the_filenames = eval(attachment['options']['content file code'], the_user_dict)
-            if not isinstance(the_filenames, list):
-                if hasattr(the_filenames, 'instanceName') and hasattr(the_filenames, 'elements') and isinstance(the_filenames.elements, list):
-                    the_filenames = the_filenames.elements
-                else:
-                    the_filenames = [the_filenames]
-            for the_filename in the_filenames:
-                the_orig_filename = the_filename
-                if the_filename.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DAStaticFile'):
-                    the_filename = the_filename.path()
-                elif isinstance(the_filename, str):
-                    if re.search(r'^https?://', str(the_filename)):
-                        temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
-                        try:
-                            urlretrieve(url_sanitize(str(the_filename)), temp_template_file.name)
-                        except Exception as err:
-                            raise DAError("prepare_attachment: error downloading " + str(the_filename) + ": " + str(err))
-                        the_filename = temp_template_file.name
+        try:
+            the_name = attachment['name'].text(the_user_dict).strip()
+            the_filename = attachment['filename'].text(the_user_dict).strip()
+            if the_filename == '':
+                the_filename = docassemble.base.functions.space_to_underscore(the_name)
+            result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': attachment['valid_formats']}
+            if attachment['content'] is None and 'content file code' in attachment['options']:
+                raw_content = ''
+                the_filenames = eval(attachment['options']['content file code'], the_user_dict)
+                if not isinstance(the_filenames, list):
+                    if hasattr(the_filenames, 'instanceName') and hasattr(the_filenames, 'elements') and isinstance(the_filenames.elements, list):
+                        the_filenames = the_filenames.elements
                     else:
-                        the_filename = docassemble.base.functions.package_template_filename(the_filename, package=self.package)
+                        the_filenames = [the_filenames]
+                for the_filename in the_filenames:
+                    the_orig_filename = the_filename
+                    if the_filename.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DAStaticFile'):
+                        the_filename = the_filename.path()
+                    elif isinstance(the_filename, str):
+                        if re.search(r'^https?://', str(the_filename)):
+                            temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
+                            try:
+                                urlretrieve(url_sanitize(str(the_filename)), temp_template_file.name)
+                            except Exception as err:
+                                raise DAError("prepare_attachment: error downloading " + str(the_filename) + ": " + str(err))
+                            the_filename = temp_template_file.name
+                        else:
+                            the_filename = docassemble.base.functions.package_template_filename(the_filename, package=self.package)
+                    else:
+                        the_filename = None
+                    if the_filename is None or not os.path.isfile(the_filename):
+                        raise DAError("prepare_attachment: error obtaining template file from code: " + repr(the_orig_filename))
+                    with open(the_filename, 'rU', encoding='utf-8') as the_file:
+                        raw_content += the_file.read()
+                the_content = TextObject(raw_content, question=self)
+            else:
+                the_content = attachment['content']
+            if 'redact' in attachment['options']:
+                if isinstance(attachment['options']['redact'], CodeType):
+                    result['redact'] = eval(attachment['options']['redact'], the_user_dict)
                 else:
-                    the_filename = None
-                if the_filename is None or not os.path.isfile(the_filename):
-                    raise DAError("prepare_attachment: error obtaining template file from code: " + repr(the_orig_filename))
-                with open(the_filename, 'rU', encoding='utf-8') as the_file:
-                    raw_content += the_file.read()
-            the_content = TextObject(raw_content, question=self)
-        else:
-            the_content = attachment['content']
-        if 'redact' in attachment['options']:
-            if isinstance(attachment['options']['redact'], CodeType):
-                result['redact'] = eval(attachment['options']['redact'], the_user_dict)
+                    result['redact'] = attachment['options']['redact']
             else:
-                result['redact'] = attachment['options']['redact']
-        else:
-            result['redact'] = True
-        if 'editable' in attachment['options']:
-            result['editable'] = eval(attachment['options']['editable'], the_user_dict)
-        else:
-            result['editable'] = True
-        docassemble.base.functions.this_thread.misc['redact'] = result['redact']
-        result['markdown'] = dict();
-        result['content'] = dict();
-        result['extension'] = dict();
-        result['mimetype'] = dict();
-        result['file'] = dict();
-        if attachment['raw']:
-            result['raw'] = attachment['raw']
-            result['formats_to_use'] = ['raw']
-        else:
-            result['raw'] = False
-            if '*' in attachment['valid_formats']:
-                result['formats_to_use'] = ['pdf', 'rtf', 'html']
+                result['redact'] = True
+            if 'editable' in attachment['options']:
+                result['editable'] = eval(attachment['options']['editable'], the_user_dict)
             else:
-                result['formats_to_use'] = attachment['valid_formats']
-        result['metadata'] = dict()
-        if len(attachment['metadata']) > 0:
-            for key in attachment['metadata']:
-                data = attachment['metadata'][key]
-                if isinstance(data, bool):
-                    result['metadata'][key] = data
-                elif isinstance(data, list):
-                    result['metadata'][key] = textify(data, the_user_dict)
+                result['editable'] = True
+            docassemble.base.functions.this_thread.misc['redact'] = result['redact']
+            result['markdown'] = dict();
+            result['content'] = dict();
+            result['extension'] = dict();
+            result['mimetype'] = dict();
+            result['file'] = dict();
+            if attachment['raw']:
+                result['raw'] = attachment['raw']
+                result['formats_to_use'] = ['raw']
+            else:
+                result['raw'] = False
+                if '*' in attachment['valid_formats']:
+                    result['formats_to_use'] = ['pdf', 'rtf', 'html']
                 else:
-                    result['metadata'][key] = data.text(the_user_dict)
-        if 'pdf_a' in attachment['options']:
-            if isinstance(attachment['options']['pdf_a'], bool):
-                result['convert_to_pdf_a'] = attachment['options']['pdf_a']
+                    result['formats_to_use'] = attachment['valid_formats']
+            result['metadata'] = dict()
+            if len(attachment['metadata']) > 0:
+                for key in attachment['metadata']:
+                    data = attachment['metadata'][key]
+                    if isinstance(data, bool):
+                        result['metadata'][key] = data
+                    elif isinstance(data, list):
+                        result['metadata'][key] = textify(data, the_user_dict)
+                    else:
+                        result['metadata'][key] = data.text(the_user_dict)
+            if 'pdf_a' in attachment['options']:
+                if isinstance(attachment['options']['pdf_a'], bool):
+                    result['convert_to_pdf_a'] = attachment['options']['pdf_a']
+                else:
+                    result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], the_user_dict)
             else:
-                result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], the_user_dict)
-        else:
-            result['convert_to_pdf_a'] = self.interview.use_pdf_a
-        if 'hyperlink_style' in attachment['options']:
-            result['hyperlink_style'] = attachment['options']['hyperlink_style'].text(the_user_dict).strip()
-        else:
-            result['hyperlink_style'] = None
-        result['permissions'] = dict()
-        if 'persistent' in attachment['options']:
-            if isinstance(attachment['options']['persistent'], bool):
-                result['permissions']['persistent'] = attachment['options']['persistent']
+                result['convert_to_pdf_a'] = self.interview.use_pdf_a
+            if 'hyperlink_style' in attachment['options']:
+                result['hyperlink_style'] = attachment['options']['hyperlink_style'].text(the_user_dict).strip()
             else:
-                result['permissions']['persistent'] = eval(attachment['options']['persistent'], the_user_dict)
-        else:
-            result['permissions']['persistent'] = None
-        if 'private' in attachment['options']:
-            if isinstance(attachment['options']['private'], bool):
-                result['permissions']['private'] = attachment['options']['private']
+                result['hyperlink_style'] = None
+            result['permissions'] = dict()
+            if 'persistent' in attachment['options']:
+                if isinstance(attachment['options']['persistent'], bool):
+                    result['permissions']['persistent'] = attachment['options']['persistent']
+                else:
+                    result['permissions']['persistent'] = eval(attachment['options']['persistent'], the_user_dict)
             else:
-                result['permissions']['private'] = eval(attachment['options']['private'], the_user_dict)
-        else:
-            result['permissions']['private'] = None
-        if 'allow users' in attachment['options']:
-            if isinstance(attachment['options']['allow users'], list):
-                result['permissions']['allow users'] = allow_users_list(attachment['options']['allow users'])
+                result['permissions']['persistent'] = None
+            if 'private' in attachment['options']:
+                if isinstance(attachment['options']['private'], bool):
+                    result['permissions']['private'] = attachment['options']['private']
+                else:
+                    result['permissions']['private'] = eval(attachment['options']['private'], the_user_dict)
             else:
-                result['permissions']['allow users'] = eval(attachment['options']['allow users'], the_user_dict)
-            result['permissions']['allow users'] = allow_users_list(result['permissions']['allow users'])
-        else:
-            result['permissions']['allow users'] = []
-        if 'allow privileges' in attachment['options']:
-            if isinstance(attachment['options']['allow privileges'], list):
-                result['permissions']['allow privileges'] = allow_privileges_list(attachment['options']['allow privileges'])
+                result['permissions']['private'] = None
+            if 'allow users' in attachment['options']:
+                if isinstance(attachment['options']['allow users'], list):
+                    result['permissions']['allow users'] = allow_users_list(attachment['options']['allow users'])
+                else:
+                    result['permissions']['allow users'] = eval(attachment['options']['allow users'], the_user_dict)
+                result['permissions']['allow users'] = allow_users_list(result['permissions']['allow users'])
             else:
-                result['permissions']['allow privileges'] = allow_privileges_list(eval(attachment['options']['allow privileges'], the_user_dict))
-        else:
-            result['permissions']['allow privileges'] = []
-        if 'tagged_pdf' in attachment['options']:
-            if isinstance(attachment['options']['tagged_pdf'], bool):
-                result['convert_to_tagged_pdf'] = attachment['options']['tagged_pdf']
+                result['permissions']['allow users'] = []
+            if 'allow privileges' in attachment['options']:
+                if isinstance(attachment['options']['allow privileges'], list):
+                    result['permissions']['allow privileges'] = allow_privileges_list(attachment['options']['allow privileges'])
+                else:
+                    result['permissions']['allow privileges'] = allow_privileges_list(eval(attachment['options']['allow privileges'], the_user_dict))
             else:
-                result['convert_to_tagged_pdf'] = eval(attachment['options']['tagged_pdf'], the_user_dict)
-        else:
-            result['convert_to_tagged_pdf'] = self.interview.use_tagged_pdf
-        if 'update_references' in attachment['options']:
-            if isinstance(attachment['options']['update_references'], bool):
-                result['update_references'] = attachment['options']['update_references']
+                result['permissions']['allow privileges'] = []
+            if 'tagged_pdf' in attachment['options']:
+                if isinstance(attachment['options']['tagged_pdf'], bool):
+                    result['convert_to_tagged_pdf'] = attachment['options']['tagged_pdf']
+                else:
+                    result['convert_to_tagged_pdf'] = eval(attachment['options']['tagged_pdf'], the_user_dict)
             else:
-                result['update_references'] = eval(attachment['options']['update_references'], the_user_dict)
-        else:
-            result['update_references'] = False
-        if 'password' in attachment['options']:
-            result['password'] = attachment['options']['password'].text(the_user_dict)
-        else:
-            result['password'] = None
-        if 'template_password' in attachment['options']:
-            result['template_password'] = attachment['options']['template_password'].text(the_user_dict)
-        else:
-            result['template_password'] = None
-        for doc_format in result['formats_to_use']:
-            if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx', 'raw']:
-                if 'decimal_places' in attachment['options']:
-                    try:
-                        float_formatter = '%.' + str(int(attachment['options']['decimal_places'].text(the_user_dict).strip())) + 'f'
-                    except:
-                        logmessage("prepare_attachment: error in float_formatter")
+                result['convert_to_tagged_pdf'] = self.interview.use_tagged_pdf
+            if 'update_references' in attachment['options']:
+                if isinstance(attachment['options']['update_references'], bool):
+                    result['update_references'] = attachment['options']['update_references']
+                else:
+                    result['update_references'] = eval(attachment['options']['update_references'], the_user_dict)
+            else:
+                result['update_references'] = False
+            if 'password' in attachment['options']:
+                result['password'] = attachment['options']['password'].text(the_user_dict)
+            else:
+                result['password'] = None
+            if 'template_password' in attachment['options']:
+                result['template_password'] = attachment['options']['template_password'].text(the_user_dict)
+            else:
+                result['template_password'] = None
+            for doc_format in result['formats_to_use']:
+                if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx', 'raw']:
+                    if 'decimal_places' in attachment['options']:
+                        try:
+                            float_formatter = '%.' + str(int(attachment['options']['decimal_places'].text(the_user_dict).strip())) + 'f'
+                        except:
+                            logmessage("prepare_attachment: error in float_formatter")
+                            float_formatter = None
+                    else:
                         float_formatter = None
-                else:
-                    float_formatter = None
-                if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
-                    if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
-                        docx_paths = []
-                        for docx_reference in attachment['options']['docx_template_file']:
-                            for docx_path in docx_reference.paths(the_user_dict=the_user_dict):
-                                if not os.path.isfile(docx_path):
-                                    raise DAError("Missing docx template file " + os.path.basename(docx_path))
-                                docx_paths.append(docx_path)
-                        if len(docx_paths) == 1:
-                            docx_path = docx_paths[0]
+                    if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
+                        if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
+                            docx_paths = []
+                            for docx_reference in attachment['options']['docx_template_file']:
+                                for docx_path in docx_reference.paths(the_user_dict=the_user_dict):
+                                    if not os.path.isfile(docx_path):
+                                        raise DAError("Missing docx template file " + os.path.basename(docx_path))
+                                    docx_paths.append(docx_path)
+                            if len(docx_paths) == 1:
+                                docx_path = docx_paths[0]
+                            else:
+                                docx_path = docassemble.base.file_docx.concatenate_files(docx_paths)
+                            result['template'] = docassemble.base.file_docx.DocxTemplate(docx_path)
+                            if result['hyperlink_style'] and result['hyperlink_style'] in result['template'].docx.styles:
+                                result['template'].da_hyperlink_style = result['hyperlink_style']
+                            elif 'Hyperlink' in result['template'].docx.styles:
+                                result['template'].da_hyperlink_style = 'Hyperlink'
+                            elif 'InternetLink' in result['template'].docx.styles:
+                                result['template'].da_hyperlink_style = 'InternetLink'
+                            else:
+                                result['template'].da_hyperlink_style = None
+                            docassemble.base.functions.set_context('docx', template=result['template'])
+                            if isinstance(attachment['options']['fields'], str):
+                                result['field_data'] = the_user_dict
+                            else:
+                                the_field_data = recursive_eval_textobject(attachment['options']['fields'], the_user_dict, self, result['template'], attachment['options']['skip_undefined'])
+                                new_field_data = dict()
+                                if isinstance(the_field_data, list):
+                                    for item in the_field_data:
+                                        if isinstance(item, dict):
+                                            new_field_data.update(item)
+                                    the_field_data = new_field_data
+                                result['field_data'] = the_field_data
+                            result['field_data']['_codecs'] = codecs
+                            result['field_data']['_array'] = array
+                            if 'code' in attachment['options']:
+                                if attachment['options']['skip_undefined']:
+                                    try:
+                                        additional_dict = eval(attachment['options']['code'], the_user_dict)
+                                    except:
+                                        additional_dict = {}
+                                else:
+                                    additional_dict = eval(attachment['options']['code'], the_user_dict)
+                                if isinstance(additional_dict, dict):
+                                    for key, val in additional_dict.items():
+                                        if isinstance(val, float) and float_formatter is not None:
+                                            result['field_data'][key] = float_formatter % val
+                                        elif isinstance(val, RawValue):
+                                            result['field_data'][key] = val.value
+                                        else:
+                                            result['field_data'][key] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
+                                else:
+                                    raise DAError("code in an attachment returned something other than a dictionary")
+                            if 'raw code dict' in attachment['options']:
+                                for varname, var_code in attachment['options']['raw code dict'].items():
+                                    if attachment['options']['skip_undefined']:
+                                        try:
+                                            val = eval(var_code, the_user_dict)
+                                        except:
+                                            val = ''
+                                    else:
+                                        val = eval(var_code, the_user_dict)
+                                    if isinstance(val, float) and float_formatter is not None:
+                                        result['field_data'][varname] = float_formatter % val
+                                    else:
+                                        result['field_data'][varname] = val
+                            if 'code dict' in attachment['options']:
+                                for varname, var_code in attachment['options']['code dict'].items():
+                                    if attachment['options']['skip_undefined']:
+                                        try:
+                                            val = eval(var_code, the_user_dict)
+                                        except:
+                                            val = ''
+                                    else:
+                                        val = eval(var_code, the_user_dict)
+                                    if isinstance(val, float) and float_formatter is not None:
+                                        result['field_data'][varname] = float_formatter % val
+                                    elif isinstance(val, RawValue):
+                                        result['field_data'][varname] = val.value
+                                    else:
+                                        result['field_data'][varname] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
+                            docassemble.base.functions.reset_context()
+                    elif doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
+                        docassemble.base.functions.set_context('pdf')
+                        result['data_strings'] = []
+                        result['images'] = []
+                        if isinstance(attachment['options']['fields'], dict):
+                            the_fields = [attachment['options']['fields']]
                         else:
-                            docx_path = docassemble.base.file_docx.concatenate_files(docx_paths)
-                        result['template'] = docassemble.base.file_docx.DocxTemplate(docx_path)
-                        if result['hyperlink_style'] and result['hyperlink_style'] in result['template'].docx.styles:
-                            result['template'].da_hyperlink_style = result['hyperlink_style']
-                        elif 'Hyperlink' in result['template'].docx.styles:
-                            result['template'].da_hyperlink_style = 'Hyperlink'
-                        elif 'InternetLink' in result['template'].docx.styles:
-                            result['template'].da_hyperlink_style = 'InternetLink'
-                        else:
-                            result['template'].da_hyperlink_style = None
-                        docassemble.base.functions.set_context('docx', template=result['template'])
-                        if isinstance(attachment['options']['fields'], str):
-                            result['field_data'] = the_user_dict
-                        else:
-                            the_field_data = recursive_eval_textobject(attachment['options']['fields'], the_user_dict, self, result['template'], attachment['options']['skip_undefined'])
-                            new_field_data = dict()
-                            if isinstance(the_field_data, list):
-                                for item in the_field_data:
-                                    if isinstance(item, dict):
-                                        new_field_data.update(item)
-                                the_field_data = new_field_data
-                            result['field_data'] = the_field_data
-                        result['field_data']['_codecs'] = codecs
-                        result['field_data']['_array'] = array
+                            the_fields = attachment['options']['fields']
+                        for item in the_fields:
+                            for key, val in item.items():
+                                if attachment['options']['skip_undefined']:
+                                    try:
+                                        answer = val.text(the_user_dict).rstrip()
+                                    except:
+                                        answer = ''
+                                else:
+                                    answer = val.text(the_user_dict).rstrip()
+                                if answer == 'True':
+                                    answer = 'Yes'
+                                elif answer == 'False':
+                                    answer = 'No'
+                                elif answer == 'None':
+                                    answer = ''
+                                answer = re.sub(r'\[(NEWLINE|BR)\]', r'\n', answer)
+                                answer = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', answer)
+                                #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
+                                m = re.search(r'\[FILE ([^\]]+)\]', answer)
+                                if m:
+                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                    result['images'].append((key, file_info))
+                                else:
+                                    result['data_strings'].append((key, answer))
                         if 'code' in attachment['options']:
                             if attachment['options']['skip_undefined']:
                                 try:
-                                    additional_dict = eval(attachment['options']['code'], the_user_dict)
+                                    additional_fields = eval(attachment['options']['code'], the_user_dict)
                                 except:
-                                    additional_dict = {}
+                                    additional_fields = []
                             else:
-                                additional_dict = eval(attachment['options']['code'], the_user_dict)
-                            if isinstance(additional_dict, dict):
-                                for key, val in additional_dict.items():
-                                    if isinstance(val, float) and float_formatter is not None:
-                                        result['field_data'][key] = float_formatter % val
-                                    elif isinstance(val, RawValue):
-                                        result['field_data'][key] = val.value
-                                    else:
-                                        result['field_data'][key] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
-                            else:
-                                raise DAError("code in an attachment returned something other than a dictionary")
-                        if 'raw code dict' in attachment['options']:
-                            for varname, var_code in attachment['options']['raw code dict'].items():
-                                if attachment['options']['skip_undefined']:
-                                    try:
-                                        val = eval(var_code, the_user_dict)
-                                    except:
-                                        val = ''
-                                else:
-                                    val = eval(var_code, the_user_dict)
-                                if isinstance(val, float) and float_formatter is not None:
-                                    result['field_data'][varname] = float_formatter % val
-                                else:
-                                    result['field_data'][varname] = val
-                        if 'code dict' in attachment['options']:
-                            for varname, var_code in attachment['options']['code dict'].items():
-                                if attachment['options']['skip_undefined']:
-                                    try:
-                                        val = eval(var_code, the_user_dict)
-                                    except:
-                                        val = ''
-                                else:
-                                    val = eval(var_code, the_user_dict)
-                                if isinstance(val, float) and float_formatter is not None:
-                                    result['field_data'][varname] = float_formatter % val
-                                elif isinstance(val, RawValue):
-                                    result['field_data'][varname] = val.value
-                                else:
-                                    result['field_data'][varname] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
-                        docassemble.base.functions.reset_context()
-                elif doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
-                    docassemble.base.functions.set_context('pdf')
-                    result['data_strings'] = []
-                    result['images'] = []
-                    if isinstance(attachment['options']['fields'], dict):
-                        the_fields = [attachment['options']['fields']]
-                    else:
-                        the_fields = attachment['options']['fields']
-                    for item in the_fields:
-                        for key, val in item.items():
-                            if attachment['options']['skip_undefined']:
-                                try:
-                                    answer = val.text(the_user_dict).rstrip()
-                                except:
-                                    answer = ''
-                            else:
-                                answer = val.text(the_user_dict).rstrip()
-                            if answer == 'True':
-                                answer = 'Yes'
-                            elif answer == 'False':
-                                answer = 'No'
-                            elif answer == 'None':
-                                answer = ''
-                            answer = re.sub(r'\[(NEWLINE|BR)\]', r'\n', answer)
-                            answer = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', answer)
-                            #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
-                            m = re.search(r'\[FILE ([^\]]+)\]', answer)
-                            if m:
-                                file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
-                                result['images'].append((key, file_info))
-                            else:
-                                result['data_strings'].append((key, answer))
-                    if 'code' in attachment['options']:
-                        if attachment['options']['skip_undefined']:
-                            try:
                                 additional_fields = eval(attachment['options']['code'], the_user_dict)
-                            except:
-                                additional_fields = []
-                        else:
-                            additional_fields = eval(attachment['options']['code'], the_user_dict)
-                        if not isinstance(additional_fields, list):
-                            additional_fields = [additional_fields]
-                        for item in additional_fields:
-                            if not isinstance(item, dict):
-                                raise DAError("code in an attachment returned something other than a dictionary or a list of dictionaries")
-                            for key, val in item.items():
-                                if val is True:
-                                    val = 'Yes'
-                                elif val is False:
-                                    val = 'No'
-                                elif val is None:
-                                    val = ''
-                                elif isinstance(val, float) and float_formatter is not None:
-                                    val = float_formatter % val
-                                else:
-                                    val = str(val)
-                                val = re.sub(r'\s*\[(NEWLINE|BR)\]\s*', r'\n', val)
-                                val = re.sub(r'\s*\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]\s*', r'', val)
-                                m = re.search(r'\[FILE ([^\]]+)\]', val)
-                                if m:
-                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
-                                    result['images'].append((key, file_info))
-                                else:
-                                    result['data_strings'].append((key, val))
-                    if 'code dict' in attachment['options']:
-                        additional_fields = attachment['options']['code dict']
-                        if not isinstance(additional_fields, list):
-                            additional_fields = [additional_fields]
-                        for item in additional_fields:
-                            if not isinstance(item, dict):
-                                raise DAError("code dict in an attachment returned something other than a dictionary or a list of dictionaries")
-                            for key, var_code in item.items():
-                                if attachment['options']['skip_undefined']:
-                                    try:
-                                        val = eval(var_code, the_user_dict)
-                                    except:
+                            if not isinstance(additional_fields, list):
+                                additional_fields = [additional_fields]
+                            for item in additional_fields:
+                                if not isinstance(item, dict):
+                                    raise DAError("code in an attachment returned something other than a dictionary or a list of dictionaries")
+                                for key, val in item.items():
+                                    if val is True:
+                                        val = 'Yes'
+                                    elif val is False:
+                                        val = 'No'
+                                    elif val is None:
                                         val = ''
-                                else:
-                                    val = eval(var_code, the_user_dict)
-                                if val is True:
-                                    val = 'Yes'
-                                elif val is False:
-                                    val = 'No'
-                                elif val is None:
-                                    val = ''
-                                elif isinstance(val, float) and float_formatter is not None:
-                                    val = float_formatter % val
-                                else:
-                                    val = str(val)
-                                val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
-                                val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
-                                m = re.search(r'\[FILE ([^\]]+)\]', val)
-                                if m:
-                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
-                                    result['images'].append((key, file_info))
-                                else:
-                                    result['data_strings'].append((key, val))
-                    if 'raw code dict' in attachment['options']:
-                        additional_fields = attachment['options']['raw code dict']
-                        if not isinstance(additional_fields, list):
-                            additional_fields = [additional_fields]
-                        for item in additional_fields:
-                            if not isinstance(item, dict):
-                                raise DAError("raw code dict in an attachment returned something other than a dictionary or a list of dictionaries")
-                            for key, var_code in item.items():
-                                if attachment['options']['skip_undefined']:
-                                    try:
+                                    elif isinstance(val, float) and float_formatter is not None:
+                                        val = float_formatter % val
+                                    else:
+                                        val = str(val)
+                                    val = re.sub(r'\s*\[(NEWLINE|BR)\]\s*', r'\n', val)
+                                    val = re.sub(r'\s*\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]\s*', r'', val)
+                                    m = re.search(r'\[FILE ([^\]]+)\]', val)
+                                    if m:
+                                        file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                        file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                        result['images'].append((key, file_info))
+                                    else:
+                                        result['data_strings'].append((key, val))
+                        if 'code dict' in attachment['options']:
+                            additional_fields = attachment['options']['code dict']
+                            if not isinstance(additional_fields, list):
+                                additional_fields = [additional_fields]
+                            for item in additional_fields:
+                                if not isinstance(item, dict):
+                                    raise DAError("code dict in an attachment returned something other than a dictionary or a list of dictionaries")
+                                for key, var_code in item.items():
+                                    if attachment['options']['skip_undefined']:
+                                        try:
+                                            val = eval(var_code, the_user_dict)
+                                        except:
+                                            val = ''
+                                    else:
                                         val = eval(var_code, the_user_dict)
-                                    except:
+                                    if val is True:
+                                        val = 'Yes'
+                                    elif val is False:
+                                        val = 'No'
+                                    elif val is None:
                                         val = ''
+                                    elif isinstance(val, float) and float_formatter is not None:
+                                        val = float_formatter % val
+                                    else:
+                                        val = str(val)
+                                    val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
+                                    val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
+                                    m = re.search(r'\[FILE ([^\]]+)\]', val)
+                                    if m:
+                                        file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                        file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                        result['images'].append((key, file_info))
+                                    else:
+                                        result['data_strings'].append((key, val))
+                        if 'raw code dict' in attachment['options']:
+                            additional_fields = attachment['options']['raw code dict']
+                            if not isinstance(additional_fields, list):
+                                additional_fields = [additional_fields]
+                            for item in additional_fields:
+                                if not isinstance(item, dict):
+                                    raise DAError("raw code dict in an attachment returned something other than a dictionary or a list of dictionaries")
+                                for key, var_code in item.items():
+                                    if attachment['options']['skip_undefined']:
+                                        try:
+                                            val = eval(var_code, the_user_dict)
+                                        except:
+                                            val = ''
+                                    else:
+                                        val = eval(var_code, the_user_dict)
+                                    if val is True:
+                                        val = 'Yes'
+                                    elif val is False:
+                                        val = 'No'
+                                    elif isinstance(val, float) and float_formatter is not None:
+                                        val = float_formatter % val
+                                    elif val is None:
+                                        val = ''
+                                    val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
+                                    val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
+                                    m = re.search(r'\[FILE ([^\]]+)\]', val)
+                                    if m:
+                                        file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                        file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                        result['images'].append((key, file_info))
+                                    else:
+                                        result['data_strings'].append((key, val))
+                        docassemble.base.functions.reset_context()
+                    elif doc_format == 'raw':
+                        docassemble.base.functions.set_context('raw')
+                        the_markdown = the_content.text(the_user_dict)
+                        result['markdown'][doc_format] = the_markdown
+                        docassemble.base.functions.reset_context()
+                    else:
+                        the_markdown = ""
+                        if len(result['metadata']):
+                            modified_metadata = dict()
+                            for key, data in result['metadata'].items():
+                                if re.search(r'Footer|Header', key) and 'Lines' not in key:
+                                    #modified_metadata[key] = docassemble.base.filter.metadata_filter(data, doc_format) + str('[END]')
+                                    modified_metadata[key] = data + str('[END]')
                                 else:
-                                    val = eval(var_code, the_user_dict)
-                                if val is True:
-                                    val = 'Yes'
-                                elif val is False:
-                                    val = 'No'
-                                elif isinstance(val, float) and float_formatter is not None:
-                                    val = float_formatter % val
-                                elif val is None:
-                                    val = ''
-                                val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
-                                val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
-                                m = re.search(r'\[FILE ([^\]]+)\]', val)
-                                if m:
-                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
-                                    result['images'].append((key, file_info))
-                                else:
-                                    result['data_strings'].append((key, val))
-                    docassemble.base.functions.reset_context()
-                elif doc_format == 'raw':
-                    docassemble.base.functions.set_context('raw')
-                    the_markdown = the_content.text(the_user_dict)
-                    result['markdown'][doc_format] = the_markdown
-                    docassemble.base.functions.reset_context()
-                else:
-                    the_markdown = ""
-                    if len(result['metadata']):
-                        modified_metadata = dict()
-                        for key, data in result['metadata'].items():
-                            if re.search(r'Footer|Header', key) and 'Lines' not in key:
-                                #modified_metadata[key] = docassemble.base.filter.metadata_filter(data, doc_format) + str('[END]')
-                                modified_metadata[key] = data + str('[END]')
-                            else:
-                                modified_metadata[key] = data
-                        the_markdown += '---\n' + codecs.decode(bytearray(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=False), encoding='utf-8'), 'utf-8') + "...\n"
-                    docassemble.base.functions.set_context('pandoc')
-                    the_markdown += the_content.text(the_user_dict)
-                    #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
-                    if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
-                        the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
-                    result['markdown'][doc_format] = the_markdown
-                    docassemble.base.functions.reset_context()
-            elif doc_format in ['html']:
-                result['markdown'][doc_format] = the_content.text(the_user_dict)
-                if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
-                    result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
-                #logmessage("output was:\n" + repr(result['content'][doc_format]))
+                                    modified_metadata[key] = data
+                            the_markdown += '---\n' + codecs.decode(bytearray(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=False), encoding='utf-8'), 'utf-8') + "...\n"
+                        docassemble.base.functions.set_context('pandoc')
+                        the_markdown += the_content.text(the_user_dict)
+                        #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
+                        if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
+                            the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
+                        result['markdown'][doc_format] = the_markdown
+                        docassemble.base.functions.reset_context()
+                elif doc_format in ['html']:
+                    result['markdown'][doc_format] = the_content.text(the_user_dict)
+                    if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
+                        result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
+                    #logmessage("output was:\n" + repr(result['content'][doc_format]))
+        except:
+            if old_language is not None:
+                docassemble.base.functions.set_language(old_language)
+            raise
         if old_language is not None:
             docassemble.base.functions.set_language(old_language)
         return(result)
