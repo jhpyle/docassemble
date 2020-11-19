@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.102](https://github.com/jhpyle/docassemble/releases/tag/v1.1.102) - 2020-11-19
+
+### Fixed
+- The local PostgreSQL database was being created with the default
+  encoding, which did not allow UTF-8 strings to be saved in `jsonb`
+  format.
+- An `attachment` that uses a different language than the current
+  language did not restore the correct language after an exception.
+
 ## [1.1.101](https://github.com/jhpyle/docassemble/releases/tag/v1.1.101) - 2020-11-14
 
 ### Fixed

@@ -920,7 +920,11 @@ refer to an existing object.  You need to include
 
 If [`choices`](#choices) refers to a variable that is a list of
 things, the list will be unpacked and used as the list of items from
-which the user can select.  [Python] code can be used here.
+which the user can select.  If [`choices`](#choices) refers to a
+string, that string is expected to be a [Python expression] that
+returns a list of objects.  If [`choices`](#choices) refers to a YAML
+list, then each item in the list is expected to be a [Python
+expression] that returns either an object or a list of objects.
 
 {% include side-by-side.html demo="object-selections" %}
 
@@ -950,32 +954,47 @@ pull-down list.
 For a fuller discussion on using multiple-choice object selectors, see
 the [section on selecting objects](#objects), below.
 
-<a name="object_checkboxes"></a>`datatype: object_checkboxes` is used
-when you would like to use a question to set the elements of an object
-of type [`DAList`] (or a subtype thereof).  The choices in
-[`choices`](#choices) (optionally modified by [`exclude`]) will be
-presented to the user as checkboxes.  The `.gathered` attribute of the
-variable will be set to `True` after the elements are set.  See
-[groups] for more information.
+<a name="object_checkboxes"></a>`datatype: object_checkboxes` is
+similar to `datatype: object`, except it results in an object of type
+[`DAList`] (or a subtype thereof) consisting of zero or more items
+selected by the user.  The choices specified in [`choices`](#choices)
+(optionally modified by [`exclude`]) will be presented to the user as
+checkboxes.  The `.gathered` attribute of the variable will be set to
+`True` after the elements are set.  See [groups] for more information.
 
 {% include side-by-side.html demo="object-checkboxes-dalist" %}
 
-You can also use `datatype: object_checkboxes` on variables that
-already exist in your interview.  You would need to do this if you
-wanted the variable to be a subtype of [`DAList`].  If you use a
-variable name that already exists, note that the `question` will only
-be used when the `.gathered` attribute is needed.  To avoid questions
-asking for `.there_are_any` and `.there_is_another`, set
-`.auto_gather` to `False`.  For example:
+You can use `datatype: object_checkboxes` on variables that already
+exist in your interview.  You would need to do this if you wanted the
+variable to be a subtype of [`DAList`].  If you use a variable name
+that already exists, note that the `question` will only be used when
+the `.gathered` attribute is needed.  To avoid questions asking for
+`.there_are_any` and `.there_is_another`, set `.auto_gather` to
+`False`.  For example:
 
-{% include side-by-side.html demo="object-checkboxes-dalist" %}
+{% include demo-side-by-side.html demo="object-checkboxes-custom" %}
 
-Another advantage of using an already-existing variable is that the
-choices in the question will default to the current elements in the
-list.  In this example, we use the [`.append()`] method to initialize
-the list of villains.
+Note the placement of the `objects` block that defines `villain` as a
+`PartyList`.  If this `objects` block came _before_ the `question`
+that defines `villain`, then the `question` block would take
+precedence over the `objects` block and define `villain` as a plain
+`DAList`.  Since the `objects` block is placed _after_ the `question`,
+it supersedes the `question`, and defines `villain` as a `PartyList`.
+The `question` will still be asked, however, because even if
+`villain` is defined, it is not yet gathered; the `question` will be
+asked when a definition of `villain.gathered` is needed.
+
+When you use an already-existing `DAList`, you can set default values
+of the checkboxes in the `object_checkboxes` list.  In this example,
+we use the [`.append()`] method to initialize the list of villains.
 
 {% include side-by-side.html demo="object-checkboxes-default" %}
+
+This example illustrates a second method of making sure that `villain`
+gets defined as a `PartyList`: marking the `objects` block with
+`mandatory: True`.  This causes each variable in the `objects` list to
+be defined as an object before the rest of the interview logic is
+evaluated.
 
 ## <a name="ml"></a><a name="mlarea"></a>Machine learning
 

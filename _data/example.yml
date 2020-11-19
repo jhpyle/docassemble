@@ -2455,7 +2455,7 @@
   code: |
     if task_not_yet_performed('show current date'):
       mark_task_as_performed('show current date')
-      show_date
+      force_ask('show_date')
   ---
   event: show_date
   question: |
@@ -7435,7 +7435,7 @@
   objects:
     protagonist: Individual
     antagonist: Individual
-    villain: PartyList
+    villain: PartyList.using(auto_gather=False)
   ---
   mandatory: True
   code: |
@@ -7443,7 +7443,6 @@
     protagonist.name.last = "Potter"
     antagonist.name.first = "Tom"
     antagonist.name.last = "Riddle"
-    villain.auto_gather = False
     villain.append(antagonist)
   ---
   mandatory: True
@@ -13178,6 +13177,44 @@
   fields:
     Seeds: person[i].fruit_preferences[j].seeds
   continue button field: person[i].fruit_preferences[j].preferred_seeds_verified
+"object-checkboxes-custom": |-
+  modules:
+    - docassemble.base.legal
+  ---
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+  ---
+  mandatory: True
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+  ---
+  question: Who are the villains, if any?
+  fields:
+    no label: villain
+    datatype: object_checkboxes
+    choices:
+      - protagonist
+      - antagonist
+  ---
+  objects:
+    villain: PartyList.using(auto_gather=False)
+  ---
+  question: |
+    % if villain.number() == 0:
+    There are no villains here.
+    % else:
+    The ${ villain.as_noun() }
+    ${ villain.does_verb("include") }
+    ${ villain }.
+    % endif
+  subquestion: |
+    The class name of `villain` is
+    `${ villain.__class__.__name__ }`.
+  mandatory: True
 "objects-from-file": "code: |\n  people = objects_from_file(\"contacts.yml\", use_objects=True)\n\
   ---\nmandatory: true\nquestion: |\n  How to contact us\nsubquestion: |\n  % for\
   \ person in people:\n  You can e-mail ${ person } at\n  ${ person.email }.\n  \n\
@@ -13411,9 +13448,9 @@
   \  - Pie: pie\n      - Cake: cake\ncheck in: question_food\n---\ntemplate: question_food\n\
   content: |\n  I am a really big fan of \n  ${ action_argument('favorite_fruit')\
   \ or \"[BLANK]\" }.\n  With dinner I like to have a side of\n  ${ action_argument('favorite_vegetable')\
-  \ or \"[BLANK]\" }.\n  % if action_argument('likes_mushrooms'):\n  And I usually\
-  \ can't resist adding sauteed \n  ${ action_argument('favorite_mushroom') or \"\
-  [BLANK]\" }\n  to my\n  ${ action_argument('favorite_vegetable') or \"[BLANK]\"\
+  \ or \"[BLANK]\" }.\n  % if action_argument('likes_mushrooms') == 'True':\n  And\
+  \ I usually can't resist adding sauteed \n  ${ action_argument('favorite_mushroom')\
+  \ or \"[BLANK]\" }\n  to my\n  ${ action_argument('favorite_vegetable') or \"[BLANK]\"\
   \ }.\n  % endif\n  [BR][BR]\n  My favorite part of the meal is dessert,\n  when\
   \ I can have a nice big slice of\n  ${ action_argument('favorite_dessert') or \"\
   [BLANK]\" }.\ntarget: food_section_text"
