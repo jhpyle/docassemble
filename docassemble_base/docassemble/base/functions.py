@@ -335,7 +335,7 @@ def state_name(state_code, country_code=None):
     for subdivision in pycountry.subdivisions.get(country_code=country_code):
         m = re.search(r'-([A-Z]+)$', subdivision.code)
         if m and m.group(1) == state_code:
-            return subdivision.name
+            return word(subdivision.name)
     return state_code
     #return us.states.lookup(state_code).name
 
@@ -353,9 +353,9 @@ def subdivision_type(country_code):
             counts[subdivision.type] += 1
     counts_ordered = sorted(counts.keys(), key=lambda x: counts[x], reverse=True)
     if len(counts_ordered) > 1 and counts[counts_ordered[1]] > 0.5*counts[counts_ordered[0]]:
-        return counts_ordered[0] + '/' + counts_ordered[1]
+        return word(counts_ordered[0] + '/' + counts_ordered[1])
     elif len(counts_ordered) > 0:
-        return counts_ordered[0]
+        return word(counts_ordered[0])
     else:
         return None
 
@@ -625,7 +625,7 @@ def states_list(country_code=None):
             continue
         m = re.search(r'-([A-Z0-9]+)$', subdivision.code)
         if m:
-            mapping[m.group(1)] = subdivision.name
+            mapping[m.group(1)] = word(subdivision.name)
     return mapping
 
 def interface():
