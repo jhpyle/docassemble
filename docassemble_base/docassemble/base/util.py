@@ -3184,7 +3184,7 @@ def prevent_dependency_satisfaction(f):
         #     raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed") from err
     return wrapper
 
-def assemble_docx(input_file, fields=None, output_path=None, output_format='docx', return_content=False, pdf_options=None):
+def assemble_docx(input_file, fields=None, output_path=None, output_format='docx', return_content=False, pdf_options=None, filename=None):
     import docassemble.base.parse
     input_file = path_and_mimetype(input_file)[0]
     if not (isinstance(input_file, str) and os.path.isfile(input_file)):
@@ -3235,7 +3235,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         docx_template.save(temp_file.name)
         if not isinstance(pdf_options, dict):
             pdf_options = dict()
-        result = docassemble.base.pandoc.word_to_pdf(temp_file.name, 'docx', output_path, pdfa=pdf_options.get('pdfa', False), password=pdf_options.get('password', None), update_refs=pdf_options.get('update_refs', False), tagged=pdf_options.get('tagged', False))
+        result = docassemble.base.pandoc.word_to_pdf(temp_file.name, 'docx', output_path, pdfa=pdf_options.get('pdfa', False), password=pdf_options.get('password', None), update_refs=pdf_options.get('update_refs', False), tagged=pdf_options.get('tagged', False), filename=filename)
         if not result:
             raise DAError("Error converting to PDF")
     elif output_format == 'md':

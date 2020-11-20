@@ -43,6 +43,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 import werkzeug.utils
 import num2words
+from unicodedata import normalize
 from collections.abc import Iterable
 from jinja2.runtime import Undefined
 TypeType = type(type(None))
@@ -4719,6 +4720,16 @@ def reconsider(*pargs):
 def single_to_double_newlines(text):
     """Converts single newlines to double newlines."""
     return re.sub(r'[\n\r]+', r'\n\n', str(text))
+
+def secure_filename(the_filename):
+    the_filename = normalize("NFKD", the_filename).encode("ascii", "ignore").decode("ascii")
+    for sep in (os.path.sep, os.path.altsep):
+        if sep:
+            the_filename = the_filename.replace(sep, "_")
+    the_filename = re.sub(r'[^A-Za-z0-9_\.\- ]', '', the_filename)
+    the_filename = re.sub(r'^[\._]*', '', the_filename)
+    the_filename = re.sub(r'[\._]*$', '', the_filename)
+    return the_filename
 
 custom_types = dict()
 

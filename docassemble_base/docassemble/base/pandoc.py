@@ -307,10 +307,13 @@ class MyPandoc(object):
             self.output_content = self.output_content.decode()
         return
 
-def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_refs=False, tagged=False):
+def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_refs=False, tagged=False, filename=None):
+    if filename is None:
+        filename = 'file'
+    filename = docassemble.base.functions.secure_filename(filename)
     tempdir = tempfile.mkdtemp()
-    from_file = os.path.join(tempdir, "file." + in_format)
-    to_file = os.path.join(tempdir, "file.pdf")
+    from_file = os.path.join(tempdir, filename + "." + in_format)
+    to_file = os.path.join(tempdir, filename + ".pdf")
     shutil.copyfile(in_file, from_file)
     tries = 0
     if pdfa:

@@ -755,7 +755,6 @@ class InterviewStatus:
                         result['decoration_name'] = decoration['image']
                         break
         if len(self.attachments) > 0:
-            #PPP
             result['attachments'] = list()
             if self.current_info['user']['is_authenticated'] and self.current_info['user']['email']:
                 result['default_email'] = self.current_info['user']['email']
@@ -5555,182 +5554,194 @@ class Question:
             #logmessage("finalize_attachment: " + attachment['variable_name'] + " was not in cache")
         #logmessage("In finalize where redact is " + repr(result['redact']))
         docassemble.base.functions.this_thread.misc['redact'] = result['redact']
-        for doc_format in result['formats_to_use']:
-            if doc_format == 'raw':
-                the_temp = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=attachment['raw'], delete=False)
-                with open(the_temp.name, 'w', encoding='utf-8') as the_file:
-                    the_file.write(result['markdown'][doc_format].lstrip("\n"))
-                result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + attachment['raw'], the_temp.name, yaml_file_name=self.interview.source.path)
-                result['raw'] = attachment['raw']
-                result['content'][doc_format] = result['markdown'][doc_format].lstrip("\n")
-            elif doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
-                if 'fields' in attachment['options']:
-                    if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
-                        if 'checkbox_export_value' in attachment['options']:
-                            default_export_value = attachment['options']['checkbox_export_value'].text(the_user_dict).strip()
-                        else:
-                            default_export_value = None
-                        docassemble.base.functions.set_context('pdf')
-                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'], default_export_value=default_export_value)
-                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
-                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions'):
-                            if key in result:
-                                del result[key]
-                        docassemble.base.functions.reset_context()
-                    elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
-                        #logmessage("field_data is " + repr(result['field_data']))
-                        docassemble.base.functions.set_context('docx', template=result['template'])
-                        docassemble.base.functions.this_thread.misc['docx_subdocs'] = []
-                        try:
-                            the_template = result['template']
-                            while True: # Rerender if there's a subdoc using include_docx_template
-                                old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
-                                the_template.render(result['field_data'], jinja_env=custom_jinja_env())
-                                if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
-                                    # There's another template included
-                                    new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
-                                    the_template.save(new_template_file.name) # Save and refresh the template
-                                    the_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
-                                    if result['hyperlink_style'] and result['hyperlink_style'] in the_template.docx.styles:
-                                        the_template.da_hyperlink_style = result['hyperlink_style']
-                                    elif 'Hyperlink' in result['template'].docx.styles:
-                                        the_template.da_hyperlink_style = 'Hyperlink'
-                                    elif 'InternetLink' in result['template'].docx.styles:
-                                        the_template.da_hyperlink_style = 'InternetLink'
-                                    else:
-                                        the_template.da_hyperlink_style = None
-                                    docassemble.base.functions.this_thread.misc['docx_template'] = the_template
-                                else:
-                                    break
-                            # Copy over images, etc from subdoc to master template
-                            subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', []) # Get the subdoc file list
-                            the_template_docx = the_template.docx
-                            for subdoc in subdocs:
-                                docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
-
-                        except TemplateError as the_error:
-                            if (not hasattr(the_error, 'filename')) or the_error.filename is None:
-                                docx_paths = []
-                                for item in attachment['options']['docx_template_file']:
-                                    for subitem in item.paths(the_user_dict=the_user_dict):
-                                        docx_paths.append(os.path.basename(subitem))
-                                the_error.filename = ', '.join(docx_paths)
-                            #logmessage("TemplateError:\n" + traceback.format_exc())
-                            raise the_error
-                        docassemble.base.functions.reset_context()
-                        docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
-                        the_template.save(docx_file.name)
-                        if result['update_references']:
-                            docassemble.base.pandoc.update_references(docx_file.name)
-                        if 'docx' in result['formats_to_use']:
-                            result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
-                        if 'pdf' in result['formats_to_use']:
-                            pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_refs=result['update_references'], tagged=result['convert_to_tagged_pdf'])
-                            result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
-                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions']:
-                            if key in result:
-                                del result[key]
-                else:
-                    converter = MyPandoc(pdfa=result['convert_to_pdf_a'], password=result['password'])
-                    converter.output_format = doc_format
-                    converter.input_content = result['markdown'][doc_format]
-                    if 'initial_yaml' in attachment['options']:
-                        converter.initial_yaml = [x.path(the_user_dict=the_user_dict) for x in attachment['options']['initial_yaml']]
-                    elif 'initial_yaml' in self.interview.attachment_options:
-                        converter.initial_yaml = [x.path(the_user_dict=the_user_dict) for x in self.interview.attachment_options['initial_yaml']]
-                    if 'additional_yaml' in attachment['options']:
-                        converter.additional_yaml = [x.path(the_user_dict=the_user_dict) for x in attachment['options']['additional_yaml']]
-                    elif 'additional_yaml' in self.interview.attachment_options:
-                        converter.additional_yaml = [x.path(the_user_dict=the_user_dict) for x in self.interview.attachment_options['additional_yaml']]
-                    if doc_format in ('rtf', 'rtf to docx'):
-                        if 'rtf_template_file' in attachment['options']:
-                            converter.template_file = attachment['options']['rtf_template_file'].path(the_user_dict=the_user_dict)
-                        elif 'rtf_template_file' in self.interview.attachment_options:
-                            converter.template_file = self.interview.attachment_options['rtf_template_file'].path(the_user_dict=the_user_dict)
-                    elif doc_format == 'docx':
-                        if 'docx_reference_file' in attachment['options']:
-                            converter.reference_file = attachment['options']['docx_reference_file'].path(the_user_dict=the_user_dict)
-                        elif 'docx_reference_file' in self.interview.attachment_options:
-                            converter.reference_file = self.interview.attachment_options['docx_reference_file'].path(the_user_dict=the_user_dict)
-                    else:
-                        if 'template_file' in attachment['options']:
-                            converter.template_file = attachment['options']['template_file'].path(the_user_dict=the_user_dict)
-                        elif 'template_file' in self.interview.attachment_options:
-                            converter.template_file = self.interview.attachment_options['template_file'].path(the_user_dict=the_user_dict)
-                    converter.metadata = result['metadata']
-                    converter.convert(self)
-                    result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], converter.output_filename, yaml_file_name=self.interview.source.path)
-                    result['content'][doc_format] = result['markdown'][doc_format]
-            elif doc_format in ['html']:
-                result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
-        if attachment['variable_name']:
-            string = "import docassemble.base.core"
-            exec(string, the_user_dict)
-            variable_name = attachment['variable_name']
-            m = re.search(r'^(.*)\.([A-Za-z0-9\_]+)$', attachment['variable_name'])
-            if m:
-                base_var = m.group(1)
-                attrib = m.group(2)
-                the_var = eval(base_var, the_user_dict)
-                if hasattr(the_var, 'instanceName'):
-                    variable_name = the_var.instanceName + '.' + attrib
-            string = variable_name + " = docassemble.base.core.DAFileCollection(" + repr(variable_name) + ")"
-            # logmessage("Executing " + string + "\n")
-            exec(string, the_user_dict)
-            the_name = attachment['name'].text(the_user_dict).strip()
-            the_filename = attachment['filename'].text(the_user_dict).strip()
-            if the_filename == '':
-                the_filename = docassemble.base.functions.space_to_underscore(the_name)
-            the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False), raw=result['raw'], permissions=result.get('permissions', None))
-            exec(variable_name + '.info = _attachment_info', the_user_dict)
-            del the_user_dict['_attachment_info']
-            for doc_format in result['file']:
+        if 'language' in attachment['options']:
+            old_language = docassemble.base.functions.get_language()
+            docassemble.base.functions.set_language(attachment['options']['language'])
+        else:
+            old_language = None
+        try:
+            for doc_format in result['formats_to_use']:
                 if doc_format == 'raw':
-                    variable_string = variable_name + '.raw'
-                else:
-                    variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
-                # filename = result['filename'] + '.' + doc_format
-                # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
-                if result['file'][doc_format] is None:
-                    raise Exception("Could not save numbered file")
-                if 'content' in result and doc_format in result['content']:
-                    content_string = ', content=' + repr(result['content'][doc_format])
-                else:
-                    content_string = ''
-                if 'markdown' in result and doc_format in result['markdown']:
-                    markdown_string = ', markdown=' + repr(result['markdown'][doc_format])
-                else:
-                    markdown_string = ''
-                if result['raw']:
-                    the_ext = result['raw']
-                else:
-                    the_ext = '.' + extension_of_doc_format[doc_format]
-                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + the_ext) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
-                #logmessage("Executing " + string + "\n")
+                    the_temp = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=attachment['raw'], delete=False)
+                    with open(the_temp.name, 'w', encoding='utf-8') as the_file:
+                        the_file.write(result['markdown'][doc_format].lstrip("\n"))
+                    result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + attachment['raw'], the_temp.name, yaml_file_name=self.interview.source.path)
+                    result['raw'] = attachment['raw']
+                    result['content'][doc_format] = result['markdown'][doc_format].lstrip("\n")
+                elif doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
+                    if 'fields' in attachment['options']:
+                        if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
+                            if 'checkbox_export_value' in attachment['options']:
+                                default_export_value = attachment['options']['checkbox_export_value'].text(the_user_dict).strip()
+                            else:
+                                default_export_value = None
+                            docassemble.base.functions.set_context('pdf')
+                            the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'], default_export_value=default_export_value)
+                            result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
+                            for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions'):
+                                if key in result:
+                                    del result[key]
+                            docassemble.base.functions.reset_context()
+                        elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
+                            #logmessage("field_data is " + repr(result['field_data']))
+                            docassemble.base.functions.set_context('docx', template=result['template'])
+                            docassemble.base.functions.this_thread.misc['docx_subdocs'] = []
+                            try:
+                                the_template = result['template']
+                                while True: # Rerender if there's a subdoc using include_docx_template
+                                    old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
+                                    the_template.render(result['field_data'], jinja_env=custom_jinja_env())
+                                    if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
+                                        # There's another template included
+                                        new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+                                        the_template.save(new_template_file.name) # Save and refresh the template
+                                        the_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
+                                        if result['hyperlink_style'] and result['hyperlink_style'] in the_template.docx.styles:
+                                            the_template.da_hyperlink_style = result['hyperlink_style']
+                                        elif 'Hyperlink' in result['template'].docx.styles:
+                                            the_template.da_hyperlink_style = 'Hyperlink'
+                                        elif 'InternetLink' in result['template'].docx.styles:
+                                            the_template.da_hyperlink_style = 'InternetLink'
+                                        else:
+                                            the_template.da_hyperlink_style = None
+                                        docassemble.base.functions.this_thread.misc['docx_template'] = the_template
+                                    else:
+                                        break
+                                # Copy over images, etc from subdoc to master template
+                                subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', []) # Get the subdoc file list
+                                the_template_docx = the_template.docx
+                                for subdoc in subdocs:
+                                    docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
+
+                            except TemplateError as the_error:
+                                if (not hasattr(the_error, 'filename')) or the_error.filename is None:
+                                    docx_paths = []
+                                    for item in attachment['options']['docx_template_file']:
+                                        for subitem in item.paths(the_user_dict=the_user_dict):
+                                            docx_paths.append(os.path.basename(subitem))
+                                    the_error.filename = ', '.join(docx_paths)
+                                #logmessage("TemplateError:\n" + traceback.format_exc())
+                                raise the_error
+                            docassemble.base.functions.reset_context()
+                            docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+                            the_template.save(docx_file.name)
+                            if result['update_references']:
+                                docassemble.base.pandoc.update_references(docx_file.name)
+                            if 'docx' in result['formats_to_use']:
+                                result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
+                            if 'pdf' in result['formats_to_use']:
+                                pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+                                docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_refs=result['update_references'], tagged=result['convert_to_tagged_pdf'], filename=result['filename'])
+                                result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
+                            for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions']:
+                                if key in result:
+                                    del result[key]
+                    else:
+                        converter = MyPandoc(pdfa=result['convert_to_pdf_a'], password=result['password'])
+                        converter.output_format = doc_format
+                        converter.input_content = result['markdown'][doc_format]
+                        if 'initial_yaml' in attachment['options']:
+                            converter.initial_yaml = [x.path(the_user_dict=the_user_dict) for x in attachment['options']['initial_yaml']]
+                        elif 'initial_yaml' in self.interview.attachment_options:
+                            converter.initial_yaml = [x.path(the_user_dict=the_user_dict) for x in self.interview.attachment_options['initial_yaml']]
+                        if 'additional_yaml' in attachment['options']:
+                            converter.additional_yaml = [x.path(the_user_dict=the_user_dict) for x in attachment['options']['additional_yaml']]
+                        elif 'additional_yaml' in self.interview.attachment_options:
+                            converter.additional_yaml = [x.path(the_user_dict=the_user_dict) for x in self.interview.attachment_options['additional_yaml']]
+                        if doc_format in ('rtf', 'rtf to docx'):
+                            if 'rtf_template_file' in attachment['options']:
+                                converter.template_file = attachment['options']['rtf_template_file'].path(the_user_dict=the_user_dict)
+                            elif 'rtf_template_file' in self.interview.attachment_options:
+                                converter.template_file = self.interview.attachment_options['rtf_template_file'].path(the_user_dict=the_user_dict)
+                        elif doc_format == 'docx':
+                            if 'docx_reference_file' in attachment['options']:
+                                converter.reference_file = attachment['options']['docx_reference_file'].path(the_user_dict=the_user_dict)
+                            elif 'docx_reference_file' in self.interview.attachment_options:
+                                converter.reference_file = self.interview.attachment_options['docx_reference_file'].path(the_user_dict=the_user_dict)
+                        else:
+                            if 'template_file' in attachment['options']:
+                                converter.template_file = attachment['options']['template_file'].path(the_user_dict=the_user_dict)
+                            elif 'template_file' in self.interview.attachment_options:
+                                converter.template_file = self.interview.attachment_options['template_file'].path(the_user_dict=the_user_dict)
+                        converter.metadata = result['metadata']
+                        converter.convert(self)
+                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], converter.output_filename, yaml_file_name=self.interview.source.path)
+                        result['content'][doc_format] = result['markdown'][doc_format]
+                elif doc_format in ['html']:
+                    result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
+            if attachment['variable_name']:
+                string = "import docassemble.base.core"
                 exec(string, the_user_dict)
-            for doc_format in result['content']:
-                # logmessage("Considering " + doc_format)
-                if doc_format not in result['file']:
-                    variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
-                    # logmessage("Setting " + variable_string)
-                    string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ', markdown=' + repr(result['markdown'][doc_format]) + ', content=' + repr(result['content'][doc_format]) + ")"
+                variable_name = attachment['variable_name']
+                m = re.search(r'^(.*)\.([A-Za-z0-9\_]+)$', attachment['variable_name'])
+                if m:
+                    base_var = m.group(1)
+                    attrib = m.group(2)
+                    the_var = eval(base_var, the_user_dict)
+                    if hasattr(the_var, 'instanceName'):
+                        variable_name = the_var.instanceName + '.' + attrib
+                string = variable_name + " = docassemble.base.core.DAFileCollection(" + repr(variable_name) + ")"
+                # logmessage("Executing " + string + "\n")
+                exec(string, the_user_dict)
+                the_name = attachment['name'].text(the_user_dict).strip()
+                the_filename = attachment['filename'].text(the_user_dict).strip()
+                if the_filename == '':
+                    the_filename = docassemble.base.functions.space_to_underscore(the_name)
+                the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False), raw=result['raw'], permissions=result.get('permissions', None))
+                exec(variable_name + '.info = _attachment_info', the_user_dict)
+                del the_user_dict['_attachment_info']
+                for doc_format in result['file']:
+                    if doc_format == 'raw':
+                        variable_string = variable_name + '.raw'
+                    else:
+                        variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
+                    # filename = result['filename'] + '.' + doc_format
+                    # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
+                    if result['file'][doc_format] is None:
+                        raise Exception("Could not save numbered file")
+                    if 'content' in result and doc_format in result['content']:
+                        content_string = ', content=' + repr(result['content'][doc_format])
+                    else:
+                        content_string = ''
+                    if 'markdown' in result and doc_format in result['markdown']:
+                        markdown_string = ', markdown=' + repr(result['markdown'][doc_format])
+                    else:
+                        markdown_string = ''
+                    if result['raw']:
+                        the_ext = result['raw']
+                    else:
+                        the_ext = '.' + extension_of_doc_format[doc_format]
+                    string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + the_ext) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
+                    #logmessage("Executing " + string + "\n")
                     exec(string, the_user_dict)
-            if 'permissions' in result:
-                if result['permissions']['private'] is not None or result['permissions']['persistent'] is not None:
-                    params = list()
-                    if 'private' in result['permissions']:
-                        params.append('private=' + repr(result['permissions']['private']))
-                    if 'persistent' in result['permissions']:
-                        params.append('persistent=' + repr(result['permissions']['persistent']))
-                    string = variable_name + '.set_attributes(' + ','.join(params) + ')'
-                    exec(string, the_user_dict)
-                if len(result['permissions']['allow users']):
-                    string = variable_name + '.user_access(' + ', '.join([repr(y) for y in result['permissions']['allow users']]) + ')'
-                    exec(string, the_user_dict)
-                if len(result['permissions']['allow privileges']):
-                    string = variable_name + '.privilege_access(' + ', '.join([repr(y) for y in result['permissions']['allow privileges']]) + ')'
-                    exec(string, the_user_dict)
+                for doc_format in result['content']:
+                    # logmessage("Considering " + doc_format)
+                    if doc_format not in result['file']:
+                        variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
+                        # logmessage("Setting " + variable_string)
+                        string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ', markdown=' + repr(result['markdown'][doc_format]) + ', content=' + repr(result['content'][doc_format]) + ")"
+                        exec(string, the_user_dict)
+                if 'permissions' in result:
+                    if result['permissions']['private'] is not None or result['permissions']['persistent'] is not None:
+                        params = list()
+                        if 'private' in result['permissions']:
+                            params.append('private=' + repr(result['permissions']['private']))
+                        if 'persistent' in result['permissions']:
+                            params.append('persistent=' + repr(result['permissions']['persistent']))
+                        string = variable_name + '.set_attributes(' + ','.join(params) + ')'
+                        exec(string, the_user_dict)
+                    if len(result['permissions']['allow users']):
+                        string = variable_name + '.user_access(' + ', '.join([repr(y) for y in result['permissions']['allow users']]) + ')'
+                        exec(string, the_user_dict)
+                    if len(result['permissions']['allow privileges']):
+                        string = variable_name + '.privilege_access(' + ', '.join([repr(y) for y in result['permissions']['allow privileges']]) + ')'
+                        exec(string, the_user_dict)
+        except:
+            if old_language is not None:
+                docassemble.base.functions.set_language(old_language)
+            raise
+        if old_language is not None:
+            docassemble.base.functions.set_language(old_language)
         return(result)
     def prepare_attachment(self, attachment, the_user_dict, **kwargs):
         if 'language' in attachment['options']:
@@ -5741,8 +5752,9 @@ class Question:
         try:
             the_name = attachment['name'].text(the_user_dict).strip()
             the_filename = attachment['filename'].text(the_user_dict).strip()
+            the_filename = docassemble.base.functions.secure_filename(the_filename)
             if the_filename == '':
-                the_filename = docassemble.base.functions.space_to_underscore(the_name)
+                the_filename = docassemble.base.functions.secure_filename(docassemble.base.functions.space_to_underscore(the_name))
             result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': attachment['valid_formats']}
             if attachment['content'] is None and 'content file code' in attachment['options']:
                 raw_content = ''
