@@ -147,6 +147,10 @@ unique` is set to `True`.  You can also set `sessions are unique` to a
 list of roles, in which case uniqueness will be enforced only if the
 user has one of the listed roles.
 
+<a name="temporary session"></a>If you set `temporary session` to to
+`True`, then **docassemble** will delete any existing sessions that the
+user already has and start a new session.
+
 <a name="required privileges"></a>If you set `required privileges` to
 a list of one or more privileges, then a user will only be able to use
 the interview if they have one of the given privileges.  If
