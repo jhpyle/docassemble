@@ -5772,11 +5772,19 @@ def index(action_argument=None, refer=None):
                 flash(word("You need to be logged in to access this interview."), "info")
                 sys.stderr.write("Redirecting to login because sessions are unique.\n")
                 return redirect(url_for('user.login', next=url_for('index', **request.args)))
+            if interview.consolidated_metadata.get('temporary session', False):
+                if session_info is not None:
+                    reset_user_dict(session_info['uid'], yaml_filename)
+                if current_user.is_authenticated:
+                    while True:
+                        session_id, encrypted = get_existing_session(yaml_filename, secret)
+                        if session_id:
+                            reset_user_dict(session_id, yaml_filename)
+                        else:
+                            break
+                    reset_interview = 1
             if current_user.is_anonymous:
-                if not interview.allowed_to_initiate(is_anonymous=True):
-                    delete_session_for_interview(yaml_filename)
-                    raise DAError(word("You are not allowed to access this interview."), code=403)
-                if not interview.allowed_to_access(is_anonymous=True):
+                if (not interview.allowed_to_initiate(is_anonymous=True)) or (not interview.allowed_to_access(is_anonymous=True)):
                     delete_session_for_interview(yaml_filename)
                     flash(word("You need to be logged in to access this interview."), "info")
                     sys.stderr.write("Redirecting to login because anonymous user not allowed to access this interview.\n")

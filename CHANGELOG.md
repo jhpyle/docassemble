@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.103] - 2020-11-19
+### Added
+- The `temporary session` specifier under `metadata`.
+### Changed
+- The `countries_list()` and `country_name()` functions will now pass
+  country names through the `word()` translation system.
+
 ## [1.1.102] - 2020-11-19
 ### Fixed
 - The local PostgreSQL database was being created with the default

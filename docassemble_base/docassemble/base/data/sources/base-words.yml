@@ -23,17 +23,27 @@
 "Administrator": Null
 "Administrator privilege": Null
 "Advocate privilege": Null
+"Afghanistan": Null
 "a GitHub repository": Null
+"Åland Islands": Null
+"Albania": Null
+"Algeria": Null
 "Allowed sites": Null
 "Already registered?": Null
 "Already registered? Sign in.": Null
+"American Samoa": Null
 "and enter the code": Null
 "and": Null
+"Andorra": Null
 "An e-mail address is required.": Null
 "A new docassemble system version is available.  If you are using Docker, install a new Docker image.": Null
+"Angola": Null
+"Anguilla": Null
 "Anonymous": Null
 "anonymous visitor": Null
 "Answer here": Null
+"Antarctica": Null
+"Antigua and Barbuda": Null
 "An uploaded JSON file": Null
 "API key": Null
 "API keys": Null
@@ -50,10 +60,15 @@
 "Are you sure you want to delete all saved interviews?": Null
 "Are you sure you want to delete this item?": Null
 "Are you sure you want to permanently delete this user's account?": Null
+"Argentina": Null
+"Armenia": Null
+"Aruba": Null
 "At least one e-mail address must be listed": Null
 "Attachment": Null
 "Attachments": Null
 "A user with that e-mail has already registered": Null
+"Australia": Null
+"Austria": Null
 "Authentication failed.": Null
 "Authentication": Null
 "Author E-mail": Null
@@ -63,17 +78,46 @@
 "Available interviews": Null
 "Available Interviews": Null
 "Available": Null
+"Azerbaijan": Null
 "back": Null
 "Back": Null
 "Back to Playground": Null
 "Back to profile": Null
 "Back to question": Null
 "Bad date": Null
+"Bahamas": Null
+"Bahrain": Null
+"Bangladesh": Null
+"Barbados": Null
+"Belarus": Null
+"Belgium": Null
+"Belize": Null
+"Benin": Null
+"Bermuda": Null
+"Bhutan": Null
 "blank message": Null
 "Block": Null
+"Bolivia, Plurinational State of": Null
+"Bonaire, Sint Eustatius and Saba": Null
+"Bosnia and Herzegovina": Null
+"Botswana": Null
+"Bouvet Island": Null
 "Branch": Null
+"Brazil": Null
+"British Indian Ocean Territory": Null
+"Brunei Darussalam": Null
+"Bulgaria": Null
+"Burkina Faso": Null
+"Burundi": Null
+"Cabo Verde": Null
+"Cambodia": Null
+"Cameroon": Null
+"Canada": Null
 "Cancel": Null
 "Case No.": Null
+"Cayman Islands": Null
+"Central African Republic": Null
+"Chad": Null
 "Changed name of interview": Null
 "Change": Null
 "Change password": Null
@@ -84,8 +128,11 @@
 "Checkboxes:": Null
 "Check box": Null
 "Check if applicable": Null
+"Chile": Null
+"China": Null
 "Choices:": Null
 "Choose file": Null
+"Christmas Island": Null
 "Classes": Null
 "Clear": Null
 "Click here to confirm your e-mail": Null
@@ -97,8 +144,11 @@
 "Click to change your status to not available": Null
 "Click to try this interview": Null
 "Close": Null
+"Cocos (Keeling) Islands": Null
+"Colombia": Null
 "Commit message": Null
 "Commit": Null
+"Comoros": Null
 "Configuration not updated.": Null
 "Configuration not updated.  There was an error.": Null
 "Configuration not updated.  There was a syntax error in the configuration YAML.": Null
@@ -107,6 +157,8 @@
 "Configure": Null
 "Confirmation Date": Null
 "Confirm your email": Null
+"Congo": Null
+"Congo, The Democratic Republic of the": Null
 "Connected to Google Drive": Null
 "Connected to OneDrive": Null
 "Connected to server.": Null
@@ -114,7 +166,9 @@
 "Continue": Null
 "Control": Null
 "Convert to .md": Null
+"Cook Islands": Null
 "Copy from here and paste into a YAML file, e.g., in the Sources folder of the Playground or the sources folder of a package.": Null
+"Costa Rica": Null
 "could not connect to Google Drive": Null
 "could not connect to OneDrive": Null
 "Could not create new key": Null
@@ -128,7 +182,12 @@
 "Created new Markdown file called ": Null
 "Create": Null
 "Create Package": Null
+"Croatia": Null
+"Cuba": Null
+"Curaçao": Null
 "Current": Null
+"Cyprus": Null
+"Czechia": Null
 "day": Null
 "Decorations": Null
 "Default Playground": Null
@@ -148,6 +207,7 @@
 "Delete": Null
 "Delete project": Null
 "Delete this package from the Playground": Null
+"Denmark": Null
 "Dependencies": Null
 "Description": Null
 "Developer Access": Null
@@ -155,10 +215,13 @@
 "Disable": Null
 "Disable two-factor authentication": Null
 "Display the menu": Null
+"Djibouti": Null
 "Docassemble Office Add-in": Null
 "Docassemble Playground": Null
 "Documentation": Null
 "Document": Null
+"Dominican Republic": Null
+"Dominica": Null
 "Done": Null
 "-- Do not link --": Null
 "Do not stop your web browser.": Null
@@ -173,6 +236,7 @@
 "Download this file": Null
 "Download this log file": Null
 "Draft translation of system phrases": Null
+"Ecuador": Null
 "Edit another file": Null
 "Edit another interview": Null
 "Edit another package": Null
@@ -187,6 +251,8 @@
 "E.g., docassemble.demo:data/questions/questions.yml": Null
 "E.g., es, fr, it": Null
 "e.g., *example.com": Null
+"Egypt": Null
+"El Salvador": Null
 "E-mail address is required": Null
 "Email address is required": Null
 "E-mail address": Null
@@ -204,7 +270,9 @@
 "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu.": Null
 "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews.": Null
 "Enter the name of the new project you want to create.": Null
+"Equatorial Guinea": Null
 "Erase existing data for each model before importing": Null
+"Eritrea": Null
 "Error: interview not found and answers could not be decrypted": Null
 "Error: interview not found": Null
 "Error: menu item is not a Python dict with keys of url and label": Null
@@ -216,6 +284,9 @@
 "Error reading JSON file.  The JSON file needs to contain a dictionary at the root level.": Null
 "Errors": Null
 "ERROR: you cannot insert a table into a .docx document": Null
+"Estonia": Null
+"Eswatini": Null
+"Ethiopia": Null
 "Every Two Weeks": Null
 "Existing module files": Null
 "Existing source files": Null
@@ -224,7 +295,10 @@
 "exit": Null
 "Exit": Null
 "Failed to load report": Null
+"Falkland Islands (Malvinas)": Null
 "false": Null
+"Faroe Islands": Null
+"Fiji": Null
 "File could not be converted: ": Null
 "File deleted.": Null
 "File format not understood: ": Null
@@ -239,6 +313,7 @@
 "Filter by tag": Null
 "Filter for": Null
 "Filter For": Null
+"Finland": Null
 "First name": Null
 "First subdivision": Null
 "First Subdivision": Null
@@ -255,12 +330,22 @@
 "Forgot your Password?": Null
 "Formula": Null
 "for printing; requires Adobe Reader or similar application": Null
+"France": Null
+"French Guiana": Null
+"French Polynesia": Null
+"French Southern Territories": Null
 "from": Null
 "Functions": Null
+"Gabon": Null
+"Gambia": Null
+"Georgia": Null
+"Germany": Null
 "Get help through live chat by clicking here.": Null
 "Get list of fields from PDF/DOCX template": Null
 "Get package": Null
 "Get template": Null
+"Ghana": Null
+"Gibraltar": Null
 "GitHub Branch": Null
 "GitHub integration": Null
 "GitHub Integration": Null
@@ -279,6 +364,18 @@
 "Google Drive synchronization": Null
 "Google Drive Sync": Null
 "Google Drive Test": Null
+"Greece": Null
+"Greenland": Null
+"Grenada": Null
+"Guadeloupe": Null
+"Guam": Null
+"Guatemala": Null
+"Guernsey": Null
+"Guinea-Bissau": Null
+"Guinea": Null
+"Guyana": Null
+"Haiti": Null
+"Heard Island and McDonald Islands": Null
 "Help is available for this question": Null
 "Help is available": Null
 "Help": Null
@@ -294,11 +391,16 @@
 "Hide import controls": Null
 "him": Null
 "History": Null
+"Holy See (Vatican City State)": Null
 "Home Page": Null
+"Honduras": Null
+"Hong Kong": Null
 "How question came to be asked": Null
 "How this question came to be asked": Null
 "How would you like the data to be imported?": Null
+"Hungary": Null
 "I am sorry.  The code you entered is invalid or expired.  Goodbye.": Null
+"Iceland": Null
 "icon": Null
 "I do not understand what you mean by": Null
 "I don't know": Null
@@ -323,6 +425,8 @@
 "Incorrect Email and/or Password": Null
 "Incorrect Password": Null
 "Incorrect %(username_or_email)s and/or Password": Null
+"India": Null
+"Indonesia": Null
 "in mako": Null
 "Input box": Null
 "Input not processed because the page expired.": Null
@@ -355,41 +459,77 @@
 "Invite!": Null
 "Invite": Null
 "Invite User": Null
+"Iran, Islamic Republic of": Null
+"Iraq": Null
+"Ireland": Null
 ", is already in use by someone else": Null
 ", is attached": Null
+"Isle of Man": Null
 "is not a valid date and time.": Null
 "is not a valid date.": Null
 "is not a valid number.": Null
 "is not a valid time.": Null
 "is not a whole number.": Null
 "is not within the range.": Null
+"Israel": Null
+"Italy": Null
 "Items in the Playground other than interviews": Null
 "Items in the training set": Null
 "Items": Null
 "it": Null
+"Jamaica": Null
+"Japan": Null
+"Jersey": Null
 "Jinja2 help template": Null
 "Join": Null
+"Jordan": Null
 "JSON file": Null
+"Kazakhstan": Null
+"Kenya": Null
+"Kiribati": Null
+"Korea, Republic of": Null
+"Kuwait": Null
+"Kyrgyzstan": Null
 "Language": Null
 "Last name": Null
+"Latvia": Null
 "Leave": Null
+"Lebanon": Null
+"Lesotho": Null
+"Liberia": Null
+"Libya": Null
 "License": Null
+"Liechtenstein": Null
 "Linked folder": Null
 "link": Null
 "Links": Null
 "Listen": Null
 "List of ISO-639-1 language codes": Null
+"Lithuania": Null
 "Live chat is available": Null
 "Live chat": Null
 "Loading . . .": Null
 "Loading.  Please wait . . . ": Null
 "Log": Null
 "Logs": Null
+"Luxembourg": Null
+"Macao": Null
+"Madagascar": Null
+"Malawi": Null
+"Malaysia": Null
+"Maldives": Null
+"Mali": Null
+"Malta": Null
 "Manage account": Null
 "Manage Emails": Null
 "Manage Projects": Null
 "Manually add a training item": Null
 "Markdown": Null
+"Marshall Islands": Null
+"Martinique": Null
+"Mauritania": Null
+"Mauritius": Null
+"Mayotte": Null
 "means the name is located in this file": Null
 "means the name may be located in a file included by reference, such as:": Null
 "mentioned in": Null
@@ -399,16 +539,26 @@
 "Menu:": Null
 "Merge new data into existing data": Null
 "Methods": Null
+"Mexico": Null
+"Micronesia, Federated States of": Null
 "Models": Null
 "Modules available in Playground": Null
 "Modules defined": Null
 "Modules": Null
+"Moldova, Republic of": Null
+"Monaco": Null
+"Mongolia": Null
 "Monitor": Null
+"Montenegro": Null
 "month": Null
+"Montserrat": Null
+"Morocco": Null
 "Move down": Null
+"Mozambique": Null
 "Must be a two-letter code": Null
 "Must be a valid e-mail address": Null
 "Must be in E.164 format.  U.S. phone numbers begin with +1.": Null
+"Myanmar": Null
 "My Interviews": Null
 "My Playground": Null
 "Name": Null
@@ -417,9 +567,14 @@
 "Name of new privilege": Null
 "Names and questions": Null
 "Names from": Null
+"Namibia": Null
 "n/a": Null
+"Nauru": Null
+"Nepal": Null
+"Netherlands": Null
 "New API Key": Null
 "(New branch)": Null
+"New Caledonia": Null
 "New chat connection from": Null
 "New chat message": Null
 "New conversation above": Null
@@ -435,10 +590,15 @@
 "New Password": Null
 "New project": Null
 "New Username": Null
+"New Zealand": Null
 "Next": Null
 "Next result": Null
 "Next will be": Null
+"Nicaragua": Null
 "Nickname": Null
+"Nigeria": Null
+"Niger": Null
+"Niue": Null
 "n": Null
 "No access code was entered.": Null
 "No administrators could be found.": Null
@@ -449,6 +609,10 @@
 "None of the above": Null
 "no": Null
 "No": Null
+"Norfolk Island": Null
+"Northern Mariana Islands": Null
+"North Macedonia": Null
+"Norway": Null
 "(no subject)": Null
 "(Not a DAFile or DAFileList object)": Null
 "(Not a readable image file)": Null
@@ -473,6 +637,7 @@
 "Old Password is incorrect": Null
 "Old Password is required": Null
 "Old Password": Null
+"Oman": Null
 "OneDrive is not configured": Null
 "OneDrive is not linked.": Null
 "OneDrive": Null
@@ -503,6 +668,12 @@
 "Package on PyPI": Null
 "Packages": Null
 "pages": Null
+"Pakistan": Null
+"Palau": Null
+"Palestine, State of": Null
+"Panama": Null
+"Papua New Guinea": Null
+"Paraguay": Null
 "Password and Retype Password did not match": Null
 "Password is required": Null
 "Password must have at least 6 characters with one lowercase letter, one uppercase letter and one number": Null
@@ -510,12 +681,15 @@
 "Password": Null
 "PDF/DOCX File": Null
 "Per Month": Null
+"Peru": Null
 "Per Week": Null
 "Per Year": Null
+"Philippines": Null
 "Phone help is available": Null
 "Phone help": Null
 "Phone number": Null
 "pip log": Null
+"Pitcairn": Null
 "Plain text of sections": Null
 "Playground not saved.  There was an error.": Null
 "Playground": Null
@@ -549,6 +723,8 @@
 "Please wait.": Null
 "Please wait.  Packages are updating.  The screen will refresh when the process is complete.  This may take several minutes.": Null
 "Please wait.  System is restarting.": Null
+"Poland": Null
+"Portugal": Null
 "Possibly not defined": Null
 "Possibly not used": Null
 "Prediction": Null
@@ -570,6 +746,7 @@
 "Publish": Null
 "Publish on PyPI also": Null
 "Publish on PyPI": Null
+"Puerto Rico": Null
 "Pull a package from GitHub or PyPI into the Playground": Null
 "Pull GitHub or PyPI Package": Null
 "Pull": Null
@@ -579,6 +756,7 @@
 "PyPI package": Null
 "PyPI Password": Null
 "PyPI Username": Null
+"Qatar": Null
 "question": Null
 "Question": Null
 "quit": Null
@@ -619,10 +797,25 @@
 "Return": Null
 "Retype New Password": Null
 "Retype Password": Null
+"Réunion": Null
 "Role": Null
+"Romania": Null
 "Room": Null
 "Running in other tab.": Null
 "Run": Null
+"Russian Federation": Null
+"Rwanda": Null
+"Saint Barthélemy": Null
+"Saint Helena, Ascension and Tristan da Cunha": Null
+"Saint Kitts and Nevis": Null
+"Saint Lucia": Null
+"Saint Martin (French part)": Null
+"Saint Pierre and Miquelon": Null
+"Saint Vincent and the Grenadines": Null
+"Samoa": Null
+"San Marino": Null
+"Sao Tome and Principe": Null
+"Saudi Arabia": Null
 "Save and Run": Null
 "Save changes": Null
 "Saved at": Null
@@ -653,8 +846,11 @@
 "Send Confirmation E-mail": Null
 "Send": Null
 "Send reset password email": Null
+"Senegal": Null
+"Serbia": Null
 "Server did not respond to request for update.": Null
 "Sessions": Null
+"Seychelles": Null
 "Share": Null
 "she": Null
 "Show all": Null
@@ -665,6 +861,7 @@
 "Showing interviews tagged with:": Null
 "Show report of names and associated questions": Null
 "Show variables and values": Null
+"Sierra Leone": Null
 "sign in": Null
 "Sign in": Null
 "Sign in.": Null
@@ -683,9 +880,15 @@
 "Since you did not type \"delete my account\" I did not delete your account.": Null
 "Since you renamed a project, the server needs to restart in order to reload any modules.": Null
 "Since you uploaded a Python module, the server needs to restart in order to load your module.": Null
+"Singapore": Null
+"Sint Maarten (Dutch part)": Null
 "skip": Null
+"Slovakia": Null
+"Slovenia": Null
 "SMS": Null
 "Social ID": Null
+"Solomon Islands": Null
+"Somalia": Null
 "something": Null
 "Sorry, no help is available for this question.": Null
 "Sorry, only .py files can be uploaded here.  To upload other types of files, use other Folders.": Null
@@ -698,8 +901,13 @@
 "Source Files": Null
 "Source": Null
 "Sources": Null
+"South Africa": Null
+"South Georgia and the South Sandwich Islands": Null
+"South Sudan": Null
+"Spain": Null
 "Special Page": Null
 "Special variable": Null
+"Sri Lanka": Null
 "Started": Null
 "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu.": Null
 "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews.": Null
@@ -708,7 +916,12 @@
 "Stop Controlling": Null
 "Stop Observing": Null
 "Submit": Null
+"Sudan": Null
 "(%s uncompressed)": Null
+"Suriname": Null
+"Svalbard and Jan Mayen": Null
+"Sweden": Null
+"Switzerland": Null
 "Sync and Run": Null
 "Synchronizing": Null
 "Synchronizing with Google Drive": Null
@@ -716,15 +929,20 @@
 "Sync": Null
 "Sync with Google Drive": Null
 "Sync with OneDrive": Null
+"Syrian Arab Republic": Null
 "system": Null
 "System": Null
 "Tags": Null
+"Taiwan, Province of China": Null
+"Tajikistan": Null
+"Tanzania, United Republic of": Null
 "Telephone assistance": Null
 "Template files": Null
 "Templates": Null
 "Terms used in this question:": Null
 "Terms used:": Null
 "Test": Null
+"Thailand": Null
 "Thank you for registering with": Null
 "That package name is already in use by someone else.  Please change the name.": Null
 "That screen is already being controlled by another operator": Null
@@ -800,9 +1018,13 @@
 "This Username is already in use. Please try another one.": Null
 "Thumbnail image of document": Null
 "Time Zone": Null
+"Timor-Leste": Null
 "Title": Null
 "t": Null
+"Togo": Null
+"Tokelau": Null
 "Token": Null
+"Tonga": Null
 "to proceed.": Null
 "To reach an advocate who can assist you, call": Null
 "To read the question again, type question.": Null
@@ -812,8 +1034,14 @@
 "Train": Null
 "Translate": Null
 "Translate system phrases into another language": Null
+"Trinidad and Tobago": Null
 "true": Null
+"Tunisia": Null
+"Turkey": Null
+"Turkmenistan": Null
+"Turks and Caicos Islands": Null
 "Turn off chat": Null
+"Tuvalu": Null
 "Twice Per Month": Null
 "Two-factor authentication": Null
 "Type a currency value.": Null
@@ -844,6 +1072,8 @@
 "Type your selection, or type skip to move on without selecting.": Null
 "Type your selection(s), separated by commas.": Null
 "Type your selection(s), separated by commas, or type none.": Null
+"Uganda": Null
+"Ukraine": Null
 "Unable to determine if the package is published on PyPI.": Null
 "Unable to determine if the package is published on your GitHub account.": Null
 "Unable to determine IP address": Null
@@ -863,6 +1093,10 @@
 "Undefined names": Null
 "Undelete": Null
 "Uninstall": Null
+"United Arab Emirates": Null
+"United Kingdom": Null
+"United States Minor Outlying Islands": Null
+"United States": Null
 "Unit": Null
 "Unknown": Null
 "Unnamed User": Null
@@ -883,6 +1117,7 @@
 "Upload successful": Null
 "Upload this .docx file to the Templates folder": Null
 "URL": Null
+"Uruguay": Null
 "Use a different server": Null
 "Used in": Null
 "Use Package": Null
@@ -902,24 +1137,32 @@
 "Using Jinja2": Null
 "(using your email address) and change your password.": Null
 "Utilities": Null
+"Uzbekistan": Null
 "Valid characters are: A-Z, a-z, 0-9, hyphen": Null
 "Valid characters are: A-Z, a-z, 0-9": Null
+"Vanuatu": Null
 "Variables, etc. from": Null
 "Variables": Null
+"Venezuela, Bolivarian Republic of": Null
 "Verification code": Null
 "Verify": Null
 "Verify your phone": Null
 "Version ": Null
 "Version": Null
+"Viet Nam": Null
 "View documentation": Null
+"Virgin Islands, British": Null
+"Virgin Islands, U.S.": Null
 "v.": Null
 "Waiting": Null
+"Wallis and Futuna": Null
 "Warning: a file by that name already exists.  If you save, you will overwrite it.": Null
 "Warning: a package definition by that name already exists.  If you save, you will overwrite it.": Null
 "WARNING!  If you press Delete, the contents of the %s project will be permanently deleted.": Null
 "was saved at": Null
 "We have received your password reset request.": Null
 "We just sent you a text message with a verification code.  Enter the verification code to proceed.": Null
+"Western Sahara": Null
 "We were unable to submit your request.": Null
 "What file do you want to import?": Null
 "When you type inside Jinja2 brackets, auto-complete options will appear here.": Null
@@ -927,6 +1170,7 @@
 "Would you like to reconfigure two-factor authentication?": Null
 "x": Null
 "year": Null
+"Yemen": Null
 "yes": Null
 "Yes": Null
 "y": Null
@@ -1038,4 +1282,6 @@
 "Your version is": Null
 "You will need to confirm your email next.": Null
 "You will need to confirm your email to start using": Null
+"Zambia": Null
+"Zimbabwe": Null
 "Zip File": Null
