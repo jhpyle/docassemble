@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.104](https://github.com/jhpyle/docassemble/releases/tag/v1.1.104) - 2020-11-20
+
+### Added
+- German translations of country names.
+
+### Changed
+- The `states_list()`, `state_name()`, and `subdivision_type()`
+  functions now pass output through the `word()` translation system.
+
+### Fixed
+- The `language` modifier for an attachment did not work with `docx
+  template file` attachments.
+
 ## [1.1.103](https://github.com/jhpyle/docassemble/releases/tag/v1.1.103) - 2020-11-19
 
 ### Added

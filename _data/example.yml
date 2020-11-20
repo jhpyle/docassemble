@@ -5567,10 +5567,11 @@
 "geolocate-from-address": "objects:\n  - the_address: Address\n---\nquestion: |\n\
   \  Enter an address\nfields:\n  - Address: address_one_line\n---\nmandatory: True\n\
   code: |\n  the_address.geolocate(address_one_line)\n---\nmandatory: True\nquestion:\
-  \ |\n  Information about your address\nsubquestion: |\n  The address you provided\
-  \ is:\n    \n  ${ the_address }\n\n  The address is located in\n  ${ the_address.city\
-  \ }.\n\n  The latitude and longitude are\n  ${ the_address.location.latitude }\n\
-  \  and\n  ${ the_address.location.longitude }."
+  \ |\n  Information about your address\nsubquestion: |\n  % if the_address.geolocate_success:\n\
+  \  The address you provided is:\n    \n  ${ the_address }\n\n  The address is located\
+  \ in\n  ${ the_address.city }.\n\n  The latitude and longitude are\n  ${ the_address.location.latitude\
+  \ }\n  and\n  ${ the_address.location.longitude }.\n  % else:\n  That address could\
+  \ not be geolocated.\n  % endif"
 "geolocate-reset": "objects:\n  - the_address: Address\n---\nmandatory: True\ncode:\
   \ |\n  saw_address\n  saw_address_again\n  final_screen\n---\nundefine:\n  - the_address.county\n\
   question: |\n  Enter an address\nfields:\n  - Address: the_address.address\n  -\
