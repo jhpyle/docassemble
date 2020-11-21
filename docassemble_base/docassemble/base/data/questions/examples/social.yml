@@ -1,0 +1,30 @@
+metadata:
+  documentation: "https://docassemble.org/docs/initial.html#social"
+  example start: 1
+  example end: 1
+---
+metadata:
+  title: Social meta tags
+  short: Social
+  social:
+    description: |
+      A demonstration of meta tags.
+    image: court.png
+    og:
+      image: docassemble.demo:data/static/crown.png
+      description: A one-page guided interview demonstrating meta tags.
+    twitter:
+      title: Social meta tag demo
+      site: "@docassemble"
+      description: |
+        An interview that demonstrates meta tags.
+      image: https://docassemble.org/img/docassemble-logo-sq-125.jpg
+      "image:alt": Docassemble logo
+---
+mandatory: True
+question: |
+  Meta tag demo
+subquestion: |
+  Check out "View Source" on this page
+  to see the meta tags for this
+  interview.

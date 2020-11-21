@@ -28,13 +28,14 @@
         msgNoFilesSelected: 'Không tập tin nào được chọn',
         msgPaused: 'Paused',
         msgCancelled: 'Đã hủy',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'Chi tiết xem trước',
         msgFileRequired: 'You must select a file to upload.',
         msgSizeTooSmall: 'File "{name}" (<b>{size} KB</b>) is too small and must be larger than <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'Tập tin "{name}" (<b>{size} KB</b>) vượt quá kích thước giới hạn cho phép <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Bạn phải chọn ít nhất <b>{n}</b> {files} để upload.',
         msgFilesTooMany: 'Số lượng tập tin upload <b>({n})</b> vượt quá giới hạn cho phép là <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Không tìm thấy tập tin "{name}"!',
         msgFileSecured: 'Các hạn chế về bảo mật không cho phép đọc tập tin "{name}".',
         msgFileNotReadable: 'Không đọc được tập tin "{name}".',
@@ -54,10 +55,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'Đã dừng upload',
-        msgUploadThreshold: 'Đang xử lý...',
-        msgUploadBegin: 'Initializing...',
+        msgUploadThreshold: 'Đang xử lý &hellip;',
+        msgUploadBegin: 'Initializing &hellip;',
         msgUploadEnd: 'Done',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'No valid data available for upload.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -98,7 +99,7 @@
             indicatorSuccessTitle: 'Đã upload',
             indicatorErrorTitle: 'Upload bị lỗi',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Đang upload ...'
+            indicatorLoadingTitle:  'Đang upload &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Xem tập tin phía trước',

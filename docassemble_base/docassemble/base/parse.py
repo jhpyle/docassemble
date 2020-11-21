@@ -44,6 +44,9 @@ import collections.abc as abc
 from collections import OrderedDict
 from types import CodeType
 import pandas
+import dateutil.parser
+import pytz
+from bs4 import BeautifulSoup
 RangeType = type(range(1,2))
 NoneType = type(None)
 
@@ -110,7 +113,7 @@ def textify(data, the_user_dict):
 #     save_numbered_file = func
 #     return
 
-initial_dict = dict(_internal=dict(dirty=dict(), progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
+initial_dict = dict(_internal=dict(session_local=dict(), device_local=dict(), user_local=dict(), dirty=dict(), progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -298,6 +301,7 @@ class InterviewSourceFile(InterviewSource):
         if os.path.isfile(new_file) and os.access(new_file, os.R_OK):
             new_source = InterviewSourceFile()
             new_source.path = path
+            new_source.directory = self.directory
             new_source.basename = path
             new_source.filepath = new_file
             new_source.playground = self.playground
@@ -334,6 +338,7 @@ class InterviewSourceURL(InterviewSource):
         if os.path.isfile(new_file) and os.access(new_file, os.R_OK):
             new_source = InterviewSourceFile()
             new_source.path = path
+            new_source.directory = self.directory
             new_source.filepath = new_file
             if new_source.update():
                 return(new_source)
@@ -442,6 +447,8 @@ class InterviewStatus:
                     saveas_to_use[field.saveas] = the_saveas
                     saveas_by_number[field.number] = the_saveas
             for field in the_field_list:
+                if not self.extras['ok'][field.number]:
+                    continue
                 if self.is_empty_mc(field):
                     if hasattr(field, 'datatype'):
                         hiddens[field.saveas] = field.datatype
@@ -451,8 +458,6 @@ class InterviewStatus:
                         datatypes[field.saveas] = field.datatype
                         if field.datatype == 'object_checkboxes':
                             datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
-                    continue
-                if not self.extras['ok'][field.number]:
                     continue
                 if hasattr(field, 'extras'):
                     if 'ml_group' in field.extras or 'ml_train' in field.extras:
@@ -558,6 +563,32 @@ class InterviewStatus:
                     the_field.number = str(list_indexno) + '_' + str(the_field.number)
                     if hasattr(the_field, 'saveas'):
                         the_field.saveas = safeid(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(the_field.saveas)))
+                        if hasattr(the_field, 'disableothers') and the_field.disableothers:
+                            list_of_other_fields = list()
+                            if isinstance(the_field.disableothers, list):
+                                for other_saveas in the_field.disableothers:
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', other_saveas))
+                            else:
+                                for other_field in field_list:
+                                    if not hasattr(other_field, 'saveas'):
+                                        continue
+                                    if other_field.number == field.number:
+                                        continue
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(other_field.saveas)))
+                            the_field.disableothers = list_of_other_fields
+                        if hasattr(the_field, 'uncheckothers') and the_field.uncheckothers:
+                            list_of_other_fields = list()
+                            if isinstance(the_field.uncheckothers, list):
+                                for other_saveas in the_field.uncheckothers:
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(other_saveas)))
+                            else:
+                                for other_field in field_list:
+                                    if not hasattr(other_field, 'saveas'):
+                                        continue
+                                    if other_field.number == field.number or not (hasattr(other_field, 'inputtype') and other_field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']):
+                                        continue
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(other_field.saveas)))
+                            the_field.uncheckothers = list_of_other_fields
                     if hasattr(the_field, 'extras'):
                         if 'show_if_var' in the_field.extras:
                             the_field.extras['show_if_var'] = safeid(re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', from_safeid(the_field.extras['show_if_var'])))
@@ -608,6 +639,7 @@ class InterviewStatus:
         self.attachments = question_result['attachments']
         self.selectcompute = question_result['selectcompute']
         self.defaults = question_result['defaults']
+        self.other_defaults = dict()
         #self.defined = question_result['defined']
         self.hints = question_result['hints']
         self.helptexts = question_result['helptexts']
@@ -625,6 +657,31 @@ class InterviewStatus:
             result['validation_messages'] = copy.copy(self.question.interview.default_validation_messages[self.question.language])
         else:
             result['validation_messages'] = dict()
+        if 'reload_after' in self.extras:
+            result['reload'] = 1000 * int(self.extras['reload_after'])
+        lang = docassemble.base.functions.get_language()
+        if len(self.question.terms) or len(self.question.interview.terms):
+            result['terms'] = dict()
+            if 'terms' in self.extras:
+                for term, vals in self.extras['terms'].items():
+                    result['terms'][term] = vals['definition']
+            if lang in self.question.interview.terms and len(self.question.interview.terms[lang]):
+                for term, vals in self.question.interview.terms[lang].items():
+                    result['terms'][term] = vals['definition']
+            elif self.question.language in self.question.interview.terms and len(self.question.interview.terms[self.question.language]):
+                for term, vals in self.question.interview.terms[self.question.language].items():
+                    result['terms'][term] = vals['definition']
+        if len(self.question.autoterms) or len(self.question.interview.autoterms):
+            result['autoterms'] = dict()
+            if 'autoterms' in self.extras:
+                for term, vals in self.extras['autoterms'].items():
+                    result['autoterms'][term] = vals['definition']
+            if lang in self.question.interview.autoterms and len(self.question.interview.autoterms[lang]):
+                for term, vals in question.interview.autoterms[lang].items():
+                    result['autoterms'][term] = vals['definition']
+            elif self.question.language in self.question.interview.autoterms and len(self.question.interview.autoterms[self.question.language]):
+                for term, vals in self.question.interview.autoterms[self.question.language].items():
+                    result['autoterms'][term] = vals['definition']
         if self.orig_sought is not None:
             result['event_list'] = [self.orig_sought]
         for param in ('questionText', 'subquestionText', 'continueLabel', 'helpLabel'):
@@ -632,9 +689,17 @@ class InterviewStatus:
                 result[param] = getattr(self, param).rstrip()
         if 'menu_items' in self.extras and isinstance(self.extras['menu_items'], list):
             result['menu_items'] = self.extras['menu_items']
-        for param in ('rightText', 'underText', 'cssClass', 'back_button_label', 'css', 'script'):
+        for param in ('rightText', 'underText', 'cssClass', 'tableCssClass', 'back_button_label', 'css', 'script'):
             if param in self.extras and isinstance(self.extras[param], str):
                 result[param] = self.extras[param].rstrip()
+        if 'questionMetadata' in self.extras:
+            result['question_metadata'] = self.extras['questionMetadata']
+        if 'segment' in self.extras:
+            result['segment'] = self.extras['segment']
+        if 'ga_id' in self.extras:
+            result['ga_id'] = self.extras['ga_id']
+        if hasattr(self.question, 'id'):
+            result['id'] = self.question.id
         if hasattr(self, 'audiovideo') and self.audiovideo is not None:
             audio_result = docassemble.base.filter.get_audio_urls(self.audiovideo)
             video_result = docassemble.base.filter.get_video_urls(self.audiovideo)
@@ -720,7 +785,7 @@ class InterviewStatus:
                 the_field['disable_others'] = True
             if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                 the_field['uncheck_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width', 'rows', 'accept', 'currency symbol'):
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata'):
                 if key in self.extras and field.number in self.extras[key]:
                     the_field[key] = self.extras[key][field.number]
             if hasattr(field, 'saveas') and field.saveas in self.embedded:
@@ -760,7 +825,7 @@ class InterviewStatus:
                     the_field['show_if_var'] = from_safeid(field.extras['show_if_var'])
                     the_field['show_if_val'] = self.extras['show_if_val'][field.number]
                 if 'show_if_js' in field.extras:
-                    the_field['show_if_js'] = dict(expression=field.extras['show_if_js']['expression'].text(the_user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
+                    the_field['show_if_js'] = dict(expression=field.extras['show_if_js']['expression'].text(the_user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'], mode=field.extras['show_if_js']['mode'])
             if hasattr(field, 'datatype'):
                 if 'note' in self.extras and field.number in self.extras['note']:
                     the_field['note'] = self.extras['note'][field.number]
@@ -1155,29 +1220,78 @@ def recursive_textobject(target, question):
         return new_set
     return TextObject(str(target), question=question)
 
-def recursive_eval_textobject(target, the_user_dict, question, tpl):
+def recursive_eval_textobject(target, the_user_dict, question, tpl, skip_undefined):
     if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
         new_dict = dict()
         for key, val in target.items():
-            new_dict[key] = recursive_eval_textobject(val, the_user_dict, question, tpl)
+            new_dict[key] = recursive_eval_textobject(val, the_user_dict, question, tpl, skip_undefined)
         return new_dict
     if isinstance(target, list) or (hasattr(target, 'elements') and isinstance(target.elements, list)):
         new_list = list()
         for val in target.__iter__():
-            new_list.append(recursive_eval_textobject(val, the_user_dict, question, tpl))
+            new_list.append(recursive_eval_textobject(val, the_user_dict, question, tpl, skip_undefined))
         return new_list
     if isinstance(target, set) or (hasattr(target, 'elements') and isinstance(target.elements, set)):
         new_set = set()
         for val in target.__iter__():
-            new_set.add(recursive_eval_textobject(val, the_user_dict, question, tpl))
+            new_set.add(recursive_eval_textobject(val, the_user_dict, question, tpl, skip_undefined))
         return new_set
     if isinstance(target, (bool, NoneType)):
         return target
     if isinstance(target, TextObject):
-        text = target.text(the_user_dict)
+        if skip_undefined:
+            try:
+                text = target.text(the_user_dict)
+            except:
+                text = ''
+        else:
+            text = target.text(the_user_dict)
         return docassemble.base.file_docx.transform_for_docx(text, question, tpl)
     else:
         raise DAError("recursive_eval_textobject: expected a TextObject, but found a " + str(type(target)))
+
+def recursive_textobject_or_primitive(target, question):
+    if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
+        new_dict = dict()
+        for key, val in target.items():
+            new_dict[key] = recursive_textobject_or_primitive(val, question)
+        return new_dict
+    if isinstance(target, list) or (hasattr(target, 'elements') and isinstance(target.elements, list)):
+        new_list = list()
+        for val in target.__iter__():
+            new_list.append(recursive_textobject_or_primitive(val, question))
+        return new_list
+    if isinstance(target, set) or (hasattr(target, 'elements') and isinstance(target.elements, set)):
+        new_set = set()
+        for val in target.__iter__():
+            new_set.add(recursive_textobject_or_primitive(val, question))
+        return new_set
+    if isinstance(target, (int, bool, float, NoneType)):
+        return target
+    return TextObject(str(target), question=question)
+
+def recursive_eval_textobject_or_primitive(target, the_user_dict):
+    if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
+        new_dict = dict()
+        for key, val in target.items():
+            new_dict[key] = recursive_eval_textobject_or_primitive(val, the_user_dict)
+        return new_dict
+    if isinstance(target, list) or (hasattr(target, 'elements') and isinstance(target.elements, list)):
+        new_list = list()
+        for val in target.__iter__():
+            new_list.append(recursive_eval_textobject_or_primitive(val, the_user_dict))
+        return new_list
+    if isinstance(target, set) or (hasattr(target, 'elements') and isinstance(target.elements, set)):
+        new_set = set()
+        for val in target.__iter__():
+            new_set.add(recursive_eval_textobject_or_primitive(val, the_user_dict))
+        return new_set
+    if isinstance(target, (bool, int, float, NoneType)):
+        return target
+    if isinstance(target, TextObject):
+        return target.text(the_user_dict)
+    else:
+        raise DAError("recursive_eval_textobject_or_primitive: expected a TextObject, but found a " + str(type(target)))
 
 def fix_quotes(match):
     instring = match.group(1)
@@ -1225,6 +1339,8 @@ class FileInPackage:
                 if len(the_user_dict) == 0:
                     raise Exception("FileInPackage.path: called with empty dict")
                 the_file_ref = eval(self.code, the_user_dict)
+                if isinstance(the_file_ref, list) and len(the_file_ref):
+                    the_file_ref = the_file_ref[0]
                 if the_file_ref.__class__.__name__ == 'DAFile':
                     the_file_ref = the_file_ref.path()
                 elif the_file_ref.__class__.__name__ == 'DAFileList' and len(the_file_ref.elements) > 0:
@@ -1243,6 +1359,41 @@ class FileInPackage:
                 return the_file_ref
             else:
                 return docassemble.base.functions.package_template_filename(self.fileref, package=self.package)
+    def paths(self, the_user_dict=dict()):
+        if self.area == 'template':
+            result = []
+            if self.is_code:
+                if len(the_user_dict) == 0:
+                    raise Exception("FileInPackage.path: called with empty dict")
+                the_file_refs = eval(self.code, the_user_dict)
+                if not isinstance(the_file_refs, list):
+                    the_file_refs = [the_file_refs]
+                for the_file_ref in the_file_refs:
+                    if the_file_ref.__class__.__name__ == 'DAFile':
+                        result.append(the_file_ref.path())
+                    elif the_file_ref.__class__.__name__ == 'DAFileList' and len(the_file_ref.elements) > 0:
+                        for item in the_file_ref.elements:
+                            result.append(item.path())
+                    elif the_file_ref.__class__.__name__ == 'DAStaticFile':
+                        result.append(the_file_ref.path())
+                    elif re.search(r'^https?://', str(the_file_ref)):
+                        temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
+                        try:
+                            urlretrieve(url_sanitize(str(the_file_ref)), temp_template_file.name)
+                        except Exception as err:
+                            raise DAError("FileInPackage: error downloading " + str(the_file_ref) + ": " + str(err))
+                        result.append(temp_template_file.name)
+                    else:
+                        result.append(the_file_ref)
+            else:
+                result.append(docassemble.base.functions.package_template_filename(self.fileref, package=self.package))
+            final_result = []
+            for the_file_ref in result:
+                if not str(the_file_ref).startswith('/'):
+                    final_result.append(docassemble.base.functions.package_template_filename(str(the_file_ref), package=self.package))
+                else:
+                    final_result.append(the_file_ref)
+            return final_result
 
 class FileOnServer:
     def __init__(self, fileref, question):
@@ -1294,6 +1445,7 @@ class Question:
         self.reload_after = None
         self.continuelabel = None
         self.backbuttonlabel = None
+        self.cornerbackbuttonlabel = None
         self.helplabel = None
         self.progress = None
         self.section = None
@@ -1305,6 +1457,7 @@ class Question:
         self.audiovideo = None
         self.compute_attachment = None
         self.can_go_back = True
+        self.other_fields_used = set()
         self.fields_used = set()
         self.names_used = set()
         self.mako_names = set()
@@ -1322,12 +1475,14 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set'):
-                    logmessage("Ignoring unknown dictionary key " + key + "." + self.idebug(data))
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list'):
+                    logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
             if not isinstance(data['features'], dict):
                 raise DAError("A features section must be a dictionary." + self.idebug(data))
+            if data['features'].get('use catchall', False):
+                self.interview.options['use catchall'] = True
             if 'table width' in data['features']:
                 if not isinstance(data['features']['table width'], int):
                     raise DAError("Table width in features must be an integer." + self.idebug(data))
@@ -1352,6 +1507,12 @@ class Question:
                 self.interview.force_fullscreen = data['features']['go full screen']
             if 'navigation' in data['features'] and data['features']['navigation']:
                 self.interview.use_navigation = data['features']['navigation']
+            if 'small screen navigation' in data['features']:
+                if data['features']['small screen navigation'] == 'dropdown':
+                    self.interview.use_navigation_on_small_screens = 'dropdown'
+                else:
+                    if not data['features']['small screen navigation']:
+                        self.interview.use_navigation_on_small_screens = False
             if 'centered' in data['features'] and not data['features']['centered']:
                 self.interview.flush_left = True
             if 'maximum image size' in data['features']:
@@ -1386,6 +1547,8 @@ class Question:
                 self.interview.options['hide standard menu'] = data['features']['hide standard menu']
             if 'labels above fields' in data['features']:
                 self.interview.options['labels above'] = True if data['features']['labels above fields'] else False
+            if 'send question data' in data['features']:
+                self.interview.options['send question data'] = True if data['features']['send question data'] else False
             if 'checkin interval' in data['features']:
                 if not isinstance(data['features']['checkin interval'], int):
                     raise DAError("A features section checkin interval entry must be an integer." + self.idebug(data))
@@ -1404,6 +1567,14 @@ class Question:
                         if key not in self.interview.external_files:
                             self.interview.external_files[key] = list()
                         self.interview.external_files[key].append((self.from_source.get_package(), the_file))
+            for key in ('default date min', 'default date max'):
+                if key in data['features']:
+                    if not isinstance(data['features'][key], str):
+                        raise DAError("A features section " + key + " entry must be plain text." + self.idebug(data))
+                    try:
+                        self.interview.options[key] = pytz.timezone(docassemble.base.functions.get_default_timezone()).localize(dateutil.parser.parse(data['features'][key]))
+                    except:
+                        raise DAError("The " + key + " in features did not contain a valid date." + self.idebug(data))
         if 'field' in data and not ('yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data or 'choices' in data or 'dropdown' in data or 'combobox' in data):
             data['continue button field'] = data['field']
             del data['field']
@@ -1496,6 +1667,12 @@ class Question:
             if not isinstance(data['progressive'], bool):
                 raise DAError("A progressive directive can only be true or false." + self.idebug(data))
             self.interview.sections_progressive = data['progressive']
+        if 'auto open' in data:
+            if 'sections' not in data:
+                raise DAError("An auto open directive can only be used with sections." + self.idebug(data))
+            if not isinstance(data['auto open'], bool):
+                raise DAError("An auto open directive can only be true or false." + self.idebug(data))
+            self.interview.sections_auto_open = data['auto open']
         if 'section' in data:
             if 'question' not in data:
                 raise DAError("You can only set the section from a question." + self.idebug(data))
@@ -1565,6 +1742,8 @@ class Question:
             self.continuelabel = TextObject(definitions + str(data['resume button label']), question=self)
         if 'back button label' in data:
             self.backbuttonlabel = TextObject(definitions + str(data['back button label']), question=self)
+        if 'corner back button label' in data:
+            self.cornerbackbuttonlabel = TextObject(definitions + str(data['corner back button label']), question=self)
         if 'skip undefined' in data:
             if 'review' not in data:
                 raise DAError("You cannot set the skip undefined directive if the type of question is not review." + self.idebug(data))
@@ -1588,6 +1767,8 @@ class Question:
                     self.list_collect_allow_append = compile(str(data['list collect']['allow append']), '<list collect allow append code>', 'eval')
                 if 'allow delete' in data['list collect']:
                     self.list_collect_allow_delete = compile(str(data['list collect']['allow delete']), '<list collect allow delete code>', 'eval')
+                if 'add another label' in data['list collect']:
+                    self.list_collect_add_another_label = TextObject(definitions + str(data['list collect']['add another label']), question=self)
             else:
                 raise DAError("Invalid data under list collect." + self.idebug(data))
         if 'mandatory' in data:
@@ -1701,6 +1882,8 @@ class Question:
                         self.fields.append(Field({'saveas': key, 'type': 'object_from_file', 'file': item[key]}))
                         if self.scan_for_variables:
                             self.fields_used.add(key)
+                        else:
+                            self.other_fields_used.add(key)
                 else:
                     raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
         if 'data' in data and 'variable name' in data:
@@ -1708,6 +1891,8 @@ class Question:
                 raise DAError("A data block variable name must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['variable name'].strip())
+            else:
+                self.other_fields_used.add(data['variable name'].strip())
             if 'use objects' in data and data['use objects']:
                 self.question_type = 'data_da'
             else:
@@ -1718,6 +1903,8 @@ class Question:
                 raise DAError("A data from code block variable name must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['variable name'])
+            else:
+                self.other_fields_used.add(data['variable name'])
             if 'use objects' in data and data['use objects']:
                 self.question_type = 'data_from_code_da'
             else:
@@ -1735,6 +1922,8 @@ class Question:
                         self.fields.append(Field({'saveas': key, 'type': 'object', 'objecttype': item[key]}))
                         if self.scan_for_variables:
                             self.fields_used.add(key)
+                        else:
+                            self.other_fields_used.add(key)
                 else:
                     raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
         if 'id' in data:
@@ -1938,7 +2127,8 @@ class Question:
                     raise DAError("A metadata directive cannot be mixed with other directives." + self.idebug(data))
             should_append = False
             if isinstance(data['metadata'], dict):
-                data['metadata']['origin_path'] = self.from_source.path
+                data['metadata']['_origin_path'] = self.from_source.path
+                data['metadata']['_origin_package'] = self.from_source.get_package()
                 self.interview.metadata.append(data['metadata'])
             else:
                 raise DAError("A metadata section must be organized as a dictionary." + self.idebug(data))
@@ -1981,17 +2171,21 @@ class Question:
             for termitem in data['terms']:
                 if not isinstance(termitem, dict):
                     raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
-                for term in termitem:
+                if len(termitem) == 2 and 'phrases' in termitem and isinstance(termitem['phrases'], list) and 'definition' in termitem:
+                    termitems = [(phrase, termitem['definition']) for phrase in termitem['phrases']]
+                else:
+                    termitems = termitem.items()
+                for term, definition in termitems:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     term_textobject = TextObject(str(lower_term), question=self)
                     alt_terms = dict()
                     re_dict = dict()
-                    re_dict[self.language] = re.compile(r"{(?i)(%s)}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)
+                    re_dict[self.language] = re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                        re_dict[lang] = re.compile(r"{(?i)(%s)}" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)
+                        re_dict[lang] = re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)
                         alt_terms[lang] = tr_tuple[0]
-                    self.terms[lower_term] = {'definition': TextObject(definitions + str(termitem[term]), question=self), 're': re_dict, 'alt_terms': alt_terms}
+                    self.terms[lower_term] = {'definition': TextObject(definitions + str(definition), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'auto terms' in data and 'question' in data:
             if not isinstance(data['auto terms'], (dict, list)):
                 raise DAError("Terms must be organized as a dictionary or a list." + self.idebug(data))
@@ -2000,7 +2194,11 @@ class Question:
             for termitem in data['auto terms']:
                 if not isinstance(termitem, dict):
                     raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
-                for term in termitem:
+                if len(termitem) == 2 and 'phrases' in termitem and isinstance(termitem['phrases'], list) and 'definition' in termitem:
+                    termitems = [(phrase, termitem['definition']) for phrase in termitem['phrases']]
+                else:
+                    termitems = termitem.items()
+                for term, definition in termitems:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     term_textobject = TextObject(str(lower_term), question=self)
                     alt_terms = dict()
@@ -2010,7 +2208,7 @@ class Question:
                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
                         re_dict[lang] = re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)
                         alt_terms[lang] = tr_tuple[0]
-                    self.autoterms[lower_term] = {'definition': TextObject(definitions + str(termitem[term]), question=self), 're': re_dict, 'alt_terms': alt_terms}
+                    self.autoterms[lower_term] = {'definition': TextObject(definitions + str(definition), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'terms' in data and 'question' not in data:
             should_append = False
             if self.language not in self.interview.terms:
@@ -2018,18 +2216,22 @@ class Question:
             if isinstance(data['terms'], list):
                 for termitem in data['terms']:
                     if isinstance(termitem, dict):
-                        for term in termitem:
+                        if len(termitem) == 2 and 'phrases' in termitem and isinstance(termitem['phrases'], list) and 'definition' in termitem:
+                            termitems = [(phrase, termitem['definition']) for phrase in termitem['phrases']]
+                        else:
+                            termitems = termitem.items()
+                        for term, definition in termitems:
                             lower_term = re.sub(r'\s+', ' ', term.lower())
                             term_textobject = TextObject(str(lower_term), question=self)
-                            definition_textobject = TextObject(str(termitem[term]), question=self)
-                            self.interview.terms[self.language][lower_term] = {'definition': str(termitem[term]), 're': re.compile(r"{(?i)(%s)}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                            definition_textobject = TextObject(str(definition), question=self)
+                            self.interview.terms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
                             for lang, tr_tuple in term_textobject.other_lang.items():
                                 if lang not in self.interview.terms:
                                     self.interview.terms[lang] = dict()
                                 if tr_tuple[0] not in self.interview.terms[lang]:
                                     if lang in definition_textobject.other_lang:
                                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                        self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)}" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
+                                        self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
                     else:
                         raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['terms'], dict):
@@ -2037,14 +2239,14 @@ class Question:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     term_textobject = TextObject(str(lower_term), question=self)
                     definition_textobject = TextObject(str(data['terms'][term]), question=self)
-                    self.interview.terms[self.language][lower_term] = {'definition': str(data['terms'][term]), 're': re.compile(r"{(?i)(%s)}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                    self.interview.terms[self.language][lower_term] = {'definition': str(data['terms'][term]), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         if lang not in self.interview.terms:
                             self.interview.terms[lang] = dict()
                         if tr_tuple[0] not in self.interview.terms[lang]:
                             if lang in definition_textobject.other_lang:
                                 lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)}" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
+                                self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
             else:
                 raise DAError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'auto terms' in data and 'question' not in data:
@@ -2054,11 +2256,15 @@ class Question:
             if isinstance(data['auto terms'], list):
                 for termitem in data['auto terms']:
                     if isinstance(termitem, dict):
-                        for term in termitem:
+                        if len(termitem) == 2 and 'phrases' in termitem and isinstance(termitem['phrases'], list) and 'definition' in termitem:
+                            termitems = [(phrase, termitem['definition']) for phrase in termitem['phrases']]
+                        else:
+                            termitems = termitem.items()
+                        for term, definition in termitems:
                             lower_term = re.sub(r'\s+', ' ', term.lower())
                             term_textobject = TextObject(str(lower_term), question=self)
-                            definition_textobject = TextObject(str(termitem[term]), question=self)
-                            self.interview.autoterms[self.language][lower_term] = {'definition': str(termitem[term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                            definition_textobject = TextObject(str(definition), question=self)
+                            self.interview.autoterms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
                             for lang, tr_tuple in term_textobject.other_lang.items():
                                 if lang not in self.interview.autoterms:
                                     self.interview.autoterms[lang] = dict()
@@ -2110,7 +2316,15 @@ class Question:
                 data['include'] = [data['include']]
             if isinstance(data['include'], list):
                 for questionPath in data['include']:
-                    self.interview.read_from(interview_source_from_string(questionPath, context_interview=self.interview))
+                    if ':' in questionPath:
+                        self.interview.read_from(interview_source_from_string(questionPath))
+                    else:
+                        new_source = self.from_source.append(questionPath)
+                        if new_source is None:
+                            new_source = interview_source_from_string('docassemble.base:data/questions/' + re.sub(r'^data/questions/', '', questionPath))
+                            if new_source is None:
+                                raise DAError('Question file ' + questionPath + ' not found')
+                        self.interview.read_from(new_source)
             else:
                 raise DAError("An include section must be organized as a list." + self.idebug(data))
         if 'action buttons' in data:
@@ -2127,6 +2341,7 @@ class Question:
                     color = item.get('color', 'primary')
                     icon = item.get('icon', None)
                     placement = item.get('placement', None)
+                    forget_prior = item.get('forget prior', False)
                     given_arguments = item.get('arguments', dict())
                     if not isinstance(action, str):
                         raise DAError("An action buttons item must contain an action in plain text." + self.idebug(data))
@@ -2140,6 +2355,8 @@ class Question:
                         raise DAError("The icon specifier in an action buttons item must refer to plain text." + self.idebug(data))
                     if not isinstance(placement, (str, NoneType)):
                         raise DAError("The placement specifier in an action buttons item must refer to plain text." + self.idebug(data))
+                    if not isinstance(forget_prior, bool):
+                        raise DAError("The forget prior specifier in an action buttons item must refer to true or false." + self.idebug(data))
                     button = dict(action=TextObject(definitions + action, question=self), label=TextObject(definitions + label, question=self), color=TextObject(definitions + color, question=self))
                     if icon is not None:
                         button['icon'] = TextObject(definitions + icon, question=self)
@@ -2149,6 +2366,10 @@ class Question:
                         button['placement'] = TextObject(definitions + placement, question=self)
                     else:
                         button['placement'] = None
+                    if forget_prior:
+                        button['forget_prior'] = True
+                    else:
+                        button['forget_prior'] = False
                     button['arguments'] = dict()
                     for key, val in given_arguments.items():
                         if isinstance(val, (list, dict)):
@@ -2204,6 +2425,23 @@ class Question:
             self.allow_emailing = data['allow emailing']
         if 'allow downloading' in data:
             self.allow_downloading = data['allow downloading']
+        if 'email subject' in data:
+            self.email_subject = TextObject(definitions + str(data['email subject']), question=self)
+        if 'email body' in data:
+            self.email_body = TextObject(definitions + str(data['email body']), question=self)
+        if 'email template' in data:
+            self.email_template = compile(data['email template'], '<email template>', 'eval')
+            self.find_fields_in(data['email template'])
+        if 'email address default' in data:
+            self.email_default = TextObject(definitions + str(data['email address default']), question=self)
+        if 'always include editable files' in data:
+            self.always_include_editable_files = data['always include editable files']
+        if 'include attachment notice' in data:
+            self.attachment_notice = data['include attachment notice']
+        if 'include download tab' in data:
+            self.download_tab = data['include download tab']
+        if 'manual attachment list' in data:
+            self.manual_attachment_list = data['manual attachment list']
         # if 'role' in data:
         #     if isinstance(data['role'], list):
         #         for rolename in data['role']:
@@ -2214,11 +2452,14 @@ class Question:
         #     else:
         #         raise DAError("A role section must be text or a list." + self.idebug(data))
         if 'progress' in data:
-            try:
-                self.progress = int(data['progress'])
-                self.interview.progress_points.add(self.progress)
-            except:
-                logmessage("Invalid progress number " + repr(data['progress']))
+            if data['progress'] is None:
+                self.progress = -1
+            else:
+                try:
+                    self.progress = int(data['progress'])
+                    self.interview.progress_points.add(self.progress)
+                except:
+                    logmessage("Invalid progress number " + repr(data['progress']))
         if 'zip filename' in data:
             self.zip_filename = TextObject(definitions + str(data['zip filename']), question=self)
         if 'action' in data:
@@ -2289,6 +2530,10 @@ class Question:
             if 'question' not in data:
                 raise DAError("A css class can only accompany a question." + self.idebug(data))
             self.css_class = TextObject(definitions + str(data['css class']), question=self)
+        if 'table css class' in data:
+            if 'question' not in data:
+                raise DAError("A table css class can only accompany a question." + self.idebug(data))
+            self.table_css_class = TextObject(definitions + str(data['table css class']), question=self)
         if 'question' in data:
             self.content = TextObject(definitions + str(data['question']), question=self)
         if 'subquestion' in data:
@@ -2378,11 +2623,29 @@ class Question:
             self.decorations = processed_decoration_list
         if 'signature' in data:
             self.question_type = 'signature'
-            self.fields.append(Field({'saveas': data['signature']}))
+            if 'required' in data:
+                if isinstance(data['required'], bool):
+                    is_required = data['required']
+                else:
+                    is_required = {'compute': compile(data['required'], '<required code>', 'eval'), 'sourcecode': data['required']}
+                    self.find_fields_in(data['required'])
+                self.fields.append(Field({'saveas': data['signature'], 'required': is_required}))
+            else:
+                self.fields.append(Field({'saveas': data['signature']}))
             if self.scan_for_variables:
                 self.fields_used.add(data['signature'])
+            else:
+                self.other_fields_used.add(data['signature'])
+        elif 'required' in data:
+            raise DAError("The required modifier can only be used on a signature block" + self.idebug(data))
+        if 'question metadata' in data:
+            self.question_metadata = recursive_textobject_or_primitive(data['question metadata'], self)
         if 'under' in data:
             self.undertext = TextObject(definitions + str(data['under']), question=self)
+        if 'pre' in data:
+            self.pretext = TextObject(definitions + str(data['pre']), question=self)
+        if 'post' in data:
+            self.posttext = TextObject(definitions + str(data['post']), question=self)
         if 'right' in data:
             self.righttext = TextObject(definitions + str(data['right']), question=self)
         if 'check in' in data:
@@ -2395,21 +2658,29 @@ class Question:
             self.fields.append(Field({'saveas': data['yesno'], 'boolean': 1}))
             if self.scan_for_variables:
                 self.fields_used.add(data['yesno'])
+            else:
+                self.other_fields_used.add(data['yesno'])
             self.question_type = 'yesno'
         if 'noyes' in data:
             self.fields.append(Field({'saveas': data['noyes'], 'boolean': -1}))
             if self.scan_for_variables:
                 self.fields_used.add(data['noyes'])
+            else:
+                self.other_fields_used.add(data['noyes'])
             self.question_type = 'noyes'
         if 'yesnomaybe' in data:
             self.fields.append(Field({'saveas': data['yesnomaybe'], 'threestate': 1}))
             if self.scan_for_variables:
                 self.fields_used.add(data['yesnomaybe'])
+            else:
+                self.other_fields_used.add(data['yesnomaybe'])
             self.question_type = 'yesnomaybe'
         if 'noyesmaybe' in data:
             self.fields.append(Field({'saveas': data['noyesmaybe'], 'threestate': -1}))
             if self.scan_for_variables:
                 self.fields_used.add(data['noyesmaybe'])
+            else:
+                self.other_fields_used.add(data['noyesmaybe'])
             self.question_type = 'noyesmaybe'
         if 'sets' in data:
             if isinstance(data['sets'], str):
@@ -2473,6 +2744,8 @@ class Question:
                     raise DAError("Missing or invalid variable name " + repr(data['field']) + "." + self.idebug(data))
                 if self.scan_for_variables:
                     self.fields_used.add(data['field'])
+                else:
+                    self.other_fields_used.add(data['field'])
                 field_data['saveas'] = data['field']
                 if 'datatype' in data and 'type' not in field_data:
                     field_data['type'] = data['datatype']
@@ -2482,11 +2755,13 @@ class Question:
                     field_data['type'] = 'threestate'
             self.fields.append(Field(field_data))
             self.question_type = 'multiple_choice'
-        elif 'continue button field' in data and 'fields' not in data and 'yesno' not in data and 'noyes' not in data and 'yesnomaybe' not in data and 'noyesmaybe' not in data:
+        elif 'continue button field' in data and 'fields' not in data and 'yesno' not in data and 'noyes' not in data and 'yesnomaybe' not in data and 'noyesmaybe' not in data and 'signature' not in data:
             if not isinstance(data['continue button field'], str):
                 raise DAError("A continue button field must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['continue button field'])
+            else:
+                self.other_fields_used.add(data['continue button field'])
             if 'review' in data:
                 self.review_saveas = data['continue button field']
             else:
@@ -2501,7 +2776,7 @@ class Question:
             else:
                 raise DAError("A need phrase must be text or a list." + self.idebug(data))
             try:
-                self.need = list(map((lambda x: compile(x, '<need expression>', 'exec')), need_list))
+                self.need = list(map((lambda x: compile(x, '<need expression>', 'eval')), need_list))
                 for x in need_list:
                     self.find_fields_in(x)
             except:
@@ -2512,10 +2787,10 @@ class Question:
                 depends_list = [str(data['depends on'])]
             else:
                 depends_list = [str(x) for x in data['depends on']]
-            if len(depends_list):
-                if self.need is None:
-                    self.need = list()
-                self.need += list(map((lambda x: compile(x, '<depends expression>', 'exec')), depends_list))
+            # if len(depends_list):
+            #     if self.need is None:
+            #         self.need = list()
+            #     self.need += list(map((lambda x: compile(x, '<depends expression>', 'exec')), depends_list))
         else:
             depends_list = []
         if 'target' in data:
@@ -2544,6 +2819,19 @@ class Question:
                 require_gathered = False
             else:
                 require_gathered = True
+            if 'show incomplete' in data and data['show incomplete'] is True:
+                show_incomplete = True
+            else:
+                show_incomplete = False
+            if show_incomplete is True or require_gathered is False:
+                ensure_complete = False
+            else:
+                ensure_complete = True
+            if 'not available label' in data and isinstance(data['not available label'], str):
+                not_available_label = data['not available label'].strip()
+            else:
+                # word('n/a')
+                not_available_label = 'n/a'
             for col in data['columns']:
                 if not isinstance(col, dict):
                     raise DAError("The column items in a table definition must be dictionaries." + self.idebug(data))
@@ -2587,9 +2875,9 @@ class Question:
                         raise DAError("The read only directive must be plain text referring to an attribute" + self.idebug(data))
                     keyword_args += ', read_only_attribute=' + repr(data['read only'].strip())
                 if isinstance(data['edit'], list):
-                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ', reorder=' + repr(reorder) + ')', '<edit code>', 'eval'))
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, ' + ', '.join([repr(y) for y in data['edit']]) + keyword_args + ', reorder=' + repr(reorder) + ', ensure_complete=' + repr(ensure_complete) + ')', '<edit code>', 'eval'))
                 else:
-                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index' + keyword_args + ', reorder=' + repr(reorder) + ')', '<edit code>', 'eval'))
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index' + keyword_args + ', reorder=' + repr(reorder) + ', ensure_complete=' + repr(ensure_complete) + ')', '<edit code>', 'eval'))
                 if 'edit header' in data:
                     if not isinstance(data['edit header'], str):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -2609,9 +2897,9 @@ class Question:
                 if 'confirm' in data and data['confirm']:
                     keyword_args += ', confirm=True'
                 if 'delete buttons' in data and data['delete buttons']:
-                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', reorder=' + repr(reorder) + ')', '<delete button code>', 'eval'))
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', reorder=' + repr(reorder) + ', ensure_complete=' + repr(ensure_complete) + ')', '<delete button code>', 'eval'))
                 else:
-                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', delete=False, reorder=' + repr(reorder) + ')', '<reorder buttons code>', 'eval'))
+                    column.append(compile('(' + data['rows'] + ').item_actions(row_item, row_index, edit=False' + keyword_args + ', delete=False, reorder=' + repr(reorder) + ', ensure_complete=' + repr(ensure_complete) + ')', '<reorder buttons code>', 'eval'))
                 if 'edit header' in data:
                     if not isinstance(data['edit header'], str):
                         raise DAError("The edit header directive must be text" + self.idebug(data))
@@ -2623,10 +2911,12 @@ class Question:
                     header.append(TextObject(word("Actions")))
             if self.scan_for_variables:
                 self.fields_used.add(data['table'])
+            else:
+                self.other_fields_used.add(data['table'])
             empty_message = data.get('show if empty', True)
             if empty_message not in (True, False, None):
                 empty_message = TextObject(definitions + str(empty_message), question=self)
-            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, empty_message=empty_message, indent=data.get('indent', False), is_editable=is_editable, require_gathered=require_gathered)}
+            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, empty_message=empty_message, indent=data.get('indent', False), is_editable=is_editable, require_gathered=require_gathered, show_incomplete=show_incomplete, not_available_label=not_available_label)}
             self.fields.append(Field(field_data))
             self.content = TextObject('')
             self.subcontent = TextObject('')
@@ -2636,6 +2926,8 @@ class Question:
                 if len(data['content file']) == 1 and 'code' in data['content file'] and isinstance(data['content file']['code'], str):
                     if self.scan_for_variables:
                         self.fields_used.add(data['template'])
+                    else:
+                        self.other_fields_used.add(data['template'])
                     field_data = {'saveas': data['template']}
                     self.fields.append(Field(field_data))
                     self.compute = compile(data['content file']['code'], '<content file code>', 'eval')
@@ -2666,6 +2958,8 @@ class Question:
                 raise DAError("The content of a template must be expressed as text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['template'])
+            else:
+                self.other_fields_used.add(data['template'])
             field_data = {'saveas': data['template']}
             self.fields.append(Field(field_data))
             self.content = TextObject(definitions + str(data['content']), question=self)
@@ -2680,6 +2974,7 @@ class Question:
         if 'code' in data:
             if 'event' in data:
                 self.question_type = 'event_code'
+                self.scan_for_variables = False
             else:
                 self.question_type = 'code'
             if isinstance(data['code'], str):
@@ -2691,8 +2986,7 @@ class Question:
                 except:
                     logmessage("Question: compile error in code:\n" + str(data['code']) + "\n" + str(sys.exc_info()[0]))
                     raise
-                if self.question_type == 'code':
-                    self.find_fields_in(data['code'])
+                self.find_fields_in(data['code'])
             else:
                 raise DAError("A code section must be text, not a list or a dictionary." + self.idebug(data))
         if 'reconsider' in data:
@@ -2730,11 +3024,13 @@ class Question:
                     raise DAError("A undefine directive must refer to variable names expressed as text." + self.idebug(data))
                 self.find_fields_in(the_field)
                 self.undefine.append(the_field)
-        if 'continue button field' in data and 'question' in data and ('field' in data or 'fields' in data or 'yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data):
+        if 'continue button field' in data and 'question' in data and ('field' in data or 'fields' in data or 'yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'signature' in data):
             if not isinstance(data['continue button field'], str):
                 raise DAError("A continue button field must be plain text." + self.idebug(data))
             if self.scan_for_variables:
                 self.fields_used.add(data['continue button field'])
+            else:
+                self.other_fields_used.add(data['continue button field'])
             self.fields_saveas = data['continue button field']
         if 'fields' in data:
             self.question_type = 'fields'
@@ -2769,6 +3065,9 @@ class Question:
                             self.find_fields_in(field['code'])
                             field_info['extras'] = dict(fields_code=compile(field['code'], '<fields code>', 'eval'))
                             self.fields.append(Field(field_info))
+                            field_number += 1
+                            if 'current_field' in docassemble.base.functions.this_thread.misc:
+                                del docassemble.base.functions.this_thread.misc['current_field']
                             continue
                         if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
                             raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
@@ -2882,6 +3181,21 @@ class Question:
                                     js_info['sign'] = True
                                 else:
                                     js_info['sign'] = False
+                                js_info['mode'] = 0
+                                js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
+                                js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                field_info['extras']['show_if_js'] = js_info
+                            elif key == 'js disable if' or key == 'js enable if':
+                                if not isinstance(field[key], str):
+                                    raise DAError("A js disable if or js enable if expression must be a string" + self.idebug(data))
+                                js_info = dict()
+                                if key == 'js enable if':
+                                    js_info['sign'] = True
+                                else:
+                                    js_info['sign'] = False
+                                js_info['mode'] = 1
                                 js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
                                 js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
                                 if 'extras' not in field_info:
@@ -2895,8 +3209,13 @@ class Question:
                                     if 'variable' in field[key] and 'is' in field[key]:
                                         if 'js show if' in field or 'js hide if' in field:
                                             raise DAError("You cannot mix js show if and non-js show if" + self.idebug(data))
+                                        if 'js disable if' in field or 'js enable if' in field:
+                                            raise DAError("You cannot mix js disable if and non-js show if" + self.idebug(data))
                                         field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
-                                        field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
+                                        if isinstance(field[key]['is'], str):
+                                            field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
+                                        else:
+                                            field_info['extras']['show_if_val'] = TextObject(str(field[key]['is']))
                                         showif_valid = True
                                     if 'code' in field[key]:
                                         field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
@@ -2911,10 +3230,63 @@ class Question:
                                     field_info['extras']['show_if_val'] = TextObject('True')
                                 else:
                                     raise DAError("Invalid variable name in show if/hide if")
-                                if key == 'show if':
-                                    field_info['extras']['show_if_sign'] = 1
+                                exclusive = False
+                                if isinstance(field[key], dict) and 'code' in field[key]:
+                                    if len(field[key]) == 1:
+                                        exclusive = True
+                                    if key == 'show if':
+                                        field_info['extras']['show_if_sign_code'] = 1
+                                    else:
+                                        field_info['extras']['show_if_sign_code'] = 0
+                                if not exclusive:
+                                    if key == 'show if':
+                                        field_info['extras']['show_if_sign'] = 1
+                                    else:
+                                        field_info['extras']['show_if_sign'] = 0
+                                field_info['extras']['show_if_mode'] = 0
+                            elif key == 'disable if' or key == 'enable if':
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                if isinstance(field[key], dict):
+                                    showif_valid = False
+                                    if 'variable' in field[key] and 'is' in field[key]:
+                                        if 'js show if' in field or 'js hide if' in field:
+                                            raise DAError("You cannot mix js show if and non-js disable if" + self.idebug(data))
+                                        if 'js disable if' in field or 'js enable if' in field:
+                                            raise DAError("You cannot mix js disable if and non-js disable if" + self.idebug(data))
+                                        field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
+                                        if isinstance(field[key]['is'], str):
+                                            field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
+                                        else:
+                                            field_info['extras']['show_if_val'] = TextObject(str(field[key]['is']))
+                                        showif_valid = True
+                                    if 'code' in field[key]:
+                                        field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
+                                        self.find_fields_in(field[key]['code'])
+                                        showif_valid = True
+                                    if not showif_valid:
+                                        raise DAError("The keys of '" + key + "' must be 'variable' and 'is,' or 'code.'" + self.idebug(data))
+                                elif isinstance(field[key], list):
+                                    raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
+                                elif isinstance(field[key], str):
+                                    field_info['extras']['show_if_var'] = safeid(field[key].strip())
+                                    field_info['extras']['show_if_val'] = TextObject('True')
                                 else:
-                                    field_info['extras']['show_if_sign'] = 0
+                                    raise DAError("Invalid variable name in disable if/enable if")
+                                exclusive = False
+                                if isinstance(field[key], dict) and 'code' in field[key]:
+                                    if len(field[key]) == 1:
+                                        exclusive = True
+                                    if key == 'enable if':
+                                        field_info['extras']['show_if_sign_code'] = 1
+                                    else:
+                                        field_info['extras']['show_if_sign_code'] = 0
+                                if not exclusive:
+                                    if key == 'enable if':
+                                        field_info['extras']['show_if_sign'] = 1
+                                    else:
+                                        field_info['extras']['show_if_sign'] = 0
+                                field_info['extras']['show_if_mode'] = 1
                             elif key == 'default' or key == 'hint' or key == 'help':
                                 if not isinstance(field[key], dict) and not isinstance(field[key], list):
                                     field_info[key] = TextObject(definitions + str(field[key]), question=self)
@@ -3021,6 +3393,10 @@ class Question:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
+                            elif key == 'field metadata':
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                field_info['extras'][key] = recursive_textobject_or_primitive(field[key], self)
                             elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width', 'currency symbol'):
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
@@ -3117,9 +3493,17 @@ class Question:
                                         if field_info['type'] == 'checkboxes':
                                             for the_key in manual_keys:
                                                 self.fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
+                                    else:
+                                        self.other_fields_used.add(field_info['saveas'])
+                                        self.other_fields_used.add(field_info['saveas'] + '.gathered')
+                                        if field_info['type'] == 'checkboxes':
+                                            for the_key in manual_keys:
+                                                self.other_fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
                                 elif field_info['type'] == 'ml':
                                     if self.scan_for_variables:
                                         self.fields_used.add(field_info['saveas'])
+                                    else:
+                                        self.other_fields_used.add(field_info['saveas'])
                                     self.interview.mlfields[field_info['saveas']] = dict(saveas=field_info['saveas'])
                                     if 'extras' in field_info and 'ml_group' in field_info['extras']:
                                         self.interview.mlfields[field_info['saveas']]['ml_group'] = field_info['extras']['ml_group']
@@ -3130,15 +3514,23 @@ class Question:
                                         field_info['saveas'] = re.sub(r'\.text$', '', field_info['saveas'])
                                         if self.scan_for_variables:
                                             self.fields_used.add(field_info['saveas'])
+                                        else:
+                                            self.other_fields_used.add(field_info['saveas'])
                                     else:
                                         if self.scan_for_variables:
                                             self.fields_used.add(field_info['saveas'] + '.text')
+                                        else:
+                                            self.other_fields_used.add(field_info['saveas'] + '.text')
                                 else:
                                     if self.scan_for_variables:
                                         self.fields_used.add(field_info['saveas'])
+                                    else:
+                                        self.other_fields_used.add(field_info['saveas'])
                             else:
                                 if self.scan_for_variables:
                                     self.fields_used.add(field_info['saveas'])
+                                else:
+                                    self.other_fields_used.add(field_info['saveas'])
                         elif 'note' in field or 'html' in field:
                             if 'note' in field:
                                 field_info['type'] = 'note'
@@ -3154,6 +3546,8 @@ class Question:
                     del docassemble.base.functions.this_thread.misc['current_field']
         if 'review' in data:
             self.question_type = 'review'
+            if self.is_mandatory and 'continue button field' not in data:
+                raise DAError("A review block without a continue button field cannot be mandatory." + self.idebug(data))
             if isinstance(data['review'], dict):
                 data['review'] = [data['review']]
             if not isinstance(data['review'], list):
@@ -3451,13 +3845,12 @@ class Question:
         self.data_for_debug = data
     def get_old_values(self, user_dict):
         old_values = dict()
-        if self.question_type != 'event_code':
-            for field_name in self.fields_used:
-                if field_name in self.interview.invalidation:
-                    try:
-                        old_values[field_name] = eval(field_name, user_dict)
-                    except:
-                        pass
+        for field_name in self.fields_used:
+            if field_name in self.interview.invalidation:
+                try:
+                    old_values[field_name] = eval(field_name, user_dict)
+                except:
+                    pass
         return old_values
     def invalidate_dependencies_of_variable(self, the_user_dict, field_name, old_value):
         if field_name in self.interview.invalidation or field_name in self.interview.onchange:
@@ -3467,8 +3860,7 @@ class Question:
         except:
             pass
     def invalidate_dependencies(self, the_user_dict, old_values):
-        for field_name in self.fields_used:
-            #logmessage("Question.invalidate_dependencies: invalidating for " + field_name)
+        for field_name in self.fields_used.union(self.other_fields_used):
             if field_name in self.interview.invalidation or field_name in self.interview.onchange:
                 self.interview.invalidate_dependencies(field_name, the_user_dict, old_values)
             try:
@@ -3485,10 +3877,10 @@ class Question:
         for the_field in self.undefine:
             docassemble.base.functions.undefine(the_field)
         if len(self.reconsider) > 0:
-            docassemble.base.functions.reconsider(*self.reconsider)
+            docassemble.base.functions.reconsider(*[substitute_vars(item, is_generic, the_x, iterators) for item in self.reconsider])
         if self.need is not None:
             for need_code in self.need:
-                exec(need_code, the_user_dict)
+                eval(need_code, the_user_dict)
     def recursive_data_from_code(self, target):
         if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
             new_dict = dict()
@@ -3538,6 +3930,10 @@ class Question:
             for item in myvisitor.targets.keys():
                 if item not in predefines:
                     self.fields_used.add(item)
+        else:
+            for item in myvisitor.targets.keys():
+                if item not in predefines:
+                    self.other_fields_used.add(item)
         definables = set(predefines) | set(myvisitor.targets.keys())
         for item in myvisitor.names.keys():
             if item not in definables:
@@ -3549,6 +3945,8 @@ class Question:
     def maybe(self):
         return word("I don't know")
     def back(self):
+        return word("Back")
+    def cornerback(self):
         return word("Back")
     def help(self):
         return word("Help")
@@ -3645,6 +4043,8 @@ class Question:
                 variable_name = target['variable name']
                 if self.scan_for_variables:
                     self.fields_used.add(target['variable name'])
+                else:
+                    self.other_fields_used.add(target['variable name'])
             else:
                 variable_name = "_internal['docvar'][" + str(self.interview.next_attachment_number()) + "]"
             if 'metadata' in target:
@@ -3744,39 +4144,59 @@ class Question:
                             raise DAError('Valid formats cannot include "rtf to docx" when "docx template file" is used' + self.idebug(target))
                     else:
                         target['valid formats'] = ['docx', 'pdf']
-                if not isinstance(target[template_type + ' template file'], (str, dict)):
-                    raise DAError(template_type + ' template file supplied to attachment must be a string or a dict' + self.idebug(target))
+                if template_type == 'docx':
+                    if not isinstance(target['docx template file'], (str, dict, list)):
+                        raise DAError(template_type + ' template file supplied to attachment must be a string, dict, or list' + self.idebug(target))
+                    if not isinstance(target['docx template file'], list):
+                        target[template_type + ' template file'] = [target['docx template file']]
+                else:
+                    if not isinstance(target[template_type + ' template file'], (str, dict)):
+                        raise DAError(template_type + ' template file supplied to attachment must be a string or dict' + self.idebug(target))
                 if field_mode == 'auto':
                     options['fields'] = 'auto'
                 elif not isinstance(target['fields'], (list, dict)):
                     raise DAError('fields supplied to attachment must be a list or dictionary' + self.idebug(target))
                 target['content'] = ''
-                options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
-                if template_type == 'docx' and isinstance(target[template_type + ' template file'], str):
-                    the_docx_path = options['docx_template_file'].path()
-                    if not os.path.isfile(the_docx_path):
-                        raise DAError("Missing docx template file " + os.path.basename(the_docx_path))
-                    try:
-                        docx_template = docassemble.base.file_docx.DocxTemplate(the_docx_path)
-                        the_env = custom_jinja_env()
-                        the_xml = docx_template.get_xml()
-                        the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
-                        the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
-                        the_xml = docx_template.patch_xml(the_xml)
-                        parsed_content = the_env.parse(the_xml)
-                    except TemplateError as the_error:
-                        if the_error.filename is None:
-                            try:
-                                the_error.filename = os.path.basename(options['docx_template_file'].path())
-                            except:
-                                pass
-                        if hasattr(the_error, 'lineno') and the_error.lineno is not None:
-                            line_number = max(the_error.lineno - 4, 0)
-                            the_error.docx_context = map(lambda x: re.sub(r'<[^>]+>', '', x), the_xml.splitlines()[line_number:(line_number + 7)])
-                        raise the_error
-                    for key in jinja2meta.find_undeclared_variables(parsed_content):
-                        if not key.startswith('_'):
-                            self.mako_names.add(key)
+                if template_type == 'docx':
+                    options[template_type + '_template_file'] = [FileInPackage(item, 'template', package=self.package) for item in target['docx template file']]
+                    for item in target['docx template file']:
+                        if not isinstance(item, (str, dict)):
+                            raise DAError('docx template file supplied to attachment must be a string or dict' + self.idebug(target))
+                    template_files = []
+                    for template_file in options['docx_template_file']:
+                        if not template_file.is_code:
+                            the_docx_path = template_file.path()
+                            if not os.path.isfile(the_docx_path):
+                                raise DAError("Missing docx template file " + os.path.basename(the_docx_path))
+                            template_files.append(the_docx_path)
+                    if len(template_files):
+                        if len(template_files) == 1:
+                            the_docx_path = template_files[0]
+                        else:
+                            the_docx_path = docassemble.base.file_docx.concatenate_files(template_files)
+                        try:
+                            docx_template = docassemble.base.file_docx.DocxTemplate(the_docx_path)
+                            the_env = custom_jinja_env()
+                            the_xml = docx_template.get_xml()
+                            the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
+                            the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
+                            the_xml = docx_template.patch_xml(the_xml)
+                            parsed_content = the_env.parse(the_xml)
+                        except TemplateError as the_error:
+                            if the_error.filename is None:
+                                try:
+                                    the_error.filename = os.path.basename(options['docx_template_file'].path())
+                                except:
+                                    pass
+                            if hasattr(the_error, 'lineno') and the_error.lineno is not None:
+                                line_number = max(the_error.lineno - 4, 0)
+                                the_error.docx_context = map(lambda x: re.sub(r'<[^>]+>', '', x), the_xml.splitlines()[line_number:(line_number + 7)])
+                            raise the_error
+                        for key in jinja2meta.find_undeclared_variables(parsed_content):
+                            if not key.startswith('_'):
+                                self.mako_names.add(key)
+                else:
+                    options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
                 if field_mode == 'manual':
                     options['fields'] = recursive_textobject(target['fields'], self)
                     if 'code' in target:
@@ -3863,6 +4283,11 @@ class Question:
                         if not isinstance(item, (str, int)):
                             raise DAError('Unknown data type in attachment allow users.' + self.idebug(target))
                     options['allow users'] = target['allow users']
+            if 'hyperlink style' in target:
+                if isinstance(target['hyperlink style'], str):
+                    options['hyperlink_style'] = TextObject(target['hyperlink style'].strip(), question=self)
+                else:
+                    raise DAError('Unknown data type in attachment hyperlink style.' + self.idebug(target))
             if 'pdf/a' in target:
                 if isinstance(target['pdf/a'], bool):
                     options['pdf_a'] = target['pdf/a']
@@ -3871,6 +4296,16 @@ class Question:
                     self.find_fields_in(target['pdf/a'])
                 else:
                     raise DAError('Unknown data type in attachment pdf/a.' + self.idebug(target))
+            if 'skip undefined' in target:
+                if isinstance(target['skip undefined'], bool):
+                    options['skip_undefined'] = target['skip undefined']
+                elif isinstance(target['skip undefined'], str):
+                    options['skip_undefined'] = compile(target['skip undefined'], '<skip undefined expression>', 'eval')
+                    self.find_fields_in(target['skip undefined'])
+                else:
+                    raise DAError('Unknown data type in attachment skip undefined.' + self.idebug(target))
+            else:
+                options['skip_undefined'] = False;
             if 'tagged pdf' in target:
                 if isinstance(target['tagged pdf'], bool):
                     options['tagged_pdf'] = target['tagged pdf']
@@ -3918,7 +4353,7 @@ class Question:
                 exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
         if self.need is not None:
             for need_code in self.need:
-                exec(need_code, user_dict)
+                eval(need_code, user_dict)
         for the_field in self.undefine:
             docassemble.base.functions.undefine(the_field)
         if len(self.reconsider) > 0:
@@ -3944,6 +4379,7 @@ class Question:
                     label = item['label'].text(user_dict).strip()
                     given_arguments = item.get('arguments', dict())
                     arguments = dict()
+                    forget_prior = item.get('forget_prior', False)
                     for key, val in given_arguments.items():
                         if isinstance(val, TextObject):
                             arguments[key] = val.text(user_dict).strip()
@@ -3951,6 +4387,9 @@ class Question:
                             arguments[key] = val
                     action = item['action'].text(user_dict).strip()
                     if not (re.search(r'^https?://', action) or action.startswith('javascript:') or action.startswith('/') or action.startswith('?')):
+                        if forget_prior:
+                            arguments = {'_action': action, '_arguments': arguments}
+                            action = '_da_priority_action'
                         action = docassemble.base.functions.url_action(action, **arguments)
                     color = item['color'].text(user_dict).strip()
                     if item['icon'] is not None:
@@ -3961,7 +4400,7 @@ class Question:
                         placement = item['placement'].text(user_dict).strip()
                     else:
                         placement = None
-                    extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement))
+                    extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement, forget_prior=forget_prior))
                 else:
                     action_buttons = eval(item, user_dict)
                     if hasattr(action_buttons, 'instanceName') and hasattr(action_buttons, 'elements'):
@@ -3981,26 +4420,40 @@ class Question:
                         icon = button.get('icon', None)
                         placement = button.get('placement', None)
                         arguments = button.get('arguments', dict())
+                        forget_prior = button.get('forget_prior', False)
                         if arguments is None:
                             arguments = dict()
                         if not isinstance(arguments, dict):
                             raise DAError("action buttons code included an arguments item that was not a dictionary")
                         action = button['action']
                         if not (re.search(r'^https?://', action) or action.startswith('javascript:') or action.startswith('/') or action.startswith('?')):
+                            if forget_prior:
+                                arguments = {'_action': action, '_arguments': arguments}
+                                action = '_da_priority_action'
                             action = docassemble.base.functions.url_action(action, **arguments)
                         label = button['label']
                         extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement))
             for item in extras['action_buttons']:
                 if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
                     raise DAError("color in action buttons not valid: " + repr(color))
+        if hasattr(self, 'question_metadata'):
+            extras['questionMetadata'] = recursive_eval_textobject_or_primitive(self.question_metadata, user_dict)
         if hasattr(self, 'css_class') and self.css_class is not None:
             extras['cssClass'] = self.css_class.text(user_dict)
         elif 'css class' in user_dict['_internal'] and user_dict['_internal']['css class'] is not None:
             extras['cssClass'] = user_dict['_internal']['css class']
         elif self.language in self.interview.default_screen_parts and 'css class' in self.interview.default_screen_parts[self.language]:
             extras['cssClass'] = self.interview.default_screen_parts[self.language]['css class'].text(user_dict)
-        elif 'css_class' in the_default_titles:
+        elif 'css class' in the_default_titles:
             extras['cssClass'] = the_default_titles['css class']
+        if hasattr(self, 'table_css_class') and self.table_css_class is not None:
+            extras['tableCssClass'] = self.table_css_class.text(user_dict)
+        elif 'table css class' in user_dict['_internal'] and user_dict['_internal']['table css class'] is not None:
+            extras['tableCssClass'] = user_dict['_internal']['table css class']
+        elif self.language in self.interview.default_screen_parts and 'table css class' in self.interview.default_screen_parts[self.language]:
+            extras['tableCssClass'] = self.interview.default_screen_parts[self.language]['table css class'].text(user_dict)
+        elif 'table css class' in the_default_titles:
+            extras['tableCssClass'] = the_default_titles['table css class']
         if hasattr(self, 'undertext') and self.undertext is not None:
             extras['underText'] = self.undertext.text(user_dict)
         elif 'under' in user_dict['_internal'] and user_dict['_internal']['under'] is not None:
@@ -4009,6 +4462,22 @@ class Question:
             extras['underText'] = self.interview.default_screen_parts[self.language]['under'].text(user_dict)
         elif 'under' in the_default_titles:
             extras['underText'] = the_default_titles['under']
+        if hasattr(self, 'pretext') and self.pretext is not None:
+            extras['pre text'] = self.pretext.text(user_dict)
+        elif 'pre' in user_dict['_internal'] and user_dict['_internal']['pre'] is not None:
+            extras['pre text'] = user_dict['_internal']['pre']
+        elif self.language in self.interview.default_screen_parts and 'pre' in self.interview.default_screen_parts[self.language]:
+            extras['pre text'] = self.interview.default_screen_parts[self.language]['pre'].text(user_dict)
+        elif 'pre' in the_default_titles:
+            extras['pre text'] = the_default_titles['pre']
+        if hasattr(self, 'posttext') and self.posttext is not None:
+            extras['post text'] = self.posttext.text(user_dict)
+        elif 'post' in user_dict['_internal'] and user_dict['_internal']['post'] is not None:
+            extras['post text'] = user_dict['_internal']['post']
+        elif self.language in self.interview.default_screen_parts and 'post' in self.interview.default_screen_parts[self.language]:
+            extras['post text'] = self.interview.default_screen_parts[self.language]['post'].text(user_dict)
+        elif 'post' in the_default_titles:
+            extras['post text'] = the_default_titles['post']
         if hasattr(self, 'righttext') and self.righttext is not None:
             extras['rightText'] = self.righttext.text(user_dict)
         elif 'right' in user_dict['_internal'] and user_dict['_internal']['right'] is not None:
@@ -4017,15 +4486,15 @@ class Question:
             extras['rightText'] = self.interview.default_screen_parts[self.language]['right'].text(user_dict)
         elif 'right' in the_default_titles:
             extras['rightText'] = the_default_titles['right']
-        for screen_part in ('pre', 'post', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo'):
+        for screen_part in ('footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window'):
             if screen_part in user_dict['_internal'] and user_dict['_internal'][screen_part] is not None:
                 extras[screen_part + ' text'] = user_dict['_internal'][screen_part]
         if self.language in self.interview.default_screen_parts:
             for screen_part in self.interview.default_screen_parts[self.language]:
-                if screen_part in ('pre', 'post', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo') and (screen_part + ' text') not in extras:
+                if screen_part in ('footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window') and (screen_part + ' text') not in extras:
                     extras[screen_part + ' text'] = self.interview.default_screen_parts[self.language][screen_part].text(user_dict)
         for key, val in the_default_titles.items():
-            if key in ('pre', 'post', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo') and (key + ' text') not in extras:
+            if key in ('pre', 'post', 'footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window') and (key + ' text') not in extras:
                 extras[key + ' text'] = val
         if len(self.terms):
             lang = docassemble.base.functions.get_language()
@@ -4043,6 +4512,19 @@ class Question:
                     extras['autoterms'][definition['alt_terms'][lang].lower()] = dict(definition=definition['definition'].text(user_dict))
                 else:
                     extras['autoterms'][termitem] = dict(definition=definition['definition'].text(user_dict))
+        for term_type in ('terms', 'autoterms'):
+            if term_type in user_dict['_internal']:
+                extras['interview_' + term_type] = dict()
+                for lang, termdefs in getattr(self.interview, term_type).items():
+                    if lang not in extras['interview_' + term_type]:
+                        extras['interview_' + term_type][lang] = dict()
+                    for term, term_info in termdefs.items():
+                        extras['interview_' + term_type][lang][term] = term_info
+                for lang, termdefs in user_dict['_internal'][term_type].items():
+                    if lang not in extras['interview_' + term_type]:
+                        extras['interview_' + term_type][lang] = dict()
+                    for term, term_info in termdefs.items():
+                        extras['interview_' + term_type][lang][term] = term_info
         if self.css is not None:
             extras['css'] = self.css.text(user_dict)
         if self.script is not None:
@@ -4077,6 +4559,16 @@ class Question:
             extras['back button label text'] = the_default_titles['back button label']
         else:
             extras['back button label text'] = None
+        if self.cornerbackbuttonlabel is not None:
+            extras['corner back button label text'] = self.cornerbackbuttonlabel.text(user_dict)
+        elif 'corner back button label' in user_dict['_internal'] and user_dict['_internal']['corner back button label'] is not None:
+            extras['corner back button label text'] = user_dict['_internal']['corner back button label']
+        elif self.language in self.interview.default_screen_parts and 'corner back button label' in self.interview.default_screen_parts[self.language]:
+            extras['corner back button label text'] = self.interview.default_screen_parts[self.language]['corner back button label'].text(user_dict)
+        elif 'corner back button label' in the_default_titles:
+            extras['corner back button label text'] = the_default_titles['corner back button label']
+        else:
+            extras['corner back button label text'] = None
         if self.helptext is not None:
             if self.helplabel is not None:
                 helplabel = self.helplabel.text(user_dict)
@@ -4158,6 +4650,26 @@ class Question:
                 extras['allow_downloading'] = self.allow_downloading
             else:
                 extras['allow_downloading'] = eval(self.allow_downloading, user_dict)
+        if hasattr(self, 'always_include_editable_files'):
+            if isinstance(self.always_include_editable_files, bool):
+                extras['always_include_editable_files'] = self.always_include_editable_files
+            else:
+                extras['always_include_editable_files'] = eval(self.always_include_editable_files, user_dict)
+        if hasattr(self, 'attachment_notice'):
+            if isinstance(self.attachment_notice, bool):
+                extras['attachment_notice'] = self.attachment_notice
+            else:
+                extras['attachment_notice'] = eval(self.attachment_notice, user_dict)
+        if hasattr(self, 'download_tab'):
+            if isinstance(self.download_tab, bool):
+                extras['download_tab'] = self.download_tab
+            else:
+                extras['download_tab'] = eval(self.download_tab, user_dict)
+        if hasattr(self, 'manual_attachment_list'):
+            if isinstance(self.manual_attachment_list, bool):
+                extras['manual_attachment_list'] = self.manual_attachment_list
+            else:
+                extras['manual_attachment_list'] = eval(self.manual_attachment_list, user_dict)
         if hasattr(self, 'allow_emailing'):
             if isinstance(self.allow_emailing, bool):
                 extras['allow_emailing'] = self.allow_emailing
@@ -4215,18 +4727,36 @@ class Question:
                                 break
                     if failed:
                         continue
+                if hasattr(field, 'action'):
+                    if 'action' not in extras:
+                        extras['action'] = dict()
+                    extras['action'][field.number] = substitute_vars(json.dumps(field.action), self.is_generic, the_x, iterators)
                 if hasattr(field, 'extras'):
                     if 'show_if_js' in field.extras:
                         if 'show_if_js' not in extras:
                             extras['show_if_js'] = dict()
-                        extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
+                        extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=copy.deepcopy(field.extras['show_if_js']['vars']), sign=field.extras['show_if_js']['sign'], mode=field.extras['show_if_js']['mode'])
+                    if 'field metadata' in field.extras:
+                        if 'field metadata' not in extras:
+                            extras['field metadata'] = dict()
+                        if skip_undefined:
+                            try:
+                                extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
+                            except LazyNameError:
+                                raise
+                            except Exception as err:
+                                if self.interview.debug:
+                                    logmessage("Exception in field metadata: " + err.__class__.__name__ + ": " + str(err))
+                                continue
+                        else:
+                            extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
                     for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width', 'currency symbol'): # 'script', 'css',
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
                             if skip_undefined:
                                 try:
-                                    extras[key][field.number] = field.extras[key].text(user_dict)
+                                    extras[key][field.number] = field.extras[key].text(user_dict).strip()
                                 except LazyNameError:
                                     raise
                                 except Exception as err:
@@ -4237,6 +4767,8 @@ class Question:
                                 extras[key][field.number] = field.extras[key].text(user_dict)
                             if isinstance(extras[key][field.number], str):
                                 extras[key][field.number] = extras[key][field.number].strip()
+                                if extras[key][field.number] == '':
+                                    del extras[key][field.number]
                 if hasattr(field, 'helptext'):
                     if skip_undefined:
                         try:
@@ -4300,6 +4832,10 @@ class Question:
                     extras['list_collect_allow_delete'] = eval(self.list_collect_allow_delete, user_dict)
                 else:
                     extras['list_collect_allow_delete'] = True
+                if hasattr(self, 'list_collect_add_another_label'):
+                    extras['list_collect_add_another_label'] = self.list_collect_add_another_label.text(user_dict)
+                else:
+                    extras['list_collect_add_another_label'] = None
                 extras['list_iterator'] = m.group(2)
                 the_list = eval(the_list_varname, user_dict)
                 if not hasattr(the_list, 'elements') or not isinstance(the_list.elements, list):
@@ -4365,7 +4901,10 @@ class Question:
                     for indexno in range(len(iterators)):
                         exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
             else:
-                only_empty_fields_exist = True
+                if hasattr(self, 'fields_saveas'):
+                    only_empty_fields_exist = False
+                else:
+                    only_empty_fields_exist = True
                 commands_to_run = list()
                 for field in self.fields:
                     if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
@@ -4393,7 +4932,7 @@ class Question:
                                 selectcompute[field.number].append(new_item)
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
-                        else:
+                        elif test_for_objects:
                             if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
                                 ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
                                 commands_to_run.append(from_safeid(field.saveas) + ".gathered = True")
@@ -4430,6 +4969,7 @@ class Question:
                             default_exists = False
                             #logmessage("Testing for " + from_safeid(field.saveas))
                             try:
+                                assert test_for_objects
                                 eval(from_safeid(field.saveas), user_dict)
                                 default_to_use = from_safeid(field.saveas)
                             except:
@@ -4454,7 +4994,7 @@ class Question:
                             del user_dict['_DAIMAGEGENERATOR']
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
-                        else:
+                        elif test_for_objects:
                             if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
                                 ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
                                 commands_to_run.append(from_safeid(field.saveas) + '.gathered = True')
@@ -4560,7 +5100,7 @@ class Question:
                     docassemble.base.functions.this_thread.misc['current_field'] = field.number
                     if hasattr(field, 'showif_code'):
                         result = eval(field.showif_code, user_dict)
-                        if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
+                        if hasattr(field, 'extras') and 'show_if_sign_code' in field.extras and field.extras['show_if_sign_code'] == 0:
                             if result:
                                 extras['ok'][field.number] = False
                                 continue
@@ -4641,9 +5181,13 @@ class Question:
                         except DAValidationError as err:
                             pass
                     if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes'):
+                        if process_list_collect:
+                            saveas_to_use = from_safeid(field.saveas)
+                        else:
+                            saveas_to_use = substitute_vars(from_safeid(field.saveas), self.is_generic, the_x, iterators, last_only=True)
                         if field.number not in selectcompute:
                             raise DAError("datatype was set to object but no code or selections was provided")
-                        string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
+                        string = "_internal['objselections'][" + repr(saveas_to_use) + "] = dict()"
                         # logmessage("Doing " + string)
                         try:
                             exec(string, user_dict)
@@ -4651,7 +5195,7 @@ class Question:
                                 key = selection['key']
                                 #logmessage("key is " + str(key))
                                 real_key = from_safeid(key)
-                                string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
+                                string = "_internal['objselections'][" + repr(saveas_to_use) + "][" + repr(key) + "] = " + real_key
                                 #logmessage("Doing " + string)
                                 exec(string, user_dict)
                         except Exception as err:
@@ -4691,7 +5235,11 @@ class Question:
                         if 'show_if_js' in field.extras:
                             if 'show_if_js' not in extras:
                                 extras['show_if_js'] = dict()
-                            extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'])
+                            extras['show_if_js'][field.number] = dict(expression=field.extras['show_if_js']['expression'].text(user_dict), vars=copy.deepcopy(field.extras['show_if_js']['vars']), sign=field.extras['show_if_js']['sign'], mode=field.extras['show_if_js']['mode'])
+                        if 'field metadata' in field.extras:
+                            if 'field metadata' not in extras:
+                                extras['field metadata'] = dict()
+                            extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
                         for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group', 'currency symbol'): # , 'textresponse', 'content_type' #'script', 'css',
                             if key in field.extras:
                                 if key not in extras:
@@ -4699,6 +5247,8 @@ class Question:
                                 extras[key][field.number] = field.extras[key].text(user_dict)
                                 if isinstance(extras[key][field.number], str):
                                     extras[key][field.number] = extras[key][field.number].strip()
+                                    if extras[key][field.number] == '':
+                                        del extras[key][field.number]
                         for key in ('ml_train',):
                             if key in field.extras:
                                 if key not in extras:
@@ -4738,13 +5288,31 @@ class Question:
                                             defaults[field.number] = field.default
                                     elif hasattr(field, 'extras') and 'default' in field.extras:
                                         defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
-                        if hasattr(field, 'helptext'):
-                            helptexts[field.number] = field.helptext.text(user_dict)
                         if hasattr(field, 'hint'):
                             hints[field.number] = field.hint.text(user_dict)
+                    if hasattr(field, 'helptext'):
+                        helptexts[field.number] = field.helptext.text(user_dict)
                 if 'current_field' in docassemble.base.functions.this_thread.misc:
                     del docassemble.base.functions.this_thread.misc['current_field']
         if len(self.attachments) or self.compute_attachment is not None:
+            if hasattr(self, 'email_default'):
+                the_email_address = self.email_default.text(user_dict).strip()
+                if '@' in the_email_address and not re.search(r'\s', the_email_address):
+                    extras['email_default'] = the_email_address
+            if hasattr(self, 'email_subject'):
+                extras['email_subject'] = re.sub(r'[\n\r]+', ' ', self.email_subject.text(user_dict).strip())
+            if hasattr(self, 'email_body'):
+                extras['email_html'] = '<html><body>' + docassemble.base.filter.markdown_to_html(self.email_body.text(user_dict), status=docassemble.base.functions.this_thread.interview_status, question=self, external=True) + '</body></html>'
+                extras['email_body'] = BeautifulSoup(extras['email_html'], "html.parser").get_text('\n')
+            if hasattr(self, 'email_template') and ('email_subject' not in extras or 'email_html' not in extras):
+                template = eval(self.email_template, user_dict)
+                if 'email_subject' not in extras:
+                    the_subject = re.sub(r'[\n\r]+', ' ', template.subject.strip())
+                    if the_subject:
+                        extras['email_subject'] = the_subject
+                if 'email_html' not in extras:
+                    extras['email_html'] = '<html><body>' + template.content_as_html(external=True) + '</body></html>'
+                    extras['email_body'] = BeautifulSoup(extras['email_html'], "html.parser").get_text('\n')
             attachment_text = self.processed_attachments(user_dict) # , the_x=the_x, iterators=iterators
         else:
             attachment_text = []
@@ -4787,7 +5355,7 @@ class Question:
                 # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        if self.question_type == 'review' and sought is not None:
+        if self.question_type == 'review' and sought is not None and not hasattr(self, 'review_saveas'):
             if 'event_stack' not in user_dict['_internal']:
                 user_dict['_internal']['event_stack'] = dict()
             session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
@@ -4799,7 +5367,7 @@ class Question:
                     already_there = True
                     break
             if not already_there:
-                user_dict['_internal']['event_stack'][session_uid].insert(0, dict(action=orig_sought, arguments=dict()))
+                user_dict['_internal']['event_stack'][session_uid].insert(0, dict(action=orig_sought, arguments=dict(), context=dict()))
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}) #'defined': defined,
     def processed_attachments(self, the_user_dict, **kwargs):
         use_cache = kwargs.get('use_cache', True)
@@ -4835,7 +5403,7 @@ class Question:
                         the_att.info['formats'] = list(file_dict.keys())
                         if 'valid_formats' not in the_att.info:
                             the_att.info['valid_formats'] = list(file_dict.keys())
-                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', dict()), 'content': the_att.info.get('content', dict()), 'extension': the_att.info.get('extension', dict()), 'mimetype': the_att.info.get('mimetype', dict()), 'file': file_dict, 'metadata': the_att.info.get('metadata', dict()), 'variable_name': str(), 'raw': the_att.info['raw']})
+                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', dict()), 'content': the_att.info.get('content', dict()), 'extension': the_att.info.get('extension', dict()), 'mimetype': the_att.info.get('mimetype', dict()), 'file': file_dict, 'metadata': the_att.info.get('metadata', dict()), 'variable_name': str(), 'raw': the_att.info.get('raw', False)})
                     #convert_to_pdf_a
                     #file is dict of file numbers
                 # if the_att.__class__.__name__ == 'DAFileCollection' and 'attachment' in the_att.info and isinstance(the_att.info, dict) and 'name' in the_att.info['attachment'] and 'number' in the_att.info['attachment'] and len(self.interview.questions_by_name[the_att.info['attachment']['name']].attachments) > the_att.info['attachment']['number']:
@@ -4986,165 +5554,194 @@ class Question:
             #logmessage("finalize_attachment: " + attachment['variable_name'] + " was not in cache")
         #logmessage("In finalize where redact is " + repr(result['redact']))
         docassemble.base.functions.this_thread.misc['redact'] = result['redact']
-        for doc_format in result['formats_to_use']:
-            if doc_format == 'raw':
-                the_temp = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=attachment['raw'], delete=False)
-                with open(the_temp.name, 'w', encoding='utf-8') as the_file:
-                    the_file.write(result['markdown'][doc_format].lstrip("\n"))
-                result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + attachment['raw'], the_temp.name, yaml_file_name=self.interview.source.path)
-                result['raw'] = attachment['raw']
-                result['content'][doc_format] = result['markdown'][doc_format].lstrip("\n")
-            elif doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
-                if 'fields' in attachment['options']:
-                    if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
-                        docassemble.base.functions.set_context('pdf')
-                        the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'])
-                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
-                        for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions'):
-                            if key in result:
-                                del result[key]
-                        docassemble.base.functions.reset_context()
-                    elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
-                        #logmessage("field_data is " + repr(result['field_data']))
-                        docassemble.base.functions.set_context('docx', template=result['template'])
-                        try:
-                            the_template = result['template']
-                            while True: # Rerender if there's a subdoc using include_docx_template
-                                old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
-                                the_template.render(result['field_data'], jinja_env=custom_jinja_env())
-                                if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
-                                    # There's another template included
-                                    new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
-                                    the_template.save(new_template_file.name) # Save and refresh the template
-                                    the_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
-                                    docassemble.base.functions.this_thread.misc['docx_template'] = the_template
-                                else:
-                                    break
-                            # Copy over images, etc from subdoc to master template
-                            subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', []) # Get the subdoc file list
-                            the_template_docx = the_template.docx
-                            for subdoc in subdocs:
-                                docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
-
-                        except TemplateError as the_error:
-                            if (not hasattr(the_error, 'filename')) or the_error.filename is None:
-                                the_error.filename = os.path.basename(attachment['options']['docx_template_file'].path(the_user_dict=the_user_dict))
-                            #logmessage("TemplateError:\n" + traceback.format_exc())
-                            raise the_error
-                        docassemble.base.functions.reset_context()
-                        docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
-                        the_template.save(docx_file.name)
-                        if result['update_references']:
-                            docassemble.base.pandoc.update_references(docx_file.name)
-                        if 'docx' in result['formats_to_use']:
-                            result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
-                        if 'pdf' in result['formats_to_use']:
-                            pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-                            docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_refs=result['update_references'], tagged=result['convert_to_tagged_pdf'])
-                            result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
-                        for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions']:
-                            if key in result:
-                                del result[key]
-                else:
-                    converter = MyPandoc(pdfa=result['convert_to_pdf_a'], password=result['password'])
-                    converter.output_format = doc_format
-                    converter.input_content = result['markdown'][doc_format]
-                    if 'initial_yaml' in attachment['options']:
-                        converter.initial_yaml = [x.path(the_user_dict=the_user_dict) for x in attachment['options']['initial_yaml']]
-                    elif 'initial_yaml' in self.interview.attachment_options:
-                        converter.initial_yaml = [x.path(the_user_dict=the_user_dict) for x in self.interview.attachment_options['initial_yaml']]
-                    if 'additional_yaml' in attachment['options']:
-                        converter.additional_yaml = [x.path(the_user_dict=the_user_dict) for x in attachment['options']['additional_yaml']]
-                    elif 'additional_yaml' in self.interview.attachment_options:
-                        converter.additional_yaml = [x.path(the_user_dict=the_user_dict) for x in self.interview.attachment_options['additional_yaml']]
-                    if doc_format in ('rtf', 'rtf to docx'):
-                        if 'rtf_template_file' in attachment['options']:
-                            converter.template_file = attachment['options']['rtf_template_file'].path(the_user_dict=the_user_dict)
-                        elif 'rtf_template_file' in self.interview.attachment_options:
-                            converter.template_file = self.interview.attachment_options['rtf_template_file'].path(the_user_dict=the_user_dict)
-                    elif doc_format == 'docx':
-                        if 'docx_reference_file' in attachment['options']:
-                            converter.reference_file = attachment['options']['docx_reference_file'].path(the_user_dict=the_user_dict)
-                        elif 'docx_reference_file' in self.interview.attachment_options:
-                            converter.reference_file = self.interview.attachment_options['docx_reference_file'].path(the_user_dict=the_user_dict)
-                    else:
-                        if 'template_file' in attachment['options']:
-                            converter.template_file = attachment['options']['template_file'].path(the_user_dict=the_user_dict)
-                        elif 'template_file' in self.interview.attachment_options:
-                            converter.template_file = self.interview.attachment_options['template_file'].path(the_user_dict=the_user_dict)
-                    converter.metadata = result['metadata']
-                    converter.convert(self)
-                    result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], converter.output_filename, yaml_file_name=self.interview.source.path)
-                    result['content'][doc_format] = result['markdown'][doc_format]
-            elif doc_format in ['html']:
-                result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
-        if attachment['variable_name']:
-            string = "import docassemble.base.core"
-            exec(string, the_user_dict)
-            variable_name = attachment['variable_name']
-            m = re.search(r'^(.*)\.([A-Za-z0-9\_]+)$', attachment['variable_name'])
-            if m:
-                base_var = m.group(1)
-                attrib = m.group(2)
-                the_var = eval(base_var, the_user_dict)
-                if hasattr(the_var, 'instanceName'):
-                    variable_name = the_var.instanceName + '.' + attrib
-            string = variable_name + " = docassemble.base.core.DAFileCollection(" + repr(variable_name) + ")"
-            # logmessage("Executing " + string + "\n")
-            exec(string, the_user_dict)
-            the_name = attachment['name'].text(the_user_dict).strip()
-            the_filename = attachment['filename'].text(the_user_dict).strip()
-            if the_filename == '':
-                the_filename = docassemble.base.functions.space_to_underscore(the_name)
-            the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False), raw=result['raw'], permissions=result.get('permissions', None))
-            exec(variable_name + '.info = _attachment_info', the_user_dict)
-            del the_user_dict['_attachment_info']
-            for doc_format in result['file']:
+        if 'language' in attachment['options']:
+            old_language = docassemble.base.functions.get_language()
+            docassemble.base.functions.set_language(attachment['options']['language'])
+        else:
+            old_language = None
+        try:
+            for doc_format in result['formats_to_use']:
                 if doc_format == 'raw':
-                    variable_string = variable_name + '.raw'
-                else:
-                    variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
-                # filename = result['filename'] + '.' + doc_format
-                # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
-                if result['file'][doc_format] is None:
-                    raise Exception("Could not save numbered file")
-                if 'content' in result and doc_format in result['content']:
-                    content_string = ', content=' + repr(result['content'][doc_format])
-                else:
-                    content_string = ''
-                if 'markdown' in result and doc_format in result['markdown']:
-                    markdown_string = ', markdown=' + repr(result['markdown'][doc_format])
-                else:
-                    markdown_string = ''
-                if result['raw']:
-                    the_ext = result['raw']
-                else:
-                    the_ext = '.' + extension_of_doc_format[doc_format]
-                string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + the_ext) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
-                #logmessage("Executing " + string + "\n")
+                    the_temp = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=attachment['raw'], delete=False)
+                    with open(the_temp.name, 'w', encoding='utf-8') as the_file:
+                        the_file.write(result['markdown'][doc_format].lstrip("\n"))
+                    result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + attachment['raw'], the_temp.name, yaml_file_name=self.interview.source.path)
+                    result['raw'] = attachment['raw']
+                    result['content'][doc_format] = result['markdown'][doc_format].lstrip("\n")
+                elif doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
+                    if 'fields' in attachment['options']:
+                        if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
+                            if 'checkbox_export_value' in attachment['options']:
+                                default_export_value = attachment['options']['checkbox_export_value'].text(the_user_dict).strip()
+                            else:
+                                default_export_value = None
+                            docassemble.base.functions.set_context('pdf')
+                            the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'], default_export_value=default_export_value)
+                            result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)
+                            for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions'):
+                                if key in result:
+                                    del result[key]
+                            docassemble.base.functions.reset_context()
+                        elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
+                            #logmessage("field_data is " + repr(result['field_data']))
+                            docassemble.base.functions.set_context('docx', template=result['template'])
+                            docassemble.base.functions.this_thread.misc['docx_subdocs'] = []
+                            try:
+                                the_template = result['template']
+                                while True: # Rerender if there's a subdoc using include_docx_template
+                                    old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
+                                    the_template.render(result['field_data'], jinja_env=custom_jinja_env())
+                                    if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
+                                        # There's another template included
+                                        new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+                                        the_template.save(new_template_file.name) # Save and refresh the template
+                                        the_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
+                                        if result['hyperlink_style'] and result['hyperlink_style'] in the_template.docx.styles:
+                                            the_template.da_hyperlink_style = result['hyperlink_style']
+                                        elif 'Hyperlink' in result['template'].docx.styles:
+                                            the_template.da_hyperlink_style = 'Hyperlink'
+                                        elif 'InternetLink' in result['template'].docx.styles:
+                                            the_template.da_hyperlink_style = 'InternetLink'
+                                        else:
+                                            the_template.da_hyperlink_style = None
+                                        docassemble.base.functions.this_thread.misc['docx_template'] = the_template
+                                    else:
+                                        break
+                                # Copy over images, etc from subdoc to master template
+                                subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', []) # Get the subdoc file list
+                                the_template_docx = the_template.docx
+                                for subdoc in subdocs:
+                                    docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
+
+                            except TemplateError as the_error:
+                                if (not hasattr(the_error, 'filename')) or the_error.filename is None:
+                                    docx_paths = []
+                                    for item in attachment['options']['docx_template_file']:
+                                        for subitem in item.paths(the_user_dict=the_user_dict):
+                                            docx_paths.append(os.path.basename(subitem))
+                                    the_error.filename = ', '.join(docx_paths)
+                                #logmessage("TemplateError:\n" + traceback.format_exc())
+                                raise the_error
+                            docassemble.base.functions.reset_context()
+                            docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+                            the_template.save(docx_file.name)
+                            if result['update_references']:
+                                docassemble.base.pandoc.update_references(docx_file.name)
+                            if 'docx' in result['formats_to_use']:
+                                result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)
+                            if 'pdf' in result['formats_to_use']:
+                                pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+                                docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_refs=result['update_references'], tagged=result['convert_to_tagged_pdf'], filename=result['filename'])
+                                result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)
+                            for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions']:
+                                if key in result:
+                                    del result[key]
+                    else:
+                        converter = MyPandoc(pdfa=result['convert_to_pdf_a'], password=result['password'])
+                        converter.output_format = doc_format
+                        converter.input_content = result['markdown'][doc_format]
+                        if 'initial_yaml' in attachment['options']:
+                            converter.initial_yaml = [x.path(the_user_dict=the_user_dict) for x in attachment['options']['initial_yaml']]
+                        elif 'initial_yaml' in self.interview.attachment_options:
+                            converter.initial_yaml = [x.path(the_user_dict=the_user_dict) for x in self.interview.attachment_options['initial_yaml']]
+                        if 'additional_yaml' in attachment['options']:
+                            converter.additional_yaml = [x.path(the_user_dict=the_user_dict) for x in attachment['options']['additional_yaml']]
+                        elif 'additional_yaml' in self.interview.attachment_options:
+                            converter.additional_yaml = [x.path(the_user_dict=the_user_dict) for x in self.interview.attachment_options['additional_yaml']]
+                        if doc_format in ('rtf', 'rtf to docx'):
+                            if 'rtf_template_file' in attachment['options']:
+                                converter.template_file = attachment['options']['rtf_template_file'].path(the_user_dict=the_user_dict)
+                            elif 'rtf_template_file' in self.interview.attachment_options:
+                                converter.template_file = self.interview.attachment_options['rtf_template_file'].path(the_user_dict=the_user_dict)
+                        elif doc_format == 'docx':
+                            if 'docx_reference_file' in attachment['options']:
+                                converter.reference_file = attachment['options']['docx_reference_file'].path(the_user_dict=the_user_dict)
+                            elif 'docx_reference_file' in self.interview.attachment_options:
+                                converter.reference_file = self.interview.attachment_options['docx_reference_file'].path(the_user_dict=the_user_dict)
+                        else:
+                            if 'template_file' in attachment['options']:
+                                converter.template_file = attachment['options']['template_file'].path(the_user_dict=the_user_dict)
+                            elif 'template_file' in self.interview.attachment_options:
+                                converter.template_file = self.interview.attachment_options['template_file'].path(the_user_dict=the_user_dict)
+                        converter.metadata = result['metadata']
+                        converter.convert(self)
+                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], converter.output_filename, yaml_file_name=self.interview.source.path)
+                        result['content'][doc_format] = result['markdown'][doc_format]
+                elif doc_format in ['html']:
+                    result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
+            if attachment['variable_name']:
+                string = "import docassemble.base.core"
                 exec(string, the_user_dict)
-            for doc_format in result['content']:
-                # logmessage("Considering " + doc_format)
-                if doc_format not in result['file']:
-                    variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
-                    # logmessage("Setting " + variable_string)
-                    string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ', markdown=' + repr(result['markdown'][doc_format]) + ', content=' + repr(result['content'][doc_format]) + ")"
+                variable_name = attachment['variable_name']
+                m = re.search(r'^(.*)\.([A-Za-z0-9\_]+)$', attachment['variable_name'])
+                if m:
+                    base_var = m.group(1)
+                    attrib = m.group(2)
+                    the_var = eval(base_var, the_user_dict)
+                    if hasattr(the_var, 'instanceName'):
+                        variable_name = the_var.instanceName + '.' + attrib
+                string = variable_name + " = docassemble.base.core.DAFileCollection(" + repr(variable_name) + ")"
+                # logmessage("Executing " + string + "\n")
+                exec(string, the_user_dict)
+                the_name = attachment['name'].text(the_user_dict).strip()
+                the_filename = attachment['filename'].text(the_user_dict).strip()
+                if the_filename == '':
+                    the_filename = docassemble.base.functions.space_to_underscore(the_name)
+                the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False), raw=result['raw'], permissions=result.get('permissions', None))
+                exec(variable_name + '.info = _attachment_info', the_user_dict)
+                del the_user_dict['_attachment_info']
+                for doc_format in result['file']:
+                    if doc_format == 'raw':
+                        variable_string = variable_name + '.raw'
+                    else:
+                        variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
+                    # filename = result['filename'] + '.' + doc_format
+                    # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
+                    if result['file'][doc_format] is None:
+                        raise Exception("Could not save numbered file")
+                    if 'content' in result and doc_format in result['content']:
+                        content_string = ', content=' + repr(result['content'][doc_format])
+                    else:
+                        content_string = ''
+                    if 'markdown' in result and doc_format in result['markdown']:
+                        markdown_string = ', markdown=' + repr(result['markdown'][doc_format])
+                    else:
+                        markdown_string = ''
+                    if result['raw']:
+                        the_ext = result['raw']
+                    else:
+                        the_ext = '.' + extension_of_doc_format[doc_format]
+                    string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + the_ext) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
+                    #logmessage("Executing " + string + "\n")
                     exec(string, the_user_dict)
-            if 'permissions' in result:
-                if result['permissions']['private'] is not None or result['permissions']['persistent'] is not None:
-                    params = list()
-                    if 'private' in result['permissions']:
-                        params.append('private=' + repr(result['permissions']['private']))
-                    if 'persistent' in result['permissions']:
-                        params.append('persistent=' + repr(result['permissions']['persistent']))
-                    string = variable_name + '.set_attributes(' + ','.join(params) + ')'
-                    exec(string, the_user_dict)
-                if len(result['permissions']['allow users']):
-                    string = variable_name + '.user_access(' + ', '.join([repr(y) for y in result['permissions']['allow users']]) + ')'
-                    exec(string, the_user_dict)
-                if len(result['permissions']['allow privileges']):
-                    string = variable_name + '.privilege_access(' + ', '.join([repr(y) for y in result['permissions']['allow privileges']]) + ')'
-                    exec(string, the_user_dict)
+                for doc_format in result['content']:
+                    # logmessage("Considering " + doc_format)
+                    if doc_format not in result['file']:
+                        variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
+                        # logmessage("Setting " + variable_string)
+                        string = variable_string + " = docassemble.base.core.DAFile(" + repr(variable_string) + ', markdown=' + repr(result['markdown'][doc_format]) + ', content=' + repr(result['content'][doc_format]) + ")"
+                        exec(string, the_user_dict)
+                if 'permissions' in result:
+                    if result['permissions']['private'] is not None or result['permissions']['persistent'] is not None:
+                        params = list()
+                        if 'private' in result['permissions']:
+                            params.append('private=' + repr(result['permissions']['private']))
+                        if 'persistent' in result['permissions']:
+                            params.append('persistent=' + repr(result['permissions']['persistent']))
+                        string = variable_name + '.set_attributes(' + ','.join(params) + ')'
+                        exec(string, the_user_dict)
+                    if len(result['permissions']['allow users']):
+                        string = variable_name + '.user_access(' + ', '.join([repr(y) for y in result['permissions']['allow users']]) + ')'
+                        exec(string, the_user_dict)
+                    if len(result['permissions']['allow privileges']):
+                        string = variable_name + '.privilege_access(' + ', '.join([repr(y) for y in result['permissions']['allow privileges']]) + ')'
+                        exec(string, the_user_dict)
+        except:
+            if old_language is not None:
+                docassemble.base.functions.set_language(old_language)
+            raise
+        if old_language is not None:
+            docassemble.base.functions.set_language(old_language)
         return(result)
     def prepare_attachment(self, attachment, the_user_dict, **kwargs):
         if 'language' in attachment['options']:
@@ -5152,335 +5749,400 @@ class Question:
             docassemble.base.functions.set_language(attachment['options']['language'])
         else:
             old_language = None
-        the_name = attachment['name'].text(the_user_dict).strip()
-        the_filename = attachment['filename'].text(the_user_dict).strip()
-        if the_filename == '':
-            the_filename = docassemble.base.functions.space_to_underscore(the_name)
-        result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': attachment['valid_formats']}
-        if attachment['content'] is None and 'content file code' in attachment['options']:
-            raw_content = ''
-            the_filenames = eval(attachment['options']['content file code'], the_user_dict)
-            if not isinstance(the_filenames, list):
-                if hasattr(the_filenames, 'instanceName') and hasattr(the_filenames, 'elements') and isinstance(the_filenames.elements, list):
-                    the_filenames = the_filenames.elements
-                else:
-                    the_filenames = [the_filenames]
-            for the_filename in the_filenames:
-                the_orig_filename = the_filename
-                if the_filename.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DAStaticFile'):
-                    the_filename = the_filename.path()
-                elif isinstance(the_filename, str):
-                    if re.search(r'^https?://', str(the_filename)):
-                        temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
-                        try:
-                            urlretrieve(url_sanitize(str(the_filename)), temp_template_file.name)
-                        except Exception as err:
-                            raise DAError("prepare_attachment: error downloading " + str(the_filename) + ": " + str(err))
-                        the_filename = temp_template_file.name
+        try:
+            the_name = attachment['name'].text(the_user_dict).strip()
+            the_filename = attachment['filename'].text(the_user_dict).strip()
+            the_filename = docassemble.base.functions.secure_filename(the_filename)
+            if the_filename == '':
+                the_filename = docassemble.base.functions.secure_filename(docassemble.base.functions.space_to_underscore(the_name))
+            result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': attachment['valid_formats']}
+            if attachment['content'] is None and 'content file code' in attachment['options']:
+                raw_content = ''
+                the_filenames = eval(attachment['options']['content file code'], the_user_dict)
+                if not isinstance(the_filenames, list):
+                    if hasattr(the_filenames, 'instanceName') and hasattr(the_filenames, 'elements') and isinstance(the_filenames.elements, list):
+                        the_filenames = the_filenames.elements
                     else:
-                        the_filename = docassemble.base.functions.package_template_filename(the_filename, package=self.package)
-                else:
-                    the_filename = None
-                if the_filename is None or not os.path.isfile(the_filename):
-                    raise DAError("prepare_attachment: error obtaining template file from code: " + repr(the_orig_filename))
-                with open(the_filename, 'rU', encoding='utf-8') as the_file:
-                    raw_content += the_file.read()
-            the_content = TextObject(raw_content, question=self)
-        else:
-            the_content = attachment['content']
-        if 'redact' in attachment['options']:
-            if isinstance(attachment['options']['redact'], CodeType):
-                result['redact'] = eval(attachment['options']['redact'], the_user_dict)
-            else:
-                result['redact'] = attachment['options']['redact']
-        else:
-            result['redact'] = True
-        if 'editable' in attachment['options']:
-            result['editable'] = eval(attachment['options']['editable'], the_user_dict)
-        else:
-            result['editable'] = True
-        docassemble.base.functions.this_thread.misc['redact'] = result['redact']
-        result['markdown'] = dict();
-        result['content'] = dict();
-        result['extension'] = dict();
-        result['mimetype'] = dict();
-        result['file'] = dict();
-        if attachment['raw']:
-            result['raw'] = attachment['raw']
-            result['formats_to_use'] = ['raw']
-        else:
-            result['raw'] = False
-            if '*' in attachment['valid_formats']:
-                result['formats_to_use'] = ['pdf', 'rtf', 'html']
-            else:
-                result['formats_to_use'] = attachment['valid_formats']
-        result['metadata'] = dict()
-        if len(attachment['metadata']) > 0:
-            for key in attachment['metadata']:
-                data = attachment['metadata'][key]
-                if isinstance(data, bool):
-                    result['metadata'][key] = data
-                elif isinstance(data, list):
-                    result['metadata'][key] = textify(data, the_user_dict)
-                else:
-                    result['metadata'][key] = data.text(the_user_dict)
-        if 'pdf_a' in attachment['options']:
-            if isinstance(attachment['options']['pdf_a'], bool):
-                result['convert_to_pdf_a'] = attachment['options']['pdf_a']
-            else:
-                result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], the_user_dict)
-        else:
-            result['convert_to_pdf_a'] = self.interview.use_pdf_a
-        result['permissions'] = dict()
-        if 'persistent' in attachment['options']:
-            if isinstance(attachment['options']['persistent'], bool):
-                result['permissions']['persistent'] = attachment['options']['persistent']
-            else:
-                result['permissions']['persistent'] = eval(attachment['options']['persistent'], the_user_dict)
-        else:
-            result['permissions']['persistent'] = None
-        if 'private' in attachment['options']:
-            if isinstance(attachment['options']['private'], bool):
-                result['permissions']['private'] = attachment['options']['private']
-            else:
-                result['permissions']['private'] = eval(attachment['options']['private'], the_user_dict)
-        else:
-            result['permissions']['private'] = None
-        if 'allow users' in attachment['options']:
-            if isinstance(attachment['options']['allow users'], list):
-                result['permissions']['allow users'] = allow_users_list(attachment['options']['allow users'])
-            else:
-                result['permissions']['allow users'] = eval(attachment['options']['allow users'], the_user_dict)
-            result['permissions']['allow users'] = allow_users_list(result['permissions']['allow users'])
-        else:
-            result['permissions']['allow users'] = []
-        if 'allow privileges' in attachment['options']:
-            if isinstance(attachment['options']['allow privileges'], list):
-                result['permissions']['allow privileges'] = allow_privileges_list(attachment['options']['allow privileges'])
-            else:
-                result['permissions']['allow privileges'] = allow_privileges_list(eval(attachment['options']['allow privileges'], the_user_dict))
-        else:
-            result['permissions']['allow privileges'] = []
-        if 'tagged_pdf' in attachment['options']:
-            if isinstance(attachment['options']['tagged_pdf'], bool):
-                result['convert_to_tagged_pdf'] = attachment['options']['tagged_pdf']
-            else:
-                result['convert_to_tagged_pdf'] = eval(attachment['options']['tagged_pdf'], the_user_dict)
-        else:
-            result['convert_to_tagged_pdf'] = self.interview.use_tagged_pdf
-        if 'update_references' in attachment['options']:
-            if isinstance(attachment['options']['update_references'], bool):
-                result['update_references'] = attachment['options']['update_references']
-            else:
-                result['update_references'] = eval(attachment['options']['update_references'], the_user_dict)
-        else:
-            result['update_references'] = False
-        if 'password' in attachment['options']:
-            result['password'] = attachment['options']['password'].text(the_user_dict)
-        else:
-            result['password'] = None
-        if 'template_password' in attachment['options']:
-            result['template_password'] = attachment['options']['template_password'].text(the_user_dict)
-        else:
-            result['template_password'] = None
-        for doc_format in result['formats_to_use']:
-            if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx', 'raw']:
-                if 'decimal_places' in attachment['options']:
-                    try:
-                        float_formatter = '%.' + str(int(attachment['options']['decimal_places'].text(the_user_dict).strip())) + 'f'
-                    except:
-                        logmessage("prepare_attachment: error in float_formatter")
-                        float_formatter = None
-                else:
-                    float_formatter = None
-                if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
-                    if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
-                        result['template'] = docassemble.base.file_docx.DocxTemplate(attachment['options']['docx_template_file'].path(the_user_dict=the_user_dict))
-                        docassemble.base.functions.set_context('docx', template=result['template'])
-                        if isinstance(attachment['options']['fields'], str):
-                            result['field_data'] = the_user_dict
+                        the_filenames = [the_filenames]
+                for the_filename in the_filenames:
+                    the_orig_filename = the_filename
+                    if the_filename.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DAStaticFile'):
+                        the_filename = the_filename.path()
+                    elif isinstance(the_filename, str):
+                        if re.search(r'^https?://', str(the_filename)):
+                            temp_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False)
+                            try:
+                                urlretrieve(url_sanitize(str(the_filename)), temp_template_file.name)
+                            except Exception as err:
+                                raise DAError("prepare_attachment: error downloading " + str(the_filename) + ": " + str(err))
+                            the_filename = temp_template_file.name
                         else:
-                            the_field_data = recursive_eval_textobject(attachment['options']['fields'], the_user_dict, self, result['template'])
-                            new_field_data = dict()
-                            if isinstance(the_field_data, list):
-                                for item in the_field_data:
-                                    if isinstance(item, dict):
-                                        new_field_data.update(item)
-                                the_field_data = new_field_data
-                            result['field_data'] = the_field_data
-                        result['field_data']['_codecs'] = codecs
-                        result['field_data']['_array'] = array
-                        if 'code' in attachment['options']:
-                            additional_dict = eval(attachment['options']['code'], the_user_dict)
-                            if isinstance(additional_dict, dict):
-                                for key, val in additional_dict.items():
-                                    if isinstance(val, float) and float_formatter is not None:
-                                        result['field_data'][key] = float_formatter % val
-                                    elif isinstance(val, RawValue):
-                                        result['field_data'][key] = val.value
-                                    else:
-                                        result['field_data'][key] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
-                            else:
-                                raise DAError("code in an attachment returned something other than a dictionary")
-                        if 'raw code dict' in attachment['options']:
-                            for varname, var_code in attachment['options']['raw code dict'].items():
-                                val = eval(var_code, the_user_dict)
-                                if isinstance(val, float) and float_formatter is not None:
-                                    result['field_data'][varname] = float_formatter % val
-                                else:
-                                    result['field_data'][varname] = val
-                        if 'code dict' in attachment['options']:
-                            for varname, var_code in attachment['options']['code dict'].items():
-                                val = eval(var_code, the_user_dict)
-                                if isinstance(val, float) and float_formatter is not None:
-                                    result['field_data'][varname] = float_formatter % val
-                                elif isinstance(val, RawValue):
-                                    result['field_data'][varname] = val.value
-                                else:
-                                    result['field_data'][varname] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
-                        docassemble.base.functions.reset_context()
-                elif doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
-                    docassemble.base.functions.set_context('pdf')
-                    result['data_strings'] = []
-                    result['images'] = []
-                    if isinstance(attachment['options']['fields'], dict):
-                        the_fields = [attachment['options']['fields']]
+                            the_filename = docassemble.base.functions.package_template_filename(the_filename, package=self.package)
                     else:
-                        the_fields = attachment['options']['fields']
-                    if 'checkbox_export_value' in attachment['options']:
-                        yes_value = attachment['options']['checkbox_export_value'].text(the_user_dict).strip()
-                    else:
-                        yes_value = 'Yes'
-                    docassemble.base.functions.this_thread.misc['checkbox_export_value'] = yes_value
-                    for item in the_fields:
-                        for key, val in item.items():
-                            answer = val.text(the_user_dict).rstrip()
-                            if answer == 'True':
-                                answer = yes_value
-                            elif answer == 'False':
-                                answer = 'No'
-                            elif answer == 'None':
-                                answer = ''
-                            answer = re.sub(r'\[(NEWLINE|BR)\]', r'\n', answer)
-                            answer = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', answer)
-                            #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
-                            m = re.search(r'\[FILE ([^\]]+)\]', answer)
-                            if m:
-                                file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
-                                result['images'].append((key, file_info))
-                            else:
-                                result['data_strings'].append((key, answer))
-                    if 'code' in attachment['options']:
-                        additional_fields = eval(attachment['options']['code'], the_user_dict)
-                        if not isinstance(additional_fields, list):
-                            additional_fields = [additional_fields]
-                        for item in additional_fields:
-                            if not isinstance(item, dict):
-                                raise DAError("code in an attachment returned something other than a dictionary or a list of dictionaries")
-                            for key, val in item.items():
-                                if val is True:
-                                    val = yes_value
-                                elif val is False:
-                                    val = 'No'
-                                elif val is None:
-                                    val = ''
-                                elif isinstance(val, float) and float_formatter is not None:
-                                    val = float_formatter % val
-                                else:
-                                    val = str(val)
-                                val = re.sub(r'\s*\[(NEWLINE|BR)\]\s*', r'\n', val)
-                                val = re.sub(r'\s*\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]\s*', r'', val)
-                                m = re.search(r'\[FILE ([^\]]+)\]', val)
-                                if m:
-                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
-                                    result['images'].append((key, file_info))
-                                else:
-                                    result['data_strings'].append((key, val))
-                    if 'code dict' in attachment['options']:
-                        additional_fields = attachment['options']['code dict']
-                        if not isinstance(additional_fields, list):
-                            additional_fields = [additional_fields]
-                        for item in additional_fields:
-                            if not isinstance(item, dict):
-                                raise DAError("code dict in an attachment returned something other than a dictionary or a list of dictionaries")
-                            for key, var_code in item.items():
-                                val = eval(var_code, the_user_dict)
-                                if val is True:
-                                    val = yes_value
-                                elif val is False:
-                                    val = 'No'
-                                elif val is None:
-                                    val = ''
-                                elif isinstance(val, float) and float_formatter is not None:
-                                    val = float_formatter % val
-                                else:
-                                    val = str(val)
-                                val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
-                                val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
-                                m = re.search(r'\[FILE ([^\]]+)\]', val)
-                                if m:
-                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
-                                    result['images'].append((key, file_info))
-                                else:
-                                    result['data_strings'].append((key, val))
-                    if 'raw code dict' in attachment['options']:
-                        additional_fields = attachment['options']['raw code dict']
-                        if not isinstance(additional_fields, list):
-                            additional_fields = [additional_fields]
-                        for item in additional_fields:
-                            if not isinstance(item, dict):
-                                raise DAError("raw code dict in an attachment returned something other than a dictionary or a list of dictionaries")
-                            for key, var_code in item.items():
-                                val = eval(var_code, the_user_dict)
-                                if val is True:
-                                    val = yes_value
-                                elif val is False:
-                                    val = 'No'
-                                elif isinstance(val, float) and float_formatter is not None:
-                                    val = float_formatter % val
-                                elif val is None:
-                                    val = ''
-                                val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
-                                val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
-                                m = re.search(r'\[FILE ([^\]]+)\]', val)
-                                if m:
-                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
-                                    result['images'].append((key, file_info))
-                                else:
-                                    result['data_strings'].append((key, val))
-                    docassemble.base.functions.reset_context()
-                elif doc_format == 'raw':
-                    docassemble.base.functions.set_context('raw')
-                    the_markdown = the_content.text(the_user_dict)
-                    result['markdown'][doc_format] = the_markdown
-                    docassemble.base.functions.reset_context()
+                        the_filename = None
+                    if the_filename is None or not os.path.isfile(the_filename):
+                        raise DAError("prepare_attachment: error obtaining template file from code: " + repr(the_orig_filename))
+                    with open(the_filename, 'rU', encoding='utf-8') as the_file:
+                        raw_content += the_file.read()
+                the_content = TextObject(raw_content, question=self)
+            else:
+                the_content = attachment['content']
+            if 'redact' in attachment['options']:
+                if isinstance(attachment['options']['redact'], CodeType):
+                    result['redact'] = eval(attachment['options']['redact'], the_user_dict)
                 else:
-                    the_markdown = ""
-                    if len(result['metadata']):
-                        modified_metadata = dict()
-                        for key, data in result['metadata'].items():
-                            if re.search(r'Footer|Header', key) and 'Lines' not in key:
-                                #modified_metadata[key] = docassemble.base.filter.metadata_filter(data, doc_format) + str('[END]')
-                                modified_metadata[key] = data + str('[END]')
+                    result['redact'] = attachment['options']['redact']
+            else:
+                result['redact'] = True
+            if 'editable' in attachment['options']:
+                result['editable'] = eval(attachment['options']['editable'], the_user_dict)
+            else:
+                result['editable'] = True
+            docassemble.base.functions.this_thread.misc['redact'] = result['redact']
+            result['markdown'] = dict();
+            result['content'] = dict();
+            result['extension'] = dict();
+            result['mimetype'] = dict();
+            result['file'] = dict();
+            if attachment['raw']:
+                result['raw'] = attachment['raw']
+                result['formats_to_use'] = ['raw']
+            else:
+                result['raw'] = False
+                if '*' in attachment['valid_formats']:
+                    result['formats_to_use'] = ['pdf', 'rtf', 'html']
+                else:
+                    result['formats_to_use'] = attachment['valid_formats']
+            result['metadata'] = dict()
+            if len(attachment['metadata']) > 0:
+                for key in attachment['metadata']:
+                    data = attachment['metadata'][key]
+                    if isinstance(data, bool):
+                        result['metadata'][key] = data
+                    elif isinstance(data, list):
+                        result['metadata'][key] = textify(data, the_user_dict)
+                    else:
+                        result['metadata'][key] = data.text(the_user_dict)
+            if 'pdf_a' in attachment['options']:
+                if isinstance(attachment['options']['pdf_a'], bool):
+                    result['convert_to_pdf_a'] = attachment['options']['pdf_a']
+                else:
+                    result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], the_user_dict)
+            else:
+                result['convert_to_pdf_a'] = self.interview.use_pdf_a
+            if 'hyperlink_style' in attachment['options']:
+                result['hyperlink_style'] = attachment['options']['hyperlink_style'].text(the_user_dict).strip()
+            else:
+                result['hyperlink_style'] = None
+            result['permissions'] = dict()
+            if 'persistent' in attachment['options']:
+                if isinstance(attachment['options']['persistent'], bool):
+                    result['permissions']['persistent'] = attachment['options']['persistent']
+                else:
+                    result['permissions']['persistent'] = eval(attachment['options']['persistent'], the_user_dict)
+            else:
+                result['permissions']['persistent'] = None
+            if 'private' in attachment['options']:
+                if isinstance(attachment['options']['private'], bool):
+                    result['permissions']['private'] = attachment['options']['private']
+                else:
+                    result['permissions']['private'] = eval(attachment['options']['private'], the_user_dict)
+            else:
+                result['permissions']['private'] = None
+            if 'allow users' in attachment['options']:
+                if isinstance(attachment['options']['allow users'], list):
+                    result['permissions']['allow users'] = allow_users_list(attachment['options']['allow users'])
+                else:
+                    result['permissions']['allow users'] = eval(attachment['options']['allow users'], the_user_dict)
+                result['permissions']['allow users'] = allow_users_list(result['permissions']['allow users'])
+            else:
+                result['permissions']['allow users'] = []
+            if 'allow privileges' in attachment['options']:
+                if isinstance(attachment['options']['allow privileges'], list):
+                    result['permissions']['allow privileges'] = allow_privileges_list(attachment['options']['allow privileges'])
+                else:
+                    result['permissions']['allow privileges'] = allow_privileges_list(eval(attachment['options']['allow privileges'], the_user_dict))
+            else:
+                result['permissions']['allow privileges'] = []
+            if 'tagged_pdf' in attachment['options']:
+                if isinstance(attachment['options']['tagged_pdf'], bool):
+                    result['convert_to_tagged_pdf'] = attachment['options']['tagged_pdf']
+                else:
+                    result['convert_to_tagged_pdf'] = eval(attachment['options']['tagged_pdf'], the_user_dict)
+            else:
+                result['convert_to_tagged_pdf'] = self.interview.use_tagged_pdf
+            if 'update_references' in attachment['options']:
+                if isinstance(attachment['options']['update_references'], bool):
+                    result['update_references'] = attachment['options']['update_references']
+                else:
+                    result['update_references'] = eval(attachment['options']['update_references'], the_user_dict)
+            else:
+                result['update_references'] = False
+            if 'password' in attachment['options']:
+                result['password'] = attachment['options']['password'].text(the_user_dict)
+            else:
+                result['password'] = None
+            if 'template_password' in attachment['options']:
+                result['template_password'] = attachment['options']['template_password'].text(the_user_dict)
+            else:
+                result['template_password'] = None
+            for doc_format in result['formats_to_use']:
+                if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx', 'raw']:
+                    if 'decimal_places' in attachment['options']:
+                        try:
+                            float_formatter = '%.' + str(int(attachment['options']['decimal_places'].text(the_user_dict).strip())) + 'f'
+                        except:
+                            logmessage("prepare_attachment: error in float_formatter")
+                            float_formatter = None
+                    else:
+                        float_formatter = None
+                    if 'fields' in attachment['options'] and 'docx_template_file' in attachment['options']:
+                        if doc_format == 'docx' or ('docx' not in result['formats_to_use'] and doc_format == 'pdf'):
+                            docx_paths = []
+                            for docx_reference in attachment['options']['docx_template_file']:
+                                for docx_path in docx_reference.paths(the_user_dict=the_user_dict):
+                                    if not os.path.isfile(docx_path):
+                                        raise DAError("Missing docx template file " + os.path.basename(docx_path))
+                                    docx_paths.append(docx_path)
+                            if len(docx_paths) == 1:
+                                docx_path = docx_paths[0]
                             else:
-                                modified_metadata[key] = data
-                        the_markdown += '---\n' + codecs.decode(bytearray(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=False), encoding='utf-8'), 'utf-8') + "...\n"
-                    docassemble.base.functions.set_context('pandoc')
-                    the_markdown += the_content.text(the_user_dict)
-                    #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
-                    if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
-                        the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
-                    result['markdown'][doc_format] = the_markdown
-                    docassemble.base.functions.reset_context()
-            elif doc_format in ['html']:
-                result['markdown'][doc_format] = the_content.text(the_user_dict)
-                if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
-                    result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
-                #logmessage("output was:\n" + repr(result['content'][doc_format]))
+                                docx_path = docassemble.base.file_docx.concatenate_files(docx_paths)
+                            result['template'] = docassemble.base.file_docx.DocxTemplate(docx_path)
+                            if result['hyperlink_style'] and result['hyperlink_style'] in result['template'].docx.styles:
+                                result['template'].da_hyperlink_style = result['hyperlink_style']
+                            elif 'Hyperlink' in result['template'].docx.styles:
+                                result['template'].da_hyperlink_style = 'Hyperlink'
+                            elif 'InternetLink' in result['template'].docx.styles:
+                                result['template'].da_hyperlink_style = 'InternetLink'
+                            else:
+                                result['template'].da_hyperlink_style = None
+                            docassemble.base.functions.set_context('docx', template=result['template'])
+                            if isinstance(attachment['options']['fields'], str):
+                                result['field_data'] = the_user_dict
+                            else:
+                                the_field_data = recursive_eval_textobject(attachment['options']['fields'], the_user_dict, self, result['template'], attachment['options']['skip_undefined'])
+                                new_field_data = dict()
+                                if isinstance(the_field_data, list):
+                                    for item in the_field_data:
+                                        if isinstance(item, dict):
+                                            new_field_data.update(item)
+                                    the_field_data = new_field_data
+                                result['field_data'] = the_field_data
+                            result['field_data']['_codecs'] = codecs
+                            result['field_data']['_array'] = array
+                            if 'code' in attachment['options']:
+                                if attachment['options']['skip_undefined']:
+                                    try:
+                                        additional_dict = eval(attachment['options']['code'], the_user_dict)
+                                    except:
+                                        additional_dict = {}
+                                else:
+                                    additional_dict = eval(attachment['options']['code'], the_user_dict)
+                                if isinstance(additional_dict, dict):
+                                    for key, val in additional_dict.items():
+                                        if isinstance(val, float) and float_formatter is not None:
+                                            result['field_data'][key] = float_formatter % val
+                                        elif isinstance(val, RawValue):
+                                            result['field_data'][key] = val.value
+                                        else:
+                                            result['field_data'][key] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
+                                else:
+                                    raise DAError("code in an attachment returned something other than a dictionary")
+                            if 'raw code dict' in attachment['options']:
+                                for varname, var_code in attachment['options']['raw code dict'].items():
+                                    if attachment['options']['skip_undefined']:
+                                        try:
+                                            val = eval(var_code, the_user_dict)
+                                        except:
+                                            val = ''
+                                    else:
+                                        val = eval(var_code, the_user_dict)
+                                    if isinstance(val, float) and float_formatter is not None:
+                                        result['field_data'][varname] = float_formatter % val
+                                    else:
+                                        result['field_data'][varname] = val
+                            if 'code dict' in attachment['options']:
+                                for varname, var_code in attachment['options']['code dict'].items():
+                                    if attachment['options']['skip_undefined']:
+                                        try:
+                                            val = eval(var_code, the_user_dict)
+                                        except:
+                                            val = ''
+                                    else:
+                                        val = eval(var_code, the_user_dict)
+                                    if isinstance(val, float) and float_formatter is not None:
+                                        result['field_data'][varname] = float_formatter % val
+                                    elif isinstance(val, RawValue):
+                                        result['field_data'][varname] = val.value
+                                    else:
+                                        result['field_data'][varname] = docassemble.base.file_docx.transform_for_docx(val, self, result['template'])
+                            docassemble.base.functions.reset_context()
+                    elif doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
+                        docassemble.base.functions.set_context('pdf')
+                        result['data_strings'] = []
+                        result['images'] = []
+                        if isinstance(attachment['options']['fields'], dict):
+                            the_fields = [attachment['options']['fields']]
+                        else:
+                            the_fields = attachment['options']['fields']
+                        for item in the_fields:
+                            for key, val in item.items():
+                                if attachment['options']['skip_undefined']:
+                                    try:
+                                        answer = val.text(the_user_dict).rstrip()
+                                    except:
+                                        answer = ''
+                                else:
+                                    answer = val.text(the_user_dict).rstrip()
+                                if answer == 'True':
+                                    answer = 'Yes'
+                                elif answer == 'False':
+                                    answer = 'No'
+                                elif answer == 'None':
+                                    answer = ''
+                                answer = re.sub(r'\[(NEWLINE|BR)\]', r'\n', answer)
+                                answer = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', answer)
+                                #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
+                                m = re.search(r'\[FILE ([^\]]+)\]', answer)
+                                if m:
+                                    file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                    result['images'].append((key, file_info))
+                                else:
+                                    result['data_strings'].append((key, answer))
+                        if 'code' in attachment['options']:
+                            if attachment['options']['skip_undefined']:
+                                try:
+                                    additional_fields = eval(attachment['options']['code'], the_user_dict)
+                                except:
+                                    additional_fields = []
+                            else:
+                                additional_fields = eval(attachment['options']['code'], the_user_dict)
+                            if not isinstance(additional_fields, list):
+                                additional_fields = [additional_fields]
+                            for item in additional_fields:
+                                if not isinstance(item, dict):
+                                    raise DAError("code in an attachment returned something other than a dictionary or a list of dictionaries")
+                                for key, val in item.items():
+                                    if val is True:
+                                        val = 'Yes'
+                                    elif val is False:
+                                        val = 'No'
+                                    elif val is None:
+                                        val = ''
+                                    elif isinstance(val, float) and float_formatter is not None:
+                                        val = float_formatter % val
+                                    else:
+                                        val = str(val)
+                                    val = re.sub(r'\s*\[(NEWLINE|BR)\]\s*', r'\n', val)
+                                    val = re.sub(r'\s*\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]\s*', r'', val)
+                                    m = re.search(r'\[FILE ([^\]]+)\]', val)
+                                    if m:
+                                        file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                        file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                        result['images'].append((key, file_info))
+                                    else:
+                                        result['data_strings'].append((key, val))
+                        if 'code dict' in attachment['options']:
+                            additional_fields = attachment['options']['code dict']
+                            if not isinstance(additional_fields, list):
+                                additional_fields = [additional_fields]
+                            for item in additional_fields:
+                                if not isinstance(item, dict):
+                                    raise DAError("code dict in an attachment returned something other than a dictionary or a list of dictionaries")
+                                for key, var_code in item.items():
+                                    if attachment['options']['skip_undefined']:
+                                        try:
+                                            val = eval(var_code, the_user_dict)
+                                        except:
+                                            val = ''
+                                    else:
+                                        val = eval(var_code, the_user_dict)
+                                    if val is True:
+                                        val = 'Yes'
+                                    elif val is False:
+                                        val = 'No'
+                                    elif val is None:
+                                        val = ''
+                                    elif isinstance(val, float) and float_formatter is not None:
+                                        val = float_formatter % val
+                                    else:
+                                        val = str(val)
+                                    val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
+                                    val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
+                                    m = re.search(r'\[FILE ([^\]]+)\]', val)
+                                    if m:
+                                        file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                        file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                        result['images'].append((key, file_info))
+                                    else:
+                                        result['data_strings'].append((key, val))
+                        if 'raw code dict' in attachment['options']:
+                            additional_fields = attachment['options']['raw code dict']
+                            if not isinstance(additional_fields, list):
+                                additional_fields = [additional_fields]
+                            for item in additional_fields:
+                                if not isinstance(item, dict):
+                                    raise DAError("raw code dict in an attachment returned something other than a dictionary or a list of dictionaries")
+                                for key, var_code in item.items():
+                                    if attachment['options']['skip_undefined']:
+                                        try:
+                                            val = eval(var_code, the_user_dict)
+                                        except:
+                                            val = ''
+                                    else:
+                                        val = eval(var_code, the_user_dict)
+                                    if val is True:
+                                        val = 'Yes'
+                                    elif val is False:
+                                        val = 'No'
+                                    elif isinstance(val, float) and float_formatter is not None:
+                                        val = float_formatter % val
+                                    elif val is None:
+                                        val = ''
+                                    val = re.sub(r'\[(NEWLINE|BR)\]', r'\n', val)
+                                    val = re.sub(r'\[(BORDER|NOINDENT|FLUSHLEFT|FLUSHRIGHT|BOLDCENTER|CENTER)\]', r'', val)
+                                    m = re.search(r'\[FILE ([^\]]+)\]', val)
+                                    if m:
+                                        file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                                        file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                        result['images'].append((key, file_info))
+                                    else:
+                                        result['data_strings'].append((key, val))
+                        docassemble.base.functions.reset_context()
+                    elif doc_format == 'raw':
+                        docassemble.base.functions.set_context('raw')
+                        the_markdown = the_content.text(the_user_dict)
+                        result['markdown'][doc_format] = the_markdown
+                        docassemble.base.functions.reset_context()
+                    else:
+                        the_markdown = ""
+                        if len(result['metadata']):
+                            modified_metadata = dict()
+                            for key, data in result['metadata'].items():
+                                if re.search(r'Footer|Header', key) and 'Lines' not in key:
+                                    #modified_metadata[key] = docassemble.base.filter.metadata_filter(data, doc_format) + str('[END]')
+                                    modified_metadata[key] = data + str('[END]')
+                                else:
+                                    modified_metadata[key] = data
+                            the_markdown += '---\n' + codecs.decode(bytearray(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|', allow_unicode=False), encoding='utf-8'), 'utf-8') + "...\n"
+                        docassemble.base.functions.set_context('pandoc')
+                        the_markdown += the_content.text(the_user_dict)
+                        #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
+                        if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
+                            the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
+                        result['markdown'][doc_format] = the_markdown
+                        docassemble.base.functions.reset_context()
+                elif doc_format in ['html']:
+                    result['markdown'][doc_format] = the_content.text(the_user_dict)
+                    if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
+                        result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
+                    #logmessage("output was:\n" + repr(result['content'][doc_format]))
+        except:
+            if old_language is not None:
+                docassemble.base.functions.set_language(old_language)
+            raise
         if old_language is not None:
             docassemble.base.functions.set_language(old_language)
         return(result)
@@ -5547,11 +6209,6 @@ def interview_source_from_string(path, **kwargs):
         new_source = InterviewSourceURL(path=path)
         if new_source.update():
             return new_source
-    context_interview = kwargs.get('context_interview', None)
-    if context_interview is not None:
-        new_source = context_interview.source.append(path)
-        if new_source is not None:
-            return new_source
     #sys.stderr.write("Trying to find " + path + "\n")
     for the_filename in [docassemble.base.functions.package_question_filename(path), docassemble.base.functions.standard_question_filename(path), docassemble.base.functions.server.absolute_filename(path)]:
         #sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
@@ -5593,6 +6250,14 @@ def is_threestate(field_data):
 
 class TableInfo:
     pass
+
+def recursive_update(base, target):
+    for key, val in target.items():
+        if isinstance(val, abc.Mapping):
+            base[key] = recursive_update(base.get(key, {}), val)
+        else:
+            base[key] = val
+    return base
 
 class Interview:
     def __init__(self, **kwargs):
@@ -5639,6 +6304,7 @@ class Interview:
         self.recursion_limit = get_config('recursion limit', 500)
         self.cache_documents = True
         self.use_navigation = False
+        self.use_navigation_on_small_screens = True
         self.flush_left = False
         self.max_image_size = get_config('maximum image size', None)
         self.image_type = get_config('image upload type', None)
@@ -5665,15 +6331,12 @@ class Interview:
         if len(the_list) <= 1:
             return the_list
     def invalidate_dependencies(self, field_name, the_user_dict, old_values):
-        #logmessage("Interview.invalidate_dependencies: invalidating for " + field_name)
-        #logmessage("Interview.invalidate_dependencies: invalidation is " + repr(self.invalidation))
         try:
             current_value = eval(field_name, the_user_dict)
         except:
             return
         try:
             if current_value == old_values[field_name]:
-                #logmessage("Interview.invalidate_dependencies: no need to dirty for " + field_name + " because unchanged")
                 return
         except:
             pass
@@ -5745,13 +6408,13 @@ class Interview:
     def get_title(self, the_user_dict, status=None, converter=None):
         if converter is None:
             converter = lambda y: y
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'), ('css class', 'css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
         title = dict()
         for title_name, title_abb in mapping:
             if '_internal' in the_user_dict and title_name in the_user_dict['_internal'] and the_user_dict['_internal'][title_name] is not None:
                 title[title_abb] = str(the_user_dict['_internal'][title_name]).strip()
             elif status is not None and (title_name + ' text') in status.extras and status.extras[title_name + ' text'] is not None:
-                if title_name in ('exit link', 'exit url'):
+                if title_name in ('exit link', 'exit url', ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window')):
                     title[title_abb] = status.extras[title_name + ' text']
                 else:
                     title[title_abb] = converter(status.extras[title_name + ' text'], title_name)
@@ -5787,6 +6450,44 @@ class Interview:
                 return False
             if has_roles is not None:
                 return len(set(roles).intersection(set(has_roles))) > 0
+        if is_anonymous:
+            require_login = False
+            for metadata in self.metadata:
+                if 'require login' in metadata:
+                    require_login = True if metadata['require login'] else False
+            if require_login:
+                return False
+        return True
+    def allowed_to_initiate(self, is_anonymous=False, has_roles=None):
+        if not self.allowed_to_access(is_anonymous=is_anonymous, has_roles=has_roles):
+            return False
+        roles = set()
+        is_none = False
+        for metadata in self.metadata:
+            if 'required privileges for initiating' in metadata:
+                roles = set()
+                is_none = False
+                privs = metadata['required privileges for initiating']
+                if isinstance(privs, list) or (hasattr(privs, 'instanceName') and hasattr(privs, 'elements') and isinstance(privs.elements, list)):
+                    if len(privs) == 0:
+                        is_none = True
+                    else:
+                        for priv in privs:
+                            if isinstance(priv, str):
+                                roles.add(priv)
+                elif isinstance(privs, str):
+                    roles.add(privs)
+                elif isinstance(privs, NoneType):
+                    is_none = True
+        if is_none:
+            return False
+        if len(roles):
+            if is_anonymous:
+                if 'anonymous' in roles:
+                    return True
+                return False
+            if has_roles is not None:
+                return len(set(roles).intersection(set(has_roles))) > 0
         return True
     def allowed_to_see_listed(self, is_anonymous=False, has_roles=None):
         if not self.allowed_to_access(is_anonymous=is_anonymous, has_roles=has_roles):
@@ -5809,6 +6510,13 @@ class Interview:
                 return False
             if has_roles is not None:
                 return len(set(roles).intersection(set(has_roles))) > 0
+        if is_anonymous:
+            require_login = False
+            for metadata in self.metadata:
+                if 'require login' in metadata:
+                    require_login = True if metadata['require login'] else False
+            if require_login:
+                return False
         return True
     def is_unlisted(self):
         unlisted = False
@@ -5923,9 +6631,31 @@ class Interview:
         if len(self.images) > 0 or get_config('default icons', 'font awesome') in ('material icons', 'font awesome'):
             self.scan_for_emojis = True
         for metadata in self.metadata:
+            if 'social' in metadata and isinstance(metadata['social'], dict):
+                if 'image' in metadata['social'] and isinstance(metadata['social']['image'], str):
+                    metadata['social']['image'] = docassemble.base.functions.server.url_finder(metadata['social']['image'], _package=metadata['_origin_package'], _external=True)
+                    if metadata['social']['image'] is None:
+                        logmessage("Invalid image reference in social meta tags")
+                        del metadata['social']['image']
+                for key, subkey in (('og', 'image'), ('twitter', 'image')):
+                    if key in metadata['social'] and isinstance(metadata['social'][key], dict) and subkey in metadata['social'][key] and isinstance(metadata['social'][key][subkey], str):
+                        metadata['social'][key][subkey] = docassemble.base.functions.server.url_finder(metadata['social'][key][subkey], _package=metadata['_origin_package'], _external=True)
+                        if metadata['social'][key][subkey] is None:
+                            logmessage("Invalid image reference in social meta tags")
+                            del metadata['social'][key][subkey]
+                for key, val in metadata['social'].items():
+                    if isinstance(val, dict):
+                        for subkey, subval in val.items():
+                            if isinstance(subval, str):
+                                metadata['social'][key][subkey] = subval.replace('\n', ' ').replace('"', '&quot;').strip()
+                    elif isinstance(val, str):
+                        metadata['social'][key] = val.replace('\n', ' ').replace('"', '&quot;').strip()
             for key, val in metadata.items():
-                self.consolidated_metadata[key] = val
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'))
+                if key in self.consolidated_metadata and isinstance(self.consolidated_metadata[key], dict) and isinstance(val, dict):
+                    recursive_update(self.consolidated_metadata[key], val)
+                else:
+                    self.consolidated_metadata[key] = val
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
         self.default_title = {'*': dict()}
         for metadata in self.metadata:
             for title_name, title_abb in mapping:
@@ -5944,7 +6674,7 @@ class Interview:
                 if title_abb in self.default_title[lang]:
                     continue
                 if parts.get('main page ' + title_name, '') != '':
-                    self.default_title[lang][title_abb] = parts['main page ' + title_name]
+                    self.default_title[lang][title_abb] = parts['main page ' + title_name].strip()
     def make_sorter(self):
         lookup_dict = self.orderings_by_question
         class K:
@@ -6031,6 +6761,8 @@ class Interview:
             user_dict['nav'].sections = self.sections
             if hasattr(self, 'sections_progressive'):
                 user_dict['nav'].progressive = self.sections_progressive
+            if hasattr(self, 'sections_auto_open'):
+                user_dict['nav'].auto_open = self.sections_auto_open
         for question in self.questions_list:
             if question.question_type == 'imports':
                 for module_name in question.module_list:
@@ -6044,7 +6776,7 @@ class Interview:
                         exec('from ' + str(question.package) + module_name + ' import *', user_dict)
                     else:
                         exec('from ' + module_name + ' import *', user_dict)
-            if question.question_type == 'reset': #, 'template', 'table'
+            if question.question_type == 'reset':
                 for var in question.reset_list:
                     if complications.search(var):
                         try:
@@ -6067,6 +6799,24 @@ class Interview:
                     pass
             elif var in user_dict:
                 del user_dict[var]
+        session_uid = interview_status.current_info['user']['session_uid']
+        device_id = interview_status.current_info['user']['device_id']
+        user_id = str(interview_status.current_info['user']['the_user_id'])
+        if 'session_local' not in user_dict['_internal']: ### take out after a time
+            user_dict['_internal']['session_local'] = dict()
+            user_dict['_internal']['device_local'] = dict()
+            user_dict['_internal']['user_local'] = dict()
+        if session_uid not in user_dict['_internal']['session_local'] or device_id not in user_dict['_internal']['device_local'] or user_id not in user_dict['_internal']['user_local']:
+            exec('import docassemble.base.core')
+            if session_uid not in user_dict['_internal']['session_local']:
+                user_dict['_internal']['session_local'][session_uid] = eval("docassemble.base.core.DASessionLocal()")
+            if device_id not in user_dict['_internal']['device_local']:
+                user_dict['_internal']['device_local'][device_id] = eval("docassemble.base.core.DADeviceLocal()")
+            if user_id not in user_dict['_internal']['user_local']:
+                user_dict['_internal']['user_local'][user_id] = eval("docassemble.base.core.DAUserLocal()")
+        user_dict['session_local'] = user_dict['_internal']['session_local'][session_uid]
+        user_dict['device_local'] = user_dict['_internal']['device_local'][device_id]
+        user_dict['user_local'] = user_dict['_internal']['user_local'][user_id]
         number_loops = 0
         variables_sought = set()
         try:
@@ -6123,7 +6873,7 @@ class Interview:
                             for keyvalue in question.objects_from_file:
                                 for variable, the_file in keyvalue.items():
                                     exec(import_core, user_dict)
-                                    command = variable + ' = docassemble.base.core.objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ', use_objects=' + repr(use_objects) + ')'
+                                    command = variable + ' = docassemble.base.core.objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ', use_objects=' + repr(use_objects) + ', package=' + repr(question.package) + ')'
                                     #logmessage("Running " + command)
                                     exec(command, user_dict)
                             question.mark_as_answered(user_dict)
@@ -6233,24 +6983,23 @@ class Interview:
                         if the_exception.next_action is not None and not interview_status.checkin:
                             if 'event_stack' not in user_dict['_internal']:
                                 user_dict['_internal']['event_stack'] = dict()
-                            session_uid = interview_status.current_info['user']['session_uid']
                             if session_uid not in user_dict['_internal']['event_stack']:
                                 user_dict['_internal']['event_stack'][session_uid] = list()
                             new_items = list()
                             for new_item in the_exception.next_action:
                                 already_there = False
                                 for event_item in user_dict['_internal']['event_stack'][session_uid]:
-                                    if event_item['action'] == new_item:
+                                    if (isinstance(new_item, dict) and event_item['action'] == new_item['action']) or (isinstance(new_item, str) and event_item['action'] == new_item):
                                         already_there = True
                                         break
                                 if not already_there:
                                     new_items.append(new_item)
                             if len(new_items):
-                                #logmessage("adding a new item to event_stack: " + repr(new_items))
                                 user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
                             #interview_status.next_action.extend(the_exception.next_action)
                             if the_exception.name.startswith('_da_'):
                                 continue
+                            docassemble.base.functions.this_thread.misc['forgive_missing_question'] = [the_exception.name]
                         if the_exception.arguments is not None:
                             docassemble.base.functions.this_thread.current_info.update(dict(action=the_exception.name, arguments=the_exception.arguments))
                         missingVariable = the_exception.name
@@ -6599,12 +7348,18 @@ class Interview:
                                 continue
                     if question.question_type == 'fields':
                         field_id = safeid(missing_var)
+                        if is_generic:
+                            if the_x != 'None':
+                                exec("x = " + the_x, user_dict)
+                        if len(iterators):
+                            for indexno in range(len(iterators)):
+                                exec(list_of_indices[indexno] + " = " + iterators[indexno], user_dict)
                         skip_question = None
                         for field in question.fields:
                             if hasattr(field, 'showif_code') and hasattr(field, 'saveas') and field.saveas == field_id:
                                 docassemble.base.functions.this_thread.misc['current_field'] = field.number
                                 result = eval(field.showif_code, user_dict)
-                                if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
+                                if hasattr(field, 'extras') and 'show_if_sign_code' in field.extras and field.extras['show_if_sign_code'] == 0:
                                     if result:
                                         if skip_question is not False:
                                             skip_question = True
@@ -6619,7 +7374,10 @@ class Interview:
                         if skip_question:
                             continue
                     if self.debug:
-                        seeking.append({'question': question, 'reason': 'asking', 'time': time.time()})
+                        if question.question_type in ('signature', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'multiple_choice', 'settrue', 'fields', 'review', 'deadend'):
+                            seeking.append({'question': question, 'reason': 'asking', 'time': time.time()})
+                        else:
+                            seeking.append({'question': question, 'reason': 'running', 'time': time.time()})
                     if question.question_type == "data":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         old_values = question.get_old_values(user_dict)
@@ -6835,6 +7593,8 @@ class Interview:
                         table_info.header = question.fields[0].extras['header']
                         table_info.is_editable = question.fields[0].extras['is_editable']
                         table_info.require_gathered = question.fields[0].extras['require_gathered']
+                        table_info.show_incomplete = question.fields[0].extras['show_incomplete']
+                        table_info.not_available_label = question.fields[0].extras['not_available_label']
                         table_info.row = question.fields[0].extras['row']
                         table_info.column = question.fields[0].extras['column']
                         table_info.indent = " " * (4 * int(question.fields[0].extras['indent']))
@@ -6893,13 +7653,19 @@ class Interview:
                         if question.question_type == 'event_code':
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
                         docassemble.base.functions.this_thread.current_question = question
-                        exec_with_trap(question, user_dict)
+                        if was_defined:
+                            exec_with_trap(question, user_dict, old_variable=missing_var)
+                        else:
+                            exec_with_trap(question, user_dict)
                         interview_status.mark_tentative_as_answered(user_dict)
                         if missing_var in variable_stack:
                             variable_stack.remove(missing_var)
                         if question.question_type == 'event_code':
                             docassemble.base.functions.pop_current_variable()
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
+                            question.invalidate_dependencies(user_dict, old_values)
+                            if was_defined:
+                                exec("del __oldvariable__", user_dict)
                             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         try:
                             eval(missing_var, user_dict)
@@ -6929,13 +7695,21 @@ class Interview:
                 if a_question_was_skipped:
                     raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
                 if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc and origMissingVariable in docassemble.base.functions.this_thread.misc['forgive_missing_question']:
-                    #logmessage("Forgiving " + origMissingVariable)
+                    docassemble.base.functions.pop_current_variable()
+                    docassemble.base.functions.pop_event_stack(origMissingVariable)
+                    if 'action' in docassemble.base.functions.this_thread.current_info and docassemble.base.functions.this_thread.current_info['action'] == origMissingVariable:
+                        del docassemble.base.functions.this_thread.current_info['action']
+                    return({'type': 'continue', 'sought': origMissingVariable, 'orig_sought': origMissingVariable})
+                if self.options.get('use catchall', False) and not origMissingVariable.endswith('.value'):
+                    string = "import docassemble.base.core"
+                    exec(string, user_dict)
+                    string = origMissingVariable + ' = docassemble.base.core.DACatchAll(' + repr(origMissingVariable) + ')'
+                    exec(string, user_dict)
                     docassemble.base.functions.pop_current_variable()
                     docassemble.base.functions.pop_event_stack(origMissingVariable)
                     return({'type': 'continue', 'sought': origMissingVariable, 'orig_sought': origMissingVariable})
                 raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
             except ForcedReRun as the_exception:
-                #logmessage("forcedrerun")
                 docassemble.base.functions.pop_current_variable()
                 docassemble.base.functions.pop_event_stack(origMissingVariable)
                 return({'type': 're_run', 'sought': origMissingVariable, 'orig_sought': origMissingVariable})
@@ -6970,13 +7744,15 @@ class Interview:
                             if not already_there:
                                 new_items.append(new_item)
                         if len(new_items):
-                            #logmessage("adding a new item to event_stack: " + repr(new_items))
                             user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
                         #interview_status.next_action.extend(the_exception.next_action)
                     if the_exception.arguments is not None:
                         docassemble.base.functions.this_thread.current_info.update(dict(action=the_exception.name, arguments=the_exception.arguments))
                     if the_exception.name.startswith('_da_'):
-                        continue
+                        docassemble.base.functions.pop_current_variable()
+                        docassemble.base.functions.pop_event_stack(origMissingVariable)
+                        return({'type': 're_run', 'sought': origMissingVariable, 'orig_sought': origMissingVariable})
+                    docassemble.base.functions.this_thread.misc['forgive_missing_question'] = [the_exception.name]
                 else:
                     #logmessage("regular nameerror")
                     follow_mc = True
@@ -7179,23 +7955,26 @@ class Interview:
             #     new_question.name = "Question_Temp"
             #     return(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
         if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc and origMissingVariable in docassemble.base.functions.this_thread.misc['forgive_missing_question']:
-            #logmessage("Forgiving " + missing_var + " and " + origMissingVariable)
             docassemble.base.functions.pop_current_variable()
             docassemble.base.functions.pop_event_stack(origMissingVariable)
             return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
 
-def substitute_vars(var, is_generic, the_x, iterators):
+def substitute_vars(var, is_generic, the_x, iterators, last_only=False):
     if is_generic:
-        if the_x != 'None' and hasattr(the_x, 'instanceName'):
-            var = re.sub(r'^x\b', the_x.instanceName, var)
+        if the_x != 'None':
+            var = re.sub(r'^x\b', the_x, var)
     if len(iterators):
-        for indexno in range(len(iterators)):
-            #the_iterator = iterators[indexno]
-            #if isinstance(the_iterator, str) and re.match(r'^-?[0-9]+$', the_iterator):
-            #    the_iterator = int(the_iterator)
-            #var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + repr(the_iterator) + ']', var)
+        if last_only:
+            indexno = len(iterators) - 1
             var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + str(iterators[indexno]) + ']', var)
+        else:
+            for indexno in range(len(iterators)):
+                #the_iterator = iterators[indexno]
+                #if isinstance(the_iterator, str) and re.match(r'^-?[0-9]+$', the_iterator):
+                #    the_iterator = int(the_iterator)
+                #var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + repr(the_iterator) + ']', var)
+                var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + str(iterators[indexno]) + ']', var)
     return var
 
 def reproduce_basics(interview, new_interview):
@@ -7218,7 +7997,7 @@ def process_selections(data, manual=False, exclude=None):
     else:
         to_exclude = unpack_list(exclude)
     result = []
-    if (isinstance(data, abc.Iterable) and not isinstance(data, (str, dict))) or (hasattr(data, 'elements') and isinstance(data.elements, list)):
+    if (isinstance(data, abc.Iterable) and not isinstance(data, (str, dict))) or (hasattr(data, 'elements') and isinstance(data.elements, (list, set))):
         for entry in data:
             if isinstance(entry, dict) or (hasattr(entry, 'elements') and isinstance(entry.elements, dict)):
                 the_item = dict()
@@ -7440,10 +8219,16 @@ def invalid_variable_name(varname):
         return True
     return False
 
-def exec_with_trap(the_question, the_dict):
+def exec_with_trap(the_question, the_dict, old_variable=None):
     try:
         exec(the_question.compute, the_dict)
     except (NameError, UndefinedError, CommandError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, QuestionError, AttributeError, MandatoryQuestion, CodeExecute, SyntaxException, CompileException):
+        if old_variable is not None:
+            try:
+                exec(str(old_variable) + " = __oldvariable__", the_dict)
+                exec("del __oldvariable__", the_dict)
+            except:
+                pass
         raise
     except Exception as e:
         cl, exc, tb = sys.exc_info()
@@ -7561,40 +8346,25 @@ class DAEnvironment(Environment):
         source = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, source)
         return super().from_string(source, **kwargs)
     def getitem(self, obj, argument):
-        """Get an item or attribute of an object but prefer the item."""
         try:
             return obj[argument]
         except (AttributeError, TypeError, LookupError):
-            if isinstance(argument, str):
-                try:
-                    attr = str(argument)
-                except Exception:
-                    pass
-                else:
-                    try:
-                        return getattr(obj, attr)
-                    except AttributeError:
-                        pass
             return self.undefined(obj=obj, name=argument, accesstype='item')
 
     def getattr(self, obj, attribute):
-        """Get an item or attribute of an object but prefer the attribute.
-        Unlike :meth:`getitem` the attribute *must* be a bytestring.
-        """
         try:
             return getattr(obj, attribute)
         except AttributeError:
             pass
-        try:
-            return obj[attribute]
-        except (TypeError, LookupError, AttributeError):
-            return self.undefined(obj=obj, name=attribute, accesstype='attribute')
+        return self.undefined(obj=obj, name=attribute, accesstype='attribute')
 
 def ampersand_filter(value):
     if value.__class__.__name__ in ('DAFile', 'DALink', 'DAStaticFile', 'DAFileCollection', 'DAFileList'):
         return value
     if value.__class__.__name__ in ('InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc', 'DALazyTemplate'):
         return str(value)
+    if isinstance(value, (int, bool, float, NoneType)):
+        return value
     if not isinstance(value, str):
         value = str(value)
     if '<w:r>' in value or '</w:t>' in value:
@@ -7618,8 +8388,8 @@ class DAStrictUndefined(StrictUndefined):
 
     @internalcode
     def __getitem__(self, index):
-        if name[:2] == '__':
-            raise IndexError(name)
+        if index[:2] == '__':
+            raise IndexError(index)
         return self._fail_with_undefined_error(item=True)
 
     @internalcode
@@ -7627,6 +8397,11 @@ class DAStrictUndefined(StrictUndefined):
         if True or self._undefined_hint is None:
             if self._undefined_obj is missing:
                 hint = "'%s' is undefined" % self._undefined_name
+            elif self._undefined_type == 'item' and hasattr(self._undefined_obj, 'instanceName'):
+                hint = "'%s[%r]' is undefined" % (
+                    self._undefined_obj.instanceName,
+                    self._undefined_name
+                )
             elif 'attribute' in kwargs or self._undefined_type == 'attribute':
                 if hasattr(self._undefined_obj, 'instanceName'):
                     hint = "'%s.%s' is undefined" % (
@@ -7634,7 +8409,7 @@ class DAStrictUndefined(StrictUndefined):
                         self._undefined_name
                     )
                 else:
-                    hint = '%r has got no attribute %r' % (
+                    hint = '%r has no attribute %r' % (
                         object_type_repr(self._undefined_obj),
                         self._undefined_name
                     )
@@ -7667,8 +8442,81 @@ def custom_jinja_env():
     env.filters['add_separators'] = docassemble.base.functions.add_separators
     env.filters['inline_markdown'] = inline_markdown_filter
     env.filters['paragraphs'] = docassemble.base.functions.single_to_double_newlines
+    env.filters['manual_line_breaks'] = docassemble.base.functions.manual_line_breaks
     env.filters['RichText'] = docassemble.base.file_docx.RichText
+    env.filters['selectattr'] = selectattr_filter
+    env.filters['nice_number'] = docassemble.base.functions.nice_number
+    env.filters['ordinal'] = docassemble.base.functions.ordinal
+    env.filters['ordinal_number'] = docassemble.base.functions.ordinal_number
+    env.filters['currency'] = docassemble.base.functions.currency
+    env.filters['comma_list'] = docassemble.base.functions.comma_list
+    env.filters['comma_and_list'] = docassemble.base.functions.comma_and_list
+    env.filters['capitalize'] = docassemble.base.functions.capitalize
+    env.filters['salutation'] = docassemble.base.functions.salutation
+    env.filters['alpha'] = docassemble.base.functions.alpha
+    env.filters['roman'] = docassemble.base.functions.roman
+    env.filters['word'] = docassemble.base.functions.word
+    env.filters['title_case'] = docassemble.base.functions.title_case
+    env.filters['single_paragraph'] = docassemble.base.functions.single_paragraph
+    env.filters['phone_number_formatted'] = docassemble.base.functions.phone_number_formatted
+    env.filters['phone_number_in_e164'] = docassemble.base.functions.phone_number_in_e164
+    env.filters['country_name'] = docassemble.base.functions.country_name
+    env.filters['fix_punctuation'] = docassemble.base.functions.fix_punctuation
+    env.filters['redact'] = docassemble.base.functions.redact
+    env.filters['verbatim'] = docassemble.base.functions.verbatim
+    env.filters['map'] = map_filter
     return env
+
+def selectattr_filter(*pargs, **kwargs):
+    if len(pargs) > 2:
+        array = pargs[0]
+        attr_name = pargs[1]
+        func_name = pargs[2]
+        env = custom_jinja_env()
+        func = lambda item: env.call_test(func_name, item, pargs[3:], kwargs)
+        for item in array:
+            if func(getattr(item, attr_name)):
+                yield item
+    else:
+        for item in pargs[0]:
+            if getattr(item, pargs[1]):
+                yield item
+
+def map_filter(*pargs, **kwargs):
+    if len(pargs) >= 2:
+        array = pargs[0]
+        the_filter = pargs[1]
+        env = custom_jinja_env()
+        if the_filter not in env.filters:
+            raise DAError('filter passed to map() does not exist')
+        for item in array:
+            yield env.call_filter(the_filter, item, pargs[2:], kwargs)
+    else:
+        if 'attribute' in kwargs:
+            if 'default' in kwargs:
+                for item in pargs[0]:
+                    yield getattr(item, kwargs['attribute'], kwargs['default'])
+            else:
+                for item in pargs[0]:
+                    yield getattr(item, kwargs['attribute'])
+        elif 'index' in kwargs:
+            if 'default' in kwargs:
+                for item in pargs[0]:
+                    yield item.get(kwargs['index'], kwargs['default'])
+            else:
+                for item in pargs[0]:
+                    yield item[kwargs['index']]
+        elif 'function' in kwargs:
+            the_kwargs = kwargs.get('kwargs', dict())
+            the_pargs = kwargs.get('pargs', list())
+            if not isinstance(the_kwargs, dict):
+                raise DAError('kwargs passed to map() must be a dictionary')
+            if not isinstance(the_pargs, list):
+                raise DAError('pargs passed to map() must be a list')
+            for item in pargs[0]:
+                yield kwargs['function'](item, *the_pargs, **the_kwargs)
+        else:
+            raise DAError('map() must refer to a function, index, attribute, or filter')
 
 def markdown_filter(text):
     return docassemble.base.file_docx.markdown_to_docx(str(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))

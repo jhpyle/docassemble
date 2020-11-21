@@ -35,7 +35,7 @@ yesno: customers.there_is_another
 code: |
   people = ([boss] if defined('boss') and boss.name.defined() else []) \
          + ([employee] if defined('employee') and employee.name.defined() else []) \
-         + customers.complete_elements()
+         + customers.complete_elements().elements
 ---
 reconsider:
   - people

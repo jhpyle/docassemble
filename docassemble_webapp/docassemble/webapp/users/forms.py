@@ -1,11 +1,11 @@
 import sys
 import re
-from flask_user.forms import RegisterForm, LoginForm, password_validator, unique_email_validator
+from docassemble_flask_user.forms import RegisterForm, LoginForm, password_validator, unique_email_validator
 from flask_wtf import FlaskForm
 from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators, TextAreaField
 from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
-from docassemble.base.functions import word
+from docassemble.base.functions import LazyWord as word, LazyArray
 from docassemble.base.config import daconfig
 from flask_login import current_user
 import email.utils
@@ -293,5 +293,5 @@ class MyResendConfirmEmailForm(FlaskForm):
     submit = SubmitField(word('Send confirmation email'))
 
 class ManageAccountForm(FlaskForm):
-    confirm = StringField(word('Type \"delete my account\" here to confirm that you want to delete your account.'), [validators.AnyOf([word("delete my account")], message=word('Since you did not type \"delete my account\" I did not delete your account.'))])
+    confirm = StringField(word('Type \"delete my account\" here to confirm that you want to delete your account.'), [validators.AnyOf(LazyArray([word("delete my account")]), message=word('Since you did not type \"delete my account\" I did not delete your account.'))])
     delete = SubmitField(word('Delete Account'))

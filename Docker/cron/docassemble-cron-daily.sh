@@ -41,6 +41,8 @@ fi
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
     export S3_ACCESS_KEY="${S3ACCESSKEY}"
     export S3_SECRET_KEY="${S3SECRETACCESSKEY}"
+    export AWS_ACCESS_KEY_ID="$S3ACCESSKEY"
+    export AWS_SECRET_ACCESS_KEY="$S3SECRETACCESSKEY"
 fi
 
 if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
@@ -56,17 +58,18 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     if [ "${USEHTTPS:-false}" == "true" ]; then
 	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
 	    if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
+		export USE_PYTHON_3=1
 		if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 		    supervisorctl --serverurl http://localhost:9001 stop apache2
 		    cd "${DA_ROOT}/letsencrypt"
-		    ./letsencrypt-auto renew --apache --cert-name "${DAHOSTNAME}"
+		    ./certbot-auto renew --apache --cert-name "${DAHOSTNAME}"
 		    /etc/init.d/apache2 stop
 		    supervisorctl --serverurl http://localhost:9001 start apache2
 		fi
 		if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
 		    supervisorctl --serverurl http://localhost:9001 stop nginx
 		    cd "${DA_ROOT}/letsencrypt"
-		    ./letsencrypt-auto renew --nginx --cert-name "${DAHOSTNAME}"
+		    ./certbot-auto renew --nginx --cert-name "${DAHOSTNAME}"
 		    nginx -s stop &> /dev/null
 		    supervisorctl --serverurl http://localhost:9001 start nginx
 		fi

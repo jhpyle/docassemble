@@ -1,0 +1,6 @@
+imports:
+  - docassemble.demo
+---
+mandatory: True
+code: |
+  json_response({'version': docassemble.demo.__version__})

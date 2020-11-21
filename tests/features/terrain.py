@@ -70,6 +70,9 @@ class MyChrome(Chrome):
 
 @before.all
 def setup_browser():
+    world.screenshot_number = 0
+    world.screenshot_folder = None
+    world.headless = False
     if use_firefox:
         world.browser = MyFirefox()
         world.browser.set_window_size(450, 1200)
@@ -78,6 +81,7 @@ def setup_browser():
     elif use_phantomjs:
         world.browser = MyPhantomJS()
     elif use_headless_chrome:
+        world.headless = True
         options = ChromeOptions()
         options.add_argument("--window-size=1005,9999")
         options.add_argument("--headless");

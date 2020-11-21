@@ -1,3 +1,8 @@
+html {
+  position: relative;
+  min-height: 100%;
+}
+
 body.dabody {
     border: 0px;
     margin: 0px;
@@ -160,26 +165,26 @@ a.danohover:hover {
     white-space: normal;
 }
 
-button.btn-da-custom {
+.btn-da-custom {
     width: 8em;
     height: 8em;
     text-align: center;
     vertical-align: middle;
 }
 
-button.btn-da-custom svg {
+.btn-da-custom svg {
     width: 4em !important;
     height: 4em !important;
     text-align: center;
     vertical-align: middle;
 }
 
-button.btn-da-custom span:first-of-type::after {
+.btn-da-custom span:first-of-type::after {
     content: "";
     display: block;
 }
 
-button.btn-da-custom:focus {
+.btn-da-custom:focus {
     outline: 1px dotted !important;
 }
 
@@ -1400,6 +1405,28 @@ div.danavnested-horiz {
     font-size: 80%;
 }
 
+@media (max-width: 767px) {
+    div.danav-horiz > .danavlink {
+	border-width: 0 0 0.1rem 0;
+	margin: 0px 3px 0px 0px;
+	padding: 0.5rem 0.25rem 0.4rem 0.25rem;
+    }
+
+    div.danav-horiz > a.danotavailableyet {
+	border-width: 0;
+    }
+
+    div.danav-horiz > a.inactive {
+	border-width: 0;
+    }
+}
+
+@media (max-width: 575px) {
+    div.danav-horiz > .danavlink {
+	font-size: 11px;
+    }
+}
+
 /* .danav > a.inactive:hover, */
 /* .danav > a.inactive:focus { */
 /*     color: #337ab7; */
@@ -1613,7 +1640,7 @@ div.danavbar {
 }
 
 .dayesnospacing + .dayesnospacing {
-    margin-top: -15px;
+    margin-top: -1.0rem;
 }
 
 .dainterviewhaserror {
@@ -1840,7 +1867,7 @@ div.daconstraintlist div + div {
     text-align: center;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 575px) {
     body.dasignature {
 	position: fixed;
 	top: 0px;
@@ -1963,7 +1990,7 @@ div.daconstraintlist div + div {
     display: block;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 576px) {
     /* .dasignature section { */
     /* 	padding: 70px 0px 0px 0px; */
     /* } */
@@ -2225,7 +2252,7 @@ tr:first-child .datableup, tr:last-child .databledown {
     cursor: pointer;
 }
 
-button.da-wrap-toggle {
+.da-wrap-toggle {
     float: right;
 }
 
@@ -2233,4 +2260,27 @@ button.da-wrap-toggle {
     width: 1em;
     height: 1em;
     fill: currentColor;
+}
+
+.dafooter {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  line-height: 60px;
+  overflow: hidden;
+}
+
+body.da-pad-for-footer {
+  margin-bottom: 60px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
 }

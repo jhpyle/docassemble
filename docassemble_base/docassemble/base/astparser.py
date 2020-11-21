@@ -95,6 +95,26 @@ class myvisitnode(ast.NodeVisitor):
         #ast.NodeVisitor.generic_visit(self, node)
         self.generic_visit(node)
         self.depth -= 1
+    def visit_AugAssign(self, node):
+        for key, val in ast.iter_fields(node):
+            if key == 'target':
+                crawler = myextract()
+                crawler.visit(val)
+                self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
+        self.depth += 1
+        #ast.NodeVisitor.generic_visit(self, node)
+        self.generic_visit(node)
+        self.depth -= 1
+    def visit_AnnAssign(self, node):
+        for key, val in ast.iter_fields(node):
+            if key == 'target':
+                crawler = myextract()
+                crawler.visit(val)
+                self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
+        self.depth += 1
+        #ast.NodeVisitor.generic_visit(self, node)
+        self.generic_visit(node)
+        self.depth -= 1
     def visit_FunctionDef(self, node):
         if hasattr(node, 'name'):
             self.targets[node.name] = 1

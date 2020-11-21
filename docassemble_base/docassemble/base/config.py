@@ -154,6 +154,35 @@ def load(**kwargs):
         else:
             config_error("The maximum content length must be an integer number of bytes, or null.")
             del daconfig['maximum content length']
+    if 'social' not in daconfig or not isinstance(daconfig['social'], dict):
+        daconfig['social'] = dict()
+    if 'twitter' not in daconfig['social'] or not isinstance(daconfig['social']['twitter'], dict):
+        daconfig['social']['twitter'] = dict()
+    if 'og' not in daconfig['social'] or not isinstance(daconfig['social']['og'], dict):
+        daconfig['social']['og'] = dict()
+    if 'fb' not in daconfig['social'] or not isinstance(daconfig['social']['fb'], dict):
+        daconfig['social']['fb'] = dict()
+    for key in list(daconfig['social'].keys()):
+        if key in ('og', 'twitter', 'fb'):
+            continue
+        if (not isinstance(daconfig['social'][key], str)) or daconfig['social'][key].strip() == '':
+            del daconfig['social'][key]
+        else:
+            daconfig['social'][key] = noquote(daconfig['social'][key])
+    for part in ('og', 'fb', 'twitter'):
+        for key in list(daconfig['social'][part].keys()):
+            if (not isinstance(daconfig['social'][part][key], str)) or daconfig['social'][part][key].strip() == '':
+                del daconfig['social'][part][key]
+            else:
+                daconfig['social'][part][key] = noquote(daconfig['social'][part][key])
+    if 'name' in daconfig['social']:
+        del daconfig['social']['name']
+    if 'title' in daconfig['social']['og']:
+        del daconfig['social']['og']['title']
+    if 'title' in daconfig['social']['twitter']:
+        del daconfig['social']['twitter']['title']
+    if 'url' in daconfig['social']['og']:
+        del daconfig['social']['og']['url']
     if 'administrative interviews' in daconfig:
         new_admin_interviews = list()
         for item in daconfig['administrative interviews']:
@@ -169,6 +198,13 @@ def load(**kwargs):
         except:
             config_error("Invalid session lifetime seconds.")
             del daconfig['session lifetime seconds']
+    if 'pagination limit' in daconfig:
+        try:
+            assert isinstance(daconfig['pagination limit'], int)
+            assert daconfig['pagination limit'] > 1
+            assert daconfig['pagination limit'] < 1001
+        except:
+            daconfig['pagination limit'] = 100
     if 'page after login' in daconfig:
         if isinstance(daconfig['page after login'], str):
             daconfig['page after login'] = [{'*': daconfig['page after login']}]
@@ -419,6 +455,10 @@ def load(**kwargs):
         elif daconfig['checkin interval'] > 0 and daconfig['checkin interval'] < 1000:
             config_error("checkin interval must be at least 1000, if not 0.")
             del daconfig['checkin interval']
+    if daconfig.get('checkin interval', 5) == 0:
+        daconfig['enable monitor'] = False
+    else:
+        daconfig['enable monitor'] = True
     if daconfig.get('default icons', None) == 'font awesome':
         daconfig['use font awesome'] = True
     if 'websockets port' in daconfig and daconfig['websockets port']:
@@ -463,6 +503,8 @@ def load(**kwargs):
         daconfig['root'] = '/'
     if 'web server' not in daconfig or not daconfig['web server']:
         daconfig['web server'] = 'nginx'
+    if 'table css class' not in daconfig or not isinstance(daconfig['table css class'], str):
+        daconfig['table css class'] = 'table table-striped'
     if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
         messages = list()
         for env_var, key in (('DBPREFIX', 'prefix'), ('DBNAME', 'name'), ('DBUSER', 'user'), ('DBPASSWORD', 'password'), ('DBHOST', 'host'), ('DBPORT', 'port'), ('DBTABLEPREFIX', 'table prefix'), ('DBBACKUP', 'backup')):
@@ -473,6 +515,10 @@ def load(**kwargs):
             daconfig['secretkey'] = env_translate('DASECRETKEY')
         if env_exists('DABACKUPDAYS'):
             override_config(daconfig, messages, 'backup days', 'DABACKUPDAYS')
+        if env_exists('DASTABLEVERSION'):
+            override_config(daconfig, messages, 'stable version', 'DASTABLEVERSION')
+        if env_exists('DASSLPROTOCOLS'):
+            override_config(daconfig, messages, 'nginx ssl protocols', 'DASSLPROTOCOLS')
         if env_exists('SERVERADMIN'):
             override_config(daconfig, messages, 'server administrator email', 'SERVERADMIN')
         if env_exists('LOCALE'):
@@ -527,6 +573,8 @@ def load(**kwargs):
             override_config(daconfig, messages, 'root', 'POSTURLROOT')
         if env_exists('DAWEBSERVER'):
             override_config(daconfig, messages, 'web server', 'DAWEBSERVER')
+        if env_exists('DASQLPING'):
+            override_config(daconfig, messages, 'sql ping', 'DASQLPING')
         env_messages = messages
     return
 
@@ -580,3 +628,8 @@ def parse_redis_uri():
     if redis_password is not None:
         redis_cli += ' -a ' + redis_password
     return (redis_host, redis_port, redis_password, redis_offset, redis_cli)
+
+def noquote(string):
+    if isinstance(string, str):
+        return string.replace('\n', ' ').replace('"', '&quot;').strip()
+    return string

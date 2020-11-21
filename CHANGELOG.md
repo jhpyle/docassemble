@@ -1,5 +1,960 @@
 # Change Log
 
+## [1.1.105] - 2020-11-20
+### Changed
+- The `.make_ocr_pdf_in_background()` method can now handle mixed file
+  types.
+### Fixed
+- Markdown internal anchor links now work in the web interface.
+
+## [1.1.104] - 2020-11-20
+### Added
+- German translations of country names.
+### Changed
+- The `states_list()`, `state_name()`, and `subdivision_type()`
+  functions now pass output through the `word()` translation system.
+### Fixed
+- The `language` modifier for an attachment did not work with `docx
+  template file` attachments.
+
+## [1.1.103] - 2020-11-19
+### Added
+- The `temporary session` specifier under `metadata`.
+### Changed
+- The `countries_list()` and `country_name()` functions will now pass
+  country names through the `word()` translation system.
+
+## [1.1.102] - 2020-11-19
+### Fixed
+- The local PostgreSQL database was being created with the default
+  encoding, which did not allow UTF-8 strings to be saved in `jsonb`
+  format.
+- An `attachment` that uses a different language than the current
+  language did not restore the correct language after an exception.
+
+## [1.1.101] - 2020-11-14
+### Fixed
+- Issue with `interview_url()` and `interview_url_action()` with `i`
+  parameter when short URL is in use.
+
+## [1.1.100] - 2020-11-13
+### Fixed
+- Translation of phrases on registration page.
+
+## [1.1.99] - 2020-11-12
+### Changed
+- Different logic for whether hyperlinks open in the same tab or a
+  different tab.
+
+## [1.1.98] - 2020-11-12
+### Fixed
+- Bug in `bates_number()`.
+
+## [1.1.97] - 2020-11-10
+### Added
+- The `/api/clear_cache` endpoint.
+
+## [1.1.96] - 2020-11-08
+### Added
+- The `lang` URL parameter for non-interview screens.
+
+## [1.1.95] - 2020-11-06
+### Fixed
+- Unnecessary incrementing of PyPI version.
+- Recent installations (since June 25, 2020, possibly) contained a
+  Debian security update that disabled ImageMagick's ability to inject
+  signature images onto PDFs.  Running `docker stop` and `docker
+  start` is required to enable the PDF signature image feature.
+
+## [1.1.94] - 2020-11-03
+### Added
+- The `set_object_type()` method of `DAList` and `DADict`.
+- The `variable` attribute of the return value of `user_info()`.
+- The `reset_geolocation()` method of `Address` and the `reset`
+  keyword parameter of the `geolocate()` method.
+### Fixed
+- The `map` Jinja2 filter looked up dictionary items instead of
+  attributes.
+- Could not mix a Python-based `show if` with a JavaScript-based `hide
+  if` or vice-versa.
+
+## [1.1.93] - 2020-10-27
+### Fixed
+- Markdown in popover field help.
+
+## [1.1.92] - 2020-10-24
+### Added
+- The `update_terms()` function.
+### Changed
+- When using `terms`, you can specify that text other than the term
+  name should be displayed using `|`.
+- When specifying `terms` and `auto terms`, you can use `phrases` and
+  `definition` to indicate that multiple terms are associated with a
+  single definition.
+
+## [1.1.91] - 2020-10-24
+### Fixed
+- Bug in GitHub configuration.
+
+## [1.1.90] - 2020-10-20
+### Changed
+- Enabled a variety of functions to operate as Jinja2 filters.
+### Fixed
+- Corrected operation of `selectattr` Jinja2 filter.
+
+## [1.1.89] - 2020-10-19
+### Added
+- The `make_ocr_pdf()` and `make_ocr_pdf_in_background()`, and
+  `bates_number()` methods of `DAFile` and `DAFileList`.
+- The `reverse()`, `insert()`, and `count()` methods of `DAList`.
+
+## [1.1.88] - 2020-10-16
+### Added
+- The `required privileges for initiating` specifier under `metadata`.
+### Changed
+- The JSON format of questions now includes analytics information.
+### Fixed
+- The `delete_variables` feature of `/api/session` did not work when
+  passing the request in JSON format.
+
+## [1.1.87] - 2020-10-14
+### Fixed
+- False error messages on package update screen.
+
+## [1.1.86] - 2020-10-13
+### Changed
+- Monitor disabled when `checkin interval` is zero.
+### Fixed
+- Potential OAuth2 issue with Google Drive.
+
+## [1.1.85] - 2020-10-12
+### Added
+- The `table css class` screen part.
+- The `show_as_markdown()` method for `template`s.
+- The `_inline` option for `include_docx_template()`.
+- Ability to list multiple files under `docx template file`.
+- Ability to set the `pre` and `post` screen parts directly on a
+  `question`.
+- The `enable if`, `disable if`, `js enable if`, and `js disable if`
+  field modifiers.
+
+## [1.1.84] - 2020-10-07
+### Fixed
+- GitHub commit issue.
+
+## [1.1.83] - 2020-10-07
+### Fixed
+- `cross site domains` was not being used by CORS for web sockets.
+
+## [1.1.82] - 2020-10-06
+### Fixed
+- GitHub commit error.
+
+## [1.1.81] - 2020-10-05
+### Fixed
+- Tweak to focusing on first element.
+
+## [1.1.80] - 2020-10-04
+### Added
+- The `middle_initial()` method of `Name`.
+### Changed
+- First input element on the screen is focused only if visible in the
+  viewport.
+- `[FILE ...]` can now be used with images declared in `images` or
+  `image sets`.
+### Fixed
+- Issue with floating point/integer numbers and input validation.
+
+## [1.1.79] - 2020-09-28
+### Fixed
+- Problem with using `[TARGET]` inside of `right`.
+
+## [1.1.78] - 2020-09-25
+### Fixed
+- Issue with `get_info()`.
+- Issue with `show if` `code` and generic objects/iterators.
+
+## [1.1.77] - 2020-09-22
+### Fixed
+- Issue with fix in the previous version regarding group-level file permissions.
+
+## [1.1.76] - 2020-09-22
+### Added
+- The `question_id` attribute of `user_info()`.
+### Fixed
+- Issue with group-level file permissions.
+
+## [1.1.75] - 2020-09-20
+### Fixed
+- Issues with `show if` and `js show if` when multiple fields with the
+  same name are on the screen.
+- Issues with server-side validation not recreating values on the
+  screen on error.
+
+## [1.1.74] - 2020-09-18
+### Changed
+- Setting `url_args` without causing a change to the `url_args` does
+  not cause a new step to be created.
+### Fixed
+- An empty string `min` or `max` was not being ignored.
+- Issue with `generic object`.
+
+## [1.1.73] - 2020-09-13
+### Changed
+- The `use_word` keyword attribute to `nice_number()` and `ordinal()`
+  can be used to force a textual representation of any number.
+
+## [1.1.72] - 2020-09-10
+### Fixed
+- Removal of `new_session` from URLs formed with `interview_url()`.
+
+## [1.1.71] - 2020-09-07
+### Fixed
+- Better support for iterables in `comma_list()` and other places.
+- Markdown table alignment in Bootstrap.
+- Upgraded Pillow.
+
+## [1.1.70] - 2020-09-05
+### Added
+- The `reply_to` option for `send_email()`.
+### Changed
+- The current section name is now the label of the `small screen
+  navigation: dropdown` button.
+- The breakpoint for the mobile signature view is now Bootstrap `xs`.
+### Fixed
+- Multiple choice fields with empty choices were being set to `None`
+  despite `code`-based `show if` deselecting the field.
+
+## [1.1.69] - 2020-09-02
+### Added
+- The `/api/stash_data` and `/api/retrieve_stashed_data` endpoints.
+- The `stash_data()` and `retrieve_stashed_data()` functions.
+- The `current` option for `referring_url()`.
+
+## [1.1.68] - 2020-09-02
+### Fixed
+- Improper verb conjugation for non-English languages.
+
+## [1.1.67] - 2020-09-01
+### Fixed
+- Issue with two POST requests being sent during inline file uploads.
+
+## [1.1.66] - 2020-08-30
+### Added
+- The `small screen navigation` option under `features`.
+- The `email template`, `email subject`, `email body`, and `email
+  address default` options for customizing the functionality of the
+  `attachment`/`attachment code` interface.
+### Changed
+- The horizontal section interface is no longer hidden on small
+  screens.
+- The vertical section interface becomes the horizontal section
+  interface on small screens.
+- The default body of the e-mail that the user can send from an
+  `attachment`/`attachment code` interface is now translated using the
+  phrases `Your document, %s, is attached.` and `Your documents, %s, are
+  attached.`.
+
+## [1.1.65] - 2020-08-28
+### Added
+- The `style` keyword parameter for `interview_url()`.
+### Changed
+- The `/start/` path for starting an interview now transforms into
+  `/run` instead of `/interview`.  It also has a second form for
+  referring to the package name and filename (without using
+  `dispatch`).
+### Fixed
+- The Playground "Share" link did not update correctly based on the
+  interview being run.
+
+## [1.1.64] - 2020-08-26
+### Fixed
+- Issue with relative image URLs when embedding in a `<div>`.
+
+## [1.1.63] - 2020-08-25
+### Added
+- The `corner back button label` screen part.
+### Changed
+- Upgraded bootstrap-fileupload.
+### Fixed
+- The `progress` modifier did not behave as described in the documentation.
+
+## [1.1.62] - 2020-08-23
+### Added
+- The modifiers `include attachment notice`, `include download tab`,
+  and `manual attachment list` for tweaking the display of attached
+  documents.
+### Fixed
+- Step advanced when session started with URL parameters.
+- The signature screen scrolled at submission.
+- The `next` parameter was forgotten when using social login methods.
+- The `reconsider` modifier did not work with iterator variables.
+
+## [1.1.61] - 2020-08-20
+### Fixed
+- JavaScript error with `getField()`.
+
+## [1.1.60] - 2020-08-19
+### Changed
+- Playground Packages page now reports local date and time of a commit.
+### Fixed
+- Issue with two file fields or two fields with a `validate` that have
+  the same variable name and one is hidden by `show if`.
+
+## [1.1.59] - 2020-08-18
+### Fixed
+- Cron problem introduced in 1.1.56.
+
+## [1.1.58] - 2020-08-16
+### Fixed
+- Backwards-compatibility issue related to `DAEmpty` introduced in 1.1.54.
+
+## [1.1.57] - 2020-08-16
+### Fixed
+- Backwards-compatibility issue related to `DAEmpty` introduced in 1.1.54.
+
+## [1.1.56] - 2020-08-16
+### Added
+- The `session_local`, `device_local`, and `user_local` objects in the
+  interview answers.
+- The `require login` `metadata` directive.
+### Changed
+- When the API is in use, `interface()` will return `'api'`.
+### Fixed
+- `review` blocks were not compatible with iterator variables.
+- `combobox` fields not working right in `list collect` mode.
+- `address autocomplete` did not initialize when the address was
+  hidden by a `show if`.
+- Submission blocked when an empty non-required file upload field was
+  present in an embedded interview.
+
+## [1.1.55] - 2020-08-06
+### Added
+- The `create_session()` function.
+- The `package` attribute of the output of `user_info()`.
+- The `make_copy` keyword parameter for `all_variables()`.
+- The `overwrite` keyword parameter for `set_session_variables()`.
+- The `overwrite` parameter for the `/api/session` POST endpoint.
+- The `persistent` option for the `/api/session/action` POST endpoint.
+- Recipe for passing variables from one session to a newly created
+  other session.
+
+## [1.1.54] - 2020-08-04
+### Added
+- The `attr_name()` method of the `DAObject` class.
+- The `dry_run` keyword parameter for `send_email()` and `send_sms()`.
+### Changed
+- The `str` keyword parameter when initializing a `DAEmpty` object.
+- New recipe for gathering multiple signatures; uses a modular
+  approach.
+### Fixed
+- Missing control for `capitalize` in some language functions.
+- SendGrid fails when subject line is empty string.
+- The `temporary` and `once_temporary` keyword parameters for
+  `interview_url_action()` were not working.
+- Problem with running interviews in a different tab in Playground on
+  Chrome.
+
+## [1.1.53] - 2020-07-29
+### Fixed
+- Error in Docassemble-Flask-User dependency.
+
+## [1.1.52] - 2020-07-29
+### Fixed
+- Moved evaluation of section information to post-assembly when
+  getting question data.
+
+## [1.1.51] - 2020-07-28
+### Added
+- The `footer` screen part.
+- `terms` and `autoterms` are now included in JSON question data.
+### Fixed
+- `signature` blocks did not support `continue button field`.
+- System message translation system had gaps due to the integration
+  with Flask-User's translation system not working as intended.
+- Inconsistent behavior of `force_ask()` depending on whether an item
+  was listed first or not.
+
+## [1.1.50] - 2020-07-21
+### Added
+- Feature for viewing names in an interview and the YAML blocks
+  associated with them.
+### Fixed
+- Missing `.copy()` method for `DAList`.
+- The `init()` method of the `DAFileCollection` class did not accept
+  arbitrary parameters.
+- Fully qualified image URLs now work in e-mail HTML.
+
+## [1.1.49] - 2020-07-07
+### Fixed
+- Additional input validation on parameters passed to APIs.
+
+## [1.1.48] - 2020-07-06
+### Fixed
+- The `/api/user_info` API endpoint and the `get_user_info()` function
+  now do case insensitive searches for e-mail addresses.
+
+## [1.1.47] - 2020-07-05
+### Added
+- The `store_variables_snapshot()` function.
+
+## [1.1.46] - 2020-07-05
+### Fixed
+- Error in restart module.
+
+## [1.1.45] - 2020-07-05
+### Fixed
+- Error in table creation module.
+
+## [1.1.44] - 2020-07-05
+### Changed
+- The `interview_list()` function, when called without an `action`,
+  now uses pagination and returns a tuple instead of a list.  Note
+  that this change is not backwards-compatible, so you will need to
+  change any code that you have that calls `interview_list()`.
+- The `get_user_list()` function now uses pagination and returns a
+  tuple instead of a list.  Note that this change is not
+  backwards-compatible, so you will need to change any code that you
+  have that calls `interview_list()`.
+- The `/api/interviews`, `/api/user/interviews`,
+  `/api/user/<user_id>/interviews`, and `/api/user_list` GET endpoints
+  of the API now use pagination and return a dictionary, not a list.
+  Note that this change is not backwards-compatible, so you will need
+  to change any code that you have that uses these APIs.
+- Removed the `PY2`, `string_types`, and `text_type` names from
+  `docassemble.base.util`.  Note that if you have used any of these,
+  this change may break your code.
+### Added
+- The `persistent` optional keyword parameter for
+  `mark_task_as_performed()` and related functions.
+- The `task_persistent` optional keyword parameter for `send_email()`,
+  `send_sms()`, and the `DAWeb` methods.
+### Fixed
+- Issue with encryption in functions launched during the loading of
+  the first page of an interview session.
+- Issue with multi-server configurations and the order in which
+  container software is updated that can result in some containers
+  unable to start.
+
+## [1.1.43] - 2020-06-30
+### Changed
+- The `complete_elements()` method now returns a `DAList`.  Note that
+  this may break existing code that uses `complete_elements()`.  To
+  get a plain list of the complete elements, use
+  `complete_elements().elements`.
+- Spanish ordinal numbers removed.
+- Upgraded jQuery and jQuery Validation Plugin.
+### Fixed
+- Possible fix to iframe reloading issue.
+
+## [1.1.42] - 2020-06-25
+### Added
+- Aliases for JavaScript functions that have the `da` prefix.
+### Fixed
+- Jinja2 filter was converting Python built-in types to strings.
+
+## [1.1.41] - 2020-06-22
+### Fixed
+- Bug in `recursive_eval_textobject()`.
+
+## [1.1.40] - 2020-06-19
+### Added
+- `question metadata`, `field metadata`, and the `send question data`
+  option under `features`.
+- The `country` keyword parameter for `.sms_number()`.
+- The `field` keyword parameter for `validation_error()`.
+
+## [1.1.39] - 2020-06-17
+### Fixed
+- Issue with `interview_url_action()` and `force_ask()`.
+- Upgraded `docxtpl` and `docx`.
+
+## [1.1.38] - 2020-06-11
+### Added
+- The `add another label` option for `list collect`.
+- The `manual_line_breaks` Jinja2 filter.
+### Changed
+- The `.all_false()` and related `DADict` methods reflect Python
+  notions of true and false values rather than literal equivalence of
+  the values to `True` or `False`.
+- Sessions that were created using the API will now appear immediately
+  in My Interviews.
+
+## [1.1.37] - 2020-06-10
+### Fixed
+- Attempt to force reinstall of pdfminer.six.
+
+## [1.1.36] - 2020-06-10
+### Fixed
+- Another attempt to force uninstall of pdfminer3k.
+
+## [1.1.35] - 2020-06-08
+### Fixed
+- Force uninstall of pdfminer3k.
+
+## [1.1.34] - 2020-06-08
+### Fixed
+- Error with `objects_from_file()`.
+
+## [1.1.33] - 2020-06-04
+### Changed
+- `help` can be added to `note` and `html` fields.
+### Fixed
+- Support for icons in terms.
+
+## [1.1.32] - 2020-05-30
+### Fixed
+- Issue with `objects_from_file()`.
+
+## [1.1.31] - 2020-05-29
+### Fixed
+- Issue with nested question file inclusion change in 1.1.30.
+
+## [1.1.30] - 2020-05-29
+### Fixed
+- Issue with screen reader and labels containing HTML codes.
+- Issue with nested question file inclusion.
+
+## [1.1.29] - 2020-05-27
+### Fixed
+- Issue with `set_save_status()`.
+- Issue with checkbox validation text when the "none of the above"
+  choice contained HTML.
+- Bug prevented `admin` users from changing other users' information
+  with the API.
+
+## [1.1.28] - 2020-05-21
+### Added
+- The `skip undefined` option for `pdf template file`
+### Fixed
+- Issue with nested `datatype: object` fields in a `list collect`.
+- Issue with `disable others` referring to a list in a `list collect`.
+
+## [1.1.27] - 2020-05-19
+### Fixed
+- Issue with `js show if` and `list collect`.
+
+## [1.1.26] - 2020-05-17
+### Fixed
+- Duplicative `under` text when `attachment` is used.
+- Error when reading certain types of PDF files.
+
+## [1.1.25] - 2020-05-07
+### Added
+- The `if_started` keyword parameter for the `number_gathered()`
+  method.
+### Changed
+- If `ask_number` on a `DAList` or `DADict` is `True` and
+  `target_number` is defined, removing an item using the table editing
+  interface will decrease `target_number` by one.
+
+## [1.1.24] - 2020-05-04
+### Fixed
+- Unicode problem with JSON sent from the browser.
+
+## [1.1.23] - 2020-05-03
+### Added
+- The `getFields()` JavaScript function.
+### Changed
+- A `question` with `fields` that contains a single multiple choice
+  field where the choices are empty is not skipped if the `question`
+  has a `continue button field`.
+- The branch and commit are shown in the Packages page of the
+  Playground when GitHub integration is enabled and the package has a
+  known presence on GitHub.
+- Upgraded Font Awesome to 5.13.0.
+### Fixed
+- Infinite loop when a list is gathered and `object_type` is set to a
+  class for which the textual representation or `complete_element` is
+  pre-defined and a set number of items are to be gathered.
+- The `sql ping` feature was not fully implemented.
+
+## [1.1.22] - 2020-04-30
+### Changed
+- When a item is added to or removed from a group, the `there_are_any`
+  attribute is updated even if `there_are_any` was not previously
+  defined.
+### Fixed
+- Package update problem due to `pip freeze` changing behavior in
+  version 20.1.
+
+## [1.1.21] - 2020-04-30
+### Fixed
+- PDF export value issue where two export values are present in the
+  PDF for a checkbox field.
+
+## [1.1.20] - 2020-04-30
+### Changed
+- Upgraded LibreOffice to version 6.4.
+### Fixed
+- `review` screens shown as part of the interview logic were being
+  treated as actions.
+
+## [1.1.19] - 2020-04-29
+### Changed
+- If `help` accompanies a `yesno` field, it will be available as a
+  popup accessed from an icon.
+### Fixed
+- GitHub issue when committing to a new branch.
+- Exception when trying to edit a non-existent user.
+- Bug in `comma_and_list()`.
+- The `disable others` and `uncheck others` features did not work
+  correctly in a `list collect`.
+
+## [1.1.18] - 2020-04-28
+### Changed
+- The `checkbox export value` feature is no longer documented because
+  PDF field filling now inspects the PDF for the export value.
+### Fixed
+- The `address autocomplete` feature was not compatible with `show
+  if`.
+
+## [1.1.17] - 2020-04-27
+### Added
+- The `hyperlink style` option for an `attachment`.
+### Fixed
+- Sendgrid API e-mails to multiple "To" recipients only reached the
+  first recipient.
+
+## [1.1.16] - 2020-04-26
+### Added
+- Test script screenshot mechanism.
+### Changed
+- Subfolder paths now allowed in URLs for static files.
+### Fixed
+- S3 file sync problem.
+
+## [1.1.15] - 2020-04-23
+### Added
+- The `default date min` and `default date max` options under
+  `features`.
+
+## [1.1.14] - 2020-04-22
+### Changed
+- The GitHub button on the Playground Packages page will now respect
+  the GitHub repository that was pulled and will make an initial
+  commit when the repository exists on GitHub but is empty.
+
+## [1.1.13] - 2020-04-21
+### Added
+ - The `title url` and `title url opens in other window` screen parts.
+ - A "retry" button on the error screen.
+### Changed
+ - Auto-focus on page load will only be given to an element in the first non-`note`,
+   non-`html` field.
+### Fixed
+ - Pressing enter key on the list collect screen clicked a hidden
+   button.
+ - Changes in 1.1.11 blocked certain types of uploads.
+
+## [1.1.12] - 2020-04-20
+### Fixed
+ - Fields with an object-based `datatype` did not work when `list
+   collect` was used.
+ - Error with exporting tables to Excel.
+
+## [1.1.11] - 2020-04-19
+### Added
+- Ability to download files by specifying a `filename` parameter to
+  GET requests to `/api/playground`.
+- The `use_word` keyword argument to `ordinal()`.
+- The `always include editable files` specifier for omitting the
+  checkbox in the attachment UI.
+- The `nginx ssl protocols` Configuration directive.
+### Changed
+- If `use https` or `behind https load balancer` are enabled, a
+  `Strict-Transport-Security` header is returned.
+- If `allow embedding` is not set to `True`, the `X-Frame-Options` and
+  `Content-Security-Policy` will block iframes.  If `allow embedding`
+  is set to `True` and `cross site domains` is set, the list of
+  domains will be used for the `Content-Security-Policy` header.
+- More than one `address autocomplete` can now be used on a screen.
+### Fixed
+- Disconnecting from GitHub integration failed if the existing
+  integration no longer functioned.
+
+## [1.1.10] - 2020-04-15
+### Added
+- The `mailgun_variables` option for `send_email()`.
+- The `docx_concatenate()` function.
+### Changed
+- When more than one file with the same name is added to a ZIP file,
+  the files are renamed to avoid name collision.
+
+## [1.1.9] - 2020-04-14
+### Fixed
+- Typo in `Address.on_one_line()`.
+
+## [1.1.8] - 2020-04-13
+### Fixed
+- Error when `code` is used to generate `fields` and manually entered
+  fields follow.
+- Jinja2 index error converted to attribute error.
+- Incorrect focus when first fields have `hide if`.
+
+## [1.1.7] - 2020-04-13
+### Fixed
+- Error with serving files through `/uploadedfile/<number>`.
+
+## [1.1.6] - 2020-04-12
+### Added
+- The `social` Configuration directive for meta tags.
+- The `social` specifier under `metadata` for meta tags.
+- The `allow robots` Configuration directive.
+- Czech translation.
+
+## [1.1.5] - 2020-04-09
+### Added
+- The `required` modifier for the `signature` block.
+### Fixed
+- Error message about blank signature not showing.
+
+## [1.1.4] - 2020-04-08
+### Changed
+- `DAEmpty` now accepts index assignments.
+- Obtaining a `new_session` during an interview now preserves
+  `url_args` and the `referring_url()`, consistent with the behavior
+  of `restart`.
+
+## [1.1.3] - 2020-04-06
+### Added
+- The `use_familiar` attribute of the `Individual` class.
+- The `familiar()` method of the `Name` class.
+### Fixed
+- Issue with too many flash messages on CSRF error.
+- Issue with multiple DOCX documents and subdocuments.
+
+## [1.1.2] - 2020-04-04
+### Fixed
+- Issue with file names and `.url_for()`.
+
+## [1.1.1] - 2020-04-04
+### Added
+- The `attachment` keyword parameter for `.url_for()`.
+- The `_attachment` keyword parameter for `url_of()`.
+### Changed
+- Securing of uploaded filenames less strict.
+
+## [1.0.11] - 2020-04-15
+### Fixed
+- Typo in `Address.on_one_line()`.
+- Error when code is used to generate fields and manually entered
+  fields follow.
+- Jinja2 index error converted to attribute error.
+- Incorrect focus when first fields have `hide if`.
+
+## [1.0.10] - 2020-04-12
+### Fixed
+- Removed 302 redirects.
+- Mako filter error.
+- Inline upload error.
+
+## [1.0.9] - 2020-04-06
+### Fixed
+- Issue with too many flash messages on CSRF error.
+- Issue with multiple DOCX documents and subdocuments.
+
+## [1.0.8] - 2020-04-05
+### Added
+- The `DASQLPING` Docker environment variable
+
+## [1.0.7] - 2020-04-05
+### Fixed
+- Display of available version on Package Management page.
+
+## [1.0.6] - 2020-04-04
+### Added
+- The `stable version` Configuration directive.
+
+## [1.0.5] - 2020-04-02
+### Fixed
+- Apache initial certbot run used wrong syntax.
+- Synchronizing local updates to files inside projects on OneDrive failed.
+
+## [1.0.4] - 2020-03-31
+### Fixed
+- Error when `disable others` is used inside of a `show if` or `js
+  show if`.
+
+## [1.0.3] - 2020-03-30
+### Fixed
+- `update_ordinal_numbers()` and `update_ordinal_function` missing
+  from `docassemble.base.util`.
+- `sql ping` workaround for SQL connections being cut off.
+
+## [1.0.2] - 2020-03-25
+### Fixed
+- Fixed issue with incomplete pull request by dependabot.
+
+## [1.0.1] - 2020-03-25
+### Fixed
+- Deprecated use of access token in URL parameter when retrieving
+  branch listing from GitHub API when repository reference uses an
+  `oauth-basic` URL.
+
+## [1.0.0] - 2020-03-22
+### Added
+- The `show_country` keyword parameter for the `.on_one_line()` and
+  `.block()` methods of the `Address` class.
+- The `international` keyword parameter for the `.block()` method of
+  the `Address` class.
+- The `assemble_docx()` function.
+### Changed
+- Switched to a different versioning system.  The `stable` branch on
+  GitHub will be version 1.0.  Patch versions within version 1.0
+  (1.0.1, 1.0.2, etc.) will be for bug fixes and security upgrades
+  only.  The `master` branch on GitHub will be version 1.1.  Patch
+  versions within version 1.1 will include bug fixes as well as
+  feature enhancements.
+- The `omit_default_country` parameter of the `.on_one_line()` method
+  of the `Address` class is deprecated.
+### Fixed
+- Bug with `restrict input variables` and attachment e-mailing and
+  downloading.
+- `pip show` inefficiency unnecessarily slowed down initial start up
+  time.
+
+## [0.5.111] - 2020-03-20
+### Added
+- The `auto open` option for the `sections` block.
+- The `pages()` method for Twilio fax status.
+### Fixed
+- The caret next to automatically closed subsections in the section
+  navigation bar defaulted to the wrong setting.
+- The `received()` method of the fax send status did not correctly
+  respond `True` when the fax was in `'delivered'` status.
+- Error message when clicking the back button under certain
+  circumstances.
+
+## [0.5.110] - 2020-03-17
+### Fixed
+- Bug affecting `raw global javascript`.
+
+## [0.5.109] - 2020-03-11
+### Changed
+- Deleting an item in a table now undefines `there_is_another` when it is
+  `True`.
+### Fixed
+- The `bootstrap theme` in the Configuration will apply to interviews
+  if `bootstrap theme` in `features` is not set.
+- Errors in global CSS and JS Configuration directives not intercepted
+  and logged.
+
+## [0.5.108] - 2020-03-08
+### Fixed
+- Issue with `bootstrap theme` and other Configuration directives that
+  require Flask URL formation.
+
+## [0.5.107] - 2020-03-03
+### Changed
+- More flexible handling of `default` values with `datatype: date`.
+- The `allow embedding` Configuration directive now accepts the value
+  `'Lax'`, which is the default.
+
+## [0.5.106] - 2020-02-29
+### Changed
+- LibreOffice Word to PDF conversion no longer reduces image
+  resolution.
+### Fixed
+- Log server in multi-server mode accessed on wrong port.
+- URL parameters stripped when redirecting to login when `allow
+  anonymous access` is `False`.
+
+## [0.5.105] - 2020-02-26
+### Changed
+- If the database is PostgreSQL, the Alembic table alteration
+  introduced in 0.5.97 for MySQL compatibility purposes is no longer
+  applied by default because it might take too much time on a server
+  with a large SQL database.  The discrepancy between the SQLAlchemy
+  column type specification (varchar) and the actual PostgreSQL column
+  types (text) is harmless.  If your SQL database is not large, you
+  can set `force text to varchar upgrade: True` in your Configuration
+  before upgrading to force the column type alteration to take place
+  during the upgrade.  After upgrading to 0.5.105+, you can remove
+  `force text to varchar upgrade` from the Configuration.  This is
+  only applicable if upgrading from 0.5.96 or before; if you already
+  upgraded to 0.5.97 - 0.5.104, then the alteration has already taken
+  place.
+### Fixed
+- Upgraded `bleach` due to security vulnerability.
+
+## [0.5.104] - 2020-02-25
+### Fixed
+- Error with `allow embedding`.
+
+## [0.5.103] - 2020-02-23
+### Fixed
+- Error with `DAContext` variables.
+
+## [0.5.102] - 2020-02-23
+### Added
+- The `user auto delete` Configuration directive.
+- The `allow embedding` Configuration directive, which if `True` sets
+  the `SameSite` flag in cookies to `None`.
+### Changed
+- The `SameSite` flag is now set to `Strict` in cookies by default.
+  For the old behavior, set `allow embedding: True` in the
+  Configuration.
+
+## [0.5.101] - 2020-02-23
+### Changed
+- Playground syntax highlighting now highlights Python code as Python
+  code.
+### Fixed
+- The `interview_menu()` function did not accept parameters.
+
+## [0.5.100] - 2020-02-20
+### Added
+- The `.data_type_guess()` method of `DACatchAll`.
+- The `.keys()` method of `DAStore`.
+### Fixed
+- Issue with default values after input validation fails and two
+  fields set the same variable.
+
+## [0.5.99] - 2020-02-19
+### Added
+- Catchall questions.
+### Fixed
+- When item under `edit` in a `table` has no question associated with
+  it, an error was raised only if the item was first.
+
+## [0.5.98] - 2020-02-18
+### Fixed
+- Typo causing `/playgroundstatic` file links to fail.
+
+## [0.5.97] - 2020-02-17
+### Added
+- The `forget prior` option for `action buttons`.
+### Changed
+- Calls to subprocesses now have timeouts.
+- Database columns used as indices changed from text to variable character.
+### Fixed
+- Bug with table export.
+
+## [0.5.96] - 2020-02-15
+### Changed
+- `depends on` no longer implies `need`.
+
+## [0.5.95] - 2020-02-14
+### Added
+- The `show incomplete` and `not available label` options for `table`
+  blocks.
+- The `gathering_started()` method of groups.
+
+## [0.5.94] - 2020-02-13
+### Added
+- The `allow external auth with admin accounts` Configuration
+  directive.
+- The url parameter feature of `url_of()`.
+
+## [0.5.93] - 2020-02-13
+### Changed
+- `code` blocks with `event` work with `depends on` now.
+- Playground folders have download buttons now.
+- `re` and `json` are now available inside the interview namespace.
+### Fixed
+- Let's Encrypt issue.
+
 ## [0.5.92] - 2020-02-11
 ### Added
 - The `add_separators()` function.
@@ -179,7 +1134,7 @@
 ### Added
 - The `help generator` and `image generator` field modifiers.
 ### Fixed
-- Error when `code` was used with `content file` and the code 
+- Error when `code` was used with `content file` and the code
   returned a list.
 - Backup of Redis database when password is used.
 

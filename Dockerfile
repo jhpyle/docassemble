@@ -59,11 +59,11 @@ bash -c \
 "cd /tmp \
 && python3.6 -m venv --copies /usr/share/docassemble/local3.6 \
 && source /usr/share/docassemble/local3.6/bin/activate \
-&& pip3 install --upgrade pip \
-&& pip3 install --upgrade mod_wsgi \
+&& pip3 install --upgrade pip==20.1 \
+&& pip3 install --upgrade mod_wsgi==4.7.0 \
 && pip3 install --upgrade \
    3to2==1.1.1 \
-   cython \
+   cython==0.29.14 \
    numpy==1.17.3 \
    bcrypt==3.1.7 \
    flask==1.1.1 \

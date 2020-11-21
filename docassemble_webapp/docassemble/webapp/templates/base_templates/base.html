@@ -9,6 +9,50 @@
     <meta name="google-signin-client_id" content="{{ config['OAUTH_CREDENTIALS']['google']['id'] }}">
 {%- endif %}{{ extra_meta }}
     <title>{% if tab_title %}{{ tab_title }}{% else %}{{ config['APP_NAME'] }}{% endif %}</title>
+{%- for key in config['SOCIAL'] %}
+{%- if key not in ('og', 'twitter', 'fb') %}
+    <meta name="{{ key }}" content="{{ config['SOCIAL'][key] }}">
+{%- endif %}
+{%- endfor %}
+    <meta itemprop="name" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
+{%- if 'description' in config['SOCIAL'] %}
+    <meta itemprop="description" content="{{ config['SOCIAL']['description'] }}">
+{%- endif %}
+{%- if 'image' in config['SOCIAL'] %}
+    <meta itemprop="image" content="{{ config['SOCIAL']['image'] }}">
+{%- endif %}
+{%- if 'card' not in config['SOCIAL']['twitter'] %}
+    <meta name="twitter:card" content="summary">
+{%- endif %}
+{%- for key in config['SOCIAL']['twitter'] %}
+{%- if key != 'title' %}
+    <meta name="twitter:{{ key }}" content="{{ config['SOCIAL']['twitter'][key] }}">
+{%- endif %}
+{%- endfor %}
+    <meta name="twitter:title" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
+{%- if 'image' in config['SOCIAL']['og'] %}
+    <meta name="og:title" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
+{%- for key in config['SOCIAL']['og'] %}
+{%- if key not in ('locale', 'url') %}
+    <meta name="og:{{ key }}" content="{{ config['SOCIAL']['og'][key] }}">
+{%- endif %}
+{%- endfor %}
+    <meta name="og:url" content="{{ request.base_url }}">
+{%- if 'locale' in config['SOCIAL']['og'] %}
+    <meta name="og:locale" content="{{ config['SOCIAL']['og']['locale'] }}">
+{%- else %}
+    <meta name="og:locale" content="{{ config['OG_LOCALE'] }}">
+{%- endif %}
+{%- if 'site_name' not in config['SOCIAL']['og'] %}
+    <meta name="og:site_name" content="{{ config['BRAND_NAME'] }}">
+{%- endif %}
+{%- if 'type' not in config['SOCIAL']['og'] %}
+    <meta name="og:type" content="website">
+{%- endif %}
+{%- endif %}
+{%- for key in config['SOCIAL']['fb'] %}
+    <meta name="fb:{{ key }}" content="{{ config['SOCIAL']['fb'][key] }}">
+{%- endfor %}
     <link rel="shortcut icon" href="{{ url_for('favicon') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon') }}">
     <link rel="icon" type="image/png" href="{{ url_for('favicon_md') }}" sizes="32x32">
@@ -20,7 +64,7 @@
     <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css', v=config['DA_VERSION']) }}{% endif %}" rel="stylesheet">
     <link href="{{ url_for('static', filename='app/app.css', v=config['DA_VERSION']) }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
   </head>
-  <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar">
+  <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar{% if footer_content %} da-pad-for-footer{% endif %}">
     <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark">
       <div class="{% if userclass %}{{ config['CONTAINER_CLASS'] }} danavcontainer{% else %}{{ config['CONTAINER_CLASS'] }}{% endif %}">
         {% if back_button %}{{ back_button }}{% endif %}{% if request.path == "/playground" %}<div class="dropdown"><div class="navbar-brand dropdown-toggle" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ page_title }}</div><div class="dropdown-menu" aria-labelledby="dropdownMenuButton">{% if current_project != 'default' %}<a class="dropdown-item" href="?project=default"><i class="fas fa-archive"></i> {{ word("Default Playground") }}</a>{% endif %}{% for project in projects %}{% if project != current_project %}<a class="dropdown-item" href="?project={{ project }}"><i class="fas fa-archive"></i> {{ project }}</a>{% endif %}{% endfor %}<a class="dropdown-item" href="{{ url_for('playground_project', project=current_project) }}"><i class="fas fa-tasks"></i> {{ word('Manage Projects') }}</a></div></div>{% else %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>{% endif %}
@@ -35,7 +79,7 @@
             <li class="nav-item dropdown show">
               <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}</a>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                {%- if current_user.has_roles(['admin', 'advocate']) %}
+                {%- if current_user.has_roles(['admin', 'advocate']) and config['ENABLE_MONITOR'] %}
                 <a class="dropdown-item" href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a>
                 {%- endif %}
                 {%- if current_user.has_roles(['admin', 'developer', 'trainer']) %}
@@ -104,6 +148,14 @@
     {%- block main %}{% endblock %}
     {%- block bottom %}{% endblock %}
     </div>
+    {%- if footer_content %}
+    <footer class="bg-light dafooter">
+      <div class="container">
+        {{ footer_content }}
+      </div>
+    </footer>
+    {% endif %}
+
     <script src="{{ url_for('static', filename='app/adminbundle.js', v=config['DA_VERSION']) }}"></script>
     <script>
       var daWhichButton = null;

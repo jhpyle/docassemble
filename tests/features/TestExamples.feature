@@ -34,7 +34,7 @@ Feature: Example interviews
     Then I should see the phrase "What is your date of birth?"
     And I set the text box to "03/31/1977"
     And I click the button "Continue"
-    Then I should see the phrase "You are 42 years old"
+    Then I should see the phrase "You are 43 years old"
 
   Scenario: Test the interview "Scheduled task"
     Given I start the interview "docassemble.base:data/questions/examples/alarm-clock.yml"
@@ -374,20 +374,6 @@ Feature: Example interviews
 
   # Scenario: Test the interview "Live chat"
   #   Given I start the interview "docassemble.base:data/questions/examples/chat.yml"
-
-  Scenario: Test the interview "Checking in"
-    Given I start the interview "docassemble.base:data/questions/examples/check-in.yml"
-    Then I should see the phrase "What is your favorite food?"
-    And I set "Favorite food" to "potatoes"
-    And I unfocus
-    And I wait 8 seconds
-    And I set "Favorite food" to "tomatoes"
-    And I unfocus
-    And I wait 8 seconds
-    And I click the button "Continue"
-    Then I should see the phrase "Your favorite food"
-    And I should see the phrase "potatoes"
-    And I should see the phrase "tomatoes"
 
   Scenario: Test the interview "Dropdown"
     Given I start the interview "docassemble.base:data/questions/examples/choices-dropdown.yml"
@@ -2657,12 +2643,6 @@ Feature: Example interviews
     And I click the link "choose something tastier"
     Then I should see the phrase "Your dessert is apple pie."
 
-  Scenario: Test the interview "Interview variables"
-    Given I start the interview "docassemble.base:data/questions/examples/js_variables.yml"
-    Then I should see the phrase "The fruit."
-    And I wait 1 second
-    And I should see the phrase "Fruit is apple."
-
   Scenario: Test the interview "Separate label and field"
     Given I start the interview "docassemble.base:data/questions/examples/label.yml"
     Then I should see the phrase "What are your favorite things to eat?"
@@ -2855,17 +2835,17 @@ Feature: Example interviews
     And I select "Fruit" from the menu
     Then I should see the phrase "What is your favorite fruit?"
 
-  Scenario: Test the interview "Several interviews in one" with vegetables interview
-    Given I start the interview "docassemble.base:data/questions/examples/menu-items-refer.yml"
-    Then I should see the phrase "Select an option from the menu in the upper right."
-    And I select "Vegetables" from the menu
-    Then I should see the phrase "What is your favorite vegetable?"
+  # Scenario: Test the interview "Several interviews in one" with vegetables interview
+  #   Given I start the interview "docassemble.base:data/questions/examples/menu-items-refer.yml"
+  #   Then I should see the phrase "Select an option from the menu in the upper right."
+  #   And I select "Vegetables" from the menu
+  #   Then I should see the phrase "What is your favorite vegetable?"
 
-  Scenario: Test the interview "Several interviews in one" with flowers interview
-    Given I start the interview "docassemble.base:data/questions/examples/menu-items-refer.yml"
-    Then I should see the phrase "Select an option from the menu in the upper right."
-    And I select "Flowers" from the menu
-    Then I should see the phrase "What is your favorite flower?"
+  # Scenario: Test the interview "Several interviews in one" with flowers interview
+  #   Given I start the interview "docassemble.base:data/questions/examples/menu-items-refer.yml"
+  #   Then I should see the phrase "Select an option from the menu in the upper right."
+  #   And I select "Flowers" from the menu
+  #   Then I should see the phrase "What is your favorite flower?"
 
   Scenario: Test the interview "Menu item"
     Given I start the interview "docassemble.base:data/questions/examples/menu-item.yml"
@@ -4097,7 +4077,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/sections-keywords-set-sections.yml"
     Then I should see the phrase "What additional section would you like to add to this interview?"
     And I set "Name" to "Apple Cake"
-    And I set "Keyword " to "apple"
+    And I set "Keyword" to "apple"
     And I click the button "Continue"
     Then I should see the phrase "Welcome to the interview"
 
@@ -4570,18 +4550,18 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/text-help.yml"
     Then I should see the phrase "What are your favorite things to eat?"
     And I should see the phrase "If you don’t know what a vegetable or fruit is, click the green text."
-    And I click the link "Vegetable "
+    And I click the link "Vegetable"
     And I wait 1 second
     Then I should see the phrase "A plant."
     And I unfocus
     And I wait 1 second
-    And I click the link "Fruit "
+    And I click the link "Fruit"
     And I wait 1 second
     Then I should see the phrase "The pulpy, edible seed vessels of certain plants."
     And I unfocus
     And I wait 1 second
-    And I set "Vegetable " to "turnip"
-    And I set "Fruit " to "orange"
+    And I set "Vegetable" to "turnip"
+    And I set "Fruit" to "orange"
     And I click the button "Continue"
     Then I should see the phrase "target_variable is: “turnip”"
 
@@ -5793,7 +5773,7 @@ Feature: Example interviews
     Then I should see the phrase "What is your date of birth?"
     And I set the text box to "08/01/1989"
     And I click the button "Continue"
-    Then I should see the phrase "You are 30 years old."
+    Then I should see the phrase "You are 31 years old."
 
   # Scenario: Test the interview "Test e-mail attachment"
   #   Given I start the interview "docassemble.demo:data/questions/testattach.yml"
@@ -6003,14 +5983,6 @@ Feature: Example interviews
   Scenario: Test the interview "Define variable"
     Given I start the interview "docassemble.base:data/questions/examples/define.yml"
     Then I should see the phrase "Your favorite fruit is apple."
-
-  Scenario: Test the interview "Back button inside question"
-    Given I start the interview "docassemble.base:data/questions/examples/question-back-button.yml"
-    Then I should see the phrase "Are you doing well?"
-    And I click the button "Yes"
-    Then I should see the phrase "Is the sky blue?"
-    And I click the question back button
-    Then I should see the phrase "Are you doing well?"
 
   Scenario: Test the interview "Help with question"
     Given I start the interview "docassemble.base:data/questions/examples/help-damages-label.yml"
@@ -6819,18 +6791,6 @@ Feature: Example interviews
     And I click the button "Yes"
     Then I should see the phrase "Done with the interview."
     And I should see the phrase "I am glad you are doing well."
-
-  Scenario: Test the interview "Flash message"
-    Given I start the interview "docassemble.base:data/questions/examples/ajax-flash.yml"
-    Then I should see the phrase "What is your favorite food?"
-    And I set "Favorite food" to "soup"
-    And I unfocus
-    And I set "Favorite drink" to "water"
-    And I unfocus
-    And I wait 4 seconds
-    Then I should see the phrase "What? You like SOUP?"
-    And I click the button "Continue"
-    Then I should see the phrase "Your favorite food is soup and your favorite drink is water."
 
   Scenario: Test the interview "Redact text Markdown"
     Given I start the interview "docassemble.base:data/questions/examples/redact.yml"
@@ -8051,3 +8011,143 @@ Feature: Example interviews
     And I should see the phrase "The following documents have been created for you."
     And I should see the phrase "Document for Graham"
     And I should see the phrase "Document for Michael"
+
+  Scenario: Test the interview "Action buttons"
+    Given I start the interview "docassemble.base:data/questions/examples/action-buttons-before.yml"
+    Then I should see the phrase "I will give you four apples."
+    And I click the link " More"
+    Then I should see the phrase "I will give you five apples"
+    And I click the link " Less"
+    Then I should see the phrase "I will give you four apples."
+    And I click the button "Continue"
+    Then I should see the phrase "Enjoy eating your four apples!"
+
+  Scenario: Test the interview "Action buttons code"
+    Given I start the interview "docassemble.base:data/questions/examples/action-buttons-code.yml"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I set "Fruit" to "apple"
+    And I click the button "Continue"
+    Then I should see the phrase "Thank you for that information."
+    And I click the link "Eat apple"
+    Then I should see the phrase "Nom nom nom."
+    And I click the button "Continue"
+    Then I should see the phrase "This concludes the interview."
+
+  Scenario: Test the interview "Action buttons"
+    Given I start the interview "docassemble.base:data/questions/examples/action-buttons.yml"
+    Then I should see the phrase "I will give you four apples."
+    And I click the link " More"
+    Then I should see the phrase "I will give you five apples"
+    And I click the link " Less"
+    Then I should see the phrase "I will give you four apples."
+    And I click the button "Continue"
+    Then I should see the phrase "Enjoy eating your four apples!"
+
+  Scenario: Test the interview "Add separators"
+    Given I start the interview "docassemble.base:data/questions/examples/add-separators.yml"
+    Then I should see the phrase "Are there any fruit that you like?"
+    And I click the button "Yes"
+    Then I should see the phrase "What is the first fruit that you like?"
+    And I set "Fruit" to "apple"
+    And I click the button "Continue"
+    Then I should see the phrase "Are there any other fruit that you like?"
+    And I click the button "Yes"
+    Then I should see the phrase "What is the second fruit that you like?"
+    And I set "Fruit" to "peach"
+    And I click the button "Continue"
+    Then I should see the phrase "Are there any other fruit that you like?"
+    And I click the button "Yes"
+    Then I should see the phrase "What is the third fruit that you like?"
+    And I set "Fruit" to "pear"
+    And I click the button "Continue"
+    Then I should see the phrase "Are there any other fruit that you like?"
+    And I click the button "No"
+    Then I should see the phrase "Fruits"
+    And I should see the phrase "apple;"
+    And I should see the phrase "peach; and"
+    And I should see the phrase "pear."
+
+  Scenario: Test the interview "CSS class for question"
+    Given I start the interview "docassemble.base:data/questions/examples/css-class.yml"
+    Then I should see the phrase "View the source and look for the word"
+
+  Scenario: Test the interview "Dependencies"
+    Given I start the interview "docassemble.base:data/questions/examples/depends-on-code.yml"
+    Then I should see the phrase "What is A?"
+    And I set "A" to "5"
+    And I click the button "Continue"
+    Then I should see the phrase "Review your answers."
+    And I should see the phrase "A is 5.0."
+    And I should see the phrase "B is 25.0."
+    And I should see the phrase "C is 30.0."
+    And I click the link "Edit A"
+    Then I should see the phrase "What is A?"
+    And I set "A" to "4"
+    And I click the button "Continue"
+    Then I should see the phrase "Review your answers."
+    And I should see the phrase "A is 4.0."
+    And I should see the phrase "B is 16.0."
+    And I should see the phrase "C is 20.0."
+
+  Scenario: Test the interview "Dependencies"
+    Given I start the interview "docassemble.base:data/questions/examples/depends-on-iterator.yml"
+    Then I should see the phrase "What is the name of the first person?"
+    And I set "First name" to "John"
+    And I set "Last name" to "Smith"
+    And I click the button "Continue"
+    Then I should see the phrase "How frequently does John Smith get paid?"
+    And I choose "Monthly"
+    And I click the button "Continue"
+    Then I should see the phrase "How much does John Smith get paid per pay period?"
+    And I set "Amount" to "2000"
+    And I click the button "Continue"
+    Then I should see the phrase "Is there another person?"
+    And I click the button "Yes"
+    Then I should see the phrase "What is the name of the second person?"
+    And I set "First name" to "Jane"
+    And I set "Last name" to "Doe"
+    And I click the button "Continue"
+    Then I should see the phrase "How frequently does Jane Doe get paid?"
+    And I choose "Weekly"
+    And I click the button "Continue"
+    Then I should see the phrase "How much does Jane Doe get paid per pay period?"
+    And I set "Amount" to "1000"
+    And I click the button "Continue"
+    Then I should see the phrase "Is there another person?"
+    And I click the button "No"
+    Then I should see the phrase "Summary"
+    And I should see the phrase "John Smith makes $2,000.00 12 times per year, for an annual income of $24,000.00."
+    And I should see the phrase "Jane Doe makes $1,000.00 52 times per year, for an annual income of $52,000.00."
+    And I click the link "Review"
+    Then I should see the phrase "Review"
+    And I click the first link " Edit"
+    Then I should see the phrase "What is the name of the first person?"
+    And I click the button "Continue"
+    Then I should see the phrase "How frequently does John Smith get paid?"
+    And I choose "Weekly"
+    And I click the button "Continue"
+    Then I should see the phrase "How much does John Smith get paid per pay period?"
+
+  Scenario: Test the interview "Dependencies"
+    Given I start the interview "docassemble.base:data/questions/examples/depends-on.yml"
+    Then I should see the phrase "What is A?"
+    And I set "A" to "5"
+    And I click the button "Continue"
+    Then I should see the phrase "What is the square of 5.0?"
+    And I set "B" to "25"
+    And I click the button "Continue"
+    Then I should see the phrase "Review your answers."
+    And I should see the phrase "A is 5.0."
+    And I should see the phrase "B is 25.0."
+    And I should see the phrase "C is 30.0."
+    And I click the link "Edit A"
+    Then I should see the phrase "What is A?"
+    And I set "A" to "4"
+    And I click the button "Continue"
+    Then I should see the phrase "What is the square of 4.0?"
+    And I set "B" to "16"
+    And I click the button "Continue"
+    Then I should see the phrase "Review your answers."
+    And I should see the phrase "A is 4.0."
+    And I should see the phrase "B is 16.0."
+    And I should see the phrase "C is 20.0."

@@ -1,6 +1,7 @@
 import sys
 import copy
 import datetime
+import dateutil
 import re
 import time
 if __name__ == "__main__":
@@ -15,7 +16,8 @@ if __name__ == "__main__":
         remaining_arguments.append(arguments.pop(0))
     import docassemble.base.config
     docassemble.base.config.load(arguments=remaining_arguments)
-from docassemble.webapp.server import UserModel, UserDict, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict, obtain_lock_patiently, release_lock, app, login_user, get_user_object, error_notification
+from docassemble.webapp.server import UserModel, UserDict, UserDictKeys, Role, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict, obtain_lock_patiently, release_lock, app, login_user, get_user_object, error_notification, user_interviews
+from docassemble.webapp.users.models import UserRoles
 import docassemble.webapp.backend
 import docassemble.base.interview_cache
 import docassemble.base.parse
@@ -24,6 +26,7 @@ import docassemble.base.functions
 import pickle
 import codecs
 from sqlalchemy import or_, and_
+from docassemble.webapp.daredis import r, r_user
 
 set_request_active(False)
 
@@ -46,6 +49,64 @@ def get_cron_user():
             if role.name == 'cron':
                 return(user)
     sys.exit("Cron user not found")
+
+def delete_inactive_users():
+    user_auto_delete = docassemble.base.config.daconfig.get('user auto delete', dict())
+    if not isinstance(user_auto_delete, dict):
+        sys.stderr.write("Error in configuration for user auto delete\n")
+        return
+    if not user_auto_delete.get('enable', True):
+        return
+    try:
+        cutoff_days = int(user_auto_delete.get('inactive days', 0))
+        assert cutoff_days >= 0
+    except:
+        sys.stderr.write("Error in configuration for user auto delete\n")
+        return
+    if cutoff_days == 0:
+        return
+    delete_shared = True if user_auto_delete.get('delete shared', False) else False
+    role_ids = dict()
+    for item in Role.query.all():
+        role_ids[item.name] = item.id
+    roles = user_auto_delete.get('privileges', ['user'])
+    if isinstance(roles, str):
+        roles = [roles]
+    if not isinstance(roles, list):
+        sys.stderr.write("Error in configuration for user auto delete\n")
+        return
+    search_roles = set()
+    for item in roles:
+        if not isinstance(item, str):
+            sys.stderr.write("Error in configuration for user auto delete: invalid privilege\n")
+            return
+        if item not in role_ids:
+            sys.stderr.write("Error in configuration for user auto delete: unknown privilege" + repr(item) + "\n")
+            return
+        if item == 'cron':
+            sys.stderr.write("Error in configuration for user auto delete: invalid privilege\n")
+            return
+        search_roles.add(role_ids[item])
+    filters = list()
+    for item in search_roles:
+        filters.append(UserRoles.role_id == item)
+    cutoff_date = datetime.datetime.utcnow() - dateutil.relativedelta.relativedelta(days=cutoff_days)
+    default_date = datetime.datetime(2020, 2, 24, 0, 0)
+    candidates = list()
+    for item in db.session.query(UserModel.id, UserModel.last_login).join(UserRoles, UserModel.id == UserRoles.user_id).filter(or_(*filters)).all():
+        if item.last_login is None:
+            the_date = default_date
+        else:
+            the_date = item.last_login
+        if the_date < cutoff_date:
+            candidates.append(item.id)
+    for user_id in candidates:
+        last_interview = db.session.query(UserDictKeys.user_id, db.func.max(UserDict.modtime).label('last_activity')).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).filter(UserDictKeys.user_id == user_id).group_by(UserDictKeys.user_id).first()
+        if last_interview is not None and last_interview.last_activity > cutoff_date:
+            continue
+        sys.stderr.write("delete_inactive_users: deleting %d\n" % (user_id,))
+        user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=delete_shared, admin=True)
+        docassemble.webapp.backend.delete_user_data(user_id, r, r_user)
 
 def clear_old_interviews():
     #sys.stderr.write("clear_old_interviews: starting\n")
@@ -112,7 +173,7 @@ def run_cron(cron_type):
         cron_types.append(str(cron_type) + "_background")
     cron_user = get_cron_user()
     cron_user_id = cron_user.id
-    user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
+    user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron', device_id='cron')
     base_url = docassemble.base.config.daconfig.get('url root', 'http://localhost') + docassemble.base.config.daconfig.get('root', '/')
     path_url = base_url + 'interview'
     with app.app_context():
@@ -158,7 +219,7 @@ def run_cron(cron_type):
                                 try:
                                     docassemble.base.functions.reset_local_variables()
                                     obtain_lock_patiently(key, filename)
-                                    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron'), session=key, secret=None, yaml_filename=filename, url=None, url_root=None, encrypted=False, action=cron_type_to_use, interface='cron', arguments=dict()))
+                                    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron', device_id='cron'), session=key, secret=None, yaml_filename=filename, url=None, url_root=None, encrypted=False, action=cron_type_to_use, interface='cron', arguments=dict()))
                                     interview.assemble(the_dict, interview_status)
                                     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
                                     if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
@@ -216,6 +277,7 @@ if __name__ == "__main__":
     with app.app_context():
         if cron_type == 'cron_daily':
             clear_old_interviews()
+            delete_inactive_users()
         run_cron(cron_type)
         db.engine.dispose()
     sys.exit(0)

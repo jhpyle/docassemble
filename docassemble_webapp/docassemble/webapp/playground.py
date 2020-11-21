@@ -19,7 +19,7 @@ TypeType = type(type(None))
 
 __all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'oneline']
 
-always_defined = set(["False", "None", "True", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x", "nav", "PY2", "string_types"])
+always_defined = set(["False", "None", "True", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x", "nav"])
 replace_square_brackets = re.compile(r'\\\[ *([^\\]+)\\\]')
 start_spaces = re.compile(r'^ +')
 end_spaces = re.compile(r' +$')
@@ -201,7 +201,7 @@ class DAQuestion(DAObject):
                             content += "    pdf template file: " + oneline(attachment.pdf_filename) + "\n"
                             self.templates_used.add(attachment.pdf_filename)
                             content += "    fields: " + "\n"
-                            for field, default, pageno, rect, field_type in attachment.fields:
+                            for field, default, pageno, rect, field_type, export_type in attachment.fields:
                                 content += '      "' + field + '": ${ ' + varname(field).lower() + " }\n"
                         elif attachment.type == 'docx':
                             content += "    docx template file: " + oneline(attachment.docx_filename) + "\n"
@@ -312,6 +312,9 @@ class PlaygroundSection(object):
         return out_list            
     def get_file(self, filename):
         return os.path.join(directory_for(self.get_area(), self.project), filename)
+    def get_mimetype(self, filename):
+        extension, mimetype = get_ext_and_mimetype(filename)
+        return mimetype
     def file_exists(self, filename):
         path = self.get_file(filename)
         if os.path.isfile(path):

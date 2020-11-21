@@ -25,6 +25,7 @@ depends on:
   - b
 ---
 event: review_screen
+skip undefined: False
 question: |
   Review your answers.
 review:

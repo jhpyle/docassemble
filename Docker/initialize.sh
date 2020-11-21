@@ -46,13 +46,18 @@ if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     pandoc --help &> /dev/null || apt-get -q -y install pandoc
 fi
 
+LIBREOFFICE_VERSION=`libreoffice --version`
+if [[ $LIBREOFFICE_VERSION =~ ^LibreOffice\ 6.3 ]]; then
+    apt-get -q -y install -t buster-backports libreoffice
+fi
+
 PANDOC_VERSION=`pandoc --version | head -n1`
 
-if [ "${PANDOC_VERSION}" != "pandoc 2.7.3" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
+if [ "${PANDOC_VERSION}" != "pandoc 2.11.1" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
    cd /tmp \
-   && wget -q https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-1-amd64.deb \
-   && dpkg -i pandoc-2.7.3-1-amd64.deb \
-   && rm pandoc-2.7.3-1-amd64.deb
+   && wget -q https://github.com/jgm/pandoc/releases/download/2.11.1.1/pandoc-2.11.1.1-1-amd64.deb \
+   && dpkg -i pandoc-2.11.1.1-1-amd64.deb \
+   && rm pandoc-2.11.1.1-1-amd64.deb
 fi
 
 echo "2" >&2
@@ -135,6 +140,8 @@ echo "8" >&2
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
     export S3_ACCESS_KEY="$S3ACCESSKEY"
     export S3_SECRET_KEY="$S3SECRETACCESSKEY"
+    export AWS_ACCESS_KEY_ID="$S3ACCESSKEY"
+    export AWS_SECRET_ACCESS_KEY="$S3SECRETACCESSKEY"
 fi
 
 if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
@@ -426,6 +433,8 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DAUPDATEONSTART}}/'"${DAUPDATEONSTART:-true}"'/' \
         -e 's/{{DAALLOWUPDATES}}/'"${DAALLOWUPDATES:-true}"'/' \
         -e 's/{{DAWEBSERVER}}/'"${DAWEBSERVER:-nginx}"'/' \
+        -e 's/{{DASTABLEVERSION}}/'"${DASTABLEVERSION:-false}"'/' \
+        -e 's/{{DASQLPING}}/'"${DASQLPING:-false}"'/' \
         "$DA_CONFIG_FILE_DIST" > "$DA_CONFIG_FILE" || exit 1
 fi
 chown www-data.www-data "$DA_CONFIG_FILE"
@@ -572,6 +581,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
         DASSLCERTIFICATE="/etc/ssl/docassemble/nginx.crt;"
         DASSLCERTIFICATEKEY="/etc/ssl/docassemble/nginx.key;"
     fi
+    DASSLPROTOCOLS=${DASSLPROTOCOLS:-TLSv1.2}
     if [ ! -f "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" ]; then
         rm -f /etc/letsencrypt/da_using_lets_encrypt
     fi
@@ -603,6 +613,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                     -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
                     -e 's@{{DASSLCERTIFICATE}}@'"${DASSLCERTIFICATE}"'@' \
                     -e 's@{{DASSLCERTIFICATEKEY}}@'"${DASSLCERTIFICATEKEY}"'@' \
+		    -e 's@{{DASSLPROTOCOLS}}@'"${DASSLPROTOCOLS}"'@' \
                     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
                     -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
                     "${DA_ROOT}/config/nginx-ssl.dist" > "/etc/nginx/sites-available/docassemblessl"
@@ -754,7 +765,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
     fi
     dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='${DBNAME:-docassemble}'\"" postgres`
     if [ -z "$dbexists" ]; then
-        echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}";" | su -c psql postgres || exit 1
+        echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}" encoding UTF8;" | su -c psql postgres || exit 1
     fi
 elif [ "$PGRUNNING" = false ] && [ "$DBTYPE" == "postgresql" ]; then
     export PGHOST="${DBHOST}"
@@ -815,6 +826,8 @@ fi
 
 echo "35" >&2
 
+sed -i 's/<policy domain="coder" rights="none" pattern="PDF" \/>/<policy domain="coder" rights="read | write" pattern="PDF" \/>/' /etc/ImageMagick-6/policy.xml
+
 echo "36" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ "$REDISRUNNING" = false ]; then
@@ -825,13 +838,13 @@ echo "37" >&2
 
 if [ "${DAUPDATEONSTART:-true}" = "true" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "Doing upgrading of packages" >&2
-    su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
+    su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip==20.1 && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
     touch "${DA_ROOT}/webapp/initialized"
 fi
 
 if [ "${DAUPDATEONSTART:-true}" = "initial" ] && [ ! -f "${DA_ROOT}/webapp/initialized" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "Doing initial upgrading of packages" >&2
-    su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
+    su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip==20.1 && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
     touch "${DA_ROOT}/webapp/initialized"
 fi
 
@@ -971,10 +984,11 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             ln -sf /etc/nginx/sites-available/docassemblessl /etc/nginx/sites-enabled/docassemblessl
             if [ "${USELETSENCRYPT:-false}" == "true" ]; then
                 cd "${DA_ROOT}/letsencrypt"
+                export USE_PYTHON_3=1
                 if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-                    ./letsencrypt-auto renew --nginx --cert-name "${DAHOSTNAME}"
+                    ./certbot-auto renew --nginx --cert-name "${DAHOSTNAME}"
                 else
-                    ./letsencrypt-auto --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --no-redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
+                    ./certbot-auto --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --no-redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi
                 cd ~-
                 nginx -s stop &> /dev/null
@@ -1120,10 +1134,11 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
             a2ensite docassemble-ssl
             if [ "${USELETSENCRYPT:-false}" == "true" ]; then
                 cd "${DA_ROOT}/letsencrypt"
+                export USE_PYTHON_3=1
                 if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-                    ./letsencrypt-auto renew --apache -d "${DAHOSTNAME}"
+                    ./certbot-auto renew --apache --cert-name "${DAHOSTNAME}"
                 else
-                    ./letsencrypt-auto --apache --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
+                    ./certbot-auto --apache --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi
                 cd ~-
                 /etc/init.d/apache2 stop

@@ -81,8 +81,8 @@
 <a class="btn {{ config['BUTTON_STYLE'] }}secondary damldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
 
 <p>
-  <a class="btn {{ config['BUTTON_STYLE'] }}success" href="#" id="showimport">Show import controls</a>
-  <a class="btn {{ config['BUTTON_STYLE'] }}danger" href="#" id="hideimport" style="display: none">Hide import controls</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}success" href="#" id="showimport">{{ word("Show import controls") }}</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}danger" href="#" id="hideimport" style="display: none">{{ word("Hide import controls") }}</a>
 </p>
 <form method="POST" class="form" role="form" enctype="multipart/form-data" id="importcontrols" style="display: none">
   {{ uploadform.hidden_tag() }}
@@ -138,7 +138,7 @@
   {%- endfor %}
 </div>
 {%- else %}
-<p>No models were found.</p>
+<p>{{ word("No models were found.") }}</p>
 {%- endif %}
 {%- endif %}
 {%- if show_entry_list %}

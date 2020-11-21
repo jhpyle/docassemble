@@ -65,9 +65,18 @@ def login(step, username, password):
 
 @step(r'I upload the file "([^"]*)"')
 def do_upload(step, value):
-    elem = world.browser.find_element_by_xpath("//input[@type='file']")
+    time.sleep(2)
+    div = world.browser.find_element_by_css_selector('div.file-caption');
+    world.browser.execute_script('arguments[0].style = ""; arguments[0].style.display = "none";', div)
+    div = world.browser.find_element_by_css_selector('div.btn-file');
+    world.browser.execute_script('arguments[0].style = ""; arguments[0].style.position = "inherit";', div)
+    span = world.browser.find_element_by_css_selector('span.hidden-xs');
+    world.browser.execute_script('arguments[0].style = ""; arguments[0].style.display = "none";', span)
+    elem = world.browser.find_element_by_css_selector('input[type="file"]');
+    world.browser.execute_script('arguments[0].style = ""; arguments[0].style.display = "block"; arguments[0].style.visibility = "visible"; arguments[0].style.opacity = "100";', elem)
     elem.clear()
-    elem.send_keys(os.getcwd() + "/" + value)
+    elem.send_keys(value)
+    time.sleep(2)
 
 @step(r'I set the text area to "([^"]*)"')
 def set_text_area(step, value):
@@ -79,8 +88,13 @@ def set_text_area(step, value):
 def click_link_if_exists(step, link_name):
     do_wait()
     try:
-        world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
-        world.browser.wait_for_it()
+        try:
+            world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+            world.browser.wait_for_it()
+        except:
+            link_name += ' '
+            world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+            world.browser.wait_for_it()
     except:
         pass
 
@@ -106,6 +120,12 @@ def start_interview(step, interview_name):
 def start_error_interview(step, interview_name):
     do_wait()
     world.browser.get(world.da_path + "/interview?i=" + interview_name + '&reset=2')
+    world.browser.wait_for_it()
+
+@step(r'I reload the screen')
+def reload_screen(step):
+    do_wait()
+    world.browser.get(re.sub(r'\#.*', '', world.browser.current_url))
     world.browser.wait_for_it()
 
 @step(r'I click the back button')
@@ -178,7 +198,11 @@ def click_button_post(step, choice):
 @step(r'I click the link "([^"]+)"')
 def click_link(step, link_name):
     do_wait()
-    world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+    try:
+        world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+    except:
+        link_name += " "
+        world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
     world.browser.wait_for_it()
 
 @step(r'I select "([^"]+)" from the menu')
@@ -207,11 +231,16 @@ def click_back_to_question_button(step):
 @step(r'I click the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) link "([^"]+)"')
 def click_nth_link(step, ordinal, link_name):
     do_wait()
-    world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+    try:
+        world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+    except:
+        link_name += " "
+        world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
     world.browser.wait_for_it()
 
 @step(r'I should see the phrase "([^"]+)"')
 def see_phrase(step, phrase):
+    take_screenshot()
     assert world.browser.text_present(phrase)
 
 @step(r'I should not see the phrase "([^"]+)"')
@@ -229,9 +258,16 @@ def not_see_phrase_sq(step, phrase):
 @step(r'I set "([^"]+)" to "([^"]*)"')
 def set_field(step, label, value):
     try:
-        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+        try:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+        except:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])/parent::label').get_attribute("for"))
     except:
-        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])/parent::label').get_attribute("for"))
+        label += " "
+        try:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+        except:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])/parent::label').get_attribute("for"))
     #try:
     elem.clear()
     #except:
@@ -241,9 +277,16 @@ def set_field(step, label, value):
 @step(r'I set the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) "([^"]+)" to "([^"]*)"')
 def set_nth_field(step, ordinal, label, value):
     try:
-        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']').get_attribute("for"))
+        try:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']').get_attribute("for"))
+        except:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']/parent::label').get_attribute("for"))
     except:
-        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']/parent::label').get_attribute("for"))
+        label += " "
+        try:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']').get_attribute("for"))
+        except:
+            elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label//a[text()="' + label + '"])[' + str(number_from_ordinal[ordinal]) + ']/parent::label').get_attribute("for"))
     try:
         elem.clear()
     except:
@@ -276,7 +319,11 @@ def set_combobox_text(step, value):
 
 @step(r'I select "([^"]+)" as the "([^"]+)"')
 def select_option(step, value, label):
-    elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    try:
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    except:
+        label += " "
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
     found = False
     for option in elem.find_elements_by_tag_name('option'):
         if option.text == value:
@@ -287,7 +334,11 @@ def select_option(step, value, label):
 
 @step(r'I select "([^"]+)" as the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) "([^"]+)"')
 def select_nth_option(step, value, ordinal, label):
-    elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']').get_attribute("for"))
+    try:
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']').get_attribute("for"))
+    except:
+        label += " "
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('(//label[text()="' + label + '"])[' + str(1+2*(number_from_ordinal[ordinal] - 1)) + ']').get_attribute("for"))
     found = False
     for option in elem.find_elements_by_tag_name('option'):
         if option.text == value:
@@ -311,7 +362,11 @@ def wait_seconds(step, seconds):
 
 @step(r'I should see that "([^"]+)" is "([^"]+)"')
 def value_of_field(step, label, value):
-    elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    try:
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
+    except:
+        label += " "
+        elem = world.browser.find_element_by_id(world.browser.find_element_by_xpath('//label[text()="' + label + '"]').get_attribute("for"))
     assert elem.get_attribute("value") == value
 
 @step(r'I set the text box to "([^"]*)"')
@@ -335,7 +390,11 @@ def set_text_box(step, num, value):
 
 @step(r'I click the "([^"]+)" option under "([^"]+)"')
 def set_mc_option_under(step, option, label):
-    div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
+    try:
+        div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
+    except:
+        label += " "
+        div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
     try:
         span = div.find_element_by_xpath('.//span[text()="' + option + '"]')
     except:
@@ -354,7 +413,11 @@ def set_mc_option(step, choice):
 
 @step(r'I click the option "([^"]+)" under "([^"]+)"')
 def set_mc_option_under_pre(step, option, label):
-    div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
+    try:
+        div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
+    except:
+        label += " "
+        div = world.browser.find_element_by_xpath('//label[text()="' + label + '"]/following-sibling::div')
     try:
         span = div.find_element_by_xpath('.//span[text()="' + option + '"]')
     except:
@@ -411,4 +474,37 @@ def unfocus(step):
 @step(r'I click the final link "([^"]+)"')
 def finally_click_link(step, link_name):
     do_wait()
-    world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+    try:
+        world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+    except:
+        link_name += " "
+        world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
+
+
+@step(r'I screenshot the page')
+def save_screenshot(step):
+    take_screenshot()
+
+@step(r'I want to store screenshots in the folder "([^"]+)"')
+def save_screenshot(step, directory):
+    if world.headless:
+        if os.path.isdir(directory):
+            shutil.rmtree(directory)
+        os.makedirs(directory, exist_ok=True)
+        world.screenshot_folder = directory
+        world.screenshot_number = 0
+
+def take_screenshot():
+    if world.headless and world.screenshot_folder:
+        world.screenshot_number += 1
+        elem = world.browser.find_element_by_id("dabody")
+        world.browser.set_window_size(1005, elem.size["height"] + 150)
+        world.browser.get_screenshot_as_file(os.path.join(world.screenshot_folder, "%05d.png") % (world.screenshot_number,))
+        world.browser.execute_script("window.open('');")
+        world.browser.switch_to.window(world.browser.window_handles[1])
+        world.browser.get(world.da_path + "/interview?i=" + world.interview_name + '&json=1')
+        with open(os.path.join(world.screenshot_folder, "%05d.json") % (world.screenshot_number,), "w", encoding='utf-8') as f:
+            the_json = json.loads(re.sub(r'^[^{]*{', '{', re.sub(r'</pre></body></html>$', '', world.browser.page_source)).strip())
+            f.write(json.dumps(the_json, indent=1))
+        world.browser.close()
+        world.browser.switch_to.window(world.browser.window_handles[0])

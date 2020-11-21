@@ -2,6 +2,47 @@ Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
 
+  Scenario: Test the interview "Back button inside question"
+    Given I start the interview "docassemble.base:data/questions/examples/question-back-button.yml"
+    Then I should see the phrase "Are you doing well?"
+    And I click the button "Yes"
+    Then I should see the phrase "Is the sky blue?"
+    And I click the question back button
+    Then I should see the phrase "Are you doing well?"
+
+  Scenario: Test the interview "Flash message"
+    Given I start the interview "docassemble.base:data/questions/examples/ajax-flash.yml"
+    Then I should see the phrase "What is your favorite food?"
+    And I set "Favorite food" to "soup"
+    And I unfocus
+    And I set "Favorite drink" to "water"
+    And I unfocus
+    And I wait 4 seconds
+    Then I should see the phrase "What? You like SOUP?"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite food is soup and your favorite drink is water."
+
+  Scenario: Test the interview "Interview variables"
+    Given I start the interview "docassemble.base:data/questions/examples/js_variables.yml"
+    And I wait 3 seconds
+    Then I should see the phrase "The fruit."
+    And I wait 3 seconds
+    And I should see the phrase "Fruit is apple."
+
+  Scenario: Test the interview "Checking in"
+    Given I start the interview "docassemble.base:data/questions/examples/check-in.yml"
+    Then I should see the phrase "What is your favorite food?"
+    And I set "Favorite food" to "potatoes"
+    And I unfocus
+    And I wait 12 seconds
+    And I set "Favorite food" to "tomatoes"
+    And I unfocus
+    And I wait 12 seconds
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite food"
+    And I should see the phrase "potatoes"
+    And I should see the phrase "tomatoes"
+
   Scenario: Test the interview "Test URL args" with argument
     Given I start the interview "docassemble.demo:data/questions/testurlarg.yml&from=moon"
     Then I should see the phrase "You came from the moon."
@@ -20,7 +61,7 @@ Feature: Example interviews
     Then I should see the phrase "Enter an address"
     And I set "Address" to "211 S 11th St"
     And I set "City" to "Philadelphia"
-    And I set "State" to "PA"
+    And I select "Pennsylvania" as the "State"
     And I click the button "Continue"
     Then I should see the phrase "Philadelphia, PA 19107"
 
@@ -165,22 +206,22 @@ Feature: Example interviews
     Then I should see the phrase "Third quarter metrics"
     And I should not see the phrase ":bed:"
 
-  Scenario: Test the interview "Store data in Google Sheet"
-    Given I start the interview "docassemble.demo:data/questions/examples/google-sheet.yml"
-    Then I should see the phrase "What is your first name?"
-    And I set "Name" to "Auto tester"
-    And I click the button "Continue"
-    Then I should see the phrase "What is your favorite fruit?"
-    And I set "Fruit" to "apples"
-    And I click the button "Continue"
-    Then I should see the phrase "What is your favorite vegetable?"
-    And I set "Vegetable" to "turnips"
-    And I click the button "Continue"
-    Then I should see the phrase "Thank you for your input!"
+  # Scenario: Test the interview "Store data in Google Sheet"
+  #   Given I start the interview "docassemble.demo:data/questions/examples/google-sheet.yml"
+  #   Then I should see the phrase "What is your first name?"
+  #   And I set "Name" to "Auto tester"
+  #   And I click the button "Continue"
+  #   Then I should see the phrase "What is your favorite fruit?"
+  #   And I set "Fruit" to "apples"
+  #   And I click the button "Continue"
+  #   Then I should see the phrase "What is your favorite vegetable?"
+  #   And I set "Vegetable" to "turnips"
+  #   And I click the button "Continue"
+  #   Then I should see the phrase "Thank you for your input!"
 
-  Scenario: Test the interview "Get files from Google Drive"
-    Given I start the interview "docassemble.demo:data/questions/examples/google-drive.yml"
-    Then I should see the phrase "Files in your Google Drive"
+  # Scenario: Test the interview "Get files from Google Drive"
+  #   Given I start the interview "docassemble.demo:data/questions/examples/google-drive.yml"
+  #   Then I should see the phrase "Files in your Google Drive"
 
   Scenario: Test the interview "Review answers"
     Given I start the interview "docassemble.base:data/questions/examples/review-8.yml"
@@ -205,3 +246,12 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/action-button-html.yml"
     Then I should see the phrase "Need more information?"
     And I click the final link "Visit our web site"
+
+  Scenario: Test the interview "Action buttons"
+    Given I start the interview "docassemble.base:data/questions/examples/action-buttons-http.yml"
+    Then I should see the phrase "You may wish to wait until"
+    And I click the final link " Come back later"
+
+  # Scenario: Test the interview "DAWeb"
+  #   Given I start the interview "docassemble.base:data/questions/examples/daweb.yml"
+

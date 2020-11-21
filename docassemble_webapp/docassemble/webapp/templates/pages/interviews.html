@@ -1,3 +1,4 @@
+{%- set footer_content = get_part('interview page footer', get_part('global footer')) %}
 {%- set page_title = get_part('interview page title', word('Interviews')) %}
 {%- set tab_title = get_part('interview page tab title', word('Interviews')) %}
 {%- set extra_css = get_part('interview page extra css') %}
@@ -48,7 +49,7 @@
                 </tr>
               {%- endif %}
               {%- endfor %}
-              {%- if numinterviews > 0 %}  
+              {%- if numinterviews > 0 %}
                 <tr>
                   <td>&nbsp;</td>
                   {%- if tags_used %}
@@ -60,5 +61,22 @@
               {%- endif %}
               </tbody>
             </table>
+            {%- if next_id or show_back %}
+            <div class="row">
+              <div class="col-xs-8 mx-auto">
+                <nav class="text-center">
+                  <ul class="pagination">
+                    {%- if show_back %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('interview_list') }}" aria-label="{{ word('Back') }}"><i class="fas fa-chevron-left"></i> {{ word('Back') }}</a></li>
+                    {%- endif %}
+                    {%- if next_id %}
+                    <li class="page-item"><a class="page-link" href="?next_id={{ next_id }}" aria-label="{{ word('Next') }}">{{ word('Next') }} <i class="fas fa-chevron-right"></i></a></li>
+                    {%- endif %}
+                  </ul>
+                </nav>
+              </div>
+            </div>
+            {%- endif %}
+
 {{ get_part('interview page post') }}
 {% endblock %}

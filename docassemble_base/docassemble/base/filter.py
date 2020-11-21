@@ -15,7 +15,7 @@ import stat
 import PyPDF2
 from docassemble.base.functions import server, word
 import docassemble.base.functions
-from docassemble.base.pandoc import MyPandoc
+import docassemble.base.pandoc as pandoc
 from bs4 import BeautifulSoup
 import docassemble.base.file_docx
 from pylatex.utils import escape_latex
@@ -30,7 +30,7 @@ import PIL
 DEFAULT_PAGE_WIDTH = '6.5in'
 
 term_start = re.compile(r'\[\[')
-term_match = re.compile(r'\[\[([^\]]*)\]\]', re.DOTALL)
+term_match = re.compile(r'\[\[([^\]\|]*)(\|[^\]]*)?\]\]', re.DOTALL)
 noquote_match = re.compile(r'"')
 lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
@@ -156,7 +156,7 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     #sys.stderr.write(text + "\n")
     if 'fontsize' in metadata:
         text = re.sub(r'{\\pard', r'\\fs' + str(convert_length(metadata['fontsize'], 'hp')) + r' {\\pard', text, count=1)
-        after_space_multiplier = str(convert_length(metadata['fontsize'], 'twips'))
+        after_space_multiplier = convert_length(metadata['fontsize'], 'twips')
     else:
         after_space_multiplier = 240
     if 'IndentationAmount' in metadata:
@@ -542,7 +542,7 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[BORDER\] *(.+?)\n *\n', border_pdf, text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
-def html_filter(text, status=None, question=None, embedder=None, default_image_width=None):
+def html_filter(text, status=None, question=None, embedder=None, default_image_width=None, external=False):
     if question is None and status is not None:
         question = status.question
     text = text + "\n\n"
@@ -554,10 +554,10 @@ def html_filter(text, status=None, question=None, embedder=None, default_image_w
     #     text = re.sub(r'\[FIELD ([^\]]+)\]', 'ERROR: FIELD cannot be used here', text)
     text = re.sub(r'\[TARGET ([^\]]+)\]', target_html, text)
     if docassemble.base.functions.this_thread.evaluation_context != 'docx':
-        text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question), text)
-        text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_url_string(x, question=question), text)
-        text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question), text)
-        text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question, default_image_width=default_image_width), text)
+        text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question, external=external, status=status), text)
+        text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', lambda x: image_url_string(x, question=question, external=external, status=status), text)
+        text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question, external=external, status=status), text)
+        text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question, default_image_width=default_image_width, external=external, status=status), text)
         text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+), *([^\]]*)\]', qr_url_string, text)
         text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_url_string, text)
         text = re.sub(r'\[QR ([^,\]]+)\]', qr_url_string, text)
@@ -662,7 +662,7 @@ def map_string(encoded_text, status):
 def target_html(match):
     target = match.group(1)
     target = re.sub(r'[^A-Za-z0-9\_]', r'', str(target))
-    return '<span id="datarget' + target + '"></span>'
+    return '<span class="datarget' + target + '"></span>'
 
 def pdf_two_col(match, add_line=False):
     firstcol = clean_markdown_to_latex(match.group(1))
@@ -755,11 +755,13 @@ def image_as_rtf(match, question=None):
     if width == 'full':
         width_supplied = False
     file_reference = match.group(1)
+    if question and file_reference in question.interview.images:
+        file_reference = question.interview.images[file_reference].get_reference()
     file_info = server.file_finder(file_reference, convert={'svg': 'png', 'gif': 'png'}, question=question)
     if 'path' not in file_info:
         return ''
     #logmessage('image_as_rtf: path is ' + file_info['path'])
-    if 'mimetype' in file_info:
+    if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'width' in file_info:
@@ -903,7 +905,7 @@ def pixels_in(length):
     logmessage("Could not read " + str(length) + "\n")
     return(300)
 
-def image_url_string(match, emoji=False, question=None, playground=False, default_image_width=None):
+def image_url_string(match, emoji=False, question=None, playground=False, default_image_width=None, external=False, status=None):
     file_reference = match.group(1)
     try:
         width = match.group(2)
@@ -922,8 +924,15 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
             alt_text = ''
     else:
         alt_text = ''
+    return image_url(file_reference, alt_text, width, emoji=emoji, question=question, playground=playground, external=external, status=status)
+
+def image_url(file_reference, alt_text, width, emoji=False, question=None, playground=False, external=False, status=None):
+    if question and file_reference in question.interview.images:
+        if status and question.interview.images[file_reference].attribution is not None:
+            status.attributions.add(question.interview.images[file_reference].attribution)
+        file_reference = question.interview.images[file_reference].get_reference()
     file_info = server.file_finder(file_reference, question=question)
-    if 'mimetype' in file_info and file_info['mimetype'] is not None:
+    if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^audio', file_info['mimetype']):
             urls = get_audio_urls([{'text': "[FILE " + file_reference + "]", 'package': None, 'type': 'audio'}], question=question)
             if len(urls):
@@ -942,7 +951,7 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
         if emoji:
             width_string += ';vertical-align: middle'
             alt_text = 'alt="" '
-        the_url = server.url_finder(file_reference, _question=question, display_filename=file_info['filename'])
+        the_url = server.url_finder(file_reference, _question=question, display_filename=file_info['filename'], _external=external)
         if the_url is None:
             return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
         if width_string == 'width:100%':
@@ -955,13 +964,16 @@ def image_url_string(match, emoji=False, question=None, playground=False, defaul
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
                 server.fg_make_png_for_pdf_path(file_info['path'] + ".pdf", 'screen', page=1)
+                if re.match(r'[0-9]+', str(file_reference)):
+                    sf = server.SavedFile(int(file_reference), fix=True)
+                    sf.finalize()
             if 'pages' not in file_info:
                 try:
                     reader = PyPDF2.PdfFileReader(open(file_info['path'] + '.pdf', 'rb'))
                     file_info['pages'] = reader.getNumPages()
                 except:
                     file_info['pages'] = 1
-            image_url = server.url_finder(file_reference, size="screen", page=1, _question=question)
+            image_url = server.url_finder(file_reference, size="screen", page=1, _question=question, _external=external)
             if image_url is None:
                 return ('[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]')
             if 'filename' in file_info:
@@ -1018,6 +1030,8 @@ def convert_pixels(match):
 
 def image_include_string(match, emoji=False, question=None):
     file_reference = match.group(1)
+    if question and file_reference in question.interview.images:
+        file_reference = question.interview.images[file_reference].get_reference()
     try:
         width = match.group(2)
         assert width != 'None'
@@ -1027,7 +1041,7 @@ def image_include_string(match, emoji=False, question=None):
     except:
         width = DEFAULT_IMAGE_WIDTH
     file_info = server.file_finder(file_reference, convert={'svg': 'eps', 'gif': 'png'}, question=question)
-    if 'mimetype' in file_info:
+    if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
@@ -1051,6 +1065,8 @@ def image_include_string(match, emoji=False, question=None):
 
 def image_include_docx(match, question=None):
     file_reference = match.group(1)
+    if question and file_reference in question.interview.images:
+        file_reference = question.interview.images[file_reference].get_reference()
     try:
         width = match.group(2)
         assert width != 'None'
@@ -1060,7 +1076,7 @@ def image_include_docx(match, question=None):
     except:
         width = DEFAULT_IMAGE_WIDTH
     file_info = server.file_finder(file_reference, convert={'svg': 'eps'}, question=question)
-    if 'mimetype' in file_info:
+    if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
@@ -1149,7 +1165,7 @@ def emoji_html(text, status=None, question=None, images=None):
     if text in images:
         if status is not None and images[text].attribution is not None:
             status.attributions.add(images[text].attribution)
-        return("[EMOJI " + images[text].get_reference() + ', 1em]')
+        return image_url(images[text].get_reference(), word('icon'), '1em', emoji=True, question=question)
     icons_setting = docassemble.base.functions.get_config('default icons', None)
     if icons_setting == 'font awesome':
         m = re.search(r'^(fa[a-z])-fa-(.*)', text)
@@ -1174,18 +1190,35 @@ def emoji_insert(text, status=None, images=None):
         return(":" + str(text) + ":")
 
 def link_rewriter(m, status):
-    if re.search(r'^(\?|javascript:)', m.group(1)):
-        target = ''
+    the_path = None
+    if m.group(1).startswith('#'):
+        return '<a href="javascript:daGoToAnchor(' + re.sub(r'"', '&quot;', json.dumps(m.group(1))) + ');"'
+    if m.group(1).startswith('/'):
+        the_path = m.group(1)
+    elif 'url_root' in docassemble.base.functions.this_thread.current_info and m.group(1).startswith(docassemble.base.functions.this_thread.current_info['url_root']):
+        the_path = '/' + m.group(1)[len(docassemble.base.functions.this_thread.current_info['url_root']):]
+    if the_path:
+        if re.search(r'^/(packagestatic|storedfile|tempfile|uploadedfile|uploadedpage|playgroundstatic|playgrounddownload)', the_path):
+            target = 'target="_blank" '
+        else:
+            target = ''
     else:
         target = 'target="_blank" '
-    action_search = re.search(r'^\?action=([^\&]+)', m.group(1))
-    if action_search:
-        action_data = 'data-embaction="' + action_search.group(1) + '" '
+    if the_path or m.group(1).startswith('?'):
+        action_search = re.search(r'[\?\&]action=([^\&]+)', m.group(1))
+        if action_search:
+            action_data = 'data-embaction="' + action_search.group(1) + '" '
+            target = ''
+        else:
+            action_data = ''
     else:
         action_data = ''
+    if m.group(1).startswith('?'):
+        target = ''
     js_search = re.search(r'^javascript:(.*)', m.group(1))
     if js_search:
         js_data = 'data-js="' + js_search.group(1) + '" '
+        target = ''
     else:
         js_data = ''
     if status is None:
@@ -1193,7 +1226,12 @@ def link_rewriter(m, status):
     status.linkcounter += 1
     return '<a data-linknum="' + str(status.linkcounter) + '" ' + action_data + target + js_data + 'href="' + m.group(1) + '"'
 
-def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None, embedder=None, default_image_width=None):
+def sub_term(m):
+    if m.group(2):
+        return '[[' + m.group(1) + m.group(2) + ']]'
+    return '[[' + m.group(1) + ']]'
+
+def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None, embedder=None, default_image_width=None, external=False):
     a = str(a)
     if question is None and status is not None:
         question = status.question
@@ -1204,9 +1242,9 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                     lang = docassemble.base.functions.get_language()
                     for term in question.terms:
                         if lang in question.terms[term]['re']:
-                            a = question.terms[term]['re'][lang].sub(r'[[\1]]', a)
+                            a = question.terms[term]['re'][lang].sub(sub_term, a)
                         else:
-                            a = question.terms[term]['re'][question.language].sub(r'[[\1]]', a)
+                            a = question.terms[term]['re'][question.language].sub(sub_term, a)
                 if len(question.autoterms):
                     lang = docassemble.base.functions.get_language()
                     for term in question.autoterms:
@@ -1214,38 +1252,59 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                             a = question.autoterms[term]['re'][lang].sub(r'[[\1]]', a)
                         else:
                             a = question.autoterms[term]['re'][question.language].sub(r'[[\1]]', a)
-            if len(question.interview.terms):
+                if 'interview_terms' in status.extras:
+                    interview_terms = status.extras['interview_terms']
+                else:
+                    interview_terms = question.interview.terms
+                if 'interview_autoterms' in status.extras:
+                    interview_autoterms = status.extras['interview_autoterms']
+                else:
+                    interview_autoterms = question.interview.autoterms
+            else:
+                interview_terms = question.interview.terms
+                interview_autoterms = question.interview.autoterms
+            if len(interview_terms):
                 lang = docassemble.base.functions.get_language()
-                if lang in question.interview.terms and len(question.interview.terms[lang]) > 0:
-                    for term in question.interview.terms[lang]:
+                if lang in interview_terms and len(interview_terms[lang]) > 0:
+                    for term in interview_terms[lang]:
                         #logmessage("Searching for term " + term + " in " + a + "\n")
-                        a = question.interview.terms[lang][term]['re'].sub(r'[[\1]]', a)
+                        a = interview_terms[lang][term]['re'].sub(sub_term, a)
                         #logmessage("string is now " + str(a) + "\n")
-                elif question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0:
-                    for term in question.interview.terms[question.language]:
+                elif question.language in interview_terms and len(interview_terms[question.language]) > 0:
+                    for term in interview_terms[question.language]:
                         #logmessage("Searching for term " + term + " in " + a + "\n")
-                        a = question.interview.terms[question.language][term]['re'].sub(r'[[\1]]', a)
+                        a = interview_terms[question.language][term]['re'].sub(sub_term, a)
                         #logmessage("string is now " + str(a) + "\n")
-            if len(question.interview.autoterms):
+            if len(interview_autoterms):
                 lang = docassemble.base.functions.get_language()
-                if lang in question.interview.autoterms and len(question.interview.autoterms[lang]) > 0:
-                    for term in question.interview.autoterms[lang]:
+                if lang in interview_autoterms and len(interview_autoterms[lang]) > 0:
+                    for term in interview_autoterms[lang]:
                         #logmessage("Searching for term " + term + " in " + a + "\n")
-                        a = question.interview.autoterms[lang][term]['re'].sub(r'[[\1]]', a)
+                        a = interview_autoterms[lang][term]['re'].sub(r'[[\1]]', a)
                         #logmessage("string is now " + str(a) + "\n")
-                elif question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]) > 0:
-                    for term in question.interview.autoterms[question.language]:
+                elif question.language in interview_autoterms and len(interview_autoterms[question.language]) > 0:
+                    for term in interview_autoterms[question.language]:
                         #logmessage("Searching for term " + term + " in " + a + "\n")
-                        a = question.interview.autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
+                        a = interview_autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
                         #logmessage("string is now " + str(a) + "\n")
-    if status is not None and question.interview.scan_for_emojis:
-        a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status, question=question)), a)
-    a = html_filter(str(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width)
+    a = html_filter(str(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width, external=external)
     #logmessage("before: " + a)
+    if status and status.extras.get('tableCssClass', None):
+        classes = status.extras['tableCssClass'].split(',')
+        table_class = json.dumps(classes[0].strip())
+        if len(classes) > 1:
+            thead_class = json.dumps(classes[1].strip())
+        else:
+            thead_class = None
+    else:
+        table_class = server.default_table_class
+        thead_class = server.default_thead_class
+    a = re.sub(r'<(/?)table', r'<\1TABLE', a)
+    a = re.sub(r'<thead>', r'<THEAD>', a)
     if use_pandoc:
-        converter = MyPandoc()
+        converter = pandoc.MyPandoc()
         converter.output_format = 'html'
-        converter.input_content = str(a)
+        converter.input_content = a
         converter.convert(question)
         result = converter.output_content
     else:
@@ -1254,25 +1313,43 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         except:
             # Try again because sometimes it fails randomly and maybe trying again will work.
             result = docassemble.base.functions.this_thread.markdown.reset().convert(a)
-    result = re.sub(r'<table>', r'<table class="table table-striped">', result)
+    result = re.sub(r'<table>', r'<div class="table-responsive"><table class=' + table_class + '>', result)
+    if thead_class:
+        result = re.sub(r'<thead>', r'<thead class=' + thead_class + '>', result)
+    result = re.sub(r'</table>', r'</table></div>', result)
+    result = re.sub(r'<(/?)TABLE', r'<\1table', result)
+    result = re.sub(r'<THEAD>', r'<thead>', result)
+    result = re.sub(r'<(t[dh]) align="(right|left|center)">', r'<\1 class="text-\2">', result)
     result = re.sub(r'<blockquote>', r'<blockquote class="blockquote">', result)
-    #result = re.sub(r'<table>', r'<table class="datable">', result)
     result = re.sub(r'<a href="(.*?)"', lambda x: link_rewriter(x, status), result)
     if do_terms and question is not None and term_start.search(result):
         lang = docassemble.base.functions.get_language()
         if status is not None:
             if len(question.terms):
-                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'], status=status, question=question)), result)
+                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'], label=x.group(2), status=status, question=question)), result)
             if len(question.autoterms):
-                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'], status=status, question=question)), result)
-        if lang in question.interview.terms and len(question.interview.terms[lang]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[lang], status=status, question=question)), result)
-        elif question.language in question.interview.terms and len(question.interview.terms[question.language]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language], status=status, question=question)), result)
-        if lang in question.interview.autoterms and len(question.interview.autoterms[lang]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[lang], status=status, question=question)), result)
-        elif question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]):
-            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language], status=status, question=question)), result)
+                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'], label=x.group(2), status=status, question=question)), result)
+            if 'interview_terms' in status.extras:
+                interview_terms = status.extras['interview_terms']
+            else:
+                interview_terms = question.interview.terms
+            if 'interview_autoterms' in status.extras:
+                interview_autoterms = status.extras['interview_autoterms']
+            else:
+                interview_autoterms = question.interview.autoterms
+        else:
+            interview_terms = question.interview.terms
+            interview_autoterms = question.interview.autoterms
+        if lang in interview_terms and len(interview_terms[lang]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), interview_terms[lang], label=x.group(2), status=status, question=question)), result)
+        elif question.language in interview_terms and len(interview_terms[question.language]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), interview_terms[question.language], label=x.group(2), status=status, question=question)), result)
+        if lang in interview_autoterms and len(interview_autoterms[lang]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), interview_autoterms[lang], label=x.group(2), status=status, question=question)), result)
+        elif question.language in interview_autoterms and len(interview_autoterms[question.language]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), interview_autoterms[question.language], label=x.group(2), status=status, question=question)), result)
+    if status is not None and question.interview.scan_for_emojis:
+        result = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status, question=question)), result)
     if trim:
         if result.startswith('<p>') and result.endswith('</p>'):
             result = re.sub(r'</p>\s*<p>', ' ', result[3:-4])
@@ -1310,14 +1387,18 @@ def noquote(string):
 def add_terms_mako(termname, terms, status=None, question=None):
     lower_termname = re.sub(r'\s+', ' ', termname.lower())
     if lower_termname in terms:
-        return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'].text(dict()), trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + str(termname) + '</a>')
+        return('<a tabindex="0" class="daterm" data-toggle="popover" data-container="body" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'].text(dict()), trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + str(termname) + '</a>')
     #logmessage(lower_termname + " is not in terms dictionary\n")
     return '[[' + termname + ']]'
 
-def add_terms(termname, terms, status=None, question=None):
+def add_terms(termname, terms, label=None, status=None, question=None):
+    if label is None:
+        label = str(termname)
+    else:
+        label = re.sub(r'^\|', '', label)
     lower_termname = re.sub(r'\s+', ' ', termname.lower())
     if lower_termname in terms:
-        return('<a tabindex="0" class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + str(termname) + '</a>')
+        return('<a tabindex="0" class="daterm" data-toggle="popover" data-container="body" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + label + '</a>')
     #logmessage(lower_termname + " is not in terms dictionary\n")
     return '[[' + termname + ']]'
 
@@ -1331,7 +1412,7 @@ def audio_control(files, preload="metadata", title_text=None):
         title_text = " title=" + json.dumps(title_text)
     output = '<audio' + title_text + ' class="daaudio-control" controls="controls" preload="' + preload + '">' + "\n"
     for d in files:
-        if type(d) is list:
+        if isinstance(d, list):
             output += '  <source src="' + d[0] + '"'
             if d[1] is not None:
                 output += ' type="' + d[1] + '"/>'
@@ -1423,7 +1504,7 @@ def get_audio_urls(the_audio, question=None):
             if 'fullpath' in file_info:
                 url = server.url_finder(full_file, _question=question)
                 output.append([url, mimetype])
-    return output
+    return [item for item in output if item[0] is not None]
 
 def get_video_urls(the_video, question=None):
     output = list()
@@ -1603,6 +1684,8 @@ def replace_fields(string, status=None, embedder=None):
 
 def image_include_docx_template(match, question=None):
     file_reference = match.group(1)
+    if question and file_reference in question.interview.images:
+        file_reference = question.interview.images[file_reference].get_reference()
     try:
         width = match.group(2)
         assert width != 'None'
@@ -1612,11 +1695,11 @@ def image_include_docx_template(match, question=None):
     except:
         width = DEFAULT_IMAGE_WIDTH
     file_info = server.file_finder(file_reference, convert={'svg': 'eps'}, question=question)
-    if 'mimetype' in file_info:
+    if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
-        if 'mimetype' in file_info:
+        if 'mimetype' in file_info and file_info['mimetype']:
             if file_info['mimetype'] in ('text/markdown', 'text/plain'):
                 with open(file_info['fullpath'], 'rU', encoding='utf-8') as f:
                     contents = f.read()

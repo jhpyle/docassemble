@@ -8,7 +8,7 @@
 <p class="h6">{{ version }}</p>
 
 <div>
-  <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', limitation=limitation, action='update') }}">{{ word('Upgrade') }}</a>
 </div>
 {%- endif %}
 

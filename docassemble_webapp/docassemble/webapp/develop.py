@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from docassemble.base.functions import word
+from docassemble.base.functions import LazyWord as word
 from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField, BooleanField
 import re
 import sys

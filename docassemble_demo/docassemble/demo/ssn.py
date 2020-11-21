@@ -7,7 +7,7 @@ class SSN(CustomDataType):
     input_class = 'da-ssn'
     javascript = """\
 $.validator.addMethod('ssn', function(value, element, params){
-  return /^[0-9]{3}\-?[0-9]{2}\-?[0-9]{4}$/.test(value);
+  return value == '' || /^[0-9]{3}\-?[0-9]{2}\-?[0-9]{4}$/.test(value);
 });
 """
     jq_rule = 'ssn'
@@ -16,11 +16,14 @@ $.validator.addMethod('ssn', function(value, element, params){
     def validate(cls, item):
         item = str(item).strip()
         m = re.search(r'^[0-9]{3}-?[0-9]{2}-?[0-9]{4}$', item)
-        if m:
+        if item == '' or m:
             return True
         raise DAValidationError("A SSN needs to be in the form xxx-xx-xxxx")
     @classmethod
     def transform(cls, item):
         item = str(item).strip()
         m = re.search(r'^([0-9]{3})-?([0-9]{2})-?([0-9]{4})$', item)
-        return m.group(1) + '-' + m.group(2) + '-' + m.group(3)
+        if m:
+            return m.group(1) + '-' + m.group(2) + '-' + m.group(3)
+        else:
+            return item

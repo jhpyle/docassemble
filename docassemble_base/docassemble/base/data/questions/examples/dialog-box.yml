@@ -8,7 +8,7 @@ mandatory: True
 code: |
   if task_not_yet_performed('show current date'):
     mark_task_as_performed('show current date')
-    show_date
+    force_ask('show_date')
 ---
 event: show_date
 question: |

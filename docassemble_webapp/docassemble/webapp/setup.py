@@ -2,7 +2,8 @@ from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 from datetime import timedelta
 import docassemble.webapp.database
-da_version = '0.5.92'
+import re
+da_version = '1.1.105'
 app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
@@ -84,7 +85,10 @@ connect_string = docassemble.webapp.database.connection_string()
 alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
 app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
-app.config['MAILGUN_API_URL'] = daconfig['mail'].get('mailgun api url', 'https://api.mailgun.net/v3/%s/messages.mime') % daconfig['mail'].get('mailgun domain', 'NOT_USING_MAILGUN')
+try:
+    app.config['MAILGUN_API_URL'] = daconfig['mail'].get('mailgun api url', 'https://api.mailgun.net/v3/%s/messages.mime') % daconfig['mail'].get('mailgun domain', 'NOT_USING_MAILGUN')
+except:
+    app.config['MAILGUN_API_URL'] = 'https://api.mailgun.net/v3/%s/messages.mime' % (daconfig['mail'].get('mailgun domain', 'NOT_USING_MAILGUN'),)
 app.config['MAILGUN_API_KEY'] = daconfig['mail'].get('mailgun api key', None)
 app.config['SENDGRID_API_KEY'] = daconfig['mail'].get('sendgrid api key', None)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
@@ -92,6 +96,15 @@ app.config['ENABLE_MANAGE_ACCOUNT'] = daconfig.get('user can delete account', Tr
 app.config['ENABLE_DELETE_SHARED'] = daconfig.get('delete account deletes shared', False)
 app.config['ENABLE_DELETE_ACCOUNT'] = daconfig.get('admin can delete account', True)
 app.config['SESSION_COOKIE_SECURE'] = daconfig.get('use https', False) or daconfig.get('behind https load balancer', False)
+if daconfig.get('allow embedding', 'Lax') is True:
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+elif daconfig.get('allow embedding', 'Lax') is False:
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
+else:
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['REMEMBER_COOKIE_SECURE'] = app.config['SESSION_COOKIE_SECURE']
 if 'session lifetime seconds' in daconfig:
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=daconfig['session lifetime seconds'])
+app.config['SOCIAL'] = daconfig['social']
+app.config['OG_LOCALE'] = re.sub(r'\..*', '', daconfig.get('locale', 'en_US.utf8'))
+app.config['ENABLE_MONITOR'] = daconfig.get('enable monitor', True)

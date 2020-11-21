@@ -1,0 +1,49 @@
+metadata:
+  title: Repeatable with defaults
+  short title: Repeat
+  documentation: "https://docassemble.org/docs/recipes.html#repeatable"
+  example start: 1
+  example end: 6
+---
+mandatory: True
+code: |
+  version = 0
+---
+event: new_version
+code: |
+  version += 1
+---
+depends on: version
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+depends on: version
+question: |
+  What is your favorite vegetable?
+fields:
+  - Fruit: favorite_vegetable
+---
+depends on: version
+question: |
+  What is your favorite apple?
+fields:
+  - Fruit: favorite_apple
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  You like ${ favorite_fruit }
+  and ${ favorite_vegetable }.
+  % if favorite_fruit == 'apple':
+
+  Your favorite apple is
+  ${ favorite_apple }
+  % endif
+action buttons:
+  - label: Try again
+    action: new_version
+    color: primary
+  

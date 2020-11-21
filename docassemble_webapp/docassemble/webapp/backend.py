@@ -4,7 +4,7 @@ from docassemble.base.config import daconfig, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, Role, ChatLog, UserDict, UserDictKeys, UserAuthModel, UserRoles
-from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage
+from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage, Email, EmailAttachment
 from docassemble.webapp.packages.models import PackageAuth
 from docassemble.base.generate_key import random_string, random_bytes, random_alphanumeric
 from sqlalchemy import or_, and_
@@ -259,6 +259,10 @@ def sql_delete(key):
     GlobalObjectStorage.query.filter_by(key=key).delete()
     db.session.commit()
 
+def sql_keys(prefix):
+    n = len(prefix)
+    return list(set([y.key[n:] for y in db.session.query(GlobalObjectStorage.key).filter(GlobalObjectStorage.key.like(prefix + '%')).all()]))
+
 def get_info_from_file_reference_with_uids(*pargs, **kwargs):
     if 'uids' not in kwargs:
         kwargs['uids'] = get_session_uids()
@@ -268,6 +272,15 @@ def get_info_from_file_number_with_uids(*pargs, **kwargs):
     if 'uids' not in kwargs:
         kwargs['uids'] = get_session_uids()
     return get_info_from_file_number(*pargs, **kwargs)
+
+
+classes = daconfig['table css class'].split(',')
+DEFAULT_TABLE_CLASS = json.dumps(classes[0].strip())
+if len(classes) > 1:
+    DEFAULT_THEAD_CLASS = json.dumps(classes[1].strip())
+else:
+    DEFAULT_THEAD_CLASS = None
+del classes
 
 docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
@@ -293,7 +306,10 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          server_sql_defined=sql_defined,
                                          server_sql_set=sql_set,
                                          server_sql_delete=sql_delete,
-                                         alchemy_url=docassemble.webapp.user_database.alchemy_url)
+                                         server_sql_keys=sql_keys,
+                                         alchemy_url=docassemble.webapp.user_database.alchemy_url,
+                                         default_table_class=DEFAULT_TABLE_CLASS,
+                                         default_thead_class=DEFAULT_THEAD_CLASS)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()
@@ -350,7 +366,7 @@ docassemble.base.functions.update_server(cloud=cloud,
                                          cloud_custom=cloud_custom,
                                          google_api=docassemble.webapp.google_api)
 
-initial_dict = dict(_internal=dict(dirty=dict(), progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
+initial_dict = dict(_internal=dict(session_local=dict(), device_local=dict(), user_local=dict(), dirty=dict(), progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
 #else:
 #    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
@@ -385,11 +401,11 @@ def can_access_file_number(file_number, uids=None):
     if upload.key in uids:
         return True
     if current_user and current_user.is_authenticated:
-        if UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=current_user.id).first() or db.session.query(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).first():
+        if UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=current_user.id).first() or db.session.query(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).filter(UploadsRoleAuth.uploads_indexno == file_number).first():
             return True
     elif session and 'tempuser' in session:
         temp_user_id = int(session['tempuser'])
-        if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user.id).first():
+        if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user_id).first():
             return True
     return False
 
@@ -599,6 +615,8 @@ def fetch_previous_user_dict(user_code, filename, secret):
     return fetch_user_dict(user_code, filename, secret=secret)
 
 def advance_progress(user_dict, interview):
+    if user_dict['_internal']['progress'] is None:
+        return
     if hasattr(interview, 'progress_bar_multiplier'):
         multiplier = interview.progress_bar_multiplier
     else:
@@ -696,6 +714,8 @@ def delete_user_data(user_id, r, r_user):
         user_object.pypi_username = None
         user_object.pypi_password = None
         user_object.otp_secret = None
+        user_object.confirmed_at = None
+        user_object.last_login = None
         user_object.social_id = 'disabled$' + str(user_id)
     db.session.commit()
     keys_to_delete = set()
@@ -745,27 +765,28 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
             do_delete = True
         else:
             do_delete = False
-    files_to_save = list()
-    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=True).all():
-        files_to_save.append(upload.indexno)
-    if len(files_to_save):
-        something_added = False
-        if user_type == 'user':
-            for uploads_indexno in files_to_save:
-                existing_auth = UploadsUserAuth.query.filter_by(user_id=the_user_id, uploads_indexno=uploads_indexno).first()
-                if not existing_auth:
-                    new_auth_record = UploadsUserAuth(user_id=the_user_id, uploads_indexno=uploads_indexno)
-                    db.session.add(new_auth_record)
-                    something_added = True
-        else:
-            for uploads_indexno in files_to_save:
-                existing_auth = UploadsUserAuth.query.filter_by(temp_user_id=the_user_id, uploads_indexno=uploads_indexno).first()
-                if not existing_auth:
-                    new_auth_record = UploadsUserAuth(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)
-                    db.session.add(new_auth_record)
-                    something_added = True
-        if something_added:
-            db.session.commit()
+    if not force:
+        files_to_save = list()
+        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=True).all():
+            files_to_save.append(upload.indexno)
+        if len(files_to_save):
+            something_added = False
+            if user_type == 'user':
+                for uploads_indexno in files_to_save:
+                    existing_auth = UploadsUserAuth.query.filter_by(user_id=the_user_id, uploads_indexno=uploads_indexno).first()
+                    if not existing_auth:
+                        new_auth_record = UploadsUserAuth(user_id=the_user_id, uploads_indexno=uploads_indexno)
+                        db.session.add(new_auth_record)
+                        something_added = True
+            else:
+                for uploads_indexno in files_to_save:
+                    existing_auth = UploadsUserAuth.query.filter_by(temp_user_id=the_user_id, uploads_indexno=uploads_indexno).first()
+                    if not existing_auth:
+                        new_auth_record = UploadsUserAuth(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)
+                        db.session.add(new_auth_record)
+                        something_added = True
+            if something_added:
+                db.session.commit()
     if do_delete:
         UserDict.query.filter_by(key=user_code, filename=filename).delete()
         db.session.commit()
@@ -779,6 +800,8 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
             files_to_delete.append(upload.indexno)
         Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
         db.session.commit()
+        GlobalObjectStorage.query.filter(GlobalObjectStorage.key.like('da:uid:' + user_code + ':i:' + filename + ':%')).delete(synchronize_session=False)
+        db.session.commit()
         ChatLog.query.filter_by(key=user_code, filename=filename).delete()
         db.session.commit()
         for short_code_item in Shortener.query.filter_by(uid=user_code, filename=filename).all():
@@ -787,6 +810,7 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
                     files_to_delete.append(attachment.upload)
         Shortener.query.filter_by(uid=user_code, filename=filename).delete()
         db.session.commit()
+        # docassemble.base.functions.server.delete_answer_json(user_code, filename, delete_all=True)
         for file_number in files_to_delete:
             the_file = SavedFile(file_number)
             the_file.delete()

@@ -28,13 +28,14 @@
         msgNoFilesSelected: '',
         msgPaused: 'Paused',
         msgCancelled: 'ألغيت',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'معاينة تفصيلية',
         msgFileRequired: 'You must select a file to upload.',
         msgSizeTooSmall: 'File "{name}" (<b>{size} KB</b>) is too small and must be larger than <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'الملف "{name}" (<b>{size} ك.ب</b>) تعدى الحد الأقصى المسموح للرفع <b>{maxSize} ك.ب</b>.',
         msgFilesTooLess: 'يجب عليك اختيار <b>{n}</b> {files} على الأقل للرفع.',
         msgFilesTooMany: 'عدد الملفات المختارة للرفع <b>({n})</b> تعدت الحد الأقصى المسموح به لعدد <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'الملف "{name}" غير موجود!',
         msgFileSecured: 'قيود أمنية تمنع قراءة الملف "{name}".',
         msgFileNotReadable: 'الملف "{name}" غير قابل للقراءة.',
@@ -54,10 +55,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'تم إلغاء رفع الملف',
-        msgUploadThreshold: 'Processing...',
-        msgUploadBegin: 'Initializing...',
+        msgUploadThreshold: 'Processing &hellip;',
+        msgUploadBegin: 'Initializing &hellip;',
         msgUploadEnd: 'Done',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'No valid data available for upload.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -98,7 +99,7 @@
             indicatorSuccessTitle: 'تم الرفع',
             indicatorErrorTitle: 'خطأ بالرفع',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'جارٍ الرفع ...'
+            indicatorLoadingTitle:  'جارٍ الرفع &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'View previous file',

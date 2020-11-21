@@ -4,7 +4,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail as SGMail, Attachment, FileContent, FileName, FileType, Disposition, ContentId
+from sendgrid.helpers.mail import Mail as SGMail, Attachment, FileContent, FileName, FileType, Disposition, ContentId, Email, To, ReplyTo
 import sys
 import base64
 
@@ -24,12 +24,16 @@ class Connection(object):
             raise BadHeaderError
         if message.date is None:
             message.date = time.time()
+        if not message.subject:
+            message.subject = word("(no subject)")
         sgmessage = SGMail(
-            from_email=message.sender,
-            to_emails=', '.join(list(sanitize_addresses(message.recipients))),
+            from_email=Email(message.sender),
+            to_emails=[To(addressee) for addressee in sanitize_addresses(message.recipients)],
             subject=message.subject,
             plain_text_content=message.body,
             html_content=message.html)
+        if message.reply_to:
+            sgmessage.reply_to = ReplyTo(message.reply_to)
         if message.cc:
             for recipient in list(sanitize_addresses(message.cc)):
                 sgmessage.add_cc(recipient)
@@ -46,10 +50,13 @@ class Connection(object):
                 sgmessage.add_attachment(attachment)
         sg = SendGridAPIClient(self.mail.api_key)
         response = sg.send(sgmessage)
-        #sys.stderr.write("SendGrid status code: " + str(response.status_code) + "\n")
-        #sys.stderr.write(str(response.body) + "\n")
-        #sys.stderr.write("SendGrid response headers: " + str(response.headers) + "\n")
         if response.status_code >= 400:
+            sys.stderr.write("SendGrid status code: " + str(response.status_code) + "\n")
+            sys.stderr.write("SendGrid response headers: " + repr(response.headers) + "\n")
+            try:
+                sys.stderr.write(repr(response.body) + "\n")
+            except:
+                pass
             raise Exception("Failed to send e-mail message to SendGrid")
         email_dispatched.send(message, app=current_app._get_current_object())
     def send_message(self, *args, **kwargs):

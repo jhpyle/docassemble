@@ -1,0 +1,40 @@
+metadata:
+  title: Address block
+  short title: Address
+  documentation: "https://docassemble.org/docs/objects.html#Address.block"
+  example start: 1
+  example end: 3
+---
+objects:
+  address: Address
+---
+question: |
+  What is your address?
+fields:
+  - Address: address.address
+  - Unit: address.unit
+    required: False
+  - City: address.city
+  - State: address.state
+    required: False
+  - Postal Code: address.postal_code
+    required: False
+  - Country: address.country
+    code: |
+      countries_list()
+    required: False
+---
+mandatory: True
+question: Your address block
+subquestion: |
+  Default:
+
+  ${ address }
+
+  Showing the country:
+
+  ${ address.block(show_country=True) }
+
+  International:
+
+  ${ address.block(international=True) }

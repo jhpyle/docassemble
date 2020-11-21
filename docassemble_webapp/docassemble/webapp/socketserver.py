@@ -30,7 +30,7 @@ from docassemble.webapp.backend import initial_dict, nice_utc_date, nice_date_fr
 from docassemble.webapp.users.models import UserModel, ChatLog
 from docassemble.base.functions import get_default_timezone, word
 from flask import session, request, current_app
-from flask_kvsession import KVSessionExtension
+from docassemblekvsession import KVSessionExtension
 
 import docassemble.webapp.daredis
 from docassemble.webapp.daredis import redis_host, redis_port, redis_offset

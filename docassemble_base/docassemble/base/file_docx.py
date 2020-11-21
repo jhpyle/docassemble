@@ -16,6 +16,9 @@ import PyPDF2
 import codecs
 import time
 import stat
+import mimetypes
+import tempfile
+from docassemble.base.error import DAError
 
 NoneType = type(None)
 
@@ -134,6 +137,11 @@ def include_docx_template(template_file, **kwargs):
         template_path = package_template_filename(template_file, package=this_thread.current_package)
     sd = this_thread.misc['docx_template'].new_subdoc()
     sd.subdocx = Document(template_path)
+    if '_inline' in kwargs:
+        single_paragraph = True
+        del kwargs['_inline']
+    else:
+        single_paragraph = False
 
     # We need to keep a copy of the subdocs so we can fix up the master template in the end (in parse.py)
     # Given we're half way through processing the template, we can't fix the master template here
@@ -155,6 +163,8 @@ def include_docx_template(template_file, **kwargs):
     if 'docx_include_count' not in this_thread.misc:
         this_thread.misc['docx_include_count'] = 0
     this_thread.misc['docx_include_count'] += 1
+    if single_paragraph:
+        return re.sub(r'<w:p[^>]*>\s*(.*)</w:p>\s*', r'\1', str(first_paragraph._p.xml), flags=re.DOTALL)
     return sd
 
 def get_children(descendants, parsed):
@@ -204,6 +214,8 @@ class SoupParser(object):
         self.style = 'p'
         self.still_new = True
         self.size = None
+        self.charstyle = None
+        self.color = None
         self.tpl = tpl
     def new_paragraph(self):
         if self.still_new:
@@ -251,7 +263,7 @@ class SoupParser(object):
     def traverse(self, elem):
         for part in elem.contents:
             if isinstance(part, NavigableString):
-                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
                 self.still_new = False
             elif isinstance(part, Tag):
                 # logmessage("Part name is " + str(part.name))
@@ -312,12 +324,20 @@ class SoupParser(object):
                     self.size = oldsize
                 elif part.name == 'a':
                     self.start_link(part['href'])
-                    self.underline = True
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = self.tpl.da_hyperlink_style
+                    else:
+                        self.underline = True
+                        self.color = '#0000ff'
                     self.traverse(part)
-                    self.underline = False
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = None
+                    else:
+                        self.underline = False
+                        self.color = None
                     self.end_link()
                 elif part.name == 'br':
-                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
                     self.still_new = False
             else:
                 logmessage("Encountered a " + part.__class__.__name__)
@@ -333,6 +353,8 @@ class InlineSoupParser(object):
         self.style = 'p'
         self.strike = False
         self.size = None
+        self.charstyle = None
+        self.color = None
         self.tpl = tpl
         self.at_start = True
         self.list_number = 1
@@ -340,7 +362,7 @@ class InlineSoupParser(object):
         if self.at_start:
             self.at_start = False
         else:
-            self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+            self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
         if self.indentation:
             self.run.add("\t" * self.indentation)
         if self.style == 'ul':
@@ -368,7 +390,7 @@ class InlineSoupParser(object):
     def traverse(self, elem):
         for part in elem.contents:
             if isinstance(part, NavigableString):
-                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                self.run.add(str(part), italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
             elif isinstance(part, Tag):
                 if part.name in ('p', 'blockquote'):
                     self.new_paragraph()
@@ -415,12 +437,20 @@ class InlineSoupParser(object):
                     self.size = oldsize
                 elif part.name == 'a':
                     self.start_link(part['href'])
-                    self.underline = True
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = self.tpl.da_hyperlink_style
+                    else:
+                        self.underline = True
+                        self.color = '#0000ff'
                     self.traverse(part)
-                    self.underline = False
+                    if self.tpl.da_hyperlink_style:
+                        self.charstyle = None
+                    else:
+                        self.underline = False
+                        self.color = None
                     self.end_link()
                 elif part.name == 'br':
-                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size)
+                    self.run.add("\n", italic=self.italic, bold=self.bold, underline=self.underline, strike=self.strike, size=self.size, style=self.charstyle, color=self.color)
             else:
                 logmessage("Encountered a " + part.__class__.__name__)
 
@@ -486,3 +516,31 @@ def pdf_pages(file_info, width):
         output += ' '
     return(output)
 
+def concatenate_files(path_list):
+    import docassemble.base.pandoc
+    import docx
+    new_path_list = list()
+    for path in path_list:
+        mimetype, encoding = mimetypes.guess_type(path)
+        if mimetype in ('application/rtf', 'application/msword', 'application/vnd.oasis.opendocument.text'):
+            new_docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+            if mimetype == 'application/rtf':
+                ext = 'rtf'
+            elif mimetype == 'application/msword':
+                ext = 'doc'
+            elif mimetype == 'application/vnd.oasis.opendocument.text':
+                ext = 'odt'
+            docassemble.base.pandoc.convert_file(path, new_docx_file.name, ext, 'docx')
+            new_path_list.append(new_docx_file.name)
+        elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+            new_path_list.append(path)
+    if len(new_path_list) == 0:
+        raise DAError("concatenate_files: no valid files to concatenate")
+    if len(new_path_list) == 1:
+        return new_path_list[0]
+    composer = Composer(docx.Document(new_path_list[0]))
+    for indexno in range(1, len(new_path_list)):
+        composer.append(docx.Document(new_path_list[indexno]))
+    docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
+    composer.save(docx_file.name)
+    return docx_file.name

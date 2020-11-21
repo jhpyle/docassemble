@@ -14,7 +14,6 @@ import codecs
 from PIL import Image
 from docassemble.base.error import DAError
 from docassemble.base.pdfa import pdf_to_pdfa
-from subprocess import call, check_output
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import word
 from pdfminer.pdfparser import PDFParser
@@ -24,6 +23,7 @@ from pdfminer.pdfpage import PDFPage
 import logging
 logging.getLogger('pdfminer').setLevel(logging.ERROR)
 import uuid
+from docassemble.base.config import daconfig
 
 PDFTK_PATH = 'pdftk'
 QPDF_PATH = 'qpdf'
@@ -82,13 +82,26 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
                 value = bytes(str(value), encoding='utf-8')
             value = remove_nonprintable_bytes_limited(value)
         #logmessage("name is " + repr(name) + " and FT is |" + repr(str(field_type)) + "| and value is " + repr(value))
-        if page is not None:
-            pageno = id_to_page[page.objid]
+        if page is not None and hasattr(page, 'objid'):
+            try:
+                pageno = id_to_page[page.objid]
+            except:
+                pageno = 1
         else:
             pageno = 1
+        export_value = None
         if str(field_type) in ('/Btn', "/'Btn'"):
+            export_value = 'Yes'
+            try:
+                for key in list(field['AP']['N'].keys()):
+                    if key in ('Off', 'off', 'No', 'no'):
+                        continue
+                    export_value = key
+                    break
+            except:
+                pass
             if value == '/Yes':
-                default = "Yes"
+                default = export_value
             else:
                 default = "No"
         elif str(field_type) in ('/Sig', "/'Sig'"):
@@ -115,14 +128,14 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
                     recursively_add_fields(kids, id_to_page, outfields, prefix=prefix + '.' + name)
         else:
             if prefix != '' and name is not None:
-                outfields.append((prefix + '.' + name, default, pageno, rect, field_type))
+                outfields.append((prefix + '.' + name, default, pageno, rect, field_type, export_value))
             elif prefix == '':
-                outfields.append((name, default, pageno, rect, field_type))
+                outfields.append((name, default, pageno, rect, field_type, export_value))
             else:
-                outfields.append((prefix, default, pageno, rect, field_type))
+                outfields.append((prefix, default, pageno, rect, field_type, export_value))
 
 def read_fields_pdftk(pdffile):
-    output = check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode()
+    output = subprocess.check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode()
     fields = list()
     if not len(output) > 0:
         return None
@@ -189,9 +202,32 @@ def recursive_add_bookmark(reader, writer, outlines, parent=None):
                 cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ)
             #logmessage("Added bookmark " + destination.title)
 
-def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None, template_password=None):
+def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None, template_password=None, default_export_value=None):
     if pdf_url is None:
         pdf_url = ''
+    the_fields = read_fields(template)
+    export_values = dict()
+    for field, default, pageno, rect, field_type, export_value in the_fields:
+        field_type = re.sub(r'[^/A-Za-z]', '', str(field_type))
+        if field_type in ('/Btn', "/'Btn'"):
+            export_values[field] = export_value or default_export_value or 'Yes'
+    if len(export_values):
+        new_data_strings = list()
+        for key, val in data_strings:
+            if key in export_values:
+                if str(val) in ('Yes', 'yes', 'True', 'true', 'On', 'on', export_values[key]):
+                    val = export_values[key]
+                else:
+                    if export_values[key] == 'On':
+                        val = 'Off'
+                    elif export_values[key] == 'on':
+                        val = 'off'
+                    elif export_values[key] == 'yes':
+                        val = 'no'
+                    else:
+                        val = 'No'
+            new_data_strings.append((key, val))
+        data_strings = new_data_strings
     fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
     fdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".fdf", delete=False)
     fdf_file.write(fdf)
@@ -208,7 +244,11 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     if template_password is not None:
         template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
         qpdf_subprocess_arguments = [QPDF_PATH, '--decrypt', '--password=' + template_password, template, template_file.name]
-        result = call(qpdf_subprocess_arguments)
+        try:
+            result = subprocess.run(qpdf_subprocess_arguments, timeout=60).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
+            logmessage("fill_template: call to qpdf took too long")
         if result != 0:
             logmessage("Failed to decrypt PDF template " + str(template))
             raise DAError("Call to qpdf failed for template " + str(template) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
@@ -219,13 +259,17 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
         subprocess_arguments.append('need_appearances')
     else:
         subprocess_arguments.append('flatten')
-    result = call(subprocess_arguments)
+    try:
+        result = subprocess.run(subprocess_arguments, timeout=600).returncode
+    except subprocess.TimeoutExpired:
+        result = 1
+        logmessage("fill_template: call to pdftk fill_form took too long")
     if result != 0:
         logmessage("Failed to fill PDF form " + str(template))
         raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments))
     if len(images):
         fields = dict()
-        for field, default, pageno, rect, field_type in read_fields(template):
+        for field, default, pageno, rect, field_type, export_value in the_fields:
             if str(field_type) in ('/Sig', "/'Sig'"):
                 fields[field] = {'pageno': pageno, 'rect': rect}
         image_todo = list()
@@ -235,8 +279,12 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
                 continue
             #logmessage("Need to put image on page " + str(fields[field]['pageno']))
             temp_png = tempfile.NamedTemporaryFile(mode="wb", suffix=".png")
-            args = ["convert", file_info['fullpath'], "-trim", "+repage", "+profile", '*', '-density', '0', temp_png.name]
-            result = call(args)
+            args = [daconfig.get('imagemagick', 'convert'), file_info['fullpath'], "-trim", "+repage", "+profile", '*', '-density', '0', temp_png.name]
+            try:
+                result = subprocess.run(args, timeout=60).returncode
+            except subprocess.TimeoutExpired:
+                logmessage("fill_template: convert took too long")
+                result = 1
             if result == 1:
                 logmessage("failed to trim file: " + " ".join(args))
                 continue
@@ -251,8 +299,12 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
                 dpp = dppy
             extent_x, extent_y = xone*dpp+width, yone*dpp+height
             overlay_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-            args = ["convert", temp_png.name, "-background", "none", "-density", str(int(dpp*72)), "-gravity", "NorthEast", "-extent", str(int(extent_x)) + 'x' + str(int(extent_y)), overlay_pdf_file.name]
-            result = call(args)
+            args = [daconfig.get('imagemagick', 'convert'), temp_png.name, "-background", "none", "-density", str(int(dpp*72)), "-gravity", "NorthEast", "-extent", str(int(extent_x)) + 'x' + str(int(extent_y)), overlay_pdf_file.name]
+            try:
+                result = subprocess.run(args, timeout=60).returncode
+            except subprocess.TimeoutExpired:
+                result = 1
+                logmessage("fill_template: call to convert took too long")
             if result == 1:
                 logmessage("failed to make overlay: " + " ".join(args))
                 continue
@@ -561,7 +613,11 @@ def flatten_pdf(filename):
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH, filename, 'output', outfile.name, 'flatten']
     #logmessage("Arguments are " + str(subprocess_arguments))
-    result = call(subprocess_arguments)
+    try:
+        result = subprocess.run(subprocess_arguments, timeout=60).returncode
+    except subprocess.TimeoutExpired:
+        result = 1
+        logmessage("flatten_pdf: call to pdftk took too long")
     if result != 0:
         logmessage("Failed to flatten PDF form " + str(template))
         raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments))

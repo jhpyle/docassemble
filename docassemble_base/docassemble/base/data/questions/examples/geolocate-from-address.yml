@@ -21,6 +21,7 @@ mandatory: True
 question: |
   Information about your address
 subquestion: |
+  % if the_address.geolocate_success:
   The address you provided is:
     
   ${ the_address }
@@ -32,3 +33,6 @@ subquestion: |
   ${ the_address.location.latitude }
   and
   ${ the_address.location.longitude }.
+  % else:
+  That address could not be geolocated.
+  % endif

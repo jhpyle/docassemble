@@ -1,5 +1,4 @@
 import types
-from six import string_types, text_type, PY2
 import markdown
 from mdx_smartypants import SmartypantsExt
 import pattern.en
@@ -18,20 +17,15 @@ import mimetypes
 import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
-from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun
+from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun, DAError
 from docassemble.base.generate_key import random_string
 import locale
 import decimal
 import docassemble.base.astparser
-if PY2:
-    from urllib import quote as urllibquote
-    FileType = file
-    equals_byte = '='
-else:
-    from urllib.parse import quote as urllibquote
-    from io import IOBase
-    FileType = IOBase
-    equals_byte = bytes('=', 'utf-8')
+from urllib.parse import quote as urllibquote
+from io import IOBase
+FileType = IOBase
+equals_byte = bytes('=', 'utf-8')
 import codecs
 import copy
 import base64
@@ -47,13 +41,16 @@ import pycountry
 import random
 from user_agents import parse as ua_parse
 import phonenumbers
-import werkzeug
+import werkzeug.utils
+import num2words
+from unicodedata import normalize
+from collections.abc import Iterable
 from jinja2.runtime import Undefined
 TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'text_type', 'string_types', 'PY2', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'create_session', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot', 'update_terms']
 
 # debug = False
 # default_dialect = 'us'
@@ -240,6 +237,34 @@ def device(ip=False):
         response = None
     return response
 
+def parse_accept_language(language_header, restrict=True):
+    ok_languages = set()
+    for lang in word_collection.keys():
+        ok_languages.add(lang)
+    languages = list()
+    for item in language_header.split(','):
+        q = 1.0
+        lang = item.strip()
+        if ';' in lang:
+            parts = item.split(';')
+            lang = parts[0]
+            q = parts[1]
+            try:
+                q = float(re.sub(r'^q=', '', q, flags=re.IGNORECASE))
+            except:
+                q = 1.0
+
+        parts = re.split('-|_', lang)
+
+        languages.append([parts[0].strip().lower(), q])
+    output = list()
+    for item in sorted(languages, key=lambda y: y[1], reverse=True):
+        if restrict and item[0] not in ok_languages:
+            continue
+        if item[0] not in output:
+            output.append(item[0])
+    return output
+
 def language_from_browser(*pargs):
     """Attempts to determine the user's language based on information supplied by the user's web browser."""
     if len(pargs) > 0:
@@ -248,7 +273,11 @@ def language_from_browser(*pargs):
     else:
         restrict = False
     if 'headers' in this_thread.current_info:
-        langs = [entry.split(";")[0].strip() for entry in this_thread.current_info['headers'].get('Accept-Language', '').lower().split(",")]
+        language_header = this_thread.current_info['headers'].get('Accept-Language', None)
+        if language_header is not None:
+            langs = parse_accept_language(language_header, restrict=False)
+        else:
+            return None
     else:
         return None
     for lang in langs:
@@ -295,7 +324,7 @@ def language_from_browser(*pargs):
 def country_name(country_code):
     """Given a two-digit country code, returns the country name."""
     ensure_definition(country_code)
-    return pycountry.countries.get(alpha_2=country_code).name
+    return word(pycountry.countries.get(alpha_2=country_code).name)
 
 def state_name(state_code, country_code=None):
     """Given a two-digit U.S. state abbreviation or the abbreviation of a
@@ -307,7 +336,7 @@ def state_name(state_code, country_code=None):
     for subdivision in pycountry.subdivisions.get(country_code=country_code):
         m = re.search(r'-([A-Z]+)$', subdivision.code)
         if m and m.group(1) == state_code:
-            return subdivision.name
+            return word(subdivision.name)
     return state_code
     #return us.states.lookup(state_code).name
 
@@ -325,15 +354,265 @@ def subdivision_type(country_code):
             counts[subdivision.type] += 1
     counts_ordered = sorted(counts.keys(), key=lambda x: counts[x], reverse=True)
     if len(counts_ordered) > 1 and counts[counts_ordered[1]] > 0.5*counts[counts_ordered[0]]:
-        return counts_ordered[0] + '/' + counts_ordered[1]
+        return word(counts_ordered[0] + '/' + counts_ordered[1])
     elif len(counts_ordered) > 0:
-        return counts_ordered[0]
+        return word(counts_ordered[0])
     else:
         return None
 
+# word('Aruba')
+# word('Afghanistan')
+# word('Angola')
+# word('Anguilla')
+# word('Åland Islands')
+# word('Albania')
+# word('Andorra')
+# word('United Arab Emirates')
+# word('Argentina')
+# word('Armenia')
+# word('American Samoa')
+# word('Antarctica')
+# word('French Southern Territories')
+# word('Antigua and Barbuda')
+# word('Australia')
+# word('Austria')
+# word('Azerbaijan')
+# word('Burundi')
+# word('Belgium')
+# word('Benin')
+# word('Bonaire, Sint Eustatius and Saba')
+# word('Burkina Faso')
+# word('Bangladesh')
+# word('Bulgaria')
+# word('Bahrain')
+# word('Bahamas')
+# word('Bosnia and Herzegovina')
+# word('Saint Barthélemy')
+# word('Belarus')
+# word('Belize')
+# word('Bermuda')
+# word('Bolivia, Plurinational State of')
+# word('Brazil')
+# word('Barbados')
+# word('Brunei Darussalam')
+# word('Bhutan')
+# word('Bouvet Island')
+# word('Botswana')
+# word('Central African Republic')
+# word('Canada')
+# word('Cocos (Keeling) Islands')
+# word('Switzerland')
+# word('Chile')
+# word('China')
+# word('Côte d'Ivoire')
+# word('Cameroon')
+# word('Congo, The Democratic Republic of the')
+# word('Congo')
+# word('Cook Islands')
+# word('Colombia')
+# word('Comoros')
+# word('Cabo Verde')
+# word('Costa Rica')
+# word('Cuba')
+# word('Curaçao')
+# word('Christmas Island')
+# word('Cayman Islands')
+# word('Cyprus')
+# word('Czechia')
+# word('Germany')
+# word('Djibouti')
+# word('Dominica')
+# word('Denmark')
+# word('Dominican Republic')
+# word('Algeria')
+# word('Ecuador')
+# word('Egypt')
+# word('Eritrea')
+# word('Western Sahara')
+# word('Spain')
+# word('Estonia')
+# word('Ethiopia')
+# word('Finland')
+# word('Fiji')
+# word('Falkland Islands (Malvinas)')
+# word('France')
+# word('Faroe Islands')
+# word('Micronesia, Federated States of')
+# word('Gabon')
+# word('United Kingdom')
+# word('Georgia')
+# word('Guernsey')
+# word('Ghana')
+# word('Gibraltar')
+# word('Guinea')
+# word('Guadeloupe')
+# word('Gambia')
+# word('Guinea-Bissau')
+# word('Equatorial Guinea')
+# word('Greece')
+# word('Grenada')
+# word('Greenland')
+# word('Guatemala')
+# word('French Guiana')
+# word('Guam')
+# word('Guyana')
+# word('Hong Kong')
+# word('Heard Island and McDonald Islands')
+# word('Honduras')
+# word('Croatia')
+# word('Haiti')
+# word('Hungary')
+# word('Indonesia')
+# word('Isle of Man')
+# word('India')
+# word('British Indian Ocean Territory')
+# word('Ireland')
+# word('Iran, Islamic Republic of')
+# word('Iraq')
+# word('Iceland')
+# word('Israel')
+# word('Italy')
+# word('Jamaica')
+# word('Jersey')
+# word('Jordan')
+# word('Japan')
+# word('Kazakhstan')
+# word('Kenya')
+# word('Kyrgyzstan')
+# word('Cambodia')
+# word('Kiribati')
+# word('Saint Kitts and Nevis')
+# word('Korea, Republic of')
+# word('Kuwait')
+# word('Lao People's Democratic Republic')
+# word('Lebanon')
+# word('Liberia')
+# word('Libya')
+# word('Saint Lucia')
+# word('Liechtenstein')
+# word('Sri Lanka')
+# word('Lesotho')
+# word('Lithuania')
+# word('Luxembourg')
+# word('Latvia')
+# word('Macao')
+# word('Saint Martin (French part)')
+# word('Morocco')
+# word('Monaco')
+# word('Moldova, Republic of')
+# word('Madagascar')
+# word('Maldives')
+# word('Mexico')
+# word('Marshall Islands')
+# word('North Macedonia')
+# word('Mali')
+# word('Malta')
+# word('Myanmar')
+# word('Montenegro')
+# word('Mongolia')
+# word('Northern Mariana Islands')
+# word('Mozambique')
+# word('Mauritania')
+# word('Montserrat')
+# word('Martinique')
+# word('Mauritius')
+# word('Malawi')
+# word('Malaysia')
+# word('Mayotte')
+# word('Namibia')
+# word('New Caledonia')
+# word('Niger')
+# word('Norfolk Island')
+# word('Nigeria')
+# word('Nicaragua')
+# word('Niue')
+# word('Netherlands')
+# word('Norway')
+# word('Nepal')
+# word('Nauru')
+# word('New Zealand')
+# word('Oman')
+# word('Pakistan')
+# word('Panama')
+# word('Pitcairn')
+# word('Peru')
+# word('Philippines')
+# word('Palau')
+# word('Papua New Guinea')
+# word('Poland')
+# word('Puerto Rico')
+# word('Korea, Democratic People's Republic of')
+# word('Portugal')
+# word('Paraguay')
+# word('Palestine, State of')
+# word('French Polynesia')
+# word('Qatar')
+# word('Réunion')
+# word('Romania')
+# word('Russian Federation')
+# word('Rwanda')
+# word('Saudi Arabia')
+# word('Sudan')
+# word('Senegal')
+# word('Singapore')
+# word('South Georgia and the South Sandwich Islands')
+# word('Saint Helena, Ascension and Tristan da Cunha')
+# word('Svalbard and Jan Mayen')
+# word('Solomon Islands')
+# word('Sierra Leone')
+# word('El Salvador')
+# word('San Marino')
+# word('Somalia')
+# word('Saint Pierre and Miquelon')
+# word('Serbia')
+# word('South Sudan')
+# word('Sao Tome and Principe')
+# word('Suriname')
+# word('Slovakia')
+# word('Slovenia')
+# word('Sweden')
+# word('Eswatini')
+# word('Sint Maarten (Dutch part)')
+# word('Seychelles')
+# word('Syrian Arab Republic')
+# word('Turks and Caicos Islands')
+# word('Chad')
+# word('Togo')
+# word('Thailand')
+# word('Tajikistan')
+# word('Tokelau')
+# word('Turkmenistan')
+# word('Timor-Leste')
+# word('Tonga')
+# word('Trinidad and Tobago')
+# word('Tunisia')
+# word('Turkey')
+# word('Tuvalu')
+# word('Taiwan, Province of China')
+# word('Tanzania, United Republic of')
+# word('Uganda')
+# word('Ukraine')
+# word('United States Minor Outlying Islands')
+# word('Uruguay')
+# word('United States')
+# word('Uzbekistan')
+# word('Holy See (Vatican City State)')
+# word('Saint Vincent and the Grenadines')
+# word('Venezuela, Bolivarian Republic of')
+# word('Virgin Islands, British')
+# word('Virgin Islands, U.S.')
+# word('Viet Nam')
+# word('Vanuatu')
+# word('Wallis and Futuna')
+# word('Samoa')
+# word('Yemen')
+# word('South Africa')
+# word('Zambia')
+# word('Zimbabwe')
+
 def countries_list():
     """Returns a list of countries, suitable for use in a multiple choice field."""
-    return [{country.alpha_2: country.name} for country in sorted(pycountry.countries, key=lambda x: x.name)]
+    return [{country.alpha_2: word(country.name)} for country in sorted(pycountry.countries, key=lambda x: x.name)]
 
 def states_list(country_code=None):
     """Returns a list of U.S. states or subdivisions of another country,
@@ -347,11 +626,11 @@ def states_list(country_code=None):
             continue
         m = re.search(r'-([A-Z0-9]+)$', subdivision.code)
         if m:
-            mapping[m.group(1)] = subdivision.name
+            mapping[m.group(1)] = word(subdivision.name)
     return mapping
 
 def interface():
-    """Returns web, json, sms, cron, or worker, depending on how the interview is being accessed."""
+    """Returns web, json, api, sms, cron, or worker, depending on how the interview is being accessed."""
     return this_thread.current_info.get('interface', None)
 
 def user_privileges():
@@ -414,6 +693,18 @@ def user_info():
         user.last_name = word("User")
     user.session = get_uid()
     user.filename = this_thread.current_info.get('yaml_filename', None)
+    if user.filename:
+        user.package = re.sub(r':.*', '', user.filename)
+    else:
+        user.package = None
+    try:
+        user.question_id = this_thread.current_question.id
+    except:
+        user.question_id = None
+    try:
+        user.variable = this_thread.current_variable[-1]
+    except:
+        user.variable = None
     return user
 
 def action_arguments():
@@ -526,7 +817,46 @@ def interview_url(**kwargs):
         args['session'] = this_thread.current_info['session']
     if not do_local:
         args['_external'] = True
-    url = url_of('interview', **args)
+    try:
+        if int(args['new_session']):
+            del args['session']
+    except:
+        pass
+    if 'style' in args and args['style'] in ('short', 'short_package'):
+        the_style = args['style']
+        del args['style']
+        url = None
+        try:
+            if int(args['new_session']):
+                is_new = True
+                del args['new_session']
+        except:
+            is_new = False
+        if the_style == 'short':
+            for k, v in server.daconfig.get('dispatch').items():
+                if v == args['i']:
+                    args['dispatch'] = k
+                    del args['i']
+                    if is_new:
+                        url = url_of('run_new_dispatch', **args)
+                    else:
+                        url = url_of('run_dispatch', **args)
+        if url is None:
+            package, filename = re.split(r':', args['i'])
+            package = re.sub(r'^docassemble\.', '', package)
+            filename = re.sub(r'^data/questions/', '', filename)
+            filename = re.sub(r'.yml$', '', filename)
+            args['package'] = package
+            args['filename'] = filename
+            del args['i']
+            if is_new:
+                url = url_of('run_new', **args)
+            else:
+                url = url_of('run', **args)
+    elif 'style' not in args and args['i'] == this_thread.current_info['yaml_filename']:
+        url = url_of('flex_interview', **args)
+    else:
+        url = url_of('interview', **args)
     if 'temporary' in args:
         if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
             expire_seconds = int(args['temporary'] * 60 * 60)
@@ -716,10 +1046,56 @@ def interview_url_action(action, **kwargs):
         args['session'] = this_thread.current_info['session']
     if contains_volatile.search(action):
         raise DAError("interview_url_action cannot be used with a generic object or a variable iterator")
+    if 'style' in kwargs and kwargs['style'] in ('short', 'short_package'):
+        args['style'] = kwargs['style']
+        del kwargs['style']
     args['action'] = myb64quote(json.dumps({'action': action, 'arguments': kwargs}))
     if not do_local:
         args['_external'] = True
-    url = url_of('interview', **args)
+    try:
+        if int(args['new_session']):
+            del args['session']
+    except:
+        pass
+    if 'style' in args and args['style'] in ('short', 'short_package'):
+        the_style = args['style']
+        del args['style']
+        try:
+            if int(args['new_session']):
+                is_new = True
+                del args['new_session']
+        except:
+            is_new = False
+        url = None
+        if the_style == 'short':
+            for k, v in server.daconfig.get('dispatch').items():
+                if v == args['i']:
+                    args['dispatch'] = k
+                    del args['i']
+                    if is_new:
+                        url = url_of('run_new_dispatch', **args)
+                    else:
+                        url = url_of('run_dispatch', **args)
+        if url is None:
+            package, filename = re.split(r':', args['i'])
+            package = re.sub(r'^docassemble\.', '', package)
+            filename = re.sub(r'^data/questions/', '', filename)
+            filename = re.sub(r'.yml$', '', filename)
+            args['package'] = package
+            args['filename'] = filename
+            del args['i']
+            if is_new:
+                url = url_of('run_new', **args)
+            else:
+                url = url_of('run', **args)
+    elif 'style' not in args and args['i'] == this_thread.current_info['yaml_filename']:
+        url = url_of('flex_interview', **args)
+    else:
+        url = url_of('interview', **args)
+    if 'temporary' in kwargs:
+        args['temporary'] = kwargs['temporary']
+    if 'once_temporary' in kwargs:
+        args['once_temporary'] = kwargs['once_temporary']
     if 'temporary' in args:
         if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
             expire_seconds = int(args['temporary'] * 60 * 60)
@@ -767,7 +1143,7 @@ def interview_url_action_as_qr(action, **kwargs):
 
 def get_info(att):
     """Used to retrieve the values of global variables set through set_info()."""
-    if hasattr(this_thread, att):
+    if hasattr(this_thread.global_vars, att):
         return getattr(this_thread.global_vars, att)
     return None
 
@@ -786,6 +1162,42 @@ def set_progress(number):
 def get_progress():
     """Returns the position of the progress meter."""
     return this_thread.internal['progress']
+
+def update_terms(dictionary, auto=False, language='*'):
+    """Defines terms and auto terms"""
+    if auto:
+        type_of_term = 'autoterms'
+    else:
+        type_of_term = 'terms'
+    if type_of_term not in this_thread.internal:
+        this_thread.internal[type_of_term] = dict()
+    if language not in this_thread.internal[type_of_term]:
+        this_thread.internal[type_of_term][language] = dict()
+    terms = this_thread.internal[type_of_term][language]
+    if isinstance(dictionary, list):
+        for termitem in dictionary:
+            if isinstance(termitem, dict):
+                if len(termitem) == 2 and 'phrases' in termitem and isinstance(termitem['phrases'], list) and 'definition' in termitem:
+                    termitems = [(phrase, termitem['definition']) for phrase in termitem['phrases']]
+                else:
+                    termitems = termitem.items()
+                for term, definition in termitems:
+                    lower_term = re.sub(r'\s+', ' ', term.lower())
+                    if auto:
+                        terms[lower_term] = {'definition': str(definition), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                    else:
+                        terms[lower_term] = {'definition': str(definition), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+            else:
+                raise DAError("update_terms: terms organized as a list must be a list of dictionary items.")
+    elif isinstance(dictionary, dict):
+        for term in dictionary:
+            lower_term = re.sub(r'\s+', ' ', term.lower())
+            if auto:
+                terms[lower_term] = {'definition': str(dictionary[term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+            else:
+                terms[lower_term] = {'definition': str(dictionary[term]), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+    else:
+        raise DAError("update_terms: terms must be organized as a dictionary or a list.")
 
 def set_save_status(status):
     """Indicates whether the current processing of the interview logic should result in a new step in the interview."""
@@ -962,75 +1374,10 @@ word_collection = {
 }
 
 ordinal_numbers = {
-    'en': {
-        '0': 'zeroth',
-        '1': 'first',
-        '2': 'second',
-        '3': 'third',
-        '4': 'fourth',
-        '5': 'fifth',
-        '6': 'sixth',
-        '7': 'seventh',
-        '8': 'eighth',
-        '9': 'ninth',
-        '10': 'tenth'
-    },
-    'es': {
-        '0': 'zeroth',
-        '1': 'primero',
-        '2': 'segundo',
-        '3': 'tercero',
-        '4': 'cuarto',
-        '5': 'quinto',
-        '6': 'sexto',
-        '7': 'séptimo',
-        '8': 'octavo',
-        '9': 'noveno',
-        '10': 'décimo'
-    }
 }
 
 nice_numbers = {
-    'en': {
-        '0': 'zero',
-        '1': 'one',
-        '2': 'two',
-        '3': 'three',
-        '4': 'four',
-        '5': 'five',
-        '6': 'six',
-        '7': 'seven',
-        '8': 'eight',
-        '9': 'nine',
-        '10': 'ten'
-    },
-    'es': {
-        '0': 'cero',
-        '1': 'uno',
-        '2': 'dos',
-        '3': 'tres',
-        '4': 'cuatro',
-        '5': 'cinco',
-        '6': 'seis',
-        '7': 'siete',
-        '8': 'ocho',
-        '9': 'nueve',
-        '10': 'diez'
-    }
 }
-
-# def basic_url_of(*pargs, **kwargs):
-#     """Returns a URL to a file within a docassemble package."""
-#     return pargs[0]
-
-# the_url_func = basic_url_of
-
-# def url_of(*pargs, **kwargs):
-#     """Returns a URL to a file within a docassemble package."""
-#     return the_url_func(*pargs, **kwargs)
-
-# def basic_write_record(key, data):
-#     return None
 
 class WebFunc:
     pass
@@ -1039,92 +1386,94 @@ server = WebFunc()
 def null_func(*pargs, **kwargs):
     return None
 
-server.write_record = null_func
-server.read_records = null_func
-server.delete_record = null_func
-server.url_for = null_func
-server.generate_csrf = null_func
-server.bg_action = null_func
-server.worker_convert = null_func
-server.chat_partners_available = null_func
+server.SavedFile = null_func
 server.absolute_filename = null_func
-server.save_numbered_file = null_func
-server.send_mail = null_func
-server.file_finder = null_func
-server.url_finder = null_func
-server.user_id_dict = null_func
-server.get_user_object = null_func
-server.sms_body = null_func
-server.get_sms_session = null_func
-server.initiate_sms_session = null_func
-server.terminate_sms_session = null_func
+server.add_privilege = null_func
+server.add_user_privilege = null_func
+server.alchemy_url = null_func
 server.applock = null_func
+server.bg_action = null_func
+server.button_class_prefix = 'btn-'
+server.chat_partners_available = null_func
+server.chord = null_func
+server.create_user = null_func
+server.daconfig = dict()
 server.debug = False
+server.debug_status = False
+server.default_country = 'US'
 server.default_dialect = 'us'
 server.default_language = 'en'
 server.default_locale = 'US.utf8'
-server.default_country = 'US'
-server.server_redis = None
-server.server_redis_user = None
-server.twilio_config = dict()
-server.daconfig = dict()
 try:
     server.default_timezone = tzlocal.get_localzone().zone
 except:
     server.default_timezone = 'America/New_York'
-
-# class NullWebFunc:
-#     def write_record(*pargs, **kwargs):
-#         return None
-#     def read_records(*pargs, **kwargs):
-#         return None
-#     def delete_record(*pargs, **kwargs):
-#         return None
-#     def url_for(*pargs, **kwargs):
-#         return None
-#     def generate_csrf(*pargs, **kwargs):
-#         sys.stderr.write("Generating csrf\n")
-#         return None
-#     def bg_action(*pargs, **kwargs):
-#         return None
-#     def worker_convert(*pargs, **kwargs):
-#         return None
-#     def chat_partners(*pargs, **kwargs):
-#         return dict(peer=0, help=0)
-#     def absolute_filename(*pargs, **kwargs):
-#         return None
-#     def save_numbered_file(*pargs, **kwargs):
-#         return None
-#     def send_mail(*pargs, **kwargs):
-#         return None
-#     def absolute_filename(*pargs, **kwargs):
-#         return None
-#     def file_finder(*pargs, **kwargs):
-#         return None
-#     def url_finder(*pargs, **kwargs):
-#         return None
-#     def user_id_dict(*pargs, **kwargs):
-#         return None
-#     def __init__(self):
-#         self.debug = False
-#         self.default_dialect = 'us'
-#         self.default_language = 'en'
-#         self.default_locale = 'US.utf8'
-#         self.default_country = 'US'
-#         self.server_redis = None
-#         try:
-#             self.default_timezone = tzlocal.get_localzone().zone
-#         except:
-#             self.default_timezone = 'America/New_York'
-#         self.daconfig = dict()
-
-# write_record = server.write_record
-# read_records = server.read_records
-# delete_record = server.delete_record
-# url_of = server.url_finder
-# get_sms_session = server.get_sms_session
-# initiate_sms_session = server.initiate_sms_session
-# terminate_sms_session = server.terminate_sms_session
+server.delete_answer_json = null_func
+server.delete_record = null_func
+server.fg_make_pdf_for_word_path = null_func
+server.fg_make_png_for_pdf = null_func
+server.fg_make_png_for_pdf_path = null_func
+server.file_finder = null_func
+server.file_number_finder = null_func
+server.file_privilege_access = null_func
+server.file_set_attributes = null_func
+server.file_user_access = null_func
+server.fix_pickle_obj = null_func
+server.generate_csrf = null_func
+server.get_chat_log = null_func
+server.get_ext_and_mimetype = null_func
+server.get_new_file_number = null_func
+server.get_privileges_list = null_func
+server.get_question_data = null_func
+server.get_secret = null_func
+server.get_session_variables = null_func
+server.get_short_code = null_func
+server.get_sms_session = null_func
+server.get_user_info = null_func
+server.get_user_list = null_func
+server.get_user_object = null_func
+server.go_back_in_session = null_func
+server.hostname = 'localhost'
+server.initiate_sms_session = null_func
+server.interview_menu = null_func
+server.main_page_parts = dict()
+server.make_png_for_pdf = null_func
+server.make_user_inactive = null_func
+server.navigation_bar = null_func
+server.ocr_finalize = null_func
+server.ocr_page = null_func
+server.path_from_reference = null_func
+server.read_answer_json = null_func
+server.read_records = null_func
+server.remove_privilege = null_func
+server.remove_user_privilege = null_func
+server.retrieve_emails = null_func
+server.save_numbered_file = null_func
+server.send_fax = null_func
+server.send_mail = null_func
+server.server_redis = None
+server.server_redis_user = None
+server.server_sql_defined = null_func
+server.server_sql_delete = null_func
+server.server_sql_get = null_func
+server.server_sql_keys = null_func
+server.server_sql_set = null_func
+server.create_session = null_func
+server.set_session_variables = null_func
+server.set_user_info = null_func
+server.sms_body = null_func
+server.task_ready = null_func
+server.terminate_sms_session = null_func
+server.twilio_config = dict()
+server.url_finder = null_func
+server.url_for = null_func
+server.user_id_dict = null_func
+server.user_interviews = null_func
+server.variables_snapshot_connection = null_func
+server.wait_for_task = null_func
+server.worker_convert = null_func
+server.write_answer_json = null_func
+server.write_record = null_func
 
 def write_record(key, data):
     """Stores the data in a SQL database for later retrieval with the
@@ -1147,6 +1496,8 @@ def url_of(file_reference, **kwargs):
         kwargs['_package'] = get_current_package()
     if 'question' not in kwargs:
         kwargs['_question'] = get_current_question()
+    if kwargs.get('attachment', False):
+        kwargs['_attachment'] = True
     return server.url_finder(file_reference, **kwargs)
 
 def server_capabilities():
@@ -1449,17 +1800,17 @@ def worker_caller(func, ui_notification, action):
 #     server_redis = target
 
 def ordinal_function_en(i, **kwargs):
-    num = str(i)
-    if 10 <= i % 100 <= 20:
-        return num + 'th'
-    elif i % 10 == 3:
-        return num + 'rd'
-    elif i % 10 == 1:
-        return num + 'st'
-    elif i % 10 == 2:
-        return num + 'nd'
+    use_word = kwargs.get('use_word', None)
+    if use_word is True:
+        kwargs['function'] = 'ordinal'
+    elif use_word is False:
+        kwargs['function'] = 'ordinal_num'
     else:
-        return num + 'th'
+        if i < 11:
+            kwargs['function'] = 'ordinal'
+        else:
+            kwargs['function'] = 'ordinal_num'
+    return number_to_word(i, **kwargs)
 
 ordinal_functions = {
     'en': ordinal_function_en,
@@ -1551,6 +1902,59 @@ def roman(num, case=None):
 def words():
     return word_collection[this_thread.language]
 
+class LazyWord:
+    def __init__(self, *args, **kwargs):
+        if len(kwargs):
+            self.original = args[0] % kwargs
+        else:
+            self.original = args[0]
+    def __mod__(self, other):
+        return word(self.original) % other
+    def __str__(self):
+        return word(self.original)
+
+class LazyArray:
+    def __init__(self, array):
+        self.original = array
+    def compute(self):
+        return [word(item) for item in self.original]
+    def copy(self):
+        return self.compute().copy()
+    def pop(self, *pargs):
+        return str(self.original.pop(*pargs))
+    def __add__(self, other):
+        return self.compute() + other
+    def index(self, *pargs, **kwargs):
+        return self.compute().index(*pargs, **kwargs)
+    def clear(self):
+        self.original = list()
+    def append(self, other):
+        self.original.append(other)
+    def remove(self, other):
+        self.original.remove(other)
+    def extend(self, other):
+        self.original.extend(other)
+    def __contains__(self, item):
+        return self.compute().__contains__(item)
+    def __iter__(self):
+        return self.compute().__iter__()
+    def __len__(self):
+        return self.compute().__len__()
+    def __delitem__(self, index):
+        self.original.__delitem__(index)
+    def __reversed__(self):
+        return self.compute().__reversed__()
+    def __setitem__(self, index, value):
+        return self.original.__setitem__(index, value)
+    def __getitem__(self, index):
+        return self.compute()[index]
+    def __str__(self):
+        return str(self.compute())
+    def __repr__(self):
+        return repr(self.compute())
+    def __eq__(self, other):
+        return self.original == other
+
 def word(the_word, **kwargs):
     """Returns the word translated into the current language.  If a translation
     is not known, the input is returned."""
@@ -1563,6 +1967,8 @@ def word(the_word, **kwargs):
         the_word = 'no'
     elif the_word is None:
         the_word = "I don't know"
+    if isinstance(the_word, LazyWord):
+        the_word = the_word.original
     try:
         the_word = word_collection[kwargs.get('language', this_thread.language)][the_word]
     except:
@@ -1686,10 +2092,13 @@ def set_language(lang, dialect=None):
     """Sets the language to use for linguistic functions.
     E.g., set_language('es') to set the language to Spanish.
     Use the keyword argument "dialect" to set a dialect."""
-    if dialect:
-        this_thread.dialect = dialect
-    elif lang != this_thread.language:
-        this_thread.dialect = None
+    try:
+        if dialect:
+            this_thread.dialect = dialect
+        elif lang != this_thread.language:
+            this_thread.dialect = None
+    except:
+        pass
     this_thread.language = lang
     return
 
@@ -1762,7 +2171,7 @@ def comma_list_en(*pargs, **kwargs):
     for parg in pargs:
         if isinstance(parg, str):
             the_list.append(parg)
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, (list, dict, set, tuple)):
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, Iterable):
             for sub_parg in parg:
                 the_list.append(str(sub_parg))
         else:
@@ -1804,7 +2213,7 @@ def comma_and_list_en(*pargs, **kwargs):
     for parg in pargs:
         if isinstance(parg, str):
             the_list.append(parg)
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, (list, dict, set, tuple)):
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, Iterable):
             for sub_parg in parg:
                 the_list.append(str(sub_parg))
         else:
@@ -1817,6 +2226,13 @@ def comma_and_list_en(*pargs, **kwargs):
         return the_list[0] + before_and + and_string + after_and + the_list[1]
     else:
         return comma_string.join(the_list[:-1]) + extracomma + before_and + and_string + after_and + the_list[-1]
+
+def manual_line_breaks(text):
+    """Replaces newlines with manual line breaks."""
+    if this_thread.evaluation_context == 'docx':
+        return re.sub(r' *\r?\n *', '</w:t><w:br/><w:t xml:space="preserve">', str(text))
+    else:
+        return re.sub(r' *\r?\n *', ' [BR] ', str(text))
 
 def add_separators_en(*pargs, **kwargs):
     """Accepts a list and returns a list, with semicolons after each item,
@@ -1832,7 +2248,7 @@ def add_separators_en(*pargs, **kwargs):
     for parg in pargs:
         if isinstance(parg, str):
             the_list.append(parg.rstrip())
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, (list, dict, set, tuple)):
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, Iterable):
             for sub_parg in parg:
                 the_list.append(str(sub_parg).rstrip())
         else:
@@ -1873,14 +2289,11 @@ def ordinal_number_default(the_number, **kwargs):
     ordinal_number(1) returns "first."  For a function that can be used
     on index numbers that start with zero, see ordinal()."""
     num = str(the_number)
-    if this_thread.language in ordinal_numbers:
-        language_to_use = this_thread.language
-    elif '*' in ordinal_numbers:
-        language_to_use = '*'
-    else:
-        language_to_use = 'en'
-    if num in ordinal_numbers[language_to_use]:
-        return ordinal_numbers[language_to_use][num]
+    if kwargs.get('use_word', True):
+        if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_language]:
+            return ordinal_numbers[language_to_use][num]
+        if '*' in ordinal_numbers and num in ordinal_numbers['*']:
+            return ordinal_numbers['*'][num]
     if this_thread.language in ordinal_functions:
         language_to_use = this_thread.language
     elif '*' in ordinal_functions:
@@ -1926,11 +2339,35 @@ def salutation_default(indiv, **kwargs):
             return salut_and_name
     return salut
 
+def number_to_word(number, **kwargs):
+    language = kwargs.get('language', None)
+    capitalize = kwargs.get('capitalize', False)
+    function = kwargs.get('function', None)
+    raise_on_error = kwargs.get('raise_on_error', False)
+    if function not in ('ordinal', 'ordinal_num'):
+        function = 'cardinal'
+    if language is None:
+        language = get_language()
+    for lang, loc in (('en', 'en_GB'), ('en', 'en_IN'), ('es', 'es_CO'), ('es', 'es_VE'), ('fr', 'fr_CH'), ('fr', 'fr_BE'), ('fr', 'fr_DZ'), ('pt', 'pt_BR')):
+        if language == lang and this_thread.locale.startswith(loc):
+            language = loc
+            break
+    if raise_on_error:
+        the_word = num2words.num2words(number, lang=language, to=function)
+    else:
+        try:
+            the_word = num2words.num2words(number, lang=language, to=function)
+        except NotImplementedError:
+            the_word = str(number)
+    if capitalize:
+        return capitalize_function(the_word)
+    return the_word
+
 def ordinal_default(the_number, **kwargs):
     """Returns the "first," "second," "third," etc. for a given number, which is expected to
     be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal
     number function, see ordinal_number()."""
-    result = ordinal_number(int(float(the_number)) + 1)
+    result = ordinal_number(int(float(the_number)) + 1, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return capitalize(result)
     return result
@@ -1939,6 +2376,7 @@ def nice_number_default(the_number, **kwargs):
     """Returns the number as a word in the current language."""
     capitalize = kwargs.get('capitalize', False)
     language = kwargs.get('language', None)
+    use_word = kwargs.get('use_word', None)
     ensure_definition(the_number, capitalize, language)
     if language is None:
         language = this_thread.language
@@ -1950,13 +2388,21 @@ def nice_number_default(the_number, **kwargs):
         language_to_use = 'en'
     if int(float(the_number)) == float(the_number):
         the_number = int(float(the_number))
-    if str(the_number) in nice_numbers[language_to_use]:
+        is_integer = True
+    else:
+        is_integer = False
+    if language_to_use in nice_numbers and str(the_number) in nice_numbers[language_to_use]:
         the_word = nice_numbers[language_to_use][str(the_number)]
         if capitalize:
             return capitalize_function(the_word)
         else:
             return the_word
-    elif type(the_number) is int:
+    if use_word or (is_integer and the_number >= 0 and the_number < 11 and use_word is not False):
+        try:
+            return number_to_word(the_number, **kwargs)
+        except:
+            pass
+    if type(the_number) is int:
         return str(locale.format_string("%d", the_number, grouping=True))
     else:
         return str(locale.format_string("%.2f", float(the_number), grouping=True)).rstrip('0')
@@ -2006,6 +2452,8 @@ def currency_default(value, **kwargs):
             value = value.amount()
         else:
             value = 0
+    elif obj_type == 'DACatchAll':
+        value = float(value)
     try:
         float(value)
     except:
@@ -2147,6 +2595,8 @@ def verb_present_es(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
+    if new_args[1] == 'pl':
+        new_args[1] = '3pl'
     output = pattern.es.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2160,6 +2610,8 @@ def verb_past_es(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
+    if new_args[1] == 'ppl':
+        new_args[1] = '3ppl'
     output = pattern.es.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2202,6 +2654,8 @@ def verb_present_de(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
+    if new_args[1] == 'pl':
+        new_args[1] = '3pl'
     output = pattern.de.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2215,6 +2669,8 @@ def verb_past_de(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
+    if new_args[1] == 'ppl':
+        new_args[1] = '3ppl'
     output = pattern.de.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2257,6 +2713,8 @@ def verb_present_fr(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
+    if new_args[1] == 'pl':
+        new_args[1] = '3pl'
     output = pattern.fr.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2270,6 +2728,8 @@ def verb_past_fr(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
+    if new_args[1] == 'ppl':
+        new_args[1] = '3ppl'
     output = pattern.fr.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2312,6 +2772,8 @@ def verb_present_it(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
+    if new_args[1] == 'pl':
+        new_args[1] = '3pl'
     output = pattern.it.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2325,6 +2787,8 @@ def verb_past_it(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
+    if new_args[1] == 'ppl':
+        new_args[1] = '3ppl'
     output = pattern.it.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2367,6 +2831,8 @@ def verb_present_nl(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
+    if new_args[1] == 'pl':
+        new_args[1] = '3pl'
     output = pattern.nl.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2380,6 +2846,8 @@ def verb_past_nl(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
+    if new_args[1] == 'ppl':
+        new_args[1] = '3ppl'
     output = pattern.nl.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
@@ -2686,7 +3154,7 @@ def underscore_to_space(a):
 
 def space_to_underscore(a):
     """Converts spaces in the input to underscores in the output and removes characters not safe for filenames."""
-    return werkzeug.secure_filename(str(a).encode('ascii', errors='ignore').decode())
+    return werkzeug.utils.secure_filename(str(a).encode('ascii', errors='ignore').decode())
 
 def message(*pargs, **kwargs):
     """Presents a screen to the user with the given message."""
@@ -2704,7 +3172,21 @@ def variables_as_json(include_internal=False):
     """Sends an HTTP response with all variables in JSON format."""
     raise ResponseError(None, all_variables=True, include_internal=include_internal)
 
-def all_variables(simplify=True, include_internal=False, special=False):
+def store_variables_snapshot(data=None, include_internal=False, key=None, persistent=False):
+    """Stores a snapshot of the interview answers in non-encrypted JSON format."""
+    session = get_uid()
+    filename = this_thread.current_info.get('yaml_filename', None)
+    if session is None or filename is None:
+        raise DAError("store_variables_snapshot: could not identify the session")
+    if key is not None and not isinstance(key, str):
+        raise DAError("store_variables_snapshot: key must be a string")
+    if data is None:
+        the_data = serializable_dict(get_user_dict(), include_internal=include_internal)
+    else:
+        the_data = safe_json(data)
+    server.write_answer_json(session, filename, the_data, tags=key, persistent=True if persistent else False)
+
+def all_variables(simplify=True, include_internal=False, special=False, make_copy=False):
     """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
     if special == 'titles':
         return this_thread.interview.get_title(get_user_dict())
@@ -2715,6 +3197,8 @@ def all_variables(simplify=True, include_internal=False, special=False):
         return copy.deepcopy(this_thread.internal['tags'])
     if simplify:
         return serializable_dict(get_user_dict(), include_internal=include_internal)
+    if make_copy:
+        return copy.deepcopy(pickleable_objects(get_user_dict()))
     return pickleable_objects(get_user_dict())
 
 def command(*pargs, **kwargs):
@@ -2885,8 +3369,6 @@ def package_data_filename(the_file):
 
 def package_question_filename(the_file):
     parts = the_file.split(":")
-    #if len(parts) == 1:
-    #    parts = ['docassemble.base', the_file]
     if len(parts) == 2:
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/questions/' + parts[1]
@@ -2971,7 +3453,7 @@ def process_action():
                 else:
                     #logmessage("process_action: forcing a nameerror")
                     this_thread.misc['forgive_missing_question'] = [event_info['action']] #restore
-                    force_ask_nameerror(event_info['action'])
+                    force_ask(event_info['action'])
                     #logmessage("process_action: done with trying")
         #logmessage("process_action: returning")
         if 'forgive_missing_question' in this_thread.misc:
@@ -2985,12 +3467,16 @@ def process_action():
     #    this_thread.misc['forgive_missing_question'] = True
     #    #logmessage("Asking for " + this_thread.current_info['arguments']['action'])
     #    the_action = this_thread.current_info['arguments']['action']
-    if the_action == '_da_priority_action' and 'action' in this_thread.current_info['arguments']:
+    if the_action == '_da_priority_action' and '_action' in this_thread.current_info['arguments']:
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack']:
             this_thread.internal['event_stack'][unique_id] = []
-        the_action = this_thread.current_info['arguments']['action']
-    elif the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
+        the_action = this_thread.current_info['arguments']['_action']
+        if '_arguments' in this_thread.current_info['arguments']:
+            this_thread.current_info['arguments'] = this_thread.current_info['arguments']['_arguments']
+        else:
+            this_thread.current_info['arguments'] = dict()
+    if the_action == '_da_force_ask' and 'variables' in this_thread.current_info['arguments']:
         this_thread.misc['forgive_missing_question'] = this_thread.current_info['arguments']['variables'] #restore
         force_ask(*this_thread.current_info['arguments']['variables'])
     elif the_action == '_da_compute' and 'variables' in this_thread.current_info['arguments']:
@@ -3058,8 +3544,22 @@ def process_action():
                 this_thread.current_info['action_list'].pop(this_thread.current_info['action_item'])
                 if len(this_thread.current_info['action_list'].elements) == 0 and hasattr(this_thread.current_info['action_list'], 'there_are_any'):
                     this_thread.current_info['action_list'].there_are_any = False
+                if hasattr(this_thread.current_info['action_list'], 'there_is_another') and this_thread.current_info['action_list'].there_is_another:
+                    del this_thread.current_info['action_list'].there_is_another
+                if hasattr(this_thread.current_info['action_list'], '_necessary_length'):
+                    del this_thread.current_info['action_list']._necessary_length
+                if hasattr(this_thread.current_info['action_list'], 'ask_number') and this_thread.current_info['action_list'].ask_number and hasattr(this_thread.current_info['action_list'], 'target_number') and int(this_thread.current_info['action_list'].target_number) > 0:
+                    this_thread.current_info['action_list'].target_number = int(this_thread.current_info['action_list'].target_number) - 1
             except Exception as err:
                 logmessage("process_action: _da_list_remove error: " + str(err))
+                try:
+                    logmessage("process_action: list is: " + str(this_thread.current_info['action_list'].instanceName))
+                except:
+                    pass
+                try:
+                    logmessage("process_action: item is: " + str(this_thread.current_info['action_item'].instanceName))
+                except:
+                    pass
         force_ask(dict(action='_da_list_ensure_complete', arguments=dict(group=this_thread.current_info['action_list'].instanceName)))
         #raise ForcedReRun()
     elif the_action == '_da_dict_remove':
@@ -3068,11 +3568,27 @@ def process_action():
                 this_thread.current_info['action_dict'].pop(this_thread.current_info['action_item'])
                 if len(this_thread.current_info['action_dict'].elements) == 0 and hasattr(this_thread.current_info['action_dict'], 'there_are_any'):
                     this_thread.current_info['action_dict'].there_are_any = False
+                if hasattr(this_thread.current_info['action_dict'], 'there_is_another') and this_thread.current_info['action_dict'].there_is_another:
+                    del this_thread.current_info['action_dict'].there_is_another
+                if len(this_thread.current_info['action_dict'].elements) == 0 and hasattr(this_thread.current_info['action_dict'], 'there_are_any'):
+                    this_thread.current_info['action_dict'].there_are_any = False
+                if hasattr(this_thread.current_info['action_dict'], 'ask_number') and this_thread.current_info['action_dict'].ask_number and hasattr(this_thread.current_info['action_dict'], 'target_number') and int(this_thread.current_info['action_dict'].target_number) > 0:
+                    this_thread.current_info['action_dict'].target_number = int(this_thread.current_info['action_dict'].target_number) - 1
             except Exception as err:
                 logmessage("process_action: _da_dict_remove error: " + str(err))
+                try:
+                    logmessage("process_action: dict is: " + str(this_thread.current_info['action_dict'].instanceName))
+                except:
+                    pass
+                try:
+                    logmessage("process_action: item is: " + str(this_thread.current_info['action_item'].instanceName))
+                except:
+                    pass
         force_ask(dict(action='_da_dict_ensure_complete', arguments=dict(group=this_thread.current_info['action_dict'].instanceName)))
         #raise ForcedReRun()
     elif the_action in ('_da_dict_edit', '_da_list_edit') and 'items' in this_thread.current_info['arguments']:
+        if isinstance(this_thread.current_info['arguments']['items'][0], dict) and 'follow up' in this_thread.current_info['arguments']['items'][0] and isinstance(this_thread.current_info['arguments']['items'][0]['follow up'], list) and len(this_thread.current_info['arguments']['items'][0]['follow up']) > 0:
+            this_thread.misc['forgive_missing_question'] = this_thread.current_info['arguments']['items'][0]['follow up']
         force_ask(*this_thread.current_info['arguments']['items'])
     elif the_action in ('_da_list_ensure_complete', '_da_dict_ensure_complete') and 'group' in this_thread.current_info['arguments']:
         group_name = this_thread.current_info['arguments']['group']
@@ -3213,10 +3729,13 @@ def url_action(action, **kwargs):
     """Returns a URL to run an action in the interview."""
     if contains_volatile.search(action):
         raise DAError("url_action cannot be used with a generic object or a variable iterator")
-    return '?action=' + urllibquote(myb64quote(json.dumps({'action': action, 'arguments': kwargs}))) + '&i=' + this_thread.current_info['yaml_filename']
+    return url_of('flex_interview', action=myb64quote(json.dumps({'action': action, 'arguments': kwargs})), i=this_thread.current_info['yaml_filename'])
 
 def myb64quote(text):
     return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf-8'), 'base64').decode())
+
+def myb64unquote(text):
+    return codecs.decode(repad_byte(bytearray(text, encoding='utf-8')), 'base64').decode('utf-8')
 
 # def set_debug_status(new_value):
 #     global debug
@@ -3367,6 +3886,8 @@ def defined(var):
     str(var)
     if not isinstance(var, str):
         raise Exception("defined() must be given a string")
+    if not re.search(r'[A-Za-z][A-Za-z0-9\_]*', var):
+        raise Exception("defined() must be given a valid Python variable name")
     try:
         eval(var, dict())
         return True
@@ -3457,7 +3978,7 @@ def value(var):
     except:
         pass
     if re.search(r'[\(\)\n\r]|lambda', var):
-        raise Exception("value() is invalid")
+        raise Exception("value() is invalid: " + repr(var))
     frame = inspect.stack()[1][0]
     components = components_of(var)
     if len(components) == 0 or len(components[0]) < 2:
@@ -3467,17 +3988,17 @@ def value(var):
     while variable not in the_user_dict:
         frame = frame.f_back
         if frame is None:
-            force_ask(var, persistent=False)
+            force_ask(variable, persistent=False)
         if 'user_dict' in frame.f_locals:
             the_user_dict = eval('user_dict', frame.f_locals)
             if variable in the_user_dict:
                 break
             else:
-                force_ask(var, persistent=False)
+                force_ask(variable, persistent=False)
         else:
             the_user_dict = frame.f_locals
     if variable not in the_user_dict:
-        force_ask(var, persistent=False)
+        force_ask(variable, persistent=False)
     if len(components) == 1:
         return eval(variable, the_user_dict)
     cum_variable = ''
@@ -3493,11 +4014,11 @@ def value(var):
             try:
                 the_index = eval(elem[1], the_user_dict)
             except:
-                force_ask(var, persistent=False)
+                force_ask(elem[1], persistent=False)
             try:
                 the_cum_variable = eval(cum_variable, the_user_dict)
             except:
-                force_ask(var, persistent=False)
+                force_ask(cum_variable, persistent=False)
             if hasattr(the_cum_variable, 'instanceName') and hasattr(the_cum_variable, 'elements'):
                 cum_variable_elements = cum_variable + '.elements'
             else:
@@ -3510,7 +4031,7 @@ def value(var):
         try:
             result = eval(to_eval, the_user_dict)
         except:
-            force_ask(var, persistent=False)
+            force_ask(to_eval, persistent=False)
         if result:
             continue
         force_ask(var, persistent=False)
@@ -3557,40 +4078,6 @@ def single_paragraph(text):
 def quote_paragraphs(text):
     """Adds Markdown to quote all paragraphs in the text."""
     return '> ' + single_newline.sub('\n> ', str(text).strip())
-
-def task_performed(task):
-    """Returns True if the task has been performed at least once, otherwise False."""
-    ensure_definition(task)
-    if task in this_thread.internal['tasks'] and this_thread.internal['tasks'][task]:
-        return True
-    return False
-
-def task_not_yet_performed(task):
-    """Returns True if the task has never been performed, otherwise False."""
-    ensure_definition(task)
-    if task_performed(task):
-        return False
-    return True
-
-def mark_task_as_performed(task):
-    """Increases by 1 the number of times the task has been performed."""
-    ensure_definition(task)
-    if not task in this_thread.internal['tasks']:
-        this_thread.internal['tasks'][task] = 0
-    this_thread.internal['tasks'][task] += 1
-    return this_thread.internal['tasks'][task]
-
-def times_task_performed(task):
-    """Returns the number of times the task has been performed."""
-    ensure_definition(task)
-    if not task in this_thread.internal['tasks']:
-        return 0
-    return this_thread.internal['tasks'][task]
-
-def set_task_counter(task, times):
-    """Allows you to manually set the number of times the task has been performed."""
-    ensure_definition(task, times)
-    this_thread.internal['tasks'][task] = times
 
 def set_live_help_status(availability=None, mode=None, partner_roles=None):
     """Defines whether live help features are available, the mode of chat,
@@ -3782,10 +4269,12 @@ def safe_json(the_object, level=0, is_key=False):
         return 'None' if is_key else None
     return the_object
 
-def referring_url(default=None):
-    """Returns the URL that the user was visiting when the user clicked on
-    a link to go to the interview."""
-    url = this_thread.internal.get('referer', None)
+def referring_url(default=None, current=False):
+    """Returns the URL that the user was visiting when the session was created."""
+    if current:
+        url = server.get_referer()
+    else:
+        url = this_thread.internal.get('referer', None)
     if url is None:
         if default is None:
             default = server.daconfig.get('exitpage', 'https://docassemble.org')
@@ -3859,9 +4348,9 @@ def yesno(value, invert=False):
     if value:
         if invert:
             return "No"
-        return this_thread.misc.get('checkbox_export_value', 'Yes')
+        return 'Yes'
     if invert:
-        return this_thread.misc.get('checkbox_export_value', 'Yes')
+        return 'Yes'
     return "No"
 
 def noyes(value, invert=False):
@@ -3959,7 +4448,10 @@ def log(message, priority='log'):
         this_thread.message_log.append(dict(message=str(message), priority=priority))
 
 def get_message_log():
-    return this_thread.message_log
+    try:
+        return this_thread.message_log
+    except:
+        return []
 
 def encode_name(var):
     """Convert a variable name to base64-encoded form for inclusion in an HTML element."""
@@ -3969,7 +4461,7 @@ def decode_name(var):
     """Convert a base64-encoded variable name to plain text."""
     return codecs.decode(repad_byte(bytearray(var, encoding='utf-8')), 'base64').decode('utf-8')
 
-def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, include_dict=True, delete_shared=False):
+def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, include_dict=True, delete_shared=False, next_id=None):
     """Returns a list of interviews that users have started."""
     if this_thread.current_info['user']['is_authenticated']:
         if user_id == 'all' or session is not None:
@@ -3982,17 +4474,41 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
             raise DAError("interview_list: invalid action")
         if action == 'delete' and (filename is None or session is None):
             raise DAError("interview_list: a filename and session must be provided when delete is the action.")
+        if action is None:
+            if next_id is not None:
+                try:
+                    start_id = int(myb64unquote(next_id))
+                    assert start_id >= 0
+                except:
+                    raise DAError("interview_list: invalid next_id.")
+            else:
+                start_id = None
+            (the_list, start_id) = server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared, start_id=start_id)
+            if start_id is None:
+                return (the_list, None)
+            return (the_list, myb64quote(str(start_id)))
         return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared)
     return None
 
-def interview_menu():
+def interview_menu(*pargs, **kwargs):
     """Returns the list of interviews that is offered at /list."""
-    return server.interview_menu()
+    return server.interview_menu(*pargs, **kwargs)
 
-def get_user_list(include_inactive=False):
+def get_user_list(include_inactive=False, next_id=None):
     """Returns a list of users on the system."""
     if this_thread.current_info['user']['is_authenticated']:
-        return server.get_user_list(include_inactive=include_inactive)
+        if next_id is not None:
+            try:
+                start_id = int(myb64unquote(next_id))
+                assert start_id >= 0
+            except:
+                raise DAError("get_user_list: invalid next_id.")
+        else:
+            start_id = None
+        (the_list, start_id) = server.get_user_list(include_inactive=include_inactive, start_id=start_id)
+        if start_id is None:
+            return (the_list, None)
+        return (the_list, myb64quote(str(start_id)))
     return None
 
 def manage_privileges(*pargs):
@@ -4050,15 +4566,24 @@ def get_user_secret(username, password):
     """
     return server.get_secret(username, password)
 
+def create_session(yaml_filename, secret=None, url_args=None):
+    """Creates a new session in the given interview."""
+    if secret is None:
+        secret = this_thread.current_info.get('secret', None)
+    (encrypted, session_id) = server.create_session(yaml_filename, secret, url_args=url_args)
+    if secret is None and encrypted:
+        raise Exception("create_session: the interview is encrypted but you did not provide a secret.")
+    return session_id
+
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
     """Returns the interview dictionary for the given interview session."""
     return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=simplify)
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None, overwrite=False):
     """Sets variables in the interview dictionary for the given interview session."""
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise Exception("You cannot set variables in the current interview session")
-    server.set_session_variables(yaml_filename, session_id, dict(), secret=secret, literal_variables=variables, question_name=question_name)
+    server.set_session_variables(yaml_filename, session_id, variables, secret=secret, question_name=question_name, post_setting=False if overwrite else True)
 
 def get_question_data(yaml_filename, session_id, secret=None):
     """Returns data about the current question for the given interview session."""
@@ -4195,6 +4720,16 @@ def reconsider(*pargs):
 def single_to_double_newlines(text):
     """Converts single newlines to double newlines."""
     return re.sub(r'[\n\r]+', r'\n\n', str(text))
+
+def secure_filename(the_filename):
+    the_filename = normalize("NFKD", the_filename).encode("ascii", "ignore").decode("ascii")
+    for sep in (os.path.sep, os.path.altsep):
+        if sep:
+            the_filename = the_filename.replace(sep, "_")
+    the_filename = re.sub(r'[^A-Za-z0-9_\.\- ]', '', the_filename)
+    the_filename = re.sub(r'^[\._]*', '', the_filename)
+    the_filename = re.sub(r'[\._]*$', '', the_filename)
+    return the_filename
 
 custom_types = dict()
 

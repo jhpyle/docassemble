@@ -525,7 +525,7 @@ pt:
   "Unable to determine if the package is published on PyPI.": "Não foi possível determinar se o pacote está publicado no PyPI."
   "Unable to determine if the package is published on your GitHub account.": "Não foi possível determinar se o pacote está publicado na sua conta do GitHub."
   "Unable to e-mail your documents to": "Não foi possível enviar seus documentos por e-mail para"
-  "Unable to find documents to e-mail.": "Não foi possível encontrar documentos para serem enviados por o e-mail."
+  "Unable to find documents to e-mail.": "Não foi possível encontrar documentos para serem enviados por e-mail."
   "Unable to send e-mail to": "Não foi possível enviar e-mail para"
   "Unable to send e-mail.  Error was: ": "Não foi possível enviar e-mail. Erro foi:"
   "Unable to send verification code.": "Não foi possível enviar o código de verificação."

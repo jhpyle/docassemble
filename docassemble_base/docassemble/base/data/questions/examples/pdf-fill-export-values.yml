@@ -1,0 +1,76 @@
+metadata:
+  title: PDF fill-in
+  short title: PDF Fill
+  documentation: "https://docassemble.org/docs/documents.html#pdf template file"
+  example start: 10
+---
+objects:
+  - user: Individual
+---
+question: |
+  Please fill in the following information.
+fields:
+  - Your First Name: user.name.first
+  - Your Last Name: user.name.last
+  - Your Organization: user.organization
+---
+question: |
+  Do you like toast?
+yesno: likes_toast
+---
+question: |
+  Do you like apples?
+yesno: likes_apples
+---
+question: |
+  Do you like pears?
+yesno: likes_pears
+---
+question: |
+  Do you like oranges?
+yesno: likes_oranges
+---
+mandatory: true
+code: |
+  introduction_shown
+---
+question: |
+  Assembling a document from a PDF
+  template
+subquestion: |
+  This interview will fill fields in
+  a .pdf template.  You can
+  [download the template] to see what
+  it looks like.
+
+  [download the template]: ${ url_of('sample-form.pdf') }
+field: introduction_shown
+---
+mandatory: True
+code: |
+  user.name.first
+  likes_apples
+  likes_oranges
+  likes_pears
+  likes_toast
+---
+question: |
+  Here is your PDF form
+attachment:
+  name: A filled-in form
+  filename: filled-form
+  pdf template file: sample-form-different-export-values.pdf
+  fields:
+    - Your Name: |
+        ${ user }
+    - Your Organization: |
+        ${ user.organization }
+    - Apple Checkbox: |
+        ${ likes_apples }
+    - Orange Checkbox: |
+        ${ likes_oranges }
+    - Pear Checkbox: |
+        ${ likes_pears }
+    - Toast Checkbox: |
+        ${ likes_toast }
+mandatory: True

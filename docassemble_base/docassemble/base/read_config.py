@@ -106,6 +106,10 @@ if __name__ == "__main__":
         print('export DAEXPOSEWEBSOCKETS=true')
     if 'websockets ip' in daconfig and daconfig['websockets ip']:
         print('export DAWEBSOCKETSIP="' + str(daconfig['websockets ip']) + '"')
+    if 'stable version' in daconfig and daconfig['stable version']:
+        print('export DASTABLEVERSION=true')
+    if 'nginx ssl protocols' in daconfig and daconfig['nginx ssl protocols']:
+        print('export DASSLPROTOCOLS=' + str(daconfig['nginx ssl protocols']))
     if 'websockets port' in daconfig and daconfig['websockets port']:
         print('export DAWEBSOCKETSPORT=' + str(daconfig['websockets port']))
     else:
@@ -143,6 +147,7 @@ if __name__ == "__main__":
         if 'region' in daconfig['s3'] and daconfig['s3']['region'] is not None:
             print('export S3REGION="' + str(daconfig['s3']['region']) + '"')
         if 'endpoint url' in daconfig['s3'] and daconfig['s3']['endpoint url'] is not None:
+            print('export S3ENDPOINTURL="' + str(daconfig['s3']['endpoint url']) + '"')
             print('export S4CMD_OPTS="--endpoint-url=\\"' + str(daconfig['s3']['endpoint url']) + '\\""')
     if 'azure' in daconfig:
         if 'enable' in daconfig['azure'] and daconfig['azure']['enable']:

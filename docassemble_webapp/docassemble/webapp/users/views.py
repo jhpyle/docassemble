@@ -1,15 +1,16 @@
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
 from flask import make_response, redirect, render_template, render_template_string, request, flash, current_app, Markup, url_for
-from flask_user import current_user, login_required, roles_required, emails
+from docassemble_flask_user import current_user, login_required, roles_required, emails
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm, UserAddForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
 #import docassemble.webapp.daredis
-from docassemble.base.functions import word, debug_status, get_default_timezone
+from docassemble.base.functions import word, debug_status, get_default_timezone, myb64quote, myb64unquote
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
+from docassemble.webapp.translations import setup_translation
 from docassemble.base.generate_key import random_alphanumeric
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, not_
 
 import random
 import string
@@ -20,11 +21,14 @@ import email.utils
 import json
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
+PAGINATION_LIMIT = daconfig.get('pagination limit', 100)
+PAGINATION_LIMIT_PLUS_ONE = PAGINATION_LIMIT + 1
 
 @app.route('/privilegelist', methods=['GET', 'POST'])
 @login_required
 @roles_required('admin')
 def privilege_list():
+    setup_translation()
     output = """\
     <table class="table">
       <thead>
@@ -49,14 +53,32 @@ def privilege_list():
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
-@app.route('/userlist', methods=['GET', 'POST'])
+@app.route('/userlist', methods=['GET'])
 @login_required
 @roles_required('admin')
 def user_list():
+    setup_translation()
+    page = request.args.get('page', None)
+    if page:
+        try:
+            page = int(page) - 1
+            assert page >= 0
+        except:
+            page = 0
+    else:
+        page = 0
     users = list()
-    for user in db.session.query(UserModel).options(db.joinedload('roles')).order_by(UserModel.id):
-        if user.nickname == 'cron' or user.social_id.startswith('disabled$'):
-            continue
+    user_query = db.session.query(UserModel).options(db.joinedload('roles')).filter(UserModel.nickname != 'cron', not_(UserModel.social_id.like('disabled$%'))).order_by(UserModel.id)
+    if page > 0:
+        user_query = user_query.offset(PAGINATION_LIMIT*page)
+    user_query = user_query.limit(PAGINATION_LIMIT_PLUS_ONE)
+    results_in_query = 0
+    there_are_more = False
+    for user in user_query:
+        results_in_query += 1
+        if results_in_query == PAGINATION_LIMIT_PLUS_ONE:
+            there_are_more = True
+            break
         role_names = [y.name for y in user.roles]
         if 'admin' in role_names:
             high_priv = 'admin'
@@ -85,7 +107,12 @@ def user_list():
         else:
             is_active = False
         users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id, high_priv=high_priv))
-    response = make_response(render_template('users/userlist.html', version_warning=None, bodyclass='daadminbody', page_title=word('User List'), tab_title=word('User List'), users=users), 200)
+    if there_are_more:
+        next_page = page + 2
+    else:
+        next_page = None
+    prev_page = page
+    response = make_response(render_template('users/userlist.html', version_warning=None, bodyclass='daadminbody', page_title=word('User List'), tab_title=word('User List'), users=users, prev_page=prev_page, next_page=next_page), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -93,6 +120,7 @@ def user_list():
 @login_required
 @roles_required('admin')
 def delete_privilege(id):
+    setup_translation()
     role = Role.query.filter_by(id=id).first()
     user_role = Role.query.filter_by(name='user').first()
     if role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron']:
@@ -119,10 +147,11 @@ def delete_privilege(id):
 @login_required
 @roles_required('admin')
 def edit_user_profile_page(id):
+    setup_translation()
     user = UserModel.query.options(db.joinedload('roles')).filter_by(id=id).first()
     the_tz = user.timezone if user.timezone else get_default_timezone()
     if user is None or user.social_id.startswith('disabled$'):
-        abort(404)
+        return redirect(url_for('user_list'))
     if 'disable_mfa' in request.args and int(request.args['disable_mfa']) == 1:
         user.otp_secret = None
         db.session.commit()
@@ -159,7 +188,7 @@ def edit_user_profile_page(id):
     if request.method == 'POST' and form.cancel.data:
         flash(word('The user profile was not changed.'), 'success')
         return redirect(url_for('user_list'))
-    if user.social_id.startswith('local$'):
+    if user.social_id.startswith('local$') or daconfig.get('allow external auth with admin accounts', False):
         form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
         privileges_note = None
     else:
@@ -208,6 +237,7 @@ def edit_user_profile_page(id):
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required
 def add_privilege():
+    setup_translation()
     form = NewPrivilegeForm(request.form, obj=current_user)
 
     if request.method == 'POST' and form.validate():
@@ -229,6 +259,7 @@ def add_privilege():
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
 def user_profile_page():
+    setup_translation()
     the_tz = current_user.timezone if current_user.timezone else get_default_timezone()
     if current_user.social_id and current_user.social_id.startswith('phone$'):
         form = PhoneUserProfileForm(request.form, obj=current_user)
@@ -259,6 +290,7 @@ def _endpoint_url(endpoint):
 @roles_required('admin')
 def invite():
     """ Allows users to send invitations to register an account """
+    setup_translation()
     user_manager = current_app.user_manager
 
     next = request.args.get('next',
@@ -333,6 +365,7 @@ def invite():
 @login_required
 @roles_required('admin')
 def user_add():
+    setup_translation()
     user_role = Role.query.filter_by(name='user').first()
     add_form = UserAddForm(request.form, role_id=[str(user_role.id)])
     add_form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
