@@ -3207,7 +3207,10 @@ class DAFile(DAObject):
         if hasattr(self, 'mimetype'):
             del self.mimetype
         self.initialize(extension=output_extension, filename=output_filename)
-        if input_extension in ("docx", "doc", "odt", "rtf") and output_extension in ("docx", "doc", "odt", "rtf"):
+        if input_extension in ("docx", "doc", "odt", "rtf", "png", "jpg", "tif") and output_extension == "pdf":
+            import docassemble.base.pandoc
+            shutil.copyfile(docassemble.base.pandoc.concatenate_files([input_path]), self.path())
+        elif input_extension in ("docx", "doc", "odt", "rtf") and output_extension in ("docx", "doc", "odt", "rtf"):
             import docassemble.base.pandoc
             docassemble.base.pandoc.convert_file(input_path, self.path(), input_extension, output_extension)
         elif input_extension in ("docx", "doc", "odt", "rtf") and output_extension == 'md':
@@ -3225,7 +3228,7 @@ class DAFile(DAObject):
                 the_image.save(self.path())
         else:
             raise Exception("DAFile.convert: could not identify file type")
-        server.SavedFile(input_number).delete
+        server.SavedFile(input_number).delete()
         self.commit()
         self.retrieve()
     def set_alt_text(self, alt_text):
@@ -3255,9 +3258,14 @@ class DAFile(DAObject):
         for key in to_delete:
             del kwargs[key]
         if kwargs.get('reinitialize', False):
+            if hasattr(self, 'mimetype'):
+                del self.mimetype
+            if hasattr(self, 'extension'):
+                del self.extension
             if hasattr(self, 'filename'):
                 del self.filename
             if hasattr(self, 'number'):
+                server.SavedFile(self.number).delete()
                 del self.number
             self.ok = False
             self.has_specific_filename = False
@@ -3314,6 +3322,8 @@ class DAFile(DAObject):
             self.file_info = server.file_number_finder(self.number, filename=self.filename)
         else:
             self.file_info = server.file_number_finder(self.number)
+        if self.file_info is None:
+            raise Exception("Could not retrieve file " + str(self.number))
         if 'path' not in self.file_info:
             raise Exception("Could not retrieve file: " + repr(self.file_info))
         self.extension = self.file_info.get('extension', None)
@@ -3435,20 +3445,45 @@ class DAFile(DAObject):
         """Makes the contents of the file an OCRed PDF of the file or, if provided, another file."""
         import docassemble.base.ocr
         lang = docassemble.base.ocr.get_ocr_language(kwargs.get('language', None))
-        docassemble.base.ocr.ocr_pdf(pargs, target=self, filename=kwargs.get('filename', None), lang=lang, psm=kwargs.get('psm', None))
+        docassemble.base.ocr.ocr_pdf(*pargs, target=self, filename=kwargs.get('filename', None), lang=lang, psm=kwargs.get('psm', None))
     def make_ocr_pdf_in_background(self, *pargs, **kwargs):
         """In the background, makes the contents of the file an OCRed PDF of the file or, if provided, another file."""
         import docassemble.base.ocr
         lang = docassemble.base.ocr.get_ocr_language(kwargs.get('language', None))
         args = dict(yaml_filename=docassemble.base.functions.this_thread.current_info['yaml_filename'], user=docassemble.base.functions.this_thread.current_info['user'], user_code=docassemble.base.functions.this_thread.current_info['session'], secret=docassemble.base.functions.this_thread.current_info['secret'], url=docassemble.base.functions.this_thread.current_info['url'], url_root=docassemble.base.functions.this_thread.current_info['url_root'], language=lang, psm=kwargs.get('psm', None), x=None, y=None, W=None, H=None, extra=None, message=None, pdf=True, preserve_color=kwargs.get('preserve_color', False), target=self, dafilelist=kwargs.get('dafilelist', None), filename=kwargs.get('filename', None))
         collector = server.ocr_finalize.s(**args)
+        docs = []
+        for parg in pargs:
+            if isinstance(parg, DAFileList):
+                docs.extend(parg.elements)
+            elif isinstance(parg, list):
+                docs.extend(parg)
+            else:
+                docs.append(parg)
         todo = list()
-        for image_file in pargs:
-            for item in docassemble.base.ocr.ocr_page_tasks(image_file, **args):
-                todo.append(server.ocr_page.s(**item))
+        indexno = 0
+        for image_file in docs:
+            if hasattr(image_file, 'extension') and image_file.extension in ('docx', 'doc', 'odt', 'rtf'):
+                todo.append(server.ocr_dummy.s(image_file, indexno, **args))
+                indexno += 1
+            elif hasattr(image_file, 'extension') and image_file._is_pdf() and hasattr(image_file, 'has_ocr') and image_file.has_ocr:
+                todo.append(server.ocr_dummy.s(image_file, indexno, **args))
+                indexno += 1
+            else:
+                for item in docassemble.base.ocr.ocr_page_tasks(image_file, **args):
+                    todo.append(server.ocr_page.s(indexno, **item))
+                    indexno += 1
         if len(todo) == 0:
-            for item in docassemble.base.ocr.ocr_page_tasks(self, **args):
-                todo.append(server.ocr_page.s(**item))
+            if hasattr(self, 'extension') and self.extension in ('docx', 'doc', 'odt', 'rtf'):
+                todo.append(server.ocr_dummy.s(self, indexno, **args))
+                indexno += 1
+            elif self._is_pdf() and hasattr(self, 'has_ocr') and image_file.has_ocr:
+                todo.append(server.ocr_dummy.s(image_file, indexno, **args))
+                indexno += 1
+            else:
+                for item in docassemble.base.ocr.ocr_page_tasks(self, **args):
+                    todo.append(server.ocr_page.s(indexno, **item))
+                    indexno += 1
         the_chord = server.chord(todo)(collector)
         return the_chord
     def _is_pdf(self):

@@ -1313,7 +1313,7 @@ class IndividualName(Name):
         and use_suffix."""
         if not self.uses_parts:
             return super().full()
-        names = [self.first]
+        names = [self.first.strip()]
         if hasattr(self, 'middle'):
             if middle is False or middle is None:
                 pass
@@ -1321,17 +1321,17 @@ class IndividualName(Name):
                 initial = self.middle_initial()
                 if initial:
                     names.append(initial)
-            elif len(self.middle):
-                names.append(self.middle)
-        if hasattr(self, 'last') and len(self.last):
-            names.append(self.last)
+            elif len(self.middle.strip()):
+                names.append(self.middle.strip())
+        if hasattr(self, 'last') and len(self.last.strip()):
+            names.append(self.last.strip())
         else:
-            if hasattr(self, 'paternal_surname'):
-                names.append(self.paternal_surname)
-            if hasattr(self, 'maternal_surname'):
-                names.append(self.maternal_surname)
-        if hasattr(self, 'suffix') and use_suffix and len(self.suffix):
-            names.append(self.suffix)
+            if hasattr(self, 'paternal_surname') and len(self.paternal_surname.strip()):
+                names.append(self.paternal_surname.strip())
+            if hasattr(self, 'maternal_surname') and len(self.maternal_surname.strip()):
+                names.append(self.maternal_surname.strip())
+        if hasattr(self, 'suffix') and use_suffix and len(self.suffix.strip()):
+            names.append(self.suffix.strip())
         return(" ".join(names))
     def firstlast(self):
         """Returns the first name followed by the last name."""
@@ -1344,11 +1344,13 @@ class IndividualName(Name):
         if not self.uses_parts:
             return super().lastfirst()
         output = self.last
-        if hasattr(self, 'suffix') and self.suffix:
+        if hasattr(self, 'suffix') and self.suffix and len(self.suffix.strip()):
             output += " " + self.suffix
         output += ", " + self.first
-        if hasattr(self, 'middle') and self.middle:
-            output += " " + self.middle[0] + '.'
+        if hasattr(self, 'middle'):
+            initial = self.middle_initial()
+            if initial:
+                output += " " + initial
         return output
     def middle_initial(self, with_period=True):
         """Returns the middle initial, or the empty string if the name does not have a middle component."""
@@ -2617,8 +2619,10 @@ def ocr_file_in_background(*pargs, **kwargs):
     args = dict(yaml_filename=this_thread.current_info['yaml_filename'], user=this_thread.current_info['user'], user_code=this_thread.current_info['session'], secret=this_thread.current_info['secret'], url=this_thread.current_info['url'], url_root=this_thread.current_info['url_root'], language=language, psm=psm, x=x, y=y, W=W, H=H, extra=ui_notification, message=message, pdf=False, preserve_color=False)
     collector = server.ocr_finalize.s(**args)
     todo = list()
+    indexno = 0
     for item in docassemble.base.ocr.ocr_page_tasks(image_file, **args):
-        todo.append(server.ocr_page.s(**item))
+        todo.append(server.ocr_page.s(indexno, **item))
+        indexno += 1
     the_chord = server.chord(todo)(collector)
     if ui_notification is not None:
         worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])

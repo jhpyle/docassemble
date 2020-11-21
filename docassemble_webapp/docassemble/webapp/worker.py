@@ -65,6 +65,7 @@ def initialize_db():
     import docassemble.base.interview_cache
     import docassemble.base.parse
     import docassemble.base.ocr
+    import docassemble.base.util
     worker_controller.flaskapp = flaskapp
     worker_controller.set_request_active = set_request_active
     worker_controller.fetch_user_dict = fetch_user_dict
@@ -90,6 +91,7 @@ def initialize_db():
     worker_controller.login_user = login_user
     worker_controller.update_last_login = update_last_login
     worker_controller.error_notification = error_notification
+    worker_controller.pdf_concatenate = docassemble.base.util.pdf_concatenate
     worker_controller.noquote = noquote
 
 def convert(obj):
@@ -799,7 +801,27 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
     return new_item_id
 
 @workerapp.task
-def ocr_page(**kwargs):
+def ocr_dummy(doc, indexno, **kwargs):
+    sys.stderr.write("ocr_dummy started in worker\n")
+    if not hasattr(worker_controller, 'loaded'):
+        initialize_db()
+    url_root = kwargs.get('url_root', daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/'))
+    url = kwargs.get('url', url_root + 'interview')
+    with worker_controller.flaskapp.app_context():
+        with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
+            worker_controller.functions.reset_local_variables()
+            worker_controller.functions.set_uid(kwargs['user_code'])
+            user_info = kwargs['user']
+            if not str(user_info['the_user_id']).startswith('t'):
+                user_object = worker_controller.get_user_object(user_info['theid'])
+                worker_controller.login_user(user_object, remember=False)
+            worker_controller.set_request_active(False)
+            if doc._is_pdf():
+                return worker_controller.functions.ReturnValue(ok=True, value=dict(indexno=indexno, doc=doc))
+            return worker_controller.functions.ReturnValue(ok=True, value=dict(indexno=indexno, doc=worker_controller.pdf_concatenate(doc)))
+
+@workerapp.task
+def ocr_page(indexno, **kwargs):
     sys.stderr.write("ocr_page started in worker\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
@@ -814,7 +836,7 @@ def ocr_page(**kwargs):
                 user_object = worker_controller.get_user_object(user_info['theid'])
                 worker_controller.login_user(user_object, remember=False)
             worker_controller.set_request_active(False)
-            return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.ocr.ocr_page(**kwargs))
+            return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.ocr.ocr_page(indexno, **kwargs))
 
 def error_object(err):
     sys.stderr.write("Error: " + str(err.__class__.__name__) + ": " + str(err))
@@ -880,7 +902,7 @@ def ocr_finalize(*pargs, **kwargs):
                             else:
                                 exec(target.instanceName + '.delattr(' + repr(attribute) + ')', user_dict)
                         if dafilelist:
-                            assert worker_controller.functions.illegal_variable_name(dafilelist) is not True
+                            assert worker_controller.functions.illegal_variable_name(dafilelist.instanceName) is not True
                             exec(dafilelist.instanceName + '.elements = [' + dafilelist.instanceName + '.elements[0]]', user_dict)
                     except Exception as the_err:
                         worker_controller.release_lock(session_code, yaml_filename)

@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.105] - 2020-11-20
+### Changed
+- The `.make_ocr_pdf_in_background()` method can now handle mixed file
+  types.
+### Fixed
+- Markdown internal anchor links now work in the web interface.
+
 ## [1.1.104] - 2020-11-20
 ### Added
 - German translations of country names.

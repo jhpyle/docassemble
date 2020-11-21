@@ -1191,6 +1191,8 @@ def emoji_insert(text, status=None, images=None):
 
 def link_rewriter(m, status):
     the_path = None
+    if m.group(1).startswith('#'):
+        return '<a href="javascript:daGoToAnchor(' + re.sub(r'"', '&quot;', json.dumps(m.group(1))) + ');"'
     if m.group(1).startswith('/'):
         the_path = m.group(1)
     elif 'url_root' in docassemble.base.functions.this_thread.current_info and m.group(1).startswith(docassemble.base.functions.this_thread.current_info['url_root']):

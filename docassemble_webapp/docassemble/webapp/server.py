@@ -7565,6 +7565,26 @@ def index(action_argument=None, refer=None):
       else{
         daTargetDiv = "#dabody";
       }
+      function daGoToAnchor(target){
+        if (daJsEmbed){
+          scrollTarget = $(target).first().position().top - 60;
+        }
+        else{
+          scrollTarget = $(target).first().offset().top - 60;
+        }
+        if (scrollTarget != null){
+          if (daJsEmbed){
+            $(daTargetDiv).animate({
+              scrollTop: scrollTarget
+            }, 500);
+          }
+          else{
+            $("html, body").animate({
+              scrollTop: scrollTarget
+            }, 500);
+          }
+        }
+      }
       function getFields(){
         var allFields = [];
         for (var rawFieldName in daVarLookup){
@@ -11786,6 +11806,14 @@ def observer():
               $(current).find(".dacollectunremove").removeClass('dainvisible');
             }
           }
+        }
+      }
+      function daGoToAnchor(target){
+        scrollTarget = $(target).first().offset().top - 60;
+        if (scrollTarget != null){
+          $("html, body").animate({
+            scrollTop: scrollTarget
+          }, 500);
         }
       }
       function getFields(){
@@ -25741,6 +25769,7 @@ else:
                                              #async_ocr=docassemble.webapp.worker.async_ocr,
                                              chord=docassemble.webapp.worker.chord,
                                              ocr_page=docassemble.webapp.worker.ocr_page,
+                                             ocr_dummy=docassemble.webapp.worker.ocr_dummy,
                                              ocr_finalize=docassemble.webapp.worker.ocr_finalize,
                                              worker_convert=docassemble.webapp.worker.convert)
 
