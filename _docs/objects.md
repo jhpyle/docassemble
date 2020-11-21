@@ -1493,7 +1493,7 @@ privileges_list = my_file.privilege_access()
 This will return a list of privileges (e.g., `['developer', 'user']`).
 
 <a name="DAFile.convert_to"></a>The `.convert_to()` method accepts a
-single positional parameter, which is expected to be `'docx'`,
+single positional parameter, which is expected to be `'pdf'`, `'docx'`,
 `'doc'`, `'odt'`, `'rtf'`, `'png'`, `'jpg'`, `'tif'`, or `'md'`.  The
 file will be converted in place to that format.  Word processing files
 cannot be converted to image files, and vice-versa.  If the conversion
