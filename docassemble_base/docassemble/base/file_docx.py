@@ -101,8 +101,10 @@ class InlineHyperlink(object):
     def __str__(self):
         return self._insert_link()
 
-def fix_subdoc(masterdoc, subdoc):
+def fix_subdoc(masterdoc, subdoc_info):
     """Fix the images, styles, references, shapes, etc of a subdoc"""
+    subdoc = subdoc_info['subdoc']
+    change_numbering = subdoc_info['change_numbering']
     composer = Composer(masterdoc) # Using docxcompose
     composer.reset_reference_mapping()
 
@@ -115,8 +117,12 @@ def fix_subdoc(masterdoc, subdoc):
             continue
         composer.add_referenced_parts(subdoc.part, masterdoc.part, element)
         composer.add_styles(subdoc, element)
-        composer.add_numberings(subdoc, element)
-        composer.restart_first_numbering(subdoc, element)
+        if change_numbering:
+            try:
+                composer.add_numberings(subdoc, element)
+                composer.restart_first_numbering(subdoc, element)
+            except:
+                pass
         composer.add_images(subdoc, element)
         composer.add_shapes(subdoc, element)
         composer.add_footnotes(subdoc, element)
@@ -142,16 +148,21 @@ def include_docx_template(template_file, **kwargs):
         del kwargs['_inline']
     else:
         single_paragraph = False
+    if 'change_numbering' in kwargs:
+        change_numbering = True if kwargs['change_numbering'] else False
+        del kwargs['change_numbering']
+    else:
+        change_numbering = True
 
     # We need to keep a copy of the subdocs so we can fix up the master template in the end (in parse.py)
     # Given we're half way through processing the template, we can't fix the master template here
     # we have to do it in post
     if 'docx_subdocs' not in this_thread.misc:
         this_thread.misc['docx_subdocs'] = []
-    this_thread.misc['docx_subdocs'].append(deepcopy(sd.subdocx))
+    this_thread.misc['docx_subdocs'].append({'subdoc': deepcopy(sd.subdocx), 'change_numbering': change_numbering})
 
     # Fix the subdocs before they are included in the template
-    fix_subdoc(this_thread.misc['docx_template'], sd.subdocx)
+    fix_subdoc(this_thread.misc['docx_template'], {'subdoc': sd.subdocx, 'change_numbering': change_numbering})
 
     first_paragraph = sd.subdocx.paragraphs[0]
     for key, val in kwargs.items():
