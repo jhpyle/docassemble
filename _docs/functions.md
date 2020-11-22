@@ -6684,6 +6684,12 @@ pass will be done, and so on, until the document is fully assembled.
 (The number of passes is limited to 10 in order to protect against
 accidentally creating an infinite loop of document inclusion.)
 
+There is a special keyword parameter `change_numbering` that when set
+to `False` will refrain from fixing up the numbering of lists in the
+included documents.  You should set `change_numbering=False` when your
+included document only contains list items, and you want the list
+items to merge into a list in the main document.
+
 <a name="include_docx_template_inline"></a>As discussed above,
 `include_docx_template()` needs to be used with {% raw %}{%p ... %}{%
 endraw %} because it returns the paragraphs from the included

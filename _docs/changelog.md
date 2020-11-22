@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.106](https://github.com/jhpyle/docassemble/releases/tag/v1.1.106) - 2020-11-21
+
+### Added
+- The `change_numbering` keyword parameter to `include_docx_template()`.
+
 ## [1.1.105](https://github.com/jhpyle/docassemble/releases/tag/v1.1.105) - 2020-11-20
 
 ### Changed
