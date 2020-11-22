@@ -47,13 +47,13 @@ if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
 fi
 
 LIBREOFFICE_VERSION=`libreoffice --version`
-if [[ $LIBREOFFICE_VERSION =~ ^LibreOffice\ 6.3 ]]; then
+if [[ $LIBREOFFICE_VERSION =~ ^LibreOffice\ 6 ]]; then
     apt-get -q -y install -t buster-backports libreoffice
 fi
 
 PANDOC_VERSION=`pandoc --version | head -n1`
 
-if [ "${PANDOC_VERSION}" != "pandoc 2.11.1" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
+if [ "${PANDOC_VERSION}" != "pandoc 2.11.1.1" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
    cd /tmp \
    && wget -q https://github.com/jgm/pandoc/releases/download/2.11.1.1/pandoc-2.11.1.1-1-amd64.deb \
    && dpkg -i pandoc-2.11.1.1-1-amd64.deb \

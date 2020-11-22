@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.107] - 2020-11-21
+### Changed
+- Upgraded LibreOffice (system upgrade required for this change).
+### Fixed
+- Bug in previous version.
+
 ## [1.1.106] - 2020-11-21
 ### Added
 - The `change_numbering` keyword parameter to `include_docx_template()`.
