@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.1.108] - 2020-11-22
+### Changed
+- The `markdown` and `inline_markdown` filters now respect the `type`
+  and `start` attributes of `<ol>`.
+
 ## [1.1.107] - 2020-11-21
 ### Changed
 - Upgraded LibreOffice (system upgrade required for this change).

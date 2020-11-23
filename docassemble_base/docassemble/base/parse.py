@@ -506,8 +506,8 @@ class InterviewStatus:
                                 checkboxes[safeid(from_safeid(field.saveas) + "[R" + myb64quote(repr(pair['key'])) + "]")] = 'False'
                     elif not self.extras['required'][field.number]:
                         checkboxes[field.saveas] = 'None'
-            if field.datatype == 'object_checkboxes':
-                datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
+                if field.datatype == 'object_checkboxes':
+                    datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
             if self.extras.get('list_collect_is_final', False):
                 if self.extras['list_collect'].ask_number:
                     datatypes[safeid(self.extras['list_collect'].instanceName + ".target_number")] = 'integer'
