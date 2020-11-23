@@ -4,7 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.1.108](https://github.com/jhpyle/docassemble/releases/tag/v1.1.108) - 2020-11-22
+
+### Changed
+- The `markdown` and `inline_markdown` filters now respect the `type`
+  and `start` attributes of `<ol>`.
+
 ## [1.1.107](https://github.com/jhpyle/docassemble/releases/tag/v1.1.107) - 2020-11-21
+
+### Changed
+- Upgraded LibreOffice (system upgrade required for this change).
 
 ### Fixed
 - Bug in previous version.
