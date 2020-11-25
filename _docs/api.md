@@ -1508,38 +1508,176 @@ defense['latches'] = False
 client.phone_number = '202-555-3434'
 {% endhighlight %}
 
-If a variable value in the [JSON] is in [ISO 8601] format (e.g.,
+After all the variables from the `variables` data have been set, the
+interview is evaluated and a [JSON] representation of the current
+question is returned.  However, if the `question` data value is set to
+`0`, this step is skipped and an empty response is returned.
+
+### Defining dates
+
+If a variable value is in [ISO 8601] format (e.g.,
 `2019-06-13T21:40:32.000Z`), then the variable will be converted from
 text into a [`DADateTime`] object.  If you do not want dates to be
 converted, set the `raw` parameter to `1`.
 
+### Defining whole objects
+
 If a variable value is a [JSON] object with keys `_class` and
 `instanceName`, then the variable will be converted into a [Python]
 object of the given class, and keys other than `_class` will be used
-to set attributes of the object.  This is the same format by which
-[Python] objects are reduced to [JSON] elsewhere in the API.  Thus,
-you should be able to take [JSON] representations of objects that you
-read from the [GET] action of this endpoint and pass them back to the
-[POST] action of this endpoint.  Note that this is not guaranteed to
-be a 100% reliable method of [Python] object serialization.  It is not
-as robust as [Python]'s [pickle] system, and it may not work for every
-class.
+to set attributes of the object.  (If you do not want objects to be
+converted, set the `raw` parameter to `1`.)  A class itself can be
+specified with a dictionary consisting of keys `_class` and `name`
+where `_class` is `'type'` and `name` is the name of the class (e.g.,
+`'docassemble.base.util.Individual'`.
 
-You can also upload files along with a [POST] request to this API.  In
-HTTP, a [POST] request can contain one or more file uploads.  Each
-file upload is associated with a name, just as a data element is
-associated with a name.  Your [POST] request can contain zero or more
-of these names, and each name can be associated with one or more
-files.
+This is the same format by which [Python] objects are reduced to
+[JSON] elsewhere in the API, such as the [GET] endpoint of
+[`/api/session`](#session_get).  This is also the format that you see
+when you click the "Show variables and values" link when you are
+looking at the "Source" of an interview.  This is also the format that
+is returned when you call [`.as_serializable()`] on a
+[`DAObject`] or call [`all_variables()`].
+
+The following example interview demonstrates what a [`DAList`] looks
+like when converted to this special [JSON] format.
+
+{% include demo-side-by-side.html demo="jsondemo" %}
+
+The final screen shows the "serializable" representation of the list
+(`user.favorite_fruit`) that the interview gathered.
+
+For example, the representation of `user.favorite_fruit` list might
+look like this in [JSON] format:
+
+{% highlight javascript %}
+{
+  "_class": "docassemble.base.core.DAList",
+  "instanceName": "user.favorite_fruit",
+  "elements": [
+    {
+      "_class": "docassemble.base.util.Thing",
+      "instanceName": "user.favorite_fruit[0]",
+      "name": {
+        "_class": "docassemble.base.util.Name",
+        "instanceName": "user.favorite_fruit[0].name",
+        "text": "Apple"
+      },
+      "sweetness": 3
+    },
+    {
+      "_class": "docassemble.base.util.Thing",
+      "instanceName": "user.favorite_fruit[1]",
+      "name": {
+        "_class": "docassemble.base.util.Name",
+        "instanceName": "user.favorite_fruit[1].name",
+        "text": "Orange"
+      },
+      "sweetness": 7
+    }
+  ],
+  "auto_gather": true,
+  "ask_number": false,
+  "minimum_number": null,
+  "object_type": {
+    "_class": "type",
+    "name": "docassemble.base.util.Thing"
+  },
+  "object_type_parameters": {},
+  "complete_attribute": null,
+  "ask_object_type": false,
+  "there_are_any": true,
+  "there_is_another": false,
+  "gathered": true,
+  "revisit": true
+}
+{% endhighlight %}
+
+This is the format that you can pass to the [POST] endpoint of
+`/api/session` as the value of an item in `variables`.
+
+Instead of relying on the interactive interview process to construct
+the `user.favorite_fruit` object for you piece-by-piece, you can
+simply specify the entire object you want to build and pass it as a
+data structure to `variables`.
+
+For example, here is an example of using the [`requests`] module to
+set a `user.favorite_fruit` list in an interview session in the above
+interview:
+
+{% highlight python %}
+r = requests.post(base_url + '/api/session', json={'i': i, 'session':
+session, 'secret': secret, 'variables': {'user.favorite_fruit':
+{'_class': 'docassemble.base.core.DAList', 'instanceName':
+'user.favorite_fruit', 'elements': [{'_class':
+'docassemble.base.util.Thing', 'instanceName':
+'user.favorite_fruit[0]', 'name': {'_class':
+'docassemble.base.util.Name', 'instanceName':
+'user.favorite_fruit[0].name', 'text': 'Strawberry'}, 'sweetness':
+9.0}, {'_class': 'docassemble.base.util.Thing', 'instanceName':
+'user.favorite_fruit[1]', 'name': {'_class':
+'docassemble.base.util.Name', 'instanceName':
+'user.favorite_fruit[1].name', 'text': 'Pineapple'}, 'sweetness':
+6.0}, {'_class': 'docassemble.base.util.Thing', 'instanceName':
+'user.favorite_fruit[2]', 'name': {'_class':
+'docassemble.base.util.Name', 'instanceName':
+'user.favorite_fruit[2].name', 'text': 'Peach'}, 'sweetness': 8.0}],
+'auto_gather': True, 'ask_number': False, 'minimum_number': None,
+'object_type': {"_class": "type", "name":
+"docassemble.base.util.Thing"}, 'object_type_parameters': {},
+'complete_attribute': None, 'ask_object_type': False, 'there_are_any':
+True, 'there_is_another': False, 'gathered': True, 'revisit': True}}},
+headers=headers)
+{% endhighlight %}
+
+(Note that this will only work if the `user` object already exists.)
+
+There are a lot of internal attributes that you need to set, even if
+you don't use them (e.g., `minimum_number` and `ask_object_type`), but
+if you start from a sample data structure generated by docassemble
+itself, it is not difficult to modify the substantive parts of the
+data structure to specify any list you want.
+
+The interview logic in the above example interview calls
+`user.favorite_fruit.gather()` and then shows a final screen.
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  user.favorite_fruit.gather()
+  final_screen
+{% endhighlight %}
+
+If you want to drive this interview with the API, you do not need to
+answer each screen one-by-one; you can just specify the whole raw data
+structure in a single [POST] to `/api/session`.  Once you have done
+so, the `user.favorite_fruit` list will be fully gathered, and thus
+`user.favorite_fruit.gather()` will not trigger any questions.
+
+Data structures with `instanceName` and `_class` attributes
+are not as robust as the [pickle] system that **docassemble** uses
+internally.
+
+### Uploading files
+
+You can upload files along with a [POST] request to the `/api/session`
+endpoint.  In HTTP, a [POST] request can contain one or more file
+uploads.  Each file upload is associated with a name, just as a data
+element is associated with a name.  Your [POST] request can contain
+zero or more of these names, and each name can be associated with one
+or more files.
 
 When a [POST] request includes one or more names associated with file
 uploads, **docassemble** creates a [`DAFileList`] object for each
 name.  This object can contain one or more files.
 
-After all the variables from the `variables` data have been set, the
-interview is evaluated and a [JSON] representation of the current
-question is returned.  However, if the `question` data value is set to
-`0`, this step is skipped and an empty response is returned.
+Here is an example of uploading a file using the [`requests`] module:
+
+{% highlight python %}
+r = requests.post(base_url + '/api/playground', data={'i': i,
+'session': session, 'secret': secret}, files={
+'user.drivers_license': open('picture.png', 'rb')}, headers=headers)
+{% endhighlight %}
 
 ## <a name="session_question"></a>Get information about the current question
 
@@ -2720,3 +2858,6 @@ function.
 [pagination]: #pagination
 [`pagination limit`]: {{ site.baseurl }}/docs/config.html#pagination limit
 [serverless function]: https://en.wikipedia.org/wiki/Serverless_computing
+[`.as_serializable()`]: {{ site.baseurl }}/docs/objects.html#DAObject.as_serializable
+[`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
+[`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList

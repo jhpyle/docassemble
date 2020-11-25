@@ -12560,6 +12560,18 @@
   \ user.legume_picks['String beans'] \\\n     and user.legume_picks['Peanut'] \\\n\
   \     and not user.legume_picks['Mango'] \\\n     and not user.legume_picks['Potato']:\n\
   \    user.knows_legumes = True\n  else:\n    user.knows_legumes = False"
+"jsondemo": "objects:\n  - user: Individual\n  - user.favorite_fruit: DAList.using(object_type=Thing)\n\
+  ---\nmandatory: True\ncode: |\n  user.favorite_fruit.gather()\n  final_screen\n\
+  ---\nquestion: |\n  Do you have any favorite fruit?\nyesno: user.favorite_fruit.there_are_any\n\
+  ---\nquestion: |\n  Tell me about your \n  ${ ordinal(i) } favorite fruit.\nfields:\n\
+  \  - Name: user.favorite_fruit[i].name.text\n  - Sweetness: user.favorite_fruit[i].sweetness\n\
+  \    datatype: range\n    min: 1\n    max: 10\n---\nquestion: |\n  Do you have any\
+  \ other favorite fruit \n  besides ${ user.favorite_fruit }?\nyesno: user.favorite_fruit.there_is_another\n\
+  ---\nevent: final_screen\nquestion: |\n  You can use this to set the value \n  of\
+  \ `user.favorite_fruit` using the POST\n  `/api/session` API endpoint.\nsubquestion:\
+  \ |\n  #### JSON format\n  \n  `${ json.dumps(user.favorite_fruit.as_serializable())\
+  \ }`\n  \n  #### Python format\n  \n  `${ repr(user.favorite_fruit.as_serializable())\
+  \ }`"
 "life_story": |-
   template: life_story
   content: |
