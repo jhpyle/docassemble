@@ -1178,6 +1178,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     validation_rules['messages'][the_saveas]['required'] = field.validation_message('file required', status, word("You must provide a file."))
                     if 'accept' in status.extras and field.number in status.extras['accept']:
                         validation_rules['messages'][the_saveas]['accept'] = field.validation_message('accept', status, word("Please upload a file with a valid file format."))
+                    if daconfig['maximum content length'] is not None:
+                        validation_rules['rules'][the_saveas]['maxuploadsize'] = daconfig['maximum content length']
+                        validation_rules['messages'][the_saveas]['maxuploadsize'] = field.validation_message('maxuploadsize', status, word("Your file upload is larger than the server can accept. Please reduce the size of your file upload."))
                 if field.datatype in custom_types:
                     if custom_types[field.datatype]['jq_rule'] is not None:
                         if not isinstance(custom_types[field.datatype]['jq_rule'], list):

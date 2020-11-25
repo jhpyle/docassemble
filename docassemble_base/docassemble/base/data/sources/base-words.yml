@@ -1253,6 +1253,7 @@
 "Your e-mail address": Null
 "Your email address": Null
 "Your email has been confirmed.": Null
+"Your file upload is larger than the server can accept. Please reduce the size of your file upload.": Null
 "Your GitHub integration has already been configured.": Null
 "Your GitHub integration is currently turned on.  Below, you can change which repositories docassemble can access.  You can disable GitHub integration if you no longer wish to use it.": Null
 "Your GitHub settings were saved.": Null

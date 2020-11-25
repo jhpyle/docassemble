@@ -147,6 +147,17 @@ def load(**kwargs):
                 override_config(daconfig, null_messages, key, env_var, pre_key='azure')
         if env_exists('KUBERNETES'):
             override_config(daconfig, null_messages, 'kubernetes', 'KUBERNETES')
+    if 'suppress error notificiations' in daconfig and isinstance(daconfig['suppress error notificiations'], list):
+        ok = True
+        for item in daconfig['suppress error notificiations']:
+            if not isinstance(item, str):
+                ok = False
+                break
+        if not ok:
+            daconfig['suppress error notificiations'] = []
+            sys.stderr.write("Configuration file suppress error notifications directive not valid")
+    else:
+        daconfig['suppress error notificiations'] = []
     if 'maximum content length' in daconfig:
         if isinstance(daconfig['maximum content length'], (int, type(None))):
             if daconfig['maximum content length'] is not None and daconfig['maximum content length'] <= 0:
@@ -154,6 +165,8 @@ def load(**kwargs):
         else:
             config_error("The maximum content length must be an integer number of bytes, or null.")
             del daconfig['maximum content length']
+    if 'maximum content length' not in daconfig:
+        daconfig['maximum content length'] = 16 * 1024 * 1024
     if 'social' not in daconfig or not isinstance(daconfig['social'], dict):
         daconfig['social'] = dict()
     if 'twitter' not in daconfig['social'] or not isinstance(daconfig['social']['twitter'], dict):

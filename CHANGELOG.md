@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.109] - 2020-11-24
+### Added
+- The `suppress error notificiations` Configuration directive.
+- Error message if file upload will exceed `maximum content length`.
+### Fixed
+- Google Drive synchronization did not work with shortcuts to folders.
+
 ## [1.1.108] - 2020-11-22
 ### Changed
 - The `markdown` and `inline_markdown` filters now respect the `type`

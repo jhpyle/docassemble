@@ -28,6 +28,7 @@ from docassemble.base.config import daconfig, hostname, in_celery
 
 STATS = daconfig.get('collect statistics', False)
 DEBUG = daconfig.get('debug', False)
+ERROR_TYPES_NO_EMAIL = daconfig.get('suppress error notificiations', [])
 
 if DEBUG:
     PREVENT_DEMO = False
@@ -5462,7 +5463,6 @@ def apply_security_headers(response):
     if app.config['SESSION_COOKIE_SECURE']:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000'
     if daconfig.get('allow embedding', False) is not True:
-        response.headers["X-Frame-Options"] = "SAMEORIGIN"
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self';"
     elif daconfig.get('cross site domains', []):
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self' " + ' '.join(daconfig['cross site domains']) + ';'
@@ -10590,6 +10590,39 @@ def index(action_argument=None, refer=None):
           var before_comparator = new Date(params[0]);
           var after_comparator = new Date(params[1]);
           if (date >= before_comparator && date <= after_comparator) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      });
+      $.validator.addMethod('maxuploadsize', function(value, element, param){
+        try {
+          var limit = parseInt(param) - 2000;
+          if (limit <= 0){
+            return true;
+          }
+          var maxImageSize;
+          if ($(element).data('maximagesize')){
+             maxImageSize = (parseInt($(element).data('maximagesize')) ** 2) * 2;
+          }
+          else {
+             maxImageSize = 0;
+          }
+          if ($(element).attr("type") === "file"){
+            if (element.files && element.files.length) {
+              var totalSize = 0;
+              for ( i = 0; i < element.files.length; i++ ) {
+                if (maxImageSize > 0 && element.files[i].size > (0.20 * maxImageSize) && element.files[i].type.match(/image.*/) && !(element.files[i].type.indexOf('image/svg') == 0)){
+                  totalSize += maxImageSize;
+                }
+                else {
+                  totalSize += element.files[i].size;
+                }
+              }
+              if (totalSize > limit){
+                return false;
+              }
+            }
             return true;
           }
         } catch (e) {}
@@ -16063,8 +16096,10 @@ def google_drive_page():
     #items = []
     page_token = None
     while True:
-        response = service.files().list(spaces="drive", pageToken=page_token, fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and 'root' in parents").execute()
+        response = service.files().list(spaces="drive", pageToken=page_token, fields="nextPageToken, files(id, name, mimeType, shortcutDetails)", q="trashed=false and 'root' in parents and (mimeType = 'application/vnd.google-apps.folder' or (mimeType = 'application/vnd.google-apps.shortcut' and shortcutDetails.targetMimeType = 'application/vnd.google-apps.folder'))").execute()
         for the_file in response.get('files', []):
+            if the_file['mimeType'] == 'application/vnd.google-apps.shortcut':
+                the_file['id'] = the_file['shortcutDetails']['targetId']
             items.append(the_file)
         page_token = response.get('nextPageToken', None)
         if page_token is None:
@@ -25500,7 +25535,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     recipient_email = daconfig.get('error notification email', None)
     if not recipient_email:
         return
-    if err.__class__.__name__ in ('CSRFError', 'ClientDisconnected'):
+    if err.__class__.__name__ in ['CSRFError', 'ClientDisconnected', 'MethodNotAllowed'] + ERROR_TYPES_NO_EMAIL:
         return
     email_recipients = list()
     if isinstance(recipient_email, list):
