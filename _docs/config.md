@@ -1724,6 +1724,21 @@ error notification email:
 
 Information about errors is also available in the [Logs].
 
+## <a name="suppress error notificiations"></a>Suppressing notifications about certain types of errors
+
+If you receive error notifications that are not helpful, you can
+suppress errors by the class of error by defining the `suppress error
+notificiations` directive:
+
+{% highlight yaml %}
+suppress error notificiations:
+  - ZeroDivisionError
+  - ReadTimeout
+{% endhighlight %}
+
+This means that if the name of the class of error is
+`ZeroDivisionError` or `ReadTimeout`, no notification will be sent.
+
 ## <a name="session error redirect url"></a>Redirecting user in case of session error
 
 If the user tries to access a non-existent session, the default

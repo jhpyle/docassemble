@@ -308,16 +308,18 @@ caused by software updates.
 If you are working as part of a team of developers on a single
 interview, you can use [Google Drive integration] so that all members
 of the team share the same [Playground], even though you log in under
-different accounts.  One developer would set up
-[Google Drive integration], and then share his or her "docassemble"
-folder with the other developers.  The other developers would then set
-up [Google Drive integration] and select the shared folder as the
-folder to use.  If more than one developer tries to edit the same file
-at the same time, there will be problems; one developer's
-synchronization may overwrite files another developer was editing.
-However, if the interview is split up into separate files, and each
-developer works only on designated files, this should not be a
-problem.
+different accounts.  One developer would set up [Google Drive
+integration], and then share his or her "docassemble" folder with the
+other developers.  The other developers would each create a "shortcut"
+from the root of their Google Drive to the shared folder.  They would
+then set up [Google Drive integration] and select the shared folder
+(the shortcut to it) as the folder to use.
+
+If more than one developer tries to edit the same file at the same
+time, there will be problems; one developer's synchronization may
+overwrite files another developer was editing.  However, if the
+interview is split up into separate files, and each developer works
+only on designated files, this should not be a problem.
 
 It is important that developers use different **docassemble** accounts
 to log into the [Playground].  If two web browsers use the

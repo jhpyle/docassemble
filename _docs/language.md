@@ -22,8 +22,13 @@ Spanish is `es`, French is `fr`, and Arabic is `ar`.
 
 The value of [`locale`] must be a locale name without the language
 prefix, such as `US.utf8` or `DE.utf8`.  Any locale you use must be
-installed on your system.  (See the [`other os locales`] configuration
-directive.)
+installed in the operating system of the server.
+
+See the [`other os locales`] configuration directive for information
+about how to install locales in the operating system of your server.
+By default, only the `en_US.UTF-8 UTF-8` locale (the locale for the
+United States) is installed, so you will have problems if you try to
+use other locales in your interviews.
 
 Within interviews, the functions [`set_language()`] and
 [`set_locale()`] will change the active language, locale, and dialect.

@@ -1628,6 +1628,9 @@ With `language: en`, the output is:
 
 > This customer would like to order fries and a Coke.
 
+The value of `language` must be plain text like `en` or `fr`; it
+cannot be a [Mako] expression.
+
 ## <a name="raw"></a>Assembling text files
 
 If you want to use **docassemble** to assemble text files, set `raw:
