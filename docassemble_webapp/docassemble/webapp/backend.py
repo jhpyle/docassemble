@@ -501,7 +501,7 @@ def safe_pickle(the_object):
         for sub_object in the_object:
             new_set.add(safe_pickle(sub_object))
         return new_set
-    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
+    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, FileType]:
         return None
     return the_object
 
@@ -517,54 +517,6 @@ def decrypt_dictionary(dict_string, secret):
 def unpack_dictionary(dict_string):
     dict_string = codecs.decode(bytearray(dict_string, encoding='utf-8'), 'base64')
     return fix_pickle_dict(dict_string)
-
-def safe_json(the_object, level=0):
-    if level > 20:
-        return None
-    if isinstance(the_object, (str, bool, int, float)):
-        return the_object
-    if isinstance(the_object, list):
-        return [safe_json(x, level=level+1) for x in the_object]
-    if isinstance(the_object, dict):
-        new_dict = dict()
-        for key, value in the_object.items():
-            new_dict[key] = safe_json(value, level=level+1)
-        return new_dict
-    if isinstance(the_object, set):
-        new_list = list()
-        for sub_object in the_object:
-            new_list.append(safe_json(sub_object, level=level+1))
-        return new_list
-    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
-        return None
-    if isinstance(the_object, datetime.datetime):
-        serial = the_object.isoformat()
-        return serial
-    if isinstance(the_object, datetime.time):
-        serial = the_object.isoformat()
-        return serial
-    if isinstance(the_object, decimal.Decimal):
-        return float(the_object)
-    if isinstance(the_object, DANav):
-        return dict(past=list(the_object.past), current=the_object.current, hidden=(the_object.hidden if hasattr(the_object, 'hidden') else False), progressive=(the_object.progressive if hasattr(the_object, 'progressive') else True))
-    from docassemble.base.core import DAObject
-    if isinstance(the_object, DAObject):
-        new_dict = dict()
-        new_dict['_class'] = type_name(the_object)
-        if the_object.__class__.__name__ == 'DALazyTemplate' or the_object.__class__.__name__ == 'DALazyTableTemplate':
-            if hasattr(the_object, 'instanceName'):
-                new_dict['instanceName'] = the_object.instanceName
-            return new_dict
-        for key, data in the_object.__dict__.items():
-            if key in ['has_nonrandom_instance_name', 'attrList']:
-                continue
-            new_dict[key] = safe_json(data, level=level+1)
-        return new_dict
-    try:
-        json.dumps(the_object)
-    except:
-        return None
-    return the_object
 
 def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
     return timestamp.replace(tzinfo=tz.tzutc()).astimezone(timezone).strftime('%x %X')

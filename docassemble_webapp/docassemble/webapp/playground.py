@@ -480,7 +480,7 @@ class Playground(PlaygroundSection):
         for val in user_dict:
             if type(user_dict[val]) is types.FunctionType:
                 functions.add(val)
-            elif type(user_dict[val]) is TypeType or type(user_dict[val]) is types.ClassType:
+            elif type(user_dict[val]) is TypeType:
                 classes.add(val)
             elif type(user_dict[val]) is types.ModuleType:
                 modules.add(val)

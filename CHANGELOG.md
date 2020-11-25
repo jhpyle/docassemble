@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.1.110] - 2020-11-25
+### Changed
+- The API can now be used to set variables to class names.
+### Fixed
+- The `sort` Jinja2 filter did not work correctly.
+
 ## [1.1.109] - 2020-11-24
 ### Added
 - The `suppress error notificiations` Configuration directive.

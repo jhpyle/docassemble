@@ -8445,6 +8445,8 @@ def custom_jinja_env():
     env.filters['manual_line_breaks'] = docassemble.base.functions.manual_line_breaks
     env.filters['RichText'] = docassemble.base.file_docx.RichText
     env.filters['selectattr'] = selectattr_filter
+    env.filters['sort'] = sort_filter
+    env.filters['dictsort'] = dictsort_filter
     env.filters['nice_number'] = docassemble.base.functions.nice_number
     env.filters['ordinal'] = docassemble.base.functions.ordinal
     env.filters['ordinal_number'] = docassemble.base.functions.ordinal_number
@@ -8466,6 +8468,54 @@ def custom_jinja_env():
     env.filters['verbatim'] = docassemble.base.functions.verbatim
     env.filters['map'] = map_filter
     return env
+
+def str_or_original(y, case_sensitive):
+    if case_sensitive:
+        if hasattr(y, 'instanceName'):
+            return str(y)
+        return y
+    if hasattr(y, 'instanceName'):
+        return str(y).lower()
+    try:
+        return y.lower()
+    except:
+        return y
+
+def dictsort_filter(dictionary, case_sensitive=False, by='key', reverse=False):
+    if by == 'value':
+        return sorted(dictionary.items(), key=lambda y: str_or_original(y[1], case_sensitive), reverse=reverse)
+    else:
+        return sorted(dictionary.items(), key=lambda y: str_or_original(y[0], case_sensitive), reverse=reverse)
+
+def sort_filter(array, reverse=False, case_sensitive=False, attribute=None):
+    if attribute is None:
+        if not case_sensitive:
+            def key_func(y):
+                if hasattr(y, 'instanceName'):
+                    y = str(y)
+                try:
+                    return y.lower()
+                except:
+                    return y
+        else:
+            key_func = None
+    else:
+        if not case_sensitive:
+            def key_func(y):
+                attr = getattr(y, attribute)
+                if hasattr(attr, 'instanceName'):
+                    attr = str(attr)
+                try:
+                    return attr.lower()
+                except:
+                    return attr
+        else:
+            def key_func(y):
+                attr = getattr(y, attribute)
+                if hasattr(attr, 'instanceName'):
+                    attr = str(attr)
+                return attr
+    return sorted(array, key=key_func, reverse=reverse)
 
 def selectattr_filter(*pargs, **kwargs):
     if len(pargs) > 2:

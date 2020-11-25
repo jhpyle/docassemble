@@ -50,8 +50,25 @@ default_playground_yaml = """metadata:
   short title: Test
   comment: This is a learning tool.  Feel free to write over it.
 ---
-include:
-  - basic-questions.yml
+objects:
+  - client: Individual
+---
+question: |
+  What is your name?
+fields:
+  - First Name: client.name.first
+  - Middle Name: client.name.middle
+    required: False
+  - Last Name: client.name.last
+  - Suffix: client.name.suffix
+    required: False
+    code: name_suffix()
+---
+question: |
+  What is your date of birth?
+fields:
+  - Date of Birth: client.birthdate
+    datatype: date
 ---
 mandatory: True
 question: |
@@ -64,7 +81,7 @@ attachments:
     content: |
       Your name is ${ client }.
 
-      % if user.age_in_years() > 60:
+      % if client.age_in_years() > 60:
       You are a senior.
       % endif
       Your quest is ${ quest }.  You
@@ -77,7 +94,7 @@ fields:
     hint: to find the Loch Ness Monster
 ---
 code: |
-  if user.age_in_years() < 18:
+  if client.age_in_years() < 18:
     benefits = "CHIP"
   else:
     benefits = "Medicaid"
@@ -3278,7 +3295,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             name_info[val] = copy.copy(pg_code_cache[val])
             if 'git' in name_info[val]:
                 modules.add(val)
-        elif type(user_dict[val]) is TypeType or type(user_dict[val]) is types.ClassType:
+        elif type(user_dict[val]) is TypeType:
             if val not in pg_code_cache:
                 bases = list()
                 for x in list(user_dict[val].__bases__):
@@ -23251,6 +23268,18 @@ def transform_json_variables(obj):
     if isinstance(obj, (bool, int, float)):
         return obj
     if isinstance(obj, dict):
+        if '_class' in obj and obj['_class'] == 'type' and 'name' in obj and isinstance(obj['name'], str) and valid_python_exp.match(obj['name']):
+            if '.' in obj['name']:
+                the_module = re.sub(r'\.[^\.]+$', '', obj['name'])
+            else:
+                the_module = None
+            try:
+                if the_module:
+                    importlib.import_module(the_module)
+                return eval(obj['name'])
+            except Exception as err:
+                logmessage("transform_json_variables: " + err.__class__.__name__ + ": " + str(err))
+                return None
         if '_class' in obj and isinstance(obj['_class'], str) and 'instanceName' in obj and valid_python_exp.match(obj['_class']) and isinstance(obj['instanceName'], str):
             the_module = re.sub(r'\.[^\.]+$', '', obj['_class'])
             try:

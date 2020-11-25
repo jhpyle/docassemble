@@ -2277,7 +2277,7 @@ def need(*pargs):
 def pickleable_objects(input_dict):
     output_dict = dict()
     for key in input_dict:
-        if isinstance(input_dict[key], (types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType)):
+        if isinstance(input_dict[key], (types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, FileType)):
             continue
         if key == "__builtins__":
             continue
@@ -4204,7 +4204,7 @@ def serializable_dict(user_dict, include_internal=False):
             continue
         if key == '__builtins__':
             continue
-        if type(data) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
+        if type(data) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, FileType]:
             continue
         result_dict[key] = safe_json(data)
     return result_dict
@@ -4238,7 +4238,9 @@ def safe_json(the_object, level=0, is_key=False):
         for sub_object in the_object:
             new_list.append(safe_json(sub_object, level=level+1))
         return new_list
-    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
+    if isinstance(the_object, TypeType):
+        return {'_class': 'type', 'name': class_name(the_object)}
+    if isinstance(the_object, (types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, FileType)):
         return 'None' if is_key else None
     if isinstance(the_object, datetime.datetime):
         serial = the_object.isoformat()
@@ -4283,6 +4285,13 @@ def referring_url(default=None, current=False):
 
 def type_name(the_object):
     name = str(type(the_object))
+    m = re.search(r'\'(.*)\'', name)
+    if m:
+        return m.group(1)
+    return name
+
+def class_name(the_object):
+    name = str(the_object)
     m = re.search(r'\'(.*)\'', name)
     if m:
         return m.group(1)
