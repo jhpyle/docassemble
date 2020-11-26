@@ -46,6 +46,8 @@ from types import CodeType
 import pandas
 import dateutil.parser
 import pytz
+from itertools import groupby, chain
+from collections import namedtuple
 from bs4 import BeautifulSoup
 RangeType = type(range(1,2))
 NoneType = type(None)
@@ -8444,7 +8446,15 @@ def custom_jinja_env():
     env.filters['paragraphs'] = docassemble.base.functions.single_to_double_newlines
     env.filters['manual_line_breaks'] = docassemble.base.functions.manual_line_breaks
     env.filters['RichText'] = docassemble.base.file_docx.RichText
+    env.filters['groupby'] = groupby_filter
+    env.filters['max'] = max_filter
+    env.filters['min'] = min_filter
+    env.filters['sum'] = sum_filter
+    env.filters['unique'] = unique_filter
+    env.filters['join'] = join_filter
+    env.filters['attr'] = attr_filter
     env.filters['selectattr'] = selectattr_filter
+    env.filters['rejectattr'] = rejectattr_filter
     env.filters['sort'] = sort_filter
     env.filters['dictsort'] = dictsort_filter
     env.filters['nice_number'] = docassemble.base.functions.nice_number
@@ -8469,12 +8479,21 @@ def custom_jinja_env():
     env.filters['map'] = map_filter
     return env
 
+def mygetattr(y, attr):
+    for attribute in attr.split('.'):
+        y = getattr(y, attribute)
+    return y
+
 def str_or_original(y, case_sensitive):
     if case_sensitive:
         if hasattr(y, 'instanceName'):
+            if y.__class__.__name__ in ('Value', 'PeriodicValue'):
+                return y.amount()
             return str(y)
         return y
     if hasattr(y, 'instanceName'):
+        if y.__class__.__name__ in ('Value', 'PeriodicValue'):
+            return y.amount()
         return str(y).lower()
     try:
         return y.lower()
@@ -8491,31 +8510,82 @@ def sort_filter(array, reverse=False, case_sensitive=False, attribute=None):
     if attribute is None:
         if not case_sensitive:
             def key_func(y):
-                if hasattr(y, 'instanceName'):
-                    y = str(y)
-                try:
-                    return y.lower()
-                except:
-                    return y
+                return str_or_original(y, case_sensitive)
         else:
             key_func = None
     else:
-        if not case_sensitive:
-            def key_func(y):
-                attr = getattr(y, attribute)
-                if hasattr(attr, 'instanceName'):
-                    attr = str(attr)
-                try:
-                    return attr.lower()
-                except:
-                    return attr
+        if isinstance(attribute, list):
+            attributes = [str(y).strip() for y in attribute]
         else:
-            def key_func(y):
-                attr = getattr(y, attribute)
-                if hasattr(attr, 'instanceName'):
-                    attr = str(attr)
-                return attr
+            attributes = [y.strip() for y in str(attribute).split(',')]
+        def key_func(y):
+            return [str_or_original(mygetattr(y, attribute), case_sensitive) for attribute in attributes]
     return sorted(array, key=key_func, reverse=reverse)
+
+_GroupTuple = namedtuple('_GroupTuple', ['grouper', 'list'])
+_GroupTuple.__repr__ = tuple.__repr__
+_GroupTuple.__str__ = tuple.__str__
+
+def groupby_filter(array, attr_name):
+    def func(y):
+        return mygetattr(y, attr_name)
+    return [_GroupTuple(key, list(values)) for key, values in groupby(sorted(array, key=func), func)]
+
+def max_filter(array, case_sensitive=False, attribute=None):
+    it = iter(array)
+    try:
+        first = next(it)
+    except StopIteration:
+        raise DAError("max: list was empty")
+    if attribute:
+        def key_func(y):
+            return str_or_original(mygetattr(y, attribute), case_sensitive=case_sensitive)
+    else:
+        def key_func(y):
+            return str_or_original(y, case_sensitive=case_sensitive)
+    return max(chain([first], it), key=key_func)
+
+def min_filter(array, case_sensitive=False, attribute=None):
+    it = iter(array)
+    try:
+        first = next(it)
+    except StopIteration:
+        raise DAError("min: list was empty")
+    if attribute:
+        def key_func(y):
+            return str_or_original(mygetattr(y, attribute), case_sensitive=case_sensitive)
+    else:
+        def key_func(y):
+            return str_or_original(y, case_sensitive=case_sensitive)
+    return min(chain([first], it), key=key_func)
+
+def sum_filter(array, attribute=None, start=0):
+    if attribute is not None:
+        array = [mygetattr(y, attribute) for y in array]
+    return sum(array, start)
+
+def unique_filter(array, case_sensitive=False, attribute=None):
+    seen = set()
+    if attribute is None:
+        for item in array:
+            new_item = str_or_original(item, case_sensitive)
+            if new_item not in seen:
+                seen.add(new_item)
+                yield item
+    else:
+        for item in array:
+            new_item = str_or_original(mygetattr(item, attribute), case_sensitive)
+            if new_item not in seen:
+                seen.add(new_item)
+                yield mygetattr(item, attribute)
+
+def join_filter(array, d="", attribute=None):
+    if attribute is not None:
+        return d.join([str(mygetattr(y, attribute)) for y in array])
+    return d.join([str(y) for y in array])
+
+def attr_filter(var, attr_name):
+    return mygetattr(var, attr_name)
 
 def selectattr_filter(*pargs, **kwargs):
     if len(pargs) > 2:
@@ -8525,11 +8595,26 @@ def selectattr_filter(*pargs, **kwargs):
         env = custom_jinja_env()
         func = lambda item: env.call_test(func_name, item, pargs[3:], kwargs)
         for item in array:
-            if func(getattr(item, attr_name)):
+            if func(mygetattr(item, attr_name)):
                 yield item
     else:
         for item in pargs[0]:
-            if getattr(item, pargs[1]):
+            if mygetattr(item, pargs[1]):
+                yield item
+
+def rejectattr_filter(*pargs, **kwargs):
+    if len(pargs) > 2:
+        array = pargs[0]
+        attr_name = pargs[1]
+        func_name = pargs[2]
+        env = custom_jinja_env()
+        func = lambda item: env.call_test(func_name, item, pargs[3:], kwargs)
+        for item in array:
+            if not func(mygetattr(item, attr_name)):
+                yield item
+    else:
+        for item in pargs[0]:
+            if not mygetattr(item, pargs[1]):
                 yield item
 
 def map_filter(*pargs, **kwargs):
@@ -8545,10 +8630,10 @@ def map_filter(*pargs, **kwargs):
         if 'attribute' in kwargs:
             if 'default' in kwargs:
                 for item in pargs[0]:
-                    yield getattr(item, kwargs['attribute'], kwargs['default'])
+                    yield mygetattr(item, kwargs['attribute'], kwargs['default'])
             else:
                 for item in pargs[0]:
-                    yield getattr(item, kwargs['attribute'])
+                    yield mygetattr(item, kwargs['attribute'])
         elif 'index' in kwargs:
             if 'default' in kwargs:
                 for item in pargs[0]:

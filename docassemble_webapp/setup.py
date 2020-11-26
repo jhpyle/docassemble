@@ -43,6 +43,7 @@ install_requires = [
     "convertapi==1.1.0",
     "cryptography==3.2",
     "dnspython==1.16.0",
+    "docopt==0.6.2",
     "docutils==0.15.2",
     "docxcompose==1.0.2",
     "docxtpl==0.10.0",
@@ -72,6 +73,7 @@ install_requires = [
     "google-cloud-core==1.0.3",
     "google-cloud-storage==1.20.0",
     "google-cloud-translate==2.0.0",
+    "google-i18n-address==2.3.5",
     "google-reauth==0.1.0",
     "google-resumable-media==0.4.1",
     "googleapis-common-protos==1.6.0",
@@ -88,7 +90,7 @@ install_requires = [
     "jaraco.functools==2.0",
     "jdcal==1.4.1",
     "jellyfish==0.5.6",
-    "Jinja2==2.10.3",
+    "Jinja2==2.11.2",
     "jmespath==0.9.4",
     "joblib==0.14.0",
     "kombu==4.6.5",
@@ -151,6 +153,7 @@ install_requires = [
     "python-docx==0.8.10",
     "python-editor==1.0.4",
     "python-engineio==3.10.0",
+    "python-http-client==3.3.1",
     "python-ldap==3.2.0",
     "python-socketio==4.3.1",
     "pytz==2019.3",
@@ -164,6 +167,7 @@ install_requires = [
     "reportlab==3.3.0",
     "repoze.lru==0.7",
     "requests==2.22.0",
+    "requests-oauthlib==1.3.0",
     "requests-toolbelt==0.9.1",
     "retry-decorator==1.1.0",
     "rfc3339==6.2",
@@ -174,6 +178,7 @@ install_requires = [
     "s4cmd==2.1.0",
     "scikit-learn==0.21.3",
     "scipy==1.3.1",
+    "sendgrid==6.1.1"
     "simplekv==0.13.0",
     "six==1.12.0",
     "sklearn==0.0",
@@ -205,7 +210,6 @@ install_requires = [
     "xlwt==1.3.0",
     "zc.lockfile==2.0",
     "zipp==0.6.0",
-    "sendgrid==6.1.1"
 ]
 
 setup(name='docassemble.webapp',
