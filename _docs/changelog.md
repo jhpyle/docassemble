@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.0](https://github.com/jhpyle/docassemble/releases/tag/v1.2.0) - 2020-11-27
+
+### Changed
+- Upgraded dependencies.
+
+## [1.1.111](https://github.com/jhpyle/docassemble/releases/tag/v1.1.111) - 2020-11-27
+
+### Changed
+- Upgrading through Package Management is turned off because the
+  upgrade from 1.1.111 to 1.2.0 requires a system upgrade.  See
+  https://docassemble.org/docs/docker.html#upgrading for instructions
+  on how to perform a system upgrade.
+
+### Fixed
+- Some Jinja2 filters did not work correctly.
+
 ## [1.1.110](https://github.com/jhpyle/docassemble/releases/tag/v1.1.110) - 2020-11-25
 
 ### Changed
