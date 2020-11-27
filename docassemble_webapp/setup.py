@@ -178,7 +178,7 @@ install_requires = [
     "s4cmd==2.1.0",
     "scikit-learn==0.21.3",
     "scipy==1.3.1",
-    "sendgrid==6.1.1"
+    "sendgrid==6.1.1",
     "simplekv==0.13.0",
     "six==1.12.0",
     "sklearn==0.0",
