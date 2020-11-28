@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.1] - 2020-11-28
+### Fixed
+- Error on Package Management page.
+
 ## [1.2.0] - 2020-11-28
 ### Changed
 - Upgraded Python to version 3.8 and upgraded dependencies.  These
