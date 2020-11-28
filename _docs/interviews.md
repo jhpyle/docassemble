@@ -1043,7 +1043,7 @@ functions.
 [GET]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
 [POST]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
 [`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
-[pickle]: https://docs.python.org/3.6/library/pickle.html
+[pickle]: https://docs.python.org/3.8/library/pickle.html
 [review screens]: {{ site.baseurl }}/docs/fields.html#review
 [Python objects]: https://docs.python.org/3/tutorial/classes.html
 [Google Form]: https://www.google.com/forms/about/

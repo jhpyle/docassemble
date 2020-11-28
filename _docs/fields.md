@@ -2986,7 +2986,7 @@ why this needs to be done manually as opposed to automatically:
 [`.strftime()`]: https://docs.python.org/3/library/datetime.html#datetime.time.strftime
 [`continue button label`]: {{ site.baseurl }}/docs/modifiers.html#continue button label
 [`validation_error()`]: {{ site.baseurl }}/docs/functions.html#validation_error
-[`raise`]: https://docs.python.org/3.6/tutorial/errors.html#raising-exceptions
+[`raise`]: https://docs.python.org/3.8/tutorial/errors.html#raising-exceptions
 [`date`]: #date
 [`number`]: #number
 [`.geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
@@ -3006,16 +3006,16 @@ why this needs to be done manually as opposed to automatically:
 [`objects from file`]: {{ site.baseurl }}/docs/initial.html#objects from file
 [`data`]: {{ site.baseurl }}/docs/initial.html#data
 [`data from code`]: {{ site.baseurl }}/docs/initial.html#data from code
-[lambda function]: https://docs.python.org/3.6/tutorial/controlflow.html#lambda-expressions
+[lambda function]: https://docs.python.org/3.8/tutorial/controlflow.html#lambda-expressions
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [accept]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#attr-accept
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`default validation messages`]: {{ site.baseurl }}/docs/initial.html#default validation messages
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
 [Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
-[list comprehension]: https://docs.python.org/3.6/tutorial/datastructures.html#list-comprehensions
+[list comprehension]: https://docs.python.org/3.8/tutorial/datastructures.html#list-comprehensions
 [`continue button field`]: #continue button field
-[tuples]: https://docs.python.org/3.6/tutorial/datastructures.html#tuples-and-sequences
+[tuples]: https://docs.python.org/3.8/tutorial/datastructures.html#tuples-and-sequences
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
 [`url_action_call()`]: {{ site.baseurl }}/docs/functions.html#js_url_action_call
 [JSON]: https://en.wikipedia.org/wiki/JSON
@@ -3037,8 +3037,8 @@ why this needs to be done manually as opposed to automatically:
 [jQuery Validation Plugin]: http://jqueryvalidation.org
 [jQuery.validator.addMethod()]: https://jqueryvalidation.org/jQuery.validator.addMethod/
 [`validation messages`]: #validation messages
-[Python object]: https://docs.python.org/3.6/tutorial/classes.html
+[Python object]: https://docs.python.org/3.8/tutorial/classes.html
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [`.object_name()`]: {{ site.baseurl }}/docs/objects.html#DAObject.object_name
-[Python special methods]: https://docs.python.org/3.6/reference/datamodel.html#special-method-names
+[Python special methods]: https://docs.python.org/3.8/reference/datamodel.html#special-method-names
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on

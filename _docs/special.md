@@ -1143,7 +1143,7 @@ internal names include:
 [`row_item`]: {{ site.baseurl }}/docs/initial.html#table
 [`run_python_module`]: {{ site.baseurl }}/docs/functions.html#run_python_module
 [`selections`]: {{ site.baseurl }}/docs/functions.html#selections
-[`self`]: https://docs.python.org/3.6/tutorial/classes.html
+[`self`]: https://docs.python.org/3.8/tutorial/classes.html
 [`send_email`]: {{ site.baseurl }}/docs/functions.html#send_email
 [`send_fax`]: {{ site.baseurl }}/docs/functions.html#send_fax
 [`send_sms`]: {{ site.baseurl }}/docs/functions.html#send_sms

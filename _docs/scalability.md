@@ -1207,6 +1207,7 @@ number of PostgreSQL connections will be 12.
 [`s3` configuration setting]: {{ site.baseurl }}/docs/config.html#s3
 [`azure` configuration setting]: {{ site.baseurl }}/docs/config.html#azure
 [`Docker/config/docassemble-log.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-log.conf.dist
+[`Docker/config/nginx-log.dist`]: {{ site.github.repository_url }}/blob/master/config/nginx-log.dist
 [`Docker/docassemble-syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-syslog-ng.conf
 [`Docker/syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/syslog-ng.conf
 [`Docker/cgi-bin/index.sh`]: {{ site.github.repository_url }}/blob/master/Docker/cgi-bin/index.sh

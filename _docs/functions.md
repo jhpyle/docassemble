@@ -5629,7 +5629,7 @@ The `docx_concatenate()` function accepts one or more file objects
 ([`DAFile`], [`DAStaticFile`], [`DAFileList`], or
 [`DAFileCollection`]) as input (raw file paths are also accepted) and
 returns a [`DAFile`] containing the files concatenated into a single
-[DOCX] file.  Only word processing files (.doc, .docx, .rtf, and .odt)
+DOCX file.  Only word processing files (.doc, .docx, .rtf, and .odt)
 are accepted.  If any of the arguments is a list, it will be unpacked.
 
 `docx_concatenate()` takes an optional keyword parameter `filename`,
@@ -7783,9 +7783,9 @@ $(document).on('daPageLoad', function(){
 [`validate`]: {{ site.baseurl }}/docs/fields.html#validate
 [`wc_side_of_bed.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/wc_side_of_bed.yml
 [`wc_common.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/wc_common.yml
-[lambda function]: https://docs.python.org/3.6/tutorial/controlflow.html#lambda-expressions
-[lambda functions]: https://docs.python.org/3.6/tutorial/controlflow.html#lambda-expressions
-[`raise`]: https://docs.python.org/3.6/tutorial/errors.html#raising-exceptions
+[lambda function]: https://docs.python.org/3.8/tutorial/controlflow.html#lambda-expressions
+[lambda functions]: https://docs.python.org/3.8/tutorial/controlflow.html#lambda-expressions
+[`raise`]: https://docs.python.org/3.8/tutorial/errors.html#raising-exceptions
 [`validation code`]: {{ site.baseurl }}/docs/fields.html#validation code
 [Google Sheets API]: https://developers.google.com/sheets/api/
 [`js show if`]: {{ site.baseurl }}/docs/fields.html#js show if
@@ -7793,7 +7793,7 @@ $(document).on('daPageLoad', function(){
 [redact_demo.pdf]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/redact_demo.pdf
 [`somefuncs.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/somefuncs.py
 [`NameError`]: https://docs.python.org/3/library/exceptions.html#exceptions.NameError
-[`try`/`except`]: https://docs.python.org/3.6/tutorial/errors.html#handling-exceptions
+[`try`/`except`]: https://docs.python.org/3.8/tutorial/errors.html#handling-exceptions
 [`redact: False`]: {{ site.baseurl }}/docs/documents.html#redact
 [`forget_result_of()`]: #forget_result_of
 [`re_run_logic()`]: #re_run_logic
@@ -7833,7 +7833,7 @@ $(document).on('daPageLoad', function(){
 [`update_locale()`]: #update_locale
 [`datatype: file`]: {{ site.baseurl }}/docs/fields.html#file
 [`datatype: files`]: {{ site.baseurl }}/docs/fields.html#files
-[`locale`]: https://docs.python.org/3.6/library/locale.html
+[`locale`]: https://docs.python.org/3.8/library/locale.html
 [language-specific functions]: #linguistic
 [`docassemble.base.util.update_word_collection()`]: #update_word_collection
 [`add-separators.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/add-separators.docx

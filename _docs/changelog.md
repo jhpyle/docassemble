@@ -4,18 +4,29 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [1.2.0](https://github.com/jhpyle/docassemble/releases/tag/v1.2.0) - 2020-11-27
+## [1.2.0](https://github.com/jhpyle/docassemble/releases/tag/v1.2.0) - 2020-11-28
 
 ### Changed
-- Upgraded dependencies.
+- Upgraded Python to version 3.8 and upgraded dependencies.  These
+  changes require a system upgrade.  See
+  https://docassemble.org/docs/docker.html#upgrading for instructions
+  on how to perform a system upgrade.  Because Python changed between
+  version 3.6 and and 3.8, you should test your code carefully to make
+  sure it still works in Python 3.8.
+- Among other upgrades, Bootstrap has been upgraded to version 4.5.3.
+  If you are using Bootstrap themes, you may wish to upgrade your
+  Bootstrap theme.
 
-## [1.1.111](https://github.com/jhpyle/docassemble/releases/tag/v1.1.111) - 2020-11-27
+### Fixed
+- Issue with user privileges.
+
+## [1.1.112](https://github.com/jhpyle/docassemble/releases/tag/v1.1.112) - 2020-11-26
 
 ### Changed
 - Upgrading through Package Management is turned off because the
-  upgrade from 1.1.111 to 1.2.0 requires a system upgrade.  See
-  https://docassemble.org/docs/docker.html#upgrading for instructions
-  on how to perform a system upgrade.
+  upgrade to 1.2.0 requires a system upgrade.
+
+## [1.1.111](https://github.com/jhpyle/docassemble/releases/tag/v1.1.111) - 2020-11-26
 
 ### Fixed
 - Some Jinja2 filters did not work correctly.

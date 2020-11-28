@@ -464,7 +464,7 @@ language.
 
 # <a name="customizing"></a>Customizing based on language and locale
 
-The [`language-specific functions`], many of which are used internally
+The [language-specific functions], many of which are used internally
 by **docassemble** object methods, can all be overridden with your own
 versions.  You can write special functions that should be used
 depending on which language is the active language (as set by
@@ -498,7 +498,7 @@ you might want to support more than one locale, but Python's [`locale`
 module] assumes that the locale setting is server-wide.
 
 The [`currency()`] function and the [`currency_symbol()`] functions
-are both [language-specific function]s, which means that you can
+are both [language-specific functions], which means that you can
 substitute your own functions in their place in order to have full
 control over currency formatting.  For example, if you include the
 following in a Python module, then whenever the active language is
@@ -545,7 +545,7 @@ docassemble.base.functions.update_language_function('fr', 'currency_symbol', lam
 {% endhighlight %}
 
 [`currency symbol`]: {{ site.baseurl }}/docs/config.html#currency symbol
-[`locale` module]: https://docs.python.org/3.6/library/locale.htmle
+[`locale` module]: https://docs.python.org/3.8/library/locale.htmle
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [initial blocks]: {{ site.baseurl }}/docs/initial.html

@@ -58,10 +58,10 @@ developers and other users, you can chat in real time with
 knowledgeable developers on the [**docassemble** Slack group].  If you
 find a bug, you can [submit an issue on GitHub].
 
-In June 2018 and June 2019, the **docassemble** community convened for
-<a href="https://docacon.com">Docacon</a>, a one-day docassemble
-conference.  There have been sessions on **docassemble** at a variety
-of conferences on law and technology.
+Every June since 2018, the **docassemble** community has convened for
+<a href="https://docacon.com">Docacon</a>, a global docassemble
+conference.  There have also been sessions on **docassemble** at a
+variety of conferences on law and technology.
 
 [get help]: {{ site.baseurl }}/docs/support.html
 [documentation]: {{ site.baseurl }}/docs.html

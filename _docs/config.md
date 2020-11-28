@@ -4344,7 +4344,7 @@ and Facebook API keys.
 [`docassemble.webapp.install_certs`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/install_certs.py
 [`brandname`]: #brandname
 [`appname`]: #appname
-[PYTHONUSERBASE]: https://docs.python.org/3.6/using/cmdline.html#envvar-PYTHONUSERBASE
+[PYTHONUSERBASE]: https://docs.python.org/3.8/using/cmdline.html#envvar-PYTHONUSERBASE
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [`cert install directory`]: #cert install directory
 [HTTPS]: {{ site.baseurl }}/docs/docker.html#https

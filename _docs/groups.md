@@ -1642,9 +1642,9 @@ after it is defined.
 [`PartyList`]: {{ site.baseurl }}/docs/legal.html#PartyList
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`.number()`]: {{ site.baseurl }}/docs/objects.html#DAList.number
-[Python interpreter]: https://docs.python.org/3.6/tutorial/interpreter.html
-[Python list]: https://docs.python.org/3.6/tutorial/datastructures.html
-[Python lists]: https://docs.python.org/3.6/tutorial/datastructures.html
+[Python interpreter]: https://docs.python.org/3.8/tutorial/interpreter.html
+[Python list]: https://docs.python.org/3.8/tutorial/datastructures.html
+[Python lists]: https://docs.python.org/3.8/tutorial/datastructures.html
 [Python dict]: https://docs.python.org/3/library/stdtypes.html#dict
 [Python set]: https://docs.python.org/3/library/stdtypes.html#set
 [`sorted()` function]: https://docs.python.org/3/library/functions.html#sorted
@@ -1656,7 +1656,7 @@ after it is defined.
 [`code` blocks]: {{ site.baseurl }}/docs/code.html#code
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
-[list]: https://docs.python.org/3.6/tutorial/datastructures.html
+[list]: https://docs.python.org/3.8/tutorial/datastructures.html
 [dict]: https://docs.python.org/3/library/stdtypes.html#dict
 [set]: https://docs.python.org/3/library/stdtypes.html#set
 [object]: {{ site.baseurl }}/docs/objects.html

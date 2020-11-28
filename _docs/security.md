@@ -1,3 +1,4 @@
+
 ---
 layout: docs
 title: Security
@@ -148,7 +149,7 @@ the [JavaScript] function [`url_action()`] to access screens they are
 not supposed to see.  For example, if your two users are represented
 by two [`Individual`]s in your interview answers called `petitioner`
 and `respondent`, the respondent might try to call
-[`url_action("petitioner.ssn")`] from the [JavaScript] console.
+`url_action("petitioner.ssn")` from the [JavaScript] console.
 
 You can provide security over the [actions] mechanism by calling
 [`process_action()`] manually inside of a [`code`] block that has
@@ -321,3 +322,7 @@ this is only used when [Azure blob storage] is enabled.
 [`debug`]: {{ site.baseurl }}/docs/config.html#debug
 [`allow demo`]: {{ site.baseurl }}/docs/config.html#allow demo
 [`enable playground`]: {{ site.baseurl }}/docs/config.html#enable playground
+[`interview delete days`]: {{ site.baseurl }}/docs/config.html#interview delete days
+[`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
+[`DAOauth`]: {{ site.baseurl }}/docs/objects.html#DAOAuth
+[front end interface]: {{ site.baseurl }}/docs/frontend.html

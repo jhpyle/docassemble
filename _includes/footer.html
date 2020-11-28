@@ -16,11 +16,11 @@
       {%- endfor %}
       <a href="{{ site.github.repository_url }}">GitHub</a>
       </p>
-      <p><a href="https://twitter.com/docassemble" class="twitter-follow-button" data-show-count="false">Follow @docassemble</a></p>
+      <p><a href="https://twitter.com/docassemble?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-show-count="false">Follow @docassemble</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script></p>
     </footer>
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
     <script src="{{ '/jquery/jquery.min.js' | prepend: site.baseurl }}"></script>
-    <script src="{{ '/bootstrap4/js/bootstrap.min.js' | prepend: site.baseurl }}"></script>
+    <script src="{{ '/bootstrap4/js/bootstrap.bundle.min.js' | prepend: site.baseurl }}"></script>
     <script src="{{ '/tocmd-generator/js/jquery.toc.js' | prepend: site.baseurl }}"></script>
     <script>
       $('#main').toc({showAlways:true});

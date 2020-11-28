@@ -1105,3 +1105,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [`undefine`]: {{ site.baseurl }}/docs/logic.html#undefine
 [`restrict input variables`]: {{ site.baseurl }}/docs/config.html#restrict input variables
 [`update_terms()`]: {{ site.baseurl }}/docs/functions.html#update_terms
+[`continue button field`]: {{ site.baseurl }}/docs/fields.html#continue button field

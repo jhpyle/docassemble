@@ -190,16 +190,20 @@ hostname of the machine that is running [Docker].  If you are running
 [Docker] on your own computer, this address is probably
 http://localhost.
 
-The number of minutes **docassemble** takes to start up depends on the
-speed of the network connection.  A number of things happen during the
-boot process, but the main bottleneck is the updating of software
-packages.  On some systems it may take up to 20 minutes for
-**docassemble** to boot.  If you want to investigate what is happening
-on the server, see the [troubleshooting] section.
+Note that the **docassemble** web interface is not available
+immediately after `docker run` is invoked.  The server needs time to
+boot and initialize.  On [EC2], this process takes about one minute
+forty seconds, and it might be slower on other platforms.  If you want
+to investigate what is happening on the server, see the
+[troubleshooting] section.  (If you have an existing configuration in
+[data storage], the boot process will take even longer because your
+software and databases will need to be copied from [data storage] and
+restored on the server).
 
-If you are running [Docker] on [AWS], the address will be something
-like `http://ec2-52-38-111-32.us-west-2.compute.amazonaws.com` (check
-your [EC2] configuration for the hostname).  On [AWS], you will need a
+If you are running [Docker] on [AWS], the address of the server will
+be something like
+`http://ec2-52-38-111-32.us-west-2.compute.amazonaws.com` (check your
+[EC2] configuration for the hostname).  On [AWS], you will need a
 [Security Group] that opens [HTTP] (port 80) to the outside world in
 order to allow web browsers to connect to your [EC2] instance.
 
@@ -485,7 +489,7 @@ If you need to make manual changes to the installation of [Python]
 packages, note that **docassemble**'s [Python] code is installed in a
 [Python virtual environment] in which all of the files are readable
 and writable by the `www-data` user.  The virtual environment is
-located at `/usr/share/docassemble/local3.6/`.  Thus, installing
+located at `/usr/share/docassemble/local3.8/`.  Thus, installing
 [Python] packages through Debian's `apt-get` utility will not actually
 make that [Python] code available to **docassemble**.  Before using
 [pip], you need to first change the user to `www-data`, and then
@@ -493,7 +497,7 @@ switch into the appropriate [Python virtual environment].
 
 {% highlight bash %}
 su www-data
-source /usr/share/docassemble/local3.6/bin/activate
+source /usr/share/docassemble/local3.8/bin/activate
 {% endhighlight %}
 
 Note that if you want to install a new version of a [Python] package
