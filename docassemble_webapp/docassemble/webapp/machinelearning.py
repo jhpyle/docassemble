@@ -16,7 +16,7 @@ import os
 import yaml
 import json
 import sys
-from pattern.vector import count, KNN, SVM, stem, PORTER, words, Document
+from docassemble_pattern.vector import count, KNN, SVM, stem, PORTER, words, Document
 from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import get_info_from_file_reference
 from docassemble.webapp.fixpickle import fix_pickle_obj
