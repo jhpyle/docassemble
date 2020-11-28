@@ -43,21 +43,6 @@ export DEBIAN_FRONTEND=noninteractive
 if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     apt-get clean &> /dev/null
     apt-get -q -y update &> /dev/null
-    pandoc --help &> /dev/null || apt-get -q -y install pandoc
-fi
-
-LIBREOFFICE_VERSION=`libreoffice --version`
-if [[ $LIBREOFFICE_VERSION =~ ^LibreOffice\ 6 ]]; then
-    apt-get -q -y install -t buster-backports libreoffice
-fi
-
-PANDOC_VERSION=`pandoc --version | head -n1`
-
-if [ "${PANDOC_VERSION}" != "pandoc 2.11.2" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
-   cd /tmp \
-   && wget -q https://github.com/jgm/pandoc/releases/download/2.11.2/pandoc-2.11.2-1-amd64.deb \
-   && dpkg -i pandoc-2.11.2-1-amd64.deb \
-   && rm pandoc-2.11.2-1-amd64.deb
 fi
 
 echo "2" >&2
@@ -824,10 +809,6 @@ if [ "$OTHERLOGSERVER" = false ] && [ -f "${LOGDIRECTORY}/docassemble.log" ]; th
     chown www-data.www-data "${LOGDIRECTORY}/docassemble.log"
 fi
 
-echo "35" >&2
-
-sed -i 's/<policy domain="coder" rights="none" pattern="PDF" \/>/<policy domain="coder" rights="read | write" pattern="PDF" \/>/' /etc/ImageMagick-6/policy.xml
-
 echo "36" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ "$REDISRUNNING" = false ]; then
@@ -838,13 +819,13 @@ echo "37" >&2
 
 if [ "${DAUPDATEONSTART:-true}" = "true" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "Doing upgrading of packages" >&2
-    su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip==20.2.4 && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
+    su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
     touch "${DA_ROOT}/webapp/initialized"
 fi
 
 if [ "${DAUPDATEONSTART:-true}" = "initial" ] && [ ! -f "${DA_ROOT}/webapp/initialized" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "Doing initial upgrading of packages" >&2
-    su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip==20.2.4 && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
+    su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
     touch "${DA_ROOT}/webapp/initialized"
 fi
 

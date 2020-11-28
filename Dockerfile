@@ -82,7 +82,7 @@ bash -c \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \
-   /tmp/docassemble/docassemble_webapp
+   /tmp/docassemble/docassemble_webapp"
 
 USER root
 RUN \
