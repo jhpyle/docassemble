@@ -30,7 +30,7 @@ class myextract(ast.NodeVisitor):
             self.in_subscript += 1
             self.seen_name = False
         elif hasattr(node.slice, 'value') and hasattr(node.slice.value, 'n'):
-            self.stack.append('[' + str(node.slice.value.n) + ']')
+            self.stack.append('[' + repr(node.slice.value.n) + ']')
             self.in_subscript += 1
             self.seen_name = False
         elif hasattr(node.slice, 'value') and hasattr(node.slice.value, 's'):
@@ -55,10 +55,10 @@ class myvisitnode(ast.NodeVisitor):
         self.depth -= 1
     def visit_Call(self, node):
         self.calls.add(node.func)
-        if hasattr(node.func, 'id') and node.func.id in ['showif', 'showifdef', 'value', 'defined'] and len(node.args) and node.args[0].__class__.__name__ == 'Str' and hasattr(node.args[0], 's') and re.search(r'^[^\d]', node.args[0].s) and not re.search(r'[^A-Z_a-z0-9\.\"\'\[\] ]', node.args[0].s):
-            self.names[node.args[0].s] = 1
-        if hasattr(node.func, 'id') and node.func.id in ['define'] and len(node.args) and node.args[0].__class__.__name__ == 'Str' and hasattr(node.args[0], 's') and re.search(r'^[^\d]', node.args[0].s) and not re.search(r'[^A-Z_a-z0-9\.\"\'\[\] ]', node.args[0].s):
-            self.targets[node.args[0].s] = 1
+        if hasattr(node.func, 'id') and node.func.id in ['showif', 'showifdef', 'value', 'defined'] and len(node.args) and node.args[0].__class__.__name__ == 'Constant' and hasattr(node.args[0], 'value') and re.search(r'^[^\d]', node.args[0].value) and not re.search(r'[^A-Z_a-z0-9\.\"\'\[\] ]', node.args[0].value):
+            self.names[node.args[0].value] = 1
+        if hasattr(node.func, 'id') and node.func.id in ['define'] and len(node.args) and node.args[0].__class__.__name__ == 'Constant' and hasattr(node.args[0], 'value') and re.search(r'^[^\d]', node.args[0].value) and not re.search(r'[^A-Z_a-z0-9\.\"\'\[\] ]', node.args[0].value):
+            self.targets[node.args[0].value] = 1
         ast.NodeVisitor.generic_visit(self, node)
     def visit_Subscript(self, node):
         if node not in self.calls:

@@ -8,12 +8,12 @@ server {
     location {{DAWSGIROOT}} { try_files $uri @docassemble; }
     location @docassemble {
         include uwsgi_params;
-        uwsgi_pass unix:/var/run/uwsgi/docassemble.sock;
+        uwsgi_pass unix:///var/run/uwsgi/docassemble.sock;
     }
 
     location {{DAPOSTURLROOT}}ws {
         include proxy_params;
-        proxy_pass http://{{DAWEBSOCKETSIP}}:{{DAWEBSOCKETSPORT}};    
+        proxy_pass http://{{DAWEBSOCKETSIP}}:{{DAWEBSOCKETSPORT}};
     }
 
     location {{DAPOSTURLROOT}}ws/socket.io {

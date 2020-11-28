@@ -187,7 +187,7 @@
   function eachWord(lineText, f) {
     var words = lineText.split(/\s+/)
     for (var i = 0; i < words.length; i++)
-      if (words[i]) f(words[i].replace(/[,;]/g, ''))
+      if (words[i]) f(words[i].replace(/[`,;]/g, ''))
   }
 
   function findTableByAlias(alias, editor) {
@@ -264,7 +264,7 @@
       token.string = token.string.slice(0, cur.ch - token.start);
     }
 
-    if (token.string.match(/^[.`"\w@]\w*$/)) {
+    if (token.string.match(/^[.`"'\w@][\w$#]*$/g)) {
       search = token.string;
       start = token.start;
       end = token.end;

@@ -1,4 +1,4 @@
-min_system_version = '0.2.36'
+min_system_version = '1.2.0'
 import re
 re._MAXCACHE = 10000
 import os
@@ -9,7 +9,7 @@ import tarfile
 import types
 import math
 from io import TextIOWrapper
-from textstat.textstat import textstat
+from docassemble_textstat.textstat import textstat
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
@@ -3828,7 +3828,10 @@ def restart_others():
 def current_info(yaml=None, req=None, action=None, location=None, interface='web', session_info=None, secret=None, device_id=None, session_uid=None):
     #logmessage("interface is " + str(interface))
     if current_user.is_authenticated and not current_user.is_anonymous:
-        ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone, language=current_user.language)
+        role_list = [role.name for role in current_user.roles]
+        if len(role_list) == 0:
+            role_list = ['user']
+        ext = dict(email=current_user.email, roles=role_list, the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone, language=current_user.language)
     else:
         ext = dict(email=None, the_user_id='t' + str(session.get('tempuser', None)), theid=session.get('tempuser', None), roles=list())
     headers = dict()
@@ -8688,9 +8691,14 @@ def index(action_argument=None, refer=None):
         return true;
       }
       function daProcessAjaxError(xhr, status, error){
-        var theHtml = xhr.responseText;
-        theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
-        $(daTargetDiv).html(theHtml);
+        if (xhr.responseType == '' || xhr.responseType == 'text'){
+          var theHtml = xhr.responseText;
+          theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
+          $(daTargetDiv).html(theHtml);
+        }
+        else {
+          console.log("daProcessAjaxError: response was not text");
+        }
       }
       function daAddScriptToHead(src){
         var head = document.getElementsByTagName("head")[0];
@@ -12064,9 +12072,14 @@ def observer():
         daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
       }
       function daProcessAjaxError(xhr, status, error){
-        var theHtml = xhr.responseText;
-        theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
-        $(daTargetDiv).html(theHtml);
+        if (xhr.responseType == '' || xhr.responseType == 'text'){
+          var theHtml = xhr.responseText;
+          theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
+          $(daTargetDiv).html(theHtml);
+        }
+        else {
+          console.log("daProcessAjaxError: response was not text");
+        }
       }
       function daAddScriptToHead(src){
         var head = document.getElementsByTagName("head")[0];
@@ -12801,7 +12814,7 @@ def monitor():
         forwarding_phone_number = twilio_config['name']['default'].get('number', None)
         if forwarding_phone_number is not None:
             call_forwarding_on = 'true'
-    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js', v=da_version) + '"></script>' + "\n" + """    <script type="text/javascript" charset="utf-8">
+    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.js', v=da_version) + '"></script>' + "\n" + """    <script type="text/javascript" charset="utf-8">
       var daAudioContext = null;
       var daSocket;
       var daSoundBuffer = Object();
@@ -14320,7 +14333,7 @@ def get_master_branch(giturl):
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
-#     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
+#     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
 #     var daSocket;
 #     $(document).ready(function(){
 #         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
@@ -19808,7 +19821,7 @@ def playground_css_bundle():
 def js_bundle():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = ''
-    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -19828,7 +19841,7 @@ def playground_js_bundle():
 def js_admin_bundle():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = ''
-    for parts in [['app', 'jquery.min.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js']]:
+    for parts in [['app', 'jquery.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -19838,7 +19851,7 @@ def js_admin_bundle():
 def js_bundle_wrap():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = '(function($) {'
-    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -19849,7 +19862,7 @@ def js_bundle_wrap():
 def js_bundle_no_query():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = ''
-    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['popper', 'umd', 'popper.min.js'], ['popper', 'umd', 'tooltip.min.js'], ['bootstrap', 'js', 'bootstrap.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.js'], ['app', 'socket.io.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"

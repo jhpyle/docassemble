@@ -831,7 +831,10 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 if person is None:
                     sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
                     continue
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
+                role_list = [role.name for role in person.roles]
+                if len(role_list) == 0:
+                    role_list = ['user']
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=role_list))
             else:
                 messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
     else:
@@ -865,7 +868,10 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 if person is None:
                     sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
                     continue
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
+                role_list = [role.name for role in person.roles]
+                if len(role_list) == 0:
+                    role_list = ['user']
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=role_list))
             else:
                 messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
     return messages

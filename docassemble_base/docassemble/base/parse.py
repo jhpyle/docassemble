@@ -2182,10 +2182,10 @@ class Question:
                     term_textobject = TextObject(str(lower_term), question=self)
                     alt_terms = dict()
                     re_dict = dict()
-                    re_dict[self.language] = re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)
+                    re_dict[self.language] = re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                        re_dict[lang] = re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)
+                        re_dict[lang] = re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)
                         alt_terms[lang] = tr_tuple[0]
                     self.terms[lower_term] = {'definition': TextObject(definitions + str(definition), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'auto terms' in data and 'question' in data:
@@ -2205,10 +2205,10 @@ class Question:
                     term_textobject = TextObject(str(lower_term), question=self)
                     alt_terms = dict()
                     re_dict = dict()
-                    re_dict[self.language] = re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)
+                    re_dict[self.language] = re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                        re_dict[lang] = re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)
+                        re_dict[lang] = re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)
                         alt_terms[lang] = tr_tuple[0]
                     self.autoterms[lower_term] = {'definition': TextObject(definitions + str(definition), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'terms' in data and 'question' not in data:
@@ -2226,14 +2226,14 @@ class Question:
                             lower_term = re.sub(r'\s+', ' ', term.lower())
                             term_textobject = TextObject(str(lower_term), question=self)
                             definition_textobject = TextObject(str(definition), question=self)
-                            self.interview.terms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                            self.interview.terms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
                             for lang, tr_tuple in term_textobject.other_lang.items():
                                 if lang not in self.interview.terms:
                                     self.interview.terms[lang] = dict()
                                 if tr_tuple[0] not in self.interview.terms[lang]:
                                     if lang in definition_textobject.other_lang:
                                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                        self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
+                                        self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
                     else:
                         raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['terms'], dict):
@@ -2241,14 +2241,14 @@ class Question:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     term_textobject = TextObject(str(lower_term), question=self)
                     definition_textobject = TextObject(str(data['terms'][term]), question=self)
-                    self.interview.terms[self.language][lower_term] = {'definition': str(data['terms'][term]), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                    self.interview.terms[self.language][lower_term] = {'definition': str(data['terms'][term]), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         if lang not in self.interview.terms:
                             self.interview.terms[lang] = dict()
                         if tr_tuple[0] not in self.interview.terms[lang]:
                             if lang in definition_textobject.other_lang:
                                 lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
+                                self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
             else:
                 raise DAError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'auto terms' in data and 'question' not in data:
@@ -2266,14 +2266,14 @@ class Question:
                             lower_term = re.sub(r'\s+', ' ', term.lower())
                             term_textobject = TextObject(str(lower_term), question=self)
                             definition_textobject = TextObject(str(definition), question=self)
-                            self.interview.autoterms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                            self.interview.autoterms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
                             for lang, tr_tuple in term_textobject.other_lang.items():
                                 if lang not in self.interview.autoterms:
                                     self.interview.autoterms[lang] = dict()
                                 if tr_tuple[0] not in self.interview.autoterms[lang]:
                                     if lang in definition_textobject.other_lang:
                                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                        self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
+                                        self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
                     else:
                         raise DAError("An auto terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['auto terms'], dict):
@@ -2281,14 +2281,14 @@ class Question:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     term_textobject = TextObject(str(lower_term), question=self)
                     definition_textobject = TextObject(str(data['auto terms'][term]), question=self)
-                    self.interview.autoterms[self.language][lower_term] = {'definition': str(data['auto terms'][term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                    self.interview.autoterms[self.language][lower_term] = {'definition': str(data['auto terms'][term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         if lang not in self.interview.autoterms:
                             self.interview.autoterms[lang] = dict()
                         if tr_tuple[0] not in self.interview.autoterms[lang]:
                             if lang in definition_textobject.other_lang:
                                 lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
+                                self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}
             else:
                 raise DAError("An auto terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'default role' in data:
@@ -6434,6 +6434,8 @@ class Interview:
                     title[key] = val
         return title
     def allowed_to_access(self, is_anonymous=False, has_roles=None):
+        if isinstance(has_roles, list) and len(has_roles) == 0:
+            has_roles = ['user']
         roles = set()
         for metadata in self.metadata:
             if 'required privileges' in metadata:
@@ -6461,6 +6463,8 @@ class Interview:
                 return False
         return True
     def allowed_to_initiate(self, is_anonymous=False, has_roles=None):
+        if isinstance(has_roles, list) and len(has_roles) == 0:
+            has_roles = ['user']
         if not self.allowed_to_access(is_anonymous=is_anonymous, has_roles=has_roles):
             return False
         roles = set()
@@ -6492,6 +6496,8 @@ class Interview:
                 return len(set(roles).intersection(set(has_roles))) > 0
         return True
     def allowed_to_see_listed(self, is_anonymous=False, has_roles=None):
+        if isinstance(has_roles, list) and len(has_roles) == 0:
+            has_roles = ['user']
         if not self.allowed_to_access(is_anonymous=is_anonymous, has_roles=has_roles):
             return False
         roles = set()

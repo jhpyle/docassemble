@@ -12,7 +12,7 @@ server {
     location /listlog { try_files $uri @docassemblelog; }
     location @docassemblelog {
         include uwsgi_params;
-        uwsgi_pass unix:/var/run/uwsgi/docassemblelog.sock;    
+        uwsgi_pass unix:///var/run/uwsgi/docassemblelog.sock;
     }
 
 }

@@ -14,7 +14,7 @@ import { Range } from "../model/selection.js"
 import { extendSelection } from "../model/selection_updates.js"
 import { ie, ie_version, mobile, webkit } from "../util/browser.js"
 import { e_preventDefault, e_stop, on, signal, signalDOMEvent } from "../util/event.js"
-import { bind, copyObj, Delayed } from "../util/misc.js"
+import { copyObj, Delayed } from "../util/misc.js"
 
 import { clearDragCursor, onDragOver, onDragStart, onDrop } from "./drop_events.js"
 import { ensureGlobalHandlers } from "./global_events.js"
@@ -76,7 +76,9 @@ export function CodeMirror(place, options) {
   attachDoc(this, doc)
 
   if ((options.autofocus && !mobile) || this.hasFocus())
-    setTimeout(bind(onFocus, this), 20)
+    setTimeout(() => {
+      if (this.hasFocus() && !this.state.focused) onFocus(this)
+    }, 20)
   else
     onBlur(this)
 
@@ -120,6 +122,9 @@ function registerEventHandlers(cm) {
   // which point we can't mess with it anymore. Context menu is
   // handled in onMouseDown for these browsers.
   on(d.scroller, "contextmenu", e => onContextMenu(cm, e))
+  on(d.input.getField(), "contextmenu", e => {
+    if (!d.scroller.contains(e.target)) onContextMenu(cm, e)
+  })
 
   // Used to suppress mouse event handling when a touch happens
   let touchFinished, prevTouch = {end: 0}

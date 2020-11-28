@@ -126,7 +126,10 @@ def main():
     if user is None:
         user_info = dict(email=None, the_user_id='t' + str(record.temp_user_id), theid=record.temp_user_id, roles=list())
     else:
-        user_info = dict(email=user.email, roles=[role.name for role in user.roles], the_user_id=user.id, theid=user.id, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization)
+        role_list = [role.name for role in user.roles]
+        if len(role_list) == 0:
+            role_list = ['user']
+        user_info = dict(email=user.email, roles=role_list, the_user_id=user.id, theid=user.id, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization)
     result = docassemble.webapp.worker.background_action.delay(record.filename, user_info, record.uid, None, None, None, dict(action='incoming_email', arguments=dict(id=email_record.id)), extra=None)
 
 def save_attachment(uid, yaml_filename, filename, email_id, index, content_type, extension, content):

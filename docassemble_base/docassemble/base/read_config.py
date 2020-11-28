@@ -11,6 +11,8 @@ if __name__ == "__main__":
         print('export TIMEZONE="' + str(daconfig['timezone']) + '"')
     if 'os locale' in daconfig and daconfig['os locale'] is not None:
         print('export LOCALE="' + str(daconfig['os locale']) + '"')
+    else:
+        print('export LOCALE="en_US.UTF-8 UTF-8"')
     print('export DAPYTHONVERSION="3"')
     if 'web server' in daconfig and isinstance(daconfig['web server'], str):
         print('export DAWEBSERVER="' + daconfig['web server'] + '"')

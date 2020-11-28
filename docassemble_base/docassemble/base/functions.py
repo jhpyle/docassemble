@@ -1,12 +1,12 @@
 import types
 import markdown
 from mdx_smartypants import SmartypantsExt
-import pattern.en
-import pattern.es
-import pattern.de
-import pattern.fr
-import pattern.it
-import pattern.nl
+import docassemble_pattern.en
+import docassemble_pattern.es
+import docassemble_pattern.de
+import docassemble_pattern.fr
+import docassemble_pattern.it
+import docassemble_pattern.nl
 import re
 from pylatex.utils import escape_latex
 #import operator
@@ -2540,7 +2540,7 @@ def verb_present_en(*pargs, **kwargs):
         new_args.append(str(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
-    output = pattern.en.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.en.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2553,7 +2553,7 @@ def verb_past_en(*pargs, **kwargs):
         new_args.append(arg)
     if len(new_args) < 2:
         new_args.append('3sgp')
-    output = pattern.en.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.en.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2564,7 +2564,7 @@ def noun_plural_en(*pargs, **kwargs):
     noun = noun_singular_en(pargs[0])
     if len(pargs) >= 2 and pargs[1] == 1:
         return str(noun)
-    output = pattern.en.pluralize(str(noun))
+    output = docassemble_pattern.en.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2574,7 +2574,7 @@ def noun_singular_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     if len(pargs) >= 2 and pargs[1] != 1:
         return pargs[0]
-    output = pattern.en.singularize(str(pargs[0]))
+    output = docassemble_pattern.en.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2582,7 +2582,7 @@ def noun_singular_en(*pargs, **kwargs):
 
 def indefinite_article_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    output = pattern.en.article(str(pargs[0]).lower()) + " " + str(pargs[0])
+    output = docassemble_pattern.en.article(str(pargs[0]).lower()) + " " + str(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2597,7 +2597,7 @@ def verb_present_es(*pargs, **kwargs):
         new_args.append('3sg')
     if new_args[1] == 'pl':
         new_args[1] = '3pl'
-    output = pattern.es.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.es.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2612,7 +2612,7 @@ def verb_past_es(*pargs, **kwargs):
         new_args.append('3sgp')
     if new_args[1] == 'ppl':
         new_args[1] = '3ppl'
-    output = pattern.es.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.es.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2623,7 +2623,7 @@ def noun_plural_es(*pargs, **kwargs):
     noun = noun_singular_es(pargs[0])
     if len(pargs) >= 2 and pargs[1] == 1:
         return str(noun)
-    output = pattern.es.pluralize(str(noun))
+    output = docassemble_pattern.es.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2633,7 +2633,7 @@ def noun_singular_es(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     if len(pargs) >= 2 and pargs[1] != 1:
         return pargs[0]
-    output = pattern.es.singularize(str(pargs[0]))
+    output = docassemble_pattern.es.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2641,7 +2641,7 @@ def noun_singular_es(*pargs, **kwargs):
 
 def indefinite_article_es(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    output = pattern.es.article(str(pargs[0]).lower()) + " " + str(pargs[0])
+    output = docassemble_pattern.es.article(str(pargs[0]).lower()) + " " + str(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2656,7 +2656,7 @@ def verb_present_de(*pargs, **kwargs):
         new_args.append('3sg')
     if new_args[1] == 'pl':
         new_args[1] = '3pl'
-    output = pattern.de.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.de.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2671,7 +2671,7 @@ def verb_past_de(*pargs, **kwargs):
         new_args.append('3sgp')
     if new_args[1] == 'ppl':
         new_args[1] = '3ppl'
-    output = pattern.de.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.de.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2682,7 +2682,7 @@ def noun_plural_de(*pargs, **kwargs):
     noun = noun_singular_de(pargs[0])
     if len(pargs) >= 2 and pargs[1] == 1:
         return str(noun)
-    output = pattern.de.pluralize(str(noun))
+    output = docassemble_pattern.de.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2692,7 +2692,7 @@ def noun_singular_de(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     if len(pargs) >= 2 and pargs[1] != 1:
         return pargs[0]
-    output = pattern.de.singularize(str(pargs[0]))
+    output = docassemble_pattern.de.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2700,7 +2700,7 @@ def noun_singular_de(*pargs, **kwargs):
 
 def indefinite_article_de(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    output = pattern.de.article(str(pargs[0]).lower()) + " " + str(pargs[0])
+    output = docassemble_pattern.de.article(str(pargs[0]).lower()) + " " + str(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2715,7 +2715,7 @@ def verb_present_fr(*pargs, **kwargs):
         new_args.append('3sg')
     if new_args[1] == 'pl':
         new_args[1] = '3pl'
-    output = pattern.fr.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.fr.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2730,7 +2730,7 @@ def verb_past_fr(*pargs, **kwargs):
         new_args.append('3sgp')
     if new_args[1] == 'ppl':
         new_args[1] = '3ppl'
-    output = pattern.fr.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.fr.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2741,7 +2741,7 @@ def noun_plural_fr(*pargs, **kwargs):
     noun = noun_singular_fr(pargs[0])
     if len(pargs) >= 2 and pargs[1] == 1:
         return str(noun)
-    output = pattern.fr.pluralize(str(noun))
+    output = docassemble_pattern.fr.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2751,7 +2751,7 @@ def noun_singular_fr(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     if len(pargs) >= 2 and pargs[1] != 1:
         return pargs[0]
-    output = pattern.fr.singularize(str(pargs[0]))
+    output = docassemble_pattern.fr.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2759,7 +2759,7 @@ def noun_singular_fr(*pargs, **kwargs):
 
 def indefinite_article_fr(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    output = pattern.fr.article(str(pargs[0]).lower()) + " " + str(pargs[0])
+    output = docassemble_pattern.fr.article(str(pargs[0]).lower()) + " " + str(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2774,7 +2774,7 @@ def verb_present_it(*pargs, **kwargs):
         new_args.append('3sg')
     if new_args[1] == 'pl':
         new_args[1] = '3pl'
-    output = pattern.it.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.it.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2789,7 +2789,7 @@ def verb_past_it(*pargs, **kwargs):
         new_args.append('3sgp')
     if new_args[1] == 'ppl':
         new_args[1] = '3ppl'
-    output = pattern.it.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.it.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2800,7 +2800,7 @@ def noun_plural_it(*pargs, **kwargs):
     noun = noun_singular_it(pargs[0])
     if len(pargs) >= 2 and pargs[1] == 1:
         return str(noun)
-    output = pattern.it.pluralize(str(noun))
+    output = docassemble_pattern.it.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2810,7 +2810,7 @@ def noun_singular_it(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     if len(pargs) >= 2 and pargs[1] != 1:
         return pargs[0]
-    output = pattern.it.singularize(str(pargs[0]))
+    output = docassemble_pattern.it.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2818,7 +2818,7 @@ def noun_singular_it(*pargs, **kwargs):
 
 def indefinite_article_it(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    output = pattern.it.article(str(pargs[0]).lower()) + " " + str(pargs[0])
+    output = docassemble_pattern.it.article(str(pargs[0]).lower()) + " " + str(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2833,7 +2833,7 @@ def verb_present_nl(*pargs, **kwargs):
         new_args.append('3sg')
     if new_args[1] == 'pl':
         new_args[1] = '3pl'
-    output = pattern.nl.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.nl.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2848,7 +2848,7 @@ def verb_past_nl(*pargs, **kwargs):
         new_args.append('3sgp')
     if new_args[1] == 'ppl':
         new_args[1] = '3ppl'
-    output = pattern.nl.conjugate(*new_args, **kwargs)
+    output = docassemble_pattern.nl.conjugate(*new_args, **kwargs)
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2859,7 +2859,7 @@ def noun_plural_nl(*pargs, **kwargs):
     noun = noun_singular_nl(pargs[0])
     if len(pargs) >= 2 and pargs[1] == 1:
         return str(noun)
-    output = pattern.nl.pluralize(str(noun))
+    output = docassemble_pattern.nl.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2869,7 +2869,7 @@ def noun_singular_nl(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     if len(pargs) >= 2 and pargs[1] != 1:
         return pargs[0]
-    output = pattern.nl.singularize(str(pargs[0]))
+    output = docassemble_pattern.nl.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:
@@ -2877,7 +2877,7 @@ def noun_singular_nl(*pargs, **kwargs):
 
 def indefinite_article_nl(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    output = pattern.nl.article(str(pargs[0]).lower()) + " " + str(pargs[0])
+    output = docassemble_pattern.nl.article(str(pargs[0]).lower()) + " " + str(pargs[0])
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return(capitalize(output))
     else:

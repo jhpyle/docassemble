@@ -3,7 +3,7 @@
 export HOME=/root
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
 export DAPYTHONVERSION="${DAPYTHONVERSION:-3}"
-export DA_DEFAULT_LOCAL="local3.6"
+export DA_DEFAULT_LOCAL="local3.8"
 
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 
@@ -53,11 +53,11 @@ fi
 
 PANDOC_VERSION=`pandoc --version | head -n1`
 
-if [ "${PANDOC_VERSION}" != "pandoc 2.11.1.1" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
+if [ "${PANDOC_VERSION}" != "pandoc 2.11.2" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
    cd /tmp \
-   && wget -q https://github.com/jgm/pandoc/releases/download/2.11.1.1/pandoc-2.11.1.1-1-amd64.deb \
-   && dpkg -i pandoc-2.11.1.1-1-amd64.deb \
-   && rm pandoc-2.11.1.1-1-amd64.deb
+   && wget -q https://github.com/jgm/pandoc/releases/download/2.11.2/pandoc-2.11.2-1-amd64.deb \
+   && dpkg -i pandoc-2.11.2-1-amd64.deb \
+   && rm pandoc-2.11.2-1-amd64.deb
 fi
 
 echo "2" >&2
@@ -838,13 +838,13 @@ echo "37" >&2
 
 if [ "${DAUPDATEONSTART:-true}" = "true" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "Doing upgrading of packages" >&2
-    su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip==20.1 && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
+    su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip==20.2.4 && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
     touch "${DA_ROOT}/webapp/initialized"
 fi
 
 if [ "${DAUPDATEONSTART:-true}" = "initial" ] && [ ! -f "${DA_ROOT}/webapp/initialized" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "Doing initial upgrading of packages" >&2
-    su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip==20.1 && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
+    su -c "source \"${DA_ACTIVATE}\" && pip install --upgrade pip==20.2.4 && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
     touch "${DA_ROOT}/webapp/initialized"
 fi
 
