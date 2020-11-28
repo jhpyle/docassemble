@@ -26,6 +26,10 @@ and offer "no code" tools for deployment and development.
 
 # Tutorials
 
+There are video recordings of the June 2020 [Docacon training
+conference](https://docacon.com), where there was a "beginner
+training" and an "advanced training."
+
 [ttamg] wrote up 
 [instructions](https://github.com/ttamg/deploy-docassemble/tree/master/digitalocean-setup)
 on how to install **docassemble** on [Digital Ocean] using [Docker Compose].
@@ -36,7 +40,9 @@ including articles on
 [how to get started](https://www.nonprofittechy.com/2019/01/12/get-started-with-docassemble/) with **docassemble** (1/12/2019),
 [the YAML interview format](https://www.nonprofittechy.com/2020/01/17/understanding-docassembles-yaml-interview-format/) (1/17/2020),
 [using groups](https://www.nonprofittechy.com/2018/11/26/gathering-repeated-information-working-with-docassemble-groups/) (11/26/2018),
-and [object oriented programming](https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/) (9/12/2018).
+and [object oriented programming](https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/)
+(9/12/2018).  He also teaches **docassemble** and his [on-line course materials](https://suffolklitlab.org/legal-tech-class/docs/introduction-to-docassemble)
+introduce **docassemble**.
 
 [Richard Batstone](https://richardbatstone.github.io/about/) wrote a
 [tutorial](https://richardbatstone.github.io/other/2020/01/11/DocAssembleInGCP.html)
