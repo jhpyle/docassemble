@@ -5,8 +5,6 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-openpyxl_version = "2.5.14" if sys.version.startswith('3.5') else "3.0.5"
-twine_version = "1.15.0" if sys.version.startswith('3.5') else "3.2.0"
 install_requires = [
     'docassemble==1.1.112',
     'docassemble.base==1.1.112',
@@ -45,11 +43,7 @@ install_requires = [
     "convertapi==1.4.0",
     "cryptography==3.2.1",
     "dnspython==1.16.0",
-    "docassemble==1.1.110",
     "Docassemble-Flask-User==0.6.22",
-    "docassemble.base==1.1.110",
-    "docassemble.demo==1.1.110",
-    "docassemble.webapp==1.1.110",
     "docassemblekvsession==0.2",
     "docopt==0.6.2",
     "docutils==0.16",

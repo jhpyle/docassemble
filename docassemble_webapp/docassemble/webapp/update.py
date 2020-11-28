@@ -82,27 +82,10 @@ def check_for_updates(doing_startup=False):
     results = dict()
     sys.stderr.write("check_for_updates: 0.5 after " + str(time.time() - start_time) + " seconds\n")
 
-    num_deleted = Package.query.filter_by(name='psycopg2').delete()
-    if num_deleted > 0:
-        db.session.commit()
-    num_deleted = Package.query.filter_by(name='pdfminer').delete()
-    if num_deleted > 0:
-        db.session.commit()
-    num_deleted = Package.query.filter_by(name='pdfminer3k').delete()
-    if num_deleted > 0:
-        db.session.commit()
-    num_deleted = Package.query.filter_by(name='py-bcrypt').delete()
-    if num_deleted > 0:
-        db.session.commit()
-    num_deleted = Package.query.filter_by(name='pycrypto').delete()
-    if num_deleted > 0:
-        db.session.commit()
-    num_deleted = Package.query.filter_by(name='constraint').delete()
-    if num_deleted > 0:
-        db.session.commit()
-    num_deleted = Package.query.filter_by(name='distutils2').delete()
-    if num_deleted > 0:
-        db.session.commit()
+    for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2'):
+        num_deleted = Package.query.filter_by(name=package_name).delete()
+        if num_deleted > 0:
+            db.session.commit()
     sys.stderr.write("check_for_updates: 1 after " + str(time.time() - start_time) + " seconds\n")
     installed_packages = get_installed_distributions()
     for package in installed_packages:

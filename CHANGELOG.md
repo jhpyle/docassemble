@@ -1,13 +1,16 @@
 # Change Log
 
-## [1.2.0] - 2020-11-27
+## [1.2.0] - 2020-11-28
 ### Changed
-- Upgraded Python to 3.8 and updated dependencies.  These changes
-  require a system upgrade.  See
+- Upgraded Python to version 3.8 and upgraded dependencies.  These
+  changes require a system upgrade.  See
   https://docassemble.org/docs/docker.html#upgrading for instructions
   on how to perform a system upgrade.  Because Python changed between
   version 3.6 and and 3.8, you should test your code carefully to make
   sure it still works in Python 3.8.
+- Among other upgrades, Bootstrap has been upgraded to version 4.5.3.
+  If you are using Bootstrap themes, you may wish to upgrade your
+  Bootstrap theme.
 ### Fixed
 - Issue with user privileges.
 

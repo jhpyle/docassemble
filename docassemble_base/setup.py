@@ -45,8 +45,6 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
                 out.setdefault(package, []).append(prefix+name)
     return out
 
-openpyxl_version = "2.5.14" if sys.version.startswith('3.5') else "3.0.5"
-twine_version = "1.15.0" if sys.version.startswith('3.5') else "3.2.0"
 install_requires = [
     'docassemble==1.1.112',
     "3to2==1.1.1",
@@ -109,7 +107,7 @@ install_requires = [
     "numpy==1.19.4",
     "oauth2client==4.1.3",
     "oauthlib==3.1.0",
-    "openpyxl==" + openpyxl_version,
+    "openpyxl==3.0.5",
     "ordered-set==4.0.2",
     "packaging==20.4",
     "pandas==1.1.4",
@@ -169,7 +167,7 @@ install_requires = [
     "toml==0.10.2",
     "tqdm==4.53.0",
     "twilio==6.48.0",
-    "twine==" + twine_version,
+    "twine==3.2.0",
     "tzlocal==2.1",
     "ua-parser==0.10.0",
     "uritemplate==3.0.1",

@@ -429,6 +429,10 @@ echo "16" >&2
 source /dev/stdin < <(su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.base.read_config \"${DA_CONFIG_FILE}\"" www-data)
 export LOGDIRECTORY="${LOGDIRECTORY:-${DA_ROOT}/log}"
 
+echo "16.1" >&2
+
+python -m docassemble.webapp.starthook "${DA_CONFIG_FILE}"
+
 echo "16.5" >&2
 
 if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
