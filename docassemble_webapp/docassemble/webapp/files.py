@@ -505,12 +505,19 @@ def make_package_zip(pkgname, info, author_info, tz_name, current_project='defau
     shutil.rmtree(directory)
     return temp_zip
 
+def get_version_suffix(package_name):
+    from docassemble.webapp.update import get_pip_info
+    info = get_pip_info(package_name)
+    if 'Version' in info:
+        return '>=' + info['Version'].strip()
+    return ''
+
 def make_package_dir(pkgname, info, author_info, tz_name, directory=None, current_project='default'):
     the_timezone = pytz.timezone(tz_name)
     area = dict()
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
-    dependencies = ", ".join(map(lambda x: repr(x), sorted(info['dependencies'])))
+    dependencies = ", ".join(map(lambda x: repr(x + get_version_suffix(x)), sorted(info['dependencies'])))
     initpy = """\
 try:
     __import__('pkg_resources').declare_namespace(__name__)

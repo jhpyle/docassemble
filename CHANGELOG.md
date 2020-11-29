@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.4] - 2020-11-29
+### Changed
+- The `setup.py` file created by the Playground now sets the minimum
+  version of dependencies to the version of the dependency on the
+  server.
+
 ## [1.2.3] - 2020-11-29
 ### Fixed
 - Upgraded to new version of Azure Blob Storage API.
