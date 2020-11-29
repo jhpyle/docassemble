@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.3] - 2020-11-29
+### Fixed
+- Upgraded to new version of Azure Blob Storage API.
+
 ## [1.2.2] - 2020-11-29
 ### Fixed
 - Reverted Azure Blob Storage API version.
