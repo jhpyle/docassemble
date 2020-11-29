@@ -156,6 +156,8 @@ if __name__ == "__main__":
             print('export AZUREENABLE=true')
         else:
             print('export AZUREENABLE=false')
+        if 'connection string' in daconfig['azure'] and daconfig['azure']['connection string'] is not None:
+            print('export AZURECONNECTIONSTRING="' + str(daconfig['azure']['connection string']) + '"')
         if 'account name' in daconfig['azure'] and daconfig['azure']['account name'] is not None:
             print('export AZUREACCOUNTNAME="' + str(daconfig['azure']['account name']) + '"')
         if 'account key' in daconfig['azure'] and daconfig['azure']['account key'] is not None:

@@ -142,7 +142,7 @@ def load(**kwargs):
         for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
             if env_exists(env_var):
                 override_config(daconfig, null_messages, key, env_var, pre_key='s3')
-        for env_var, key in (('AZUREENABLE', 'enable'), ('AZUREACCOUNTKEY', 'account key'), ('AZUREACCOUNTNAME', 'account name'), ('AZURECONTAINER', 'container')):
+        for env_var, key in (('AZUREENABLE', 'enable'), ('AZUREACCOUNTKEY', 'account key'), ('AZUREACCOUNTNAME', 'account name'), ('AZURECONTAINER', 'container'), (AZURECONNECTIONSTRING, 'connection string')):
             if env_exists(env_var):
                 override_config(daconfig, null_messages, key, env_var, pre_key='azure')
         if env_exists('KUBERNETES'):
@@ -545,7 +545,7 @@ def load(**kwargs):
         for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
             if env_exists(env_var):
                 override_config(daconfig, messages, key, env_var, pre_key='s3')
-        for env_var, key in (('AZUREENABLE', 'enable'), ('AZUREACCOUNTKEY', 'account key'), ('AZUREACCOUNTNAME', 'account name'), ('AZURECONTAINER', 'container')):
+        for env_var, key in (('AZUREENABLE', 'enable'), ('AZUREACCOUNTKEY', 'account key'), ('AZUREACCOUNTNAME', 'account name'), ('AZURECONTAINER', 'container'), ('AZURECONNECTIONSTRING', 'connection string')):
             if env_exists(env_var):
                 override_config(daconfig, messages, key, env_var, pre_key='azure')
         if env_exists('EC2'):
