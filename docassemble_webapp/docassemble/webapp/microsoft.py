@@ -15,7 +15,7 @@ class azureobject(object):
             if not connection_string:
                 endpoint_suffix = azure_config.get('endpoint suffix', None)
                 if not endpoint_suffix:
-                    endpoint_suffix = core.windows.net
+                    endpoint_suffix = 'core.windows.net'
                 endpoints_protocol = azure_config.get('endpoints protocol', None)
                 if not endpoints_protocol:
                     endpoints_protocol = 'https'
