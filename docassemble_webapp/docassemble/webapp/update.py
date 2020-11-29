@@ -258,7 +258,7 @@ def check_for_updates(doing_startup=False):
     packages_to_delete = list()
     sys.stderr.write("check_for_updates: 10 after " + str(time.time() - start_time) + " seconds\n")
     for package in to_install:
-        sys.stderr.write("check_for_updates: going to install a package: " + package.name + "after " + str(time.time() - start_time) + " seconds\n")
+        sys.stderr.write("check_for_updates: going to install a package: " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
         # if doing_startup and package.name.startswith('docassemble') and package.name in here_already:
         #     #adding this because of unpredictability of installing new versions of docassemble
         #     #just because of a system restart.

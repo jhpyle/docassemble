@@ -3,8 +3,10 @@
 ## [1.2.4] - 2020-11-29
 ### Changed
 - The `setup.py` file created by the Playground now sets the minimum
-  version of dependencies to the version of the dependency on the
-  server.
+  version of dependencies to the latest version on PyPI that is not
+  more recent than the version installed on the server.
+### Fixed
+- Browser warning about Google Analytics cookies.
 
 ## [1.2.3] - 2020-11-29
 ### Fixed
