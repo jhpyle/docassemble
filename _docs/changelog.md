@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.2](https://github.com/jhpyle/docassemble/releases/tag/v1.2.2) - 2020-11-29
+
+### Fixed
+- Reverted Azure Blob Storage API version.
+
+## [1.2.1](https://github.com/jhpyle/docassemble/releases/tag/v1.2.1) - 2020-11-28
+
+### Fixed
+- Error on Package Management page.
+
 ## [1.2.0](https://github.com/jhpyle/docassemble/releases/tag/v1.2.0) - 2020-11-28
 
 ### Changed
