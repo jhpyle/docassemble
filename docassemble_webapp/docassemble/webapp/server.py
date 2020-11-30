@@ -10628,7 +10628,7 @@ def index(action_argument=None, refer=None):
           }
           var maxImageSize;
           if ($(element).data('maximagesize')){
-             maxImageSize = (parseInt($(element).data('maximagesize')) ** 2) * 2;
+             maxImageSize = (parseInt($(element).data('maximagesize')) * parseInt($(element).data('maximagesize'))) * 2;
           }
           else {
              maxImageSize = 0;

@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.5] - 2020-11-30
+### Fixed
+- JavaScript error in Internet Explorer.
+
 ## [1.2.4] - 2020-11-29
 ### Changed
 - The `setup.py` file created by the Playground now sets the minimum
