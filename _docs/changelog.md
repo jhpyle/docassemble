@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.5](https://github.com/jhpyle/docassemble/releases/tag/v1.2.5) - 2020-11-30
+
+### Fixed
+- JavaScript error in Internet Explorer.
+
 ## [1.2.4](https://github.com/jhpyle/docassemble/releases/tag/v1.2.4) - 2020-11-29
 
 ### Changed
