@@ -82,7 +82,7 @@ def check_for_updates(doing_startup=False):
     results = dict()
     sys.stderr.write("check_for_updates: 0.5 after " + str(time.time() - start_time) + " seconds\n")
 
-    for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2'):
+    for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2', 'azure-storage'):
         num_deleted = Package.query.filter_by(name=package_name).delete()
         if num_deleted > 0:
             db.session.commit()

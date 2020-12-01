@@ -1184,18 +1184,18 @@ def update_terms(dictionary, auto=False, language='*'):
                 for term, definition in termitems:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     if auto:
-                        terms[lower_term] = {'definition': str(definition), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                        terms[lower_term] = {'definition': str(definition), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
                     else:
-                        terms[lower_term] = {'definition': str(definition), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                        terms[lower_term] = {'definition': str(definition), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
             else:
                 raise DAError("update_terms: terms organized as a list must be a list of dictionary items.")
     elif isinstance(dictionary, dict):
         for term in dictionary:
             lower_term = re.sub(r'\s+', ' ', term.lower())
             if auto:
-                terms[lower_term] = {'definition': str(dictionary[term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                terms[lower_term] = {'definition': str(dictionary[term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
             else:
-                terms[lower_term] = {'definition': str(dictionary[term]), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
+                terms[lower_term] = {'definition': str(dictionary[term]), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}
     else:
         raise DAError("update_terms: terms must be organized as a dictionary or a list.")
 

@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.6] - 2020-12-01
+### Fixed
+- Error in `update_terms()`.
+
 ## [1.2.5] - 2020-11-30
 ### Fixed
 - JavaScript error in Internet Explorer.
