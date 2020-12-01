@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.6](https://github.com/jhpyle/docassemble/releases/tag/v1.2.6) - 2020-12-01
+
+### Fixed
+- Error in `update_terms()`.
+
 ## [1.2.5](https://github.com/jhpyle/docassemble/releases/tag/v1.2.5) - 2020-11-30
 
 ### Fixed
