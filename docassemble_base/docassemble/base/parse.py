@@ -2339,6 +2339,11 @@ class Question:
                     if not isinstance(item, dict):
                         raise DAError("An action buttons item must be a dictionary." + self.idebug(data))
                     action = item.get('action', None)
+                    target = item.get('new window', None)
+                    if target is True:
+                        target = '_blank'
+                    elif target is False:
+                        target = None
                     label = item.get('label', None)
                     color = item.get('color', 'primary')
                     icon = item.get('icon', None)
@@ -2347,6 +2352,8 @@ class Question:
                     given_arguments = item.get('arguments', dict())
                     if not isinstance(action, str):
                         raise DAError("An action buttons item must contain an action in plain text." + self.idebug(data))
+                    if not isinstance(target, (str, NoneType)):
+                        raise DAError("The new window specifier in an action buttons item must refer to True or plain text." + self.idebug(data))
                     if not isinstance(given_arguments, dict):
                         raise DAError("The arguments specifier in an action buttons item must refer to a dictionary." + self.idebug(data))
                     if not isinstance(label, str):
@@ -2360,6 +2367,10 @@ class Question:
                     if not isinstance(forget_prior, bool):
                         raise DAError("The forget prior specifier in an action buttons item must refer to true or false." + self.idebug(data))
                     button = dict(action=TextObject(definitions + action, question=self), label=TextObject(definitions + label, question=self), color=TextObject(definitions + color, question=self))
+                    if target is not None:
+                        button['target'] = TextObject(definitions + target, question=self)
+                    else:
+                        button['target'] = None
                     if icon is not None:
                         button['icon'] = TextObject(definitions + icon, question=self)
                     else:
@@ -4394,6 +4405,10 @@ class Question:
                             action = '_da_priority_action'
                         action = docassemble.base.functions.url_action(action, **arguments)
                     color = item['color'].text(user_dict).strip()
+                    if item['target'] is not None:
+                        target = item['target'].text(user_dict).strip()
+                    else:
+                        target = None
                     if item['icon'] is not None:
                         icon = item['icon'].text(user_dict).strip()
                     else:
@@ -4402,7 +4417,7 @@ class Question:
                         placement = item['placement'].text(user_dict).strip()
                     else:
                         placement = None
-                    extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement, forget_prior=forget_prior))
+                    extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement, forget_prior=forget_prior, target=target))
                 else:
                     action_buttons = eval(item, user_dict)
                     if hasattr(action_buttons, 'instanceName') and hasattr(action_buttons, 'elements'):
@@ -4412,6 +4427,8 @@ class Question:
                     for button in action_buttons:
                         if not (isinstance(button, dict) and 'label' in button and 'action' in button and isinstance(button['label'], str) and isinstance(button['action'], str)):
                             raise DAError("action buttons code did not evaluate to a list of dictionaries with label and action items")
+                        if 'new window' in button and not isinstance(button['new window'], (str, bool, NoneType)):
+                            raise DAError("action buttons code included a new window item that was not boolean, text, or None")
                         if 'color' in button and not isinstance(button['color'], (str, NoneType)):
                             raise DAError("action buttons code included a color item that was not text or None")
                         if 'icon' in button and not isinstance(button['icon'], (str, NoneType)):
@@ -4421,6 +4438,11 @@ class Question:
                             color = 'primary'
                         icon = button.get('icon', None)
                         placement = button.get('placement', None)
+                        target = button.get('new window', None)
+                        if target is True:
+                            target = '_blank'
+                        elif target is False:
+                            target = None
                         arguments = button.get('arguments', dict())
                         forget_prior = button.get('forget_prior', False)
                         if arguments is None:
@@ -4434,7 +4456,7 @@ class Question:
                                 action = '_da_priority_action'
                             action = docassemble.base.functions.url_action(action, **arguments)
                         label = button['label']
-                        extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement))
+                        extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement, target=target))
             for item in extras['action_buttons']:
                 if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
                     raise DAError("color in action buttons not valid: " + repr(color))

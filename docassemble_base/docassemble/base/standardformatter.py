@@ -570,6 +570,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 action_data = 'data-embaction="' + action_search.group(1) + '" '
             else:
                 action_data = ''
+            if item['target'] is not None and action_data == '':
+                target_string = 'target=' + json.dumps(item['target']) + ' '
+            else:
+                target_string = ''
             js_search = re.search(r'^javascript:(.*)', item['action'])
             if js_search:
                 js_data = 'data-js="' + js_search.group(1) + '" '
@@ -577,9 +581,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 js_data = ''
             status.linkcounter += 1
             if item['placement'] == 'before':
-                additional_buttons_before += '\n                  <a data-linknum="' + str(status.linkcounter) + '" ' + action_data + js_data + 'href="' + item['action'] + '" class="btn ' + BUTTON_STYLE + item['color'] + ' ' + BUTTON_CLASS + ' daquestionactionbutton danonsubmit">' + icon + markdown_to_html(item['label'], trim=True, do_terms=False, status=status) + '</a>'
+                additional_buttons_before += '\n                  <a ' + target_string + 'data-linknum="' + str(status.linkcounter) + '" ' + action_data + js_data + 'href="' + item['action'] + '" class="btn ' + BUTTON_STYLE + item['color'] + ' ' + BUTTON_CLASS + ' daquestionactionbutton danonsubmit">' + icon + markdown_to_html(item['label'], trim=True, do_terms=False, status=status) + '</a>'
             else:
-                additional_buttons_after += '\n                  <a data-linknum="' + str(status.linkcounter) + '" ' + action_data + js_data + 'href="' + item['action'] + '" class="btn ' + BUTTON_STYLE + item['color'] + ' ' + BUTTON_CLASS + ' daquestionactionbutton danonsubmit">' + icon + markdown_to_html(item['label'], trim=True, do_terms=False, status=status) + '</a>'
+                additional_buttons_after += '\n                  <a ' + target_string + 'data-linknum="' + str(status.linkcounter) + '" ' + action_data + js_data + 'href="' + item['action'] + '" class="btn ' + BUTTON_STYLE + item['color'] + ' ' + BUTTON_CLASS + ' daquestionactionbutton danonsubmit">' + icon + markdown_to_html(item['label'], trim=True, do_terms=False, status=status) + '</a>'
     else:
         additional_buttons_before = ''
         additional_buttons_after = ''

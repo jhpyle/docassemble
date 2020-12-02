@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.7] - 2020-12-02
+### Added
+- The `new window` option to `action buttons`.
+### Fixed
+- Ajax error with xhr responses.
+
 ## [1.2.6] - 2020-12-01
 ### Fixed
 - Error in `update_terms()`.

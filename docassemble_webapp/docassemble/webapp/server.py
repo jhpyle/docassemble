@@ -8691,7 +8691,7 @@ def index(action_argument=None, refer=None):
         return true;
       }
       function daProcessAjaxError(xhr, status, error){
-        if (xhr.responseType == '' || xhr.responseType == 'text'){
+        if (xhr.responseType == undefined || xhr.responseType == '' || xhr.responseType == 'text'){
           var theHtml = xhr.responseText;
           theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
           $(daTargetDiv).html(theHtml);
@@ -12072,7 +12072,7 @@ def observer():
         daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
       }
       function daProcessAjaxError(xhr, status, error){
-        if (xhr.responseType == '' || xhr.responseType == 'text'){
+        if (xhr.responseType == undefined || xhr.responseType == '' || xhr.responseType == 'text'){
           var theHtml = xhr.responseText;
           theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
           $(daTargetDiv).html(theHtml);
