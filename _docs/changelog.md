@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.7](https://github.com/jhpyle/docassemble/releases/tag/v1.2.7) - 2020-12-02
+
+### Added
+- The `new window` option to `action buttons`.
+
+### Fixed
+- Ajax error with xhr responses.
+
 ## [1.2.6](https://github.com/jhpyle/docassemble/releases/tag/v1.2.6) - 2020-12-01
 
 ### Fixed

@@ -395,6 +395,9 @@ the value of the `action` as the `href`.
 
 {% include side-by-side.html demo="action-buttons-http" %}
 
+If you want the link to open in another window, use `new window:
+True`.
+
 <a name="forget prior"></a>By default, if the user starts an action
 and then starts a second action without finishing the first, then when
 the user finishes the second action, the first action will be resumed.
