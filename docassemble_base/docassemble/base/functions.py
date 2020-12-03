@@ -1691,7 +1691,7 @@ this_thread.gathering_mode = dict()
 this_thread.global_vars = GenericObject()
 this_thread.current_variable = list()
 this_thread.open_files = set()
-this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
+this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html'], output_format='html5')
 this_thread.saved_files = dict()
 this_thread.message_log = list()
 this_thread.misc = dict()
@@ -2079,7 +2079,7 @@ def reset_local_variables():
     this_thread.current_package = None
     this_thread.current_question = None
     this_thread.internal = dict()
-    this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list'], output_format='html5')
+    this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html'], output_format='html5')
     this_thread.prevent_going_back = False
 
 def prevent_going_back():
