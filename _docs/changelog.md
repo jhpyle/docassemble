@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.8](https://github.com/jhpyle/docassemble/releases/tag/v1.2.8) - 2020-12-03
+
+### Changed
+- Different limiting mechanism for the nested use of
+  `include_docx_template()`.
+- Enabled the `md_in_html` extension of the `Markdown` package.
+
 ## [1.2.7](https://github.com/jhpyle/docassemble/releases/tag/v1.2.7) - 2020-12-02
 
 ### Added
