@@ -279,7 +279,7 @@ Consider the following example, which uses [generic objects]:
 
 {% highlight yaml %}
 objects:
-  - respondents: DADict
+  - respondents: DADict.using(gathered=True)
 ---
 initial: True
 code: |
