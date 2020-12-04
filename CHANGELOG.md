@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.9] - 2020-12-04
+### Fixed
+- Bug in `comma_and_list()`.
+
 ## [1.2.8] - 2020-12-03
 ### Changed
 - Different limiting mechanism for the nested use of

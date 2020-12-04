@@ -2189,10 +2189,6 @@ def comma_and_list_en(*pargs, **kwargs):
     Use the optional argument oxford=False if you do not want a comma before the "and."
     See also comma_list()."""
     ensure_definition(*pargs, **kwargs)
-    if 'oxford' in kwargs and kwargs['oxford'] == False:
-        extracomma = ""
-    else:
-        extracomma = ","
     if 'and_string' in kwargs:
         and_string = kwargs['and_string']
     else:
@@ -2201,6 +2197,10 @@ def comma_and_list_en(*pargs, **kwargs):
         comma_string = kwargs['comma_string']
     else:
         comma_string = ", "
+    if 'oxford' in kwargs and kwargs['oxford'] == False:
+        extracomma = ""
+    else:
+        extracomma = comma_string.strip()
     if 'before_and' in kwargs:
         before_and = kwargs['before_and']
     else:
