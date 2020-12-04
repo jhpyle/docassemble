@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.9](https://github.com/jhpyle/docassemble/releases/tag/v1.2.9) - 2020-12-04
+
+### Fixed
+- Bug in `comma_and_list()`.
+
 ## [1.2.8](https://github.com/jhpyle/docassemble/releases/tag/v1.2.8) - 2020-12-03
 
 ### Changed
