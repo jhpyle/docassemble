@@ -1012,6 +1012,12 @@ that is "trained" to classify user input.
 For more information about how to use machine learning variables, see
 the [machine learning section].
 
+## <a name="raw"></a><a name="raw"></a>Raw data
+
+By default, inputs with the `datatype` of `text` (which is the
+default) will be sanitized of any HTML.  If you want to allow users to
+include HTML, set the `datatype` to `raw`.
+
 ## <a name="custom datatype"></a>Custom data types
 
 You can use custom data types by declaring a subclass of
