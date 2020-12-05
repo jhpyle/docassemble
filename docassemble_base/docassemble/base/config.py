@@ -74,6 +74,15 @@ def config_error(error):
     errors.append(error)
     sys.stderr.write(error + "\n")
 
+def cleanup_filename(filename):
+    filename = filename.strip()
+    parts = filename.split(':')
+    if len(parts) != 2 or re.search(r'\s', filename):
+        return None
+    if not parts[0].startswith('docassemble.playground') and not parts[1].startswith('data/questions/'):
+        return parts[0] + ':' + 'data/questions/' + parts[1]
+    return filename
+
 def load(**kwargs):
     global daconfig
     global s3_config
@@ -197,13 +206,20 @@ def load(**kwargs):
     if 'url' in daconfig['social']['og']:
         del daconfig['social']['og']['url']
     if 'administrative interviews' in daconfig:
-        new_admin_interviews = list()
-        for item in daconfig['administrative interviews']:
-            if isinstance(item, str):
-                new_admin_interviews.append(dict(interview=item))
-            else:
-                new_admin_interviews.append(item)
-        daconfig['administrative interviews'] = new_admin_interviews
+        if isinstance(daconfig['administrative interviews'], list):
+            new_admin_interviews = list()
+            for item in daconfig['administrative interviews']:
+                if isinstance(item, str):
+                    new_item = cleanup_filename(item)
+                    if new_item:
+                        new_admin_interviews.append(dict(interview=new_item))
+                elif isinstance(item, dict) and 'interview' in item and isinstance(item['interview'], str):
+                    item['interview'] = cleanup_filename(item['interview'])
+                    if item['interview'] is not None:
+                        new_admin_interviews.append(item)
+            daconfig['administrative interviews'] = new_admin_interviews
+        else:
+            del daconfig['administrative interviews']
     if 'session lifetime seconds' in daconfig:
         try:
             daconfig['session lifetime seconds'] = int(daconfig['session lifetime seconds'])
@@ -487,6 +503,29 @@ def load(**kwargs):
     if not isinstance(daconfig['dispatch'], dict):
         config_error("dispatch must be structured as a dictionary")
         daconfig['dispatch'] = dict()
+    if len(daconfig['dispatch']):
+        new_dispatch = dict()
+        for shortcut, filename in daconfig['dispatch'].items():
+            if isinstance(shortcut, str) and isinstance(filename, str):
+                new_filename = cleanup_filename(filename)
+                if new_filename:
+                    new_dispatch[shortcut] = new_filename
+        daconfig['dispatch'] = new_dispatch
+    if 'interview delete days by filename' in daconfig and isinstance(daconfig['interview delete days by filename'], dict):
+        new_delete_days = dict()
+        for filename, days in daconfig['interview delete days by filename'].items():
+            new_filename = cleanup_filename(filename)
+            if new_filename:
+                new_delete_days[new_filename] = days
+        daconfig['interview delete days by filename'] = new_delete_days
+    for key in ('default interview', 'session list interview', 'dispatch interview', 'auto resume interview'):
+        if key in daconfig:
+            if isinstance(daconfig[key], str):
+                daconfig[key] = cleanup_filename(daconfig[key])
+                if daconfig[key] is None:
+                    del daconfig[key]
+            else:
+                del daconfig[key]
     if 'ldap login' not in daconfig:
         daconfig['ldap login'] = dict()
     if not isinstance(daconfig['ldap login'], dict):

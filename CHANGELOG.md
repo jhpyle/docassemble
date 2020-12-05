@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.2.10] - 2020-12-05
+### Added
+- The `raw` datatype.
+### Changed
+- Additional items colorized in spreadsheet translations.
+- HTML stripped from fields with `datatype` of `text`.
+### Fixed
+- Issue with server-side validation where multiple `question` blocks
+  have the same `id`.
+
 ## [1.2.9] - 2020-12-04
 ### Fixed
 - Bug in `comma_and_list()`.

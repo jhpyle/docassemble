@@ -6273,7 +6273,10 @@ def index(action_argument=None, refer=None):
     else:
         next_action = None
     if '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name:
-        the_question = interview.questions_by_name[post_data['_question_name']]
+        if already_assembled:
+            the_question = interview_status.question
+        else:
+            the_question = interview.questions_by_name[post_data['_question_name']]
         if not already_assembled:
             uses_permissions = False
             for the_field in the_question.fields:
@@ -6286,6 +6289,8 @@ def index(action_argument=None, refer=None):
                     if hasattr(the_field, 'validate'):
                         interview.assemble(user_dict, interview_status)
                         break
+    elif already_assembled:
+        the_question = interview_status.question
     else:
         the_question = None
     key_to_orig_key = dict()
@@ -6505,9 +6510,14 @@ def index(action_argument=None, refer=None):
                 else:
                     data = repr('')
             elif known_datatypes[real_key] == 'integer':
-                if data == '':
+                if data.strip() == '':
                     data = 0
-                test_data = int(data)
+                try:
+                    test_data = int(data)
+                except:
+                    validated = False
+                    field_error[orig_key] = word("You need to enter a valid number.")
+                    continue
                 data = "int(" + repr(data) + ")"
             elif known_datatypes[real_key] in ('ml', 'mlarea'):
                 is_ml = True
@@ -6516,7 +6526,12 @@ def index(action_argument=None, refer=None):
                     data = 0.0
                 if isinstance(data, str):
                     data = re.sub(r'[,\%]', '', data)
-                test_data = float(data)
+                try:
+                    test_data = float(data)
+                except:
+                    validated = False
+                    field_error[orig_key] = word("You need to enter a valid number.")
+                    continue
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ('object', 'object_radio'):
                 if data == '' or set_to_empty:
@@ -6561,9 +6576,16 @@ def index(action_argument=None, refer=None):
                         data = '__DANEWOBJECT'
                     else:
                         data = repr(test_data)
+            elif known_datatypes[real_key] == 'raw':
+                if data == "None" and set_to_empty is not None:
+                    test_data = None
+                    data = "None"
+                else:
+                    test_data = data
+                    data = repr(data)
             else:
                 if isinstance(data, str):
-                    data = data.strip()
+                    data = BeautifulSoup(data, "html.parser").get_text('\n')
                 if data == "None" and set_to_empty is not None:
                     test_data = None
                     data = "None"
@@ -25385,6 +25407,7 @@ def illegal_variable_name(var):
     return detector.illegal
 
 emoji_match = re.compile(r':([A-Za-z][A-Za-z0-9\_\-]+):')
+html_match = re.compile(r'(</?[A-Za-z\!][^>]*>|https*://[A-Za-z0-9\-\_:\%\/\@\.\#\&\=\~\?]+|mailto*://[A-Za-z0-9\-\_:\%\/\@\.\#\&\=\~]+\?)')
 
 def mako_parts(expression):
     in_percent = False
@@ -25392,14 +25415,27 @@ def mako_parts(expression):
     in_square = False
     var_depth = 0
     in_colon = 0
+    in_html = 0
     in_pre_bracket = False
     in_post_bracket = False
     output = list()
     current = ''
     i = 0
     expression = emoji_match.sub(r'^^\1^^', expression)
+    expression = html_match.sub(r'!@\1!@', expression)
     n = len(expression)
     while i < n:
+        if in_html:
+            if i + 1 < n and expression[i:i+2] == '!@':
+                in_html = False
+                if current != '':
+                    output.append([current, 2])
+                current = ''
+                i += 2
+            else:
+                current += expression[i]
+                i += 1
+            continue
         if in_percent:
             if expression[i] in ["\n", "\r"]:
                 in_percent = False
@@ -25461,7 +25497,28 @@ def mako_parts(expression):
                 i += 1
                 continue
             elif i + 1 < n and expression[i:i+2] == '^^':
-                current += ':'
+                if in_colon:
+                    in_colon = False
+                    current += ':'
+                    output.append([current, 2])
+                    current = ''
+                else:
+                    in_colon = True
+                    if current.startswith('[${'):
+                        output.append([current, 2])
+                    else:
+                        output.append([current, 0])
+                    current = ':'
+                i += 2
+                continue
+            elif i + 1 < n and expression[i:i+2] == '!@':
+                in_html = True
+                if current != '':
+                    if current.startswith('[${'):
+                        output.append([current, 2])
+                    else:
+                        output.append([current, 0])
+                current = ''
                 i += 2
                 continue
         elif in_colon:
@@ -25487,6 +25544,13 @@ def mako_parts(expression):
                 if current != '':
                     output.append([current, 0])
                 current = ':'
+                i += 2
+                continue
+            elif expression[i:i+2] == '!@':
+                in_html = True
+                if current != '':
+                    output.append([current, 0])
+                current = ''
                 i += 2
                 continue
             elif expression[i:i+2] == '<%':

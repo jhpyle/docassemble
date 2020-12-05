@@ -2581,7 +2581,7 @@ def input_for(status, field, wide=False, embedded=False):
                         output += '<span class="da-embed-currency-wrapper"><span class="da-embed-currency-symbol">' + the_currency_symbol(status, field) + '</span>'
                     else:
                         output += '<div class="input-group mb-2"><div class="input-group-prepend" id="addon-' + do_escape_id(saveas_string) + '"><div class="input-group-text">' + the_currency_symbol(status, field) + '</div></div>'
-            if field.datatype == 'ml':
+            if field.datatype in ('ml', 'raw'):
                 input_type = 'text'
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
