@@ -93,6 +93,7 @@ app.config['MAILGUN_API_KEY'] = daconfig['mail'].get('mailgun api key', None)
 app.config['SENDGRID_API_KEY'] = daconfig['mail'].get('sendgrid api key', None)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 app.config['ENABLE_MANAGE_ACCOUNT'] = daconfig.get('user can delete account', True)
+app.config['ENABLE_REQUEST_DEVELOPER_ACCOUNT'] = daconfig.get('user can request developer account', True)
 app.config['ENABLE_DELETE_SHARED'] = daconfig.get('delete account deletes shared', False)
 app.config['ENABLE_DELETE_ACCOUNT'] = daconfig.get('admin can delete account', True)
 app.config['SESSION_COOKIE_SECURE'] = daconfig.get('use https', False) or daconfig.get('behind https load balancer', False)

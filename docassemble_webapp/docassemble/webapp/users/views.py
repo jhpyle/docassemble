@@ -270,7 +270,13 @@ def user_profile_page():
     if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
         form.timezone.data = the_tz
     if request.method == 'POST' and form.validate():
-        form.populate_obj(current_user)
+        if current_user.has_roles(['admin', 'developer']):
+            form.populate_obj(current_user)
+        else:
+            current_user.first_name = form.first_name.data
+            current_user.last_name = form.last_name.data
+            if current_user.social_id and current_user.social_id.startswith('phone$'):
+                current_user.email = form.email.data
         db.session.commit()
         #docassemble.webapp.daredis.clear_user_cache()
         flash(word('Your information was saved.'), 'success')

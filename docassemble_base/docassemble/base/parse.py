@@ -49,6 +49,7 @@ import pytz
 from itertools import groupby, chain
 from collections import namedtuple
 from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 RangeType = type(range(1,2))
 NoneType = type(None)
 
@@ -1607,8 +1608,8 @@ class Question:
             for item in data['translations']:
                 if not isinstance(item, str):
                     raise DAError("A 'translations' block must be a list of text items" + self.idebug(data))
-                if not item.endswith('.xlsx'):
-                    raise DAError("Invalid translations entry '" + item + "'.  A translations entry must refer to a file ending in .xlsx." + self.idebug(data))
+                if not (item.endswith('.xlsx') or item.endswith('.xlf') or item.endswith('.xliff')):
+                    raise DAError("Invalid translations entry '" + item + "'.  A translations entry must refer to a file ending in .xlsx, .xlf, or .xliff." + self.idebug(data))
                 parts = item.split(":")
                 if len(parts) == 1:
                     item = re.sub(r'^data/sources/', '', item)
@@ -1622,21 +1623,84 @@ class Question:
                     raise DAError("Invalid translations entry: " + item + ".  A translations entry must refer to a data sources file" + self.idebug(data))
             for item in tr_todo:
                 self.interview.translations.append(item)
-                the_xlsx_file = docassemble.base.functions.package_data_filename(item)
-                if not os.path.isfile(the_xlsx_file):
-                    raise DAError("The translations file " + the_xlsx_file + " could not be found")
-                df = pandas.read_excel(the_xlsx_file)
-                for column_name in ('interview', 'question_id', 'index_num', 'hash', 'orig_lang', 'tr_lang', 'orig_text', 'tr_text'):
-                    if column_name not in df.columns:
-                        raise DAError("Invalid translations file " + os.path.basename(the_xlsx_file) + ": column " + column_name + " is missing")
-                for indexno in df.index:
-                    if not isinstance(df['tr_text'][indexno], str) or df['tr_text'][indexno] == '':
+                if item.endswith(".xlsx"):
+                    the_xlsx_file = docassemble.base.functions.package_data_filename(item)
+                    if not os.path.isfile(the_xlsx_file):
+                        raise DAError("The translations file " + the_xlsx_file + " could not be found")
+                    df = pandas.read_excel(the_xlsx_file)
+                    for column_name in ('interview', 'question_id', 'index_num', 'hash', 'orig_lang', 'tr_lang', 'orig_text', 'tr_text'):
+                        if column_name not in df.columns:
+                            raise DAError("Invalid translations file " + os.path.basename(the_xlsx_file) + ": column " + column_name + " is missing")
+                    for indexno in df.index:
+                        if not isinstance(df['tr_text'][indexno], str) or df['tr_text'][indexno] == '':
+                            continue
+                        if df['orig_text'][indexno] not in self.interview.translation_dict:
+                            self.interview.translation_dict[df['orig_text'][indexno]] = dict()
+                        if df['orig_lang'][indexno] not in self.interview.translation_dict[df['orig_text'][indexno]]:
+                            self.interview.translation_dict[df['orig_text'][indexno]][df['orig_lang'][indexno]] = dict()
+                        self.interview.translation_dict[df['orig_text'][indexno]][df['orig_lang'][indexno]][df['tr_lang'][indexno]] = df['tr_text'][indexno]
+                elif item.endswith(".xlf") or item.endswith(".xliff"):
+                    the_xlf_file = docassemble.base.functions.package_data_filename(item)
+                    if not os.path.isfile(the_xlf_file):
                         continue
-                    if df['orig_text'][indexno] not in self.interview.translation_dict:
-                        self.interview.translation_dict[df['orig_text'][indexno]] = dict()
-                    if df['orig_lang'][indexno] not in self.interview.translation_dict[df['orig_text'][indexno]]:
-                        self.interview.translation_dict[df['orig_text'][indexno]][df['orig_lang'][indexno]] = dict()
-                    self.interview.translation_dict[df['orig_text'][indexno]][df['orig_lang'][indexno]][df['tr_lang'][indexno]] = df['tr_text'][indexno]
+                    tree = ET.parse(the_xlf_file)
+                    root = tree.getroot()
+                    indexno = 1
+                    if root.attrib['version'] == "1.2":
+                        for the_file in root.iter('{urn:oasis:names:tc:xliff:document:1.2}file'):
+                            source_lang = the_file.attrib.get('source-language', 'en')
+                            target_lang = the_file.attrib.get('target-language', 'en')
+                            for transunit in the_file.iter('{urn:oasis:names:tc:xliff:document:1.2}trans-unit'):
+                                orig_text = ''
+                                tr_text = ''
+                                for source in transunit.iter('{urn:oasis:names:tc:xliff:document:1.2}source'):
+                                    if source.text:
+                                        orig_text += source.text
+                                    for mrk in source:
+                                        orig_text += mrk.text
+                                        if mrk.tail:
+                                            orig_text += mrk.tail
+                                for target in transunit.iter('{urn:oasis:names:tc:xliff:document:1.2}target'):
+                                    if target.text:
+                                        tr_text += target.text
+                                    for mrk in target:
+                                        tr_text += mrk.text
+                                        if mrk.tail:
+                                            tr_text += mrk.tail
+                                if orig_text == '' or tr_text == '':
+                                    continue
+                                if orig_text not in self.interview.translation_dict:
+                                    self.interview.translation_dict[orig_text] = dict()
+                                if source_lang not in self.interview.translation_dict[orig_text]:
+                                    self.interview.translation_dict[orig_text][source_lang] = dict()
+                                self.interview.translation_dict[orig_text][source_lang][target_lang] = tr_text
+                    elif root.attrib['version'] == "2.0":
+                        source_lang = root.attrib.get('srcLang', 'en')
+                        target_lang = root.attrib.get('trgLang', 'en')
+                        for segment in root.iter('{urn:oasis:names:tc:xliff:document:2.0}segment'):
+                            orig_text = ''
+                            tr_text = ''
+                            for source in segment.iter('{urn:oasis:names:tc:xliff:document:2.0}source'):
+                                if source.text:
+                                    orig_text += source.text
+                                for mrk in source:
+                                    orig_text += mrk.text
+                                    if mrk.tail:
+                                        orig_text += mrk.tail
+                            for target in segment.iter('{urn:oasis:names:tc:xliff:document:2.0}target'):
+                                if target.text:
+                                    tr_text += target.text
+                                for mrk in target:
+                                    tr_text += mrk.text
+                                    if mrk.tail:
+                                        tr_text += mrk.tail
+                            if orig_text == '' or tr_text == '':
+                                continue
+                            if orig_text not in self.interview.translation_dict:
+                                self.interview.translation_dict[orig_text] = dict()
+                            if source_lang not in self.interview.translation_dict[orig_text]:
+                                self.interview.translation_dict[orig_text][source_lang] = dict()
+                            self.interview.translation_dict[orig_text][source_lang][target_lang] = tr_text
         if 'default language' in data:
             should_append = False
             self.from_source.set_language(data['default language'])

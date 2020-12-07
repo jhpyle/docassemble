@@ -1,6 +1,6 @@
 {%- extends 'base_templates/page_base_half.html' %}
 {%- block content %}
-{%- from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
+{%- from "base_templates/form_macros.html" import render_field, render_file_field, render_select_field, render_submit_field with context %}
 {%- if fields %}
 <h3 class="da-page-header">{{ word('Fields from %s template' % (file_type.upper(),)) }}</h3>
 <p>{{ word('Here is the start of a question you can use to assemble the %s template.' % (file_type.upper(),)) }}</p>
@@ -38,9 +38,10 @@
   {{ form.hidden_tag() }}
   <div class="form-group">
     {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">' + word("List of ISO-639-1 language codes") + '</a>') }}
+    {{ render_select_field(form.systemfiletype) }}
   </div>
   <div class="form-actions">
-    {{ render_submit_field(form.language_submit) }}
+    {{ render_submit_field(form.language_submit, data={'disable-button': 0}) }}
   </div>
 </form>
 
@@ -51,6 +52,7 @@
   <div class="form-group">
     {{ render_field(form.interview, placeholder=interview_placeholder) }}
     {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">List of ISO-639-1 language codes</a>') }}
+    {{ render_select_field(form.filetype) }}
   </div>
   <div class="form-actions">
     {{ render_submit_field(form.interview_submit, data={'disable-button': 0}) }}

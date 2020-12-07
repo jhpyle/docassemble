@@ -12,6 +12,14 @@
               {%- endfor %}
           </ul>
           {%- endif %}
+          <form action="" method="POST" role="form" class="daconfigform">
+            {{ form.hidden_tag() }}
+            <textarea rows="24" cols="80" id="config_content" name="config_content"></textarea>
+            <div class="form-actions mt-2">
+              {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
+              {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
+            </div>
+          </form>
           {%- if config_messages %}
           <h3>{{ word("Overrides") }}</h3>
           <p>{{ word("The following overrides were applied.") }}</p>
@@ -21,12 +29,4 @@
               {%- endfor %}
           </ul>
           {%- endif %}
-          <form action="" method="POST" role="form" class="daconfigform">
-            {{ form.hidden_tag() }}
-            <textarea rows="24" cols="80" id="config_content" name="config_content"></textarea>
-            <div class="form-actions mt-2">
-              {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
-              {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
-            </div>
-          </form>
 {% endblock %}

@@ -85,6 +85,7 @@
 "Back to profile": Null
 "Back to question": Null
 "Bad date": Null
+"Bad file format": Null
 "Bahamas": Null
 "Bahrain": Null
 "Bangladesh": Null
@@ -656,6 +657,7 @@
 "Other settings": Null
 "other user": Null
 "other users": Null
+"Output Format": Null
 "Overrides": Null
 "Package created": Null
 "Package did not exist": Null
@@ -1220,6 +1222,7 @@
 "You need to enter a number that is at most %s.": Null
 "You need to enter a valid date and time.": Null
 "You need to enter a valid date.": Null
+"You need to enter a valid number.": Null
 "You need to enter a valid time.": Null
 "You need to enter a valid value.": Null
 "You need to increment the version before publishing to PyPI.": Null

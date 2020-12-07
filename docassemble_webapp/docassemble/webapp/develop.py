@@ -65,6 +65,8 @@ class Utilities(FlaskForm):
     interview = StringField(word('Interview'))
     interview_submit = SubmitField(word('Download'))
     language = StringField(word('Language'))
+    systemfiletype = SelectField(word('Output Format'))
+    filetype = SelectField(word('Output Format'))
     language_submit = SubmitField(word('Translate'))
     officeaddin_version = StringField(word('Version'), default='0.0.0.1')
     officeaddin_submit = SubmitField(word('Download'))
