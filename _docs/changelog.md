@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.11](https://github.com/jhpyle/docassemble/releases/tag/v1.2.11) - 2020-12-07
+
+### Added
+- XLIFF support.
+- The `user can request developer account` Configuration directive.
+
+### Fixed
+- User information that non-privileged users are not allowed to edit
+  in Profile but that was set with code was overwritten when user
+  edited their user profile.
+- Problem with `datereplace.js` in recipe.
+
 ## [1.2.10](https://github.com/jhpyle/docassemble/releases/tag/v1.2.10) - 2020-12-05
 
 ### Added

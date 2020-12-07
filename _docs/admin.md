@@ -235,14 +235,16 @@ each English word or phrase to a word or phrase in another language.
 For more information about how this feature works, see the [`words`]
 directive.
 
-This utility will produce a draft [YAML] file that you can then edit,
-store within a [package], and reference from the [`words`] directive
-of your [Configuration].
+This utility will produce a draft [YAML], [XLSX], or [XLIFF] file that
+you can then edit, store within a [package], and reference from the
+[`words`] directive of your [Configuration].
 
 To use this utility, provide a language in the form of a lowercase
-[ISO-639-1] code (e.g., `fr` for French) and press "Translate."  You
-will be provided with a text box containing a [YAML] data structure
-that you can copy and paste into a text file.
+[ISO-639-1] code (e.g., `fr` for French) and press "Translate."  If
+you choose "YAML" as the file format, you will be provided with a text
+box containing a [YAML] data structure that you can copy and paste
+into a text file.  If you choose "XLSX," "XLIFF 1.2," or "XLIFF 2.0",
+you will be provided with a file download.
 
 If you have configured a Google `api key` inside your [`google`]
 directive in the [Configuration], and you have enabled the [Google
@@ -671,3 +673,5 @@ For tips on troubleshooting your **docassemble** system, see the
 [OneDrive synchronization]: {{ site.baseurl }}/docs/installation.html#onedrive
 [Google Drive synchronization]: {{ site.baseurl }}/docs/installation.html#google drive
 [`admin can delete account`]: {{ site.baseurl }}/docs/config.html#admin can delete account
+[XLSX]: https://en.wikipedia.org/wiki/Office_Open_XML
+[XLIFF]: https://en.wikipedia.org/wiki/XLIFF

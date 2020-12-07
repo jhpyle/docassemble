@@ -1988,7 +1988,8 @@ set `admin can delete account` to `False`:
 admin can delete account: False
 {% endhighlight %}
 
-## <a name="user can delete account"></a>Whether users can delete their accounts
+## <a name="user can delete account"></a>Whether users can delete
+their accounts
 
 By default, users have the power to delete their own accounts and all
 of their data.  To disable this, you can set `user can delete account`
@@ -2008,6 +2009,17 @@ deletes shared` to `True`.
 
 {% highlight yaml %}
 delete account deletes shared: True
+{% endhighlight %}
+
+## <a name="user can request developer account"></a>Whether users can request developer accounts
+
+By default, if `enable playground` is not set to `False`, then users
+can submit a request for a developer account on the user profile
+page.  To prevent users from requesting developer accounts, you can
+set `user can request developer account` to `False`:
+
+{% highlight yaml %}
+user can request developer account: False
 {% endhighlight %}
 
 ## <a name="use alembic"></a>Database table upgrades
@@ -2574,7 +2586,8 @@ you will want to make sure that built-in words and phrases used within
 **docassemble**, such as "Continue" and "Sign in," are translated into
 the user's language.
 
-The `words` directive loads one or more [YAML] files in order:
+The `words` directive loads one or more [YAML], [XLSX], or [XLIFF]
+files in order:
 
 {% highlight yaml %}
 words:
@@ -2606,6 +2619,16 @@ and phrases that **docassemble** uses and that might be presented to
 the user.  If you have set up a [Google API key](#google), it will use
 the [Google Cloud Translation API] to prepare "first draft"
 translations for any [ISO-639-1] language you designate.
+
+The "Utilities" page will also allow you to download an [XLSX] or
+[XLIFF] file in the appropriate format.  If you provide an [XLSX] that
+is not in exactly the right format, **docassemble** will not be able
+to read your file.
+
+If **docassemble** is not able to read any of the files listed under
+`words`, errors will be written to the `uwsgi.log` file, which you can
+find in [Logs].  If you find that your translations are not being
+used, make sure to check `uwsgi.log` for errors.
 
 Users of **docassemble** have contributed translations of built-in
 system phrases.  These are available in the `docassemble.base`
@@ -4572,3 +4595,5 @@ and Facebook API keys.
 [My Interviews]: {{ site.baseurl }}/docs/admin.html#my interviews
 [`table css class`]: {{ site.baseurl }}/docs/questions.html#table css class
 [`default screen parts`]: {{ site.baseurl }}/docs/initial.html#default screen parts
+[XLSX]: https://en.wikipedia.org/wiki/Office_Open_XML
+[XLIFF]: https://en.wikipedia.org/wiki/XLIFF
