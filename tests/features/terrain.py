@@ -2,6 +2,7 @@ try:
     from aloe import *
 except ImportError:
     from lettuce import *
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,6 +10,7 @@ from selenium.common.exceptions import NoSuchElementException, WebDriverExceptio
 from selenium.webdriver import ChromeOptions, Chrome
 import time
 import os
+from webdriver_manager.chrome import ChromeDriverManager
 
 default_path = "http://localhost"
 #default_path = "https://demo.docassemble.org"
@@ -85,11 +87,11 @@ def setup_browser():
         options = ChromeOptions()
         options.add_argument("--window-size=1005,9999")
         options.add_argument("--headless");
-        world.browser = MyChrome(executable_path=os.path.join('..', '..', 'chromedriver'), chrome_options=options)
+        world.browser = MyChrome(ChromeDriverManager().install(), chrome_options=options)
     else:
         options = ChromeOptions()
         options.add_argument("--start-maximized");
-        world.browser = MyChrome(executable_path=os.path.join('..', '..', 'chromedriver'), chrome_options=options)
+        world.browser = MyChrome(ChromeDriverManager().install(), chrome_options=options)
     world.da_path = default_path
     world.wait_seconds = default_wait_seconds
 

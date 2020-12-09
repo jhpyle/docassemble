@@ -77,7 +77,7 @@ def config_error(error):
 def cleanup_filename(filename):
     filename = filename.strip()
     parts = filename.split(':')
-    if len(parts) != 2 or re.search(r'\s', filename):
+    if len(parts) != 2 or re.search(r'\s', parts[0]):
         return None
     if not parts[0].startswith('docassemble.playground') and not parts[1].startswith('data/questions/'):
         return parts[0] + ':' + 'data/questions/' + parts[1]
