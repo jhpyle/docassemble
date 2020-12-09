@@ -1617,7 +1617,7 @@ accomplish this:
   `Docker/ssl/nginx.ca.pem`.  During the build process, these files
   will be copied into `/usr/share/docassemble/certs`.
 * Use [persistent volumes] and copy the SSL certificate files
-  (`nginx.key`, `nginx.crt`, and `nginx.ca.pem`)
+  (`nginx.key` and `nginx.crt`)
   into the volume for `/usr/share/docassemble/certs` before starting
   the container.
 
@@ -1659,18 +1659,89 @@ directory are copied into `/usr/share/docassemble/certs` during the
 build process.
 
 The second way is to use [persistent volumes].  If you have a
-persistent volume called `certs` for the directory
-`/usr/share/docassemble/certs`, then you can run `docker volume
-inspect certs` to get the directory on the [Docker] host corresponding
-to this directory, and you can copy the SSL certificate files into
-that directory before starting the container.
+persistent volume for the directory `/usr/share/docassemble/certs`,
+you can copy the SSL certificate files into that directory before
+starting the container.
 
 Note that the files need to be called `nginx.crt` and `nginx.key`,
 because this is what the standard web server configuration expects.
 
+If you are starting a new server using a [persistent volume], you can
+set up HTTPS with your own certificates as follows.
+
+Create an `env.list` file like the following:
+
+{% highlight text %}
+DAHOSTNAME=myserver.example.com
+TIMEZONE=America/New_York
+USEHTTPS=true
+{% endhighlight %}
+
+(Of course, you may also need additional environment variables, such
+as `EC2`, depending on your setup.)
+
+Create a docker volume called `dacerts` using a temporary container
+based on the minimal [BusyBox] image.
+
+{% highlight bash %}
+docker run -v dacerts:/data --name deleteme busybox true
+{% endhighlight %}
+
+Now copy your SSL certificate files to the volume.
+
+{% highlight bash %}
+docker cp nginx.crt deleteme:/data/
+docker cp nginx.key deleteme:/data/
+{% endhighlight %}
+
+Now delete the [BusyBox] container.  (Your volume will not be
+deleted.)
+
+{% highlight bash %}
+docker rm deleteme
+{% endhighlight %}
+
+Now start your **docassemble** container using the `dacerts` volume
+mounted to `/usr/share/docassemble/certs`:
+
+{% highlight bash %}
+docker run \
+  --stop-timeout 600 \
+  --env-file=env.list \
+  -v dabackup:/usr/share/docassemble/backup \
+  -v dacerts:/usr/share/docassemble/certs \
+  -d -p 80:80 -p 443:443 jhpyle/docassemble
+{% endhighlight %}
+
+When it comes time to update the certificate files, save the new
+certificates as `nginx.crt` and `nginx.key`, and then do:
+
+{% highlight bash %}
+docker cp nginx.crt a3970318cb38:/usr/share/docassemble/certs/
+docker cp nginx.key a3970318cb38:/usr/share/docassemble/certs/
+{% endhighlight %}
+
+replacing `a3970318cb38` with whatever the ID or name of your
+container is.
+
+Then restart your container:
+
+{% highlight bash %}
+docker stop -t 600 a3970318cb38
+docker start a3970318cb38
+{% endhighlight %}
+
+Instead of restarting your container, you could instead `docker exec`
+into the container and do:
+
+{% highlight bash %}
+cp /usr/share/docassemble/certs/nginx.??? /etc/ssl/docassemble/
+supervisorctl restart nginx
+{% endhighlight %}
+
 If you want to use different filesystem or cloud locations, the
-`docassemble.webapp.install_certs` can be configured to use different
-locations.  See the [configuration] variables [`certs`] and
+`docassemble.webapp.install_certs` module can be configured to use
+different locations.  See the [configuration] variables [`certs`] and
 [`cert install directory`].
 
 ## <a name="tls"></a>Using TLS for incoming e-mail
@@ -2228,3 +2299,4 @@ line), as the containers depend on the images.
 [`nginx ssl protocols`]: {{ site.baseurl }}/docs/config.html#nginx ssl protocols
 [Helm]: https://helm.sh/
 [`BEHINDHTTPSLOADBALANCER`]: #BEHINDHTTPSLOADBALANCER
+[BusyBox]: https://hub.docker.com/_/busybox
