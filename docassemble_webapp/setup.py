@@ -192,7 +192,7 @@ install_requires = [
     "s4cmd==2.1.0",
     "scikit-learn==0.23.2",
     "scipy==1.5.4",
-    "selenium==3.141.0"
+    "selenium==3.141.0",
     "SecretStorage==3.3.0",
     "sendgrid==6.4.7",
     "simplekv==0.14.1",
