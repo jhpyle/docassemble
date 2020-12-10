@@ -4,6 +4,25 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.14](https://github.com/jhpyle/docassemble/releases/tag/v1.2.14) - 2020-12-09
+
+### Fixed
+- Problem with the way in which `pip` was invoked, given new version
+  of `pip`.
+
+## [1.2.13](https://github.com/jhpyle/docassemble/releases/tag/v1.2.13) - 2020-12-09
+
+### Fixed
+- Typo in `setup.py`.
+
+## [1.2.12](https://github.com/jhpyle/docassemble/releases/tag/v1.2.12) - 2020-12-09
+
+### Changed
+- Dependencies on `aloe` and `selenium`.
+
+### Fixed
+- Interview filenames with spaces in the Configuration were disregarded.
+
 ## [1.2.11](https://github.com/jhpyle/docassemble/releases/tag/v1.2.11) - 2020-12-07
 
 ### Added
