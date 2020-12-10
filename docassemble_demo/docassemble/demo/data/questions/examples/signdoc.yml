@@ -345,9 +345,9 @@ code: |
         document_templates[i].template_ok = False
     except Exception as err:
       log("Error with template: " + err.__class__.__name__ + ": " + str(err))
-      template_ok = False
+      document_templates[i].template_ok = False
       del err
-    del md_file
+    undefine('md_file')
 ---
 question: |
   Collect an electronic signature
