@@ -502,10 +502,10 @@ source /usr/share/docassemble/local3.8/bin/activate
 
 Note that if you want to install a new version of a [Python] package
 that may already be installed, you will want to use the `--upgrade`
-parameter.
+and `--force-reinstall` parameters.
 
 {% highlight bash %}
-pip install --upgrade azure-storage
+pip install --upgrade --force-reinstall azure-storage
 {% endhighlight %}
 
 To stop using the [Python virtual environment], type the command

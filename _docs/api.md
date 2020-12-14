@@ -108,7 +108,7 @@ you can simply provide an array or an object as part of [JSON] data
 structure that you are sending.  The exception to this is if you are
 making a [POST] request that includes file uploads.  In this
 situation, the format of the [POST] body cannot be [JSON], but must be
-traditional 'multipart/form-data' format in which text parameters are
+traditional `multipart/form-data` format in which text parameters are
 provided along with file contents, with boundary separators.
 
 Instead of passing the API key in the URL parameter or the POST body,
