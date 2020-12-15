@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.15] - 2020-12-14
+### Fixed
+- Pinned dependencies of fork dependencies.
+
 ## [1.2.14] - 2020-12-09
 ### Fixed
 - Problem with the way in which `pip` was invoked, given new version
