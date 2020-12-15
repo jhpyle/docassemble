@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.16] - 2020-12-15
+### Fixed
+- Forced deletion of `Flask-User`.
+
 ## [1.2.15] - 2020-12-14
 ### Fixed
 - Pinned dependencies of fork dependencies.
