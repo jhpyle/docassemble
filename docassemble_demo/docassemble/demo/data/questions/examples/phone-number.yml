@@ -37,7 +37,7 @@ subquestion: |
   ${ country_name(user.phone_country) }.
   % endif
 fields:
-  - Phone number: user.mobile_number
+  - Phone number: user.phone_number
     validate: |
       lambda y: phone_number_is_valid(y, country=user.phone_country) or validation_error("Please enter a valid " + country_name(user.phone_country) + " phone number." )
 ---

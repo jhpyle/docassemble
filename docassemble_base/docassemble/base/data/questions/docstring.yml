@@ -533,3 +533,7 @@ json:
 re:
   doc: |
     This is a standard Python module for using regular expressions.
+chain:
+  doc: |
+    This is a function from the itertools package that is useful for
+    concatenating generators.

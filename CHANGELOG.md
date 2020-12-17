@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.17] - 2020-12-17
+### Added
+- The `chain` function from `itertools`.
+
 ## [1.2.16] - 2020-12-15
 ### Fixed
 - Forced deletion of `Flask-User`.

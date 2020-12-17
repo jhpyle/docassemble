@@ -1521,6 +1521,8 @@ class DAList(DAObject):
                 del self.gathered
             else:
                 return True
+        if not self.auto_gather:
+            return self.gathered
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
             item_object_parameters = self.object_type_parameters

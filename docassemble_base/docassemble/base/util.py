@@ -12,6 +12,7 @@ from twilio.rest import Client as TwilioRestClient
 import pycountry
 import docassemble.base.ocr
 import pickle
+from itertools import chain
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError
 from jinja2.runtime import UndefinedError
@@ -300,7 +301,8 @@ __all__ = [
     'store_variables_snapshot',
     'stash_data',
     'retrieve_stashed_data',
-    'update_terms'
+    'update_terms',
+    'chain'
 ]
 
 #knn_machine_learner = DummyObject
