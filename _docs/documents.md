@@ -573,6 +573,17 @@ You may wish to distribute your property to your
 {% raw %}{% if user.child.number() > 0 %}heirs.{% else %}friends.{% endif %}{% endraw %}
 {% endhighlight %}
 
+Another big difference is that [Jinja2] does not allow you to use
+[Python built-in functions] like `max()` and `any()`, or built-in
+Python names like `None`.  Instead, it provides you with a variety of
+[filters] and [tests].  For example, instead of writing `You have {%
+raw %}{{ len(favorite_fruits) }}{% endraw %} favorite fruits`, you
+would write `You have {% raw %}{{ favorite_fruits | length }}{% endraw
+%} favorite fruits`.  Instead of writing `{% raw %}{% if
+result_of_api_call is None %}N/A{% endif %}{% endraw %}` you would
+write `{% raw %}{% if none(result_of_api_call) %}N/A{% endif %}{%
+endraw %}`
+
 Also, the [`python-docx-template`] package uses a slightly modified
 version of the [Jinja2] syntax to account for the fact that it is
 being used inside of a DOCX file.  The standard [Jinja2] way of
@@ -2010,3 +2021,6 @@ interview, see the [`cache documents` feature].
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
 [built-in filters]: https://jinja.palletsprojects.com/en/2.11.x/templates/#filters
+[Python built-in functions]: https://docs.python.org/3.8/library/functions.html
+[filters]: https://jinja.palletsprojects.com/en/2.11.x/templates/#filters
+[tests]: https://jinja.palletsprojects.com/en/2.11.x/templates/#list-of-builtin-tests

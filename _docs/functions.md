@@ -3383,17 +3383,17 @@ choices:
 
 Finally, suppose that the user selected "Español" as their language.
 
-Thereafter, if code in your interview runs `word("fish")`, the
+Thereafter, if code in your interview runs `word("cow")`, the
 returned value will be `'vaca'`.  However, if the user had selected
 "English" as their language, the returned value would have been
-`'fish'`.
+`'cow'`.
 
-When you call `word("fish")`, the `word()` function looks through all
+When you call `word("cow")`, the `word()` function looks through all
 the data in the [YAML] files listed under `words` and checks to see if
-there is an entry for the phrase `fish` under the current language
+there is an entry for the phrase `cow` under the current language
 (which is controlled by [`set_language()`] and [`get_language()`]).
 If, among the key/value pairs listed under the language in question,
-there is a key matching the word `'fish'`, the corresponding value is
+there is a key matching the word `'cow'`, the corresponding value is
 returned.
 
 <a name="update_word_collection"></a>In addition to using the

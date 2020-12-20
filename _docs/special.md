@@ -518,6 +518,7 @@ The following names are imported automatically:
 * [`background_response_action`]
 * [`bold`]
 * [`capitalize`]
+* [`chain`]
 * [`chat_partners_available`]
 * [`comma_and_list`]
 * [`comma_list`]
@@ -618,6 +619,7 @@ The following names are imported automatically:
 * [`quantity_noun`]
 * [`quote_paragraphs`]
 * [`raw`]
+* [`re`]
 * [`re_run_logic`]
 * [`read_qr`]
 * [`read_records`]
@@ -1234,3 +1236,5 @@ internal names include:
 [Google Analytics]: https://analytics.google.com
 [`analytics id`]: {{ site.baseurl }}/docs/config.html#google analytics
 [`google`]: {{ site.baseurl }}/docs/config.html#google
+[`re`]: https://docs.python.org/3.8/library/re.html
+[`chain`]: https://docs.python.org/3/library/itertools.html#itertools.chain

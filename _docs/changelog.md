@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.17](https://github.com/jhpyle/docassemble/releases/tag/v1.2.17) - 2020-12-17
+
+### Added
+- The `chain` function from `itertools`.
+
+## [1.2.16](https://github.com/jhpyle/docassemble/releases/tag/v1.2.16) - 2020-12-15
+
+### Fixed
+- Forced deletion of `Flask-User`.
+
+## [1.2.15](https://github.com/jhpyle/docassemble/releases/tag/v1.2.15) - 2020-12-14
+
+### Fixed
+- Pinned dependencies of fork dependencies.
+
 ## [1.2.14](https://github.com/jhpyle/docassemble/releases/tag/v1.2.14) - 2020-12-09
 
 ### Fixed
