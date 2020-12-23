@@ -2831,6 +2831,9 @@ def user_can_edit_package(pkgname=None, giturl=None):
             return False
         return True
     if pkgname is not None:
+        pkgname = pkgname.strip()
+        if pkgname == '' or re.search(r'\s', pkgname):
+            return False
         results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(and_(Package.name == pkgname, Package.active == True))
         if results.count() == 0:
             return(True)
@@ -2838,6 +2841,9 @@ def user_can_edit_package(pkgname=None, giturl=None):
             if d.user_id == current_user.id:
                 return True
     if giturl is not None:
+        giturl = giturl.strip()
+        if giturl == '' or re.search(r'\s', giturl):
+            return False
         results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(and_(Package.giturl == giturl, Package.active == True))
         if results.count() == 0:
             return(True)

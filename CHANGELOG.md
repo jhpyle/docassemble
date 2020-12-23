@@ -1,15 +1,17 @@
 # Change Log
 
 ## [1.2.18] - 2020-12-22
+### Fixed
+- Adapted to new version of `pip`.
+
+## [1.2.17] - 2020-12-22
 ### Changed
 - Different startup mechanism for `celery`.
 - Removed `--force-reinstall` from `pip` invocation.
 
-## [1.2.17] - 2020-12-17
+## [1.2.16] - 2020-12-15
 ### Added
 - The `chain` function from `itertools`.
-
-## [1.2.16] - 2020-12-15
 ### Fixed
 - Forced deletion of `Flask-User`.
 
