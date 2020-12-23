@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.18](https://github.com/jhpyle/docassemble/releases/tag/v1.2.18) - 2020-12-22
+
+### Changed
+- Different startup mechanism for `celery`.
+- Removed `--force-reinstall` from `pip` invocation.
+
 ## [1.2.17](https://github.com/jhpyle/docassemble/releases/tag/v1.2.17) - 2020-12-17
 
 ### Added
