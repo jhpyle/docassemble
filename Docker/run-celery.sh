@@ -17,15 +17,4 @@ export LANG=$1
 
 export HOME=/var/www
 
-celery -A docassemble.webapp.worker worker --loglevel=INFO &
-
-CELERYPID=%1
-
-function stopfunc {
-    kill -SIGTERM $CELERYPID
-    exit 0
-}
-
-trap stopfunc SIGINT SIGTERM
-
-wait $CELERYPID
+exec celery -A docassemble.webapp.worker worker --loglevel=INFO

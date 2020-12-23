@@ -1541,7 +1541,7 @@ class DAList(DAObject):
                 number = self.target_number
         if minimum is None:
             minimum = self.minimum_number
-        if number is None and minimum is None:
+        if number is None and (minimum is None or minimum == 0):
             if len(self.elements) == 0:
                 if self.there_are_any:
                     minimum = 1
@@ -2332,7 +2332,7 @@ class DADict(DAObject):
                 number = self.target_number
         if minimum is None:
             minimum = self.minimum_number
-        if number is None and minimum is None:
+        if number is None and (minimum is None or minimum == 0):
             if len(self.elements) == 0:
                 if self.there_are_any:
                     minimum = 1
@@ -2988,7 +2988,7 @@ class DASet(DAObject):
                 number = self.target_number
         if minimum is None:
             minimum = self.minimum_number
-        if number is None and minimum is None:
+        if number is None and (minimum is None or minimum == 0):
             if len(self.elements) == 0:
                 if self.there_are_any:
                     minimum = 1
