@@ -38,7 +38,7 @@ __all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', '
 #unique_names = set()
 
 match_inside_and_outside_brackets = re.compile('(.*)\[([^\]]+)\]$')
-is_number = re.compile(r'[0-9]+')
+is_number = re.compile(r'^[0-9]+$')
 
 def noquote(text):
     return re.sub(r'["\']', '', text)
@@ -1521,8 +1521,6 @@ class DAList(DAObject):
                 del self.gathered
             else:
                 return True
-        if not self.auto_gather:
-            return self.gathered
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
             item_object_parameters = self.object_type_parameters

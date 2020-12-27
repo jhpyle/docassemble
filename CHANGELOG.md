@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.19] - 2020-12-26
+### Fixed
+- Error in `.object_name()`.
+
 ## [1.2.18] - 2020-12-22
 ### Fixed
 - Adapted to new version of `pip`.

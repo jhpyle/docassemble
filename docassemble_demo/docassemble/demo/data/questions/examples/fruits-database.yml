@@ -1,0 +1,18 @@
+modules:
+  - .fruit_database
+---
+question: |
+  Pick a fruit.
+fields:
+  - Fruit: favorite_fruit
+    code: get_fruit_names()
+---
+mandatory: True
+question: |
+  Your favorite fruit,
+  ${ favorite_fruit },
+  is
+  ${ fruit_info(favorite_fruit)['color'] }
+  and has
+  ${ fruit_info(favorite_fruit)['seeds'] }
+  seeds.
