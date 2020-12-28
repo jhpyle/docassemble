@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.20] - 2020-12-28
+### Fixed
+- Error with `generic object` inheritance.
+
 ## [1.2.19] - 2020-12-26
 ### Fixed
 - Error in `.object_name()`.

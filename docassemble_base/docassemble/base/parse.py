@@ -6349,6 +6349,11 @@ def recursive_update(base, target):
             base[key] = val
     return base
 
+def recursive_add_classes(class_list, the_class):
+    for cl in the_class.__bases__:
+        class_list.append(cl.__name__)
+        recursive_add_classes(class_list, cl)
+
 class Interview:
     def __init__(self, **kwargs):
         self.source = None
@@ -7369,8 +7374,7 @@ class Interview:
                     root_evaluated = eval(mv['generic'], user_dict)
                     #logmessage("Root was evaluated")
                     classes_to_look_for = [type(root_evaluated).__name__]
-                    for cl in type(root_evaluated).__bases__:
-                        classes_to_look_for.append(cl.__name__)
+                    recursive_add_classes(classes_to_look_for, type(root_evaluated))
                     for generic_object in classes_to_look_for:
                         #logmessage("Looking for generic object " + generic_object + " for " + missingVariable)
                         if generic_object in self.generic_questions and missingVariable in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][missingVariable] or '*' in self.generic_questions[generic_object][missingVariable]):
