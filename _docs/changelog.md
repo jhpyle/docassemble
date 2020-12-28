@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.20](https://github.com/jhpyle/docassemble/releases/tag/v1.2.20) - 2020-12-28
+
+### Fixed
+- Error with `generic object` inheritance.
+
+## [1.2.19](https://github.com/jhpyle/docassemble/releases/tag/v1.2.19) - 2020-12-26
+
+### Fixed
+- Error in `.object_name()`.
+
 ## [1.2.18](https://github.com/jhpyle/docassemble/releases/tag/v1.2.18) - 2020-12-22
 
 ### Fixed
