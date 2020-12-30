@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.21] - 2020-12-29
+### Changed
+- The `list collect` feature will now show the `minimum_number` of
+  entries if `minimum_number` is set.
+
 ## [1.2.20] - 2020-12-28
 ### Fixed
 - Error with `generic object` inheritance.

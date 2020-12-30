@@ -382,6 +382,8 @@ class InterviewStatus:
             else:
                 field_list = self.question.fields
             list_len = len(self.extras['list_collect'].elements)
+            if hasattr(self.extras['list_collect'], 'minimum_number') and self.extras['list_collect'].minimum_number is not None and self.extras['list_collect'].minimum_number > list_len:
+                list_len = self.extras['list_collect'].minimum_number
             if list_len == 0:
                 list_len = 1
             if self.extras['list_collect'].ask_object_type or not allow_append:
@@ -542,6 +544,8 @@ class InterviewStatus:
             allow_append = self.extras['list_collect_allow_append']
             iterator_re = re.compile(r"\[%s\]" % (self.extras['list_iterator'],))
             list_len = len(self.extras['list_collect'].elements)
+            if hasattr(self.extras['list_collect'], 'minimum_number') and self.extras['list_collect'].minimum_number is not None and self.extras['list_collect'].minimum_number > list_len:
+                list_len = self.extras['list_collect'].minimum_number
             if list_len == 0:
                 list_len = 1
             if self.extras['list_collect'].ask_object_type or not allow_append:
@@ -4934,6 +4938,8 @@ class Question:
                     extras['list_minimum'] = the_list.minimum_number
                 iterator_index = list_of_indices.index(extras['list_iterator'])
                 length_to_use = len(the_list.elements)
+                if hasattr(the_list, 'minimum_number') and the_list.minimum_number is not None and the_list.minimum_number > length_to_use:
+                    length_to_use = the_list.minimum_number
                 if length_to_use == 0:
                     length_to_use = 1
                 if the_list.ask_object_type or not extras['list_collect_allow_append']:
