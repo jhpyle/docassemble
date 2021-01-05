@@ -1480,7 +1480,29 @@ folder] of the [Playground].
 
 Alternatively, you can refer to files using code.
 
-{% include side-by-side.html demo="template-code" %}
+{% highlight yaml %}
+question: |
+  Please upload the template file.
+subquestion: |
+  For best results, download
+  [this file] and then upload
+  it here.
+
+  [this file]: ${ url_of('letter_template.docx') }
+fields:
+  - File: the_template_file
+    datatype: file
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  - name: Your letter
+    filename: letter
+    docx template file: 
+      code: |
+        the_template_file
+{% endhighlight %}
 
 The `code` needs to refer to a [Python] expression (e.g., a variable
 name).  The expression can return:

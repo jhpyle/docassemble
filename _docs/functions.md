@@ -6625,7 +6625,8 @@ that exists in the templates folder of the current package.  You can
 also refer to templates in other packages using a full package
 filename reference, such as
 `docassemble.demo:data/templates/sub_document.docx`.  You can also
-give the function a [`DAFile`] or a [`DAFileList`] object.
+give the function a [`DAFile`], a [`DAFileList`], a
+[`DAFileCollection`], or a [`DAStaticFile`] object.
 
 The `include_docx_template()` function also accepts optional keyword
 parameters.  These values become variables that you can use in
