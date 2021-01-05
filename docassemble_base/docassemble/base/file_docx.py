@@ -28,7 +28,7 @@ DEFAULT_PAGE_WIDTH = '6.5in'
 list_types = ['1', 'A', 'a', 'I', 'i']
 
 def image_for_docx(fileref, question, tpl, width=None):
-    if fileref.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile'):
+    if fileref.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile', 'DAStaticFile'):
         file_info = dict(fullpath=fileref.path())
     else:
         file_info = server.file_finder(fileref, convert={'svg': 'png'}, question=question)
@@ -140,7 +140,7 @@ def include_docx_template(template_file, **kwargs):
     """Include the contents of one docx file inside another docx file."""
     if this_thread.evaluation_context is None:
         return 'ERROR: not in a docx file'
-    if template_file.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile'):
+    if template_file.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile', 'DAStaticFile'):
         template_path = template_file.path()
     else:
         template_path = package_template_filename(template_file, package=this_thread.current_package)

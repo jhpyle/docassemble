@@ -17,25 +17,24 @@
  * limitations under the License.
  * ============================================================ */
 
-(function( $ ) {
+(function ($) {
+  "use strict";
 
- "use strict";
+  /* COMBOBOX PUBLIC CLASS DEFINITION
+   * ================================ */
 
- /* COMBOBOX PUBLIC CLASS DEFINITION
-  * ================================ */
-
-  var Combobox = function ( element, options ) {
+  var Combobox = function (element, options) {
     this.options = $.extend({}, $.fn.combobox.defaults, options);
-    this.template = this.options.template || this.template
+    this.template = this.options.template || this.template;
     this.$source = $(element);
     this.$container = this.setup();
-    this.$element = this.$container.find('input[type=text]');
-    this.$target = this.$container.find('input[type=hidden]');
-    if (this.$source.attr('disabled') !== undefined){
-      this.$target.prop('disabled', true);
+    this.$element = this.$container.find("input[type=text]");
+    this.$target = this.$container.find("input[type=hidden]");
+    if (this.$source.attr("disabled") !== undefined) {
+      this.$target.prop("disabled", true);
     }
-    this.$button = this.$container.find('.dacomboboxtoggle');
-    this.$menu = $(this.options.menu).appendTo('body');
+    this.$button = this.$container.find(".dacomboboxtoggle");
+    this.$menu = $(this.options.menu).appendTo("body");
     this.matcher = this.options.matcher || this.matcher;
     this.sorter = this.options.sorter || this.sorter;
     this.highlighter = this.options.highlighter || this.highlighter;
@@ -48,142 +47,151 @@
   };
 
   Combobox.prototype = {
+    constructor: Combobox,
 
-    constructor: Combobox
-
-  , setup: function () {
+    setup: function () {
       //console.log('setup');
       var combobox = $(this.template());
       this.$source.before(combobox);
       this.$source.hide();
       return combobox;
-    }
+    },
 
-  , disable: function() {
+    disable: function () {
       //console.log('disable');
-      this.$element.prop('disabled', true);
-      this.$button.attr('disabled', true);
+      this.$element.prop("disabled", true);
+      this.$button.attr("disabled", true);
       this.disabled = true;
-      this.$container.addClass('combobox-disabled');
-    }
+      this.$container.addClass("combobox-disabled");
+    },
 
-  , enable: function() {
+    enable: function () {
       //console.log('enable');
-      this.$element.prop('disabled', false);
-      this.$button.attr('disabled', false);
+      this.$element.prop("disabled", false);
+      this.$button.attr("disabled", false);
       this.disabled = false;
-      this.$container.removeClass('combobox-disabled');
-    }
-  , parse: function () {
+      this.$container.removeClass("combobox-disabled");
+    },
+    parse: function () {
       //console.log('parse');
-      var that = this
-        , map = {}
-        , source = []
-        , selected = false
-        , selectedValue = '';
-      this.$source.find('option').each(function() {
+      var that = this,
+        map = {},
+        source = [],
+        selected = false,
+        selectedValue = "";
+      this.$source.find("option").each(function () {
         var option = $(this);
-        if (option.val() === '') {
+        if (option.val() === "") {
           that.options.placeholder = option.text();
           return;
         }
         map[option.text()] = option.val();
         source.push(option.text());
-        if (option.prop('selected')) {
+        if (option.prop("selected")) {
           selected = option.text();
           selectedValue = option.val();
         }
-      })
+      });
       this.map = map;
       if (selected) {
         this.$element.val(selected);
         this.$target.val(selectedValue);
-        this.$container.addClass('combobox-selected');
+        this.$container.addClass("combobox-selected");
         this.selected = true;
       }
       return source;
-    }
+    },
 
-  , transferAttributes: function() {
-    //console.log('transferAttributes');
-    this.options.placeholder = this.$source.attr('data-placeholder') || this.options.placeholder
-    if(this.options.appendId !== "undefined") {
-    	this.$element.attr('id', this.$source.attr('id') + this.options.appendId);
-        daComboBoxes[this.$element.attr('id')] = this;
-    }
-    this.$element.attr('placeholder', this.options.placeholder)
-    this.$target.prop('name', this.$source.prop('name'))
-    this.$target.val(this.$source.val())
-    this.$source.removeAttr('name')  // Remove from source otherwise form will pass parameter twice.
-    this.$element.attr('required', this.$source.attr('required'))
-    this.$element.attr('rel', this.$source.attr('rel'))
-    this.$element.attr('title', this.$source.attr('title'))
-    this.$element.attr('class', this.$source.attr('class'))
-    this.$element.attr('tabindex', this.$source.attr('tabindex'))
-    this.$source.removeAttr('tabindex')
-    if (this.$source.attr('disabled') !== undefined)
-      this.disable();
-  }
+    transferAttributes: function () {
+      //console.log('transferAttributes');
+      this.options.placeholder =
+        this.$source.attr("data-placeholder") || this.options.placeholder;
+      if (this.options.appendId !== "undefined") {
+        this.$element.attr(
+          "id",
+          this.$source.attr("id") + this.options.appendId
+        );
+        daComboBoxes[this.$element.attr("id")] = this;
+      }
+      this.$element.attr("placeholder", this.options.placeholder);
+      this.$target.prop("name", this.$source.prop("name"));
+      this.$target.val(this.$source.val());
+      this.$source.removeAttr("name"); // Remove from source otherwise form will pass parameter twice.
+      this.$element.attr("required", this.$source.attr("required"));
+      this.$element.attr("rel", this.$source.attr("rel"));
+      this.$element.attr("title", this.$source.attr("title"));
+      this.$element.attr("class", this.$source.attr("class"));
+      this.$element.attr("tabindex", this.$source.attr("tabindex"));
+      this.$source.removeAttr("tabindex");
+      if (this.$source.attr("disabled") !== undefined) this.disable();
+    },
 
-  , select: function () {
-      //console.log('select');
-      var val = this.$menu.find('.active').attr('data-value');
-      this.$container.parent().find('.da-has-error').remove();
-      this.$element.val(this.updater(val)).trigger('change');
-      this.$target.val(this.map[val]).trigger('change');
-      this.$source.val(this.map[val]).trigger('change');
-      this.$container.addClass('combobox-selected');
+    select: function () {
+      //console.log("select");
+      var val = this.$menu.find(".active").attr("data-value");
+      var oldVal;
+      this.$container.parent().find(".da-has-error").remove();
+      this.$element.val(this.updater(val));
+      oldVal = this.$target.val();
+      if (oldVal != this.map[val]) {
+        this.$target.val(this.map[val]); //.trigger("change");
+      }
+      oldVal = this.$source.val();
+      if (oldVal != this.map[val]) {
+        this.$source.val(this.map[val]).trigger("change");
+      }
+      this.$container.addClass("combobox-selected");
       this.selected = true;
-      return this.hide();
-    }
+      this.hide();
+      return;
+    },
 
-  , updater: function (item) {
+    updater: function (item) {
       //console.log('updater');
       return item;
-    }
+    },
 
-  , show: function () {
-      //console.log('show');
+    show: function () {
+      //console.log("show");
       var pos = $.extend({}, this.$element.position(), {
-        height: this.$element[0].offsetHeight
+        height: this.$element[0].offsetHeight,
       });
-
       this.$menu
         .insertAfter(this.$element)
         .css({
-          top: pos.top + pos.height
-        , left: pos.left
+          top: pos.top + pos.height,
+          left: pos.left,
         })
         .show();
 
-      $('.dropdown-menu').on('mousedown', $.proxy(this.scrollSafety, this));
+      $(".dropdown-menu").on("mousedown", $.proxy(this.scrollSafety, this));
 
       this.shown = true;
       return this;
-    }
+    },
 
-  , hide: function () {
+    hide: function () {
       //console.log('hide');
       this.$menu.hide();
-      $('.dropdown-menu').off('mousedown', $.proxy(this.scrollSafety, this));
-      this.$element.on('blur', $.proxy(this.blur, this));
+      $(".dropdown-menu").off("mousedown", $.proxy(this.scrollSafety, this));
+      this.$element.on("blur", $.proxy(this.blur, this));
       this.shown = false;
       return this;
-    }
+    },
 
-  , lookup: function (event) {
-      //console.log('lookup');
+    lookup: function (event) {
+      //console.log("lookup");
       this.query = this.$element.val();
-      return this.process(this.source);
-    }
+      this.process(this.source);
+    },
 
-  , process: function (items) {
-      //console.log('process');
+    process: function (items) {
+      //console.log("process");
       var that = this;
 
       items = $.grep(items, function (item) {
         return that.matcher(item);
-      })
+      });
 
       items = this.sorter(items);
 
@@ -192,170 +200,183 @@
       }
 
       return this.render(items.slice(0, this.options.items)).show();
-    }
+    },
 
-  , template: function() {
+    template: function () {
       //console.log('template');
-      if (this.options.bsVersion == '2') {
-        return '<div class="combobox-container"><input type="hidden" /> <div class="input-append"> <input type="text" autocomplete="off" /> <span class="add-on dropdown-toggle" data-dropdown="dropdown"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>'
+      if (this.options.bsVersion == "2") {
+        return '<div class="combobox-container"><input type="hidden" /> <div class="input-append"> <input type="text" autocomplete="off" /> <span class="add-on dropdown-toggle" data-dropdown="dropdown"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>';
       } else {
-        return '<div class="combobox-container"> <input type="hidden" /> <div class="input-group"> <input type="text" autocomplete="off" /> <div class="input-group-append"> <button class="btn btn-outline-secondary dacomboboxtoggle" data-toggle="dropdown" type="button"><span class="fas fa-caret-down"></span><span class="fas fa-times"></span></button> </div> </div>'
+        return '<div class="combobox-container"> <input type="hidden" /> <div class="input-group"> <input type="text" autocomplete="off" /> <div class="input-group-append"> <button class="btn btn-outline-secondary dacomboboxtoggle" data-toggle="dropdown" type="button"><span class="fas fa-caret-down"></span><span class="fas fa-times"></span></button> </div> </div>';
       }
-    }
+    },
 
-  , matcher: function (item) {
+    matcher: function (item) {
       //console.log('matcher');
       return ~item.toLowerCase().indexOf(this.query.toLowerCase());
-    }
+    },
 
-  , sorter: function (items) {
+    sorter: function (items) {
       //console.log('sorter');
-      var beginswith = []
-        , caseSensitive = []
-        , caseInsensitive = []
-        , item;
+      var beginswith = [],
+        caseSensitive = [],
+        caseInsensitive = [],
+        item;
 
-      while (item = items.shift()) {
-        if (!item.toLowerCase().indexOf(this.query.toLowerCase())) {beginswith.push(item);}
-        else if (~item.indexOf(this.query)) {caseSensitive.push(item);}
-        else {caseInsensitive.push(item);}
+      while ((item = items.shift())) {
+        if (!item.toLowerCase().indexOf(this.query.toLowerCase())) {
+          beginswith.push(item);
+        } else if (~item.indexOf(this.query)) {
+          caseSensitive.push(item);
+        } else {
+          caseInsensitive.push(item);
+        }
       }
 
       return beginswith.concat(caseSensitive, caseInsensitive);
-    }
+    },
 
-  , highlighter: function (item) {
+    highlighter: function (item) {
       //console.log('highlighter');
-      var query = this.query.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&');
-      return item.replace(new RegExp('(' + query + ')', 'ig'), function ($1, match) {
-        return '<strong>' + match + '</strong>';
-      })
-    }
+      var query = this.query.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
+      return item.replace(new RegExp("(" + query + ")", "ig"), function (
+        $1,
+        match
+      ) {
+        return "<strong>" + match + "</strong>";
+      });
+    },
 
-  , render: function (items) {
+    render: function (items) {
       //console.log('render');
       var that = this;
 
       items = $(items).map(function (i, item) {
-        i = $(that.options.item).attr('data-value', item);
+        i = $(that.options.item).attr("data-value", item);
         i.html(that.highlighter(item));
         return i[0];
-      })
+      });
 
-      items.first().addClass('active');
+      items.first().addClass("active");
       this.$menu.html(items);
       return this;
-    }
+    },
 
-  , next: function (event) {
+    next: function (event) {
       //console.log('next');
-      var active = this.$menu.find('.active').removeClass('active')
-        , next = active.next();
+      var active = this.$menu.find(".active").removeClass("active"),
+        next = active.next();
 
       if (!next.length) {
-        next = $(this.$menu.find('a')[0]);
+        next = $(this.$menu.find("a")[0]);
       }
 
-      next.addClass('active');
-    }
+      next.addClass("active");
+    },
 
-  , prev: function (event) {
+    prev: function (event) {
       //console.log('prev');
-      var active = this.$menu.find('.active').removeClass('active')
-        , prev = active.prev();
+      var active = this.$menu.find(".active").removeClass("active"),
+        prev = active.prev();
 
       if (!prev.length) {
-        prev = this.$menu.find('a').last();
+        prev = this.$menu.find("a").last();
       }
 
-      prev.addClass('active');
-    }
+      prev.addClass("active");
+    },
 
-  , toggle: function () {
-    //console.log('toggle');
-    if (!this.disabled) {
-      if (this.$container.hasClass('combobox-selected')) {
-        this.clearTarget();
-        this.triggerChange();
-        this.clearElement();
-      } else {
-        if (this.shown) {
-          this.hide();
-        } else {
+    toggle: function (e) {
+      //console.log("toggle");
+      if (!this.disabled) {
+        if (this.$container.hasClass("combobox-selected")) {
+          this.clearTarget();
+          this.triggerChange();
           this.clearElement();
-          this.lookup();
+        } else {
+          if (this.shown) {
+            this.hide();
+          } else {
+            this.clearElement();
+            this.lookup();
+          }
         }
       }
-    }
-  }
-
-  , scrollSafety: function(e) {
-      //console.log('scrollsafety');
-      if (e.target.tagName == 'UL') {
-          this.$element.off('blur');
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
       }
-  }
-  , clearElement: function () {
-    //console.log('clearElement');
-    this.$element.val('').focus();
-  }
+      return false;
+    },
 
-  , clearTarget: function () {
-    //console.log('clearTarget');
-    this.$source.val('');
-    this.$target.val('');
-    this.$container.removeClass('combobox-selected');
-    this.selected = false;
-  }
+    scrollSafety: function (e) {
+      //console.log("scrollsafety");
+      if (e.target.tagName == "UL") {
+        this.$element.off("blur");
+      }
+    },
+    clearElement: function () {
+      //console.log('clearElement');
+      this.$element.val("").focus();
+    },
 
-  , triggerChange: function () {
-    //console.log('triggerChange');
-    this.$source.trigger('change');
-  }
+    clearTarget: function () {
+      //console.log('clearTarget');
+      this.$source.val("");
+      this.$target.val("");
+      this.$container.removeClass("combobox-selected");
+      this.selected = false;
+    },
 
-  , refresh: function () {
-    //console.log('refresh');
-    this.source = this.parse();
-    this.options.items = this.source.length;
-  }
+    triggerChange: function () {
+      //console.log('triggerChange');
+      this.$source.trigger("change");
+    },
 
-  , listen: function () {
+    refresh: function () {
+      //console.log('refresh');
+      this.source = this.parse();
+      this.options.items = this.source.length;
+    },
+
+    listen: function () {
       //console.log('listen');
       this.$element
-        .on('focus',    $.proxy(this.focus, this))
-        .on('change',   $.proxy(this.change, this))
-        .on('blur',     $.proxy(this.blur, this))
-        .on('keypress', $.proxy(this.keypress, this))
-        .on('keyup',    $.proxy(this.keyup, this));
+        .on("focus", $.proxy(this.focus, this))
+        .on("change", $.proxy(this.change, this))
+        .on("blur", $.proxy(this.blur, this))
+        .on("keypress", $.proxy(this.keypress, this))
+        .on("keyup", $.proxy(this.keyup, this));
 
-      if (this.eventSupported('keydown')) {
-        this.$element.on('keydown', $.proxy(this.keydown, this));
+      if (this.eventSupported("keydown")) {
+        this.$element.on("keydown", $.proxy(this.keydown, this));
       }
 
       this.$menu
-        .on('click', $.proxy(this.click, this))
-        .on('mouseenter', 'a', $.proxy(this.mouseenter, this))
-        .on('mouseleave', 'a', $.proxy(this.mouseleave, this));
+        .on("click", $.proxy(this.click, this))
+        .on("mouseenter", "a", $.proxy(this.mouseenter, this))
+        .on("mouseleave", "a", $.proxy(this.mouseleave, this));
 
-      this.$button
-        .on('click', $.proxy(this.toggle, this));
-    }
+      this.$button.on("click", $.proxy(this.toggle, this));
+    },
 
-  , eventSupported: function(eventName) {
+    eventSupported: function (eventName) {
       //console.log('eventSupported');
       var isSupported = eventName in this.$element;
       if (!isSupported) {
-        this.$element.setAttribute(eventName, 'return;');
-        isSupported = typeof this.$element[eventName] === 'function';
+        this.$element.setAttribute(eventName, "return;");
+        isSupported = typeof this.$element[eventName] === "function";
       }
       return isSupported;
-    }
+    },
 
-  , move: function (e) {
-      //console.log('move');
-      if (!this.shown) {return;}
+    move: function (e) {
+      //console.log("move");
+      if (!this.shown) {
+        return;
+      }
 
-      switch(e.keyCode) {
+      switch (e.keyCode) {
         case 9: // tab
         case 13: // enter
         case 27: // escape
@@ -374,46 +395,47 @@
           this.fixMenuScroll();
           break;
       }
-
       e.stopPropagation();
-    }
+    },
 
-  , fixMenuScroll: function(){
+    fixMenuScroll: function () {
       //console.log('fixMenuScroll');
-      var active = this.$menu.find('.active');
-      if(active.length){
-          var top = active.position().top;
-          var bottom = top + active.height();
-          var scrollTop = this.$menu.scrollTop();
-          var menuHeight = this.$menu.height();
-          if(bottom > menuHeight){
-              this.$menu.scrollTop(scrollTop + bottom - menuHeight);
-          } else if(top < 0){
-              this.$menu.scrollTop(scrollTop + top);
-          }
+      var active = this.$menu.find(".active");
+      if (active.length) {
+        var top = active.position().top;
+        var bottom = top + active.height();
+        var scrollTop = this.$menu.scrollTop();
+        var menuHeight = this.$menu.height();
+        if (bottom > menuHeight) {
+          this.$menu.scrollTop(scrollTop + bottom - menuHeight);
+        } else if (top < 0) {
+          this.$menu.scrollTop(scrollTop + top);
+        }
       }
-  }
+    },
 
-  , keydown: function (e) {
+    keydown: function (e) {
       //console.log('keyDown');
-      this.suppressKeyPressRepeat = ~$.inArray(e.keyCode, [40,38,9,13,27]);
+      this.suppressKeyPressRepeat = ~$.inArray(e.keyCode, [40, 38, 9, 13, 27]);
       this.move(e);
-    }
+    },
 
-  , keypress: function (e) {
+    keypress: function (e) {
       //console.log('keyPress');
-      if (this.suppressKeyPressRepeat) {return;}
+      if (this.suppressKeyPressRepeat) {
+        return;
+      }
       this.move(e);
-    }
+    },
 
-  , keyup: function (e) {
-      //console.log('keyUp');
-      switch(e.keyCode) {
+    keyup: function (e) {
+      //console.log("keyUp");
+      switch (e.keyCode) {
         case 40: // down arrow
-         if (!this.shown){
-           this.toggle();
-         }
-         break;
+          if (!this.shown) {
+            this.toggle();
+          }
+          break;
         case 39: // right arrow
         case 38: // up arrow
         case 37: // left arrow
@@ -426,12 +448,16 @@
 
         case 9: // tab
         case 13: // enter
-          if (!this.shown) {return;}
+          if (!this.shown) {
+            return;
+          }
           this.select();
           break;
 
         case 27: // escape
-          if (!this.shown) {return;}
+          if (!this.shown) {
+            return;
+          }
           this.hide();
           break;
 
@@ -443,72 +469,91 @@
 
       e.stopPropagation();
       e.preventDefault();
-  }
+    },
 
-  , focus: function (e) {
+    focus: function (e) {
       //console.log('focus');
       this.focused = true;
-  }
+    },
 
-  , blur: function (e) {
+    blur: function (e) {
       //console.log('blur');
       var that = this;
       this.focused = false;
       var val = this.$element.val();
-      if (this.clearIfNoMatch && !this.selected && val !== '' ) {
-        this.$element.val('');
-        this.$source.val('').trigger('change');
-        this.$target.val('').trigger('change');
+      var oldVal;
+      if (this.clearIfNoMatch && !this.selected && val !== "") {
+        this.$element.val("");
+        oldVal = this.$source.val();
+        if (oldVal != "") {
+          this.$source.val("").trigger("change");
+        }
+        oldVal = this.$target.val();
+        if (oldVal != "") {
+          this.$target.val(""); //.trigger("change");
+        }
       }
-      if (!this.selected){
-        this.$target.val(val).trigger('change');
+      if (!this.selected) {
+        oldVal = this.$target.val();
+        if (oldVal != val) {
+          this.$target.val(val); //.trigger("change");
+        }
       }
-      if (!this.mousedover && this.shown) {setTimeout(function () { that.hide(); }, 200);}
-    }
+      if (!this.mousedover && this.shown) {
+        setTimeout(function () {
+          that.hide();
+        }, 200);
+      }
+    },
 
-  , click: function (e) {
-      //console.log('click');
-      e.stopPropagation();
-      e.preventDefault();
+    click: function (e) {
+      //console.log("click");
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
       daFetchAjaxTimeoutFetchAfter = false;
       daFetchAcceptIncoming = false;
       this.select();
       this.$element.focus();
-    }
+    },
 
-  , mouseenter: function (e) {
+    mouseenter: function (e) {
       //console.log('mouseenter');
       this.mousedover = true;
-      this.$menu.find('.active').removeClass('active');
-      $(e.currentTarget).addClass('active');
-    }
+      this.$menu.find(".active").removeClass("active");
+      $(e.currentTarget).addClass("active");
+    },
 
-  , mouseleave: function (e) {
+    mouseleave: function (e) {
       //console.log('mouseleave');
       this.mousedover = false;
-    }
+    },
   };
 
   /* COMBOBOX PLUGIN DEFINITION
    * =========================== */
-  $.fn.combobox = function ( option ) {
+  $.fn.combobox = function (option) {
     return this.each(function () {
-      var $this = $(this)
-        , data = $this.data('combobox')
-        , options = typeof option == 'object' && option;
-      if(!data) {$this.data('combobox', (data = new Combobox(this, options)));}
-      if (typeof option == 'string') {data[option]();}
+      var $this = $(this),
+        data = $this.data("combobox"),
+        options = typeof option == "object" && option;
+      if (!data) {
+        $this.data("combobox", (data = new Combobox(this, options)));
+      }
+      if (typeof option == "string") {
+        data[option]();
+      }
     });
   };
 
   $.fn.combobox.defaults = {
-    bsVersion: '4'
-    , menu: '<div class="typeahead typeahead-long dropdown-menu"></div>'
-    , item: '<a href="#" class="dropdown-item"></a>'
-    , appendId: 'combobox'
-    , clearIfNoMatch: false
+    bsVersion: "4",
+    menu: '<div class="typeahead typeahead-long dropdown-menu"></div>',
+    item: '<a href="#" class="dropdown-item"></a>',
+    appendId: "combobox",
+    clearIfNoMatch: false,
   };
 
   $.fn.combobox.Constructor = Combobox;
-
-}( window.jQuery ));
+})(window.jQuery);

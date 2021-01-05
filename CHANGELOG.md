@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.2.22] - 2021-01-04
+### Changed
+- Expanded the information available in the data view of a question.
+### Fixed
+- Issue with combobox update triggers.
+- Issue with `DADict` objects in `code` for multiple choice lists.
+
 ## [1.2.21] - 2020-12-29
 ### Changed
 - The `list collect` feature will now show the `minimum_number` of

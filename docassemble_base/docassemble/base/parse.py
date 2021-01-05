@@ -347,6 +347,9 @@ class InterviewSourceURL(InterviewSource):
                 return(new_source)
         return None
 
+def dummy_embed_input(status, variable):
+    return variable
+
 class InterviewStatus:
     def __init__(self, current_info=dict(), **kwargs):
         self.current_info = current_info
@@ -658,6 +661,8 @@ class InterviewStatus:
         self.tracker = tracker
     def as_data(self, the_user_dict, encode=True):
         result = dict(language=self.question.language)
+        if self.question.interview.debug:
+            result['source'] = {'label': word("Source"), 'title': word("How this question came to be asked")}
         if 'progress' in the_user_dict['_internal']:
             result['progress'] = the_user_dict['_internal']['progress']
         if self.question.language in self.question.interview.default_validation_messages:
@@ -691,14 +696,54 @@ class InterviewStatus:
                     result['autoterms'][term] = vals['definition']
         if self.orig_sought is not None:
             result['event_list'] = [self.orig_sought]
-        for param in ('questionText', 'subquestionText', 'continueLabel', 'helpLabel'):
+        if 'action_buttons' in self.extras:
+            result['additional_buttons'] = []
+            for item in self.extras['action_buttons']:
+                new_item = copy.deepcopy(item)
+                new_item['label'] = docassemble.base.filter.markdown_to_html(item['label'], trim=True, do_terms=False, status=self, verbatim=encode)
+        for param in ('questionText',):
             if hasattr(self, param) and getattr(self, param) is not None:
-                result[param] = getattr(self, param).rstrip()
+                result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, status=self, verbatim=encode)
+        if hasattr(self, 'subquestionText') and self.subquestionText is not None:
+            if self.question.question_type == "fields":
+                embedder = dummy_embed_input
+            else:
+                embedder = None
+            result['subquestionText'] = docassemble.base.filter.markdown_to_html(self.subquestionText.rstrip(), status=self, verbatim=encode, embedder=embedder)
+        for param in ('continueLabel', 'helpLabel'):
+            if hasattr(self, param) and getattr(self, param) is not None:
+                result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, do_terms=False, status=self, verbatim=encode)
         if 'menu_items' in self.extras and isinstance(self.extras['menu_items'], list):
             result['menu_items'] = self.extras['menu_items']
-        for param in ('rightText', 'underText', 'cssClass', 'tableCssClass', 'back_button_label', 'css', 'script'):
+        for param in ('cssClass', 'tableCssClass', 'css', 'script'):
             if param in self.extras and isinstance(self.extras[param], str):
                 result[param] = self.extras[param].rstrip()
+        for param in ('back_button_label',):
+            if param in self.extras and isinstance(self.extras[param], str):
+                result[param] = docassemble.base.filter.markdown_to_html(self.extras[param].rstrip(), trim=True, do_terms=False, status=self, verbatim=encode)
+        for param in ('rightText', 'underText'):
+            if param in self.extras and isinstance(self.extras[param], str):
+                result[param] = docassemble.base.filter.markdown_to_html(self.extras[param].rstrip(), status=self, verbatim=encode)
+        if 'continueLabel' not in result:
+            if self.question.question_type == "review":
+                result['continueLabel'] = word('Resume')
+            else:
+                result['continueLabel'] = word('Continue')
+        steps = the_user_dict['_internal']['steps'] - the_user_dict['_internal']['steps_offset']
+        if self.can_go_back and steps > 1:
+            result['allow_going_back'] = True
+            result['backTitle'] = word("Go back to the previous question")
+            back_button_val = self.extras.get('back_button', None)
+            if (back_button_val or (back_button_val is None and self.question.interview.question_back_button)):
+                result['questionBackButton'] = self.back
+        else:
+            result['allow_going_back'] = False
+        if self.question.question_type == "signature":
+            result['signaturePhrases'] = {
+                'clear': word('Clear'),
+                'noSignature': word("You must sign your name to continue."),
+                'loading': word('Loading.  Please wait . . . '),
+                }
         if 'questionMetadata' in self.extras:
             result['question_metadata'] = self.extras['questionMetadata']
         if 'segment' in self.extras:
@@ -726,13 +771,23 @@ class InterviewStatus:
                     if len(video_result) > 0:
                         the_help['video'] = [dict(url=x[0], mime_type=x[1]) for x in video_result]
                 if 'content' in help_text and help_text['content'] is not None:
-                    the_help['content'] = help_text['content'].rstrip()
+                    the_help['content'] = docassemble.base.filter.markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=encode)
                 if 'heading' in help_text and help_text['heading'] is not None:
                     the_help['heading'] = help_text['heading'].rstrip()
+                elif len(self.helpText) > 1:
+                    the_help['heading'] = word('Help with this question')
                 result['helpText'].append(the_help)
+            result['help'] = dict()
+            if self.helpText[0]['label']:
+                result['help']['label'] = docassemble.base.filter.markdown_to_html(self.helpText[0]['label'], trim=True, do_terms=False, status=self, verbatim=encode)
+            else:
+                result['help']['label'] = self.question.help()
+            result['help']['title'] = word("Help is available for this question")
         if 'questionText' not in result and self.question.question_type == "signature":
             result['questionText'] = word('Sign Your Name')
         result['questionType'] = self.question.question_type
+        if hasattr(self.question, 'question_variety'):
+            result['questionVariety'] = self.question.question_variety
         if self.question.is_mandatory or self.question.mandatory_code is not None:
             result['mandatory'] = True
         if hasattr(self.question, 'name'):
@@ -767,7 +822,13 @@ class InterviewStatus:
                 result['default_email'] = self.current_info['user']['email']
             for attachment in self.attachments:
                 the_attachment = dict(url=dict(), number=dict(), filename_with_extension=dict())
-                for key in ('valid_formats', 'filename', 'name', 'description', 'content', 'markdown', 'raw'):
+                if 'name' in attachment:
+                    if attachment['name']:
+                        the_attachment['name'] = docassemble.base.filter.markdown_to_html(attachment['name'], trim=True, status=self, verbatim=encode)
+                if 'description' in attachment:
+                    if attachment['description']:
+                        the_attachment['description'] = docassemble.base.filter.markdown_to_html(attachment['description'], status=self, verbatim=encode)
+                for key in ('valid_formats', 'filename', 'content', 'markdown', 'raw'):
                     if key in attachment:
                         if attachment[key]:
                             the_attachment[key] = attachment[key]
@@ -776,6 +837,15 @@ class InterviewStatus:
                     the_attachment['number'][the_format] = attachment['file'][the_format]
                     the_attachment['filename_with_extension'][the_format] = attachment['filename'] + '.' + extension_of_doc_format[the_format]
                 result['attachments'].append(the_attachment)
+        if self.extras.get('list_collect', False) is not False:
+            result['listCollect'] = {
+                'deleteLabel': word('Delete'),
+                'addAnotherLabel': self.extras['list_collect_add_another_label'] if self.extras['list_collect_add_another_label'] else word("Add another"),
+                'deletedLabel': word("(Deleted)"),
+                'undeleteLabel': word("Undelete"),
+            }
+        validation_rules_used = set()
+        file_fields = list()
         for field in self.question.fields:
             the_field = dict()
             the_field['number'] = field.number
@@ -783,6 +853,105 @@ class InterviewStatus:
                 the_field['variable_name'] = from_safeid(field.saveas)
                 if encode:
                     the_field['variable_name_encoded'] = field.saveas
+                the_field['validation_messages'] = dict()
+                if self.question.question_type == 'multiple_choice' and self.question.question_variety in ["radio", "dropdown", "combobox"]:
+                    if self.question.question_variety == 'combobox':
+                         the_field['validation_messages']['required'] = field.validation_message('combobox required', self, word("You need to select one or type in a new value."))
+                    else:
+                        the_field['validation_messages']['required'] = field.validation_message('multiple choice required', self, word("You need to select one."))
+                elif not (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
+                    if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
+                        the_field['validation_messages']['required'] = field.validation_message('combobox required', self, word("You need to select one or type in a new value."))
+                    elif hasattr(field, 'inputtype') and field.inputtype == 'ajax':
+                        the_field['validation_messages']['required'] = field.validation_message('combobox required', self, word("You need to select one."))
+                    elif hasattr(field, 'datatype') and (field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype in ('yesnoradio', 'noyesradio', 'radio', 'dropdown'))):
+                        the_field['validation_messages']['required'] = field.validation_message('multiple choice required', self, word("You need to select one."))
+                    else:
+                        the_field['validation_messages']['required'] = field.validation_message('required', self, word("This field is required."))
+                if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide'] and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
+                    the_field['validation_messages']['uncheckothers'] = field.validation_message('checkboxes required', self, word("Check at least one option, or check “%s”"), parameters=tuple([strip_tags(self.labels[field.number])]))
+                if hasattr(field, 'datatype') and field.datatype not in ('checkboxes', 'object_checkboxes'):
+                    for key in ('minlength', 'maxlength'):
+                        if hasattr(field, 'extras') and key in field.extras and key in self.extras:
+                            if key == 'minlength':
+                                the_field['validation_messages'][key] = field.validation_message(key, self, word("You must type at least %s characters."), parameters=tuple([self.extras[key][field.number]]))
+                            elif key == 'maxlength':
+                                the_field['validation_messages'][key] = field.validation_message(key, self, word("You cannot type more than %s characters."), parameters=tuple([self.extras[key][field.number]]))
+            if hasattr(field, 'datatype'):
+                if field.datatype in ('checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and self.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in self.extras) or ('maxlength' in field.extras and 'maxlength' in self.extras)))):
+                    if hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in self.extras) or ('maxlength' in field.extras and 'maxlength' in self.extras)):
+                        checkbox_messages = dict()
+                        if 'minlength' in field.extras and 'minlength' in self.extras and 'maxlength' in field.extras and 'maxlength' in self.extras and self.extras['minlength'][field.number] == self.extras['maxlength'][field.number] and self.extras['minlength'][field.number] > 0:
+                            if 'nota' not in self.extras:
+                                self.extras['nota'] = dict()
+                            self.extras['nota'][field.number] = False
+                            checkbox_messages['checkexactly'] = field.validation_message('checkbox minmaxlength', self, word("Please select exactly %s."), parameters=tuple([self.extras['maxlength'][field.number]]))
+                        else:
+                            if 'minlength' in field.extras and 'minlength' in self.extras:
+                                checkbox_rules['checkatleast'] = [str(field.number), self.extras['minlength'][field.number]]
+                                if self.extras['minlength'][field.number] == 1:
+                                    checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', self, word("Please select one."))
+                                else:
+                                    checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', self, word("Please select at least %s."), parameters=tuple([self.extras['minlength'][field.number]]))
+                                if int(float(self.extras['minlength'][field.number])) > 0:
+                                    if 'nota' not in self.extras:
+                                        self.extras['nota'] = dict()
+                                    self.extras['nota'][field.number] = False
+                            if 'maxlength' in field.extras and 'maxlength' in self.extras:
+                                checkbox_rules['checkatmost'] = [str(field.number), self.extras['maxlength'][field.number]]
+                                checkbox_messages['checkatmost'] = field.validation_message('checkbox maxlength', self, word("Please select no more than %s."), parameters=tuple([self.extras['maxlength'][field.number]]))
+                        the_field['validation_messages'].update(checkbox_messages)
+                    if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
+                        the_field['validation_messages']['checkatleast'] = field.validation_message('checkboxes required', self, word("Check at least one option, or check “%s”"), parameters=tuple([self.extras['nota'][field.number]]))
+                if field.datatype == 'date':
+                    the_field['validation_messages']['date'] = field.validation_message('date', self, word("You need to enter a valid date."))
+                    if hasattr(field, 'extras') and 'min' in field.extras and 'min' in self.extras and 'max' in field.extras and 'max' in self.extras and field.number in self.extras['min'] and field.number in self.extras['max']:
+                        the_field['validation_messages']['minmax'] = field.validation_message('date minmax', self, word("You need to enter a date between %s and %s."), parameters=(format_date(self.extras['min'][field.number], format='medium'), format_date(self.extras['max'][field.number], format='medium')))
+                    else:
+                        was_defined = dict()
+                        for key in ['min', 'max']:
+                            if hasattr(field, 'extras') and key in field.extras and key in self.extras and field.number in self.extras[key]:
+                                was_defined[key] = True
+                                if key == 'min':
+                                    the_field['validation_messages']['min'] = field.validation_message('date min', self, word("You need to enter a date on or after %s."), parameters=tuple([format_date(self.extras[key][field.number], format='medium')]))
+                                elif key == 'max':
+                                    the_field['validation_messages']['max'] = field.validation_message('date max', self, word("You need to enter a date on or before %s."), parameters=tuple([format_date(self.extras[key][field.number], format='medium')]))
+                        if len(was_defined) == 0 and 'default date min' in self.question.interview.options and 'default date max' in self.question.interview.options:
+                            the_field['min'] = format_date(self.question.interview.options['default date min'], format='yyyy-MM-dd')
+                            the_field['max'] = format_date(self.question.interview.options['default date max'], format='yyyy-MM-dd')
+                            the_field['validation_messages']['minmax'] = field.validation_message('date minmax', self, word("You need to enter a date between %s and %s."), parameters=(format_date(self.question.interview.options['default date min'], format='medium'), format_date(self.question.interview.options['default date max'], format='medium')))
+                        elif 'max' not in was_defined and 'default date max' in self.question.interview.options:
+                            the_field['max'] = format_date(self.question.interview.options['default date max'], format='yyyy-MM-dd')
+                            the_field['validation_messages']['max'] = field.validation_message('date max', self, word("You need to enter a date on or before %s."), parameters=tuple([format_date(self.question.interview.options['default date max'], format='medium')]))
+                        elif 'min' not in was_defined and 'default date min' in self.question.interview.options:
+                            the_field['min'] = format_date(self.question.interview.options['default date min'], format='yyyy-MM-dd')
+                            the_field['validation_messages']['min'] = field.validation_message('date min', self, word("You need to enter a date on or after %s."), parameters=tuple([format_date(self.question.interview.options['default date min'], format='medium')]))
+                if field.datatype == 'time':
+                    the_field['validation_messages']['time'] = field.validation_message('time', self, word("You need to enter a valid time."))
+                if field.datatype in ['datetime', 'datetime-local']:
+                    the_field['validation_messages']['datetime'] = field.validation_message('datetime', self, word("You need to enter a valid date and time."))
+                if field.datatype == 'email':
+                    the_field['validation_messages']['email'] = field.validation_message('email', self, word("You need to enter a complete e-mail address."))
+                if field.datatype in ['number', 'currency', 'float', 'integer']:
+                    the_field['validation_messages']['number'] = field.validation_message('number', self, word("You need to enter a number."))
+                    if field.datatype == 'integer' and not ('step' in self.extras and field.number in self.extras['step']):
+                        the_field['validation_messages']['step'] = field.validation_message('integer', self, word("Please enter a whole number."))
+                    elif 'step' in self.extras and field.number in self.extras['step']:
+                        the_field['validation_messages']['step'] = field.validation_message('step', self, word("Please enter a multiple of {0}."))
+                    for key in ['min', 'max']:
+                        if hasattr(field, 'extras') and key in field.extras and key in self.extras and field.number in self.extras[key]:
+                            if key == 'min':
+                                the_field['validation_messages'][key] = field.validation_message('min', self, word("You need to enter a number that is at least %s."), parameters=tuple([self.extras[key][field.number]]))
+                            elif key == 'max':
+                                the_field['validation_messages'][key] = field.validation_message('max', self, word("You need to enter a number that is at most %s."), parameters=tuple([self.extras[key][field.number]]))
+                if (field.datatype in ['files', 'file', 'camera', 'user', 'environment', 'camcorder', 'microphone']):
+                    file_fields.append(field)
+                    the_field['validation_messages']['required'] = field.validation_message('file required', self, word("You must provide a file."))
+                    if 'accept' in self.extras and field.number in self.extras['accept']:
+                        the_field['validation_messages']['accept'] = field.validation_message('accept', self, word("Please upload a file with a valid file format."))
+                    if get_config('maximum content length') is not None:
+                        the_field['max'] = get_config('maximum content length')
+                        the_field['validation_messages']['max'] = field.validation_message('maxuploadsize', self, word("Your file upload is larger than the server can accept. Please reduce the size of your file upload."))
             for param in ('datatype', 'fieldtype', 'sign', 'inputtype', 'address_autocomplete'):
                 if hasattr(field, param):
                     the_field[param] = getattr(field, param)
@@ -794,6 +963,8 @@ class InterviewStatus:
                 the_field['uncheck_others'] = True
             for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata'):
                 if key in self.extras and field.number in self.extras[key]:
+                    if key in ('minlength', 'maxlength', 'min', 'max', 'step'):
+                        validation_rules_used.add(key)
                     the_field[key] = self.extras[key][field.number]
             if hasattr(field, 'saveas') and field.saveas in self.embedded:
                 the_field['embedded'] = True
@@ -808,12 +979,14 @@ class InterviewStatus:
             if self.question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'checkboxes', 'object_checkboxes', 'object_radio')):
                 the_field['choices'] = self.get_choices_data(field, the_default, the_user_dict, encode=encode)
             if hasattr(field, 'nota'):
-                the_field['none_of_the_above'] = self.extras['nota'][field.number]
+                the_field['none_of_the_above'] = docassemble.base.filter.markdown_to_html(self.extras['nota'][field.number], do_terms=False, status=self, verbatim=encode)
             the_field['active'] = self.extras['ok'][field.number]
             if field.number in self.extras['required']:
                 the_field['required'] = self.extras['required'][field.number]
+                if the_field['required']:
+                    validation_rules_used.add('required')
             if 'validation messages' in self.extras and field.number in self.extras['validation messages']:
-                the_field['validation_messages'] = self.extras['validation messages'][field.number]
+                the_field['validation_messages'].update(self.extras['validation messages'][field.number])
             if 'permissions' in self.extras:
                 the_field['permissions'] = self.extras['permissions'][field.number]
             if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'max_image_size' in self.extras and self.extras['max_image_size']:
@@ -833,27 +1006,35 @@ class InterviewStatus:
                     the_field['show_if_val'] = self.extras['show_if_val'][field.number]
                 if 'show_if_js' in field.extras:
                     the_field['show_if_js'] = dict(expression=field.extras['show_if_js']['expression'].text(the_user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'], mode=field.extras['show_if_js']['mode'])
-            if hasattr(field, 'datatype'):
-                if 'note' in self.extras and field.number in self.extras['note']:
-                    the_field['note'] = self.extras['note'][field.number]
-                if 'html' in self.extras and field.number in self.extras['html']:
-                    the_field['html'] = self.extras['html'][field.number]
-                if field.number in self.hints:
-                    the_field['hint'] = self.hints[field.number]
-                if field.number in self.labels:
-                    the_field['label'] = self.labels[field.number]
-                if field.number in self.helptexts:
-                    the_field['helptext'] = self.helptexts[field.number]
-            result['fields'].append(the_field)
+            if 'note' in self.extras and field.number in self.extras['note']:
+                the_field['note'] = docassemble.base.filter.markdown_to_html(self.extras['note'][field.number], status=self, verbatim=encode)
+            if 'html' in self.extras and field.number in self.extras['html']:
+                the_field['html'] = self.extras['html'][field.number]
+            if field.number in self.hints:
+                the_field['hint'] = self.hints[field.number]
+            if field.number in self.labels:
+                the_field['label'] = docassemble.base.filter.markdown_to_html(self.labels[field.number], trim=True, status=self, verbatim=encode)
+            if field.number in self.helptexts:
+                the_field['helptext'] = docassemble.base.filter.markdown_to_html(self.helptexts[field.number], status=self, verbatim=encode)
             if self.question.question_type in ("yesno", "yesnomaybe"):
-                the_field['true_label'] = self.question.yes()
-                the_field['false_label'] = self.question.no()
+                the_field['true_label'] = docassemble.base.filter.markdown_to_html(self.question.yes(), trim=True, do_terms=False, status=self, verbatim=encode)
+                the_field['false_label'] = docassemble.base.filter.markdown_to_html(self.question.no(), trim=True, do_terms=False, status=self, verbatim=encode)
             if self.question.question_type == 'yesnomaybe':
-                the_field['maybe_label'] = self.question.maybe()
+                the_field['maybe_label'] = docassemble.base.filter.markdown_to_html(self.question.maybe(), trim=True, do_terms=False, status=self, verbatim=encode)
+            result['fields'].append(the_field)
         if len(self.attributions):
             result['attributions'] = [x.rstrip() for x in self.attributions]
         if 'track_location' in self.extras and self.extras['track_location']:
             result['track_location'] = True
+        if 'inverse navbar' in self.question.interview.options:
+            if self.question.interview.options['inverse navbar']:
+                result['navbarVariant'] = 'dark'
+            else:
+                result['navbarVariant'] = 'light'
+        elif get_config('inverse navbar', True):
+            result['navbarVariant'] = 'dark'
+        else:
+            result['navbarVariant'] = 'light'
         return result
     def get_choices(self, field, the_user_dict):
         question = self.question
@@ -910,9 +1091,9 @@ class InterviewStatus:
             if self.question.question_type == "multiple_choice":
                 pairlist = list(self.selectcompute[field.number])
                 for pair in pairlist:
-                    item = dict(label=pair['label'], value=pair['key'])
+                    item = dict(label=docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), value=pair['key'])
                     if 'help' in pair:
-                        item['help'] = pair['help'].rstrip()
+                        item['help'] = docassemble.base.filter.markdown_to_html(pair['help'].rstrip(), trim=True, do_terms=False, status=self, verbatim=encode)
                     if 'default' in pair:
                         item['default'] = pair['default']
                     if 'image' in pair:
@@ -931,7 +1112,7 @@ class InterviewStatus:
                     pairlist = list()
                 if field.datatype == 'object_checkboxes':
                     for pair in pairlist:
-                        item = dict(label=pair['label'], value=from_safeid(pair['key']))
+                        item = dict(label=docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), value=from_safeid(pair['key']))
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue) or (isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]) or (isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             item['selected'] = True
                         if 'help' in pair:
@@ -939,7 +1120,7 @@ class InterviewStatus:
                         choice_list.append(item)
                 elif field.datatype in ('object', 'object_radio'):
                     for pair in pairlist:
-                        item = dict(label=pair['label'], value=from_safeid(pair['key']))
+                        item = dict(label=docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), value=from_safeid(pair['key']))
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             item['selected'] = True
                         if 'default' in pair:
@@ -949,7 +1130,7 @@ class InterviewStatus:
                         choice_list.append(item)
                 elif field.datatype == 'checkboxes':
                     for pair in pairlist:
-                        item = dict(label=pair['label'], variable_name=saveas + "[" + repr(pair['key']) + "]", value=True)
+                        item = dict(label=docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), variable_name=saveas + "[" + repr(pair['key']) + "]", value=True)
                         if encode:
                             item['variable_name_encoded'] = safeid(saveas + "[" + repr(pair['key']) + "]")
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue) or (isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]) or (isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
@@ -959,7 +1140,7 @@ class InterviewStatus:
                         choice_list.append(item)
                 else:
                     for pair in pairlist:
-                        item = dict(label=pair['label'], value=pair['key'])
+                        item = dict(label=docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), value=pair['key'])
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             item['selected'] = True
                         choice_list.append(item)
@@ -968,11 +1149,11 @@ class InterviewStatus:
                         formatted_item = word("None of the above")
                     else:
                         formatted_item = self.extras['nota'][field.number]
-                    choice_list.append(dict(label=formatted_item))
+                    choice_list.append(dict(label=docassemble.base.filter.markdown_to_html(formatted_item, trim=True, do_terms=False, status=self, verbatim=encode)))
         else:
             indexno = 0
             for choice in self.selectcompute[field.number]:
-                item = dict(label=choice['label'], variable_name='_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']', value=indexno)
+                item = dict(label=docassemble.base.filter.markdown_to_html(choice['label'], trim=True, do_terms=False, status=self, verbatim=encode), variable_name='_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']', value=indexno)
                 if encode:
                     item['variable_name_encoded'] = safeid('_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']')
                 if 'image' in choice:
@@ -8103,7 +8284,7 @@ def process_selections(data, manual=False, exclude=None):
     else:
         to_exclude = unpack_list(exclude)
     result = []
-    if (isinstance(data, abc.Iterable) and not isinstance(data, (str, dict))) or (hasattr(data, 'elements') and isinstance(data.elements, (list, set))):
+    if (isinstance(data, abc.Iterable) and not isinstance(data, (str, dict)) and not (hasattr(data, 'elements') and isinstance(data.elements, dict))) or (hasattr(data, 'elements') and isinstance(data.elements, (list, set))):
         for entry in data:
             if isinstance(entry, dict) or (hasattr(entry, 'elements') and isinstance(entry.elements, dict)):
                 the_item = dict()

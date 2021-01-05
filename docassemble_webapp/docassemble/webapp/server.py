@@ -2599,7 +2599,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     elif daconfig.get('inverse navbar', True):
         inverse = 'navbar-dark bg-dark '
     else:
-        inverse = 'navbar-light-bg-light '
+        inverse = 'navbar-light bg-light '
     if 'jsembed' in docassemble.base.functions.this_thread.misc:
         fixed_top = ''
     else:
@@ -24270,6 +24270,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     else:
         allow_going_back = False
     data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_url=interview_status.exit_url, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), section=the_section, display_section=the_section_display, sections=the_sections)
+    if allow_going_back:
+        data['cornerBackButton'] = interview_status.cornerback
     data.update(interview_status.as_data(user_dict, encode=False))
     #if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
     #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
@@ -25481,6 +25483,130 @@ def manage_api():
         argu['avail_keys'] = avail_keys
         argu['has_any_keys'] = True if len(avail_keys) > 0 else False
     return render_template('pages/manage_api.html', **argu)
+
+@app.route('/api/interview', methods=['GET', 'POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'POST', 'HEAD'], automatic_options=True)
+def api_interview():
+    if request.method == 'POST':
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            return jsonify_with_status('The request must be JSON', 400)
+        yaml_filename = post_data.get('i', None)
+        secret = post_data.get('secret', None)
+        session_id = post_data.get('session', None)
+        url_args = post_data.get('url_args', None)
+        user_code = post_data.get('user_code', None)
+        command = post_data.get('command', None)
+    else:
+        yaml_filename = request.args.get('i', None)
+        secret = request.args.get('secret', None)
+        session_id = request.args.get('session', None)
+        url_args = dict()
+        user_code = request.args.get('user_code', None)
+        for key, val in request.args.items():
+            if key not in ('session', 'secret', 'i', 'user_code'):
+                url_args[key] = val
+        if len(url_args) == 0:
+            url_args = None
+    output = dict()
+    if user_code:
+        key = 'da:apiinterview:usercode:' + user_code
+        user_info = r.get(key)
+        if user_info is None:
+            user_code = None
+        else:
+            r.expire(key, 60*60*24*30)
+            try:
+                user_info = json.loads(user_info)
+            except:
+                user_code = None
+        if user_code:
+            if user_info['user_id']:
+                user = UserModel.query.filter_by(id=user_id).first()
+                if user is None or user.social_id.startswith('disabled$') or not user.active:
+                    user_code = None
+                else:
+                    login_user(user, remember=False)
+                    update_last_login(user)
+            else:
+                session['tempuser'] = user_info['temp_user_id']
+    if not user_code:
+        user_code = random_string(32)
+        new_temp_user = TempUser()
+        db.session.add(new_temp_user)
+        db.session.commit()
+        session['tempuser'] = new_temp_user.id
+        user_info = {"user_id": None, "temp_user_id": new_temp_user.id}
+        key = 'da:apiinterview:usercode:' + user_code
+        pipe = r.pipeline()
+        pipe.set(key, json.dumps(user_info))
+        pipe.expire(key, 60*60*24*30)
+        pipe.execute()
+        output['user_code'] = user_code
+    docassemble.base.functions.this_thread.current_info = current_info(req=request, interface='api', secret=secret)
+    if not yaml_filename:
+        return jsonify_with_status("Parameter i is required.", 400)
+    if not secret:
+        secret = random_string(16)
+        output['secret'] = secret
+    secret = str(secret)
+    if not session_id:
+        try:
+            (encrypted, session_id) = create_new_interview(yaml_filename, secret, url_args=url_args, req=request)
+        except Exception as err:
+            return jsonify_with_status(err.__class__.__name__ + ': ' + str(err), 400)
+        output['session'] = session_id
+    if url_args is not None and isinstance(url_args, dict):
+        variables = dict()
+        for key, val in url_args.items():
+            variables["url_args[%s]" % (repr(key),)] = val
+        try:
+            set_session_variables(yaml_filename, session_id, variables, secret=secret)
+        except Exception as the_err:
+            return jsonify_with_status(str(the_err), 400)
+    try:
+        data = get_question_data(yaml_filename, session_id, secret)
+    except Exception as err:
+        return jsonify_with_status(str(err), 400)
+    if request.method == 'POST':
+        if command:
+            if command == 'back':
+                if data['allow_going_back']:
+                    try:
+                        data = go_back_in_session(yaml_filename, session_id, secret=secret, return_question=True)
+                    except Exception as the_err:
+                        return jsonify_with_status(str(the_err), 400)
+            else:
+                return jsonify_with_status("Invalid command", 400)
+        else:
+            variables = post_data.get('variables', None)
+            if not isinstance(variables, dict):
+                return jsonify_with_status("variables must be a dictionary", 400)
+            if variables is not None:
+                variables = transform_json_variables(variables)
+            valid_variables = dict()
+            if 'fields' in data:
+                for field in data['fields']:
+                    if 'variable_name' in field and field.get('active', False):
+                        valid_variables[field['variable_name']] = field
+                    if field.get('required', False):
+                        if field['variable_name'] not in variables:
+                            return jsonify_with_status("variable %s is missing" % (field['variable_name'],), 400)
+            for key, val in variables.items():
+                if key not in valid_variables:
+                    return jsonify_with_status("invalid variable name " + repr(key), 400)
+            try:
+                data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=True, event_list=data.get('event_list', None), question_name=data.get('questionName', None))
+            except Exception as the_err:
+                return jsonify_with_status(str(the_err), 400)
+    if data.get('questionType', None) is 'response':
+        output['question'] = {
+            'questionType': 'response'
+        }
+    else:
+        output['question'] = data
+    return jsonify(output)
 
 @app.route('/me', methods=['GET'])
 def whoami():
