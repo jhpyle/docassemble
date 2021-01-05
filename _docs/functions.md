@@ -4511,7 +4511,7 @@ same as the user who ran `create_session()`.
 ## <a name="set_session_variables"></a>set_session_variables()
 
 The [`set_session_variables()`] function allows you to write changes
-to any [interview session dictionary].  It has three required
+to any [interview session dictionary] (except the current interview session).  It has three required
 parameters: an interview filename (e.g.,
 `'docassemble.demo:data/questions/questions.yml'`), a session ID
 (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`), and a [Python
@@ -4557,14 +4557,6 @@ The [`set_session_variables()`] function accepts the optional keyword
 parameter `secret`, an encryption key for decrypting the interview
 answers.  If no `secret` is provided, the encryption key of the
 current user is used.
-
-It also accepts the optional keyword parameter `question_name`, which
-you can set to the name of a question, if you are calling the function
-to answer a specific question.  Typically, you would take the
-`question_name` value from [`get_question_data()`] and pass it to
-[`set_session_variables()`].  Using this parameter is necessary in
-order to ensure that the interview logic moves past [`mandatory`]
-questions when the variables are defined.
 
 It also accepts the optional keyword parameter `overwrite`, which can
 be set to `True` if you do not want to create a new step in the
