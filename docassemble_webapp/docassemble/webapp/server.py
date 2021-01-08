@@ -5834,6 +5834,23 @@ def index(action_argument=None, refer=None):
                 need_to_reset = True
             session_info = get_session(yaml_filename)
         else:
+            unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
+            if unique_sessions is not False and not current_user.is_authenticated:
+                delete_session_for_interview(yaml_filename)
+                flash(word("You need to be logged in to access this interview."), "info")
+                sys.stderr.write("Redirecting to login because sessions are unique.\n")
+                return redirect(url_for('user.login', next=url_for('index', **request.args)))
+            if current_user.is_anonymous:
+                if (not interview.allowed_to_initiate(is_anonymous=True)) or (not interview.allowed_to_access(is_anonymous=True)):
+                    delete_session_for_interview(yaml_filename)
+                    flash(word("You need to be logged in to access this interview."), "info")
+                    sys.stderr.write("Redirecting to login because anonymous user not allowed to access this interview.\n")
+                    return redirect(url_for('user.login', next=url_for('index', **request.args)))
+            elif not interview.allowed_to_initiate(has_roles=[role.name for role in current_user.roles]):
+                delete_session_for_interview(yaml_filename)
+                raise DAError(word("You are not allowed to access this interview."), code=403)
+            elif not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+                raise DAError(word('You are not allowed to access this interview.'), code=403)
             if reset_interview:
                 reset_user_dict(session_parameter, yaml_filename)
                 if reset_interview == 2:
@@ -5933,7 +5950,7 @@ def index(action_argument=None, refer=None):
             if not url_args_changed:
                 old_url_args = copy.deepcopy(user_dict['url_args'])
                 url_args_changed = True
-            exec("url_args[" + repr(argname) + "] = " + repr(codecs.encode(request.args.get(argname), 'unicode_escape').decode()), user_dict)
+            exec("url_args[" + repr(argname) + "] = " + repr(request.args.get(argname)), user_dict)
         if url_args_changed:
             if old_url_args == user_dict['url_args']:
                 url_args_changed = False
@@ -7658,7 +7675,7 @@ def index(action_argument=None, refer=None):
           theArray.push(elem[0]);
         }
       }
-      function getField(fieldName){
+      function getField(fieldName, notInDiv){
         var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');
         var possibleElements = [];
         daAppendIfExists(fieldNameEscaped, possibleElements);
@@ -7672,6 +7689,9 @@ def index(action_argument=None, refer=None):
           if (!$(possibleElements[i]).prop('disabled')){
             var showifParents = $(possibleElements[i]).parents(".dajsshowif,.dashowif");
             if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
+              if (notInDiv && $.contains(notInDiv, possibleElements[i])){
+                continue;
+              }
               returnVal = possibleElements[i];
             }
           }
@@ -10206,7 +10226,7 @@ def index(action_argument=None, refer=None):
             var showIfVar = showIfVars[i];
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var showHideDiv = function(speed){
-              var elem = daGetField(varName);
+              var elem = daGetField(varName, showIfDiv);
               if (elem != null && !$(elem).parent().is($(this).parent())){
                 return;
               }
@@ -11916,26 +11936,28 @@ def observer():
         return allFields;
       }
       var daGetFields = getFields;
-      function getField(fieldName){
-        var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-        if ($("[name='" + fieldNameEscaped + "']").length == 0 && typeof daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')] != "undefined"){
-          fieldName = daVarLookup[btoa(fieldName).replace(/[\\n=]/g, '')];
-          fieldNameEscaped = fieldName;//.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+      function getField(fieldName, notInDiv){
+        var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');
+        var possibleElements = [];
+        daAppendIfExists(fieldNameEscaped, possibleElements);
+        if (daVarLookupMulti.hasOwnProperty(fieldNameEscaped)){
+          for (var i = 0; i < daVarLookupMulti[fieldNameEscaped].length; ++i){
+            daAppendIfExists(daVarLookupMulti[fieldNameEscaped][i], possibleElements);
+          }
         }
-        var varList = $("[name='" + fieldNameEscaped + "']");
-        if (varList.length == 0){
-          varList = $("input[type='radio'][name='" + fieldNameEscaped + "']");
+        var returnVal = null;
+        for (var i = 0; i < possibleElements.length; ++i){
+          if (!$(possibleElements[i]).prop('disabled')){
+            var showifParents = $(possibleElements[i]).parents(".dajsshowif,.dashowif");
+            if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
+              if (notInDiv && $.contains(notInDiv, possibleElements[i])){
+                continue;
+              }
+              returnVal = possibleElements[i];
+            }
+          }
         }
-        if (varList.length == 0){
-          varList = $("input[type='checkbox'][name='" + fieldNameEscaped + "']");
-        }
-        if (varList.length > 0){
-          elem = varList[0];
-        }
-        else{
-          return null;
-        }
-        return elem;
+        return returnVal;
       }
       var daGetField = getField;
       function setField(fieldName, val){
@@ -24195,9 +24217,9 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         the_section_display = None
         the_sections = list()
     if advance_progress_meter:
-        if interview_status.question.interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
+        if interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
             advance_progress(user_dict, interview)
-        if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and (user_dict['_internal']['progress'] is None or interview_status.question.progress > user_dict['_internal']['progress']):
+        if interview.use_progress_bar and interview_status.question.progress is not None and (user_dict['_internal']['progress'] is None or interview_status.question.progress > user_dict['_internal']['progress']):
             user_dict['_internal']['progress'] = interview_status.question.progress
     if save:
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=post_setting, steps=steps)
@@ -24240,7 +24262,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         interview_language = interview_status.question.language
     else:
         interview_language = DEFAULT_LANGUAGE
-    title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
+    title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     interview_status.exit_url = title_info.get('exit url', None)
     interview_status.exit_link = title_info.get('exit link', 'exit')
     interview_status.exit_label = title_info.get('exit label', word('Exit'))
@@ -24273,6 +24295,9 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     if allow_going_back:
         data['cornerBackButton'] = interview_status.cornerback
     data.update(interview_status.as_data(user_dict, encode=False))
+    if 'source' in data:
+        data['source']['varsLink'] = url_for('get_variables', i=yaml_filename)
+        data['source']['varsLabel'] = word('Show variables and values')
     #if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
     #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
     #else:
@@ -24291,6 +24316,80 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             del data[key]
         elif key.startswith('_'):
             del data[key]
+    data['menu'] = {'items': []}
+    menu_items = data['menu']['items']
+    if 'menu_items' in interview_status.extras:
+        if not isinstance(interview_status.extras['menu_items'], list):
+            menu_items.append({'anchor': word("Error: menu_items is not a Python list")})
+        elif len(interview_status.extras['menu_items']):
+            for menu_item in interview_status.extras['menu_items']:
+                if not (isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item):
+                    menu_items.append({'anchor': word("Error: menu item is not a Python dict with keys of url and label")})
+                else:
+                    match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
+                    if match_action:
+                        menu_items.append({'href': menu_item['url'], 'action': match_action.group(1), 'anchor': menu_item['label']})
+                    else:
+                        menu_items.append({'href': menu_item['url'], 'anchor': menu_item['label']})
+    if ALLOW_REGISTRATION:
+        sign_in_text = word('Sign in or sign up to save answers')
+    else:
+        sign_in_text = word('Sign in to save answers')
+    if daconfig.get('resume interview after login', False):
+        login_url = url_for('user.login', next=url_for('index', i=yaml_filename))
+    else:
+        login_url = url_for('user.login')
+    if interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN):
+        if current_user.is_anonymous:
+            if len(menu_items):
+                data['menu']['top'] = {'anchor': word("Menu")}
+                menu_items.append({'href': login_url, 'anchor': sign_in_text})
+            else:
+                data['menu']['top'] = {'href': login_url, 'anchor': sign_in_text}
+        else:
+            if (len(menu_items) == 0 and interview_status.question.interview.options.get('hide standard menu', False)):
+                data['menu']['top'] = {'anchor': (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id))}
+            else:
+                data['menu']['top'] = {'anchor': current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)}
+                if not interview_status.question.interview.options.get('hide standard menu', False):
+                    if current_user.has_role('admin', 'developer') and interview_status.question.interview.debug:
+                        menu_items.append({'href': '#source', 'title': word("How this question came to be asked"), 'anchor': word('Source')})
+                    if current_user.has_role('admin', 'advocate') and app.config['ENABLE_MONITOR']:
+                        menu_items.append({'href': url_for('monitor'), 'anchor': word('Monitor')})
+                    if current_user.has_role('admin', 'developer', 'trainer'):
+                        menu_items.append({'href': url_for('train'), 'anchor': word('Train')})
+                    if current_user.has_role('admin', 'developer'):
+                        if app.config['ALLOW_UPDATES']:
+                            menu_items.append({'href': url_for('update_package'), 'anchor': word('Package Management')})
+                        menu_items.append({'href': url_for('logs'), 'anchor': word('Logs')})
+                        if app.config['ENABLE_PLAYGROUND']:
+                            menu_items.append({'href': url_for('playground_page'), 'anchor': word('Playground')})
+                        menu_items.append({'href': url_for('utilities'), 'anchor': word('Utilities')})
+                        if current_user.has_role('admin'):
+                            menu_items.append({'href': url_for('user_list'), 'anchor': word('User List')})
+                            menu_items.append({'href': url_for('config_page'), 'anchor': word('Configuration')})
+                    if app.config['SHOW_DISPATCH']:
+                        menu_items.append({'href': url_for('interview_start'), 'anchor': word('Available Interviews')})
+                    for item in app.config['ADMIN_INTERVIEWS']:
+                        if item.can_use() and docassemble.base.functions.this_thread.current_info.get('yaml_filename', '') != item.interview:
+                            menu_items.append({'href': url_for('index'), 'anchor': item.get_title(docassemble.base.functions.get_language())})
+                    if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
+                        menu_items.append({'href': url_for('interview_list'), 'anchor': word('My Interviews')})
+                    if current_user.has_role('admin', 'developer'):
+                        menu_items.append({'href': url_for('user_profile_page'), 'anchor': word('Profile')})
+                    else:
+                        if app.config['SHOW_PROFILE'] or current_user.has_role('admin'):
+                            menu_items.append({'href': url_for('user_profile_page'), 'anchor': word('Profile')})
+                        else:
+                            menu_items.append({'href': url_for('user.change_password'), 'anchor': word('Change Password')})
+                    menu_items.append({'href': url_for('user.logout'), 'anchor': word('Sign Out')})
+    else:
+        if len(menu_items):
+            data['menu']['top'] = {'anchor': word("Menu")}
+            if not interview_status.question.interview.options.get('hide standard menu', False):
+                menu_items.append({'href': exit_href(interview_status), 'anchor': interview_status.exit_label})
+        else:
+            data['menu']['top'] = {'href': exit_href(interview_status), 'anchor': interview_status.exit_label}
     #logmessage("Ok returning")
     return data
 
@@ -25483,6 +25582,10 @@ def manage_api():
         argu['avail_keys'] = avail_keys
         argu['has_any_keys'] = True if len(avail_keys) > 0 else False
     return render_template('pages/manage_api.html', **argu)
+
+@app.route('/i', methods=['GET'])
+def html_index():
+    return app.send_static_file('index.html')
 
 @app.route('/api/interview', methods=['GET', 'POST'])
 @csrf.exempt

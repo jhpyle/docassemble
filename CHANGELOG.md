@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.2.23] - 2021-01-07
+### Changed
+- Expanded the information available in the data view of a question.
+- Unicode passed in URL arguments is no longer escaped.
+### Fixed
+- The `next` parameter now contains the session ID upon attempting to
+  access a session in an interview with `require login`.
+- `depends on` and `on change` now can be used with generic object
+  and/or index variables even when the fields being changed do not
+  literally match the variable name specified in `depends on` or `on
+  change`.
+- Problem with `show if` when there are two fields with the same name
+  visible on the screen at the same time.
+
 ## [1.2.22] - 2021-01-04
 ### Changed
 - Expanded the information available in the data view of a question.

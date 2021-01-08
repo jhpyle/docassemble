@@ -95,7 +95,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Map of you and your enemy"
 
-  # Scenario: Test the interview "Machine learning"
+  # Scenario: Test the interview "Machine learning" 1
   #   Given I start the interview "docassemble.base:data/questions/examples/ml-ajax-classify.yml"
 
   # Scenario: Test the interview "Suggestions"
@@ -133,7 +133,7 @@ Feature: Example interviews
   # Scenario: Test the interview "Save for classification"
   #   Given I start the interview "docassemble.base:data/questions/examples/ml-save-and-predict.yml"
 
-  Scenario: Test the interview "Share training sets"
+  Scenario: Test the interview "Share training sets" 1
     Given I start the interview "docassemble.demo:data/questions/examples/predict-activity-activity.yml"
     Then I should see the phrase "What kind of work do you do now?"
     And I set "Work" to "Analyzing briefs, writing memos, and taking cases"
@@ -143,7 +143,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "It seems that you are fairly content with your current work."
 
-  Scenario: Test the interview "Share training sets"
+  Scenario: Test the interview "Share training sets" 2
     Given I start the interview "docassemble.demo:data/questions/examples/predict-activity.yml"
     Then I should see the phrase "What kind of work do you do now?"
     And I set "Work" to "Analyzing briefs, writing memos, and taking cases"
@@ -153,14 +153,14 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "It seems that you are fairly content with your current work."
 
-  Scenario: Test the interview "Machine Learning"
+  Scenario: Test the interview "Machine Learning" 2
     Given I start the interview "docassemble.demo:data/questions/examples/predict-happy-sad-area.yml"
     Then I should see the phrase "Describe how you feel."
     And I set the text area to "Lousy"
     And I click the button "Continue"
     Then I should see the phrase "You sound sad."
 
-  Scenario: Test the interview "Machine Learning"
+  Scenario: Test the interview "Machine Learning" 3
     Given I start the interview "docassemble.demo:data/questions/examples/predict-happy-sad.yml"
     Then I should see the phrase "Describe how you feel."
     And I set the text box to "Lousy"

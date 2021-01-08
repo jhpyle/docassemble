@@ -1474,6 +1474,7 @@ server.wait_for_task = null_func
 server.worker_convert = null_func
 server.write_answer_json = null_func
 server.write_record = null_func
+server.to_text = null_func
 
 def write_record(key, data):
     """Stores the data in a SQL database for later retrieval with the

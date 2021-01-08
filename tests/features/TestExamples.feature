@@ -43,7 +43,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/alignment.yml"
     Then I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "Checkbox method"
+  Scenario: Test the interview "Checkbox method" 1
     Given I start the interview "docassemble.base:data/questions/examples/all-false.yml"
     And I click the "Apples" option under "Select the fruits you like"
     And I click the "Plums" option under "Select the fruits you like"
@@ -52,7 +52,7 @@ Feature: Example interviews
     And I should see the phrase "It is not true that you do not like apples or pears."
     And I should see the phrase "It is not true that apples and pears are the only fruits you do not like."
 
-  Scenario: Test the interview "Interview"
+  Scenario: Test the interview "Interview" 1
     Given I start the interview "docassemble.base:data/questions/examples/all-mandatory.yml"
     And I click the "Fine" option
     And I click the button "Continue"
@@ -76,7 +76,7 @@ Feature: Example interviews
     And I wait 5 seconds
     Then I should see the phrase "E-mail this document"
 
-  Scenario: Test the interview "Checkbox method"
+  Scenario: Test the interview "Checkbox method" 2
     Given I start the interview "docassemble.base:data/questions/examples/all-true.yml"
     And I click the "Apples" option under "Select the fruits you like"
     And I click the "Plums" option under "Select the fruits you like"
@@ -142,7 +142,7 @@ Feature: Example interviews
     And I should see the phrase "A document with a classic message"
     And I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "Allowing documents to be e-mailed"
+  Scenario: Test the interview "Allowing documents to be e-mailed" two
     Given I start the interview "docassemble.base:data/questions/examples/attachment.yml"
     And I wait 4 seconds
     Then I should see the phrase "A hello world document"
@@ -206,7 +206,7 @@ Feature: Example interviews
     And I wait 12 seconds
     Then I should see the phrase "The answer is 555."
 
-  Scenario: Test the interview "Return a value"
+  Scenario: Test the interview "Return a value" 1
     Given I start the interview "docassemble.base:data/questions/examples/background_action.yml"
     Then I should see the phrase "How much shall I add to 553?"
     And I set "Number" to "2"
@@ -233,14 +233,14 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "target_variable is: “Aries”"
 
-  Scenario: Test the interview "Object"
+  Scenario: Test the interview "Object" 1
     Given I start the interview "docassemble.base:data/questions/examples/branch-no-error.yml"
     Then I should see the phrase "What is the length of the branch on the tree?"
     And I set "Length" to "30"
     And I click the button "Continue"
     Then I should see the phrase "The length of the branch is 30."
 
-  Scenario: Test the interview "Buttons that run code"
+  Scenario: Test the interview "Buttons that run code" 3
     Given I start the interview "docassemble.base:data/questions/examples/buttons-code-color.yml"
     Then I should see the phrase "What is your favorite color?"
     And I click the button "Red"
@@ -266,7 +266,7 @@ Feature: Example interviews
     And I click the button "I’m not sure"
     Then I should see the phrase "target_variable is: “unsure”"
 
-  Scenario: Test the interview "Buttons defined with code"
+  Scenario: Test the interview "Buttons defined with code" partial
     Given I start the interview "docassemble.base:data/questions/examples/buttons-code-list-partial.yml"
     Then I should see the phrase "Your use of this system does not mean that you have a lawyer. Do you understand this?"
     And I click the button "I understand"
@@ -317,25 +317,25 @@ Feature: Example interviews
     And I click the button "Lease it"
     Then I should see the phrase "You are a borrower."
 
-  Scenario: Test the interview "Buttons" first
+  Scenario: Test the interview "Buttons" first variation
     Given I start the interview "docassemble.base:data/questions/examples/buttons-variation-1.yml"
     Then I should see the phrase "What is your gender?"
     And I click the button "Male"
     Then I should see the phrase "You are Male."
 
-  Scenario: Test the interview "Buttons" second
+  Scenario: Test the interview "Buttons" second variation
     Given I start the interview "docassemble.base:data/questions/examples/buttons-variation-1.yml"
     Then I should see the phrase "What is your gender?"
     And I click the button "Female"
     Then I should see the phrase "You are Female."
 
-  Scenario: Test the interview "Buttons variation two" first
+  Scenario: Test the interview "Buttons variation two" first variation
     Given I start the interview "docassemble.base:data/questions/examples/buttons-variation-2.yml"
     Then I should see the phrase "What is your gender?"
     And I click the button "Male"
     Then I should see the phrase "You are Male."
 
-  Scenario: Test the interview "Buttons variation two" second
+  Scenario: Test the interview "Buttons variation two" second variation
     Given I start the interview "docassemble.base:data/questions/examples/buttons-variation-2.yml"
     Then I should see the phrase "What is your gender?"
     And I click the button "Female"
@@ -394,14 +394,14 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/choices-icons.yml"
     Then I should see the phrase "What is the most important question to ask?"
 
-  Scenario: Test the interview "Radio buttons with default"
+  Scenario: Test the interview "Radio buttons with default" 1
     Given I start the interview "docassemble.base:data/questions/examples/choices-with-default-item.yml"
     Then I should see the phrase "What type of shoes do you wear?"
     And I click the button "Continue"
     Then I should see the phrase "Result of question"
     And I should see the phrase "sandals"
 
-  Scenario: Test the interview "Radio buttons with default"
+  Scenario: Test the interview "Radio buttons with default" 2
     Given I start the interview "docassemble.base:data/questions/examples/choices-with-default.yml"
     Then I should see the phrase "What type of shoes do you wear?"
     And I click the button "Continue"
@@ -468,13 +468,13 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You have 3 pieces of fruit."
 
-  Scenario: Test the interview "Comments"
+  Scenario: Test the interview "Comments" 1
     Given I start the interview "docassemble.base:data/questions/examples/comment-weather.yml"
     Then I should see the phrase "Do you agree the weather is nice today?"
     And I click the button "Yes"
     Then I should see the phrase "All done with the interview."
 
-  Scenario: Test the interview "Comments"
+  Scenario: Test the interview "Comments" 2
     Given I start the interview "docassemble.base:data/questions/examples/comment.yml"
     Then I should see the phrase "Do you like turnips?"
     And I click the button "Yes"
@@ -487,7 +487,7 @@ Feature: Example interviews
     And I click the button "Keep going"
     Then I should see the phrase "Your favorite fruit is starfruit."
 
-  Scenario: Test the interview "Continue button"
+  Scenario: Test the interview "Continue button" 1
     Given I start the interview "docassemble.base:data/questions/examples/continue-participation.yml"
     Then I should see the phrase "Welcome to the interview!"
     And I should see the phrase "Your participation means a lot to us."
@@ -528,7 +528,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Your favorite food is grapes."
 
-  Scenario: Test the interview "Continue button"
+  Scenario: Test the interview "Continue button" 2
     Given I start the interview "docassemble.base:data/questions/examples/continue.yml"
     Then I should see the phrase "Welcome to the interview."
     And I click the button "Continue"
@@ -725,26 +725,7 @@ Feature: Example interviews
     And I click the button "Ok"
     Then I should see the phrase "Ok, the interview is now over."
 
-  Scenario: Test the interview "Dispatch"
-    Given I start the interview "docassemble.base:data/questions/examples/dispatch-count.yml"
-    Then I should see the phrase "Main menu"
-    And I click the button "Apple"
-    Then I should see the phrase "Apple screen"
-    And I click the button "Continue"
-    Then I should see the phrase "Main menu"
-    And I click the button "Apple"
-    Then I should see the phrase "Apple screen"
-    And I click the button "Continue"
-    Then I should see the phrase "Main menu"
-    And I click the button "Orange"
-    Then I should see the phrase "Orange screen"
-    And I click the button "Continue"
-    Then I should see the phrase "Main menu"
-    And I click the button "Continue"
-    Then I should see the phrase "You visited the apple screen two times."
-    And I should see the phrase "You visited the orange screen one times."
-
-  Scenario: Test the interview "Dispatch"
+  Scenario: Test the interview "Dispatch" 1
     Given I start the interview "docassemble.base:data/questions/examples/dispatch-track.yml"
     Then I should see the phrase "Main menu"
     And I click the button "Apple"
@@ -756,7 +737,7 @@ Feature: Example interviews
     And I should see the phrase "You visited the apple menu."
     And I should not see the phrase "You visited the orange menu."
 
-  Scenario: Test the interview "Dispatch"
+  Scenario: Test the interview "Dispatch" 2
     Given I start the interview "docassemble.base:data/questions/examples/dispatch.yml"
     Then I should see the phrase "Main menu"
     And I click the button "Fruit"
@@ -823,13 +804,12 @@ Feature: Example interviews
     And I wait 1 second
     Then I should see the phrase "Hello, world!"
 
-  Scenario: Test the interview "Language"
+  Scenario: Test the interview "Language" 1
     Given I start the interview "docassemble.base:data/questions/examples/document-language-docx.yml"
     Then I should see the phrase "El documento está listo."
     And I should see the phrase "Alimentos"
 
-
-  Scenario: Test the interview "Language"
+  Scenario: Test the interview "Language" 2
     Given I start the interview "docassemble.base:data/questions/examples/document-language.yml"
     Then I should see the phrase "El documento está listo."
     And I should see the phrase "Alimentos"
@@ -837,11 +817,11 @@ Feature: Example interviews
     And I wait 1 second
     Then I should see the phrase "This customer would like to order fries and a Coke."
 
-  Scenario: Test the interview "Document links"
+  Scenario: Test the interview "Document links" 1
     Given I start the interview "docassemble.base:data/questions/examples/document-links-limited.yml"
     Then I should see the phrase "This interview is all done."
 
-  Scenario: Test the interview "Document links"
+  Scenario: Test the interview "Document links" 2
     Given I start the interview "docassemble.base:data/questions/examples/document-links.yml"
     Then I should see the phrase "This interview is all done."
     And I should see the phrase "To start your case, download your pleading, print it, and take it to clerk’s office at the court."
@@ -863,7 +843,7 @@ Feature: Example interviews
     Then I should see the phrase "Here is your document."
     And I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "Fill fields in a DOCX template"
+  Scenario: Test the interview "Fill fields in a DOCX template" 1
     Given I start the interview "docassemble.base:data/questions/examples/docx-jinja2-demo.yml"
     Then I should see the phrase "Assembling a document from a .docx template"
     And I click the button "Continue"
@@ -881,7 +861,7 @@ Feature: Example interviews
     Then I should see the phrase "Here is the document."
     And I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "Fill fields in a DOCX template"
+  Scenario: Test the interview "Fill fields in a DOCX template" 2
     Given I start the interview "docassemble.base:data/questions/examples/docx-recipe.yml"
     Then I should see the phrase "Assembling a document from a .docx template"
     And I click the button "Continue"
@@ -900,7 +880,7 @@ Feature: Example interviews
     Then I should see the phrase "Here is your document."
     And I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "Fill fields in a DOCX template with code"
+  Scenario: Test the interview "Fill fields in a DOCX template with code" 1
     Given I start the interview "docassemble.base:data/questions/examples/docx-template-code.yml"
     Then I should see the phrase "Assembling a document from a .docx template"
     And I click the button "Continue"
@@ -1019,7 +999,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You walk into a field of clover."
 
-  Scenario: Test the interview "Edit list"
+  Scenario: Test the interview "Edit list" 1
     Given I start the interview "docassemble.base:data/questions/examples/edit-list.yml"
     Then I should see the phrase "Who is the first person?"
     And I set "First Name" to "Jöhn"
@@ -1115,7 +1095,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You chose Door Number 1."
 
-  Scenario: Test the interview "Empty choices list in fields" with empty choices
+  Scenario: Test the interview "Empty choices list in fields" with empty choices 1
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-fields-multiple.yml"
     Then I should see the phrase "Should the list of choices for the radio field be empty?"
     And I click the button "Yes"
@@ -1123,7 +1103,7 @@ Feature: Example interviews
     And I should see the phrase "door is None."
     And I should see the phrase "bucket is None."
 
-  Scenario: Test the interview "Empty choices list in fields" with non-empty choices
+  Scenario: Test the interview "Empty choices list in fields" with non-empty choices 1
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-fields-multiple.yml"
     Then I should see the phrase "Should the list of choices for the radio field be empty?"
     And I click the button "No"
@@ -1134,14 +1114,14 @@ Feature: Example interviews
     Then I should see the phrase "door is Door Number 1."
     And I should see the phrase "bucket is Green Bucket."
 
-  Scenario: Test the interview "Empty choices list in fields" with empty choices
+  Scenario: Test the interview "Empty choices list in fields" with empty choices 2
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-fields-solo.yml"
     Then I should see the phrase "Should the list of choices for the radio field be empty?"
     And I click the button "Yes"
     Then I should see the phrase "There were no choices available."
     And I should see the phrase "door is None."
 
-  Scenario: Test the interview "Empty choices list in fields" with non-empty choices
+  Scenario: Test the interview "Empty choices list in fields" with non-empty choices 2
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-fields-solo.yml"
     Then I should see the phrase "Should the list of choices for the radio field be empty?"
     And I click the button "No"
@@ -1150,7 +1130,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "door is Door Number 1."
 
-  Scenario: Test the interview "Empty choices list in fields" with empty choices
+  Scenario: Test the interview "Empty choices list in fields" with empty choices 3
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-fields.yml"
     Then I should see the phrase "Should the list of choices for the radio field be empty?"
     And I click the button "Yes"
@@ -1159,7 +1139,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "door is None."
 
-  Scenario: Test the interview "Empty choices list in fields" with non-empty choices
+  Scenario: Test the interview "Empty choices list in fields" with non-empty choices 3
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-fields.yml"
     Then I should see the phrase "Should the list of choices for the radio field be empty?"
     And I click the button "No"
@@ -1169,7 +1149,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "door is Door Number 1."
 
-  Scenario: Test the interview "Empty object checkboxes" with empty choices
+  Scenario: Test the interview "Empty object checkboxes" with empty choices 1
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-object-checkboxes-create.yml"
     Then I should see the phrase "Should the list of choices for the object_checkboxes field be empty?"
     And I click the button "Yes"
@@ -1179,7 +1159,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "There are no villains here. In fact, no villains ever existed."
 
-  Scenario: Test the interview "Empty object checkboxes" with non-empty choices
+  Scenario: Test the interview "Empty object checkboxes" with non-empty choices 1
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-object-checkboxes-create.yml"
     Then I should see the phrase "Should the list of choices for the object_checkboxes field be empty?"
     And I click the button "No"
@@ -1199,13 +1179,13 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "There are no villains here."
 
-  Scenario: Test the interview "Empty object checkboxes" with empty choices
+  Scenario: Test the interview "Empty object checkboxes" with empty choices 2
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-object-checkboxes-solo-create.yml"
     Then I should see the phrase "Should the list of choices for the object_checkboxes field be empty?"
     And I click the button "Yes"
     Then I should see the phrase "There are no villains here. In fact, no villains ever existed."
 
-  Scenario: Test the interview "Empty object checkboxes" with non-empty choices
+  Scenario: Test the interview "Empty object checkboxes" with non-empty choices 2
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-object-checkboxes-solo-create.yml"
     Then I should see the phrase "Should the list of choices for the object_checkboxes field be empty?"
     And I click the button "No"
@@ -1214,13 +1194,13 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "The villain includes Harry Potter."
 
-  Scenario: Test the interview "Empty object checkboxes" with empty choices
+  Scenario: Test the interview "Empty object checkboxes" with empty choices 3
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-object-checkboxes-solo.yml"
     Then I should see the phrase "Should the list of choices for the object_checkboxes field be empty?"
     And I click the button "Yes"
     Then I should see the phrase "There are no villains here. In fact, no villains ever existed."
 
-  Scenario: Test the interview "Empty object checkboxes" with non-empty choices
+  Scenario: Test the interview "Empty object checkboxes" with non-empty choices 3
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-object-checkboxes-solo.yml"
     Then I should see the phrase "Should the list of choices for the object_checkboxes field be empty?"
     And I click the button "No"
@@ -1229,7 +1209,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "The villain includes Tom Riddle."
 
-  Scenario: Test the interview "Empty object checkboxes" with empty choices
+  Scenario: Test the interview "Empty object checkboxes" with empty choices 4
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-object-checkboxes.yml"
     Then I should see the phrase "Should the list of choices for the object_checkboxes field be empty?"
     And I click the button "Yes"
@@ -1240,7 +1220,7 @@ Feature: Example interviews
     Then I should see the phrase "There are no villains here. In fact, no villains ever existed."
     And I should see the phrase "Your favorite fruit is äpples."
 
-  Scenario: Test the interview "Empty object checkboxes" with non-empty choices
+  Scenario: Test the interview "Empty object checkboxes" with non-empty choices 4
     Given I start the interview "docassemble.base:data/questions/examples/empty-choices-object-checkboxes.yml"
     Then I should see the phrase "Should the list of choices for the object_checkboxes field be empty?"
     And I click the button "No"
@@ -1378,7 +1358,7 @@ Feature: Example interviews
     And I click the button "Yes"
     Then I should see the phrase "That is splendid news!"
 
-  Scenario: Test the interview "Checkbox method"
+  Scenario: Test the interview "Checkbox method" 3
     Given I start the interview "docassemble.base:data/questions/examples/false-values.yml"
     Then I should see the phrase "Please tell me what you think."
     And I click the option "Apples"
@@ -1405,14 +1385,14 @@ Feature: Example interviews
     Then I should see the phrase "You like pears."
     And I should see the phrase "Your favorite, though, is mango."
 
-  Scenario: Test the interview "Checkboxes within fields"
+  Scenario: Test the interview "Checkboxes within fields" 1
     Given I start the interview "docassemble.base:data/questions/examples/fields-checkboxes-default-0.yml"
     Then I should see the phrase "Please tell me what you think."
     And I set "What is your favorite fruit overall?" to "mango"
     And I click the button "Continue"
     Then I should see the phrase "You like pears."
 
-  Scenario: Test the interview "Checkboxes within fields"
+  Scenario: Test the interview "Checkboxes within fields" 2
     Given I start the interview "docassemble.base:data/questions/examples/fields-checkboxes-default-1.yml"
     Then I should see the phrase "Please tell me what you think."
     And I set "What is your favorite fruit overall?" to "mango"
@@ -1420,7 +1400,7 @@ Feature: Example interviews
     Then I should see the phrase "You like apples."
     And I should see the phrase "You like pears."
 
-  Scenario: Test the interview "Checkboxes within fields"
+  Scenario: Test the interview "Checkboxes within fields" 3
     Given I start the interview "docassemble.base:data/questions/examples/fields-checkboxes-default-2.yml"
     Then I should see the phrase "Please tell me what you think."
     And I set "What is your favorite fruit overall?" to "mango"
@@ -1428,7 +1408,7 @@ Feature: Example interviews
     Then I should see the phrase "You like apples."
     And I should see the phrase "You like pears."
 
-  Scenario: Test the interview "Checkboxes within fields"
+  Scenario: Test the interview "Checkboxes within fields" 4
     Given I start the interview "docassemble.base:data/questions/examples/fields-checkboxes-default-3.yml"
     Then I should see the phrase "Please tell me what you think."
     And I set "What is your favorite fruit overall?" to "mango"
@@ -1436,21 +1416,21 @@ Feature: Example interviews
     Then I should see the phrase "You like apples."
     And I should see the phrase "You like pears."
 
-  Scenario: Test the interview "Checkboxes within fields"
+  Scenario: Test the interview "Checkboxes within fields" 5
     Given I start the interview "docassemble.base:data/questions/examples/fields-checkboxes-default-4.yml"
     Then I should see the phrase "Please tell me what you think."
     And I set "What is your favorite fruit overall?" to "mango"
     And I click the button "Continue"
     Then I should see the phrase "You like apples."
 
-  Scenario: Test the interview "Checkboxes within fields"
+  Scenario: Test the interview "Checkboxes within fields" 6
     Given I start the interview "docassemble.base:data/questions/examples/fields-checkboxes-default-5.yml"
     Then I should see the phrase "Please tell me what you think."
     And I set "What is your favorite fruit overall?" to "mango"
     And I click the button "Continue"
     Then I should see the phrase "You like apples."
 
-  Scenario: Test the interview "Checkboxes within fields"
+  Scenario: Test the interview "Checkboxes within fields" 7
     Given I start the interview "docassemble.base:data/questions/examples/fields-checkboxes-default-6.yml"
     Then I should see the phrase "Please tell me what you think."
     And I set "What is your favorite fruit overall?" to "mango"
@@ -1490,7 +1470,7 @@ Feature: Example interviews
     And I should see the phrase "'Apples': False"
     And I should see the phrase "'Pears': False"
 
-  Scenario: Test the interview "Checkboxes within fields"
+  Scenario: Test the interview "Checkboxes within fields" 8
     Given I start the interview "docassemble.base:data/questions/examples/fields-checkboxes.yml"
     Then I should see the phrase "Please tell me what you think."
     And I click the "apple" option
@@ -1506,19 +1486,19 @@ Feature: Example interviews
   # Scenario: Test the interview "Combobox within fields"
   #   Given I start the interview "docassemble.base:data/questions/examples/fields-choices-combobox.yml"
 
-  Scenario: Test the interview "Multiple choice pulldown"
+  Scenario: Test the interview "Multiple choice pulldown" 1
     Given I start the interview "docassemble.base:data/questions/examples/fields-choices-dropdown.yml"
     And I select "Clogs" as the "Shoe Type"
     And I click the button "Continue"
     Then I should see the phrase "target_variable is: “Clogs”"
 
-  Scenario: Test the interview "Multiple choice pulldown"
+  Scenario: Test the interview "Multiple choice pulldown" 2
     Given I start the interview "docassemble.base:data/questions/examples/fields-choices.yml"
     And I select "Apples" as the "Fruit"
     And I click the button "Continue"
     Then I should see the phrase "Your favorite fruit is the apple, which is the king of all fruits."
 
-  Scenario: Test the interview "Multiple choice with code"
+  Scenario: Test the interview "Multiple choice with code" 1
     Given I start the interview "docassemble.base:data/questions/examples/fields-mc-2.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I click the "Pears" option
@@ -1529,7 +1509,7 @@ Feature: Example interviews
     Then I should see the phrase "Your favorite fruit is the pear, which is the king of all fruits."
     And I should see the phrase "Your brother, who is not so wise, is partial to the orange."
 
-  Scenario: Test the interview "Multiple choice with code"
+  Scenario: Test the interview "Multiple choice with code" 2
     Given I start the interview "docassemble.base:data/questions/examples/fields-mc-3.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I click the "Pears" option
@@ -1540,7 +1520,7 @@ Feature: Example interviews
     Then I should see the phrase "Your favorite fruit is the Pears, which is the king of all fruits."
     And I should see the phrase "Your brother, who is not so wise, is partial to the Oranges."
 
-  Scenario: Test the interview "Multiple choice with code"
+  Scenario: Test the interview "Multiple choice with code" 3
     Given I start the interview "docassemble.base:data/questions/examples/fields-mc-4.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I click the "Pears" option
@@ -1551,7 +1531,7 @@ Feature: Example interviews
     Then I should see the phrase "Your favorite fruit is the pear, which is the king of all fruits."
     And I should see the phrase "Your brother, who is not so wise, is partial to the orange."
 
-  Scenario: Test the interview "Multiple choice with code and default"
+  Scenario: Test the interview "Multiple choice with code and default" 1
     Given I start the interview "docassemble.base:data/questions/examples/fields-mc-5.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I click the button "Continue"
@@ -1571,7 +1551,7 @@ Feature: Example interviews
     Then I should see the phrase "Your favorite fruit is the apple, which is the king of all fruits."
     And I should see the phrase "Your brother, who is not so wise, is partial to the orange."
 
-  Scenario: Test the interview "Multiple choice with code and default"
+  Scenario: Test the interview "Multiple choice with code and default" 2
     Given I start the interview "docassemble.base:data/questions/examples/fields-mc-7.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I click the button "Continue"
@@ -1589,14 +1569,14 @@ Feature: Example interviews
     Then I should see the phrase "Your favorite fruit is the apple, which is the king of all fruits."
     And I should see the phrase "Your brother, who is not so wise, is partial to the apple."
 
-  Scenario: Test the interview "With exclusion"
+  Scenario: Test the interview "With exclusion" 1
     Given I start the interview "docassemble.base:data/questions/examples/fields-mc-exclude-manual.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I click the option "Apples" under "Fruit"
     And I click the button "Continue"
     Then I should see the phrase "Your brother, who is not so wise, is partial to the None."
 
-  Scenario: Test the interview "With exclusion"
+  Scenario: Test the interview "With exclusion" 2
     Given I start the interview "docassemble.base:data/questions/examples/fields-mc-exclude.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I click the option "Apples" under "Fruit"
@@ -1713,7 +1693,7 @@ Feature: Example interviews
     Then I should not see the phrase "You like apricots."
     Then I should see the phrase "You do not like pineapple."
 
-  Scenario: Test the interview "Yes/no checkboxes with None of the above"
+  Scenario: Test the interview "Yes/no checkboxes with None of the above" 1
     Given I start the interview "docassemble.base:data/questions/examples/fields-yesno-uncheck-others-list.yml"
     Then I should see the phrase "Please provide the following information."
     And I set "What is your favorite food?" to "apple pie"
@@ -1739,7 +1719,7 @@ Feature: Example interviews
     And I should not see the phrase "You like apples."
     And I should not see the phrase "You like obsidian."
 
-  Scenario: Test the interview "Yes/no checkboxes with None of the above"
+  Scenario: Test the interview "Yes/no checkboxes with None of the above" 2
     Given I start the interview "docassemble.base:data/questions/examples/fields-yesno-uncheck-others.yml"
     Then I should see the phrase "Please provide the following information."
     And I set "What is your favorite food?" to "apple pie"
@@ -1969,7 +1949,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/function.yml"
     Then I should see the phrase "The word green becomes Green when passed through the capitalize() function."
 
-  Scenario: Test the interview "Gather"
+  Scenario: Test the interview "Gather" 1
     Given I start the interview "docassemble.base:data/questions/examples/gather-another.yml"
     Then I should see the phrase "What’s the first fruit?"
     And I set "Fruit" to "äpple"
@@ -2035,7 +2015,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You have two pets."
 
-  Scenario: Test the interview "Dictionary: gather keys, values"
+  Scenario: Test the interview "Dictionary: gather keys, values" 1
     Given I start the interview "docassemble.base:data/questions/examples/gather-dict-value.yml"
     Then I should see the phrase "What fruit should be added to the database?"
     And I set "Fruit" to "peach"
@@ -2053,7 +2033,7 @@ Feature: Example interviews
     And I should see the phrase "The fruit äpple has 10 seeds."
     And I should see the phrase "The fruit peach has 1 seeds."
 
-  Scenario: Test the interview "Dictionary: gather keys, values"
+  Scenario: Test the interview "Dictionary: gather keys, values" 2
     Given I start the interview "docassemble.base:data/questions/examples/gather-dict.yml"
     Then I should see the phrase "What fruit should be added to the database?"
     And I set "Fruit" to "peach"
@@ -2155,7 +2135,7 @@ Feature: Example interviews
     And I should see the phrase "fred@docassemble.org"
     And I should see the phrase "sally@docassemble.org"
 
-  Scenario: Test the interview "Gathering a list of people"
+  Scenario: Test the interview "Gathering a list of people" 1
     Given I start the interview "docassemble.base:data/questions/examples/gather-list-friend-bad-order.yml"
     Then I should see the phrase "What is the name of your first friend?"
     And I set "First Name" to "Fred"
@@ -2183,7 +2163,7 @@ Feature: Example interviews
     And I should see the phrase "Fred likes toads and is"
     And I should see the phrase "Sälly likes frogs and is"
 
-  Scenario: Test the interview "Gathering a list of people"
+  Scenario: Test the interview "Gathering a list of people" 2
     Given I start the interview "docassemble.base:data/questions/examples/gather-list-friend-good-order.yml"
     Then I should see the phrase "What is the name of your first friend?"
     And I set "First Name" to "Fred"
@@ -2321,7 +2301,7 @@ Feature: Example interviews
     Then I should see the phrase "There are two fruits in all."
     And I should see the phrase "The fruit include pear and äpple."
 
-  Scenario: Test the interview "Gather"
+  Scenario: Test the interview "Gather" 2
     Given I start the interview "docassemble.base:data/questions/examples/gather-simple.yml"
     Then I should see the phrase "How many fruits are there?"
     And I set "Number" to "2"
@@ -2418,7 +2398,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You are seeking $500.00 in damages."
 
-  Scenario: Test the interview "Help with question"
+  Scenario: Test the interview "Help with question" 1
     Given I start the interview "docassemble.base:data/questions/examples/help-damages.yml"
     Then I should see the phrase "How much money do you wish to seek in damages?"
     And I go to the help screen
@@ -2428,7 +2408,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You are seeking $40,000.00 in damages."
 
-  Scenario: Test the interview "Help with question"
+  Scenario: Test the interview "Help with question" 2
     Given I start the interview "docassemble.base:data/questions/examples/help.yml"
     Then I should see the phrase "What is 2+2?"
     And I go to the help screen
@@ -2533,7 +2513,7 @@ Feature: Example interviews
     And I click the button "No"
     Then I should see the phrase "Härry Jones and Larry Smith"
 
-  Scenario: Test the interview "Infinite loop"
+  Scenario: Test the interview "Infinite loop" 1
     Given I start the interview "docassemble.base:data/questions/examples/infinite-loop.yml"
     Then I should see the phrase "The variable is foo."
 
@@ -2932,7 +2912,7 @@ Feature: Example interviews
     Then I should see the phrase "Result of question"
     And I should see the phrase "target_variable is: “100000.0”"
 
-  Scenario: Test the interview "Name in Mako template"
+  Scenario: Test the interview "Name in Mako template" 1
     Given I start the interview "docassemble.base:data/questions/examples/name-company-question.yml"
     Then I should see the phrase "What is the name of the company?"
     And I set "Company name" to "Exämple Inc."
@@ -2941,7 +2921,7 @@ Feature: Example interviews
     And I click the button "Yes"
     Then I should see the phrase "You will need a lawyer."
 
-  Scenario: Test the interview "Name in Mako template"
+  Scenario: Test the interview "Name in Mako template" 2
     Given I start the interview "docassemble.base:data/questions/examples/name-company.yml"
     Then I should see the phrase "Do you wish to sue ABC Corporation?"
     And I click the button "Yes"
@@ -3037,7 +3017,7 @@ Feature: Example interviews
     And I should see the phrase "You told me about Rälph Smith. Rälph Smith has a child named Peter Smith. Rälph Smith has a child named Sälly Smith. Sälly Smith is allergic to cotton and grapes."
     And I should see the phrase "You told me about Henry Jones. Henry Jones is allergic to spiders and beet roots."
 
-  Scenario: Test the interview "Mako for loops"
+  Scenario: Test the interview "Mako for loops" 1
     Given I start the interview "docassemble.base:data/questions/examples/nested-gather.yml"
     Then I should see the phrase "What is the name of the first witness?"
     And I set "First Name" to "Härold"
@@ -3148,7 +3128,7 @@ Feature: Example interviews
     And I click the button "No"
     Then I should see the phrase "user_is_minor is: “True”"
 
-  Scenario: Test the interview "Numbers"
+  Scenario: Test the interview "Numbers" 1
     Given I start the interview "docassemble.base:data/questions/examples/number-field.yml"
     Then I should see the phrase "Describe your possessions."
     And I set "Number of cars" to "1"
@@ -3157,7 +3137,7 @@ Feature: Example interviews
     Then I should see the phrase "Result of question"
     And I should see the phrase "You have only one car. You also have 539.0 ounces of gold."
 
-  Scenario: Test the interview "Set variable to list of objects"
+  Scenario: Test the interview "Set variable to list of objects" 1
     Given I start the interview "docassemble.base:data/questions/examples/object-checkboxes-dalist.yml"
     Then I should see the phrase "Who are the villains, if any?"
     And I click the option "Harry Potter"
@@ -3168,13 +3148,13 @@ Feature: Example interviews
     And I should see the phrase "and"
     And I should see the phrase "Tom Riddle"
 
-  Scenario: Test the interview "Set variable to list of objects"
+  Scenario: Test the interview "Set variable to list of objects" 2
     Given I start the interview "docassemble.base:data/questions/examples/object-checkboxes-default.yml"
     Then I should see the phrase "Who are the villains, if any?"
     And I click the button "Continue"
     Then I should see the phrase "The villain includes Tom Riddle."
 
-  Scenario: Test the interview "Set variable to list of objects"
+  Scenario: Test the interview "Set variable to list of objects" 3
     Given I start the interview "docassemble.base:data/questions/examples/object-checkboxes.yml"
     Then I should see the phrase "Who are the villains, if any?"
     And I click the option "Harry Potter"
@@ -3212,7 +3192,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Damon Barry will surely be defeated!"
 
-  Scenario: Test the interview "Object radio buttons"
+  Scenario: Test the interview "Object radio buttons" 2
     Given I start the interview "docassemble.base:data/questions/examples/object-radio.yml"
     Then I should see the phrase "Who is the villain?"
     And I click the button "Continue"
@@ -3288,7 +3268,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "The villain, Andrew Advocate, was born on April 4, 2004."
 
-  Scenario: Test the interview "Set variable to object"
+  Scenario: Test the interview "Set variable to object" 1
     Given I start the interview "docassemble.base:data/questions/examples/object.yml"
     Then I should see the phrase "Who is the villain?"
     And I click the button "Continue"
@@ -3515,7 +3495,7 @@ Feature: Example interviews
     Then I should see the phrase "Here is your document."
     And I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "Fill fields with code"
+  Scenario: Test the interview "Fill fields with code" 1
     Given I start the interview "docassemble.base:data/questions/examples/pdf-template-alt-3.yml"
     Then I should see the phrase "Assembling a document from a PDF template"
     And I click the button "Continue"
@@ -3535,7 +3515,7 @@ Feature: Example interviews
     Then I should see the phrase "Here is your document."
     And I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "Fill fields with code"
+  Scenario: Test the interview "Fill fields with code" 2
     Given I start the interview "docassemble.base:data/questions/examples/pdf-template-alt-4.yml"
     Then I should see the phrase "Assembling a document from a PDF template"
     And I click the button "Continue"
@@ -3574,7 +3554,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You make $64,800.00 per year."
 
-  Scenario: Test the interview "Disable back button"
+  Scenario: Test the interview "Disable back button" 1
     Given I start the interview "docassemble.base:data/questions/examples/prevent-back.yml"
     Then I should see the phrase "For what service would you like to apply?"
     And I click the option "Tutoring"
@@ -3582,7 +3562,7 @@ Feature: Example interviews
     Then I should see the phrase "Your application for Tutoring has been submitted."
     Then I should not see the phrase "Back"
 
-  Scenario: Test the interview "Disable back button"
+  Scenario: Test the interview "Disable back button" 2
     Given I start the interview "docassemble.base:data/questions/examples/prevent-going-back.yml"
     Then I should see the phrase "For what service would you like to apply?"
     And I click the option "Tutoring"
@@ -3597,7 +3577,7 @@ Feature: Example interviews
     Then I should see the phrase "Done with the interview."
     And I should see the phrase "I am glad you are doing well."
 
-  Scenario: Test the interview "Progress meter"
+  Scenario: Test the interview "Progress meter" 2
     Given I start the interview "docassemble.base:data/questions/examples/progress.yml"
     Then I should see the phrase "Are you doing well?"
     And I click the button "Yes"
@@ -3624,14 +3604,14 @@ Feature: Example interviews
     Then I should see the phrase "Result of question"
     And I should see the phrase "Your favorite fruit is pears, which is not surprising given that you have only a High School education."
 
-  Scenario: Test the interview "QR code"
+  Scenario: Test the interview "QR code" 1
     Given I start the interview "docassemble.base:data/questions/examples/qr-code-demo.yml"
     Then I should see the phrase "Here is a URL for you in a QR code"
     And I click the link "Preview"
     And I wait 1 second
     Then I should see the phrase "Use the QR reader on your smartphone to take a picture of this:"
 
-  Scenario: Test the interview "QR code"
+  Scenario: Test the interview "QR code" 2
     Given I start the interview "docassemble.base:data/questions/examples/qr-code.yml"
     Then I should see the phrase "Read the news on your mobile phone"
     And I should see the phrase "If you have a QR code reader on your phone, point it here:"
@@ -3640,7 +3620,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/quantity-noun.yml"
     Then I should see the phrase "You have four apples."
 
-  Scenario: Test the interview "Vocabulary"
+  Scenario: Test the interview "Vocabulary" 1
     Given I start the interview "docassemble.base:data/questions/examples/question-autoterms.yml"
     Then I should see the phrase "Have you ever met a creeper?"
     And I should see the phrase "If you have met a zombie pigman, you have almost certainly met a creeper."
@@ -3687,7 +3667,7 @@ Feature: Example interviews
     And I click the button "No"
     Then I should see the phrase "Thanks for answering my questions!"
 
-  Scenario: Test the interview "Vocabulary"
+  Scenario: Test the interview "Vocabulary" 2
     Given I start the interview "docassemble.base:data/questions/examples/question-terms.yml"
     Then I should see the phrase "Have you ever met a creeper?"
     And I should see the phrase "If you have met a zombie pigman, you have almost certainly met a creeper."
@@ -3707,7 +3687,7 @@ Feature: Example interviews
     Then I should see the phrase "Thank you for telling me about your creeper experience."
     And I should see the phrase "You clearly need to play more Minecraft."
 
-  Scenario: Test the interview "Question text"
+  Scenario: Test the interview "Question text" 1
     Given I start the interview "docassemble.base:data/questions/examples/question.yml"
     Then I should see the phrase "What is the airspeed velocity of an unladen swallow?"
     And I set "Velocity" to "400 mph"
@@ -3724,7 +3704,7 @@ Feature: Example interviews
     And I should see the phrase "You allege that:"
     And I should see the phrase "The force is with me."
 
-  Scenario: Test the interview "Radio buttons within fields"
+  Scenario: Test the interview "Radio buttons within fields" 1
     Given I start the interview "docassemble.base:data/questions/examples/radio-list.yml"
     Then I should see the phrase "Describe your car."
     And I set "Number of wheels" to "4"
@@ -3851,7 +3831,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You like apples, potatoes, and button mushrooms."
 
-  Scenario: Test the interview "Review answers"
+  Scenario: Test the interview "Review answers" 1
     Given I start the interview "docassemble.base:data/questions/examples/review-1.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I set the text box to "orange"
@@ -3873,7 +3853,7 @@ Feature: Example interviews
     And I click the button "Resume"
     Then I should see the phrase "You like orange, potato, and button mushrooms."
 
-  Scenario: Test the interview "Review answers"
+  Scenario: Test the interview "Review answers" 2
     Given I start the interview "docassemble.base:data/questions/examples/review-2.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I set the text box to "orange"
@@ -3908,7 +3888,7 @@ Feature: Example interviews
     And I click the button "Resume"
     Then I should see the phrase "You like apple, potato, and button mushrooms."
 
-  Scenario: Test the interview "Review answers"
+  Scenario: Test the interview "Review answers" 3
     Given I start the interview "docassemble.base:data/questions/examples/review-3.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I set the text box to "orange"
@@ -3929,7 +3909,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "You like apple, potato, and button mushrooms."
 
-  Scenario: Test the interview "Review answers"
+  Scenario: Test the interview "Review answers" 4
     Given I start the interview "docassemble.base:data/questions/examples/review-4.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I set the text box to "orange"
@@ -3952,7 +3932,7 @@ Feature: Example interviews
     Then I should see the phrase "All done"
     Then I should see the phrase "You like apple, turnip, and button mushrooms."
 
-  Scenario: Test the interview "Review answers"
+  Scenario: Test the interview "Review answers" 5
     Given I start the interview "docassemble.base:data/questions/examples/review.yml"
     Then I should see the phrase "Review your answers"
     And I should see the phrase "Welcome to the review of answers."
@@ -3999,7 +3979,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Here is the file."
 
-  Scenario: Test the interview "Opt out of variable seeking"
+  Scenario: Test the interview "Opt out of variable seeking" 1
     Given I start the interview "docassemble.base:data/questions/examples/scan-for-variables-original.yml"
     Then I should see the phrase "What is the time of day?"
     And I click the option "Night"
@@ -4012,7 +3992,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "The best color is now blue."
 
-  Scenario: Test the interview "Opt out of variable seeking"
+  Scenario: Test the interview "Opt out of variable seeking" 2
     Given I start the interview "docassemble.base:data/questions/examples/scan-for-variables-sets.yml"
     Then I should see the phrase "What is the best color?"
     And I set "Color" to "green"
@@ -4036,7 +4016,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Since the best thing is astronomy, the best color is black."
 
-  Scenario: Test the interview "Opt out of variable seeking"
+  Scenario: Test the interview "Opt out of variable seeking" 3
     Given I start the interview "docassemble.base:data/questions/examples/scan-for-variables.yml"
     Then I should see the phrase "What is the best color?"
     And I set "Color" to "red"
@@ -4234,7 +4214,7 @@ Feature: Example interviews
     And I should see the phrase "In Latvia, you live in a Municipality."
     And I should see the phrase "In United States, you live in a State."
 
-  Scenario: Test the interview "Question text"
+  Scenario: Test the interview "Question text" 2
     Given I start the interview "docassemble.base:data/questions/examples/subquestion.yml"
     Then I should see the phrase "What is the airspeed velocity of an unladen swallow?"
     And I should see the phrase "Be careful how you answer."
@@ -4242,28 +4222,28 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "The velocity is 24 mph"
 
-  Scenario: Test the interview "Precedence of blocks"
+  Scenario: Test the interview "Precedence of blocks" 1
     Given I start the interview "docassemble.base:data/questions/examples/supersede-order.yml"
     Then I should see the phrase "What the heck is your favorite fruit?"
     And I set "Fruit" to "kiwi"
     And I click the button "Continue"
     Then I should see the phrase "Your favorite fruit is kiwi."
 
-  Scenario: Test the interview "Precedence of blocks"
+  Scenario: Test the interview "Precedence of blocks" 2
     Given I start the interview "docassemble.base:data/questions/examples/supersede-regular.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I set "Fruit" to "kiwi"
     And I click the button "Continue"
     Then I should see the phrase "Your favorite fruit is kiwi."
 
-  Scenario: Test the interview "Precedence of blocks"
+  Scenario: Test the interview "Precedence of blocks" 3
     Given I start the interview "docassemble.base:data/questions/examples/supersede.yml"
     Then I should see the phrase "What the heck is your favorite fruit?"
     And I set "Fruit" to "kiwi"
     And I click the button "Continue"
     Then I should see the phrase "Your favorite fruit is kiwi."
 
-  Scenario: Test the interview "Table block"
+  Scenario: Test the interview "Table block" 1
     Given I start the interview "docassemble.base:data/questions/examples/table-alt.yml"
     Then I should see the phrase "What fruit should be added to the list?"
     And I set "Fruit" to "apple"
@@ -4280,18 +4260,18 @@ Feature: Example interviews
     Then I should see the phrase "Information about fruit"
     And I should see the phrase "Here is a fruity summary."
 
-  Scenario: Test the interview "Empty table"
+  Scenario: Test the interview "Empty table" 1
     Given I start the interview "docassemble.base:data/questions/examples/table-empty-message.yml"
     Then I should see the phrase "Information about fruit"
     And I should see the phrase "Here is a fruity summary."
     And I should see the phrase "I’m very sorry, but there are no fruits to display today."
 
-  Scenario: Test the interview "Empty table"
+  Scenario: Test the interview "Empty table" 2
     Given I start the interview "docassemble.base:data/questions/examples/table-empty.yml"
     Then I should see the phrase "Information about fruit"
     And I should see the phrase "Here is a fruity summary."
 
-  Scenario: Test the interview "Table block"
+  Scenario: Test the interview "Table block" 2
     Given I start the interview "docassemble.base:data/questions/examples/table-if-then.yml"
     Then I should see the phrase "What fruit should be added to the list?"
     And I set "Fruit" to "apple"
@@ -4325,22 +4305,22 @@ Feature: Example interviews
     Then I should see the phrase "Information about fruit"
     And I should see the phrase "Here is a fruity summary."
 
-  Scenario: Test the interview "Tables in Markdown"
+  Scenario: Test the interview "Tables in Markdown" 1
     Given I start the interview "docassemble.base:data/questions/examples/table-markdown-noheader.yml"
     Then I should see the phrase "Your vegetable inventory"
     And I should see the phrase "This describes your vegetable collection."
 
-  Scenario: Test the interview "Tables in Markdown"
+  Scenario: Test the interview "Tables in Markdown" 2
     Given I start the interview "docassemble.base:data/questions/examples/table-markdown-unaligned.yml"
     Then I should see the phrase "Your vegetable inventory"
     And I should see the phrase "This describes your vegetable collection."
 
-  Scenario: Test the interview "Tables in Markdown"
+  Scenario: Test the interview "Tables in Markdown" 3
     Given I start the interview "docassemble.base:data/questions/examples/table-markdown.yml"
     Then I should see the phrase "Your fruit inventory"
     And I should see the phrase "This describes your fruit collection."
 
-  Scenario: Test the interview "Table block"
+  Scenario: Test the interview "Table block" 3
     Given I start the interview "docassemble.base:data/questions/examples/table-python.yml"
     Then I should see the phrase "What fruit should be added to the list?"
     And I should see the phrase "When entering fruit names, use the singular rather than the plural."
@@ -4359,7 +4339,7 @@ Feature: Example interviews
     And I should see the phrase "The fruits you mentioned were apple and orange."
     And I should see the phrase "Here is a fruity summary."
 
-  Scenario: Test the interview "Table block"
+  Scenario: Test the interview "Table block" 4
     Given I start the interview "docassemble.base:data/questions/examples/table-width.yml"
     Then I should see the phrase "Information about fruit"
     Then I should see the phrase "Open the attachment to see a table with information about fruit."
@@ -4367,7 +4347,7 @@ Feature: Example interviews
     Then I should see the phrase "Fruit with an extremely long name because this fruit needs to demonstrate what happens when a table is wide."
     And I should see the phrase "Grape"
 
-  Scenario: Test the interview "Table block"
+  Scenario: Test the interview "Table block" 5
     Given I start the interview "docassemble.base:data/questions/examples/table.yml"
     Then I should see the phrase "What fruit should be added to the list?"
     And I set "Fruit" to "apple"
@@ -4455,7 +4435,7 @@ Feature: Example interviews
     Then I should see the phrase "Congratulations!"
     And I should see the phrase "You are all done with the interview."
 
-  Scenario: Test the interview "Vocabulary"
+  Scenario: Test the interview "Vocabulary" 3
     Given I start the interview "docassemble.base:data/questions/examples/terms.yml"
     Then I should see the phrase "Have you ever met a creeper?"
     And I should see the phrase "If you have met a zombie pigman, you have almost certainly met a creeper."
@@ -4590,7 +4570,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/today.yml"
     Then I should see the phrase "Today’s date is"
 
-  Scenario: Test the interview "Checkbox method"
+  Scenario: Test the interview "Checkbox method" 4
     Given I start the interview "docassemble.base:data/questions/examples/true-values.yml"
     Then I should see the phrase "Please tell me what you think."
     And I click the option "Apples" under "Select the fruits you like"
@@ -4723,7 +4703,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "This concludes the interview."
 
-  Scenario: Test the interview "Interview, tweaked"
+  Scenario: Test the interview "Interview, tweaked" 1
     Given I start the interview "docassemble.base:data/questions/examples/with-mandatory-tweak-a.yml"
     Then I should see the phrase "How are you doing?"
     And I click the option "Fine"
@@ -4734,7 +4714,7 @@ Feature: Example interviews
     Then I should see the phrase "Your favorite color is purple."
     And I should see the phrase "I am glad you are doing well."
 
-  Scenario: Test the interview "Interview, tweaked"
+  Scenario: Test the interview "Interview, tweaked" 2
     Given I start the interview "docassemble.base:data/questions/examples/with-mandatory-tweak-b.yml"
     Then I should see the phrase "How are you doing?"
     And I click the option "Fine"
@@ -4745,7 +4725,7 @@ Feature: Example interviews
     Then I should see the phrase "Your favorite color is purple."
     And I should see the phrase "I am glad you are doing well."
 
-  Scenario: Test the interview "Interview"
+  Scenario: Test the interview "Interview" 2
     Given I start the interview "docassemble.base:data/questions/examples/with-mandatory.yml"
     Then I should see the phrase "What is your favorite color?"
     And I set "Color" to "purple"
@@ -4845,20 +4825,20 @@ Feature: Example interviews
     And I should see the phrase "'object': 'InventoryItem'"
     And I should see the phrase "'items': ['paper', 'staplers', 'toner']"
 
-  Scenario: Test the interview "Run a Python module"
+  Scenario: Test the interview "Run a Python module" 1
     Given I start the interview "docassemble.demo:data/questions/examples/run-python-module-2.yml"
     Then I should see the phrase "Hello, world!"
 
-  Scenario: Test the interview "Run a Python module"
+  Scenario: Test the interview "Run a Python module" 2
     Given I start the interview "docassemble.demo:data/questions/examples/run-python-module-3.yml"
     Then I should see the phrase "Hello, world!"
 
-  Scenario: Test the interview "Run a Python module"
+  Scenario: Test the interview "Run a Python module" 3
     Given I start the interview "docassemble.demo:data/questions/examples/run-python-module-tests.yml"
     Then I should see the phrase "Result of unit tests"
     And I should see the phrase "Ran 2 tests"
 
-  Scenario: Test the interview "Run a Python module"
+  Scenario: Test the interview "Run a Python module" 4
     Given I start the interview "docassemble.demo:data/questions/examples/run-python-module.yml"
     Then I should see the phrase "Hello, world!"
 
@@ -4894,7 +4874,7 @@ Feature: Example interviews
     And I should see the phrase "Ingredients:"
     And I should see the phrase "Instructions:"
 
-  Scenario: Test the interview "Input validation"
+  Scenario: Test the interview "Input validation" 1
     Given I start the interview "docassemble.demo:data/questions/examples/validation-code.yml"
     Then I should see the phrase "There are 10 fruit in all."
     And I should see the phrase "How many apples and oranges are there?"
@@ -4907,7 +4887,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "There were 6 apples and 4 oranges."
 
-  Scenario: Test the interview "Input validation"
+  Scenario: Test the interview "Input validation" 2
     Given I start the interview "docassemble.demo:data/questions/examples/validation-test-two.yml"
     Then I should see the phrase "How many car tires are in the garage?"
     And I set "Tires" to "5"
@@ -4917,7 +4897,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "There were 8 tires in the garage."
 
-  Scenario: Test the interview "Input validation"
+  Scenario: Test the interview "Input validation" 3
     Given I start the interview "docassemble.demo:data/questions/examples/validation-test.yml"
     Then I should see the phrase "How many car tires are in the garage?"
     And I set "Tires" to "5"
@@ -5001,7 +4981,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "{‘the_number’: 555}"
 
-  Scenario: Test the interview "Return a value"
+  Scenario: Test the interview "Return a value" 2
     Given I start the interview "docassemble.base:data/questions/examples/background_action_test_timing.yml"
     Then I should see the phrase "How much shall I add to 553?"
     And I set "Number" to "2"
@@ -5010,11 +4990,11 @@ Feature: Example interviews
     And I wait 12 seconds
     Then I should see the phrase "The answer is 555."
 
-  Scenario: Test the interview "Object"
+  Scenario: Test the interview "Object" 2
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/branch-error.yml"
     Then I should see the phrase "Interview has an error. There was a reference to a variable 'long_branch.length' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
-  Scenario: Test the interview "Checkboxes within fields"
+  Scenario: Test the interview "Checkboxes within fields" 9
     Given I start the interview "docassemble.base:data/questions/examples/checkbox-dict-dict.yml"
     Then I should see the phrase "Do you have any fr.uit bowls?"
     And I click the button "Yes"
@@ -5064,7 +5044,7 @@ Feature: Example interviews
     And I should see the phrase "yellow"
     And I should see the phrase "The Peach has 1,000,000 seeds."
 
-  Scenario: Test the interview "Data structure"
+  Scenario: Test the interview "Data structure" 1
     Given I start the interview "docassemble.base:data/questions/examples/data-simple.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I choose "Orange"
@@ -5076,7 +5056,7 @@ Feature: Example interviews
     And I should see the phrase "You like Orange."
     Then I should see the phrase "Your brother, on the other hand, likes Peach."
 
-  Scenario: Test the interview "Data structure"
+  Scenario: Test the interview "Data structure" 2
     Given I start the interview "docassemble.base:data/questions/examples/data.yml"
     Then I should see the phrase "On what planet were you born?"
     And I set "Planet" to "Mars"
@@ -5089,7 +5069,7 @@ Feature: Example interviews
     And I should see the phrase "Everyone on Mars loves to eat apples."
     And I should see the phrase "The Apple has five seeds."
 
-  Scenario: Test the interview "Date and time"
+  Scenario: Test the interview "Date and time" 1
     Given I start the interview "docassemble.base:data/questions/examples/date-and-time-fields.yml"
     Then I should see the phrase "When is your appointment?"
     And I set "Date" to "03/30/2018"
@@ -5106,7 +5086,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Your response is due"
 
-  Scenario: Test the interview "Date and time"
+  Scenario: Test the interview "Date and time" 2
     Given I start the interview "docassemble.base:data/questions/examples/datetime-field.yml"
     Then I should see the phrase "When is your appointment?"
     And I set "Date and time" to "05/06/2018	05:00PM"
@@ -5129,7 +5109,7 @@ Feature: Example interviews
     And I click the link "Markdown"
     Then I should see the phrase "benefits plan G-432."
 
-  Scenario: Test the interview "Fill fields in a DOCX template with code"
+  Scenario: Test the interview "Fill fields in a DOCX template with code" 2
     Given I start the interview "docassemble.base:data/questions/examples/docx-template-code-2.yml"
     Then I should see the phrase "Assembling a document from a .docx template"
     And I click the button "Continue"
@@ -5162,7 +5142,7 @@ Feature: Example interviews
   # Scenario: Test the interview ""
   #   Given I start the interview "docassemble.base:data/questions/examples/dual-dict.yml"
 
-  Scenario: Test the interview "Code-generated fields"
+  Scenario: Test the interview "Code-generated fields" 1
     Given I start the interview "docassemble.base:data/questions/examples/fields-code-embed.yml"
     Then I should see the phrase "How many people are there?"
     And I set "Number" to "4"
@@ -5181,7 +5161,7 @@ Feature: Example interviews
     And I should see the phrase "The people include:"
     And I should see the phrase "Rebecca Holmes"
 
-  Scenario: Test the interview "Code-generated fields"
+  Scenario: Test the interview "Code-generated fields" 2
     Given I start the interview "docassemble.base:data/questions/examples/fields-code.yml"
     Then I should see the phrase "How many people are there?"
     And I set "Number" to "2"
@@ -5222,15 +5202,15 @@ Feature: Example interviews
   # Scenario: Test the interview "forward chaining assumptions"
   #   Given I start the interview "docassemble.base:data/questions/examples/forward-chaining-assumptions.yml"
 
-  Scenario: Test the interview "Gather"
+  Scenario: Test the interview "Gather" 3
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/gather-fruit-incomplete.yml"
     Then I should see the phrase "Interview has an error. There was a reference to a variable 'fruit.there_are_any' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
-  Scenario: Test the interview "Mako for loops"
+  Scenario: Test the interview "Mako for loops" 2
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/gather.yml"
     Then I should see the phrase "Interview has an error. There was a reference to a variable 'witness.there_are_any' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
-  Scenario: Test the interview "Infinite loop"
+  Scenario: Test the interview "Infinite loop" 2
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/infinite-loop-2.yml"
     Then I should see the phrase "There appears to be an infinite loop."
     And I should see the phrase "Variables in stack are bar, foo."
@@ -5251,7 +5231,7 @@ Feature: Example interviews
     And I click the button "No"
     Then I should see the phrase "Yeah, I don’t care for it either."
 
-  Scenario: Test the interview ""Dictionary: gather keys, values""
+  Scenario: Test the interview "Dictionary: gather keys, values" 3
     Given I start the interview "docassemble.base:data/questions/examples/item-dict.yml"
     Then I should see the phrase "What type of pet do you have?"
     And I select "rock" as the "Type"
@@ -5359,7 +5339,7 @@ Feature: Example interviews
     Then I should see the phrase "Your monthly income is 3595.2716"
     Then I should see the phrase "But it would be better to say your monthly income is 3595.27 dollars per month, or 3595.27 dollars per month, or 3,595.27 dollars per month, or 3595 dollars per month, or best of all, $3,595.27 per month."
 
-  Scenario: Test the interview "Set variable to object"
+  Scenario: Test the interview "Set variable to object" 2
     Given I start the interview "docassemble.base:data/questions/examples/object-default.yml"
     Then I should see the phrase "Who is the villain?"
     And I click the button "Continue"
@@ -5434,12 +5414,12 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/server-capabilities.yml"
     Then I should see the phrase "Server capabilities"
 
-  Scenario: Test the interview "Interviews"
+  Scenario: Test the interview "Interviews" 1
     Given I start the interview "docassemble.base:data/questions/examples/session-interview-redirect.yml"
     And I wait 3 seconds
     Then I should see the phrase "Sign in"
 
-  Scenario: Test the interview "Interviews"
+  Scenario: Test the interview "Interviews" 2
     Given I start the interview "docassemble.base:data/questions/examples/session-interview.yml"
     And I wait 3 seconds
     Then I should see the phrase "Sign in"
@@ -5578,7 +5558,7 @@ Feature: Example interviews
     Then I should see the phrase "Here is your document."
     And I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "hello world"
+  Scenario: Test the interview "hello world" 1
     Given I start the interview "docassemble.demo:data/questions/hello.yml"
     Then I should see the phrase "Hello, world!"
 
@@ -5723,7 +5703,7 @@ Feature: Example interviews
   # Scenario: Test the interview "test URL"
   #   Given I start the interview "docassemble.demo:data/questions/test-url.yml"
 
-  Scenario: Test the interview "Test fields"
+  Scenario: Test the interview "Test fields" 1
     Given I start the interview "docassemble.demo:data/questions/test.yml"
     Then I should see the phrase "Tell me more about yourself"
     And I set "Description" to "Small and green"
@@ -5826,7 +5806,7 @@ Feature: Example interviews
   # Scenario: Test the interview ""
   #   Given I start the interview "docassemble.demo:data/questions/testemail.yml"
 
-  Scenario: Test the interview "Test fields"
+  Scenario: Test the interview "Test fields" 2
     Given I start the interview "docassemble.demo:data/questions/testfields.yml"
     Then I should see the phrase "Tell me more about yourself"
     And I set "Description" to "Small and green"
@@ -5984,7 +5964,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/define.yml"
     Then I should see the phrase "Your favorite fruit is apple."
 
-  Scenario: Test the interview "Help with question"
+  Scenario: Test the interview "Help with question" 3
     Given I start the interview "docassemble.base:data/questions/examples/help-damages-label.yml"
     Then I should see the phrase "How much money do you wish to seek in damages?"
     And I should see the phrase "More info"
@@ -5996,7 +5976,7 @@ Feature: Example interviews
   # Scenario: Test the interview "Material icons"
   #   Given I start the interview "docassemble.base:data/questions/examples/material-icons.yml"
 
-  Scenario: Test the interview "Question help button enabled"
+  Scenario: Test the interview "Question help button enabled" 1
     Given I start the interview "docassemble.base:data/questions/examples/question-help-button-off.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I should see the phrase "Huh?"
@@ -6013,7 +5993,7 @@ Feature: Example interviews
     Then I should see the phrase "Your favorite fruit is apple."
     And I should see the phrase "More info"
 
-  Scenario: Test the interview "Question help button enabled"
+  Scenario: Test the interview "Question help button enabled" 2
     Given I start the interview "docassemble.base:data/questions/examples/question-help-button.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I should see the phrase "More info"
@@ -6067,7 +6047,7 @@ Feature: Example interviews
     And I should see the phrase "You can find all the information you need at Dòcassemble."
     And I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "Progress meter"
+  Scenario: Test the interview "Progress meter" 1
     Given I start the interview "docassemble.base:data/questions/examples/progress-multi.yml"
     Then I should see the phrase "Are you doing well?"
     And I click the button "Yes"
@@ -6140,7 +6120,7 @@ Feature: Example interviews
     And I click the button "Yes"
     Then I should see the phrase "I am glad you are doing well."
 
-  Scenario: Test the interview "Text to the right of the question"
+  Scenario: Test the interview "Text to the right of the question" 1
     Given I start the interview "docassemble.base:data/questions/examples/right.yml"
     Then I should see the phrase "What is the airspeed velocity of an unladen swallow?"
     And I should see the phrase "Note"
@@ -6155,7 +6135,7 @@ Feature: Example interviews
   # Scenario: Test the interview "Address autocomplete test"
   #   Given I start the interview "docassemble.base:data/questions/examples/address-autocomplete-test.yml"
 
-  Scenario: Test the interview "Radio buttons within fields"
+  Scenario: Test the interview "Radio buttons within fields" 2
     Given I start the interview "docassemble.base:data/questions/examples/radio-list-mobile.yml"
     Then I should see the phrase "Describe your car."
     And I set "Number of wheels" to "4"
@@ -6164,7 +6144,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Your Hatchback, which is from United States, has 4 wheels."
 
-  Scenario: Test the interview "Text to the right of the question"
+  Scenario: Test the interview "Text to the right of the question" 2
     Given I start the interview "docassemble.base:data/questions/examples/right-centered.yml"
     Then I should see the phrase "What is the airspeed velocity of an unladen swallow?"
     And I should see the phrase "If you did not catch this movie reference, you need to improve your cultural literacy."
@@ -6294,7 +6274,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Your favorite color is green."
 
-  Scenario: Test the interview "Combobox" in fields with typing
+  Scenario: Test the interview "Combobox" in fields with typing 1
     Given I start the interview "docassemble.base:data/questions/examples/choices-combobox.yml"
     Then I should see the phrase "What is your favorite color?"
     And I set the combobox text to "Orange"
@@ -6308,7 +6288,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Your favorite color is green."
 
-  Scenario: Test the interview "Combobox" in fields with typing
+  Scenario: Test the interview "Combobox" in fields with typing 2
     Given I start the interview "docassemble.base:data/questions/examples/combobox.yml"
     Then I should see the phrase "What is your favorite color?"
     And I set the combobox text to "Orange"
@@ -6356,7 +6336,7 @@ Feature: Example interviews
     Then I should see the phrase "likes_apricots is True."
     Then I should see the phrase "fruit_favorites is Apples."
 
-  Scenario: Test the interview "Edit list"
+  Scenario: Test the interview "Edit list" 2
     Given I start the interview "docassemble.base:data/questions/examples/edit-list-manual.yml"
     Then I should see the phrase "Who is the first person?"
     And I set "First Name" to "Jane"
@@ -6383,7 +6363,7 @@ Feature: Example interviews
     And I should see the phrase "The people are Jane Smith and Jöhn Doe."
     And I should see the phrase "Your favorite is Jöhn Doe."
 
-  Scenario: Test the interview "Review answers"
+  Scenario: Test the interview "Review answers" 6
     Given I start the interview "docassemble.base:data/questions/examples/review-5.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I set the text box to "orange"
@@ -6415,7 +6395,7 @@ Feature: Example interviews
     And I click the button "Resume"
     Then I should see the phrase "You like orange, potato, and button mushrooms."
 
-  Scenario: Test the interview "Review answers"
+  Scenario: Test the interview "Review answers" 7
     Given I start the interview "docassemble.base:data/questions/examples/review-6.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I set the text box to "orange"
@@ -6436,7 +6416,7 @@ Feature: Example interviews
     Then I should see the phrase "Revisit your answers"
     And I should see the phrase "Thank you for telling me about your food preferences."
 
-  Scenario: Test the interview "Review answers"
+  Scenario: Test the interview "Review answers" 8
     Given I start the interview "docassemble.base:data/questions/examples/review-7.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I set the text box to "orange"
@@ -6464,7 +6444,7 @@ Feature: Example interviews
     And I click the button "Resume"
     Then I should see the phrase "Since you like apple and turnip, you would probably enjoy a apple-turnip salad."
 
-  Scenario: Test the interview "Edit list"
+  Scenario: Test the interview "Edit list" 3
     Given I start the interview "docassemble.base:data/questions/examples/review-edit-list.yml"
     Then I should see the phrase "Who is the first person?"
     And I set "First Name" to "Jöhn"
@@ -6498,7 +6478,7 @@ Feature: Example interviews
     And I click the button "Resume"
     Then I should see the phrase "Thank you for your answers!"
 
-  Scenario: Test the interview "Review answers"
+  Scenario: Test the interview "Review answers" 9
     Given I start the interview "docassemble.base:data/questions/examples/review-9.yml"
     Then I should see the phrase "What is a?"
     And I set "a" to "10"
@@ -6528,7 +6508,7 @@ Feature: Example interviews
     And I click the button "Resume"
     Then I should see the phrase "The answer is 16.0."
 
-  Scenario: Test the interview "Error help"
+  Scenario: Test the interview "Error help" 2
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/error-help.yml"
     Then I should see the phrase "We are sorry."
 
@@ -6638,7 +6618,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Thomas Miller"
 
-  Scenario: Test the interview "Numbers"
+  Scenario: Test the interview "Numbers" 2
     Given I start the interview "docassemble.base:data/questions/examples/number-field-step.yml"
     Then I should see the phrase "How much gold and silver do you have?"
     And I set "Ounces of gold" to "1.01002121"
@@ -6895,7 +6875,7 @@ Feature: Example interviews
     And I click the button "Yes"
     Then I should see the phrase "Done with the interview."
 
-  Scenario: Test the interview "Back button inside question on some questions"
+  Scenario: Test the interview "Back button inside question on some questions" with label
     Given I start the interview "docassemble.base:data/questions/examples/question-back-button-sometimes-label.yml"
     Then I should see the phrase "Are you doing well?"
     And I click the button "No"
@@ -7008,7 +6988,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/dafile-url-for-temporary.yml"
     Then I should see the phrase "This interview is all done."
 
-  Scenario: Test the interview "Review answers"
+  Scenario: Test the interview "Review answers" 10
     Given I start the interview "docassemble.base:data/questions/examples/review-conditional.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I click the "Apple" option
@@ -7054,7 +7034,7 @@ Feature: Example interviews
     And I click the button "No"
     Then I should see the phrase "You really have five pets."
 
-  Scenario: Test the interview "Table for dictionary"
+  Scenario: Test the interview "Table for dictionary" 1
     Given I start the interview "docassemble.base:data/questions/examples/table-dict.yml"
     Then I should see the phrase "Summary"
     And I should see the phrase "benefits"
@@ -7275,7 +7255,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Your favorite fruit, apples, has 98 seeds."
 
-  # Scenario: Test the interview "Edit list"
+  # Scenario: Test the interview "Edit list" 4
   #   Given I start the interview "docassemble.base:data/questions/examples/edit-list-non-editable.yml"
 
   Scenario: Test the interview "Mermaid"
@@ -7319,16 +7299,16 @@ Feature: Example interviews
   # Scenario: Test the interview "Overlay"
   #   Given I start the interview "docassemble.demo:data/questions/examples/overlay-pdf.yml"
 
-  Scenario: Test the interview "Default screen parts"
+  Scenario: Test the interview "Default screen parts" 1
     Given I start the interview "docassemble.base:data/questions/examples/default-screen-parts-override.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I should see the phrase "You all can just forget it, I am actually the under!!!"
 
-  Scenario: Test the interview "Default screen parts"
+  Scenario: Test the interview "Default screen parts" 2
     Given I start the interview "docassemble.base:data/questions/examples/default-screen-parts.yml"
     Then I should see the phrase "This interview was generously sponsored by Example, Inc."
 
-  Scenario: Test the interview "Edit list"
+  Scenario: Test the interview "Edit list" 5
     Given I start the interview "docassemble.base:data/questions/examples/edit-list-complete-complex.yml"
     Then I should see the phrase "Who is the first person?"
     And I set "First Name" to "John"
@@ -7419,7 +7399,7 @@ Feature: Example interviews
     And I wait 1 second
     Then I should see the phrase "What is a fruit?"
 
-  Scenario: Test the interview "Error action"
+  Scenario: Test the interview "Error action" 1
     Given I start the interview "docassemble.base:data/questions/examples/error-action-2.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I set "Fruit" to "apple"
@@ -7429,17 +7409,17 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "We encountered an error, so we did the best we could to fill out the document."
 
-  Scenario: Test the interview "Error action"
+  Scenario: Test the interview "Error action" 2
     Given I start the interview "docassemble.base:data/questions/examples/error-action.yml"
     Then I should see the phrase "This interview will encounter an error when you press Continue."
     And I click the button "Continue"
     Then I should see the phrase "Sorry, we have encountered an error."
 
-  Scenario: Test the interview "Error help"
+  Scenario: Test the interview "Error help" 1
     Given I start the interview "docassemble.base:data/questions/examples/error-help-language.yml"
     Then I should see the phrase "We are sorry. An error has occurred."
 
-  Scenario: Test the interview "Object radio buttons"
+  Scenario: Test the interview "Object radio buttons" 1
     Given I start the interview "docassemble.base:data/questions/examples/object-radio-nota.yml"
     Then I should see the phrase "Who is the villain?"
     And I click the "Someone else" option
@@ -7561,7 +7541,7 @@ Feature: Example interviews
     And I should see the phrase "So, you idolize worms now, but plan to stop on April 1, 2024."
     And I should see the phrase "Interesting."
 
-  Scenario: Test the interview "Buttons that run code"
+  Scenario: Test the interview "Buttons that run code" 1
     Given I start the interview "docassemble.base:data/questions/examples/buttons-code-color-iterator.yml"
     Then I should see the phrase "What is the name of the first person?"
     And I set "Name" to "Edward Ableton"
@@ -7584,7 +7564,7 @@ Feature: Example interviews
     Then I should see the phrase "Edward Ableton’s favorite color is Light Red."
     And I should see the phrase "Melissa Duncan’s favorite color is Dark Green."
 
-  Scenario: Test the interview "Buttons that run code"
+  Scenario: Test the interview "Buttons that run code" 2
     Given I start the interview "docassemble.base:data/questions/examples/buttons-code-iterator.yml"
     Then I should see the phrase "What is the name of the first person?"
     And I set "Name" to "Edward Ableton"
@@ -7603,12 +7583,12 @@ Feature: Example interviews
     Then I should see the phrase "Edward Ableton needs to go to a Ford dealership and ask if they have a Focus for sale."
     And I should see the phrase "Melissa Duncan needs to go to a Toyota dealership and ask if they have a Camry for sale."
 
-  Scenario: Test the interview "Collect"
+  Scenario: Test the interview "Collect" 1
     Given I start the interview "docassemble.base:data/questions/examples/list-collect-options.yml"
     Then I should see the phrase "Tell me about the fruit."
     And I set the second "Fruit name" to "orange"
     And I set the second "Number of seeds" to "2"
-    And I click the button " Add another"
+    And I click the button " Add more"
     And I wait 1 second
     And I set the third "Fruit name" to "grapes"
     And I set the third "Number of seeds" to "0"
@@ -7632,7 +7612,7 @@ Feature: Example interviews
     Then I should not see the phrase "orange"
     And I should see the phrase "starfruit"
 
-  Scenario: Test the interview "Collect"
+  Scenario: Test the interview "Collect" 2
     Given I start the interview "docassemble.base:data/questions/examples/list-collect.yml"
     Then I should see the phrase "Tell me about the fruit."
     And I set the second "Fruit name" to "orange"
@@ -7656,11 +7636,11 @@ Feature: Example interviews
     And I should see the phrase "grapes"
     And I should see the phrase "starfruit"
 
-  Scenario: Test the interview "Image upload type"
+  Scenario: Test the interview "Image upload type" 1
     Given I start the interview "docassemble.base:data/questions/examples/upload-max-image-size-type-features.yml"
     Then I should see the phrase "Please upload a picture of yourself."
 
-  Scenario: Test the interview "Image upload type"
+  Scenario: Test the interview "Image upload type" 2
     Given I start the interview "docassemble.base:data/questions/examples/upload-max-image-size-type.yml"
     Then I should see the phrase "Please upload a picture of yourself."
 
@@ -7754,7 +7734,7 @@ Feature: Example interviews
     Then I should see the phrase "All done"
     And I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "Hello World"
+  Scenario: Test the interview "Hello World" 2
     Given I start the interview "docassemble.demo:data/questions/hello7.yml"
     Then I should see the phrase "What is your planet’s name?"
     And I set "Your Planet" to "Pluto"
@@ -7795,7 +7775,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "The date you entered was January 1, 2019."
 
-  Scenario: Test the interview "Edit list"
+  Scenario: Test the interview "Edit list" 6
     Given I start the interview "docassemble.base:data/questions/examples/edit-list-string.yml"
     Then I should see the phrase "Who is the first person?"
     And I set "Name" to "Fred"
@@ -7820,7 +7800,7 @@ Feature: Example interviews
     And I click the first link " Delete"
     Then I should see the phrase "The people are Ralph and Sally."
 
-  Scenario: Test the interview "Collect"
+  Scenario: Test the interview "Collect" 3
     Given I start the interview "docassemble.base:data/questions/examples/list-collect-string.yml"
     Then I should see the phrase "Tell me about the fruit."
     And I click the button " Add another"
@@ -7855,7 +7835,7 @@ Feature: Example interviews
     And I should see the phrase "Dirt hut is one story tall."
     And I should see the phrase "Empire State Building is 102 stories tall."
 
-  Scenario: Test the interview "Table for dictionary"
+  Scenario: Test the interview "Table for dictionary" 2
     Given I start the interview "docassemble.base:data/questions/examples/table-dict-string.yml"
     Then I should see the phrase "Summary of income"
     And I should see the phrase "benefits"
@@ -8012,7 +7992,7 @@ Feature: Example interviews
     And I should see the phrase "Document for Graham"
     And I should see the phrase "Document for Michael"
 
-  Scenario: Test the interview "Action buttons"
+  Scenario: Test the interview "Action buttons" before
     Given I start the interview "docassemble.base:data/questions/examples/action-buttons-before.yml"
     Then I should see the phrase "I will give you four apples."
     And I click the link " More"
@@ -8071,7 +8051,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/css-class.yml"
     Then I should see the phrase "View the source and look for the word"
 
-  Scenario: Test the interview "Dependencies"
+  Scenario: Test the interview "Dependencies" with code
     Given I start the interview "docassemble.base:data/questions/examples/depends-on-code.yml"
     Then I should see the phrase "What is A?"
     And I set "A" to "5"
@@ -8089,17 +8069,17 @@ Feature: Example interviews
     And I should see the phrase "B is 16.0."
     And I should see the phrase "C is 20.0."
 
-  Scenario: Test the interview "Dependencies"
+  Scenario: Test the interview "Dependencies" with iterator
     Given I start the interview "docassemble.base:data/questions/examples/depends-on-iterator.yml"
     Then I should see the phrase "What is the name of the first person?"
     And I set "First name" to "John"
     And I set "Last name" to "Smith"
     And I click the button "Continue"
-    Then I should see the phrase "How frequently does John Smith get paid?"
-    And I choose "Monthly"
-    And I click the button "Continue"
     Then I should see the phrase "How much does John Smith get paid per pay period?"
     And I set "Amount" to "2000"
+    And I click the button "Continue"
+    Then I should see the phrase "How frequently does John Smith get paid?"
+    And I choose "Monthly"
     And I click the button "Continue"
     Then I should see the phrase "Is there another person?"
     And I click the button "Yes"
@@ -8107,11 +8087,11 @@ Feature: Example interviews
     And I set "First name" to "Jane"
     And I set "Last name" to "Doe"
     And I click the button "Continue"
-    Then I should see the phrase "How frequently does Jane Doe get paid?"
-    And I choose "Weekly"
-    And I click the button "Continue"
     Then I should see the phrase "How much does Jane Doe get paid per pay period?"
     And I set "Amount" to "1000"
+    And I click the button "Continue"
+    Then I should see the phrase "How frequently does Jane Doe get paid?"
+    And I choose "Weekly"
     And I click the button "Continue"
     Then I should see the phrase "Is there another person?"
     And I click the button "No"

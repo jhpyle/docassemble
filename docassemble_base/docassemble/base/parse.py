@@ -50,6 +50,7 @@ from itertools import groupby, chain
 from collections import namedtuple
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
+from docassemble_textstat.textstat import textstat
 RangeType = type(range(1,2))
 NoneType = type(None)
 
@@ -659,10 +660,65 @@ class InterviewStatus:
         self.orig_sought = question_result['orig_sought']
     def set_tracker(self, tracker):
         self.tracker = tracker
+    def get_history(self):
+        output = {'steps': []}
+        if self.question.from_source.path != self.question.interview.source.path and self.question.from_source.path is not None:
+            output['source_file'] = self.question.from_source.path
+        if hasattr(self.question, 'source_code') and self.question.source_code is not None:
+            output['source_code'] = self.question.source_code
+        index = 0
+        seeking_len = len(self.seeking)
+        if seeking_len:
+            starttime = self.seeking[0]['time']
+            for stage in self.seeking:
+                index += 1
+                if index < seeking_len and 'reason' in self.seeking[index] and self.seeking[index]['reason'] in ('asking', 'running') and self.seeking[index]['question'] is stage['question'] and 'question' in stage and 'reason' in stage and stage['reason'] == 'considering':
+                    continue
+                the_stage = {'time': "%.5fs" % (stage['time'] - starttime), 'index': index}
+                if 'question' in stage and 'reason' in stage and (index < (seeking_len - 1) or stage['question'] is not self.question):
+                    the_stage['reason'] = stage['reason']
+                    if stage['reason'] == 'initial':
+                        the_stage['reason_text'] = "Ran initial code"
+                    elif stage['reason'] == 'mandatory question':
+                        the_stage['reason_text'] = "Tried to ask mandatory question"
+                    elif stage['reason'] == 'mandatory code':
+                        the_stage['reason_text'] = "Tried to run mandatory code"
+                    elif stage['reason'] == 'asking':
+                        the_stage['reason_text'] = "Tried to ask question"
+                    elif stage['reason'] == 'running':
+                        the_stage['reason_text'] = "Tried to run block"
+                    elif stage['reason'] == 'considering':
+                        the_stage['reason_text'] = "Considered using block"
+                    elif stage['reason'] == 'objects from file':
+                        the_stage['reason_text'] = "Tried to load objects from file"
+                    elif stage['reason'] == 'data':
+                        the_stage['reason_text'] = "Tried to load data"
+                    elif stage['reason'] == 'objects':
+                        the_stage['reason_text'] = "Tried to load objects"
+                    elif stage['reason'] == 'result of multiple choice':
+                        the_stage['reason_text'] = "Followed the result of multiple choice selection"
+                    if stage['question'].from_source.path != self.question.interview.source.path and stage['question'].from_source.path is not None:
+                        the_stage['source_file'] = stage['question'].from_source.path
+                    if (not hasattr(stage['question'], 'source_code')) or stage['question'].source_code is None:
+                        the_stage['embedded'] = True
+                    else:
+                        the_stage['code'] = stage['question'].source_code
+                elif 'variable' in stage:
+                    the_stage['reason'] = 'needed'
+                    the_stage['reason_text'] = "Needed definition of"
+                    the_stage['variable_name'] = str(stage['variable'])
+                elif 'done' in stage:
+                    the_stage['reason'] = 'complete'
+                    the_stage['reason_text'] = "Completed processing"
+                else:
+                    continue
+                output['steps'].append(the_stage)
+        return output
     def as_data(self, the_user_dict, encode=True):
         result = dict(language=self.question.language)
-        if self.question.interview.debug:
-            result['source'] = {'label': word("Source"), 'title': word("How this question came to be asked")}
+        debug = self.question.interview.debug
+        if debug:
+            output = dict(question='', help='')
         if 'progress' in the_user_dict['_internal']:
             result['progress'] = the_user_dict['_internal']['progress']
         if self.question.language in self.question.interview.default_validation_messages:
@@ -701,18 +757,26 @@ class InterviewStatus:
             for item in self.extras['action_buttons']:
                 new_item = copy.deepcopy(item)
                 new_item['label'] = docassemble.base.filter.markdown_to_html(item['label'], trim=True, do_terms=False, status=self, verbatim=encode)
+                if debug:
+                    output['question'] += '<p>' + new_item['label'] + '</p>'
         for param in ('questionText',):
             if hasattr(self, param) and getattr(self, param) is not None:
                 result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, status=self, verbatim=encode)
+                if debug:
+                    output['question'] += result[param]
         if hasattr(self, 'subquestionText') and self.subquestionText is not None:
             if self.question.question_type == "fields":
                 embedder = dummy_embed_input
             else:
                 embedder = None
             result['subquestionText'] = docassemble.base.filter.markdown_to_html(self.subquestionText.rstrip(), status=self, verbatim=encode, embedder=embedder)
+            if debug:
+                output['question'] += result['subquestionText']
         for param in ('continueLabel', 'helpLabel'):
             if hasattr(self, param) and getattr(self, param) is not None:
                 result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, do_terms=False, status=self, verbatim=encode)
+                if debug:
+                    output['question'] += '<p>' + result[param] + '</p>'
         if 'menu_items' in self.extras and isinstance(self.extras['menu_items'], list):
             result['menu_items'] = self.extras['menu_items']
         for param in ('cssClass', 'tableCssClass', 'css', 'script'):
@@ -724,11 +788,15 @@ class InterviewStatus:
         for param in ('rightText', 'underText'):
             if param in self.extras and isinstance(self.extras[param], str):
                 result[param] = docassemble.base.filter.markdown_to_html(self.extras[param].rstrip(), status=self, verbatim=encode)
+                if debug:
+                    output['question'] += result[param]
         if 'continueLabel' not in result:
             if self.question.question_type == "review":
                 result['continueLabel'] = word('Resume')
             else:
                 result['continueLabel'] = word('Continue')
+            if debug:
+                output['question'] += '<p>' + result['continueLabel'] + '</p>'
         steps = the_user_dict['_internal']['steps'] - the_user_dict['_internal']['steps_offset']
         if self.can_go_back and steps > 1:
             result['allow_going_back'] = True
@@ -772,8 +840,12 @@ class InterviewStatus:
                         the_help['video'] = [dict(url=x[0], mime_type=x[1]) for x in video_result]
                 if 'content' in help_text and help_text['content'] is not None:
                     the_help['content'] = docassemble.base.filter.markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=encode)
+                    if debug:
+                        output['help'] += the_help['content']
                 if 'heading' in help_text and help_text['heading'] is not None:
                     the_help['heading'] = help_text['heading'].rstrip()
+                    if debug:
+                        output['help'] += '<p>' + the_help['heading'] + '</p>'
                 elif len(self.helpText) > 1:
                     the_help['heading'] = word('Help with this question')
                 result['helpText'].append(the_help)
@@ -785,6 +857,8 @@ class InterviewStatus:
             result['help']['title'] = word("Help is available for this question")
         if 'questionText' not in result and self.question.question_type == "signature":
             result['questionText'] = word('Sign Your Name')
+            if debug:
+                output['question'] += '<p>' + result['questionText'] + '</p>'
         result['questionType'] = self.question.question_type
         if hasattr(self.question, 'question_variety'):
             result['questionVariety'] = self.question.question_variety
@@ -825,9 +899,13 @@ class InterviewStatus:
                 if 'name' in attachment:
                     if attachment['name']:
                         the_attachment['name'] = docassemble.base.filter.markdown_to_html(attachment['name'], trim=True, status=self, verbatim=encode)
+                        if debug:
+                            output['question'] += '<p>' + the_attachment['name'] + '</p>'
                 if 'description' in attachment:
                     if attachment['description']:
                         the_attachment['description'] = docassemble.base.filter.markdown_to_html(attachment['description'], status=self, verbatim=encode)
+                        if debug:
+                            output['question'] += the_attachment['description']
                 for key in ('valid_formats', 'filename', 'content', 'markdown', 'raw'):
                     if key in attachment:
                         if attachment[key]:
@@ -1012,15 +1090,26 @@ class InterviewStatus:
                 the_field['html'] = self.extras['html'][field.number]
             if field.number in self.hints:
                 the_field['hint'] = self.hints[field.number]
+                if debug:
+                    output['question'] += '<p>' + the_field['hint'] + '</p>'
             if field.number in self.labels:
                 the_field['label'] = docassemble.base.filter.markdown_to_html(self.labels[field.number], trim=True, status=self, verbatim=encode)
+                if debug:
+                    output['question'] += '<p>' + the_field['label'] + '</p>'
             if field.number in self.helptexts:
                 the_field['helptext'] = docassemble.base.filter.markdown_to_html(self.helptexts[field.number], status=self, verbatim=encode)
+                if debug:
+                    output['question'] += the_field['helptext']
             if self.question.question_type in ("yesno", "yesnomaybe"):
                 the_field['true_label'] = docassemble.base.filter.markdown_to_html(self.question.yes(), trim=True, do_terms=False, status=self, verbatim=encode)
                 the_field['false_label'] = docassemble.base.filter.markdown_to_html(self.question.no(), trim=True, do_terms=False, status=self, verbatim=encode)
+                if debug:
+                    output['question'] += '<p>' + the_field['true_label'] + '</p>'
+                    output['question'] += '<p>' + the_field['false_label'] + '</p>'
             if self.question.question_type == 'yesnomaybe':
                 the_field['maybe_label'] = docassemble.base.filter.markdown_to_html(self.question.maybe(), trim=True, do_terms=False, status=self, verbatim=encode)
+                if debug:
+                    output['question'] += '<p>' + the_field['maybe_label'] + '</p>'
             result['fields'].append(the_field)
         if len(self.attributions):
             result['attributions'] = [x.rstrip() for x in self.attributions]
@@ -1035,6 +1124,25 @@ class InterviewStatus:
             result['navbarVariant'] = 'dark'
         else:
             result['navbarVariant'] = 'light'
+        if debug:
+            readability = dict()
+            for question_type in ('question', 'help'):
+                if question_type not in output:
+                    continue
+                phrase = docassemble.base.functions.server.to_text(output[question_type])
+                if (not phrase) or len(phrase) < 10:
+                    phrase = "The sky is blue."
+                phrase = re.sub(r'[^A-Za-z 0-9\.\,\?\#\!\%\&\(\)]', r' ', phrase)
+                readability[question_type] = [('Flesch Reading Ease', textstat.flesch_reading_ease(phrase)),
+                                              ('Flesch-Kincaid Grade Level', textstat.flesch_kincaid_grade(phrase)),
+                                              ('Gunning FOG Scale', textstat.gunning_fog(phrase)),
+                                              ('SMOG Index', textstat.smog_index(phrase)),
+                                              ('Automated Readability Index', textstat.automated_readability_index(phrase)),
+                                              ('Coleman-Liau Index', textstat.coleman_liau_index(phrase)),
+                                              ('Linsear Write Formula', textstat.linsear_write_formula(phrase)),
+                                              ('Dale-Chall Readability Score', textstat.dale_chall_readability_score(phrase)),
+                                              ('Readability Consensus', textstat.text_standard(phrase))]
+            result['source'] = {'label': word("Source"), 'title': word("How this question came to be asked"), 'history': self.get_history(), 'readability': readability}
         return result
     def get_choices(self, field, the_user_dict):
         question = self.question
@@ -1647,6 +1755,8 @@ class Question:
         self.can_go_back = True
         self.other_fields_used = set()
         self.fields_used = set()
+        self.fields_for_invalidation = set()
+        self.fields_for_onchange = set()
         self.names_used = set()
         self.mako_names = set()
         self.reconsider = list()
@@ -4107,15 +4217,14 @@ class Question:
         self.data_for_debug = data
     def get_old_values(self, user_dict):
         old_values = dict()
-        for field_name in self.fields_used:
-            if field_name in self.interview.invalidation:
-                try:
-                    old_values[field_name] = eval(field_name, user_dict)
-                except:
-                    pass
+        for field_name in self.fields_for_invalidation:
+            try:
+                old_values[field_name] = eval(field_name, user_dict)
+            except:
+                pass
         return old_values
     def invalidate_dependencies_of_variable(self, the_user_dict, field_name, old_value):
-        if field_name in self.interview.invalidation or field_name in self.interview.onchange:
+        if field_name in self.interview.invalidation_todo or field_name in self.interview.onchange_todo:
             self.interview.invalidate_dependencies(field_name, the_user_dict, { field_name: old_value })
         try:
             del the_user_dict['_internal']['dirty'][field_name]
@@ -4123,7 +4232,7 @@ class Question:
             pass
     def invalidate_dependencies(self, the_user_dict, old_values):
         for field_name in self.fields_used.union(self.other_fields_used):
-            if field_name in self.interview.invalidation or field_name in self.interview.onchange:
+            if field_name in self.interview.invalidation_todo or field_name in self.interview.onchange_todo:
                 self.interview.invalidate_dependencies(field_name, the_user_dict, old_values)
             try:
                 del the_user_dict['_internal']['dirty'][field_name]
@@ -5550,19 +5659,15 @@ class Question:
                                 defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
                         except:
                             try:
-                                #logmessage("Checking if " + from_safeid(field.saveas) + " is in dirty")
-                                defaults[field.number] = user_dict['_internal']['dirty'][from_safeid(field.saveas)]
+                                defaults[field.number] = user_dict['_internal']['dirty'][substitute_vars(from_safeid(field.saveas), self.is_generic, the_x, iterators)]
                             except:
-                                try:
-                                    defaults[field.number] = user_dict['_internal']['dirty'][substitute_vars(from_safeid(field.saveas), self.is_generic, the_x, iterators)]
-                                except:
-                                    if hasattr(field, 'default'):
-                                        if isinstance(field.default, TextObject):
-                                            defaults[field.number] = field.default.text(user_dict).strip()
-                                        else:
-                                            defaults[field.number] = field.default
-                                    elif hasattr(field, 'extras') and 'default' in field.extras:
-                                        defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
+                                if hasattr(field, 'default'):
+                                    if isinstance(field.default, TextObject):
+                                        defaults[field.number] = field.default.text(user_dict).strip()
+                                    else:
+                                        defaults[field.number] = field.default
+                                elif hasattr(field, 'extras') and 'default' in field.extras:
+                                    defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
                         if hasattr(field, 'hint'):
                             hints[field.number] = field.hint.text(user_dict)
                     if hasattr(field, 'helptext'):
@@ -6541,6 +6646,25 @@ def recursive_add_classes(class_list, the_class):
         class_list.append(cl.__name__)
         recursive_add_classes(class_list, cl)
 
+def unqualified_name(variable, the_user_dict):
+    if variable == 'x' or variable.startswith('x[') or variable.startswith('x.') and 'x' in the_user_dict and hasattr(the_user_dict['x'], 'instanceName'):
+        variable = re.sub(r'^x', the_user_dict['x'].instanceName, variable)
+    for index_var in ['i', 'j', 'k', 'l', 'm', 'n']:
+        if '[' + index_var + ']' in variable and index_var in the_user_dict:
+            variable = re.sub(r'\[' + index_var + '\]', '[' + repr(the_user_dict[index_var]) + ']', variable)
+    return variable
+
+def make_backup_vars(the_user_dict):
+    backups = dict()
+    for var in ['x', 'i', 'j', 'k', 'l', 'm', 'n']:
+        if var in the_user_dict:
+            backups[var] = the_user_dict[var]
+    return backups
+
+def restore_backup_vars(the_user_dict, backups):
+    for var, val in backups.items():
+        the_user_dict[var] = val
+
 class Interview:
     def __init__(self, **kwargs):
         self.source = None
@@ -6554,7 +6678,9 @@ class Interview:
         self.ids_in_use = set()
         self.id_orderings = list()
         self.invalidation = dict()
+        self.invalidation_todo = dict()
         self.onchange = dict()
+        self.onchange_todo = dict()
         self.orderings = list()
         self.orderings_by_question = dict()
         self.images = dict()
@@ -6609,6 +6735,45 @@ class Interview:
         self.issue = dict()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
+            self.cross_reference_dependencies()
+    def cross_reference_dependencies(self):
+        to_listen_for = set(self.invalidation.keys()).union(set(self.onchange.keys()))
+        todo = dict()
+        for question in self.questions_list:
+            for field_name in question.fields_used.union(question.other_fields_used):
+                totry = list()
+                variants = list()
+                level_dict = dict()
+                generic_dict = dict()
+                expression_as_list = [x for x in match_brackets_or_dot.split(field_name) if x != '']
+                expression_as_list.append('')
+                recurse_indices(expression_as_list, list_of_indices, [], variants, level_dict, [], generic_dict, [])
+                for variant in variants:
+                    if variant in to_listen_for:
+                        totry.append({'real': field_name, 'vari': variant, 'iterators': level_dict[variant], 'generic': generic_dict[variant], 'is_generic': 0 if generic_dict[variant] == '' else 1, 'num_dots': variant.count('.'), 'num_iterators': variant.count('[')})
+                totry = sorted(sorted(sorted(sorted(totry, key=lambda x: len(x['iterators'])), key=lambda x: x['num_iterators'], reverse=True), key=lambda x: x['num_dots'], reverse=True), key=lambda x: x['is_generic'])
+                for attempt in totry:
+                    if field_name not in todo:
+                        todo[field_name] = []
+                    found = False
+                    for existing_item in todo[field_name]:
+                        if attempt['vari'] == existing_item['vari']:
+                            found = True
+                    if not found:
+                        todo[field_name].append(attempt)
+                    if attempt['vari'] in self.invalidation:
+                        for var in self.invalidation[attempt['vari']]:
+                            if field_name not in self.invalidation_todo:
+                                self.invalidation_todo[field_name] = []
+                            if not found:
+                                self.invalidation_todo[field_name].append({'target': var, 'context': attempt})
+                            question.fields_for_invalidation.add(field_name)
+                    if attempt['vari'] in self.onchange:
+                        if field_name not in self.onchange_todo:
+                            self.onchange_todo[field_name] = []
+                        if not found:
+                            self.onchange_todo[field_name].append({'target': self.onchange[attempt['vari']], 'context': attempt})
+                        question.fields_for_onchange.add(field_name)
     def ordered(self, the_list):
         if len(the_list) <= 1:
             return the_list
@@ -6620,37 +6785,65 @@ class Interview:
         try:
             if current_value == old_values[field_name]:
                 return
+            do_invalidation = True
         except:
-            pass
-        if field_name in self.invalidation:
-            for variable in self.invalidation[field_name]:
-                if re.search(r'^x[\.\]]', variable) and not re.search(r'^x[\.\]]', field_name):
-                    continue
-                if '[' in variable:
-                    ok = True
-                    for iterator in ['[i]', '[j]', '[k]', '[l]', '[m]', '[n]']:
-                        if iterator in variable and iterator not in field_name:
-                            ok = False
-                            break
-                    if not ok:
+            do_invalidation = False
+        if do_invalidation:
+            if field_name in self.invalidation_todo:
+                for info in self.invalidation_todo[field_name]:
+                    unqualified_variable = info['target']
+                    if info['context']['is_generic'] or len(info['context']['iterators']) > 0:
+                        if info['context']['is_generic']:
+                            unqualified_variable = re.sub('^x', info['context']['generic'], info['target'])
+                        for index_num, index_var in enumerate(['i', 'j', 'k', 'l', 'm', 'n']):
+                            if index_num >= len(info['context']['iterators']):
+                                break
+                            unqualified_variable = re.sub(r'\[' + index_var + '\]', '[' + info['context']['iterators'][index_num] + ']', unqualified_variable)
+                    unqualified_variable = unqualified_name(unqualified_variable, the_user_dict)
+                    try:
+                        exec("_internal['dirty'][" + repr(unqualified_variable) + "] = " + unqualified_variable, the_user_dict)
+                    except:
                         continue
-                try:
-                    exec("_internal['dirty'][" + repr(variable) + "] = " + variable, the_user_dict)
-                except:
-                    continue
-                try:
-                    exec("del " + variable, the_user_dict)
-                    #logmessage("Interview.invalidate_dependencies: deleted " + variable)
-                except:
-                    pass
-        if field_name in self.onchange:
+                    try:
+                        exec("del " + unqualified_variable, the_user_dict)
+                        #logmessage("Interview.invalidate_dependencies: deleted " + unqualified_variable)
+                    except:
+                        pass
+        if field_name in self.onchange_todo:
             if 'alpha' not in the_user_dict:
                 self.load_util(the_user_dict)
-            for the_code in self.onchange[field_name]:
-                try:
-                    exec(the_code, the_user_dict)
-                except Exception as err:
-                    logmessage("Exception raised by on change code: " + err.__class__.__name__ + ": " + str(err))
+            for info in self.onchange_todo[field_name]:
+                if info['context']['is_generic'] or len(info['context']['iterators']) > 0:
+                    backup_vars = make_backup_vars(the_user_dict)
+                    if info['context']['is_generic']:
+                        try:
+                            the_user_dict['x'] = eval(info['context']['generic'], the_user_dict)
+                        except:
+                            restore_backup_vars(the_user_dict, backup_vars)
+                            continue
+                    failed = False
+                    for index_num, index_var in enumerate(['i', 'j', 'k', 'l', 'm', 'n']):
+                        if index_num >= len(info['context']['iterators']):
+                            break
+                        if index_var == info['context']['iterators'][index_num]:
+                            continue
+                        try:
+                            the_user_dict[index_var] = eval(info['context']['iterators'][index_num], the_user_dict)
+                        except:
+                            failed = True
+                            break
+                    if failed:
+                        restore_backup_vars(the_user_dict, backup_vars)
+                        continue
+                else:
+                    backup_vars = None
+                for code_to_run in info['target']:
+                    try:
+                        exec(code_to_run, the_user_dict)
+                    except Exception as err:
+                        logmessage("Exception raised by on change code: " + err.__class__.__name__ + ": " + str(err))
+                if backup_vars:
+                    restore_backup_vars(the_user_dict, backup_vars)
     def get_ml_store(self):
         if hasattr(self, 'ml_store'):
             return self.ml_store
