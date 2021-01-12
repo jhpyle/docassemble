@@ -1976,9 +1976,9 @@ The `states_list()` function returns a dictionary that maps state
 abbreviations to state names.  This function is primarily useful when
 asking a user to specify his or her state.
 
-The function takes an optional keyword argument `country`, which is
+The function takes an optional keyword argument `country_code`, which is
 expected to be a country abbreviation ([ISO 3166-1 alpha-2], e.g.,
-`'SE'` for Sweden).  If the `country` is not provided, it is assumed
+`'SE'` for Sweden).  If the `country_code` is not provided, it is assumed
 to be the default country (the value returned by [`get_country()`]).
 For countries other than the United States, the geographic areas
 returned are the first-level subdivisions within the country.  The
