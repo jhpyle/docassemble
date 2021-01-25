@@ -1290,6 +1290,37 @@ then the SQL database will be backed up on a daily basis.  You will
 want to set it to `false` if backing up the SQL database could lead to
 the exhaustion of hard drive space.
 
+If you want to connect to a [PostgreSQL] server using an SSL
+certificate, you can use the `ssl mode`, `ssl cert`, `ssl key`, and
+`ssl root cert`:
+
+{% highlight yaml %}
+db:
+  prefix: postgresql+psycopg2://
+  name: docassemble
+  user: docassemble
+  password: abc123
+  host: someserver.example.com
+  port: 5432
+  ssl mode: require
+  ssl cert: postgresql.crt
+  ssl key: postgresql.key
+  ssl root cert: postgresql_root.crt
+{% endhighlight %}
+
+The possible values of `ssl mode` are `disable`, `allow`,
+`prefer`,`require`, `verify-ca`, and `verify-full`.  This corresponds
+with the `sslmode` parameter of [libpq].
+
+The `ssl cert`, `ssl key`, and `ssl root cert` parameters correspond
+with the `sslcert`, `sslkey`, and `sslrootcert` parameters of [libpq].
+These parameters must refer to the names of files present in the
+**docassemble** certificates directory.  If you are using [S3] or
+[Azure Blob Storage], these files are stored under `certs`; otherwise,
+the files must be present in `/usr/share/docassemble/certs/`.  Note
+that if you change these files, you will need to stop and start you
+**docassemble** server for the changes to be recognized.
+
 ## <a name="sql ping"></a>Avoiding SQL errors
 
 If your **docassemble** server runs in an environment in which
@@ -3552,27 +3583,21 @@ imagemagick: /usr/local/bin/convert
 pdftoppm: /usr/local/bin/pdftoppm
 {% endhighlight %}
 
-## <a name="pacpl"></a><a name="avconv"></a>Sound file conversion
+## <a name="pacpl"></a><a name="ffmpeg"></a>Sound file conversion
 
 By default, **docassemble** assumes that you have pacpl (the
-[Perl Audio Converter] and/or [avconv] installed on your system, and
+[Perl Audio Converter] and/or [ffmpeg] installed on your system, and
 that they are accessible through the commands `pacpl` and
-`avconv`, respectively.  If you do not have these applications on
+`ffmpeg`, respectively.  If you do not have these applications on
 your system, you need to set the configuration variables to null:
 
 {% highlight yaml %}
 pacpl: Null
-avconv: Null
+ffmpeg: Null
 {% endhighlight %}
 
 You can also set these variables to tell **docassemble** to use a
 particular path on your system to run these applications.
-
-If you have [ffmpeg] instead of [avconv], you can do:
-
-{% highlight yaml %}
-avconv: ffmpeg
-{% endhighlight %}
 
 ## <a name="libreoffice"></a><a name="pandoc"></a><a name="convertapi secret"></a><a name="cloudconvert secret"></a>Document conversion
 
@@ -4299,7 +4324,6 @@ and Facebook API keys.
 [S3]: {{ site.baseurl }}/docs/docker.html#persistent s3
 [Azure blob storage]: {{ site.baseurl }}/docs/docker.html#persistent azure
 [Amazon S3]: https://aws.amazon.com/s3/
-[avconv]: https://libav.org/avconv.html
 [ffmpeg]: https://www.ffmpeg.org/
 [Google Maps Geocoding API]: https://developers.google.com/maps/documentation/geocoding/intro
 [Amazon EC2]: https://aws.amazon.com/ec2/
@@ -4597,3 +4621,4 @@ and Facebook API keys.
 [`default screen parts`]: {{ site.baseurl }}/docs/initial.html#default screen parts
 [XLSX]: https://en.wikipedia.org/wiki/Office_Open_XML
 [XLIFF]: https://en.wikipedia.org/wiki/XLIFF
+[libpq]: https://www.postgresql.org/docs/current/libpq-ssl.html

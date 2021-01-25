@@ -759,6 +759,22 @@ your container for the new configuration to take effect.
   database to be backed up by the daily cron job.  This is important
   if the off-site SQL database is large compared to the available disk
   space on the server.  The default value is `true`.
+* <a name="DBSSLMODE"></a>`DBSSLMODE`: This is relevant if you have
+  [PostgreSQL] database and you have an SSL certificate for it.  This
+  sets the `sslmode` parameter.  For more information, see the
+  documentation for the [`db` section] of the [Configuration].
+* <a name="DBSSLCERT"></a>`DBSSLCERT`: This is relevant if you have
+  [PostgreSQL] database and you have an SSL certificate for it.  This
+  is the name of a certificate file.  For more information, see the
+  documentation for the [`db` section] of the [Configuration].
+* <a name="DBSSLKEY"></a>`DBSSLKEY`: This is relevant if you have
+  [PostgreSQL] database and you have an SSL certificate for it.  This
+  is the name of a certificate key file.  For more information, see the
+  documentation for the [`db` section] of the [Configuration].
+* <a name="DBSSLROOTCERT"></a>`DBSSLROOTCERT`: This is relevant if you have
+  [PostgreSQL] database and you have an SSL certificate for it.  This
+  is the name of a root certificate file.  For more information, see the
+  documentation for the [`db` section] of the [Configuration].
 * <a name="DASQLPING"></a>`DASQLPING`: If your docassemble server runs
   in an environment in which persistent SQL connections will
   periodically be severed, you can set `DASQLPING: true` in order to

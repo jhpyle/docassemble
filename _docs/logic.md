@@ -504,9 +504,7 @@ purposes of the `depends on` specifier.  If a user presses Continue on
 a screen but does not change the value of a variable, the `depends on`
 logic is not triggered.
 
-The `depends on` specifier can be used with iterator variables as long
-as the `depends on` variables and the variables set by the block all
-use the same iterator variables.
+The `depends on` specifier can be used with iterator variables.
 
 {% include side-by-side.html demo="depends-on-iterator" %}
 

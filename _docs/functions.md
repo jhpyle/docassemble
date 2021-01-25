@@ -504,11 +504,6 @@ user selects a menu item.
 
 {% include side-by-side.html demo="dispatch-track" %}
 
-Or, if you want to keep a count of the number of times a user has
-visited a page, you could do:
-
-{% include side-by-side.html demo="dispatch-count" %}
-
 ## <a name="all_variables"></a>all_variables()
 
 The `all_variables()` function returns all of the variables defined in
