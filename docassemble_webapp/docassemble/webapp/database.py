@@ -3,6 +3,7 @@ import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
 from docassemble.base.config import daconfig
+import os
 
 if 'db' not in daconfig:
     daconfig['db'] = dict()
@@ -51,8 +52,23 @@ if not dbprefix.startswith('oracle'):
     else:
         raise DAError("No database name provided")
 
+alchemy_connect_args = dict()
+if alchemy_connect_string.startswith('postgres'):
+    ssl_mode = daconfig['db'].get('ssl mode', None)
+    if ssl_mode in ('disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full'):
+        alchemy_connect_args['sslmode'] = ssl_mode
+    for local_parameter, postgres_parameter in (('ssl cert', 'sslcert'), ('ssl key', 'sslkey'), ('ssl root cert', 'sslrootcert')):
+        filename = daconfig['db'].get(local_parameter, None)
+        if isinstance(filename, str):
+            cert_file = os.path.join(daconfig.get('web server certificate directory', '/var/www/.certs'), filename)
+            if os.path.isfile(cert_file):
+                alchemy_connect_args[postgres_parameter] = cert_file
+
 def connection_string():
     return connect_string
 
 def alchemy_connection_string():
     return alchemy_connect_string
+
+def connect_args():
+    return alchemy_connect_args

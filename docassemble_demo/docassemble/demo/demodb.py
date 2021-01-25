@@ -2,7 +2,7 @@
 # Import any DAObject classes that you will need
 from docassemble.base.util import Individual, Person, DAObject
 # Import the SQLObject and some associated utility functions
-from docassemble.base.sql import alchemy_url, upgrade_db, SQLObject, SQLObjectRelationship
+from docassemble.base.sql import alchemy_url, connect_args, upgrade_db, SQLObject, SQLObjectRelationship
 # Import SQLAlchemy names
 from sqlalchemy import Column, ForeignKey, Integer, String, create_engine, or_, and_
 from sqlalchemy.ext.declarative import declarative_base
@@ -46,7 +46,11 @@ class BankCustomerModel(Base):
 url = alchemy_url('demo db')
 
 # Build the "engine" for connecting to the SQL server, using the URL for the database.
-engine = create_engine(url)
+conn_args = connect_args('demo db')
+if url.startswith('postgres'):
+    engine = create_engine(url, connect_args=conn_args, pool_pre_ping=False)
+else:
+    engine = create_engine(url, pool_pre_ping=False)
 
 # Create the tables 
 Base.metadata.create_all(engine)
@@ -57,7 +61,7 @@ DBSession = sessionmaker(bind=engine)()
 
 # Perform any necessary database schema updates using alembic, if there is an alembic
 # directory and alembic.ini file in the package.
-upgrade_db(url, __file__, engine)
+upgrade_db(url, __file__, engine, conn_args=conn_args)
 
 # Define Bank as both a DAObject and SQLObject
 class Bank(Person, SQLObject):

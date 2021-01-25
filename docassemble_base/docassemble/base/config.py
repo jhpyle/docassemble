@@ -130,6 +130,10 @@ def load(**kwargs):
             daconfig[re.sub(r'_', r' ', key)] = val
         else:
             daconfig[key] = val
+    if 'avconv' in daconfig:
+        config_error("The Configuration directive avconv has been renamed ffmpeg.")
+        daconfig['ffmpeg'] = daconfig['avconv']
+        del daconfig['avconv']
     daconfig['config file'] = filename
     if 'modules' not in daconfig:
         daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local' + str(sys.version_info.major) + '.' + str(sys.version_info.minor))

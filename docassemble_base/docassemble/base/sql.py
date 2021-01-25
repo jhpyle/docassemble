@@ -4,8 +4,9 @@ import sys
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import server, this_thread
 from docassemble.base.core import DAList, DAObjectPlusParameters
+import json
 
-__all__ = ['SQLObject', 'SQLObjectRelationship', 'SQLObjectList', 'SQLRelationshipList', 'StandardRelationshipList', 'alchemy_url', 'upgrade_db']
+__all__ = ['SQLObject', 'SQLObjectRelationship', 'SQLObjectList', 'SQLRelationshipList', 'StandardRelationshipList', 'alchemy_url', 'connect_args', 'upgrade_db']
 
 class SQLObject(object):
     _required = []
@@ -412,9 +413,15 @@ def alchemy_url(db_config):
     """Returns a URL representing a database connection."""
     return server.alchemy_url(db_config)
 
-def upgrade_db(url, py_file, engine, name=None):
+def connect_args(db_config):
+    """Returns PostgreSQL arguments for connecting via SSL."""
+    return server.connect_args(db_config)
+
+def upgrade_db(url, py_file, engine, name=None, conn_args=None):
     if name is None:
         name = 'alembic'
+    if not isinstance(conn_args, dict):
+        conn_args = {}
     packagedir = os.path.dirname(os.path.abspath(py_file))
     alembic_path = os.path.join(packagedir, name)
     if not os.path.isdir(alembic_path):
@@ -431,6 +438,7 @@ def upgrade_db(url, py_file, engine, name=None):
     from alembic import command
     alembic_cfg = Config(ini_file)
     alembic_cfg.set_main_option("sqlalchemy.url", url)
+    alembic_cfg.set_main_option("connect_args", json.dumps(conn_args))
     alembic_cfg.set_main_option("script_location", alembic_path)
     if not engine.has_table('alembic_version'):
         command.stamp(alembic_cfg, "head")

@@ -21,7 +21,7 @@ from docassemble.base.generate_key import random_alphanumeric
 from docassemble_flask_user import UserManager, SQLAlchemyAdapter
 import pkg_resources
 import os
-from docassemble.webapp.database import alchemy_connection_string, dbtableprefix
+from docassemble.webapp.database import alchemy_connection_string, connect_args, dbtableprefix
 import time
 
 def get_role(db, name):

@@ -3,6 +3,8 @@ import os
 import stat
 import re
 import copy
+from pwd import getpwnam
+import shutil
 
 def main():
     from docassemble.base.config import daconfig, S3_ENABLED, s3_config, AZURE_ENABLED, azure_config
@@ -50,7 +52,7 @@ def main():
                 os.chmod(fullpath, stat.S_IRUSR)
                 success = True
         else:
-            sys.stderr.write("SSL destination directory not known")
+            sys.stderr.write("SSL destination directory not known\n")
             sys.exit(1)
         if success:
             return
@@ -74,6 +76,19 @@ def main():
     else:
         sys.stderr.write("SSL destination directory not known")
         sys.exit(1)
+    www_install = daconfig.get('web server certificate directory', '/var/www/.certs')
+    if www_install:
+        www_username = daconfig.get('web server user', 'www-data')
+        www_uid = getpwnam(www_username)[2]
+        www_gid = getpwnam(www_username)[3]
+        if os.path.isdir(www_install):
+            shutil.rmtree(www_install)
+        shutil.copytree(certs_location, www_install)
+        os.chown(www_install, www_uid, www_gid)
+        for root, dirs, files in os.walk(www_install):
+            for the_file in files:
+                os.chown(os.path.join(root, the_file), www_uid, www_gid)
+                os.chmod(os.path.join(root, the_file), stat.S_IRUSR)
     return
 
 if __name__ == "__main__":

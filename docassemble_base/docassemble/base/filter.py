@@ -1387,7 +1387,7 @@ def noquote(string):
     return '"' + string.replace('\n', ' ').replace('"', '&quot;').rstrip() + '"'
 
 def add_terms_mako(termname, terms, status=None, question=None):
-    lower_termname = re.sub(r'\s+', ' ', termname.lower())
+    lower_termname = re.sub(r'\s+', ' ', termname.lower(), re.DOTALL)
     if lower_termname in terms:
         return('<a tabindex="0" class="daterm" data-toggle="popover" data-container="body" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'].text(dict()), trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + str(termname) + '</a>')
     #logmessage(lower_termname + " is not in terms dictionary\n")
@@ -1398,7 +1398,7 @@ def add_terms(termname, terms, label=None, status=None, question=None):
         label = str(termname)
     else:
         label = re.sub(r'^\|', '', label)
-    lower_termname = re.sub(r'\s+', ' ', termname.lower())
+    lower_termname = re.sub(r'\s+', ' ', termname.lower(), re.DOTALL)
     if lower_termname in terms:
         return('<a tabindex="0" class="daterm" data-toggle="popover" data-container="body" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + label + '</a>')
     #logmessage(lower_termname + " is not in terms dictionary\n")

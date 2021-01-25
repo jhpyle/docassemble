@@ -797,6 +797,20 @@ class InterviewStatus:
                 result['continueLabel'] = word('Continue')
             if debug:
                 output['question'] += '<p>' + result['continueLabel'] + '</p>'
+        if self.question.question_type == "yesno":
+            result['yesLabel'] = self.question.yes()
+            result['noLabel'] = self.question.no()
+        elif self.question.question_type == "noyes":
+            result['noLabel'] = self.question.yes()
+            result['yesLabel'] = self.question.no()
+        elif self.question.question_type == "yesnomaybe":
+            result['yesLabel'] = self.question.yes()
+            result['noLabel'] = self.question.no()
+            result['maybeLabel'] = self.question.maybe()
+        elif self.question.question_type == "noyesmaybe":
+            result['noLabel'] = self.question.yes()
+            result['yesLabel'] = self.question.no()
+            result['maybeLabel'] = self.question.maybe()
         steps = the_user_dict['_internal']['steps'] - the_user_dict['_internal']['steps_offset']
         if self.can_go_back and steps > 1:
             result['allow_going_back'] = True
@@ -829,6 +843,7 @@ class InterviewStatus:
                 result['video'] = [dict(url=re.sub(r'.*"(http[^"]+)".*', r'\1', x)) if isinstance(x, str) else dict(url=x[0], mime_type=x[1]) for x in video_result]
         if hasattr(self, 'helpText') and len(self.helpText) > 0:
             result['helpText'] = list()
+            result['helpBackLabel'] = word("Back to question")
             for help_text in self.helpText:
                 the_help = dict()
                 if 'audiovideo' in help_text and help_text['audiovideo'] is not None:
@@ -855,6 +870,7 @@ class InterviewStatus:
             else:
                 result['help']['label'] = self.question.help()
             result['help']['title'] = word("Help is available for this question")
+            result['help']['specific'] = False if self.question.helptext is None else True
         if 'questionText' not in result and self.question.question_type == "signature":
             result['questionText'] = word('Sign Your Name')
             if debug:

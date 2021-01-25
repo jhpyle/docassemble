@@ -2473,6 +2473,8 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
             html = body_html
     if body is None and html is None:
         body = ""
+    if html is None:
+        html = '<html><body>' + body + '</body></html>'
     subject = re.sub(r'[\n\r]+', ' ', subject)
     sender_string = email_stringer(sender, first=True, include_name=True)
     reply_to_string = email_stringer(reply_to, first=True, include_name=True)

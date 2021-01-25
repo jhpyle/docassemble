@@ -3520,7 +3520,10 @@ class DAFile(DAObject):
         c.setopt(pycurl.USERAGENT, server.daconfig.get('user agent', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36'))
         c.setopt(pycurl.COOKIEFILE, cookiefile.name)
         c.perform()
+        status_code = curl.getinfo(pycurl.HTTP_CODE)
         c.close()
+        if status_code >= 400:
+            raise Exception("from_url: Error %s" % (status_code,))
         self.retrieve()
     def is_encrypted(self):
         """Returns True if the file is a PDF file and it is encrypted, otherwise returns False."""

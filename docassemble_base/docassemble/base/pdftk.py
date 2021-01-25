@@ -490,6 +490,8 @@ def remove_nonprintable(text):
     return final
 
 def remove_nonprintable_bytes(byte_list):
+    if isinstance(byte_list, str):
+        return bytearray(remove_nonprintable(byte_list), 'utf-8')
     final = str()
     for the_int in byte_list:
         if chr(the_int) in string.printable:

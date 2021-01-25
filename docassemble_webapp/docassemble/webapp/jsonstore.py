@@ -33,7 +33,11 @@ else:
         modtime = Column(DateTime(), server_default=func.now())
         persistent = Column(Boolean(), nullable=False, server_default=false())
 
-    engine = create_engine(url)
+    if url.startswith('postgres'):
+        connect_args = server.connect_args('variables snapshot db')
+        engine = create_engine(url, connect_args=connect_args, pool_pre_ping=daconfig.get('sql ping', False))
+    else:
+        engine = create_engine(url, pool_pre_ping=daconfig.get('sql ping', False))
     Base.metadata.create_all(engine)
     Base.metadata.bind = engine
     JsonDb = sessionmaker(bind=engine)()

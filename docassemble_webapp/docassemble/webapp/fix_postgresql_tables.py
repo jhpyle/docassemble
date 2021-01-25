@@ -27,6 +27,10 @@ def main():
     db_password = dbconfig.get('password', None)
     db_port = dbconfig.get('port', None)
     db_table_prefix = dbconfig.get('table prefix', None)
+    db_ssl_mode = dbconfig.get('ssl mode', None)
+    db_ssl_cert = dbconfig.get('ssl cert', None)
+    db_ssl_key = dbconfig.get('ssl key', None)
+    db_ssl_root_cert = dbconfig.get('ssl root cert', None)
     schema_file = dbconfig.get('schema file', None)
     if db_name is None:
         db_name = os.getenv('DBNAME', '')
@@ -50,6 +54,14 @@ def main():
         db_port = '5432'
     if db_table_prefix is None:
         db_table_prefix = os.getenv('DBTABLEPREFIX', '')
+    if db_ssl_mode is None:
+        db_ssl_mode = os.getenv('DBSSLMODE', '')
+    if db_ssl_cert is None:
+        db_ssl_cert = os.getenv('DBSSLCERT', '')
+    if db_ssl_key is None:
+        db_ssl_key = os.getenv('DBSSLKEY', '')
+    if db_ssl_root_cert is None:
+        db_ssl_root_cert = os.getenv('DBSSLROOTCERT', '')
     if schema_file is None:
         schema_file = os.getenv('DBSCHEMAFILE', None)
         if not (schema_file and os.path.isfile(schema_file)):

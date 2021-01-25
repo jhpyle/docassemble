@@ -10,8 +10,6 @@ def main():
     from docassemble.base.config import daconfig
     container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
     if ':all:' in container_role or ':cron:' in container_role:
-        import docassemble.webapp.fix_postgresql_tables
-        docassemble.webapp.fix_postgresql_tables.main()
         import docassemble.webapp.create_tables
         docassemble.webapp.create_tables.main()
         if ':cron:' in container_role:

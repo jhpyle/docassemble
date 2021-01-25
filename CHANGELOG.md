@@ -1,5 +1,25 @@
 # Change Log
 
+## [1.2.24] - 2021-01-24
+### Not changed
+- The license.  (Just in case you thought the 1/14/2021 @docassemble
+  Twitter thread about the dystopian MIT-SAFE License was real.)
+### Changed
+- The `from_url()` method will now raise an exception if there is an
+  error retrieving the URL.
+- The `avconv` Configuration directive is now called `ffmpeg`.
+- Uploading a video no longer runs a conversion to `.ogg`.
+### Added
+- Option for connecting to a PostgreSQL database using SSL with `db`
+  and other database configurations.
+### Fixed
+- Problem writing error messages to the logs when Mailgun mail sending
+  fails.
+- Error in `pdf_concatenate()` when JavaScript in a PDF is text
+  instead of bytes.
+- Non-graceful failure on Google Drive configuration page when API for
+  obtaining a file listing raises an exception.
+
 ## [1.2.23] - 2021-01-07
 ### Changed
 - Expanded the information available in the data view of a question.

@@ -83,7 +83,10 @@ class LawsuitDocumentModel(Base):
 url = alchemy_url('demo db')
 
 # Build the "engine" for connecting to the SQL server, using the URL for the database.
-engine = create_engine(url)
+if url.startswith('postgres'):
+    engine = create_engine(url, connect_args=connect_args('demo db'), pool_pre_ping=False)
+else:
+    engine = create_engine(url, pool_pre_ping=False)
 
 # Create the tables
 Base.metadata.create_all(engine)

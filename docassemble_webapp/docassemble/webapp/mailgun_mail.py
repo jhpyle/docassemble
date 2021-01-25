@@ -1,6 +1,7 @@
 # Adapted from flask_mail
 import time
 import requests
+import sys
 from requests.auth import HTTPBasicAuth
 from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
 
@@ -29,8 +30,8 @@ class Connection(object):
                                  data=data,
                                  files={'message': ('mime_message', message.as_string())})
         if response.status_code >= 400:
-            sys.stderr.write("SendGrid status code: " + str(response.status_code) + "\n")
-            sys.stderr.write("SendGrid response headers: " + repr(response.headers) + "\n")
+            sys.stderr.write("Mailgun status code: " + str(response.status_code) + "\n")
+            sys.stderr.write("Mailgun response headers: " + repr(response.headers) + "\n")
             try:
                 sys.stderr.write(repr(response.body) + "\n")
             except:
