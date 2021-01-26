@@ -405,8 +405,9 @@ It is a best practice to tag all `mandatory` blocks with an [`id`].
 
 The `initial` modifier is very similar to [`mandatory`].  It can only
 be used on a [`code`] block.  It causes the [`code`] block to be run
-every time **docassemble** processes your interview.  [`mandatory`]
-blocks, by contrast, are never run again if they are successfully
+every time **docassemble** processes your interview (i.e., every time the
+screen loads during an interview).  [`mandatory`] blocks, by contrast,
+are never run again during the session if they are successfully
 "asked" once.
 
 {% include side-by-side.html demo="initial" %}
