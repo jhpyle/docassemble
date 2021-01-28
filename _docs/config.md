@@ -2773,6 +2773,23 @@ communications with Google's server come from your server.  Thus, you
 may wish to secure the `api key` using IP addresses, and secure the
 `google maps api key` using "Referer" headers.
 
+When using the [address autocomplete] feature, Google
+[biases](https://developers.google.com/maps/documentation/javascript/localization#Region)
+the behavior of address autocompletion to the United States.  You can
+tell Google to bias results to a different region by setting a
+`region`:
+
+{% highlight yaml %}
+google:
+  google maps api key: YyFeyuE-36grDgEE34jETRy3WDjGerye0y-wrRb
+  region: PA
+{% endhighlight %}
+
+This will bias results toward Panama.  `region` values are two-letter
+[ISO_3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) country codes
+like `PK` for Pakistan, with the exception that `region` should be set
+to `GB` instead of `UK` for the United Kingdom.
+
 If you use the [Google Cloud Translation API] for the feature in
 [Utilities] that [translates system phrases] into other languages, you
 can control how many phrases are translated in a single request to the

@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.25](https://github.com/jhpyle/docassemble/releases/tag/v1.2.25) - 2021-01-27
+
+### Added
+- The `region` parameter under the `google` Configuration directive,
+  for biasing the address autocomplete feature.
+
+### Fixed
+- Unicode characters in PDF forms were altered if they were not part
+  of `latin1`.
+
 ## [1.2.24](https://github.com/jhpyle/docassemble/releases/tag/v1.2.24) - 2021-01-24
 
 ### Not changed

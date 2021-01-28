@@ -336,6 +336,14 @@ of the variables.
 
 ## <a name="mandatory"></a>`mandatory`
 
+By default, all blocks in an interview are optional; they will be
+called upon only if needed to retrieve the value of a variable.
+However, if all blocks are optional, the interview has nothing to do.
+You can use the `mandatory` modifier to indicate that a block must be
+run.  The first `mandatory` block in your interview will be the
+starting point of the interview logic when the user first starts the
+interview.
+
 Consider the following as a complete interview file:
 
 {% highlight yaml %}
@@ -403,12 +411,26 @@ It is a best practice to tag all `mandatory` blocks with an [`id`].
 
 ## <a name="initial"></a>`initial`
 
-The `initial` modifier is very similar to [`mandatory`].  It can only
-be used on a [`code`] block.  It causes the [`code`] block to be run
-every time **docassemble** processes your interview (i.e., every time the
-screen loads during an interview).  [`mandatory`] blocks, by contrast,
-are never run again during the session if they are successfully
-"asked" once.
+The `initial` modifier causes the [`code`] block to be run every time
+**docassemble** processes your interview (i.e., every time the screen
+loads during an interview).  [`mandatory`] blocks, by contrast, are
+never run again during the session if they are successfully "asked"
+once.  **docassemble** executes the code in an [`initial`] block in
+the same way it executes the code of [`mandatory`] blocks, except that
+running to completion does not mean the block will not be executed again.
+
+`initial` blocks should be used in the following situations:
+
+* "Initializing" the Python context in a [multi-user interview]
+  depending on who the user is.  For example, if your interview uses a
+  variable `user` that should always refer to an [`Individual`] object
+  corresponding to the user, you can write an `initial` block that
+  looks at `user_info().email` to figure out who the logged-in user
+  is.
+* When you are using the [actions] feature and you want to make sure
+  the [actions] are processed only in particular circumstances.
+
+Here is an example that illustrates how `initial` blocks work:
 
 {% include side-by-side.html demo="initial" %}
 
@@ -437,13 +459,10 @@ Like [`mandatory`], `initial` can be set to `True`, `False`, or to
 [Python] code that will be evaluated to see whether it evaluates to a
 true or false value.
 
-`initial` blocks are useful in a variety of contexts:
-
-* When you are using a [multi-user interview] and you want to set
-  interview variables to particular values depending on the user who
-  is currently using the interview.
-* When you are using the [actions] feature and you want to make sure
-  the [actions] are processed only in particular circumstances.
+If your interview has a single `mandatory` code block and it is
+incapable of running to completion, then you don't really need an
+`initial` block because you can put the logic that needs to run every
+time the screen loads at the beginning of that `mandatory` block.
 
 ## <a name="need"></a>`need`
 
