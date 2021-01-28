@@ -1912,7 +1912,12 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
         ga_id = None
     output_js = ''
     if api_key is not None:
-        scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=places"></script>'
+        region = google_config.get('region', None)
+        if region is None:
+            region = ''
+        else:
+            region = '&region=' + region
+        scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + region + '&libraries=places"></script>'
         if as_javascript:
             output_js += """\
       var daScript = document.createElement('script');
@@ -24364,6 +24369,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         reload_after = 0
     #if next_action_review:
     #    data['next_action'] = next_action_review
+    data['interview_options'] = interview_status.question.interview.options
     if reload_after and reload_after > 0:
         data['reload_after'] = reload_after
     for key in list(data.keys()):
@@ -25819,14 +25825,14 @@ def api_interview():
                     break
             if output['location_bar'] is None:
                 output['location_bar'] = url_for('index', **index_params)
-
+        send_initial = True
     if not yaml_filename:
         return jsonify_with_status("Parameter i is required.", 400)
-    docassemble.base.functions.this_thread.current_info = current_info(req=request, interface='api', secret=secret)
     if not secret:
         secret = random_string(16)
         output['secret'] = secret
     secret = str(secret)
+    docassemble.base.functions.this_thread.current_info = current_info(req=request, interface='api', secret=secret)
     if yaml_filename not in user_info['sessions'] or need_to_reset or new_session:
         was_new = True
         if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
@@ -25990,6 +25996,36 @@ def api_interview():
     else:
         output['question'] = data
     release_lock(session_id, yaml_filename)
+    if send_initial:
+        output['setup'] = {}
+        if 'google maps api key' in google_config:
+            api_key = google_config.get('google maps api key')
+        elif 'api key' in google_config:
+            api_key = google_config.get('api key')
+        else:
+            api_key = None
+        if api_key:
+            output['setup']['googleApiKey'] = api_key
+        if ga_configured and data['interview_options'].get('analytics on', True):
+            interview_package = re.sub(r'^docassemble\.', '', re.sub(r':.*', '', yaml_filename))
+            interview_filename = re.sub(r'\.ya?ml$', '', re.sub(r'.*[:\/]', '', yaml_filename), re.IGNORECASE)
+            output['setup']['googleAnalytics'] = dict(enable=True, ga_id=google_config.get('analytics id'), prefix=interview_package + '/' + interview_filename)
+        else:
+            output['setup']['googleAnalytics'] = dict(enable=False)
+      #<script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=places"></script>'
+      #window.dataLayer = window.dataLayer || [];
+      #function gtag(){dataLayer.push(arguments);}
+      #gtag('js', new Date());
+      #function daPageview(){
+      #  var idToUse = daQuestionID['id'];
+      #  if (daQuestionID['ga'] != undefined && daQuestionID['ga'] != null){
+      #    idToUse = daQuestionID['ga'];
+      #  }
+      #  if (idToUse != null){
+      #    gtag('config', """ + json.dumps(ga_id) + """, {""" + ("'cookie_flags': 'SameSite=None;Secure', " if app.config['SESSION_COOKIE_SECURE'] else '') + """'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + idToUse.replace(/[^A-Za-z0-9]+/g, '_')});
+      #  }
+      #}
+      #<script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """"></script>
     return jsonify(output)
 
 @app.route('/me', methods=['GET'])

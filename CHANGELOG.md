@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.2.25] - 2021-01-27
+### Added
+- The `region` parameter under the `google` Configuration directive,
+  for biasing the address autocomplete feature.
+### Fixed
+- Unicode characters in PDF forms were altered if they were not part
+  of `latin1`.
+
 ## [1.2.24] - 2021-01-24
 ### Not changed
 - The license.  (Just in case you thought the 1/14/2021 @docassemble
@@ -11,7 +19,8 @@
 - Uploading a video no longer runs a conversion to `.ogg`.
 ### Added
 - Option for connecting to a PostgreSQL database using SSL with `db`
-  and other database configurations.
+  and other database configurations.  A system update is required to
+  use this feature.
 ### Fixed
 - Problem writing error messages to the logs when Mailgun mail sending
   fails.

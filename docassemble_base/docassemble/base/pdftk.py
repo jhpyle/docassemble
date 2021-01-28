@@ -4,7 +4,8 @@ import subprocess
 import mimetypes
 import tempfile
 import shutil
-import fdfgen
+#import fdfgen
+from xfdfgen import Xfdf
 import yaml
 import re
 import PyPDF2 as pypdf
@@ -204,7 +205,9 @@ def recursive_add_bookmark(reader, writer, outlines, parent=None):
 
 def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None, template_password=None, default_export_value=None):
     if pdf_url is None:
-        pdf_url = ''
+        pdf_url = 'file.pdf'
+    if not pdf_url.endswith('.pdf'):
+        pdf_url += '.pdf'
     the_fields = read_fields(template)
     export_values = dict()
     for field, default, pageno, rect, field_type, export_value in the_fields:
@@ -228,10 +231,15 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
                         val = 'No'
             new_data_strings.append((key, val))
         data_strings = new_data_strings
-    fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
-    fdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".fdf", delete=False)
-    fdf_file.write(fdf)
+    data_dict = {}
+    for key, val in data_strings:
+        data_dict[key] = val
+    fdf = Xfdf(pdf_url, data_dict)
+    #fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
+    fdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".xfdf", delete=False)
+    #fdf_file.write(fdf)
     fdf_file.close()
+    fdf.write_xfdf(fdf_file.name)
     if False:
         fdf_dict = dict()
         for key, val in data_strings:
