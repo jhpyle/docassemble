@@ -119,4 +119,7 @@ LOGSERVER="" \
 REDIS="" \
 RABBITMQ=""
 
+HEALTHCHECK --interval=15s --start-period=15s --retries=40 \
+  CMD curl --fail http://127.0.0.1/health_check || exit 1
+
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
