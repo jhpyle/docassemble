@@ -45,10 +45,6 @@ bash -c \
 && chmod ogu+r /usr/share/docassemble/config/config.yml.dist \
 && chmod 755 /etc/ssl/docassemble \
 && cd /tmp \
-&& wget https://bootstrap.pypa.io/get-pip.py \
-&& python get-pip.py \
-&& rm -f get-pip.py \
-&& pip install --upgrade virtualenv \
 && echo \"en_US.UTF-8 UTF-8\" >> /etc/locale.gen \
 && locale-gen \
 && update-locale"
