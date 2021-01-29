@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.26] - 2021-01-28
+### Fixed
+- Error in Dockerfile.
+
 ## [1.2.25] - 2021-01-27
 ### Added
 - The `region` parameter under the `google` Configuration directive,
