@@ -27,7 +27,7 @@ install_requires = [
     "bcrypt==3.2.0",
     "beautifulsoup4==4.9.3",
     "billiard==3.6.3.0",
-    "bleach==3.2.1",
+    "bleach==3.3.0",
     "blinker==1.4",
     "boto==2.49.0",
     "boto3==1.16.25",
