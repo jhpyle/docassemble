@@ -55,7 +55,7 @@ install_requires = [
     "Babel==2.9.0",
     "bcrypt==3.2.0",
     "beautifulsoup4==4.9.3",
-    "bleach==3.2.1",
+    "bleach==3.3.0",
     "blinker==1.4",
     "cachetools==4.1.1",
     "certifi==2020.11.8",
