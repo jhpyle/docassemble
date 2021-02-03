@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.26](https://github.com/jhpyle/docassemble/releases/tag/v1.2.26) - 2021-01-28
+
+### Fixed
+- Error in Dockerfile.
+
 ## [1.2.25](https://github.com/jhpyle/docassemble/releases/tag/v1.2.25) - 2021-01-27
 
 ### Added
