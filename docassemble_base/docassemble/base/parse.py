@@ -912,6 +912,8 @@ class InterviewStatus:
                 result['default_email'] = self.current_info['user']['email']
             for attachment in self.attachments:
                 the_attachment = dict(url=dict(), number=dict(), filename_with_extension=dict())
+                if 'orig_variable_name' in attachment and attachment['orig_variable_name']:
+                    the_attachment['variable_name'] = attachment['orig_variable_name']
                 if 'name' in attachment:
                     if attachment['name']:
                         the_attachment['name'] = docassemble.base.filter.markdown_to_html(attachment['name'], trim=True, status=self, verbatim=encode)
@@ -1055,7 +1057,7 @@ class InterviewStatus:
                 the_field['disable_others'] = True
             if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                 the_field['uncheck_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata'):
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata'):
                 if key in self.extras and field.number in self.extras[key]:
                     if key in ('minlength', 'maxlength', 'min', 'max', 'step'):
                         validation_rules_used.add(key)
@@ -3785,7 +3787,7 @@ class Question:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras'][key] = recursive_textobject_or_primitive(field[key], self)
-                            elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width', 'currency symbol'):
+                            elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline', 'inline width', 'currency symbol'):
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
@@ -4703,12 +4705,12 @@ class Question:
                     raise DAError('Unknown data type in attachment tagged pdf.' + self.idebug(target))
             if 'content' not in target:
                 if 'content file code' in options:
-                    return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': None, 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options, 'raw': target['raw']})
+                    return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': None, 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'orig_variable_name': variable_name, 'options': options, 'raw': target['raw']})
                 raise DAError("No content provided in attachment")
             #logmessage("The content is " + str(target['content']))
-            return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': TextObject("\n".join(defs) + "\n" + target['content'], question=self), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options, 'raw': target['raw']})
+            return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': TextObject("\n".join(defs) + "\n" + target['content'], question=self), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'orig_variable_name': variable_name, 'options': options, 'raw': target['raw']})
         elif isinstance(orig_target, str):
-            return({'name': TextObject('Document'), 'filename': TextObject('Document'), 'description': TextObject(''), 'content': TextObject(orig_target, question=self), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options, 'raw': False})
+            return({'name': TextObject('Document'), 'filename': TextObject('Document'), 'description': TextObject(''), 'content': TextObject(orig_target, question=self), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'orig_variable_name': variable_name, 'options': options, 'raw': False})
         else:
             raise DAError("Unknown data type in attachment")
     def get_question_for_field_with_sub_fields(self, field, user_dict):
@@ -5148,7 +5150,7 @@ class Question:
                                 continue
                         else:
                             extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
-                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline width', 'currency symbol'): # 'script', 'css',
+                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline', 'inline width', 'currency symbol'): # 'script', 'css',
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -5640,7 +5642,7 @@ class Question:
                             if 'field metadata' not in extras:
                                 extras['field metadata'] = dict()
                             extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
-                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline width', 'ml_group', 'currency symbol'): # , 'textresponse', 'content_type' #'script', 'css',
+                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline', 'inline width', 'ml_group', 'currency symbol'): # , 'textresponse', 'content_type' #'script', 'css',
                             if key in field.extras:
                                 if key not in extras:
                                     extras[key] = dict()
@@ -5799,7 +5801,7 @@ class Question:
                         the_att.info['formats'] = list(file_dict.keys())
                         if 'valid_formats' not in the_att.info:
                             the_att.info['valid_formats'] = list(file_dict.keys())
-                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', dict()), 'content': the_att.info.get('content', dict()), 'extension': the_att.info.get('extension', dict()), 'mimetype': the_att.info.get('mimetype', dict()), 'file': file_dict, 'metadata': the_att.info.get('metadata', dict()), 'variable_name': str(), 'raw': the_att.info.get('raw', False)})
+                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', dict()), 'content': the_att.info.get('content', dict()), 'extension': the_att.info.get('extension', dict()), 'mimetype': the_att.info.get('mimetype', dict()), 'file': file_dict, 'metadata': the_att.info.get('metadata', dict()), 'variable_name': '', 'orig_variable_name': getattr(the_att, 'instanceName', ''), 'raw': the_att.info.get('raw', False)})
                     #convert_to_pdf_a
                     #file is dict of file numbers
                 # if the_att.__class__.__name__ == 'DAFileCollection' and 'attachment' in the_att.info and isinstance(the_att.info, dict) and 'name' in the_att.info['attachment'] and 'number' in the_att.info['attachment'] and len(self.interview.questions_by_name[the_att.info['attachment']['name']].attachments) > the_att.info['attachment']['number']:
@@ -6085,7 +6087,7 @@ class Question:
                 the_filename = attachment['filename'].text(the_user_dict).strip()
                 if the_filename == '':
                     the_filename = docassemble.base.functions.space_to_underscore(the_name)
-                the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False), raw=result['raw'], permissions=result.get('permissions', None))
+                the_user_dict['_attachment_info'] = dict(name=the_name, filename=the_filename, description=attachment['description'].text(the_user_dict), valid_formats=result['valid_formats'], formats=result['formats_to_use'], attachment=dict(name=attachment['question_name'], number=attachment['indexno']), extension=result.get('extension', dict()), mimetype=result.get('mimetype', dict()), content=result.get('content', dict()), markdown=result.get('markdown', dict()), metadata=result.get('metadata', dict()), convert_to_pdf_a=result.get('convert_to_pdf_a', False), convert_to_tagged_pdf=result.get('convert_to_tagged_pdf', False), orig_variable_name=result.get('orig_variable_name', None), raw=result['raw'], permissions=result.get('permissions', None))
                 exec(variable_name + '.info = _attachment_info', the_user_dict)
                 del the_user_dict['_attachment_info']
                 for doc_format in result['file']:
@@ -6269,6 +6271,8 @@ class Question:
                     result['convert_to_tagged_pdf'] = eval(attachment['options']['tagged_pdf'], the_user_dict)
             else:
                 result['convert_to_tagged_pdf'] = self.interview.use_tagged_pdf
+            if 'orig_variable_name' in attachment and attachment['orig_variable_name']:
+                result['orig_variable_name'] = attachment['orig_variable_name']
             if 'update_references' in attachment['options']:
                 if isinstance(attachment['options']['update_references'], bool):
                     result['update_references'] = attachment['options']['update_references']

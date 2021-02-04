@@ -25695,7 +25695,7 @@ def api_interview():
                 user_code = None
         if user_code:
             if user_info['user_id']:
-                user = UserModel.query.filter_by(id=user_id).first()
+                user = UserModel.query.filter_by(id=user_info['user_id']).first()
                 if user is None or user.social_id.startswith('disabled$') or not user.active:
                     user_code = None
                 else:
@@ -25717,6 +25717,7 @@ def api_interview():
         changed = True
     need_to_reset = False
     new_session = False
+    send_initial = False
     if yaml_filename.startswith('/'):
         parts = urlparse(yaml_filename)
         params = urllib.parse.parse_qs(parts.query)

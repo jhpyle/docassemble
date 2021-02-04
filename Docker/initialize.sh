@@ -972,12 +972,11 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             rm -f /etc/nginx/sites-enabled/docassemblehttp
             ln -sf /etc/nginx/sites-available/docassemblessl /etc/nginx/sites-enabled/docassemblessl
             if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-                cd "${DA_ROOT}/letsencrypt"
                 export USE_PYTHON_3=1
                 if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-                    ./certbot-auto renew --nginx --cert-name "${DAHOSTNAME}"
+                    certbot renew --nginx --cert-name "${DAHOSTNAME}"
                 else
-                    ./certbot-auto --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --no-redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
+                    certbot --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --no-redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi
                 cd ~-
                 nginx -s stop &> /dev/null
@@ -1122,12 +1121,11 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
             a2enmod ssl
             a2ensite docassemble-ssl
             if [ "${USELETSENCRYPT:-false}" == "true" ]; then
-                cd "${DA_ROOT}/letsencrypt"
                 export USE_PYTHON_3=1
                 if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-                    ./certbot-auto renew --apache --cert-name "${DAHOSTNAME}"
+                    certbot renew --apache --cert-name "${DAHOSTNAME}"
                 else
-                    ./certbot-auto --apache --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
+                    certbot --apache --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi
                 cd ~-
                 /etc/init.d/apache2 stop
