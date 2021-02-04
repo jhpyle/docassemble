@@ -77,6 +77,9 @@ bash -c \
    ConfigArgParse==1.2.3 \
    acme==1.12.0 \
    certbot==1.12.0 \
+   certbot-nginx==1.12.0 \
+   certbot-apache==1.12.0 \
+   python-augeas==1.1.0 \
    configobj==5.0.6 \
    distro==1.5.0 \
    josepy==1.6.0 \
