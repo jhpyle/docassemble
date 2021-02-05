@@ -74,23 +74,10 @@ bash -c \
    pycryptodomex==3.9.9 \
    six==1.15.0 \
    setuptools==50.3.2 \
-   ConfigArgParse==1.2.3 \
-   acme==1.12.0 \
+&& pip3 install --upgrade \
    certbot==1.12.0 \
    certbot-nginx==1.12.0 \
    certbot-apache==1.12.0 \
-   configobj==5.0.6 \
-   distro==1.5.0 \
-   josepy==1.6.0 \
-   parsedatetime==2.6 \
-   pyrfc3339==1.1 \
-   zope.component==4.6.2 \
-   zope.deferredimport==4.3.1 \
-   zope.deprecation==4.4.0 \
-   zope.event==4.5.0 \
-   zope.hookable==5.0.1 \
-   zope.interface==5.2.0 \
-   zope.proxy==4.3.5 \
 && pip3 install --upgrade \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \

@@ -51,6 +51,8 @@ from collections import namedtuple
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 from docassemble_textstat.textstat import textstat
+from html.parser import HTMLParser
+from io import StringIO
 RangeType = type(range(1,2))
 NoneType = type(None)
 
@@ -9205,3 +9207,20 @@ def allow_privileges_list(obj):
         if isinstance(item, str):
             new_list.append(item)
     return new_list
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs= True
+        self.text = StringIO()
+    def handle_data(self, d):
+        self.text.write(d)
+    def get_data(self):
+        return self.text.getvalue()
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()

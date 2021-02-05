@@ -978,7 +978,6 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                 else
                     certbot --nginx --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --no-redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi
-                cd ~-
                 nginx -s stop &> /dev/null
                 touch /etc/letsencrypt/da_using_lets_encrypt
             else
@@ -1127,7 +1126,6 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
                 else
                     certbot --apache --quiet --email "${LETSENCRYPTEMAIL}" --agree-tos --redirect -d "${DAHOSTNAME}" && touch /etc/letsencrypt/da_using_lets_encrypt
                 fi
-                cd ~-
                 /etc/init.d/apache2 stop
                 touch /etc/letsencrypt/da_using_lets_encrypt
             else
