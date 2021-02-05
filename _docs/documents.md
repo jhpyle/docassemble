@@ -1604,7 +1604,7 @@ into your assembled file using the [Markdown] format for a hyperlink.
 
 For example, you can put the following into a DOCX file.
 
-> For more information, visit {% raw %}{{r the_link{% endraw %} | {% raw %}inline_markdown }}{% endraw %}.
+> For more information, visit {% raw %}{{r the_link \| inline_markdown }}{% endraw %}.
 
 Then in your [YAML] you can write something like:
 
