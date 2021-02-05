@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.27](https://github.com/jhpyle/docassemble/releases/tag/v1.2.27) - 2021-02-04
+
+### Changed
+- Added `variable_name` to items under `attachments` in the JSON
+  representation of a question.
+
+### Fixed
+- Removed use of `certbot-auto`.
+
 ## [1.2.26](https://github.com/jhpyle/docassemble/releases/tag/v1.2.26) - 2021-01-28
 
 ### Fixed
