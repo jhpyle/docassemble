@@ -1624,7 +1624,7 @@ If you are using [Microsoft Word], your document may not contain a
 character style called `Hyperlink`.  The character style is not
 created by default when you create a new file in [Microsoft Word].
 However, it is easy to cause the style to be added: edit your template
-in Microsoft Word, add a hyperlink manuall (any hyperlink will do),
+in Microsoft Word, add a hyperlink manually (any hyperlink will do),
 save the file, and then delete the hyperlink.  When you create the
 link, [Microsoft Word] will create the character style `Hyperlink` and
 it the character style will persist even after you delete the
