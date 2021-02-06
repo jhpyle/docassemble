@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.28] - 2021-02-05
+### Fixed
+- Restored default behavior of not converting to HTML in question
+  data.
+
 ## [1.2.27] - 2021-02-04
 ### Changed
 - Added `variable_name` to items under `attachments` in the JSON

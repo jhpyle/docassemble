@@ -23957,7 +23957,7 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True,
         return variables
     return user_dict
 
-def go_back_in_session(yaml_filename, session_id, secret=None, return_question=False, use_lock=False):
+def go_back_in_session(yaml_filename, session_id, secret=None, return_question=False, use_lock=False, encode=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
     try:
@@ -23982,7 +23982,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
         raise Exception("Unable to obtain interview dictionary.")
     if return_question:
         try:
-            data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, old_user_dict=old_user_dict)
+            data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, old_user_dict=old_user_dict, encode=encode)
         except Exception as the_err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
@@ -23993,7 +23993,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
         release_lock(session_id, yaml_filename)
     return data
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False, post_setting=True, use_lock=False):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False, post_setting=True, use_lock=False, encode=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
     device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
@@ -24109,7 +24109,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         steps += 1
     if return_question:
         try:
-            data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, post_setting=post_setting, advance_progress_meter=advance_progress_meter)
+            data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, post_setting=post_setting, advance_progress_meter=advance_progress_meter, encode=encode)
         except Exception as the_err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
@@ -24231,7 +24231,7 @@ def api_session_question():
         return data['response']
     return jsonify(**data)
 
-def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True, post_setting=False, advance_progress_meter=False, action=None):
+def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True, post_setting=False, advance_progress_meter=False, action=None, encode=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
     if user_dict is None:
@@ -24355,7 +24355,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_url=interview_status.exit_url, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), section=the_section, display_section=the_section_display, sections=the_sections)
     if allow_going_back:
         data['cornerBackButton'] = interview_status.cornerback
-    data.update(interview_status.as_data(user_dict, encode=False))
+    data.update(interview_status.as_data(user_dict, encode=encode))
     if 'source' in data:
         data['source']['varsLink'] = url_for('get_variables', i=yaml_filename)
         data['source']['varsLabel'] = word('Show variables and values')
@@ -25944,13 +25944,13 @@ def api_interview():
             release_lock(session_id, yaml_filename)
             return jsonify_with_status("Invalid action", 400)
         try:
-            data = get_question_data(yaml_filename, session_id, secret, save=True, use_lock=False, action=action, post_setting=True, advance_progress_meter=True)
+            data = get_question_data(yaml_filename, session_id, secret, save=True, use_lock=False, action=action, post_setting=True, advance_progress_meter=True, encode=True)
         except Exception as err:
             release_lock(session_id, yaml_filename)
             return jsonify_with_status(str(err), 400)
     else:
         try:
-            data = get_question_data(yaml_filename, session_id, secret, save=False, use_lock=False)
+            data = get_question_data(yaml_filename, session_id, secret, save=False, use_lock=False, encode=True)
         except Exception as err:
             release_lock(session_id, yaml_filename)
             return jsonify_with_status(str(err), 400)
@@ -25958,7 +25958,7 @@ def api_interview():
         if command == 'back':
             if data['allow_going_back']:
                 try:
-                    data = go_back_in_session(yaml_filename, session_id, secret=secret, return_question=True)
+                    data = go_back_in_session(yaml_filename, session_id, secret=secret, return_question=True, encode=True)
                 except Exception as the_err:
                     release_lock(session_id, yaml_filename)
                     return jsonify_with_status(str(the_err), 400)
@@ -25983,7 +25983,7 @@ def api_interview():
                     release_lock(session_id, yaml_filename)
                     return jsonify_with_status("invalid variable name " + repr(key), 400)
             try:
-                data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=True, event_list=data.get('event_list', None), question_name=data.get('questionName', None))
+                data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=True, event_list=data.get('event_list', None), question_name=data.get('questionName', None), encode=True)
             except Exception as the_err:
                 release_lock(session_id, yaml_filename)
                 return jsonify_with_status(str(the_err), 400)

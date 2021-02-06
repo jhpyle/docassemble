@@ -758,12 +758,12 @@ class InterviewStatus:
             result['additional_buttons'] = []
             for item in self.extras['action_buttons']:
                 new_item = copy.deepcopy(item)
-                new_item['label'] = docassemble.base.filter.markdown_to_html(item['label'], trim=True, do_terms=False, status=self, verbatim=encode)
+                new_item['label'] = docassemble.base.filter.markdown_to_html(item['label'], trim=True, do_terms=False, status=self, verbatim=(not encode))
                 if debug:
                     output['question'] += '<p>' + new_item['label'] + '</p>'
         for param in ('questionText',):
             if hasattr(self, param) and getattr(self, param) is not None:
-                result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, status=self, verbatim=encode)
+                result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, status=self, verbatim=(not encode))
                 if debug:
                     output['question'] += result[param]
         if hasattr(self, 'subquestionText') and self.subquestionText is not None:
@@ -771,12 +771,12 @@ class InterviewStatus:
                 embedder = dummy_embed_input
             else:
                 embedder = None
-            result['subquestionText'] = docassemble.base.filter.markdown_to_html(self.subquestionText.rstrip(), status=self, verbatim=encode, embedder=embedder)
+            result['subquestionText'] = docassemble.base.filter.markdown_to_html(self.subquestionText.rstrip(), status=self, verbatim=(not encode), embedder=embedder)
             if debug:
                 output['question'] += result['subquestionText']
         for param in ('continueLabel', 'helpLabel'):
             if hasattr(self, param) and getattr(self, param) is not None:
-                result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, do_terms=False, status=self, verbatim=encode)
+                result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, do_terms=False, status=self, verbatim=(not encode))
                 if debug:
                     output['question'] += '<p>' + result[param] + '</p>'
         if 'menu_items' in self.extras and isinstance(self.extras['menu_items'], list):
@@ -786,10 +786,10 @@ class InterviewStatus:
                 result[param] = self.extras[param].rstrip()
         for param in ('back_button_label',):
             if param in self.extras and isinstance(self.extras[param], str):
-                result[param] = docassemble.base.filter.markdown_to_html(self.extras[param].rstrip(), trim=True, do_terms=False, status=self, verbatim=encode)
+                result[param] = docassemble.base.filter.markdown_to_html(self.extras[param].rstrip(), trim=True, do_terms=False, status=self, verbatim=(not encode))
         for param in ('rightText', 'underText'):
             if param in self.extras and isinstance(self.extras[param], str):
-                result[param] = docassemble.base.filter.markdown_to_html(self.extras[param].rstrip(), status=self, verbatim=encode)
+                result[param] = docassemble.base.filter.markdown_to_html(self.extras[param].rstrip(), status=self, verbatim=(not encode))
                 if debug:
                     output['question'] += result[param]
         if 'continueLabel' not in result:
@@ -856,7 +856,7 @@ class InterviewStatus:
                     if len(video_result) > 0:
                         the_help['video'] = [dict(url=x[0], mime_type=x[1]) for x in video_result]
                 if 'content' in help_text and help_text['content'] is not None:
-                    the_help['content'] = docassemble.base.filter.markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=encode)
+                    the_help['content'] = docassemble.base.filter.markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=(not encode))
                     if debug:
                         output['help'] += the_help['content']
                 if 'heading' in help_text and help_text['heading'] is not None:
@@ -868,7 +868,7 @@ class InterviewStatus:
                 result['helpText'].append(the_help)
             result['help'] = dict()
             if self.helpText[0]['label']:
-                result['help']['label'] = docassemble.base.filter.markdown_to_html(self.helpText[0]['label'], trim=True, do_terms=False, status=self, verbatim=encode)
+                result['help']['label'] = docassemble.base.filter.markdown_to_html(self.helpText[0]['label'], trim=True, do_terms=False, status=self, verbatim=(not encode))
             else:
                 result['help']['label'] = self.question.help()
             result['help']['title'] = word("Help is available for this question")
@@ -918,12 +918,12 @@ class InterviewStatus:
                     the_attachment['variable_name'] = attachment['orig_variable_name']
                 if 'name' in attachment:
                     if attachment['name']:
-                        the_attachment['name'] = docassemble.base.filter.markdown_to_html(attachment['name'], trim=True, status=self, verbatim=encode)
+                        the_attachment['name'] = docassemble.base.filter.markdown_to_html(attachment['name'], trim=True, status=self, verbatim=(not encode))
                         if debug:
                             output['question'] += '<p>' + the_attachment['name'] + '</p>'
                 if 'description' in attachment:
                     if attachment['description']:
-                        the_attachment['description'] = docassemble.base.filter.markdown_to_html(attachment['description'], status=self, verbatim=encode)
+                        the_attachment['description'] = docassemble.base.filter.markdown_to_html(attachment['description'], status=self, verbatim=(not encode))
                         if debug:
                             output['question'] += the_attachment['description']
                 for key in ('valid_formats', 'filename', 'content', 'markdown', 'raw'):
@@ -1077,7 +1077,7 @@ class InterviewStatus:
             if self.question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'checkboxes', 'object_checkboxes', 'object_radio')):
                 the_field['choices'] = self.get_choices_data(field, the_default, the_user_dict, encode=encode)
             if hasattr(field, 'nota'):
-                the_field['none_of_the_above'] = docassemble.base.filter.markdown_to_html(self.extras['nota'][field.number], do_terms=False, status=self, verbatim=encode)
+                the_field['none_of_the_above'] = docassemble.base.filter.markdown_to_html(self.extras['nota'][field.number], do_terms=False, status=self, verbatim=(not encode))
             the_field['active'] = self.extras['ok'][field.number]
             if field.number in self.extras['required']:
                 the_field['required'] = self.extras['required'][field.number]
@@ -1105,7 +1105,7 @@ class InterviewStatus:
                 if 'show_if_js' in field.extras:
                     the_field['show_if_js'] = dict(expression=field.extras['show_if_js']['expression'].text(the_user_dict), vars=field.extras['show_if_js']['vars'], sign=field.extras['show_if_js']['sign'], mode=field.extras['show_if_js']['mode'])
             if 'note' in self.extras and field.number in self.extras['note']:
-                the_field['note'] = docassemble.base.filter.markdown_to_html(self.extras['note'][field.number], status=self, verbatim=encode)
+                the_field['note'] = docassemble.base.filter.markdown_to_html(self.extras['note'][field.number], status=self, verbatim=(not encode))
             if 'html' in self.extras and field.number in self.extras['html']:
                 the_field['html'] = self.extras['html'][field.number]
             if field.number in self.hints:
@@ -1113,21 +1113,21 @@ class InterviewStatus:
                 if debug:
                     output['question'] += '<p>' + the_field['hint'] + '</p>'
             if field.number in self.labels:
-                the_field['label'] = docassemble.base.filter.markdown_to_html(self.labels[field.number], trim=True, status=self, verbatim=encode)
+                the_field['label'] = docassemble.base.filter.markdown_to_html(self.labels[field.number], trim=True, status=self, verbatim=(not encode))
                 if debug:
                     output['question'] += '<p>' + the_field['label'] + '</p>'
             if field.number in self.helptexts:
-                the_field['helptext'] = docassemble.base.filter.markdown_to_html(self.helptexts[field.number], status=self, verbatim=encode)
+                the_field['helptext'] = docassemble.base.filter.markdown_to_html(self.helptexts[field.number], status=self, verbatim=(not encode))
                 if debug:
                     output['question'] += the_field['helptext']
             if self.question.question_type in ("yesno", "yesnomaybe"):
-                the_field['true_label'] = docassemble.base.filter.markdown_to_html(self.question.yes(), trim=True, do_terms=False, status=self, verbatim=encode)
-                the_field['false_label'] = docassemble.base.filter.markdown_to_html(self.question.no(), trim=True, do_terms=False, status=self, verbatim=encode)
+                the_field['true_label'] = docassemble.base.filter.markdown_to_html(self.question.yes(), trim=True, do_terms=False, status=self, verbatim=(not encode))
+                the_field['false_label'] = docassemble.base.filter.markdown_to_html(self.question.no(), trim=True, do_terms=False, status=self, verbatim=(not encode))
                 if debug:
                     output['question'] += '<p>' + the_field['true_label'] + '</p>'
                     output['question'] += '<p>' + the_field['false_label'] + '</p>'
             if self.question.question_type == 'yesnomaybe':
-                the_field['maybe_label'] = docassemble.base.filter.markdown_to_html(self.question.maybe(), trim=True, do_terms=False, status=self, verbatim=encode)
+                the_field['maybe_label'] = docassemble.base.filter.markdown_to_html(self.question.maybe(), trim=True, do_terms=False, status=self, verbatim=(not encode))
                 if debug:
                     output['question'] += '<p>' + the_field['maybe_label'] + '</p>'
             result['fields'].append(the_field)

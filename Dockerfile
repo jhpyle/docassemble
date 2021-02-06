@@ -55,7 +55,7 @@ bash -c \
 "cd /tmp \
 && python3.8 -m venv --copies /usr/share/docassemble/local3.8 \
 && source /usr/share/docassemble/local3.8/bin/activate \
-&& pip3 install --upgrade pip==20.3.1 \
+&& pip3 install --upgrade pip==21.0.1 \
 && pip3 install --upgrade mod_wsgi==4.7.1 \
 && pip3 install --upgrade \
    3to2==1.1.1 \
