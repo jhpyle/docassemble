@@ -84,7 +84,7 @@ install_requires = [
     "grpcio==1.33.2",
     "gspread==3.6.0",
     "guess-language-spirit==0.5.3",
-    "httplib2==0.18.1",
+    "httplib2==0.19.0",
     "humanize==3.1.0",
     "hyphenate==1.1.0",
     "idna==2.10",
