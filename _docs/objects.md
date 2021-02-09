@@ -1329,8 +1329,7 @@ which the file can be accessed.  The URL should only be used in the
 context of the user's session and the user's web browser.  For
 example, if you are using cloud storage as your form of [data
 storage], the URL will link directly to the cloud and will expire
-after an hour.  If you are not using cloud storage, the server will
-only allow access to the file to the current user.
+after an hour.
 
 {% include side-by-side.html demo="dafile-url-for" %}
 
@@ -1354,10 +1353,10 @@ expires in 60 seconds.
 
 {% include side-by-side.html demo="dafile-url-for-temporary" %}
 
-`external` - by default, if you are not using cloud storage, the URLs
-returned by `.url_for()` will be root-relative URLs.  If you want URLs
-that include the protocol and hostname, include `external=True` when
-you call `.url_for()`.  Using `temporary=True` implies `external=True`.
+`external` - by default, the URLs returned by `.url_for()` will be
+root-relative URLs.  If you want URLs that include the protocol and
+hostname, include `external=True` when you call `.url_for()`.  Using
+`temporary=True` implies `external=True`.
 
 `attachment` - by default, the URLs return files suitable for
 inclusion in web pages.  If you want the user to download the file

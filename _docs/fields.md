@@ -474,6 +474,13 @@ Validation is applied to ensure that the time can be parsed by
 
 The resulting variable will be an object of type [`datetime.time`].
 
+To indicate a default time, write a [`default`] value in the format
+`13:43:23`.  If you have a [`datetime.time`] variable called
+`meeting_start` and you want the value of `meeting_start` to be the
+default time for a field, you can set the [`default`] value to `${
+meeting_start }`.  This has the same effect as `str(meeting_start)` or
+`meeting_start.strftime('%H:%M:%S')`.
+
 If you want to format a time variable for inclusion in a document or a
 question, see the [`.strftime()`] method or the [`format_time()`]
 function.
