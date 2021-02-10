@@ -44,7 +44,7 @@ install_requires = [
     "configparser==5.0.1",
     "convertapi==1.4.0",
     "crayons==0.3.1",
-    "cryptography==3.2.1",
+    "cryptography==3.3.2",
     "dnspython==1.16.0",
     "Docassemble-Flask-User==0.6.23",
     "docassemblekvsession==0.3",
