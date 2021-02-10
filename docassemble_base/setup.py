@@ -64,7 +64,7 @@ install_requires = [
     "click==7.1.2",
     "colorama==0.4.4",
     "convertapi==1.4.0",
-    "cryptography==3.2.1",
+    "cryptography==3.3.2",
     "docopt==0.6.2",
     "docutils==0.16",
     "docxcompose==1.3.0",
