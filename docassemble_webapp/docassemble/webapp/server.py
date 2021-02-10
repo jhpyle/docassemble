@@ -1185,7 +1185,7 @@ def remove_question_package(args):
         del args['_package']
 
 def get_url_from_file_reference(file_reference, **kwargs):
-    if 'jsembed' in docassemble.base.functions.this_thread.misc:
+    if 'jsembed' in docassemble.base.functions.this_thread.misc or COOKIELESS_SESSIONS:
         kwargs['_external'] = True
     if 'privileged' in kwargs:
         privileged = kwargs['privileged']
@@ -14125,14 +14125,17 @@ def update_package_ajax():
         return jsonify(success=False)
     setup_translation()
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['taskwait'])
-    if result.ready() and START_TIME > session['serverstarttime']:
+    if result.ready():
         #if 'taskwait' in session:
         #    del session['taskwait']
         the_result = result.get()
         if isinstance(the_result, ReturnValue):
             if the_result.ok:
                 #logmessage("update_package_ajax: success")
-                return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
+                if START_TIME > session['serverstarttime']:
+                    return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
+                else:
+                    jsonify(success=True, status='waiting')
             elif hasattr(the_result, 'error_message'):
                 logmessage("update_package_ajax: failed return value is " + str(the_result.error_message))
                 return jsonify(success=True, status='failed', error_message=str(the_result.error_message))
@@ -25974,7 +25977,7 @@ def api_interview():
                 for field in data['fields']:
                     if 'variable_name' in field and field.get('active', False):
                         valid_variables[field['variable_name']] = field
-                    if field.get('required', False):
+                    if field.get('required', False) and 'variable_name' in field:
                         if field['variable_name'] not in variables:
                             release_lock(session_id, yaml_filename)
                             return jsonify_with_status("variable %s is missing" % (field['variable_name'],), 400)

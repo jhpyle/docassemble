@@ -218,9 +218,11 @@ def url_for(*pargs, **kwargs):
         kwargs['_external'] = True
         if pargs[0] == 'index':
             kwargs['js_target'] = docassemble.base.functions.this_thread.misc['jsembed']
-    if pargs[0] == 'index' and COOKIELESS_SESSIONS:
-        pargs = list(pargs)
-        pargs[0] = 'html_index'
+    if COOKIELESS_SESSIONS:
+        if pargs[0] == 'index':
+            pargs = list(pargs)
+            pargs[0] = 'html_index'
+        kwargs['_external'] = True
     return base_url_for(*pargs, **kwargs)
 
 def sql_get(key, secret=None):

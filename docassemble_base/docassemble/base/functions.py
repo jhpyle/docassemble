@@ -2885,6 +2885,9 @@ def indefinite_article_nl(*pargs, **kwargs):
     else:
         return(output)
 
+def titlecasestr(text):
+    return titlecase.titlecase(str(text))
+
 language_functions = {
     'in_the': {
         'en': prefix_constructor('in the ')
@@ -3034,7 +3037,7 @@ language_functions = {
         '*': capitalize_default
     },
     'title_case': {
-        '*': titlecase.titlecase
+        '*': titlecasestr
     },
     'salutation': {
         '*': salutation_default

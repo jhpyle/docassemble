@@ -896,17 +896,30 @@ class InterviewStatus:
         if hasattr(self.question, 'fields_saveas'):
             result['question_variable_name'] = self.question.fields_saveas
         if self.decorations is not None:
+            width_value = get_config('decoration size', 2.0)
+            width_units = get_config('decoration units', 'em')
             for decoration in self.decorations:
                 if 'image' in decoration:
+                    result['decoration'] = {}
                     the_image = self.question.interview.images.get(decoration['image'], None)
                     if the_image is not None:
                         the_url = docassemble.base.functions.server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
-                        if the_url is not None and the_image.attribution is not None:
-                            result['decoration_url'] = the_url
-                            self.attributions.add(the_image.attribution)
-                        break
+                        width = str(width_value) + str(width_units)
+                        filename = docassemble.base.functions.server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
+                        if 'extension' in filename and filename['extension'] == 'svg' and 'width' in filename:
+                            if filename['width'] and filename['height']:
+                                height = str(width_value * (filename['height']/filename['width'])) + str(width_units)
+                        else:
+                            height = 'auto'
+                        if the_url is not None:
+                            result['decoration']['url'] = the_url
+                            result['decoration']['size'] = {"width": width, "height": height}
+                            if the_image.attribution is not None:
+                                self.attributions.add(the_image.attribution)
+                            break
                     elif get_config('default icons', None) in ('material icons', 'font awesome'):
-                        result['decoration_name'] = decoration['image']
+                        result['decoration']['name'] = decoration['image']
+                        result['decoration']['size'] = str(width_value) + str(width_units)
                         break
         if len(self.attachments) > 0:
             result['attachments'] = list()

@@ -456,7 +456,7 @@ css: |
   </style>
 script: |
   <script>
-    $("#today_time").html(Date());
+    document.getElementById("today_time").innerHTML = Date();
   </script>
 comment: |
   You can embed raw HTML into a list of fields using the 'html' key.
