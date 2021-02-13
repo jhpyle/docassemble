@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.29] - 2021-02-12
+### Fixed
+- Package Management issue with waiting for restart.
+
 ## [1.2.28] - 2021-02-09
 ### Changed
 - In the question data, `decoration_url` and `decoration_name` have

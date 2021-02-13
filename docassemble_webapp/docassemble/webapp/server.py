@@ -14135,7 +14135,7 @@ def update_package_ajax():
                 if START_TIME > session['serverstarttime']:
                     return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
                 else:
-                    jsonify(success=True, status='waiting')
+                    return jsonify(success=True, status='waiting')
             elif hasattr(the_result, 'error_message'):
                 logmessage("update_package_ajax: failed return value is " + str(the_result.error_message))
                 return jsonify(success=True, status='failed', error_message=str(the_result.error_message))
