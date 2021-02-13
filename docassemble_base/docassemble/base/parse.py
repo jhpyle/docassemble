@@ -8281,7 +8281,8 @@ class Interview:
                     questions_tried[newMissingVariable] = set()
                 else:
                     variable_stack.add(missingVariable)
-                questions_tried[newMissingVariable].add(current_question)
+                if current_question.question_type != 'objects':
+                    questions_tried[newMissingVariable].add(current_question)
                 question_result = self.askfor(newMissingVariable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc, recursion_depth=recursion_depth, seeking_question=seeking_question)
                 if question_result['type'] == 'continue' and missing_var != newMissingVariable:
                     # logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
@@ -8299,7 +8300,8 @@ class Interview:
                     questions_tried[newMissingVariable] = set()
                 else:
                     variable_stack.add(missingVariable)
-                questions_tried[newMissingVariable].add(current_question)
+                if current_question.question_type != 'objects':
+                    questions_tried[newMissingVariable].add(current_question)
                 question_result = self.askfor(newMissingVariable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=True, recursion_depth=recursion_depth, seeking_question=seeking_question)
                 if question_result['type'] == 'continue':
                     continue
