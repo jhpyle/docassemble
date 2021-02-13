@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.30](https://github.com/jhpyle/docassemble/releases/tag/v1.2.30) - 2021-02-13
+
+### Fixed
+- False positive infinite loop detection with `objects` block.
+
 ## [1.2.29](https://github.com/jhpyle/docassemble/releases/tag/v1.2.29) - 2021-02-12
 
 ### Fixed
