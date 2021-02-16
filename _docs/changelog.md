@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.31](https://github.com/jhpyle/docassemble/releases/tag/v1.2.31) - 2021-02-16
+
+### Added
+- The `post` option for `need`.
+
+### Changed
+- Deleting a package in the Playground will now delete the memory of
+  the last pull of that package.
+
 ## [1.2.30](https://github.com/jhpyle/docassemble/releases/tag/v1.2.30) - 2021-02-13
 
 ### Fixed

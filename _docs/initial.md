@@ -767,7 +767,7 @@ file; the second block will "override" the first.
 {% include side-by-side.html demo="supersede-regular" %}
 
 However, if you actually want the first block to be tried first, you
-can manually specify the order of blocks:
+can manually specify the order in which the blocks will be tried:
 
 {% include side-by-side.html demo="supersede-order" %}
 

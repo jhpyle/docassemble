@@ -486,6 +486,57 @@ used by the question.  Also, if your question uses variables that are
 not mentioned in the `need` list, **docassemble** will still pursue
 definitions of those variables.
 
+If any of the variables listed under `need` are undefined,
+**docassemble** will obtain their definitions before processing the
+content of the [`question`].  For example, suppose you have the
+following [`question`]:
+
+{% highlight yaml %}
+need:
+  - favorite_fruit
+question: |
+  Your favorite apple is ${ favorite_apple }.
+continue button field: fruit_verified
+{% endhighlight %}
+
+If both `favorite_fruit` and `favorite_apple` are undefined, the
+definition of `favorite_fruit` will be sought first.
+
+What if you wanted `favorite_fruit` to be sought **after**
+`favorite_apple`?  To do this, you can use the following special form
+of `need`:
+
+{% highlight yaml %}
+need:
+  post:
+    - favorite_fruit
+question: |
+  Your favorite apple is ${ favorite_apple }.
+continue button field: fruit_verified
+{% endhighlight %}
+
+In this case, the definition of `favorite_fruit` will be sought after
+all of the prerequisites of the `question` have been satisfied.
+
+You can organize your `need` items into `pre` and `post` items:
+
+{% highlight yaml %}
+need:
+  pre:
+    - favorite_vegetable
+  post:
+    - favorite_fruit
+{% endhighlight %}
+
+You can also include `post` among a list of other items:
+
+{% highlight yaml %}
+need:
+  - favorite_vegetable
+  - post:
+      - favorite_fruit
+{% endhighlight %}
+
 ## <a name="depends on"></a>`depends on`
 
 The `depends on` specifier indicates that if the listed variables
