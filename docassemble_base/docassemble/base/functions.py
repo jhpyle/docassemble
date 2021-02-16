@@ -3466,7 +3466,7 @@ def process_action():
         return
     #sys.stderr.write("process_action() continuing")
     the_action = this_thread.current_info['action']
-    #logmessage("process_action: action is " + the_action)
+    #logmessage("process_action: action is " + repr(the_action))
     del this_thread.current_info['action']
     #if the_action == '_da_follow_up' and 'action' in this_thread.current_info['arguments']:
     #    this_thread.misc['forgive_missing_question'] = True

@@ -11238,7 +11238,7 @@ def get_referer():
 
 def add_referer(user_dict, referer=None):
     if referer:
-        user_dict['_internal']['referer'] = referrer
+        user_dict['_internal']['referer'] = referer
     elif request.referrer:
         user_dict['_internal']['referer'] = request.referrer
     else:
@@ -18054,6 +18054,9 @@ def playground_packages():
         return redirect(url_for('playground_packages', project=current_project, file=the_file))
     if request.method == 'POST' and validated and form.delete.data and the_file != '' and the_file == form.file_name.data and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
         os.remove(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file))
+        dotfile = os.path.join(directory_for(area['playgroundpackages'], current_project), '.docassemble-' + the_file)
+        if os.path.exists(dotfile):
+            os.remove(dotfile)
         area['playgroundpackages'].finalize()
         flash(word("Deleted package"), "success")
         return redirect(url_for('playground_packages', project=current_project))
@@ -25650,7 +25653,9 @@ def manage_api():
 
 @app.route(html_index_path, methods=['GET'])
 def html_index():
-    return app.send_static_file('index.html')
+    resp = app.send_static_file('index.html')
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return resp
 
 @app.route('/api/interview', methods=['GET', 'POST'])
 @csrf.exempt

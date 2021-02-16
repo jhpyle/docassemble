@@ -1640,6 +1640,8 @@ class DAList(DAObject):
             raise Exception("Attempt to fill up " + self.instanceName + " with index " + index)
         if index < 0 and len(self.elements) + index < 0:
             num_to_add = (-1 * index) - len(self.elements)
+            if num_to_add > 10:
+                raise Exception("Attempt to fill up more than 10 items")
             for i in range(0, num_to_add):
                 if self.object_type is None:
                     self.elements.append(None)
@@ -1647,6 +1649,8 @@ class DAList(DAObject):
                     self.appendObject(self.object_type, **self.object_type_parameters)
         elif len(self.elements) <= index:
             num_to_add = 1 + index - len(self.elements)
+            if num_to_add > 10:
+                raise Exception("Attempt to fill up more than 10 items")
             for i in range(0, num_to_add):
                 if self.object_type is None:
                     self.elements.append(None)

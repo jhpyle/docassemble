@@ -1767,6 +1767,7 @@ class Question:
         self.terms = dict()
         self.autoterms = dict()
         self.need = None
+        self.need_post = None
         self.scan_for_variables = True
         self.embeds = False
         self.helptext = None
@@ -3174,19 +3175,53 @@ class Question:
                 self.fields.append(Field(field_data))
                 self.question_type = 'settrue'
         if 'need' in data:
-            if isinstance(data['need'], str):
+            if isinstance(data['need'], (str, dict)):
                 need_list = [data['need']]
             elif isinstance(data['need'], list):
                 need_list = data['need']
             else:
                 raise DAError("A need phrase must be text or a list." + self.idebug(data))
-            try:
-                self.need = list(map((lambda x: compile(x, '<need expression>', 'eval')), need_list))
-                for x in need_list:
-                    self.find_fields_in(x)
-            except:
-                logmessage("Question: compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
-                raise
+            pre_need_list = []
+            post_need_list = []
+            for item in need_list:
+                if isinstance(item, dict):
+                    if not (('pre' in item and len(item) == 1) or ('post' in item and len(item) == 1) or ('pre' in item and 'post' in item and len(item) == 2)):
+                        raise DAError("If 'need' contains a dictionary it can only include keys 'pre' or 'post'." + self.idebug(data))
+                    if 'post' in item:
+                        if isinstance(item['post'], str):
+                            post_need_list.append(item['post'])
+                        elif isinstance(item['post'], list):
+                            post_need_list.extend(item['post'])
+                        else:
+                            raise DAError("A need post phrase must be text or a list." + self.idebug(data))
+                    if 'pre' in item:
+                        if isinstance(item['pre'], str):
+                            pre_need_list.append(item['pre'])
+                        elif isinstance(item['pre'], list):
+                            pre_need_list.extend(item['pre'])
+                        else:
+                            raise DAError("A need pre phrase must be text or a list." + self.idebug(data))
+                else:
+                    pre_need_list.append(item)
+            for sub_item in pre_need_list + post_need_list:
+                if not isinstance(sub_item, str):
+                    raise DAError("In 'need', the items must be text strings." + self.idebug(data))
+            if len(pre_need_list):
+                try:
+                    self.need = list(map((lambda x: compile(x, '<need expression>', 'eval')), pre_need_list))
+                    for x in pre_need_list:
+                        self.find_fields_in(x)
+                except:
+                    logmessage("Question: compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
+                    raise
+            if len(post_need_list):
+                try:
+                    self.need_post = list(map((lambda x: compile(x, '<post need expression>', 'eval')), post_need_list))
+                    for x in post_need_list:
+                        self.find_fields_in(x)
+                except:
+                    logmessage("Question: compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
+                    raise
         if 'depends on' in data:
             if not isinstance(data['depends on'], list):
                 depends_list = [str(data['depends on'])]
@@ -4271,6 +4306,10 @@ class Question:
                 del the_user_dict['_internal']['dirty'][field_name]
             except:
                 pass
+    def post_exec(self, the_user_dict):
+        if self.need_post is not None:
+            for need_code in self.need_post:
+                eval(need_code, the_user_dict)
     def exec_setup(self, is_generic, the_x, iterators, the_user_dict):
         if is_generic:
             if the_x != 'None':
@@ -5781,6 +5820,9 @@ class Question:
                     break
             if not already_there:
                 user_dict['_internal']['event_stack'][session_uid].insert(0, dict(action=orig_sought, arguments=dict(), context=dict()))
+        if self.need_post is not None:
+            for need_code in self.need_post:
+                eval(need_code, user_dict)
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}) #'defined': defined,
     def processed_attachments(self, the_user_dict, **kwargs):
         use_cache = kwargs.get('use_cache', True)
@@ -7773,7 +7815,7 @@ class Interview:
         expression_as_list = [x for x in match_brackets_or_dot.split(missingVariable) if x != '']
         expression_as_list.append('')
         recurse_indices(expression_as_list, list_of_indices, [], variants, level_dict, [], generic_dict, [])
-        #logmessage(repr(variants))
+        #logmessage("variants: " + repr(variants))
         for variant in variants:
             totry.append({'real': missingVariable, 'vari': variant, 'iterators': level_dict[variant], 'generic': generic_dict[variant], 'is_generic': 0 if generic_dict[variant] == '' else 1, 'num_dots': variant.count('.'), 'num_iterators': variant.count('[')})
         totry = sorted(sorted(sorted(sorted(totry, key=lambda x: len(x['iterators'])), key=lambda x: x['num_iterators'], reverse=True), key=lambda x: x['num_dots'], reverse=True), key=lambda x: x['is_generic'])
@@ -7898,6 +7940,7 @@ class Interview:
                         old_values = question.get_old_values(user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
                         exec(string, user_dict)
+                        question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
@@ -7907,6 +7950,7 @@ class Interview:
                         exec(import_core, user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                         exec(string, user_dict)
+                        question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
@@ -7915,6 +7959,7 @@ class Interview:
                         old_values = question.get_old_values(user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
                         exec(string, user_dict)
+                        question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
@@ -7924,6 +7969,7 @@ class Interview:
                         exec(import_core, user_dict)
                         string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.objects_from_structure(' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                         exec(string, user_dict)
+                        question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
@@ -7988,6 +8034,7 @@ class Interview:
                             continue
                         #question.mark_as_answered(user_dict)
                         # logmessage("pop current variable")
+                        question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         if old_variable is not None:
                             question.invalidate_dependencies_of_variable(user_dict, missing_var, old_variable)
@@ -8030,6 +8077,7 @@ class Interview:
                         the_object.source_decorations = [dec['image'] for dec in decoration_list]
                         the_object.userdict = user_dict
                         the_object.tempvars = temp_vars
+                        question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "template_code":
@@ -8093,6 +8141,7 @@ class Interview:
                         the_object.source_decorations = [dec['image'] for dec in decoration_list]
                         the_object.userdict = user_dict
                         the_object.tempvars = temp_vars
+                        question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == "table":
@@ -8137,6 +8186,7 @@ class Interview:
                         the_object.userdict = user_dict
                         the_object.tempvars = temp_vars
                         #logmessage("Pop variable for table")
+                        question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type == 'attachments':
@@ -8149,12 +8199,13 @@ class Interview:
                         try:
                             eval(missing_var, user_dict)
                             #question.mark_as_answered(user_dict)
-                            docassemble.base.functions.pop_current_variable()
-                            question.invalidate_dependencies(user_dict, old_values)
-                            return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                         except:
                             logmessage("Problem with attachments block: " + err.__class__.__name__ + ": " + str(err))
                             continue
+                        question.post_exec(user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        question.invalidate_dependencies(user_dict, old_values)
+                        return({'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable})
                     if question.question_type in ["code", "event_code"]:
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         was_defined = False
@@ -8739,6 +8790,7 @@ def invalid_variable_name(varname):
 def exec_with_trap(the_question, the_dict, old_variable=None):
     try:
         exec(the_question.compute, the_dict)
+        the_question.post_exec(the_dict)
     except (NameError, UndefinedError, CommandError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, QuestionError, AttributeError, MandatoryQuestion, CodeExecute, SyntaxException, CompileException):
         if old_variable is not None:
             try:
