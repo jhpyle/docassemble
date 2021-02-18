@@ -3762,21 +3762,21 @@ def wait_for_task(task_id, timeout=None):
 #     return
 
 def trigger_update(except_for=None):
-    logmessage("trigger_update: except_for is " + str(except_for) + " and hostname is " + hostname)
+    sys.stderr.write("trigger_update: except_for is " + str(except_for) + " and hostname is " + hostname + "\n")
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url and not (except_for and host.hostname == except_for):
                 if host.hostname == hostname:
                     the_url = 'http://localhost:9001'
-                    logmessage("trigger_update: using http://localhost:9001")
+                    sys.stderr.write("trigger_update: using http://localhost:9001\n")
                 else:
                     the_url = host.url
                 args = [SUPERVISORCTL, '-s', the_url, 'start', 'update']
                 result = subprocess.run(args).returncode
                 if result == 0:
-                    logmessage("trigger_update: sent update to " + str(host.hostname) + " using " + the_url)
+                    sys.stderr.write("trigger_update: sent update to " + str(host.hostname) + " using " + the_url + "\n")
                 else:
-                    logmessage("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful")
+                    sys.stderr.write("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful\n")
     return
 
 def restart_on(host):

@@ -969,6 +969,7 @@ def update_packages():
     sys.stderr.write("update_packages in worker: continuing\n")
     try:
         with worker_controller.flaskapp.app_context():
+            worker_controller.set_request_active(False)
             sys.stderr.write("update_packages in worker: importing update\n")
             import docassemble.webapp.update
             sys.stderr.write("update_packages in worker: starting update\n")

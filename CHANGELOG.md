@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.32] - 2021-02-17
+### Fixed
+- Issue with logging messages during post-update restart.
+
 ## [1.2.31] - 2021-02-16
 ### Added
 - The `post` option for `need`.
