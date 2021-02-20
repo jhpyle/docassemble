@@ -3504,7 +3504,10 @@ class DAFile(DAObject):
         """Returns a list of fields that exist in the PDF document"""
         results = list()
         import docassemble.base.pdftk
-        for item in docassemble.base.pdftk.read_fields(self.path()):
+        all_items = docassemble.base.pdftk.read_fields(self.path())
+        if all_items is None:
+            return None
+        for item in all_items:
             the_type = re.sub(r'[^/A-Za-z]', '', str(item[4]))
             if the_type == 'None':
                 the_type = None
