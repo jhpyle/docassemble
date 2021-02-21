@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.2.33] - 2021-02-20
+### Changed
+- When `datatype` is `password`, autocomplete will be turned off.
+### Fixed
+- `code` with `content file` in `raw` mode.
+- `.get_pdf_fields()` raised exception when no fields present.
+
 ## [1.2.32] - 2021-02-17
 ### Fixed
 - Issue with logging messages during post-update restart.

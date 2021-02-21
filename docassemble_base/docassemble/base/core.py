@@ -3505,14 +3505,13 @@ class DAFile(DAObject):
         results = list()
         import docassemble.base.pdftk
         all_items = docassemble.base.pdftk.read_fields(self.path())
-        if all_items is None:
-            return None
-        for item in all_items:
-            the_type = re.sub(r'[^/A-Za-z]', '', str(item[4]))
-            if the_type == 'None':
-                the_type = None
-            result = (item[0], '' if item[1] == 'something' else item[1], item[2], item[3], the_type, item[5])
-            results.append(result)
+        if all_items is not None:
+            for item in all_items:
+                the_type = re.sub(r'[^/A-Za-z]', '', str(item[4]))
+                if the_type == 'None':
+                    the_type = None
+                result = (item[0], '' if item[1] == 'something' else item[1], item[2], item[3], the_type, item[5])
+                results.append(result)
         return results
     def from_url(self, url):
         """Makes the contents of the file the contents of the given URL."""

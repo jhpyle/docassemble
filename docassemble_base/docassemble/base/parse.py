@@ -4510,16 +4510,20 @@ class Question:
             if 'raw' in target and target['raw']:
                 if 'content file' in target:
                     content_file = target['content file']
-                    if not isinstance(content_file, list):
-                        content_file = [content_file]
-                    the_ext = None
-                    for item in content_file:
-                        (the_base, the_ext) = os.path.splitext(item)
-                    if the_ext:
-                        target['raw'] = the_ext
+                    if isinstance(content_file, dict):
                         target['valid formats'] = ['raw']
+                        target['raw'] = '.txt'
                     else:
-                        target['raw'] = False
+                        if not isinstance(content_file, list):
+                            content_file = [content_file]
+                        the_ext = None
+                        for item in content_file:
+                            (the_base, the_ext) = os.path.splitext(item)
+                        if the_ext:
+                            target['raw'] = the_ext
+                            target['valid formats'] = ['raw']
+                        else:
+                            target['raw'] = False
                 else:
                     target['raw'] = False
             else:
@@ -6017,11 +6021,10 @@ class Question:
         try:
             for doc_format in result['formats_to_use']:
                 if doc_format == 'raw':
-                    the_temp = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=attachment['raw'], delete=False)
+                    the_temp = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=result['raw'], delete=False)
                     with open(the_temp.name, 'w', encoding='utf-8') as the_file:
                         the_file.write(result['markdown'][doc_format].lstrip("\n"))
-                    result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + attachment['raw'], the_temp.name, yaml_file_name=self.interview.source.path)
-                    result['raw'] = attachment['raw']
+                    result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + result['raw'], the_temp.name, yaml_file_name=self.interview.source.path)
                     result['content'][doc_format] = result['markdown'][doc_format].lstrip("\n")
                 elif doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
                     if 'fields' in attachment['options']:
@@ -6213,6 +6216,7 @@ class Question:
             if the_filename == '':
                 the_filename = docassemble.base.functions.secure_filename(docassemble.base.functions.space_to_underscore(the_name))
             result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': attachment['valid_formats']}
+            actual_extension = attachment['raw']
             if attachment['content'] is None and 'content file code' in attachment['options']:
                 raw_content = ''
                 the_filenames = eval(attachment['options']['content file code'], the_user_dict)
@@ -6239,6 +6243,7 @@ class Question:
                         the_filename = None
                     if the_filename is None or not os.path.isfile(the_filename):
                         raise DAError("prepare_attachment: error obtaining template file from code: " + repr(the_orig_filename))
+                    (the_base, actual_extension) = os.path.splitext(the_filename)
                     with open(the_filename, 'rU', encoding='utf-8') as the_file:
                         raw_content += the_file.read()
                 the_content = TextObject(raw_content, question=self)
@@ -6262,7 +6267,7 @@ class Question:
             result['mimetype'] = dict();
             result['file'] = dict();
             if attachment['raw']:
-                result['raw'] = attachment['raw']
+                result['raw'] = actual_extension
                 result['formats_to_use'] = ['raw']
             else:
                 result['raw'] = False

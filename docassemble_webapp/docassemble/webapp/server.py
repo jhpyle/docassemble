@@ -6083,7 +6083,7 @@ def index(action_argument=None, refer=None):
         else:
             ml_info = dict()
     something_changed = False
-    if '_tracker' in post_data and user_dict['_internal']['tracker'] != int(post_data['_tracker']):
+    if '_tracker' in post_data and re.search(r'^-?[0-9]+$', post_data['_tracker']) and user_dict['_internal']['tracker'] != int(post_data['_tracker']):
         if user_dict['_internal']['tracker'] > int(post_data['_tracker']):
             logmessage("index: the assemble function has been run since the question was posed.")
         else:

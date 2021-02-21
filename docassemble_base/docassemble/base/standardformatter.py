@@ -2076,6 +2076,10 @@ def input_for(status, field, wide=False, embedded=False):
         extra_checkbox = ''
         extra_radio = ''
         title_text = ''
+    if field.datatype == 'password':
+        autocomplete_off = ' autocomplete="new-password"'
+    else:
+        autocomplete_off = ''
     if hasattr(field, 'choicetype'):
         # logmessage("In a choicetype where field datatype is " + field.datatype)
         # if hasattr(field, 'inputtype'):
@@ -2590,9 +2594,9 @@ def input_for(status, field, wide=False, embedded=False):
                 extra_class = ' ' + custom_types[field.datatype]['input_class']
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if not embedded and field.datatype == 'currency':
-                output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"' + disable_others_data + '/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error text-danger" id="' + escape_id(saveas_string) + '-error"></label>'
+                output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"' + disable_others_data + autocomplete_off + ' /></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="da-has-error text-danger" id="' + escape_id(saveas_string) + '-error"></label>'
             else:
-                output += disable_others_data + '/>'
+                output += disable_others_data + autocomplete_off + ' />'
             if embedded:
                 if field.datatype == 'currency':
                     output += '</span></span>'
