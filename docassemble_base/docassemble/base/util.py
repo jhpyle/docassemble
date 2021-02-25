@@ -396,8 +396,8 @@ class DAWeb(DAObject):
             task_persistent = self.task_persistent
         if task_persistent is None:
             return False
-        if not isinstance(task, bool):
-            raise Exception("DAWeb.call: task_persistent must be boolean")
+        if not isinstance(task, (bool, str)):
+            raise Exception("DAWeb.call: task_persistent must be boolean or string")
         return task_persistent
     def _get_auth(self, auth):
         if auth is None and hasattr(self, 'auth'):

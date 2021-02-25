@@ -55,6 +55,7 @@ DAObject.copy_shallow: "https://docassemble.org/docs/objects.html#DAObject.copy_
 DAObject.copy_deep: "https://docassemble.org/docs/objects.html#DAObject.copy_deep"
 DAObject.attr_name: "https://docassemble.org/docs/objects.html#DAObject.attr_name"
 DAObject.delattr: "https://docassemble.org/docs/objects.html#DAObject.delattr"
+DAObject.getattr_fresh: "https://docassemble.org/docs/objects.html#DAObject.getattr_fresh"
 DAObject.invalidate_attr: "https://docassemble.org/docs/objects.html#DAObject.invalidate_attr"
 DAObject.as_serializable: "https://docassemble.org/docs/objects.html#DAObject.as_serializable"
 DAObject.object_possessive: "https://docassemble.org/docs/objects.html#DAObject.object_possessive"

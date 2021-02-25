@@ -279,6 +279,11 @@ class DAObject:
         for attr in pargs:
             if hasattr(self, attr):
                 invalidate(self.instanceName + '.' + attr)
+    def getattr_fresh(self, attr):
+        """Compute a fresh value of the given attr and return it."""
+        if hasattr(self, attr):
+            docassemble.base.functions.reconsider(self.attr_name(attr))
+        return getattr(self, attr)
     def is_peer_relation(self, target, relationship_type, tree):
         for item in tree.query_peer(tree._and(involves=[self, target], relationship_type=relationship_type)):
             return True
@@ -3526,7 +3531,7 @@ class DAFile(DAObject):
         c.setopt(pycurl.USERAGENT, server.daconfig.get('user agent', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36'))
         c.setopt(pycurl.COOKIEFILE, cookiefile.name)
         c.perform()
-        status_code = curl.getinfo(pycurl.HTTP_CODE)
+        status_code = c.getinfo(pycurl.HTTP_CODE)
         c.close()
         if status_code >= 400:
             raise Exception("from_url: Error %s" % (status_code,))

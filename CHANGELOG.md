@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.34] - 2021-02-25
+### Added
+- The `.getattr_fresh()` method.
+### Fixed
+- Bug in `.from_url()`.
+
 ## [1.2.33] - 2021-02-20
 ### Changed
 - When `datatype` is `password`, autocomplete will be turned off.
