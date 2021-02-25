@@ -73,6 +73,10 @@ fields available include:
 
 * First name
 * Last name
+
+Users with privileges of `admin` or `developer` can also edit other
+fields, including:
+
 * Country Code (must be an official [country code] like `us`)
 * First subdivision (e.g., state)
 * Second subdivision (e.g., county)
