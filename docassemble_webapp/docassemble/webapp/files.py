@@ -491,7 +491,7 @@ def make_package_zip(pkgname, info, author_info, tz_name, current_project='defau
     trimlength = len(directory) + 1
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
-    zf = zipfile.ZipFile(temp_zip.name, mode='w')
+    zf = zipfile.ZipFile(temp_zip, mode='w')
     the_timezone = pytz.timezone(tz_name)
     for root, dirs, files in os.walk(packagedir):
         for file in files:

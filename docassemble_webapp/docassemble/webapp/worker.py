@@ -962,7 +962,7 @@ def reset_server(result):
     return result
 
 @workerapp.task
-def update_packages():
+def update_packages(restart=True):
     sys.stderr.write("update_packages in worker: starting\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
@@ -975,9 +975,10 @@ def update_packages():
             sys.stderr.write("update_packages in worker: starting update\n")
             ok, logmessages, results = docassemble.webapp.update.check_for_updates()
             sys.stderr.write("update_packages in worker: update completed\n")
-            worker_controller.trigger_update(except_for=hostname)
-            sys.stderr.write("update_packages in worker: trigger completed\n")
-            return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results, hostname=hostname)
+            if restart:
+                worker_controller.trigger_update(except_for=hostname)
+                sys.stderr.write("update_packages in worker: trigger completed\n")
+            return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results, hostname=hostname, restart=restart)
     except:
         e = sys.exc_info()[0]
         error_mess = sys.exc_info()[1]

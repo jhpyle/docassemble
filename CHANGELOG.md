@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.2.35] - 2021-02-27
+### Added
+- The `.item_name()` and `.delitem()` methods of `DAList`.
+- The `.item_name()`, `.delitem()`, `.invalidate_item()`, and
+  `.getitem_fresh()` methods of `DADict`.
+- The `restart` option for `/api/package`.
+
 ## [1.2.34] - 2021-02-25
 ### Added
 - The `.getattr_fresh()` method.

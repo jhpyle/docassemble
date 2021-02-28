@@ -14132,7 +14132,7 @@ def update_package_ajax():
         if isinstance(the_result, ReturnValue):
             if the_result.ok:
                 #logmessage("update_package_ajax: success")
-                if START_TIME > session['serverstarttime']:
+                if (not the_result.restart) or START_TIME > session['serverstarttime']:
                     return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
                 else:
                     return jsonify(success=True, status='waiting')
@@ -17763,7 +17763,7 @@ def playground_packages():
                     zippath = tempfile.NamedTemporaryFile(mode="wb", suffix=".zip", delete=True)
                     up_file.save(zippath.name)
                     area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
-                    with zipfile.ZipFile(zippath.name, mode='r') as zf:
+                    with zipfile.ZipFile(zippath, mode='r') as zf:
                         readme_text = ''
                         setup_py = ''
                         extracted = dict()
@@ -20024,7 +20024,7 @@ def logs():
     if LOGSERVER is None and use_zip:
         timezone = get_default_timezone()
         zip_archive = tempfile.NamedTemporaryFile(mode="wb", prefix="datemp", suffix=".zip", delete=False)
-        zf = zipfile.ZipFile(zip_archive.name, mode='w')
+        zf = zipfile.ZipFile(zip_archive, mode='w')
         for f in os.listdir(LOG_DIRECTORY):
             zip_path = os.path.join(LOG_DIRECTORY, f)
             if f.startswith('.') or not os.path.isfile(zip_path):
@@ -23040,7 +23040,7 @@ def translation_file():
         else:
             zip_file = tempfile.NamedTemporaryFile(suffix='.zip', delete=False)
             zip_file_name = docassemble.base.functions.space_to_underscore(os.path.splitext(os.path.basename(re.sub(r'.*:', '', yaml_filename)))[0]) + "_" + tr_lang + ".zip"
-            with zipfile.ZipFile(zip_file.name, mode='w') as zf:
+            with zipfile.ZipFile(zip_file, mode='w') as zf:
                 for item in xliff_files:
                     info = zipfile.ZipInfo(item[1])
                     with open(item[0].name, 'rb') as fp:
@@ -24748,6 +24748,7 @@ def api_package():
         return jsonify(packages)
     if request.method == 'DELETE':
         target = request.args.get('package', None)
+        do_restart = true_or_false(request.args.get('restart', True))
         if target is None:
             return jsonify_with_status("Missing package name.", 400)
         package_list, package_auth = get_package_info()
@@ -24761,12 +24762,16 @@ def api_package():
         if not the_package.can_uninstall:
             return jsonify_with_status("You are not allowed to uninstall that package.", 400)
         uninstall_package(target)
-        result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+        if do_restart:
+            result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+        else:
+            result = docassemble.webapp.worker.update_packages.delay(restart=False)
         return jsonify_task(result)
     if request.method == 'POST':
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
+        do_restart = true_or_false(post_data.get('restart', True))
         num_commands = 0
         if 'update' in post_data:
             num_commands += 1
@@ -24804,7 +24809,10 @@ def api_package():
                         existing_package.limitation = None
                     install_pip_package(existing_package.name, existing_package.limitation)
             db.session.commit()
-            result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+            if do_restart:
+                result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+            else:
+                result = docassemble.webapp.worker.update_packages.delay(restart=False)
             return jsonify_task(result)
         if 'github_url' in post_data:
             github_url = post_data['github_url']
@@ -24819,7 +24827,10 @@ def api_package():
             packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
             if user_can_edit_package(giturl=github_url) and user_can_edit_package(pkgname=packagename):
                 install_git_package(packagename, github_url, branch)
-                result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                if do_restart:
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                else:
+                    result = docassemble.webapp.worker.update_packages.delay(restart=False)
                 return jsonify_task(result)
             else:
                 jsonify_with_status("You do not have permission to install that package.", 403)
@@ -24834,6 +24845,10 @@ def api_package():
             packagename = re.sub(r'[^A-Za-z0-9\_\-\.]', '', packagename)
             if user_can_edit_package(pkgname=packagename):
                 install_pip_package(packagename, limitation)
+                if do_restart:
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                else:
+                    result = docassemble.webapp.worker.update_packages.delay(restart=False)
                 result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                 return jsonify_task(result)
             else:
@@ -24852,7 +24867,10 @@ def api_package():
                 pkgname = get_package_name_from_zip(zippath)
                 if user_can_edit_package(pkgname=pkgname):
                     install_zip_package(pkgname, file_number)
-                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                    if do_restart:
+                        result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                    else:
+                        result = docassemble.webapp.worker.update_packages.delay(restart=False)
                     return jsonify_task(result)
                 return jsonify_with_status("You do not have permission to install that package.", 403)
             except:
@@ -24873,19 +24891,25 @@ def api_package_update_status():
         return jsonify({'status': 'unknown'})
     task_info = json.loads(task_data.decode())
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_info['id'])
-    if result.ready() and START_TIME > task_info['server_start_time']:
-        r.delete(the_key)
+    if result.ready():
         the_result = result.get()
         if isinstance(the_result, ReturnValue):
             if the_result.ok:
+                if the_result.restart and START_TIME <= task_info['server_start_time']:
+                    return jsonify(status='working')
+                r.delete(the_key)
                 return jsonify(status='completed', ok=True, log=summarize_results(the_result.results, the_result.logmessages, html=False))
             elif hasattr(the_result, 'error_message'):
+                r.delete(the_key)
                 return jsonify(status='completed', ok=False, error_message=str(the_result.error_message))
             elif hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
+                r.delete(the_key)
                 return jsonify(status='completed', ok=False, error_message=summarize_results(the_result.results, the_result.logmessages, html=False))
             else:
+                r.delete(the_key)
                 return jsonify(status='completed', ok=False, error_message=str("No error message.  Result is " + str(the_result)))
         else:
+            r.delete(the_key)
             return jsonify(status='completed', ok=False, error_message=str(the_result))
     else:
         return jsonify(status='working')

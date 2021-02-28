@@ -92,6 +92,8 @@ class DAEmpty:
         return DAEmpty()
     def __setitem__(self, index, val):
         return
+    def __delitem__(self, index):
+        return
     def __call__(self, *pargs, **kwargs):
         return DAEmpty()
     def __repr__(self):
@@ -282,7 +284,7 @@ class DAObject:
     def getattr_fresh(self, attr):
         """Compute a fresh value of the given attr and return it."""
         if hasattr(self, attr):
-            docassemble.base.functions.reconsider(self.attr_name(attr))
+            docassemble.base.functions.reconsider(self.instanceName + '.' + attr)
         return getattr(self, attr)
     def is_peer_relation(self, target, relationship_type, tree):
         for item in tree.query_peer(tree._and(involves=[self, target], relationship_type=relationship_type)):
@@ -1119,6 +1121,14 @@ class DAList(DAObject):
         if hasattr(self, 'doing_gathered_and_complete'):
             del self.doing_gathered_and_complete
         return True
+    def item_name(self, item):
+        """Returns a variable name for an item, suitable for use in force_ask() and other functions."""
+        return self.instanceName + '[' + repr(item) + ']'
+    def delitem(self, *pargs):
+        """Deletes items."""
+        for item in reversed([item for item in pargs if item < len(self.elements)]):
+            self.elements.__delitem__(item)
+        self._reset_instance_names()
     def copy(self):
         """Returns a copy of the list."""
         return self.elements.copy()
@@ -1956,6 +1966,24 @@ class DADict(DAObject):
             if isinstance(value, DAObject):
                 value._reset_gathered_recursively()
         return super()._reset_gathered_recursively()
+    def item_name(self, item):
+        """Returns a variable name for an item, suitable for use in force_ask() and other functions."""
+        return self.instanceName + '[' + repr(item) + ']'
+    def delitem(self, *pargs):
+        """Deletes items."""
+        for item in pargs:
+            if item in self.elements:
+                del self[item]
+    def invalidate_item(self, *pargs):
+        """Invalidate items."""
+        for item in pargs:
+            if item in self.elements.keys():
+                invalidate(self.instanceName + '[' + repr(item) + ']')
+    def getitem_fresh(self, item):
+        """Compute a fresh value of the given item and return it."""
+        if item in self.elements:
+            docassemble.base.functions.reconsider(self.instanceName + '[' + repr(item) + ']')
+        return self[item]
     def all_false(self, *pargs, **kwargs):
         """Returns True if the values of all keys are false.  If one or more
         keys are provided as arguments, returns True if all of the
