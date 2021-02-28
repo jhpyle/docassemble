@@ -2181,7 +2181,11 @@ Data:
  - `branch` (optional): if a `github_url` is provided and you want to
    install from a non-standard branch, set `branch` to the name of the
    branch you want to install.
- - `pip` (optional): the name of [Python] package to install from [PyPI].
+ - `pip` (optional): the name of [Python] package to install from
+   [PyPI].
+ - `restart` (optional): set this to `0` if you want to skip the
+   process of restarting the server after installing the package.  By
+   default, the server is restarted.
 
 File data:
  - `zip`: a file upload of a ZIP file containing a package.
@@ -2230,6 +2234,9 @@ Parameters:
    cookie or header).
  - `package`: the name of an already-installed [Python] package that
    you want to uninstall.
+ - `restart` (optional): set this to `0` if you want to skip the
+   process of restarting the server after uninstalling the package.  By
+   default, the server is restarted.
 
 Required privileges:
 - `admin` or

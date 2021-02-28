@@ -316,6 +316,13 @@ Other methods available on a `DAList` are:
 
 {% include side-by-side.html demo="item" %}
 
+* <a name="DAList.item_name"></a><a name="DADict.item_name"></a> -
+  returns the variable name for an item, given the item.  For example,
+  `mylist.item_name(0)` returns `'mylist[0]'`.  This can be useful
+  when calling functions like [`force_ask()`] and [`reconsider()`].
+* <a name="DAList.delitem"></a> - Deletes
+  one or more items by index number.  For example, `mylist.delitem(4,
+  5)` deletes the fifth and sixth items from the list.
 * <a name="DAList.does_verb"></a><a name="DADict.does_verb"></a><a
   name="DASet.does_verb"></a>`does_verb(verb)` - like the
   [`verb_present()`] function, except that it uses the singular or
@@ -963,6 +970,17 @@ is like the `delattr()` method, except it remembers the values of the
 attributes in order to present them as default values to the user when
 the [`question`] that defines the attribute is asked again.
 
+<a name="DAObject.getattr_fresh"></a>The `fresh_getattr()` method
+takes the name of an attribute, calls [`reconsider()`] on the
+attribute and then returns the value of the attribute.
+
+{% highlight yaml %}
+client.getattr_fresh('total_income')
+{% endhighlight %}
+
+This should only be used on attributes that are defined by `code`
+blocks.
+
 <a name="DAObject.pronoun"></a><a
 name="DAObject.pronoun_objective"></a><a
 name="DAObject.pronoun_subjective"></a><a
@@ -1166,6 +1184,22 @@ result, so `fruit.item('apple').seeds` or
 
 For more information about using [`DADict`] objects, see the section
 on [groups].
+
+<a name="DADict.delitem"></a>You can delete one or more items from the
+dictionary using the `delitem()` method.  For example,
+`fruit.delitem('apple', 'orange')` removes the `'apple'` and
+`'orange'` items from the list if they are present.  If an item is not
+present, no error is raised.
+
+<a name="DADict.invalidate_item"></a>Similar to the `invalidate_attr()`
+method, the `invalidate_item()` method runs [`invalidate()`] on the
+given items of the dictionary.
+
+<a name="DADict.getitem_fresh"></a>Similar to the `getattr_fresh()`
+method, the `getitem_fresh()` method runs [`reconsider()`] on the
+given item in the list and then returns the recomputed item.  This
+should only be used if the item value is computed, not posed to the
+user as a question.
 
 ## <a name="DAOrderedDict"></a>DAOrderedDict
 
@@ -3013,6 +3047,11 @@ code: |
     web.post('new_user', data={'name': 'Fred'}, task='user_created')
 {% endhighlight %}
 
+If you set a `task`, you can optionally set the "persistence" of the
+task by setting the `task_persistent` keyword parameter to `True` or
+`False`.  The default is `False`.  For more information, see the
+documentation for the [task-related functions].
+
 You can control what is returned if a request is unsuccessful by
 setting the `on_failure` attribute (or keyword parameter).  If you set
 `on_failure` to `{'success': False}`, then that dictionary will be
@@ -3044,10 +3083,8 @@ The `DAWebError` object has the following attributes:
 * `data`: the data that were were sent in the body of the request (if applicable)
 * `task`: the task that would have been marked as completed if the
   request was successful
-* `task_persistent`: if you set a `task`, you can optionally set
-  the "persistence" of the task by setting this to `True` or a value
-  like `'user'`.  For more information, see the documentation for the
-  [task-related functions].
+* `task_persistent`: the value of `task_persistent` used during the
+  call.
 * `headers`: the headers that were sent in the request
 * `status_code`: the status code of the response, or -1 if there no
   response (e.g., because of a network error)
@@ -6423,3 +6460,6 @@ the `_uid` of the table rather than the `id`.
 [Bates numbered]: https://en.wikipedia.org/wiki/Bates_numbering
 [`.reset_geolocation()`]: #Address.reset_geolocation
 [`sorted()`]: https://docs.python.org/3.8/howto/sorting.html
+[`reconsider()`]: {{ site.baseurl }}/docs/functions.html#reconsider
+[`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
+[`invalidate()`]: {{ site.baseurl }}/docs/functions.html#invalidate

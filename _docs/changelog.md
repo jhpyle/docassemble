@@ -4,6 +4,36 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.35](https://github.com/jhpyle/docassemble/releases/tag/v1.2.35) - 2021-02-27
+
+### Added
+- The `.item_name()` and `.delitem()` methods of `DAList`.
+- The `.item_name()`, `.delitem()`, `.invalidate_item()`, and
+  `.getitem_fresh()` methods of `DADict`.
+- The `restart` option for `/api/package`.
+
+## [1.2.34](https://github.com/jhpyle/docassemble/releases/tag/v1.2.34) - 2021-02-25
+
+### Added
+- The `.getattr_fresh()` method.
+
+### Fixed
+- Bug in `.from_url()`.
+
+## [1.2.33](https://github.com/jhpyle/docassemble/releases/tag/v1.2.33) - 2021-02-20
+
+### Changed
+- When `datatype` is `password`, autocomplete will be turned off.
+
+### Fixed
+- `code` with `content file` in `raw` mode.
+- `.get_pdf_fields()` raised exception when no fields present.
+
+## [1.2.32](https://github.com/jhpyle/docassemble/releases/tag/v1.2.32) - 2021-02-17
+
+### Fixed
+- Issue with logging messages during post-update restart.
+
 ## [1.2.31](https://github.com/jhpyle/docassemble/releases/tag/v1.2.31) - 2021-02-16
 
 ### Added
