@@ -844,7 +844,7 @@ def error_object(err):
     error_message = str(err)
     error_trace = None
     worker_controller.error_notification(err, message=error_message, trace=error_trace)
-    return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace))
+    return(worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, restart=False))
 
 @workerapp.task
 def ocr_finalize(*pargs, **kwargs):
@@ -983,9 +983,9 @@ def update_packages(restart=True):
         e = sys.exc_info()[0]
         error_mess = sys.exc_info()[1]
         sys.stderr.write("update_packages in worker: error was " + str(e) + " with message " + str(error_mess) + "\n")
-        return worker_controller.functions.ReturnValue(ok=False, error_message=str(e))
+        return worker_controller.functions.ReturnValue(ok=False, error_message=str(e), restart=False)
     sys.stderr.write("update_packages in worker: all done\n")
-    return worker_controller.functions.ReturnValue(ok=False, error_message="Reached end")
+    return worker_controller.functions.ReturnValue(ok=False, error_message="Reached end", restart=False)
 
 @workerapp.task
 def email_attachments(user_code, email_address, attachment_info, language, subject=None, body=None, html=None):

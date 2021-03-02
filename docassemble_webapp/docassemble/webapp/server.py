@@ -14132,7 +14132,7 @@ def update_package_ajax():
         if isinstance(the_result, ReturnValue):
             if the_result.ok:
                 #logmessage("update_package_ajax: success")
-                if (not the_result.restart) or START_TIME > session['serverstarttime']:
+                if (hasattr(the_result, 'restart') and not the_result.restart) or START_TIME > session['serverstarttime']:
                     return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
                 else:
                     return jsonify(success=True, status='waiting')
@@ -14672,6 +14672,7 @@ def create_playground_package():
                     else:
                         raise DAError("create_playground_package: GitHub repository could not be found after creating it.")
                 if first_time:
+                    logmessage("Not checking for stored commit code because no target repository exists")
                     pulled_already = False
                 else:
                     current_commit_file = os.path.join(directory_for(area['playgroundpackages'], current_project), '.' + github_package_name)
@@ -14681,10 +14682,13 @@ def create_playground_package():
                         commit_code = commit_code.strip()
                         resp, content = http.request("https://api.github.com/repos/" + commit_repository['full_name'] + "/commits/" + commit_code , "GET")
                         if int(resp['status']) == 200:
+                            logmessage("Stored commit code is valid")
                             pulled_already = True
                         else:
+                            logmessage("Stored commit code is invalid")
                             pulled_already = False
                     else:
+                        logmessage("Commit file not found")
                         pulled_already = False
                 directory = tempfile.mkdtemp()
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
@@ -14789,6 +14793,7 @@ def create_playground_package():
                     the_branch = branch
                 else:
                     the_branch = commit_branch
+                output += "Going to use " + the_branch + " as the branch.\n"
                 if not is_empty:
                     output += "Doing git config user.email " + json.dumps(github_email) + "\n"
                     try:
@@ -17910,8 +17915,10 @@ def playground_packages():
                 expected_name = re.sub(r'docassemble-', '', expected_name)
                 try:
                     if branch is not None:
+                        logmessage("Doing git clone -b " + branch + " " + github_url)
                         output += subprocess.check_output(['git', 'clone', '-b', branch, github_url], cwd=directory, stderr=subprocess.STDOUT).decode()
                     else:
+                        logmessage("Doing git clone " + github_url)
                         output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT).decode()
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
@@ -17928,6 +17935,7 @@ def playground_packages():
                     raise DAError("playground_packages: error running git rev-parse.  " + output)
                 with open(commit_file, 'w', encoding='utf-8') as fp:
                     fp.write(current_commit.strip())
+                logmessage("Wrote " + current_commit.strip() + " to " + commit_file)
             else:
                 logmessage("Did not find a single directory inside repo")
             do_pypi_also = true_or_false(request.args.get('pypi_also', False))
@@ -17938,6 +17946,7 @@ def playground_packages():
                     the_args['pypi'] = '1'
                 if do_install_also:
                     the_args['install'] = '1'
+                area['playgroundpackages'].finalize()
                 return redirect(url_for('create_playground_package', **the_args))
         elif 'pypi' in request.args:
             pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])

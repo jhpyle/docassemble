@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.36] - 2021-03-02
+### Fixed
+- Package install errors not being sent to screen.
+
 ## [1.2.35] - 2021-02-27
 ### Added
 - The `.item_name()` and `.delitem()` methods of `DAList`.
