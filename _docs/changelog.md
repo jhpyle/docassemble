@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.36](https://github.com/jhpyle/docassemble/releases/tag/v1.2.36) - 2021-03-02
+
+### Fixed
+- Package install errors not being sent to screen.
+
 ## [1.2.35](https://github.com/jhpyle/docassemble/releases/tag/v1.2.35) - 2021-02-27
 
 ### Added
