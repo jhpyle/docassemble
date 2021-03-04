@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.37] - 2021-03-03
+### Fixed
+- Default value on combobox fields.
+
 ## [1.2.36] - 2021-03-02
 ### Fixed
 - Package install errors not being sent to screen.
