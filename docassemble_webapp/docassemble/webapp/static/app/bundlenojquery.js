@@ -9330,11 +9330,8 @@ var h,f,l,d=String.fromCharCode;t.exports={version:"2.1.2",encode:a,decode:u}},f
       this.$source.removeAttr("tabindex");
       if (!this.$target.val() && this.$source.data("default")) {
         var defaultVal = this.$source.data("default");
-        console.log("default value is " + defaultVal);
         this.$element.val(defaultVal);
         this.$target.val(defaultVal);
-        /* this.$container.addClass("combobox-selected");
-         * this.selected = true; */
       }
       if (this.$source.attr("disabled") !== undefined) this.disable();
     },
