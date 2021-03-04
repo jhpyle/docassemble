@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.38](https://github.com/jhpyle/docassemble/releases/tag/v1.2.38) - 2021-03-04
+
+### Fixed
+- Default value on combobox fields.
+
 ## [1.2.37](https://github.com/jhpyle/docassemble/releases/tag/v1.2.37) - 2021-03-03
 
 ### Fixed

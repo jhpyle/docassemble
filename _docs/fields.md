@@ -1558,6 +1558,8 @@ The `enable if` and `disable if` field modifiers work just like `show
 if` and `hide if`, except that instead of visibly hiding the fields
 and labels, it disables the input elements.
 
+The use of `code` inside of `enable if` and `disable if` is not supported.
+
 ## <a name="js show if"></a>`js show if`
 
 Sometimes you might want to do more complicated evaluations with
