@@ -296,7 +296,7 @@ Other methods available on a `DAList` are:
   Just like the [Python list] method of the same name.
 * <a name="DAList.insert"></a>`insert()` - inserts an item into the
   list.  Just like the [Python list] method of the same name.
-* <a name="DAList.reverse"></a>`insert()` - reverses the order of
+* <a name="DAList.reverse"></a>`reverse()` - reverses the order of
   elements in the list.  Just like the [Python list] method of the
   same name.
 * <a name="DAList.count"></a>`count()` - returns the number of times a
@@ -306,7 +306,7 @@ Other methods available on a `DAList` are:
   the list; error triggered if list is empty.
 * <a name="DAList.last"></a>`last()` - returns the last item of the
   list; error triggered if list is empty.
-* <a name="DAList.item"></a>`item()` - if `fruit` is a `DAList`,
+* <a name="DAList.item"></a>`item(idx)` - if `fruit` is a `DAList`,
   `fruit.item(2)` is equivalent to `fruit[2]`, except that if `fruit`
   does not have an item `2`, the result will be empty text.  This is
   a helpful method in some contexts, such as fillable PDF forms.
@@ -316,11 +316,11 @@ Other methods available on a `DAList` are:
 
 {% include side-by-side.html demo="item" %}
 
-* <a name="DAList.item_name"></a><a name="DADict.item_name"></a> -
+* <a name="DAList.item_name"></a><a name="DADict.item_name"></a> `item_name(idx)`-
   returns the variable name for an item, given the item.  For example,
   `mylist.item_name(0)` returns `'mylist[0]'`.  This can be useful
   when calling functions like [`force_ask()`] and [`reconsider()`].
-* <a name="DAList.delitem"></a> - Deletes
+* <a name="DAList.delitem"></a> `delitem(idx, ...)`- Deletes
   one or more items by index number.  For example, `mylist.delitem(4,
   5)` deletes the fifth and sixth items from the list.
 * <a name="DAList.does_verb"></a><a name="DADict.does_verb"></a><a
@@ -373,7 +373,7 @@ Other methods available on a `DAList` are:
   no items in the list, it returns 0.  This is useful in questions
   where an iterator `i` is not available, such as question that set
   `.new_object_type`.
-* <a name="DAList.remove"></a>`remove()` -
+* <a name="DAList.remove"></a>`remove(val, ...)` -
   removes the given items from the list, if they are in the list.
 * <a name="DAList.comma_and_list"></a><a
   name="DADict.comma_and_list"></a><a
