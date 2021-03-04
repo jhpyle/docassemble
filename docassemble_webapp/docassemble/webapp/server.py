@@ -9797,7 +9797,7 @@ def index(action_argument=None, refer=None):
             return false;
           });
         });
-        $("#daemailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + json.dumps(word("An e-mail address is required.")) + """, 'email': """ + json.dumps(word("You need to enter a complete e-mail address.")) + """}}, 'errorClass': 'da-has-error'});
+        $("#daemailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + json.dumps(word("An e-mail address is required.")) + """, 'email': """ + json.dumps(word("You need to enter a complete e-mail address.")) + """}}, 'errorClass': 'da-has-error text-danger'});
         $("a[data-embaction]").click(daEmbeddedAction);
         $("a[data-js]").click(daEmbeddedJs);
         $("a.da-review-action").click(daReviewAction);
@@ -10528,7 +10528,7 @@ def index(action_argument=None, refer=None):
             $(element).removeClass('is-invalid');
         },
         errorElement: 'span',
-        errorClass: 'da-has-error',
+        errorClass: 'da-has-error text-danger',
         errorPlacement: function(error, element) {
             $(error).addClass('text-danger');
             var elementName = $(element).attr("name");
@@ -10732,7 +10732,7 @@ def index(action_argument=None, refer=None):
         interview_language = interview_status.question.language
     else:
         interview_language = current_language
-    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error', 'debug': False}
+    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error text-danger', 'debug': False}
     interview_status.exit_url = title_info.get('exit url', None)
     interview_status.exit_link = title_info.get('exit link', 'exit')
     interview_status.exit_label = title_info.get('exit label', word('Exit'))

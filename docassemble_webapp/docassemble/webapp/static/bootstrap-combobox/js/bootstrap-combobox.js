@@ -123,6 +123,11 @@
       this.$element.attr("class", this.$source.attr("class"));
       this.$element.attr("tabindex", this.$source.attr("tabindex"));
       this.$source.removeAttr("tabindex");
+      if (!this.$target.val() && this.$source.data("default")) {
+        var defaultVal = this.$source.data("default");
+        this.$element.val(defaultVal);
+        this.$target.val(defaultVal);
+      }
       if (this.$source.attr("disabled") !== undefined) this.disable();
     },
 
