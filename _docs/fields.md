@@ -1849,6 +1849,7 @@ fields:
     validate: |
       lambda y: True if not y.isnumeric() else validation_error("Please include a unit. E.g., 180 pounds")
   - Height: height
+    validate: | 
       lambda y: True if not y.isnumeric() else validation_error("Please include a unit. E.g., 6 feet 1 inch")
 {% endhighlight %}
 
