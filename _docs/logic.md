@@ -1291,7 +1291,7 @@ forget others.
 [`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
 [`action_menu_item()`]: {{ site.baseurl }}/docs/functions.html#action_menu_item
 [`menu_items`]: {{ site.baseurl }}/docs/special.html#menu_items
-[`review`]: {{ site.baseurl }}/docs/fields.html#menu_items
+[`review`]: {{ site.baseurl }}/docs/fields.html#review
 [`reset` initial block]: {{ site.baseurl }}/docs/initial.html#reset
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [package]: {{ site.baseurl }}/docs/packages.html
