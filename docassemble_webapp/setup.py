@@ -22,6 +22,8 @@ install_requires = [
     "azure-common==1.1.26",
     "azure-core==1.9.0",
     "azure-nspkg==3.0.2",
+    "azure-identity==1.5.0",
+    "azure-keyvault-secrets==4.2.0",
     "azure-storage-blob==12.6.0",
     "Babel==2.9.0",
     "bcrypt==3.2.0",
