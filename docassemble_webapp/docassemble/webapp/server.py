@@ -11187,7 +11187,11 @@ def get_history(interview, interview_status):
     seeking_len = len(interview_status.seeking)
     if seeking_len:
         starttime = interview_status.seeking[0]['time']
+        seen_done = False
         for stage in interview_status.seeking:
+            if seen_done:
+                output = ''
+                seen_done = False
             index += 1
             if index < seeking_len and 'reason' in interview_status.seeking[index] and interview_status.seeking[index]['reason'] in ('asking', 'running') and interview_status.seeking[index]['question'] is stage['question'] and 'question' in stage and 'reason' in stage and stage['reason'] == 'considering':
                 continue
@@ -11223,6 +11227,7 @@ def get_history(interview, interview_status):
                 output += "          <h5>Needed definition of <code>" + str(stage['variable']) + "</code>" + the_time + "</h5>\n"
             elif 'done' in stage:
                 output += "          <h5>Completed processing" + the_time + "</h5>\n"
+                seen_done = True
     return output
 
 def is_mobile_or_tablet():
