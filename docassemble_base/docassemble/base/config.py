@@ -160,6 +160,45 @@ def load(**kwargs):
                 override_config(daconfig, null_messages, key, env_var, pre_key='azure')
         if env_exists('KUBERNETES'):
             override_config(daconfig, null_messages, 'kubernetes', 'KUBERNETES')
+    s3_config = daconfig.get('s3', None)
+    if not s3_config or ('enable' in s3_config and not s3_config['enable']):
+        S3_ENABLED = False
+    else:
+        S3_ENABLED = True
+    gc_config = daconfig.get('google cloud', None)
+    if not gc_config or ('enable' in gc_config and not gc_config['enable']) or not ('access key id' in gc_config and gc_config['access key id']) or not ('secret access key' in gc_config and gc_config['secret access key']):
+        GC_ENABLED = False
+    else:
+        GC_ENABLED = True
+    if 'azure' in daconfig and not isinstance(daconfig['azure'], dict):
+        config_error('azure must be a dict')
+    azure_config = daconfig.get('azure', None)
+    if not isinstance(azure_config, dict) or ('enable' in azure_config and not azure_config['enable']) or 'account name' not in azure_config or azure_config['account name'] is None or 'account key' not in azure_config or azure_config['account key'] is None:
+        AZURE_ENABLED = False
+    else:
+        AZURE_ENABLED = True
+    if daconfig.get('ec2', False) or (env_true_false('ENVIRONMENT_TAKES_PRECEDENCE') and env_true_false('EC2')):
+        h = httplib2.Http()
+        resp, content = h.request(daconfig.get('ec2 ip url', "http://169.254.169.254/latest/meta-data/local-hostname"), "GET")
+        if resp['status'] and int(resp['status']) == 200:
+            hostname = content.decode()
+        else:
+            config_error("Could not get hostname from ec2")
+            sys.exit(1)
+    elif daconfig.get('kubernetes', False) or (env_true_false('ENVIRONMENT_TAKES_PRECEDENCE') and env_true_false('KUBERNETES')):
+        hostname = socket.gethostbyname(socket.gethostname())
+    else:
+        hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
+    if S3_ENABLED:
+        import docassemble.webapp.amazon
+        cloud = docassemble.webapp.amazon.s3object(s3_config)
+    elif AZURE_ENABLED:
+        import docassemble.webapp.microsoft
+        cloud = docassemble.webapp.microsoft.azureobject(azure_config)
+        if ('key vault name' in azure_config and azure_config['key vault name'] is not None and 'managed identity' in azure_config and azure_config['managed identity'] is not None):
+            daconfig = cloud.load_with_secrets(daconfig)
+    else:
+        cloud = None
     if 'suppress error notificiations' in daconfig and isinstance(daconfig['suppress error notificiations'], list):
         ok = True
         for item in daconfig['suppress error notificiations']:
@@ -297,16 +336,6 @@ def load(**kwargs):
     #         if key[1] not in daconfig['s3'] or daconfig['s3'][key[1]] != val:
     #             daconfig['s3'][key[1]] = val
     #             changed = True
-    s3_config = daconfig.get('s3', None)
-    if not s3_config or ('enable' in s3_config and not s3_config['enable']):
-        S3_ENABLED = False
-    else:
-        S3_ENABLED = True
-    gc_config = daconfig.get('google cloud', None)
-    if not gc_config or ('enable' in gc_config and not gc_config['enable']) or not ('access key id' in gc_config and gc_config['access key id']) or not ('secret access key' in gc_config and gc_config['secret access key']):
-        GC_ENABLED = False
-    else:
-        GC_ENABLED = True
     # for key in [['AZURECONTAINER', 'container'], ['AZUREACCOUNTKEY', 'account key'], ['AZUREACCOUNTNAME', 'account name'], ['AZUREENABLE', 'enable']]:
     #     if key[0] in os.environ:
     #         if 'azure' not in daconfig:
@@ -315,38 +344,11 @@ def load(**kwargs):
     #         if key[1] not in daconfig['azure'] or daconfig['azure'][key[1]] != val:
     #             daconfig['azure'][key[1]] = val
     #             changed = True
-    if 'azure' in daconfig and not isinstance(daconfig['azure'], dict):
-        config_error('azure must be a dict')
-    azure_config = daconfig.get('azure', None)
-    if not isinstance(azure_config, dict) or ('enable' in azure_config and not azure_config['enable']) or 'account name' not in azure_config or azure_config['account name'] is None or 'account key' not in azure_config or azure_config['account key'] is None:
-        AZURE_ENABLED = False
-    else:
-        AZURE_ENABLED = True
     if 'db' not in daconfig:
         daconfig['db'] = dict(name="docassemble", user="docassemble", password="abc123")
     dbtableprefix = daconfig['db'].get('table prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
-    if daconfig.get('ec2', False) or (env_true_false('ENVIRONMENT_TAKES_PRECEDENCE') and env_true_false('EC2')):
-        h = httplib2.Http()
-        resp, content = h.request(daconfig.get('ec2 ip url', "http://169.254.169.254/latest/meta-data/local-hostname"), "GET")
-        if resp['status'] and int(resp['status']) == 200:
-            hostname = content.decode()
-        else:
-            config_error("Could not get hostname from ec2")
-            sys.exit(1)
-    elif daconfig.get('kubernetes', False) or (env_true_false('ENVIRONMENT_TAKES_PRECEDENCE') and env_true_false('KUBERNETES')):
-        hostname = socket.gethostbyname(socket.gethostname())
-    else:
-        hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
-    if S3_ENABLED:
-        import docassemble.webapp.amazon
-        cloud = docassemble.webapp.amazon.s3object(s3_config)
-    elif AZURE_ENABLED:
-        import docassemble.webapp.microsoft
-        cloud = docassemble.webapp.microsoft.azureobject(azure_config)
-    else:
-        cloud = None
     if cloud is not None:
         if 'host' not in daconfig['db'] or daconfig['db']['host'] is None:
             key = cloud.get_key('hostname-sql')

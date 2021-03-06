@@ -4,12 +4,23 @@ import io
 import time
 import pytz
 import mimetypes
+import re
+import yaml
 from azure.storage.blob import BlobServiceClient, BlobSasPermissions, ContentSettings, generate_blob_sas
+from azure.identity import ManagedIdentityCredential
+from azure.keyvault.secrets import SecretClient
 
 epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
 
 class azureobject(object):
     def __init__(self, azure_config):
+        if ('key vault name' in azure_config and azure_config['key vault name'] is not None and 'managed identity' in azure_config and azure_config['managed identity'] is not None):
+            self.credential = ManagedIdentityCredential()
+            self.key_vault_name = azure_config.get('key vault name', None)
+            self.key_vault_base_url = 'https://%s.vault.azure.net/' % (self.key_vault_name)
+            self.secret_client = SecretClient(vault_url=self.key_vault_base_url, credential=self.credential)
+            self.key_vault_reference_regex = r'(\@Microsoft\.KeyVault\(SecretUri=https:\/\/([\w-]+)\.vault\.azure\.net\/secrets\/([\w-]+)\/(\w+)?\))'
+            azure_config = self.load_with_secrets(azure_config)
         if ('account name' in azure_config and azure_config['account name'] is not None and 'account key' in azure_config and azure_config['account key'] is not None and 'container' in azure_config and azure_config['container'] is not None) or ('connection string' in azure_config and azure_config['connection string'] is not None and 'container' in azure_config and azure_config['container'] is not None):
             connection_string = azure_config.get('connection string', None)
             if not connection_string:
@@ -43,6 +54,17 @@ class azureobject(object):
         for blob in self.container_client.list_blobs(name_starts_with=prefix):
             output.append(azurekey(self, blob.name))
         return output
+    def get_secret(self, key_vault_reference):
+        new_secret = azuresecret(self, key_vault_reference)
+        return new_secret.get_secret_as_string()
+    def replace_secrets(self, match):
+        match = match.groups()
+        return self.get_secret(match[0])
+    def load_with_secrets(self, config):
+        config_dump_raw = yaml.dump(config)
+        config_dump_replace_secrets = re.sub(self.key_vault_reference_regex, self.replace_secrets, config_dump_raw)
+        loaded_config_with_secrets = yaml.load(config_dump_replace_secrets, Loader=yaml.FullLoader)
+        return loaded_config_with_secrets
 
 class azurekey(object):
     def __init__(self, azure_object, key_name, load=True):
@@ -115,3 +137,35 @@ class azurekey(object):
             content_type=content_type
         )
         return self.blob_client.url + '?' + token
+
+class azuresecret(object):
+    def __init__(self, azure_object, key_vault_reference):
+        self.azure_object = azure_object
+        self.secret_client = azure_object.secret_client
+        self.key_vault_reference = key_vault_reference
+        self.key_vault_reference_regex = azure_object.key_vault_reference_regex
+        self.secret = None
+        self.secret_value = None
+        self.reference_secret_name = None
+        self.reference_secret_version= None
+
+    def set_secret_reference_components(self):
+        secret_regex=re.compile(self.key_vault_reference_regex)
+        secret_match=secret_regex.search(self.key_vault_reference)
+        if secret_match is not None:
+            self.reference_vault_name = secret_match.groups()[1]
+            self.reference_secret_name = secret_match.groups()[2]
+            if len(secret_match.groups()) > 3:
+                self.reference_secret_version = secret_match.groups()[3]
+        else:
+            raise Exception("Invalid format for Azure Key Vault reference value in configuration!")
+
+    def get_secret_from_vault(self):
+        self.secret = self.secret_client.get_secret(self.reference_secret_name, self.reference_secret_version)
+        self.secret_value = self.secret.value
+
+    def get_secret_as_string(self):
+        if self.secret is None:
+            self.set_secret_reference_components()
+            self.get_secret_from_vault()
+        return self.secret_value
