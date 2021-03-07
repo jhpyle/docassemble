@@ -674,7 +674,17 @@ Playground.
 
 ![Sidebar in Word Online]({{ site.baseurl }}/img/playground-word-online-sidebar.png){: .maybe-full-width }
 
-To enable this in Microsoft Word, first go to [Utilities] and
+In order for this to function, you will need to make some changes to
+your [Configuration] to allow your site to be "embedded" in another
+site.  Your [Configuration] will need to contain:
+
+{% highlight yaml %}
+allow embedding: True
+cross site domains:
+  - https://word-edit.officeapps.live.com/
+{% endhighlight %}
+
+To enable the sidebar in Microsoft Word, first go to [Utilities] and
 [download the XML manifest file].  This small data file represents an
 "add-in" for Microsoft Word.
 
