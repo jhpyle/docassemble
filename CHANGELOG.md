@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.39] - 2021-03-06
+### Fixed
+- Issues with Word add-in.
+
 ## [1.2.38] - 2021-03-04
 ### Fixed
 - Default value on combobox fields.

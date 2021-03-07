@@ -174,6 +174,9 @@ class AddinUploadForm(FlaskForm):
     content = HiddenField()
     filename = HiddenField()
 
+class FunctionFileForm(FlaskForm):
+    pass
+
 class APIKey(FlaskForm):
     action = HiddenField()
     key = HiddenField()

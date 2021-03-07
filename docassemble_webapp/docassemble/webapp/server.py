@@ -831,7 +831,7 @@ from flask_login import login_user, logout_user, current_user
 from docassemble_flask_user import login_required, roles_required
 from docassemble_flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 #from flask_wtf.csrf import generate_csrf
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm, RenameProject, DeleteProject, NewProject
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm, FunctionFileForm, RenameProject, DeleteProject, NewProject
 import docassemble_flask_user.signals
 import docassemble_flask_user.emails
 import docassemble_flask_user.views
@@ -5495,6 +5495,8 @@ def setup_variables():
 def apply_security_headers(response):
     if app.config['SESSION_COOKIE_SECURE']:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000'
+    if 'embed' in g:
+        return response
     if daconfig.get('allow embedding', False) is not True:
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self';"
     elif daconfig.get('cross site domains', []):
@@ -16676,16 +16678,21 @@ def playground_download(current_project, userid, filename):
     return ('File not found', 404)
 
 @app.route('/officefunctionfile', methods=['GET', 'POST'])
+@cross_origin(origins='*', methods=['GET', 'POST', 'HEAD'], automatic_options=True)
 def playground_office_functionfile():
+    g.embed = True
     docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
-    response = make_response(render_template('pages/officefunctionfile.html', current_project=get_current_project(), page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', daconfig.get('url root', get_base_url()))), 200)
+    functionform = FunctionFileForm(request.form)
+    response = make_response(render_template('pages/officefunctionfile.html', current_project=get_current_project(), page_title=word("Docassemble Playground"), tab_title=word("Playground"), parent_origin=daconfig.get('office addin url', daconfig.get('url root', get_base_url())), form=functionform), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
 @app.route('/officetaskpane', methods=['GET', 'POST'])
+@cross_origin(origins='*', methods=['GET', 'POST', 'HEAD'], automatic_options=True)
 def playground_office_taskpane():
+    g.embed = True
     docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
@@ -16695,9 +16702,11 @@ def playground_office_taskpane():
     return response
 
 @app.route('/officeaddin', methods=['GET', 'POST'])
+@cross_origin(origins='*', methods=['GET', 'POST', 'HEAD'], automatic_options=True)
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_office_addin():
+    g.embed = True
     setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
