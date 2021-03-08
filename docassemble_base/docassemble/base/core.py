@@ -1223,7 +1223,7 @@ class DAList(DAObject):
             return self
         if isinstance(other, DAList):
             other._trigger_gather()
-            the_list = DAList(elements=self.elements + other.elements, gathered=True, auto_gather=False)
+            the_list = self.__class__(elements=self.elements + other.elements, gathered=True, auto_gather=False)
             the_list.set_random_instance_name()
             return the_list
         return self.elements + other
@@ -1490,7 +1490,7 @@ class DAList(DAObject):
         """Returns a list of the elements that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
             complete_attribute = self.complete_attribute
-        items = DAList(self.instanceName)
+        items = self.__class__(self.instanceName)
         for item in self.elements:
             if item is None:
                 continue
@@ -3140,21 +3140,21 @@ class DASet(DAObject):
 
         """
         self._trigger_gather()
-        return DASet(elements=self.elements.union(setify(other_set)))
+        return self.__class__(elements=self.elements.union(setify(other_set)))
     def intersection(self, other_set):
         """Returns a Python set consisting of the elements of the current set
         that also exist in the other_set.
 
         """
         self._trigger_gather()
-        return DASet(elements=self.elements.intersection(setify(other_set)))
+        return self.__class__(elements=self.elements.intersection(setify(other_set)))
     def difference(self, other_set):
         """Returns a Python set consisting of the elements of the current set
         that do not exist in the other_set.
 
         """
         self._trigger_gather()
-        return DASet(elements=self.elements.difference(setify(other_set)))
+        return self.__class__(elements=self.elements.difference(setify(other_set)))
     def isdisjoint(self, other_set):
         """Returns True if no elements overlap between the current set and the
         other_set.  Otherwise, returns False."""
