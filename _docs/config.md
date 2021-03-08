@@ -2420,6 +2420,15 @@ are two networks, `lo` and `eth0`.  Setting `expose websockets` to
 `true` will cause the server to connect to whatever address is
 associated with the `eth0` network.
 
+## <a name="http port"></a>Alternative port for HTTP
+
+By default, if you are not using [HTTPS], the **docassemble** web
+application runs on port 80.  When running [Docker], you can map any
+port on the host to port 80 in the container.  However, if you are
+using a system like Heroku which expects HTTP to be available at a
+specific port other than port 80, you can set `http port` to the port
+number.
+
 ## <a name="log"></a>Directory for log files
 
 **docassemble** writes messages to a log files stored in the directory

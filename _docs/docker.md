@@ -911,6 +911,13 @@ your container for the new configuration to take effect.
 * <a name="DAWEBSOCKETSPORT"></a>`DAWEBSOCKETSPORT`: You can set this
   if you need to manually specify the port on which the `websockets`
   service runs.  See the [`websockets port`] configuration directive.
+* <a name="PORT"></a>`PORT`: By default, if you are not using [HTTPS],
+  the **docassemble** web application runs on port 80.  When running
+  Docker, you can map any port on the host to port 80 in the
+  container.  However, if you are using a system like Heroku which
+  expects the Docker container to use the `PORT` environment variable,
+  you can set `PORT` in your `env.list` file.  See the [`http port`]
+  configuration directive.
 * <a name="USEMINIO"></a>`USEMINIO`: Set this to `true` if you are
   setting [`S3ENDPOINTURL`] to point to [MinIO] and you would like the
   bucket to be created when the container starts.  See the [`use
@@ -2316,3 +2323,4 @@ line), as the containers depend on the images.
 [Helm]: https://helm.sh/
 [`BEHINDHTTPSLOADBALANCER`]: #BEHINDHTTPSLOADBALANCER
 [BusyBox]: https://hub.docker.com/_/busybox
+[`http port`]: {{ site.baseurl }}/docs/config.html#http port
