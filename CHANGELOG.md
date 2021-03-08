@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.40] - 2021-03-08
+### Added
+- Support for the `PORT` Docker environment variable, which defaults
+  to port 80.
+
 ## [1.2.39] - 2021-03-06
 ### Fixed
 - Issues with Word add-in.
