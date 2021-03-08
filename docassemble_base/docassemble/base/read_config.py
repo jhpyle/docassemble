@@ -116,6 +116,8 @@ if __name__ == "__main__":
         print('export DAEXPOSEWEBSOCKETS=true')
     if 'websockets ip' in daconfig and daconfig['websockets ip']:
         print('export DAWEBSOCKETSIP="' + str(daconfig['websockets ip']) + '"')
+    if 'http port' in daconfig and daconfig['http port']:
+        print('export PORT="' + str(daconfig['http port']) + '"')
     if 'stable version' in daconfig and daconfig['stable version']:
         print('export DASTABLEVERSION=true')
     if 'nginx ssl protocols' in daconfig and daconfig['nginx ssl protocols']:

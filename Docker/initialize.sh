@@ -605,6 +605,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
 		    -e 's@{{DASSLPROTOCOLS}}@'"${DASSLPROTOCOLS}"'@' \
                     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
                     -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+                    -e 's@{{DALISTENPORT}}@'"${PORT:-80}"'@' \
                     "${DA_ROOT}/config/nginx-ssl.dist" > "/etc/nginx/sites-available/docassemblessl"
                 rm -f /etc/letsencrypt/da_using_lets_encrypt
             fi
@@ -617,6 +618,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                     -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
                     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
                     -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+                    -e 's@{{DALISTENPORT}}@'"${PORT:-80}"'@' \
                     "${DA_ROOT}/config/nginx-http.dist" > "/etc/nginx/sites-available/docassemblehttp"
                 rm -f /etc/letsencrypt/da_using_lets_encrypt
             fi
@@ -643,6 +645,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                     -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
                     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
                     -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+                    -e 's@{{DALISTENPORT}}@'"${PORT:-80}"'@' \
                     "${DA_ROOT}/config/nginx-http.dist" > "/etc/nginx/sites-available/docassemblehttp"
             fi
         fi
@@ -1065,7 +1068,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
     echo "43" >&2
 
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
-        echo "Listen 80" > /etc/apache2/ports.conf
+        echo "Listen ${PORT:-80}" > /etc/apache2/ports.conf
         if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
             WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
             if [ "${WSGI_VERSION}" != '4.6.5-1' ]; then
@@ -1110,7 +1113,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
             echo -e "LoadModule wsgi_module ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so" >> /etc/apache2/conf-available/docassemble.conf
         fi
         echo -e "WSGIPythonHome ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}" >> /etc/apache2/conf-available/docassemble.conf
-        echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}\nDefine DAWEBSOCKETSIP ${DAWEBSOCKETSIP}\nDefine DAWEBSOCKETSPORT ${DAWEBSOCKETSPORT}\nDefine DACROSSSITEDOMAINVALUE *" >> /etc/apache2/conf-available/docassemble.conf
+        echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}\nDefine DAWEBSOCKETSIP ${DAWEBSOCKETSIP}\nDefine DAWEBSOCKETSPORT ${DAWEBSOCKETSPORT}\nDefine DACROSSSITEDOMAINVALUE *\nDefine DALISTENPORT ${PORT:-80}" >> /etc/apache2/conf-available/docassemble.conf
         if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
             echo "Listen 8081" >> /etc/apache2/ports.conf
             a2ensite docassemble-redirect

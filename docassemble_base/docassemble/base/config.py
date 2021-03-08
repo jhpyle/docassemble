@@ -633,6 +633,8 @@ def load(**kwargs):
             override_config(daconfig, messages, 'web server', 'DAWEBSERVER')
         if env_exists('DASQLPING'):
             override_config(daconfig, messages, 'sql ping', 'DASQLPING')
+        if env_exists('PORT'):
+            override_config(daconfig, messages, 'http port', 'PORT')
         env_messages = messages
     return
 

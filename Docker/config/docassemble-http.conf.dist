@@ -1,5 +1,5 @@
 ServerName ${DAHOSTNAME}
-<VirtualHost *:80>
+<VirtualHost *:${DALISTENPORT}>
     ServerAdmin ${DASERVERADMIN}
     ServerName ${DAHOSTNAME}
     DocumentRoot /var/www/html
