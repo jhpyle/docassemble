@@ -1221,9 +1221,12 @@ class DAList(DAObject):
         self._trigger_gather()
         if isinstance(other, DAEmpty):
             return self
-        if isinstance(other, DAList):
+        if isinstance(other, DAList) or isinstance(other, self.__class__):
             other._trigger_gather()
-            the_list = self.__class__(elements=self.elements + other.elements, gathered=True, auto_gather=False)
+            if isinstance(other, self.__class__):
+                the_list = self.__class__(elements=self.elements + other.elements, gathered=True, auto_gather=False)
+            else:
+                the_list = DAList(elements=self.elements + other.elements, gathered=True, auto_gather=False)
             the_list.set_random_instance_name()
             return the_list
         return self.elements + other
