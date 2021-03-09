@@ -34,6 +34,7 @@ import docassemble.base.pdftk
 import docassemble.base.file_docx
 from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError, DAAttributeError, DAIndexError
 import docassemble.base.functions
+import docassemble.base.util
 from docassemble.base.functions import pickleable_objects, word, get_language, server, RawValue, get_config
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import MyPandoc, word_to_markdown
@@ -992,6 +993,7 @@ class InterviewStatus:
                 if field.datatype in ('checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and self.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in self.extras) or ('maxlength' in field.extras and 'maxlength' in self.extras)))):
                     if hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in self.extras) or ('maxlength' in field.extras and 'maxlength' in self.extras)):
                         checkbox_messages = dict()
+                        checkbox_rules = dict()
                         if 'minlength' in field.extras and 'minlength' in self.extras and 'maxlength' in field.extras and 'maxlength' in self.extras and self.extras['minlength'][field.number] == self.extras['maxlength'][field.number] and self.extras['minlength'][field.number] > 0:
                             if 'nota' not in self.extras:
                                 self.extras['nota'] = dict()
@@ -1017,26 +1019,26 @@ class InterviewStatus:
                 if field.datatype == 'date':
                     the_field['validation_messages']['date'] = field.validation_message('date', self, word("You need to enter a valid date."))
                     if hasattr(field, 'extras') and 'min' in field.extras and 'min' in self.extras and 'max' in field.extras and 'max' in self.extras and field.number in self.extras['min'] and field.number in self.extras['max']:
-                        the_field['validation_messages']['minmax'] = field.validation_message('date minmax', self, word("You need to enter a date between %s and %s."), parameters=(format_date(self.extras['min'][field.number], format='medium'), format_date(self.extras['max'][field.number], format='medium')))
+                        the_field['validation_messages']['minmax'] = field.validation_message('date minmax', self, word("You need to enter a date between %s and %s."), parameters=(docassemble.base.util.format_date(self.extras['min'][field.number], format='medium'), docassemble.base.util.format_date(self.extras['max'][field.number], format='medium')))
                     else:
                         was_defined = dict()
                         for key in ['min', 'max']:
                             if hasattr(field, 'extras') and key in field.extras and key in self.extras and field.number in self.extras[key]:
                                 was_defined[key] = True
                                 if key == 'min':
-                                    the_field['validation_messages']['min'] = field.validation_message('date min', self, word("You need to enter a date on or after %s."), parameters=tuple([format_date(self.extras[key][field.number], format='medium')]))
+                                    the_field['validation_messages']['min'] = field.validation_message('date min', self, word("You need to enter a date on or after %s."), parameters=tuple([docassemble.base.util.format_date(self.extras[key][field.number], format='medium')]))
                                 elif key == 'max':
-                                    the_field['validation_messages']['max'] = field.validation_message('date max', self, word("You need to enter a date on or before %s."), parameters=tuple([format_date(self.extras[key][field.number], format='medium')]))
+                                    the_field['validation_messages']['max'] = field.validation_message('date max', self, word("You need to enter a date on or before %s."), parameters=tuple([docassemble.base.util.format_date(self.extras[key][field.number], format='medium')]))
                         if len(was_defined) == 0 and 'default date min' in self.question.interview.options and 'default date max' in self.question.interview.options:
-                            the_field['min'] = format_date(self.question.interview.options['default date min'], format='yyyy-MM-dd')
-                            the_field['max'] = format_date(self.question.interview.options['default date max'], format='yyyy-MM-dd')
-                            the_field['validation_messages']['minmax'] = field.validation_message('date minmax', self, word("You need to enter a date between %s and %s."), parameters=(format_date(self.question.interview.options['default date min'], format='medium'), format_date(self.question.interview.options['default date max'], format='medium')))
+                            the_field['min'] = docassemble.base.util.format_date(self.question.interview.options['default date min'], format='yyyy-MM-dd')
+                            the_field['max'] = docassemble.base.util.format_date(self.question.interview.options['default date max'], format='yyyy-MM-dd')
+                            the_field['validation_messages']['minmax'] = field.validation_message('date minmax', self, word("You need to enter a date between %s and %s."), parameters=(docassemble.base.util.format_date(self.question.interview.options['default date min'], format='medium'), docassemble.base.util.format_date(self.question.interview.options['default date max'], format='medium')))
                         elif 'max' not in was_defined and 'default date max' in self.question.interview.options:
-                            the_field['max'] = format_date(self.question.interview.options['default date max'], format='yyyy-MM-dd')
-                            the_field['validation_messages']['max'] = field.validation_message('date max', self, word("You need to enter a date on or before %s."), parameters=tuple([format_date(self.question.interview.options['default date max'], format='medium')]))
+                            the_field['max'] = docassemble.base.util.format_date(self.question.interview.options['default date max'], format='yyyy-MM-dd')
+                            the_field['validation_messages']['max'] = field.validation_message('date max', self, word("You need to enter a date on or before %s."), parameters=tuple([docassemble.base.util.format_date(self.question.interview.options['default date max'], format='medium')]))
                         elif 'min' not in was_defined and 'default date min' in self.question.interview.options:
-                            the_field['min'] = format_date(self.question.interview.options['default date min'], format='yyyy-MM-dd')
-                            the_field['validation_messages']['min'] = field.validation_message('date min', self, word("You need to enter a date on or after %s."), parameters=tuple([format_date(self.question.interview.options['default date min'], format='medium')]))
+                            the_field['min'] = docassemble.base.util.format_date(self.question.interview.options['default date min'], format='yyyy-MM-dd')
+                            the_field['validation_messages']['min'] = field.validation_message('date min', self, word("You need to enter a date on or after %s."), parameters=tuple([docassemble.base.util.format_date(self.question.interview.options['default date min'], format='medium')]))
                 if field.datatype == 'time':
                     the_field['validation_messages']['time'] = field.validation_message('time', self, word("You need to enter a valid time."))
                 if field.datatype in ['datetime', 'datetime-local']:

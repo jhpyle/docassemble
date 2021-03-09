@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.41] - 2021-03-09
+### Fixed
+- Bug in 1.2.40.
+
 ## [1.2.40] - 2021-03-08
 ### Added
 - Support for the `PORT` Docker environment variable, which defaults
