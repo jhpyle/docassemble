@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.41](https://github.com/jhpyle/docassemble/releases/tag/v1.2.41) - 2021-03-09
+
+### Fixed
+- Bug in 1.2.40.
+
 ## [1.2.40](https://github.com/jhpyle/docassemble/releases/tag/v1.2.40) - 2021-03-08
 
 ### Added
