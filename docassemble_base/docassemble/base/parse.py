@@ -5190,7 +5190,7 @@ class Question:
                 if hasattr(field, 'action'):
                     if 'action' not in extras:
                         extras['action'] = dict()
-                    extras['action'][field.number] = substitute_vars(json.dumps(field.action), self.is_generic, the_x, iterators)
+                    extras['action'][field.number] = json.dumps(substitute_vars_action(field.action, self.is_generic, the_x, iterators))
                 if hasattr(field, 'extras'):
                     if 'show_if_js' in field.extras:
                         if 'show_if_js' not in extras:
@@ -8551,6 +8551,29 @@ def substitute_vars(var, is_generic, the_x, iterators, last_only=False):
                 #var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + repr(the_iterator) + ']', var)
                 var = re.sub(r'\[' + list_of_indices[indexno] + r'\]', '[' + str(iterators[indexno]) + ']', var)
     return var
+
+def substitute_vars_action(action, is_generic, the_x, iterators):
+    if isinstance(action, str):
+        return substitute_vars(action, is_generic, the_x, iterators)
+    elif isinstance(action, dict):
+        new_dict = dict()
+        for key, val in action.items():
+            if key == 'action' and not key.startswith('_da_'):
+                new_dict[key] = substitute_vars_action(val, is_generic, the_x, iterators)
+            elif key == 'arguments' and isinstance(val, dict) and 'variables' in val and len(val) == 1:
+                new_dict[key] = substitute_vars_action(val, is_generic, the_x, iterators)
+            elif key == 'variables' and isinstance(val, list):
+                new_dict[key] = substitute_vars_action(val, is_generic, the_x, iterators)
+            else:
+                new_dict[key] = val
+        return new_dict
+    elif isinstance(action, list):
+        new_list = list()
+        for item in action:
+            new_list.append(substitute_vars_action(item, is_generic, the_x, iterators))
+        return new_list
+    else:
+        return action
 
 def reproduce_basics(interview, new_interview):
     new_interview.metadata = interview.metadata

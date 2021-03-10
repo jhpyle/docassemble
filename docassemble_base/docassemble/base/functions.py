@@ -647,8 +647,14 @@ def user_has_privilege(*pargs):
     has any of the privileges, False otherwise."""
     privileges = list()
     for parg in pargs:
-        if type(parg) is list:
+        if isinstance(parg, list):
             arg_list = parg
+        elif isinstance(parg, str):
+            arg_list = [parg]
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, Iterable):
+            arg_list = list()
+            for sub_parg in parg:
+                arg_list.append(str(sub_parg))
         else:
             arg_list = [parg]
         for arg in arg_list:
@@ -768,10 +774,16 @@ def chat_partners_available(*pargs, **kwargs):
     if type(partner_roles) is not list:
         partner_roles = [partner_roles]
     for parg in pargs:
-        if type(parg) is not list:
-            the_parg = [parg]
-        else:
+        if isinstance(parg, list):
             the_parg = parg
+        elif isinstance(parg, str):
+            the_parg = [parg]
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, Iterable):
+            the_parg = list()
+            for sub_parg in parg:
+                the_parg.append(str(sub_parg))
+        else:
+            the_parg = [parg]
         for the_arg in the_parg:
             if the_arg not in partner_roles:
                 partner_roles.append(the_arg)
@@ -2173,7 +2185,7 @@ def comma_list_en(*pargs, **kwargs):
     for parg in pargs:
         if isinstance(parg, str):
             the_list.append(parg)
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, Iterable):
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, Iterable):
             for sub_parg in parg:
                 the_list.append(str(sub_parg))
         else:
@@ -2250,7 +2262,7 @@ def add_separators_en(*pargs, **kwargs):
     for parg in pargs:
         if isinstance(parg, str):
             the_list.append(parg.rstrip())
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(the_list, Iterable):
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, Iterable):
             for sub_parg in parg:
                 the_list.append(str(sub_parg).rstrip())
         else:
@@ -3210,6 +3222,17 @@ def command(*pargs, **kwargs):
     """Executes a command, such as exit, logout, restart, or leave."""
     raise CommandError(*pargs, **kwargs)
 
+def unpack_pargs(args):
+    return args
+    the_list = list()
+    for parg in args:
+        if isinstance(parg, (types.GeneratorType, map, filter)):
+            for sub_parg in parg:
+                the_list.append(sub_parg)
+        else:
+            the_list.append(parg)
+    return the_list
+
 def force_ask(*pargs, **kwargs):
     """Given a variable name, instructs docassemble to ask a question that
     would define the variable, even if the variable has already been
@@ -3219,10 +3242,11 @@ def force_ask(*pargs, **kwargs):
     questions will be asked serially.
 
     """
+    the_pargs = unpack_pargs(pargs)
     if kwargs.get('persistent', True):
-        raise ForcedNameError(*pargs, user_dict=get_user_dict())
+        raise ForcedNameError(*the_pargs, user_dict=get_user_dict())
     else:
-        force_ask_nameerror(pargs[0])
+        force_ask_nameerror(the_pargs[0])
 
 def force_ask_nameerror(variable_name):
     raise NameError("name '" + str(variable_name) + "' is not defined")
@@ -3238,7 +3262,7 @@ def force_gather(*pargs):
     for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
         if var_name in the_user_dict:
             the_context[var_name] = the_user_dict[var_name]
-    for variable_name in pargs:
+    for variable_name in unpack_pargs(pargs):
         if variable_name not in [(variable_dict if isinstance(variable_dict, str) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
             this_thread.internal['gather'].append(dict(var=variable_name, context=the_context))
     raise ForcedNameError(variable_name, gathering=True)
@@ -3819,7 +3843,8 @@ def invalidate(*pargs):
 def undefine(*pargs, invalidate=False):
     """Deletes the variable or variables if they exist."""
     vars_to_delete = list()
-    for var in pargs:
+    the_pargs = unpack_pargs(pargs)
+    for var in the_pargs:
         str(var)
         if not isinstance(var, str):
             raise Exception("undefine() must be given a string, not " + repr(var) + ", a " + str(var.__class__.__name__))
@@ -4186,6 +4211,8 @@ def phone_number_formatted(number, country=None):
     the standard format for the country.  Returns None if the number
     could not be so formatted."""
     ensure_definition(number, country)
+    if number.__class__.__name__ == 'DAEmpty':
+        return str(number)
     if country is None:
         country = get_country()
     if isinstance(number, str):
@@ -4708,7 +4735,8 @@ class DALocalFile:
 
 def forget_result_of(*pargs):
     """Resets the user's answer to an embedded code question or mandatory code block."""
-    for id_name in pargs:
+    the_pargs = unpack_pargs(pargs)
+    for id_name in the_pargs:
         key = 'ID ' + id_name
         for key_item in list(this_thread.internal['answers'].keys()):
             if key_item == key or key_item.startswith(key + '|WITH|'):
@@ -4724,7 +4752,7 @@ def reconsider(*pargs):
     """Ensures that the value of one or more variables is freshly calculated."""
     if 'reconsidered' not in this_thread.misc:
         this_thread.misc['reconsidered'] = set()
-    for var in pargs:
+    for var in unpack_pargs(pargs):
         if var in this_thread.misc['reconsidered']:
             continue
         undefine(var)
