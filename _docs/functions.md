@@ -3655,6 +3655,11 @@ otherwise, the pluralized version of the first argument will be returned.
 * `noun_plural('friend', number_friends)` returns `friend` if
   `number_friends` is `1`, otherwise it returns `friends`.
 
+Instead of a number, you can pass a list, dictionary, or set as the
+second argument to the function.  If the number of items in the group
+is `1`, the singular will be used.  Otherwise, the plural will be
+used.
+
 ## <a name="quantity_noun"></a>quantity_noun()
 
 {% include side-by-side.html demo="quantity-noun" %}
@@ -3685,6 +3690,11 @@ untouched.
 
 * `noun_singular('friends', number_friends)` return `friend` if
   `number_friends` is `1`, otherwise it returns `friends`.
+
+Instead of a number, you can pass a list, dictionary, or set as the
+second argument to the function.  If the number of items in the group
+is `1`, the singular will be used.  Otherwise, the plural will be
+used.
 
 ## <a name="ordinal_number"></a>ordinal_number()
 
