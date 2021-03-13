@@ -825,6 +825,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         status.saveas_to_use = dict()
         status.saveas_by_number = dict()
         seen_first = False
+        null_question = True
         for field in field_list:
             if 'html' in status.extras and field.number in status.extras['html']:
                 note_fields[field.number] = status.extras['html'][field.number].rstrip()
@@ -890,6 +891,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 continue
             if not status.extras['ok'][field.number]:
                 continue
+            if hasattr(field, 'saveas'):
+                null_question = False
             if status.extras['required'][field.number]:
                 req_tag = ' darequired'
             else:
@@ -1287,6 +1290,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += '                <input type="hidden" name="_ml_info" value=' + myb64doublequote(json.dumps(ml_info)) + '/>\n'
         if len(files):
             output += '                <input type="hidden" name="_files" value=' + myb64doublequote(json.dumps(files)) + '/>\n'
+        if null_question:
+            output += '                <input type="hidden" name="_null_question" value="1" />\n'
         output += status.submit
         output += '                <fieldset class="da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
         if hasattr(status.question, 'fields_saveas'):

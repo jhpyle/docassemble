@@ -2478,9 +2478,9 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
     subject = re.sub(r'[\n\r]+', ' ', subject)
     sender_string = email_stringer(sender, first=True, include_name=True)
     reply_to_string = email_stringer(reply_to, first=True, include_name=True)
-    to_string = email_stringer(to)
-    cc_string = email_stringer(cc)
-    bcc_string = email_stringer(bcc)
+    to_string = email_stringer(to, include_name=None)
+    cc_string = email_stringer(cc, include_name=None)
+    bcc_string = email_stringer(bcc, include_name=None)
     #logmessage("Sending mail to: " + repr(dict(subject=subject, recipients=to_string, sender=sender_string, cc=cc_string, bcc=bcc_string, body=body, html=html)))
     msg = Message(subject, sender=sender_string, reply_to=reply_to_string, recipients=to_string, cc=cc_string, bcc=bcc_string, body=body, html=html)
     if mailgun_variables is not None:

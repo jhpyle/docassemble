@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.2.42] - 2021-03-13
+### Changed
+- The optional second positional parameter of `noun_plural()` and
+  `noun_singular()` can now be a list, dictionary, set, or tuple, in
+  which case the length is used.
+- Elements with `aria-hidden="true"` or CSS class `sr-exclude` will
+  be ignored by the VoiceRSS screen reader.
+- `force_ask()`, `force_gather()`, `undefine()`, `forget_result_of()`,
+  and `reconsider()` now accept generators as positional parameters.
+- When given `Person` objects, `send_email()` will include names in
+  To, Cc, and Bcc if the names are defined.
+### Fixed
+- A `fields` question with no variable-setting fields or a `continue
+  button field` did not get marked as answered.
+
 ## [1.2.41] - 2021-03-09
 ### Fixed
 - Bug in 1.2.40.

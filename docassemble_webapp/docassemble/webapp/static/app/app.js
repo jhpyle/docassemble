@@ -7,15 +7,11 @@ var daCtx,
 var daTheWidth;
 var daAspectRatio;
 var daTheBorders;
-var daWaiter;
-var daWaitLimit;
 var daIsEmpty;
 
 function daInitializeSignature() {
   daAspectRatio = 0.4;
   daTheBorders = 30;
-  daWaiter = 0;
-  daWaitLimit = 2;
   daIsEmpty = 1;
   setTimeout(function () {
     if (!isCanvasSupported()) {
@@ -188,24 +184,20 @@ $.fn.drawTouch = function () {
   };
   var move = function (e) {
     e.preventDefault();
-    if (daWaiter % daWaitLimit == 0) {
-      e = e.originalEvent;
-      x = e.changedTouches[0].pageX - $("#dasigcanvas").offset().left;
-      y = e.changedTouches[0].pageY - $("#dasigcanvas").offset().top;
-      daCtx.lineTo(x, y);
-      daCtx.stroke();
-      if (daIsEmpty) {
-        daIsEmpty = 0;
-      }
+    e = e.originalEvent;
+    x = e.changedTouches[0].pageX - $("#dasigcanvas").offset().left;
+    y = e.changedTouches[0].pageY - $("#dasigcanvas").offset().top;
+    daCtx.lineTo(x, y);
+    daCtx.stroke();
+    if (daIsEmpty) {
+      daIsEmpty = 0;
     }
-    daWaiter++;
     //daCtx.fillRect(x-0.5*daTheWidth,y-0.5*daTheWidth,daTheWidth,daTheWidth);
     //daCtx.beginPath();
     //daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
     //daCtx.fill();
   };
   var moveline = function (e) {
-    daWaiter = 0;
     move(e);
   };
   var dot = function (e) {
@@ -248,25 +240,21 @@ $.fn.drawPointer = function () {
   };
   var move = function (e) {
     e.preventDefault();
-    if (daWaiter % daWaitLimit == 0) {
-      e = e.originalEvent;
-      x = e.pageX - $("#dasigcanvas").offset().left;
-      y = e.pageY - $("#dasigcanvas").offset().top;
-      daCtx.lineTo(x, y);
-      daCtx.stroke();
-      daCtx.beginPath();
-      daCtx.arc(x, y, 0.5 * daTheWidth, 0, 2 * Math.PI);
-      daCtx.fill();
-      daCtx.beginPath();
-      daCtx.moveTo(x, y);
-      if (daIsEmpty) {
-        daIsEmpty = 0;
-      }
+    e = e.originalEvent;
+    x = e.pageX - $("#dasigcanvas").offset().left;
+    y = e.pageY - $("#dasigcanvas").offset().top;
+    daCtx.lineTo(x, y);
+    daCtx.stroke();
+    daCtx.beginPath();
+    daCtx.arc(x, y, 0.5 * daTheWidth, 0, 2 * Math.PI);
+    daCtx.fill();
+    daCtx.beginPath();
+    daCtx.moveTo(x, y);
+    if (daIsEmpty) {
+      daIsEmpty = 0;
     }
-    //daWaiter++;
   };
   var moveline = function (e) {
-    daWaiter = 0;
     move(e);
   };
   $(this).on("MSPointerDown", start);
@@ -292,7 +280,7 @@ $.fn.drawMouse = function () {
     }
   };
   var move = function (e) {
-    if (clicked && daWaiter % daWaitLimit == 0) {
+    if (clicked) {
       x = e.pageX - $("#dasigcanvas").offset().left;
       y = e.pageY - $("#dasigcanvas").offset().top;
       daCtx.lineTo(x, y);
@@ -306,10 +294,8 @@ $.fn.drawMouse = function () {
         daIsEmpty = 0;
       }
     }
-    //daWaiter++;
   };
   var stop = function (e) {
-    daWaiter = 0;
     move(e);
     clicked = 0;
     return true;
@@ -352,11 +338,12 @@ function daInitAutocomplete(ids) {
   setTimeout(function () {
     for (var i = 0; i < ids.length; ++i) {
       var id = ids[i];
-      daAutocomplete[
-        id
-      ] = new google.maps.places.Autocomplete(document.getElementById(id), {
-        types: ["address"],
-      });
+      daAutocomplete[id] = new google.maps.places.Autocomplete(
+        document.getElementById(id),
+        {
+          types: ["address"],
+        }
+      );
       daAutocomplete[id].setFields(["address_components"]);
       google.maps.event.addListener(
         daAutocomplete[id],

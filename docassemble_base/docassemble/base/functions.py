@@ -2573,10 +2573,19 @@ def verb_past_en(*pargs, **kwargs):
     else:
         return(output)
 
+def number_or_length(target):
+    if isinstance(target, (int, float)):
+        return target
+    if isinstance(target, (list, dict, set, tuple)) or (hasattr(target, 'elements') and isinstance(target.elements, (list, dict, set))):
+        return len(target)
+    if target:
+        return 2
+    return 1
+
 def noun_plural_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     noun = noun_singular_en(pargs[0])
-    if len(pargs) >= 2 and pargs[1] == 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.en.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2586,7 +2595,7 @@ def noun_plural_en(*pargs, **kwargs):
 
 def noun_singular_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and pargs[1] != 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
         return pargs[0]
     output = docassemble_pattern.en.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2635,7 +2644,7 @@ def verb_past_es(*pargs, **kwargs):
 def noun_plural_es(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     noun = noun_singular_es(pargs[0])
-    if len(pargs) >= 2 and pargs[1] == 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.es.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2645,7 +2654,7 @@ def noun_plural_es(*pargs, **kwargs):
 
 def noun_singular_es(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and pargs[1] != 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
         return pargs[0]
     output = docassemble_pattern.es.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2694,7 +2703,7 @@ def verb_past_de(*pargs, **kwargs):
 def noun_plural_de(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     noun = noun_singular_de(pargs[0])
-    if len(pargs) >= 2 and pargs[1] == 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.de.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2704,7 +2713,7 @@ def noun_plural_de(*pargs, **kwargs):
 
 def noun_singular_de(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and pargs[1] != 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
         return pargs[0]
     output = docassemble_pattern.de.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2753,7 +2762,7 @@ def verb_past_fr(*pargs, **kwargs):
 def noun_plural_fr(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     noun = noun_singular_fr(pargs[0])
-    if len(pargs) >= 2 and pargs[1] == 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.fr.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2763,7 +2772,7 @@ def noun_plural_fr(*pargs, **kwargs):
 
 def noun_singular_fr(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and pargs[1] != 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
         return pargs[0]
     output = docassemble_pattern.fr.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2812,7 +2821,7 @@ def verb_past_it(*pargs, **kwargs):
 def noun_plural_it(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     noun = noun_singular_it(pargs[0])
-    if len(pargs) >= 2 and pargs[1] == 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.it.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2822,7 +2831,7 @@ def noun_plural_it(*pargs, **kwargs):
 
 def noun_singular_it(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and pargs[1] != 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
         return pargs[0]
     output = docassemble_pattern.it.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2871,7 +2880,7 @@ def verb_past_nl(*pargs, **kwargs):
 def noun_plural_nl(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
     noun = noun_singular_nl(pargs[0])
-    if len(pargs) >= 2 and pargs[1] == 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.nl.pluralize(str(noun))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2881,7 +2890,7 @@ def noun_plural_nl(*pargs, **kwargs):
 
 def noun_singular_nl(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and pargs[1] != 1:
+    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
         return pargs[0]
     output = docassemble_pattern.nl.singularize(str(pargs[0]))
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -3223,7 +3232,6 @@ def command(*pargs, **kwargs):
     raise CommandError(*pargs, **kwargs)
 
 def unpack_pargs(args):
-    return args
     the_list = list()
     for parg in args:
         if isinstance(parg, (types.GeneratorType, map, filter)):

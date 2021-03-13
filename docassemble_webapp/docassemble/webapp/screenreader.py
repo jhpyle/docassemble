@@ -11,6 +11,7 @@ def to_text(html_doc):
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
     [s.extract() for s in soup.find_all(hidden)]
     [s.extract() for s in soup.find_all('div', {'class': 'dainvisible'})]
+    [s.extract() for s in soup.select('.sr-exclude')]
     previous = str()
     for s in soup.find_all(do_show):
         if s.name in ['input', 'textarea', 'img'] and s.has_attr('alt'):
@@ -45,6 +46,8 @@ def hidden(element):
         if element.has_attr('type'):
             if element.attrs['type'] == 'hidden':
                 return True
+    elif element.has_attr('aria-hidden') and element.attrs['aria-hidden'] != 'false':
+        return True
     return False
 
 bad_list = ['div', 'option']

@@ -1,5 +1,6 @@
 import ast
 import re
+
 #import sys
 
 fix_assign = re.compile(r'\.(\[[^\]]*\])')
@@ -138,7 +139,34 @@ class myvisitnode(ast.NodeVisitor):
                 self.targets[the_name] = 1
                 the_name = re.sub(r'\.[^\.]+$', '', the_name)
             self.targets[the_name] = 1
+    def visit_GeneratorExp(self, node):
+        for comp in node.generators:
+            if isinstance(comp.target, ast.Name):
+                self.targets[comp.target.id] = 1
+            elif isinstance(comp.target, ast.Tuple):
+                for subtarget in comp.target.elts:
+                    if isinstance(subtarget, ast.Name):
+                        self.targets[subtarget.id] = 1
+        self.generic_visit(node)
     def visit_ListComp(self, node):
+        for comp in node.generators:
+            if isinstance(comp.target, ast.Name):
+                self.targets[comp.target.id] = 1
+            elif isinstance(comp.target, ast.Tuple):
+                for subtarget in comp.target.elts:
+                    if isinstance(subtarget, ast.Name):
+                        self.targets[subtarget.id] = 1
+        self.generic_visit(node)
+    def visit_DictComp(self, node):
+        for comp in node.generators:
+            if isinstance(comp.target, ast.Name):
+                self.targets[comp.target.id] = 1
+            elif isinstance(comp.target, ast.Tuple):
+                for subtarget in comp.target.elts:
+                    if isinstance(subtarget, ast.Name):
+                        self.targets[subtarget.id] = 1
+        self.generic_visit(node)
+    def visit_SetComp(self, node):
         for comp in node.generators:
             if isinstance(comp.target, ast.Name):
                 self.targets[comp.target.id] = 1

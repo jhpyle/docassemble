@@ -6184,6 +6184,8 @@ def index(action_argument=None, refer=None):
             empty_fields = list()
         authorized_fields = set()
     changed = False
+    if '_null_question' in post_data:
+        changed = True
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         success = False
         attachment_email_address = post_data['_attachment_email_address'].strip()
@@ -6338,7 +6340,7 @@ def index(action_argument=None, refer=None):
         the_question = None
     key_to_orig_key = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_collect_delete', '_list_collect_list') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_collect_delete', '_list_collect_list', '_null_question') or orig_key.startswith('_ignore'):
             continue
         try:
             key = myb64unquote(orig_key)
@@ -6375,7 +6377,7 @@ def index(action_argument=None, refer=None):
     imported_core = False
     special_question = None
     for orig_key in post_data:
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '', '_collect', '_collect_delete', '_list_collect_list') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '', '_collect', '_collect_delete', '_list_collect_list', '_null_question') or orig_key.startswith('_ignore'):
             continue
         data = post_data[orig_key]
         try:
@@ -7628,7 +7630,7 @@ def index(action_argument=None, refer=None):
       var daQuestionID = """ + json.dumps(question_id_dict) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
-      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_list_collect_list'];
+      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_list_collect_list', '_null_question'];
       var daVarLookup = Object();
       var daVarLookupRev = Object();
       var daVarLookupMulti = Object();
@@ -8763,6 +8765,12 @@ def index(action_argument=None, refer=None):
           var theHtml = xhr.responseText;
           theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
           $(daTargetDiv).html(theHtml);
+          if (daJsEmbed){
+            $(daTargetDiv)[0].scrollTo(0, 1);
+          }
+          else{
+            window.scrollTo(0, 1);
+          }
         }
         else {
           console.log("daProcessAjaxError: response was not text");
@@ -11852,7 +11860,7 @@ def observer():
       var daDisable = null;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
-      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect'];
+      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_null_question'];
       var daVarLookup = Object();
       var daVarLookupRev = Object();
       var daVarLookupMulti = Object();
@@ -12165,6 +12173,12 @@ def observer():
           var theHtml = xhr.responseText;
           theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
           $(daTargetDiv).html(theHtml);
+          if (daJsEmbed){
+            $(daTargetDiv)[0].scrollTo(0, 1);
+          }
+          else{
+            window.scrollTo(0, 1);
+          }
         }
         else {
           console.log("daProcessAjaxError: response was not text");
