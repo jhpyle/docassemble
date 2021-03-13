@@ -4787,7 +4787,8 @@ object.
 
 {% include demo-side-by-side.html demo="objects-from-file" %}
 
-In the above example, the file [`contacts.yml`] file has the following contents:
+In the above example, [`contacts.yml`] is a file in the `data/sources`
+folder of the package, and it has the following contents:
 
 {% highlight yaml %}
 object: Individual

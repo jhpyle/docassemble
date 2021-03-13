@@ -224,7 +224,7 @@ could add a [`generic object`] question that is specific to the
 recipients that were added with `appendObject()`.  For example:
 
 {% highlight yaml %}
-generic object: Individual
+generic object: DAList
 question: |
   The ${ ordinal(i) } ${ x.object_name() } must have a name.  What is it?
 fields:
@@ -236,7 +236,7 @@ The names of the fourth and fifth recipients are capable of being
 asked by this question, since the pattern `x[i]` (where `x[i]` is an
 [`Individual`]) matches the intrinsic names `recipient[3]` and
 `recipient[4]`.  Since the other [`generic object`] question, which
-matches `x` (where `x` is an [`Individual`]) also matches `recipient[3]`
+matches `x` (where `x` is an [`DAList`]) also matches `recipient[3]`
 and `recipient[4]`, the order in which you list the questions in the
 [YAML] file will determine which one is chosen.  Later-appearing questions
 take precedence, so you would need to place the second [`generic
