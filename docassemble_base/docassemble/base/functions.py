@@ -4355,7 +4355,7 @@ def bold(text, default=None):
             return ''
         else:
             return '**' + str(default) + '**'
-    return '**' + str(text) + '**'
+    return '**' + re.sub(r'\*', '', str(text)) + '**'
 
 def italic(text, default=None):
     """Adds Markdown tags to make the text italic if it is not blank."""
@@ -4365,7 +4365,7 @@ def italic(text, default=None):
             return ''
         else:
             return '_' + str(default) + '_'
-    return '_' + str(text) + '_'
+    return '_' + re.sub(r'\_', '', str(text)) + '_'
 
 # def inspector():
 #     frame = inspect.stack()[1][0]

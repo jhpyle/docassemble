@@ -859,6 +859,10 @@ fi
 
 echo "37" >&2
 
+su -c "source \"${DA_ACTIVATE}\" && pip config set global.disable-pip-version-check true" www-data
+
+echo "37.1" >&2
+
 if [ "${DAUPDATEONSTART:-true}" = "true" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "Doing upgrading of packages" >&2
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
@@ -902,6 +906,12 @@ echo "40" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start celery
+fi
+
+NASCENTRUNNING=true;
+if [ "${USEHTTPS:-false}" == "true" ] && [ "${USELETSENCRYPT:-false}" == "true" ]; then
+    supervisorctl --serverurl http://localhost:9001 stop nascent &> /dev/null
+    NASCENTRUNNING=false;
 fi
 
 if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
@@ -1006,6 +1016,9 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
         if [ "$NGINXRUNNING" = false ]; then
+	    if [ "$NASCENTRUNNING" = true ]; then
+		supervisorctl --serverurl http://localhost:9001 stop nascent &> /dev/null
+	    fi
             supervisorctl --serverurl http://localhost:9001 start nginx
         fi
     fi
@@ -1159,6 +1172,9 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
     echo "46" >&2
 
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
+	if [ "$NASCENTRUNNING" = true ]; then
+	    supervisorctl --serverurl http://localhost:9001 stop nascent &> /dev/null
+	fi
         supervisorctl --serverurl http://localhost:9001 start apache2
     fi
 fi

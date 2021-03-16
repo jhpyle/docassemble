@@ -10,6 +10,7 @@ import sys
 import shutil
 import time
 import fcntl
+installed_distribution_cache = None
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
@@ -42,9 +43,10 @@ def fix_fnctl():
     except:
         pass
 
-def remove_inactive_hosts():
-    start_time = time.time()
-    sys.stderr.write("remove_inactive_hosts: starting\n")
+def remove_inactive_hosts(start_time=None):
+    if start_time is None:
+        start_time = time.time()
+    sys.stderr.write("remove_inactive_hosts: starting after " + str(time.time() - start_time) + " seconds\n")
     if USING_SUPERVISOR:
         from docassemble.base.config import hostname
         from docassemble.webapp.app_object import app
@@ -70,9 +72,12 @@ class DummyPackage(object):
         self.type = 'pip'
         self.limitation = None
 
-def check_for_updates(doing_startup=False):
-    start_time = time.time()
-    sys.stderr.write("check_for_updates: starting\n")
+def check_for_updates(doing_startup=False, start_time=None, invalidate_cache=True, full=True):
+    if start_time is None:
+        start_time = time.time()
+    sys.stderr.write("check_for_updates: starting after " + str(time.time() - start_time) + " seconds\n")
+    if invalidate_cache:
+        invalidate_installed_distributions_cache()
     from docassemble.base.config import hostname
     from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
@@ -80,87 +85,88 @@ def check_for_updates(doing_startup=False):
     ok = True
     here_already = dict()
     results = dict()
-    sys.stderr.write("check_for_updates: 0.5 after " + str(time.time() - start_time) + " seconds\n")
-
-    for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2', 'azure-storage', 'Flask-User'):
-        num_deleted = Package.query.filter_by(name=package_name).delete()
-        if num_deleted > 0:
-            db.session.commit()
-    sys.stderr.write("check_for_updates: 1 after " + str(time.time() - start_time) + " seconds\n")
-    installed_packages = get_installed_distributions()
+    if full:
+        sys.stderr.write("check_for_updates: 0.5 after " + str(time.time() - start_time) + " seconds\n")
+        for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2', 'azure-storage', 'Flask-User'):
+            num_deleted = Package.query.filter_by(name=package_name).delete()
+            if num_deleted > 0:
+                db.session.commit()
+        sys.stderr.write("check_for_updates: 1 after " + str(time.time() - start_time) + " seconds\n")
+    installed_packages = get_installed_distributions(start_time=start_time)
     for package in installed_packages:
         here_already[package.key] = package.version
     changed = False
-    if 'psycopg2' in here_already:
-        sys.stderr.write("check_for_updates: uninstalling psycopg2\n")
-        uninstall_package(DummyPackage('psycopg2'))
-        if 'psycopg2-binary' in here_already:
-            sys.stderr.write("check_for_updates: reinstalling psycopg2-binary\n")
-            uninstall_package(DummyPackage('psycopg2-binary'))
-            install_package(DummyPackage('psycopg2-binary'))
-        changed = True
-    if 'psycopg2-binary' not in here_already:
-        sys.stderr.write("check_for_updates: installing psycopg2-binary\n")
-        install_package(DummyPackage('psycopg2-binary'))
-        change = True
-    if 'kombu' not in here_already or LooseVersion(here_already['kombu']) <= LooseVersion('4.1.0'):
-        sys.stderr.write("check_for_updates: installing new kombu version\n")
-        install_package(DummyPackage('kombu'))
-        changed = True
-    if 'celery' not in here_already or LooseVersion(here_already['celery']) <= LooseVersion('4.1.0'):
-        sys.stderr.write("check_for_updates: installing new celery version\n")
-        install_package(DummyPackage('celery'))
-        changed = True
-    if 'pycrypto' in here_already:
-        sys.stderr.write("check_for_updates: uninstalling pycrypto\n")
-        uninstall_package(DummyPackage('pycrypto'))
-        if 'pycryptodome' in here_already:
-            sys.stderr.write("check_for_updates: reinstalling pycryptodome\n")
-            uninstall_package(DummyPackage('pycryptodome'))
-            install_package(DummyPackage('pycryptodome'))
-        changed = True
-    if 'pycryptodome' not in here_already:
-        sys.stderr.write("check_for_updates: installing pycryptodome\n")
-        install_package(DummyPackage('pycryptodome'))
-        changed = True
-    if 'pdfminer' in here_already:
-        sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
-        uninstall_package(DummyPackage('pdfminer'))
-        changed = True
-    if 'pdfminer3k' in here_already:
-        sys.stderr.write("check_for_updates: uninstalling pdfminer3k\n")
-        uninstall_package(DummyPackage('pdfminer3k'))
-        changed = True
-    if 'pdfminer.six' in here_already:
-        try:
-            from pdfminer.pdfparser import PDFParser
-            from pdfminer.pdfdocument import PDFDocument
-        except:
-            sys.stderr.write("check_for_updates: reinstalling pdfminer.six\n")
-            uninstall_package(DummyPackage('pdfminer.six'))
-            install_package(DummyPackage('pdfminer.six'))
-    else:
-        sys.stderr.write("check_for_updates: installing pdfminer.six\n")
-        install_package(DummyPackage('pdfminer.six'))
-        changed = True
-    if 'py-bcrypt' in here_already:
-        sys.stderr.write("check_for_updates: uninstalling py-bcrypt\n")
-        uninstall_package(DummyPackage('py-bcrypt'))
-        changed = True
-        if 'bcrypt' in here_already:
-            sys.stderr.write("check_for_updates: reinstalling bcrypt\n")
-            uninstall_package(DummyPackage('bcrypt'))
-            install_package(DummyPackage('bcrypt'))
+    if full:
+        if 'psycopg2' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling psycopg2\n")
+            uninstall_package(DummyPackage('psycopg2'), start_time=start_time)
+            if 'psycopg2-binary' in here_already:
+                sys.stderr.write("check_for_updates: reinstalling psycopg2-binary\n")
+                uninstall_package(DummyPackage('psycopg2-binary'), start_time=start_time)
+                install_package(DummyPackage('psycopg2-binary'), start_time=start_time)
             changed = True
-    if 'bcrypt' not in here_already:
-        sys.stderr.write("check_for_updates: installing bcrypt\n")
-        install_package(DummyPackage('bcrypt'))
-        changed = True
-    if changed:
-        installed_packages = get_installed_distributions()
-        here_already = dict()
-        for package in installed_packages:
-            here_already[package.key] = package.version
+        if 'psycopg2-binary' not in here_already:
+            sys.stderr.write("check_for_updates: installing psycopg2-binary\n")
+            install_package(DummyPackage('psycopg2-binary'), start_time=start_time)
+            change = True
+        if 'kombu' not in here_already or LooseVersion(here_already['kombu']) <= LooseVersion('4.1.0'):
+            sys.stderr.write("check_for_updates: installing new kombu version\n")
+            install_package(DummyPackage('kombu'), start_time=start_time)
+            changed = True
+        if 'celery' not in here_already or LooseVersion(here_already['celery']) <= LooseVersion('4.1.0'):
+            sys.stderr.write("check_for_updates: installing new celery version\n")
+            install_package(DummyPackage('celery'), start_time=start_time)
+            changed = True
+        if 'pycrypto' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling pycrypto\n")
+            uninstall_package(DummyPackage('pycrypto'), start_time=start_time)
+            if 'pycryptodome' in here_already:
+                sys.stderr.write("check_for_updates: reinstalling pycryptodome\n")
+                uninstall_package(DummyPackage('pycryptodome'), start_time=start_time)
+                install_package(DummyPackage('pycryptodome'), start_time=start_time)
+            changed = True
+        if 'pycryptodome' not in here_already:
+            sys.stderr.write("check_for_updates: installing pycryptodome\n")
+            install_package(DummyPackage('pycryptodome'), start_time=start_time)
+            changed = True
+        if 'pdfminer' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
+            uninstall_package(DummyPackage('pdfminer'), start_time=start_time)
+            changed = True
+        if 'pdfminer3k' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling pdfminer3k\n")
+            uninstall_package(DummyPackage('pdfminer3k'), start_time=start_time)
+            changed = True
+        if 'pdfminer.six' in here_already:
+            try:
+                from pdfminer.pdfparser import PDFParser
+                from pdfminer.pdfdocument import PDFDocument
+            except:
+                sys.stderr.write("check_for_updates: reinstalling pdfminer.six\n")
+                uninstall_package(DummyPackage('pdfminer.six'), start_time=start_time)
+                install_package(DummyPackage('pdfminer.six'), start_time=start_time)
+        else:
+            sys.stderr.write("check_for_updates: installing pdfminer.six\n")
+            install_package(DummyPackage('pdfminer.six'), start_time=start_time)
+            changed = True
+        if 'py-bcrypt' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling py-bcrypt\n")
+            uninstall_package(DummyPackage('py-bcrypt'), start_time=start_time)
+            changed = True
+            if 'bcrypt' in here_already:
+                sys.stderr.write("check_for_updates: reinstalling bcrypt\n")
+                uninstall_package(DummyPackage('bcrypt'), start_time=start_time)
+                install_package(DummyPackage('bcrypt'), start_time=start_time)
+                changed = True
+        if 'bcrypt' not in here_already:
+            sys.stderr.write("check_for_updates: installing bcrypt\n")
+            install_package(DummyPackage('bcrypt'), start_time=start_time)
+            changed = True
+        if changed:
+            installed_packages = get_installed_distributions(start_time=start_time)
+            here_already = dict()
+            for package in installed_packages:
+                here_already[package.key] = package.version
     packages = dict()
     installs = dict()
     to_install = list()
@@ -243,7 +249,8 @@ def check_for_updates(doing_startup=False):
             returnval = 1
             newlog = ''
         else:
-            returnval, newlog = uninstall_package(package)
+            sys.stderr.write("check_for_updates: calling uninstall_package on " + package.name + "\n")
+            returnval, newlog = uninstall_package(package, start_time=start_time)
         uninstall_done[package.name] = 1
         logmessages += newlog
         if returnval == 0:
@@ -257,23 +264,28 @@ def check_for_updates(doing_startup=False):
             ok = False
     packages_to_delete = list()
     sys.stderr.write("check_for_updates: 10 after " + str(time.time() - start_time) + " seconds\n")
+    did_something = False
     for package in to_install:
+        did_something = True
         sys.stderr.write("check_for_updates: going to install a package: " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
         # if doing_startup and package.name.startswith('docassemble') and package.name in here_already:
         #     #adding this because of unpredictability of installing new versions of docassemble
         #     #just because of a system restart.
         #     sys.stderr.write("check_for_updates: skipping update on " + str(package.name) + "\n")
         #     continue
-        returnval, newlog = install_package(package)
+        returnval, newlog = install_package(package, start_time=start_time)
         logmessages += newlog
         sys.stderr.write("check_for_updates: return value was " + str(returnval) + " after " + str(time.time() - start_time) + " seconds\n")
         if returnval != 0:
             sys.stderr.write("Return value was not good" + " after " + str(time.time() - start_time) + " seconds\n")
             ok = False
         #pip._vendor.pkg_resources._initialize_master_working_set()
-        pip_info = get_pip_info(package.name)
-        real_name = pip_info['Name']
-        sys.stderr.write("check_for_updates: real name of package " + str(package.name) + " is " + str(real_name) + "\n after " + str(time.time() - start_time) + " seconds")
+        if full:
+            pip_info = get_pip_info(package.name, start_time=start_time)
+            real_name = pip_info['Name']
+            sys.stderr.write("check_for_updates: real name of package " + str(package.name) + " is " + str(real_name) + " after " + str(time.time() - start_time) + " seconds\n")
+        else:
+            real_name = package.name
         if real_name is None:
             results[package.name] = 'install failed'
             ok = False
@@ -294,9 +306,10 @@ def check_for_updates(doing_startup=False):
                 install = Install(hostname=hostname, packageversion=package.packageversion, version=package.version, package_id=package.id)
             db.session.add(install)
             db.session.commit()
-            update_versions()
-            add_dependencies(package_owner.get(package.id, 1))
-            update_versions()
+    if did_something:
+        update_versions(start_time=start_time)
+        if full and add_dependencies(package_owner.get(package.id, 1), start_time=start_time):
+            update_versions(start_time=start_time)
     sys.stderr.write("check_for_updates: 11 after " + str(time.time() - start_time) + " seconds\n")
     for package in packages_to_delete:
         db.session.delete(package)
@@ -305,9 +318,10 @@ def check_for_updates(doing_startup=False):
     sys.stderr.write("check_for_updates: finished uninstalling and installing after " + str(time.time() - start_time) + " seconds\n")
     return ok, logmessages, results
 
-def update_versions():
-    start_time = time.time()
-    sys.stderr.write("update_versions: starting" + "\n")
+def update_versions(start_time=None):
+    if start_time is None:
+        start_time = time.time()
+    sys.stderr.write("update_versions: starting after " + str(time.time() - start_time) + " seconds\n")
     from docassemble.base.config import hostname
     from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
@@ -321,7 +335,7 @@ def update_versions():
         if package.name in package_by_name:
             continue
         package_by_name[package.name] = Object(id=package.id, packageversion=package.packageversion, name=package.name)
-    installed_packages = get_installed_distributions()
+    installed_packages = get_installed_distributions(start_time=start_time)
     for package in installed_packages:
         if package.key in package_by_name:
             if package_by_name[package.key].id in install_by_id and package.version != install_by_id[package_by_name[package.key].id].packageversion:
@@ -357,10 +371,11 @@ def get_home_page_dict():
                 home_page[name.lower()] = url
     return home_page
 
-def add_dependencies(user_id):
-    start_time = time.time()
+def add_dependencies(user_id, start_time=None):
+    if start_time is None:
+        start_time = time.time()
     #sys.stderr.write('add_dependencies: user_id is ' + str(user_id) + "\n")
-    sys.stderr.write("add_dependencies: starting\n")
+    sys.stderr.write("add_dependencies: starting after " + str(time.time() - start_time) + " seconds\n")
     from docassemble.base.config import hostname
     from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
@@ -368,7 +383,7 @@ def add_dependencies(user_id):
     packages_known = set()
     for package in Package.query.filter_by(active=True).all():
         packages_known.add(package.name)
-    installed_packages = get_installed_distributions()
+    installed_packages = get_installed_distributions(start_time=start_time)
     home_pages = None
     packages_to_add = list()
     for package in installed_packages:
@@ -378,7 +393,9 @@ def add_dependencies(user_id):
             continue
         Package.query.filter_by(name=package.key).delete()
         packages_to_add.append(package)
+    did_something = False
     if len(packages_to_add):
+        did_something = True
         db.session.commit()
         for package in packages_to_add:
             package_auth = PackageAuth(user_id=user_id)
@@ -398,7 +415,7 @@ def add_dependencies(user_id):
             db.session.add(install)
             db.session.commit()
     sys.stderr.write("add_dependencies: ending after " + str(time.time() - start_time) + " seconds\n")
-    return
+    return did_something
 
 def fix_names():
     from docassemble.webapp.app_object import app
@@ -430,11 +447,13 @@ def splitall(path):
             allparts.insert(0, parts[1])
     return allparts
 
-def install_package(package):
-    sys.stderr.write("install_package: " + package.name + "\n")
+def install_package(package, start_time=None):
+    if start_time is None:
+        start_time = time.time()
+    invalidate_installed_distributions_cache()
+    sys.stderr.write("install_package: " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
     if package.type == 'zip' and package.upload is None:
         return 0, ''
-    sys.stderr.write('install_package: ' + package.name + "\n")
     from docassemble.base.config import daconfig
     from docassemble.webapp.daredis import r
     from docassemble.webapp.files import SavedFile
@@ -451,7 +470,8 @@ def install_package(package):
     #    disable_pip_cache = True
     disable_pip_cache = True
     if package.type in ('zip', 'git'):
-        returnval, newlog = uninstall_package(package, sleep=False)
+        sys.stderr.write("install_package: calling uninstall_package on " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
+        returnval, newlog = uninstall_package(package, sleep=False, start_time=start_time)
         logfilecontents += newlog
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
@@ -492,66 +512,75 @@ def install_package(package):
             commands.append('--no-cache-dir')
         commands.extend(['--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, package.name + limit])
     else:
-        sys.stderr.write("Wrong package type\n")
+        sys.stderr.write("Wrong package type after " + str(time.time() - start_time) + " seconds\n")
         return 1, 'Unable to recognize package type: ' + package.name
-    sys.stderr.write("install_package: running " + " ".join(commands) + "\n")
-    logfilecontents += " ".join(commands) + "\n"
+    sys.stderr.write("install_package: running " + " ".join(commands) + " after " + str(time.time() - start_time) + " seconds\n")
+    logfilecontents += "install_package: running " + " ".join(commands) + "\n"
     returnval = 1
     try:
         subprocess.run(commands)
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
-    fix_fnctl()
-    sys.stderr.flush()
-    sys.stdout.flush()
-    time.sleep(4)
+    if False:
+        fix_fnctl()
+        sys.stderr.flush()
+        sys.stdout.flush()
+    #time.sleep(4)
+    pip_log.seek(0)
     with open(pip_log.name, 'rU', encoding='utf-8') as x:
         logfilecontents += x.read()
     pip_log.close()
-    try:
-        sys.stderr.write(logfilecontents + "\n")
-    except:
-        pass
-    sys.stderr.flush()
-    sys.stdout.flush()
-    time.sleep(4)
-    sys.stderr.write('returnval is: ' + str(returnval) + "\n")
-    sys.stderr.write('install_package: done' + "\n")
+    if False:
+        try:
+            sys.stderr.write(logfilecontents + "\n")
+        except:
+            pass
+        sys.stderr.flush()
+        sys.stdout.flush()
+    #time.sleep(4)
     shutil.rmtree(temp_dir)
+    sys.stderr.write('returnval is: ' + str(returnval) + "\n")
+    sys.stderr.write('install_package: done' + " after " + str(time.time() - start_time) + " seconds\n")
     return returnval, logfilecontents
 
-def uninstall_package(package, sleep=True):
-    sys.stderr.write('uninstall_package: ' + package.name + "\n")
-    logfilecontents = ''
-    #sys.stderr.write("uninstall_package: uninstalling " + package.name + "\n")
+def uninstall_package(package, sleep=True, start_time=None):
+    if start_time is None:
+        start_time = time.time()
+    invalidate_installed_distributions_cache()
+    sys.stderr.write('uninstall_package: ' + package.name + " after " + str(time.time() - start_time) + " seconds\n")
+    logfilecontents = 'uninstall_package: ' + package.name + "\n"
     pip_log = tempfile.NamedTemporaryFile()
     commands = ['pip', 'uninstall', '--yes', '--log-file=' + pip_log.name, package.name]
-    sys.stderr.write("Running " + " ".join(commands) + "\n")
-    logfilecontents += " ".join(commands) + "\n"
-    #returnval = pip.main(commands)
+    sys.stderr.write("Running " + " ".join(commands) + " after " + str(time.time() - start_time) + " seconds\n")
+    logfilecontents += "Running " + (" ".join(commands)) + "\n"
     try:
         subprocess.run(commands)
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
-    fix_fnctl()
-    sys.stderr.flush()
-    sys.stdout.flush()
-    time.sleep(4)
-    sys.stderr.write('Finished running pip' + "\n")
+    if False:
+        fix_fnctl()
+        sys.stderr.flush()
+        sys.stdout.flush()
+    #time.sleep(4)
+    pip_log.seek(0)
     with open(pip_log.name, 'rU', encoding='utf-8') as x:
         logfilecontents += x.read()
     pip_log.close()
-    try:
-        sys.stderr.write(logfilecontents + "\n")
-    except:
-        pass
-    sys.stderr.flush()
-    sys.stdout.flush()
-    if sleep:
-        time.sleep(4)
-    sys.stderr.write('uninstall_package: done' + "\n")
+    if False:
+        try:
+            sys.stderr.write(logfilecontents + "\n")
+        except:
+            pass
+        sys.stderr.flush()
+        sys.stdout.flush()
+        #if sleep:
+        #    time.sleep(4)
+    sys.stderr.write('returnval is: ' + str(returnval) + "\n")
+    sys.stderr.write("uninstall_package: done after " + str(time.time() - start_time) + " seconds\n")
+    logfilecontents += 'returnval is: ' + str(returnval) + "\n"
+    logfilecontents += 'uninstall_package: done' + "\n"
     return returnval, logfilecontents
 
 class Object(object):
@@ -560,15 +589,23 @@ class Object(object):
             setattr(self, key, value)
     pass
 
-def get_installed_distributions():
-    start_time = time.time()
-    sys.stderr.write("get_installed_distributions: starting\n")
+def invalidate_installed_distributions_cache():
+    global installed_distribution_cache
+    installed_distribution_cache = None
+
+def get_installed_distributions(start_time=None):
+    global installed_distribution_cache
+    if installed_distribution_cache is not None:
+        return installed_distribution_cache
+    if start_time is None:
+        start_time = time.time()
+    sys.stderr.write("get_installed_distributions: starting after " + str(time.time() - start_time) + " seconds\n")
     results = list()
-    try:
-        output = subprocess.check_output(['pip', '--version']).decode('utf-8', 'ignore')
-    except subprocess.CalledProcessError as err:
-        output = err.output.decode('utf-8', 'ignore')
-    sys.stderr.write("get_installed_distributions: pip version:\n" + output)
+    # try:
+    #     output = subprocess.check_output(['pip', '--version']).decode('utf-8', 'ignore')
+    # except subprocess.CalledProcessError as err:
+    #     output = err.output.decode('utf-8', 'ignore')
+    # sys.stderr.write("get_installed_distributions: pip version: " + output.strip() + " after " + str(time.time() - start_time) + " seconds\n")
     try:
         output = subprocess.check_output(['pip', 'list', '--format=freeze']).decode('utf-8', 'ignore')
     except subprocess.CalledProcessError as err:
@@ -578,17 +615,20 @@ def get_installed_distributions():
         a = line.split("==")
         if len(a) == 2:
             results.append(Object(key=a[0], version=a[1]))
+    installed_distribution_cache = results
     sys.stderr.write("get_installed_distributions: ending after " + str(time.time() - start_time) + " seconds\n")
     #sys.stderr.write(repr([x.key for x in results]) + "\n")
     return results
 
-def get_pip_info(package_name):
-    #sys.stderr.write("get_pip_info: " + package_name + "\n")
+def get_pip_info(package_name, start_time=None):
+    if start_time is None:
+        start_time = time.time()
+    sys.stderr.write("get_pip_info: " + package_name + " after " + str(time.time() - start_time) + " seconds\n")
     try:
         output = subprocess.check_output(['pip', 'show', package_name]).decode('utf-8', 'ignore')
     except subprocess.CalledProcessError as err:
         output = ""
-        sys.stderr.write("get_pip_info: error.  output was " + err.output.decode('utf-8', 'ignore') + "\n")
+        sys.stderr.write("get_pip_info: error.  output was " + err.output.decode('utf-8', 'ignore') + " after " + str(time.time() - start_time) + " seconds\n")
     # old_stdout = sys.stdout
     # sys.stdout = saved_stdout = StringIO()
     # pip.main(['show', package_name])
@@ -606,10 +646,12 @@ def get_pip_info(package_name):
     for key in ['Name', 'Home-page', 'Version']:
         if key not in results:
             results[key] = None
+    sys.stderr.write("get_pip_info: returning after " + str(time.time() - start_time) + " seconds")
     return results
 
 if __name__ == "__main__":
     #import docassemble.webapp.database
+    start_time = time.time()
     from docassemble.webapp.app_object import app
     with app.app_context():
         from docassemble.webapp.db_object import db
@@ -617,29 +659,29 @@ if __name__ == "__main__":
         from docassemble.webapp.daredis import r
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
         if mode == 'initialize':
-            sys.stderr.write("updating with mode initialize\n")
-            update_versions()
+            sys.stderr.write("updating with mode initialize after " + str(time.time() - start_time) + " seconds\n")
+            update_versions(start_time=start_time)
             any_package = Package.query.filter_by(active=True).first()
             if any_package is None:
-                add_dependencies(1)
-                update_versions()
-            check_for_updates(doing_startup=True)
-            remove_inactive_hosts()
+                add_dependencies(1, start_time=start_time)
+                update_versions(start_time=start_time)
+            check_for_updates(doing_startup=True, start_time=start_time, invalidate_cache=False)
+            remove_inactive_hosts(start_time=start_time)
         else:
-            sys.stderr.write("updating with mode check_for_updates\n")
-            check_for_updates()
+            sys.stderr.write("updating with mode check_for_updates after " + str(time.time() - start_time) + " seconds\n")
+            check_for_updates(start_time=start_time)
             from docassemble.base.config import daconfig
             if USING_SUPERVISOR:
                 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
                 container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
                 if re.search(r':(web|celery|all):', container_role):
-                    sys.stderr.write("Sending reset signal\n")
+                    sys.stderr.write("Sending reset signal after " + str(time.time() - start_time) + " seconds\n")
                     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
                     subprocess.run(args)
                 else:
-                    sys.stderr.write("Not sending reset signal because not web or celery\n")
+                    sys.stderr.write("Not sending reset signal because not web or celery after " + str(time.time() - start_time) + " seconds\n")
             else:
-                sys.stderr.write("update: touched wsgi file" + "\n")
+                sys.stderr.write("update: touched wsgi file after " + str(time.time() - start_time) + " seconds\n")
                 wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
                 if os.path.isfile(wsgi_file):
                     with open(wsgi_file, 'a'):

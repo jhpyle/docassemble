@@ -25066,6 +25066,147 @@ def api_config():
         restart_all()
         return ('', 204)
 
+@app.route('/api/playground_install', methods=['GET', 'POST', 'DELETE'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
+def api_playground_install():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
+    do_restart = true_or_false(post_data.get('restart', True))
+    current_project = post_data.get('project', 'default')
+    try:
+        if current_user.has_role('admin'):
+            user_id = int(post_data.get('user_id', current_user.id))
+        else:
+            if 'user_id' in post_data:
+                assert int(post_data['user_id']) == current_user.id
+            user_id = current_user.id
+    except:
+        return jsonify_with_status("Invalid user_id.", 400)
+    if current_project != 'default' and current_project not in get_list_of_projects(user_id):
+        return jsonify_with_status("Invalid project.", 400)
+    docassemble.base.functions.this_thread.current_info['user'] = dict(is_anonymous=False, theid=user_id)
+    found = False
+    expected_name = 'unknown'
+    need_to_restart = False
+    area = dict()
+    area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
+    for sec in ('playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
+        area[sec] = SavedFile(user_id, fix=True, section=sec)
+    try:
+        for filekey in request.files:
+            the_files = request.files.getlist(filekey)
+            if not the_files:
+                continue
+            for up_file in the_files:
+                found = True
+                zippath = tempfile.NamedTemporaryFile(mode="wb", prefix='datemp', suffix=".zip", delete=False)
+                up_file.save(zippath)
+                up_file.close()
+                zippath.close()
+                with zipfile.ZipFile(zippath.name, mode='r') as zf:
+                    readme_text = ''
+                    setup_py = ''
+                    extracted = dict()
+                    data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
+                    has_docassemble_dir = set()
+                    has_setup_file = set()
+                    for zinfo in zf.infolist():
+                        if zinfo.is_dir():
+                            if zinfo.filename.endswith('/docassemble/'):
+                                has_docassemble_dir.add(re.sub(r'/docassemble/$', '', zinfo.filename))
+                            if zinfo.filename == 'docassemble/':
+                                has_docassemble_dir.add('')
+                        elif zinfo.filename.endswith('/setup.py'):
+                            (directory, filename) = os.path.split(zinfo.filename)
+                            has_setup_file.add(directory)
+                        elif zinfo.filename == 'setup.py':
+                            has_setup_file.add('')
+                    root_dir = None
+                    for directory in has_docassemble_dir.union(has_setup_file):
+                        if root_dir is None or len(directory) < len(root_dir):
+                            root_dir = directory
+                    if root_dir is None:
+                        return jsonify_with_status("Not a docassemble package.", 400)
+                    for zinfo in zf.infolist():
+                        if zinfo.filename.endswith('/'):
+                            continue
+                        (directory, filename) = os.path.split(zinfo.filename)
+                        if filename.startswith('#') or filename.endswith('~'):
+                            continue
+                        dirparts = splitall(directory)
+                        if '.git' in dirparts:
+                            continue
+                        levels = re.findall(r'/', directory)
+                        time_tuple = zinfo.date_time
+                        the_time = time.mktime(datetime.datetime(*time_tuple).timetuple())
+                        for sec in ('templates', 'static', 'sources', 'questions'):
+                            if directory.endswith('data/' + sec) and filename != 'README.md':
+                                data_files[sec].append(filename)
+                                target_filename = os.path.join(directory_for(area[area_sec[sec]], current_project), filename)
+                                with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
+                                    shutil.copyfileobj(source_fp, target_fp)
+                                os.utime(target_filename, (the_time, the_time))
+                        if filename == 'README.md' and directory == root_dir:
+                            with zf.open(zinfo) as f:
+                                the_file_obj = TextIOWrapper(f, encoding='utf8')
+                                readme_text = the_file_obj.read()
+                        if filename == 'setup.py' and directory == root_dir:
+                            with zf.open(zinfo) as f:
+                                the_file_obj = TextIOWrapper(f, encoding='utf8')
+                                setup_py = the_file_obj.read()
+                        elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
+                            need_to_restart = True
+                            data_files['modules'].append(filename)
+                            target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
+                            with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
+                                shutil.copyfileobj(source_fp, target_fp)
+                                os.utime(target_filename, (the_time, the_time))
+                    setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
+                    for line in setup_py.splitlines():
+                        m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
+                        if m:
+                            extracted[m.group(1)] = m.group(2)
+                        m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
+                        if m:
+                            extracted[m.group(1)] = m.group(2)
+                        m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+                        if m:
+                            the_list = list()
+                            for item in re.split(r', *', m.group(2)):
+                                inner_item = re.sub(r"'$", '', item)
+                                inner_item = re.sub(r"^'", '', inner_item)
+                                inner_item = re.sub(r'"+$', '', inner_item)
+                                inner_item = re.sub(r'^"+', '', inner_item)
+                                the_list.append(inner_item)
+                            extracted[m.group(1)] = the_list
+                    info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=[z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', list()))], description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+
+                    info_dict['dependencies'] = [x for x in [z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies'])] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
+                    package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
+                    with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
+                        the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
+                        fp.write(str(the_yaml))
+                    for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
+                        r.incr(key.decode())
+                    for sec in area:
+                        area[sec].finalize()
+                    the_file = package_name
+                zippath.close()
+    except Exception as err:
+        logmessage("api_playground_install: " + err.__class__.__name__ + ": " + str(err))
+        return jsonify_with_status("Error installing packages.", 400)
+    if not found:
+        return jsonify_with_status("No package found.", 400)
+    for key in r.keys('da:interviewsource:docassemble.playground' + str(user_id) + project_name(current_project) + ':*'):
+        r.incr(key.decode())
+    if do_restart and need_to_restart:
+        restart_all()
+    return ('', 204)
+
 @app.route('/api/playground', methods=['GET', 'POST', 'DELETE'])
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)

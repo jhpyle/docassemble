@@ -963,21 +963,22 @@ def reset_server(result):
 
 @workerapp.task
 def update_packages(restart=True):
+    start_time = time.time()
     sys.stderr.write("update_packages in worker: starting\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    sys.stderr.write("update_packages in worker: continuing\n")
+    sys.stderr.write("update_packages in worker: continuing after " + str(time.time() - start_time) + " seconds\n")
     try:
         with worker_controller.flaskapp.app_context():
             worker_controller.set_request_active(False)
-            sys.stderr.write("update_packages in worker: importing update\n")
+            sys.stderr.write("update_packages in worker: importing update after " + str(time.time() - start_time) + " seconds\n")
             import docassemble.webapp.update
-            sys.stderr.write("update_packages in worker: starting update\n")
-            ok, logmessages, results = docassemble.webapp.update.check_for_updates()
-            sys.stderr.write("update_packages in worker: update completed\n")
+            sys.stderr.write("update_packages in worker: starting update after " + str(time.time() - start_time) + " seconds\n")
+            ok, logmessages, results = docassemble.webapp.update.check_for_updates(start_time=start_time, full=restart)
+            sys.stderr.write("update_packages in worker: update completed after " + str(time.time() - start_time) + " seconds\n")
             if restart:
                 worker_controller.trigger_update(except_for=hostname)
-                sys.stderr.write("update_packages in worker: trigger completed\n")
+                sys.stderr.write("update_packages in worker: trigger completed after " + str(time.time() - start_time) + " seconds\n")
             return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results, hostname=hostname, restart=restart)
     except:
         e = sys.exc_info()[0]

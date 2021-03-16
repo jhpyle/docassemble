@@ -65,9 +65,10 @@ def get_user(db, role, defaults):
     db.session.commit()
     return the_user
 
-def populate_tables():
-    start_time = time.time()
-    sys.stderr.write("populate_tables: starting\n")
+def populate_tables(start_time=None):
+    if start_time is None:
+        start_time = time.time()
+    sys.stderr.write("populate_tables: starting after " + str(time.time() - start_time) + "\n")
     user_manager = UserManager(SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel), app)
     admin_defaults = daconfig.get('default admin account', dict())
     if 'email' not in admin_defaults:
@@ -100,7 +101,7 @@ def populate_tables():
     if cron.confirmed_at is None:
         cron.confirmed_at = datetime.datetime.now()
     db.session.commit()
-    add_dependencies(admin.id)
+    add_dependencies(admin.id, start_time=start_time)
     git_packages = Package.query.filter_by(type='git')
     for package in git_packages:
         if package.name in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
@@ -187,7 +188,7 @@ def main():
                 sys.stderr.write("Error trying to create tables; trying a third time.\n")
                 db.create_all()
         sys.stderr.write("Finished creating tables after " + str(time.time() - start_time) + " seconds.\n")
-        populate_tables()
+        populate_tables(start_time=start_time)
         db.engine.dispose()
 
 if __name__ == "__main__":

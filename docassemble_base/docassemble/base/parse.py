@@ -9065,6 +9065,8 @@ def custom_jinja_env():
     env.filters['alpha'] = docassemble.base.functions.alpha
     env.filters['roman'] = docassemble.base.functions.roman
     env.filters['word'] = docassemble.base.functions.word
+    env.filters['bold'] = docassemble.base.functions.bold
+    env.filters['italic'] = docassemble.base.functions.italic
     env.filters['title_case'] = docassemble.base.functions.title_case
     env.filters['single_paragraph'] = docassemble.base.functions.single_paragraph
     env.filters['phone_number_formatted'] = docassemble.base.functions.phone_number_formatted

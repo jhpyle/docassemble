@@ -32,6 +32,7 @@ bash -c \
 && cp /tmp/docassemble/Docker/config/exim4-main /etc/exim4/conf.d/main/01_docassemble \
 && cp /tmp/docassemble/Docker/config/exim4-acl /etc/exim4/conf.d/acl/29_docassemble \
 && cp /tmp/docassemble/Docker/config/exim4-update /etc/exim4/update-exim4.conf.conf \
+&& cp /tmp/docassemble/Docker/nascent.html /var/www/nascent/index.html \
 && update-exim4.conf \
 && chown www-data.www-data /usr/share/docassemble/config \
 && chown www-data.www-data \
