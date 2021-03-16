@@ -2526,10 +2526,14 @@ def middle_constructor(middle, **kwargs):
 
 def possessify_en(a, b, **kwargs):
     ensure_definition(a, b, **kwargs)
-    if 'plural' in kwargs and kwargs['plural']:
-        middle = "' "
+    if this_thread.evaluation_context == 'docx':
+        apostrophe = "’"
     else:
-        middle = "'s "
+        apostrophe = "'"
+    if 'plural' in kwargs and kwargs['plural']:
+        middle = apostrophe + " "
+    else:
+        middle = apostrophe + "s "
     if 'capitalize' in kwargs and kwargs['capitalize']:
         return capitalize(str(a)) + str(middle) + str(b)
     else:

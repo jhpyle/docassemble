@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.44] - 2021-03-16
+### Changed
+- The `possessify()` function and the object methods that use it will
+  return a Unicode apostrophe when called from the context of a DOCX
+  template.
+
 ## [1.2.43] - 2021-03-15
 ### Added
 - The `/api/playground_install` endpoint.
