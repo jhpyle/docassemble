@@ -2040,6 +2040,53 @@ Response on success: [204]
 
 Body of response: empty.
 
+## <a name="playground_install"></a>Upload packages to the Playground
+
+Description: Installs one or more packages into the [Playground].
+
+Path: `/api/playground_install`
+
+Method: [POST]
+
+Data:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `user_id` (optional): the user ID of the user whose [Playground]
+   should be written to.  Only users with `admin` privileges can write
+   to a different user's [Playground].  The default is the user ID of the
+   owner of the API key.
+ - `project` (optional): the project in the [Playground] to which the
+   uploaded package(s) should be written.  The default is `default`,
+   which is the "Default Playground" project.
+ - `restart` (optional): set this to `0` if you want to skip the
+   process of restarting the server after installing the package.  By
+   default, the server is restarted if any of the packages contained a
+   module file.
+
+File data:
+ - `file` or `files[]`: the package(s) to install, in ZIP format.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Invalid user_id" if the user does not have administrative
+   privileges and the `user_id` is different from the current user's
+   user ID.
+ - [400] "Invalid project" if the project given by `project` does not
+   exist.
+ - [400] "Not a docassemble package" if the ZIP file
+ - [400] "Error installing packages" if an error occurred during the
+   process of installing the packages.
+ - [400] "No package found." if no uploaded packages were provided.
+
+Response on success: [204]
+
+Body of response: empty.
+
 ## <a name="clear_cache"></a>Clear the interview cache
 
 Description: Clears the interview cache, causing the [YAML] of each

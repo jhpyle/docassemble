@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.43](https://github.com/jhpyle/docassemble/releases/tag/v1.2.43) - 2021-03-15
+
+### Added
+- The `/api/playground_install` endpoint.
+- The `bold` and `italic` functions as Jinja2 filters.
+
+### Changed
+- As soon as the container starts, a dummy web server begins listening
+  on port 80 (or `PORT`).  This web server turns off before NGINX
+  starts.
+- Verbose `pip` logs no longer saved to `worker.log`.
+
 ## [1.2.42](https://github.com/jhpyle/docassemble/releases/tag/v1.2.42) - 2021-03-13
 
 ### Changed

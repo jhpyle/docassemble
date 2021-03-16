@@ -472,140 +472,71 @@ server.
 
 Note that the URL cannot have a trailing slash.
 
-# <a name="localediting"></a>Editing Playground files in a text editor on a local machine
+# <a name="cli"></a>Editing package files in a text editor on a local machine
 
-## <a name="editingwithoutdocker"></a>Not using Docker
+The [Playground] is designed for people who are just getting started
+with **docassemble**.  Once you start creating packages, it can be
+more useful to work on your interview files on your local machine, so
+that you can use all of the features of command-line [git].
 
-If you are not using [Docker] to run **docassemble**, you can use
-[sshfs] to "mount" your [Playground].
+If you already have an interview working in the Playground, you can
+use the "Packages" folder of the [Playground] to create a package
+(e.g., called "custody") and then download it as
+`docassemble-custody.zip`.  When you uncompress the ZIP file, you will
+have a directory called `docassemble-custody`.  Your YAML files are in
+the `docassemble/custody/data/questions` directory.
 
-{% highlight bash %}
-sshfs www-data@localhost:/usr/share/docassemble/files pg
-{% endhighlight %}
+If your interview is packaged and on [GitHub], you can install [git]
+on your personal computer and then run `git clone` to copy the
+package.  This has the advantage that `git` will already be configured
+inside the directory.
 
-This way, you can use a text editor to edit your [Playground] files.
+You can also download [a dummy package] to serve as the shell for your
+own package.  Make sure to replace the word `dummy` with your own
+package name, and make other changes as appropriate, to the following
+files and directories:
 
-## <a name="editingwithdocker"></a>Using Docker
+* README.md
+* LICENSE
+* setup.py
+* docassemble/dummy
 
-If you are running **docassemble** using [Docker] on a local machine,
-and you are not using S3 or Azure Blob Storage, you can use [Docker
-volume]s to access your [Playground] files using a text editor running
-on your local machine.
+Using your personal computer to manage your template files and YAML
+files is very convenient.  If you haven't used a text editor before,
+try installing [Sublime Text], [Notepad++], or [Visual Studio Code].
 
-This requires running [`docker run`], so if you already have a running
-**docassemble** [Docker] container, you will have to delete it and
-create a new one.
-
-In the following commands, we create a directory called `da`, and then
-use [`docker run`] to start **docassemble** in a way that maps the
-`da` directory to the container's directory
-`/usr/share/docassemble/files`.
-
-{% highlight bash %}
-mkdir da
-docker run \
---env WWWUID=`id -u` --env WWWGID=`id -g` \
--v `pwd`/da:/usr/share/docassemble/files \
--v dabackup:/usr/share/docassemble/backup \
--d -p 80:80 -p 443:443 jhpyle/docassemble
-{% endhighlight %}
-
-The `WWWUID` and `WWWGID` options are important because they ensure
-that the user who runs the `docker run` command will be able to
-read and write the files in `da`.  This command also creates a [Docker
-volume] called `dabackup` so that you can use [`docker stop`] to stop
-the container, [`docker rm`] to remove the container, and then you can
-re-run the [`docker run`] command above, and you will not lose your
-work.
-
-The contents of `da` will include:
-
-* `000` - This is where uploaded files are stored.  You can ignore this.
-* `playground` - This is where interview YAML files are.
-* `playgroundmodules` - This is where module files are.
-* `playgroundpackages` - This is where package information is stored.
-  If you use [GitHub integration], the SSH key is stored in here, in 
-  hidden files called `.ssh-private` and `.ssh-public`.
-* `playgroundsources` - This is where "sources" files are stored.
-* `playgroundstatic` - This is where "static" files are stored.
-* `playgroundtemplate` - This is where "template" files are stored.
-
-Within each of these folders there are sub-folders with integer
-names.  These integers correspond with user IDs.  Your user ID is
-probably `1` unless you create a new user for yourself.  Within that
-folder, you will find the files for the default "project."  Other
-projects are located in subfolders bearing the name of the project.
-
-## <a name="editingwithplayground"></a>Editing locally and running interviews in the Playground
-
-Within each `playground` directory, there are subdirectories with
-numbers like `1`.  These refer to user numbers.  Each user has their
-own separate folder.  Typically, if you have a server all to yourself,
-you will do everything as user `1`.  The directories you will use most
-often are `da/playground/1` and `da/playgroundtemplate/1`, for
-interview files and templates, respectively.  For convenience, you
-might want to create symbolic links from your home directory to these
-folders.  If you change the directory structure within `da`, you will
-probably cause errors.
-
-To run interviews in your Playground, you can use links like 
-
-{% highlight text %}
-http://localhost/interview?i=docassemble.playground1:interview.yml&cache=0&reset=1
-{% endhighlight %}
-
-The `docassemble.playground1` part refers to the Playground of user 1,
-which is a "package" that isn't really a package.
-
-The `interview.yml` part refers to the interview file you want to run.
-
-The `cache=0` part means that you are telling **docassemble** to
-re-read the interview from the disk.  This is important; normally
-**docassemble** caches interviews in its memory.  So if you make
-changes to the interview file on disk, you need to tell
-**docassemble** that the interview changed.  That is what `cache=0`
-does.
-
-The `reset=1` part means that you want to start the interview at the
-beginning.  This might not be the case; if you want to try to resume
-an interview you had already been running, you can omit `reset=1`.
-
-If you use the [Playground] in the web browser, you can use the "Run"
-button in the "Variables, etc." section to launch interviews.  Be
-careful about using "Save and Run" because it will save whatever
-version is in the text area in the web browser; this may overwrite the
-version you had been working with.
-
-Note that editing files in your [Playground] in this way is a "hack"
-that bypasses **docassemble**'s front end, so do not be surprised if
-you encounter problems.  For example, if the server is unable to
-access a file because your text editor has placed a lock on it, you
-might see an error.
-
-If you are not using [Docker], but you are using Linux, you can use
-sshfs to create a mount in your home directory that maps to the
-[Playground].
-
-First, if you don't have an SSH key stored in `~/.ssh/id_rsa` and
-`~/.ssh/id_rsa.pub`, generate one:
+To test your interview, you should use the `dainstall` command-line
+utility, which is part of the [`docassemblecli`] Python package.
+Then, to install your package on a remote server, just run:
 
 {% highlight bash %}
-ssh-keygen -t rsa
+dainstall docassemble-custody
 {% endhighlight %}
 
-Then, run the following as root, from your home directory:
-
-{% highlight bash %}
-mkdir -p /var/www/.ssh
-cat .ssh/id_rsa.pub >> /var/www/.ssh/authorized_keys
-chown www-data.www-data /var/www/.ssh/authorized_keys
-chmod 700 /var/www/.ssh/authorized_keys
-{% endhighlight %}
+If you haven't made any changes to module files, you can run it as:
 
 {% highlight bash %}
-mkdir pg
-sshfs -o idmap=user www-data@localhost:/usr/share/docassemble/files pg
+dainstall --norestart docassemble-custody
 {% endhighlight %}
+
+Without a restart, a package will install in about 5.5
+seconds. Installing a package without a restart only works if the
+server is a single machine rather than a cluster.
+
+By default, when you run `dainstall`, it installs the package on the
+server itself, not in the [Playground] on the server.  So in order to
+test the interview you would visit, e.g.,
+`/start/custody/myinterview/`.
+
+If you want to install the package into the Playground, call
+`dainstall` with `--playground`:
+
+{% highlight bash %}
+dainstall --norestart --playground docassemble-custody
+{% endhighlight %}
+
+The interview files are available almost immediately when installing
+into the Playground.
 
 # <a name="core"></a>Workflow for making changes to the core docassemble code
 
@@ -1734,3 +1665,8 @@ staff member who knows a lot about the subject matter.
 [`value()`]: {{ site.baseurl }}/docs/functions.html#value
 [DevOps]: https://en.wikipedia.org/wiki/DevOps
 [uWSGI]: https://uwsgi-docs.readthedocs.io/en/latest/
+[a dummy package]: {{ site.baseurl }}/img/docassemble-dummy.zip
+[Notepad++]: https://notepad-plus-plus.org/
+[Sublime Text]: http://www.sublimetext.com/
+[Visual Studio Code]: https://code.visualstudio.com/
+[`docassemblecli`]: https://pypi.org/project/docassemblecli/
