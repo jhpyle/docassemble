@@ -133,7 +133,7 @@ install_requires = [
     "Docassemble-Pattern==3.6.1",
     "pdfminer.six==20201018",
     "phonenumbers==8.12.13",
-    "Pillow==8.0.1",
+    "Pillow==8.1.1",
     "pkginfo==1.6.1",
     "pluggy==0.13.1",
     "ply==3.11",
