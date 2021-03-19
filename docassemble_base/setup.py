@@ -91,7 +91,7 @@ install_requires = [
     "jdcal==1.4.1",
     "jeepney==0.6.0",
     "jellyfish==0.6.1",
-    "Jinja2==2.11.2",
+    "Jinja2==2.11.3",
     "joblib==0.17.0",
     "keyring==21.5.0",
     "lxml==4.6.2",
