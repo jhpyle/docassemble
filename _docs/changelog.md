@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.45](https://github.com/jhpyle/docassemble/releases/tag/v1.2.45) - 2021-03-19
+
+### Fixed
+- Error with `allow reordering`.
+
 ## [1.2.44](https://github.com/jhpyle/docassemble/releases/tag/v1.2.44) - 2021-03-16
 
 ### Changed
