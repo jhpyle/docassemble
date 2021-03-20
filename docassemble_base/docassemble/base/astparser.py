@@ -148,6 +148,14 @@ class myvisitnode(ast.NodeVisitor):
                     if isinstance(subtarget, ast.Name):
                         self.targets[subtarget.id] = 1
         self.generic_visit(node)
+    def visit_Lambda(self, node):
+        for arg in node.args.posonlyargs:
+            self.targets[arg.arg] = 1
+        for arg in node.args.args:
+            self.targets[arg.arg] = 1
+        for arg in node.args.kwonlyargs:
+            self.targets[arg.arg] = 1
+        self.generic_visit(node)
     def visit_ListComp(self, node):
         for comp in node.generators:
             if isinstance(comp.target, ast.Name):

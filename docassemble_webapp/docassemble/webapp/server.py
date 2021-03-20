@@ -6854,8 +6854,8 @@ def index(action_argument=None, refer=None):
             orderChanges = json.loads(post_data['_order_changes'])
             for tableName, changes in orderChanges.items():
                 tableName = myb64unquote(tableName)
-                if STRICT_MODE and tableName not in authorized_fields:
-                    raise DAError("The variable " + repr(tableName) + " was not in the allowed fields, which were " + repr(authorized_fields))
+                #if STRICT_MODE and tableName not in authorized_fields:
+                #    raise DAError("The variable " + repr(tableName) + " was not in the allowed fields, which were " + repr(authorized_fields))
                 if illegal_variable_name(tableName):
                     error_messages.append(("error", "Error: Invalid character in table reorder: " + str(tableName)))
                     continue

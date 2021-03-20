@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.45] - 2021-03-19
+### Fixed
+- Error with `allow reordering`.
+
 ## [1.2.44] - 2021-03-16
 ### Changed
 - The `possessify()` function and the object methods that use it will
