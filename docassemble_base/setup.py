@@ -94,7 +94,7 @@ install_requires = [
     "Jinja2==2.11.2",
     "joblib==0.17.0",
     "keyring==21.5.0",
-    "lxml==4.6.2",
+    "lxml==4.6.3",
     "Mako==1.1.3",
     "Marisol==0.3.0",
     "Markdown==3.3.3",
