@@ -538,6 +538,20 @@ dainstall --norestart --playground docassemble-custody
 The interview files are available almost immediately when installing
 into the Playground.
 
+You can also use the `dawatchinstall` shell script to run `dainstall`
+automatically when any file in a directory changes:
+
+{% highlight bash %}
+dawatchinstall --playground docassemble-custody
+{% endhighlight %}
+
+The `dawatchinstall` script calls `dainstall` with `--norestart` by
+default, except when a `.py` file is changed, in which case
+`--norestart` is omitted.
+
+For more information about these commands, consult the README for the
+[`docassemblecli`] Python package.
+
 # <a name="core"></a>Workflow for making changes to the core docassemble code
 
 If you want to make changes to the **docassemble** code, clone the
