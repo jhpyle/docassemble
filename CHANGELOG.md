@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.46] - 2021-03-24
+### Fixed
+- Error with reading zip files.
+- Error when the `complete_attribute` is a `@property`.
+
 ## [1.2.45] - 2021-03-19
 ### Fixed
 - Error with `allow reordering`.

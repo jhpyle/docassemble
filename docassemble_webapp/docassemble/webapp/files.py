@@ -510,7 +510,10 @@ def get_version_suffix(package_name):
     from docassemble.webapp.update import get_pip_info
     info = get_pip_info(package_name)
     if 'Version' in info:
-        installed_version = LooseVersion(info['Version'].strip())
+        the_version = info['Version']
+        if the_version is None:
+            the_version = '1.0'
+        installed_version = LooseVersion(the_version.strip())
         latest_release = None
         printable_latest_release = None
         try:

@@ -17793,10 +17793,11 @@ def playground_packages():
             for up_file in the_files:
                 #try:
                     zip_filename = werkzeug.utils.secure_filename(up_file.filename)
-                    zippath = tempfile.NamedTemporaryFile(mode="wb", suffix=".zip", delete=True)
+                    zippath = tempfile.NamedTemporaryFile(mode="wb", suffix=".zip", prefix="datemp", delete=False)
                     up_file.save(zippath.name)
                     area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
-                    with zipfile.ZipFile(zippath, mode='r') as zf:
+                    zippath.close()
+                    with zipfile.ZipFile(zippath.name, mode='r') as zf:
                         readme_text = ''
                         setup_py = ''
                         extracted = dict()

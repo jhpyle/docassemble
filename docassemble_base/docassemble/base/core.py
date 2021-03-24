@@ -1109,7 +1109,10 @@ class DAList(DAObject):
             if hasattr(self, 'complete_attribute') and self.complete_attribute == 'complete':
                 for item in self.elements:
                     if hasattr(item, self.complete_attribute):
-                        delattr(item, self.complete_attribute)
+                        try:
+                            delattr(item, self.complete_attribute)
+                        except:
+                            pass
             if hasattr(self, 'gathered'):
                 del self.gathered
         if self.auto_gather:
@@ -1183,7 +1186,10 @@ class DAList(DAObject):
         if mark_incomplete and self.complete_attribute is not None:
             for item in self.elements:
                 if hasattr(item, self.complete_attribute):
-                    delattr(item, self.complete_attribute)
+                    try:
+                        delattr(item, self.complete_attribute)
+                    except:
+                        pass
         if recursive:
             self._reset_gathered_recursively()
     def has_been_gathered(self):
@@ -2145,7 +2151,10 @@ class DADict(DAObject):
         if mark_incomplete and self.complete_attribute is not None:
             for item in list(self.elements.values()):
                 if hasattr(item, self.complete_attribute):
-                    delattr(item, self.complete_attribute)
+                    try:
+                        delattr(item, self.complete_attribute)
+                    except:
+                        pass
         if recursive:
             self._reset_gathered_recursively()
     def slice(self, *pargs):
@@ -2327,7 +2336,10 @@ class DADict(DAObject):
             if self.complete_attribute == 'complete':
                 for item in list(self.elements.values()):
                     if hasattr(item, self.complete_attribute):
-                        delattr(item, self.complete_attribute)
+                        try:
+                            delattr(item, self.complete_attribute)
+                        except:
+                            pass
             if hasattr(self, 'gathered'):
                 del self.gathered
         if self.auto_gather:
@@ -2772,7 +2784,10 @@ class DASet(DAObject):
             if hasattr(self, 'complete_attribute') and self.complete_attribute == 'complete':
                 for item in self.elements:
                     if hasattr(item, self.complete_attribute):
-                        delattr(item, self.complete_attribute)
+                        try:
+                            delattr(item, self.complete_attribute)
+                        except:
+                            pass
             if hasattr(self, 'gathered'):
                 del self.gathered
         if self.auto_gather:
@@ -2850,7 +2865,10 @@ class DASet(DAObject):
         if mark_incomplete and self.complete_attribute is not None:
             for item in list(self.elements):
                 if hasattr(item, self.complete_attribute):
-                    delattr(item, self.complete_attribute)
+                    try:
+                        delattr(item, self.complete_attribute)
+                    except:
+                        pass
         if recursive:
             self._reset_gathered_recursively()
     def has_been_gathered(self):
@@ -4583,6 +4601,8 @@ def selections(*pargs, **kwargs):
         elif isinstance(arg, list):
             the_list = arg
         elif isinstance(arg, set):
+            the_list = list(arg)
+        elif isinstance(arg, abc.Iterable) and not isinstance(arg, str):
             the_list = list(arg)
         else:
             the_list = [arg]
