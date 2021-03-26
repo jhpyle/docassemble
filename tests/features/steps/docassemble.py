@@ -234,8 +234,14 @@ def click_nth_link(step, ordinal, link_name):
     try:
         world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
     except:
-        link_name += " "
-        world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+        try:
+            world.browser.find_element_by_xpath('(//a/span[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+        except:
+            link_name += " "
+            try:
+                world.browser.find_element_by_xpath('(//a[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+            except:
+                world.browser.find_element_by_xpath('(//a/span[text()="' + link_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
     world.browser.wait_for_it()
 
 @step(r'I should see the phrase "([^"]+)"')

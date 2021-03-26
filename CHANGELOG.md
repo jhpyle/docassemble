@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.2.47] - 2021-03-25
+## [1.2.47] - 2021-03-26
 ### Fixed
 - Enter key on Playground Packages page.
 - Word wrap on buttons.
