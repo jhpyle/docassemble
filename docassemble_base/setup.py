@@ -141,7 +141,7 @@ install_requires = [
     "python-docx==0.8.10",
     "python-editor==1.0.4",
     "pytz==2020.4",
-    "PyYAML==5.3.1",
+    "PyYAML==5.4",
     "pyzbar==0.1.8",
     "qrcode==6.1",
     "readme-renderer==28.0",
