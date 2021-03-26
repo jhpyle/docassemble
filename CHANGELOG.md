@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.47] - 2021-03-25
+### Fixed
+- Enter key on Playground Packages page.
+- Word wrap on buttons.
+
 ## [1.2.46] - 2021-03-24
 ### Fixed
 - Error with reading zip files.

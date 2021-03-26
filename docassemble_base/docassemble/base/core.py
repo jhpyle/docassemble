@@ -1828,13 +1828,13 @@ class DAList(DAObject):
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             if ensure_complete:
                 items += [dict(action='_da_list_ensure_complete', arguments=dict(group=self.instanceName))]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'secondary btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'secondary btn-darevisit"><span class="text-nowrap"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</span></a> '
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'danger btn-darevisit' + areyousure +'"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'danger btn-darevisit' + areyousure +'"><span class="text-nowrap"><i class="fas fa-trash"></i> ' + word('Delete') + '</span></a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):
@@ -4074,6 +4074,7 @@ class DAStaticFile(DAObject):
     def init(self, *pargs, **kwargs):
         if 'filename' in kwargs and 'mimetype' not in kwargs and 'extension' not in kwargs:
             self.extension, self.mimetype = server.get_ext_and_mimetype(kwargs['filename'])
+        self.package = docassemble.base.functions.this_thread.current_question.package
         return super().init(*pargs, **kwargs)
     def get_alt_text(self):
         """Returns the alt text for the file.  If no alt text is defined, None
@@ -4086,6 +4087,15 @@ class DAStaticFile(DAObject):
     def set_alt_text(self, alt_text):
         """Sets the alt text for the file."""
         self.alt_text = alt_text
+    def _get_unqualified_reference(self):
+        if not ':' in self.filename and hasattr(self, 'package'):
+            file_reference = self.package + ':'
+            if not '/' in str(self.filename):
+                file_reference += 'data/static/'
+            file_reference += str(self.filename)
+            return file_reference
+        else:
+            return str(self.filename)
     def show(self, width=None, alt_text=None):
         """Inserts markup that displays the file.  Takes optional keyword
         arguments width and alt_text.
@@ -4110,7 +4120,7 @@ class DAStaticFile(DAObject):
                 the_alt_text = the_alt_text = re.sub(r'\]', '', str(alt_text))
             else:
                 the_alt_text = 'None'
-            return('[FILE ' + str(self.filename) + ', ' + the_width + ', ' + the_alt_text + ']')
+            return('[FILE ' + self._get_unqualified_reference() + ', ' + the_width + ', ' + the_alt_text + ']')
     def _pdf_pages(self, width):
         file_info = dict()
         pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
@@ -4121,7 +4131,7 @@ class DAStaticFile(DAObject):
         return docassemble.base.file_docx.pdf_pages(file_info, width)
     def is_encrypted(self):
         """Returns True if the file is a PDF file and it is encrypted, otherwise returns False."""
-        file_info = server.file_finder(self.filename)
+        file_info = server.file_finder(self._get_unqualified_reference())
         return the_file.get('encrypted', False)
     def size_in_bytes(self):
         """Returns the number of bytes in the file."""
@@ -4142,7 +4152,7 @@ class DAStaticFile(DAObject):
         """Returns a path and filename at which the file can be accessed.
 
         """
-        file_info = server.file_finder(self.filename)
+        file_info = server.file_finder(self._get_unqualified_reference())
         return file_info.get('fullpath', None)
     def get_docx_variables(self):
         """Returns a list of variables used by the Jinja2 templating of a DOCX template file."""
@@ -4170,8 +4180,8 @@ class DAStaticFile(DAObject):
         if 'attachment' in kwargs:
             the_args['_attachment'] = kwargs['attachment']
             del the_args['attachment']
-        the_args['_question'] = docassemble.base.functions.this_thread.current_question
-        return server.url_finder(self.filename, **the_args)
+        the_args['question'] = docassemble.base.functions.this_thread.current_question
+        return server.url_finder(self._get_unqualified_reference(), **the_args)
     def _is_pdf(self):
         if hasattr(self, 'extension') and self.extension.lower() == 'pdf':
             return True

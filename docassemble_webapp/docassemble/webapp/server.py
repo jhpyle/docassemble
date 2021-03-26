@@ -18293,6 +18293,15 @@ def playground_packages():
             event.preventDefault();
             return false;
           }
+        });
+        $(document).on('keydown', function(e){
+          if (e.which == 13){
+            var tag = $( document.activeElement ).prop("tagName");
+            if (tag != "TEXTAREA" && tag != "A" && tag != "LABEL" && tag != "BUTTON"){
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }
         });"""
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '

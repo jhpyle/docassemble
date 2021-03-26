@@ -7481,6 +7481,7 @@ class Interview:
                                 if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'objects', 'time': time.time()})
                                 #logmessage("Going into objects")
+                                docassemble.base.functions.this_thread.current_question = question
                                 for keyvalue in question.objects:
                                     for variable in keyvalue:
                                         object_type_name = keyvalue[variable]
@@ -7992,6 +7993,7 @@ class Interview:
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         success = False
                         old_variable = None
+                        docassemble.base.functions.this_thread.current_question = question
                         for keyvalue in question.objects:
                             # logmessage("In a for loop for keyvalue")
                             for variable, object_type_name in keyvalue.items():
