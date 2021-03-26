@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.47](https://github.com/jhpyle/docassemble/releases/tag/v1.2.47) - 2021-03-26
+
+### Fixed
+- Enter key on Playground Packages page.
+- Word wrap on buttons.
+
 ## [1.2.46](https://github.com/jhpyle/docassemble/releases/tag/v1.2.46) - 2021-03-24
 
 ### Fixed
