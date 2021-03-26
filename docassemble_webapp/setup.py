@@ -171,7 +171,7 @@ install_requires = [
     "python-socketio==4.6.0",
     "pytz==2020.4",
     "pyu2f==0.1.5",
-    "PyYAML==5.3.1",
+    "PyYAML==5.4",
     "pyzbar==0.1.8",
     "qrcode==6.1",
     "rauth==0.7.3",
