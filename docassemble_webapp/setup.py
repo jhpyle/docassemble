@@ -106,7 +106,7 @@ install_requires = [
     "kombu==5.0.2",
     "libcst==0.3.14",
     "links-from-link-header==0.1.0",
-    "lxml==4.6.2",
+    "lxml==4.6.3",
     "Mako==1.1.3",
     "Marisol==0.3.0",
     "Markdown==3.3.3",
