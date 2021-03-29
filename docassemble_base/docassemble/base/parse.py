@@ -7152,12 +7152,7 @@ class Interview:
                     document = yaml.safe_load(source_code)
                 except Exception as errMess:
                     self.success = False
-                    #sys.stderr.write("Error: " + str(source_code) + "\n")
-                    #str(source_code)
-                    try:
-                        raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
-                    except:
-                        raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess.__class__.__name__))
+                    raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
                 if document is not None:
                     try:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
