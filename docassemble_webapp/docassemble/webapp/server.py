@@ -21752,14 +21752,14 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     while True:
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
-            update_session(sess_info['yaml_filename'], encrypted=encrypted)
+            update_session(sess_info['yaml_filename'], encrypted=encrypted, uid=sess_info['uid'])
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             if save:
                 decrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if user_dict.get('multi_user', False) is False and encrypted is False:
             encrypted = True
-            update_session(sess_info['yaml_filename'], encrypted=encrypted)
+            update_session(sess_info['yaml_filename'], encrypted=encrypted, uid=sess_info['uid'])
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             if save:
@@ -21780,9 +21780,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if sess_info['user_id'] is not None:
             user = load_user(sess_info['user_id'])
         if user is None:
-            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None, session_uid=sess_info['session_uid']), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
+            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None, session_uid=sess_info['session_uid'], device_id=form["From"]), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
         else:
-            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None, session_uid=sess_info['session_uid']), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'])
+            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None, session_uid=sess_info['session_uid'], device_id=form["From"]), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'])
         if action is not None:
             logmessage("do_sms: setting action to " + str(action))
             ci.update(action)
@@ -22382,14 +22382,14 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', '', qoutput)
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
-            update_session(sess_info['yaml_filename'], encrypted=encrypted)
+            update_session(sess_info['yaml_filename'], encrypted=encrypted, uid=sess_info['uid'])
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             if save:
                 decrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if user_dict.get('multi_user', False) is False and encrypted is False:
             encrypted = True
-            update_session(sess_info['yaml_filename'], encrypted=encrypted)
+            update_session(sess_info['yaml_filename'], encrypted=encrypted, uid=sess_info['uid'])
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             if save:

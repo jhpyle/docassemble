@@ -7156,7 +7156,7 @@ class Interview:
                     #str(source_code)
                     try:
                         raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
-                    except:
+                    except (UnicodeDecodeError, UnicodeEncodeError):
                         raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess.__class__.__name__))
                 if document is not None:
                     try:

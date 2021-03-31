@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.48] - 2021-03-31
+### Fixed
+- Error with SMS interface.
+- Better trapping of unicode errors in case of a YAML error.
+
 ## [1.2.47] - 2021-03-26
 ### Fixed
 - Enter key on Playground Packages page.
