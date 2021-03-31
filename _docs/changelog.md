@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.48](https://github.com/jhpyle/docassemble/releases/tag/v1.2.48) - 2021-03-31
+
+### Fixed
+- Error with SMS interface.
+- Better trapping of unicode errors in case of a YAML error.
+
 ## [1.2.47](https://github.com/jhpyle/docassemble/releases/tag/v1.2.47) - 2021-03-26
 
 ### Fixed
