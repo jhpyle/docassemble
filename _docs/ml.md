@@ -840,7 +840,7 @@ If the dependent values are `'Unhappy'` and `'Happy'`, the
 something like this:
 
 {% highlight python %}
-{u'Unhappy': {u'Unhappy': 8, u'Happy': 3}, u'Happy': {u'Unhappy': 2, u'Happy': 6}}
+{'Unhappy': {'Unhappy': 8, 'Happy': 3}, 'Happy': {'Unhappy': 2, 'Happy': 6}}
 {% endhighlight %}
 
 The outer keys refer to "actual" values and the inner keys refer to
@@ -1123,9 +1123,9 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-# <a name="SVNMachineLearner"></a>The `SVNMachineLearner` object
+# <a name="SVMMachineLearner"></a>The `SVMMachineLearner` object
 
-The `SVNMachineLearner` works just like `SimpleTextMachineLearner`
+The `SVMMachineLearner` works just like `SimpleTextMachineLearner`
 except that is uses the Support Vector Machines algorithm from the
 [`pattern.vector`] package.  The prediction list always has a length
 of one.
