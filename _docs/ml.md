@@ -1127,8 +1127,7 @@ subquestion: |
 
 The `SVMMachineLearner` works just like `SimpleTextMachineLearner`
 except that is uses the Support Vector Machines algorithm from the
-[`pattern.vector`] package.  The prediction list always has a length
-of one.
+[`pattern.vector`] package.
 
 # <a name="RandomForestMachineLearner"></a>The `RandomForestMachineLearner` object
 
