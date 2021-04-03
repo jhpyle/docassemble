@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.49] - 2021-04-03
+### Fixed
+- Issue with SVM library.
+
 ## [1.2.48] - 2021-03-31
 ### Fixed
 - Error with SMS interface.

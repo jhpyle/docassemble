@@ -112,7 +112,7 @@ install_requires = [
     "pandas==1.1.4",
     "passlib==1.7.4",
     "pathlib==1.0.1",
-    "Docassemble-Pattern==3.6.1",
+    "Docassemble-Pattern==3.6.2",
     "pdfminer.six==20201018",
     "phonenumbers==8.12.13",
     "Pillow==8.1.1",
