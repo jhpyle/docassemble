@@ -128,7 +128,7 @@ install_requires = [
     "pycryptodome==3.9.9",
     "pycryptodomex==3.9.9",
     "pycurl==7.43.0.6",
-    "Pygments==2.7.2",
+    "Pygments==2.7.4",
     "PyJWT==1.7.1",
     "PyLaTeX==1.4.1",
     "pyparsing==2.4.7",
