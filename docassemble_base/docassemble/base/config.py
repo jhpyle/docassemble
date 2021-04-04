@@ -587,6 +587,8 @@ def load(**kwargs):
             override_config(daconfig, messages, 'redis', 'REDIS')
         if env_exists('RABBITMQ'):
             override_config(daconfig, messages, 'rabbitmq', 'RABBITMQ')
+        if env_exists('DACELERYWORKERS'):
+            override_config(daconfig, messages, 'celery processes', 'DACELERYWORKERS')
         for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
             if env_exists(env_var):
                 override_config(daconfig, messages, key, env_var, pre_key='s3')

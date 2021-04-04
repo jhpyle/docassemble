@@ -54,6 +54,7 @@ os locale: {{LOCALE}}
 timezone: {{TIMEZONE}}
 redis: {{REDIS}}
 rabbitmq: {{RABBITMQ}}
+celery processes: {{DACELERYWORKERS}}
 voicerss:
   enable: False
   key: ae8734983948ebc98239e9898f998432

@@ -42,7 +42,9 @@ if __name__ == "__main__":
             print('DAMAXCONTENTLENGTH=' + str(max_content_length))
     else:
         print('DAMAXCONTENTLENGTH=' + str(16 * 1024 * 1024))
-    if 'debian packages' in daconfig and type(daconfig['debian packages']) is list:
+    if 'celery processes' in daconfig and isinstance(daconfig['celery processes'], int):
+        print('DACELERYWORKERS=' + str(daconfig['celery processes']))
+    if 'debian packages' in daconfig and isinstance(daconfig['debian packages'], list):
         print('declare -a PACKAGES')
         print('export PACKAGES')
         indexno = 0

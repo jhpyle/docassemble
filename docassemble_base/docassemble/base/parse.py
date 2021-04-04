@@ -4494,6 +4494,8 @@ class Question:
                     defs.extend(self.interview.defs[def_key])
             if 'variable name' in target:
                 variable_name = target['variable name']
+                if variable_name is None:
+                    raise DAError('A variable name cannot be None.' + self.idebug(target))
                 if self.scan_for_variables:
                     self.fields_used.add(target['variable name'])
                 else:
