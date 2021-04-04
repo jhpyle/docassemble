@@ -6,6 +6,7 @@ import httplib2
 import socket
 import pkg_resources
 from docassemble.base.generate_key import random_string
+from distutils.version import LooseVersion
 # def trenv(key):
 #     if os.environ[key] == 'null':
 #         return None
@@ -144,6 +145,10 @@ def load(**kwargs):
             daconfig['system version'] = fp.read().strip()
     else:
         daconfig['system version'] = '0.1.12'
+    if LooseVersion(daconfig['system version']) >= LooseVersion('1.2.50'):
+        daconfig['has_celery_single_queue'] = True
+    else:
+        daconfig['has_celery_single_queue'] = False
     # for key in [['REDIS', 'redis'], ['RABBITMQ', 'rabbitmq'], ['EC2', 'ec2'], ['LOGSERVER', 'log server'], ['LOGDIRECTORY', 'log'], ['USEHTTPS', 'use https'], ['USELETSENCRYPT', 'use lets encrypt'], ['BEHINDHTTPSLOADBALANCER', 'behind https load balancer'], ['LETSENCRYPTEMAIL', 'lets encrypt email'], ['DAHOSTNAME', 'external hostname']]:
     #     if key[0] in os.environ:
     #         val = trenv(os.environ[key[0]])

@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.50] - 2021-04-04
+### Changed
+- OCRing in background now uses one process per machine (requires
+  system update).
+
 ## [1.2.49] - 2021-04-03
 ### Fixed
 - Issue with SVM library.
