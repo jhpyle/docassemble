@@ -833,6 +833,11 @@ your container for the new configuration to take effect.
   Note that if you run **docassemble** using the instructions in the
   [scalability] section, you may not need to worry about setting
   `RABBITMQ`.  See the [`rabbitmq`] configuration directive.
+* <a name="DACELERYWORKERS"></a>`DACELERYWORKERS`: By default, the
+  number of Celery workers is based on the number of CPUs on the
+  machine.  If you want to set a different value, set
+  `DACELERYWORKERS` to integer greater than or equal to 1.  See the 
+  [`celery processes`] configuration directive.
 * <a name="SERVERADMIN"></a>`SERVERADMIN`: If your **docassemble** web
   server generates an error, the error message will contain an e-mail
   address that the user can contact for help.  This e-mail address
@@ -2324,3 +2329,4 @@ line), as the containers depend on the images.
 [`BEHINDHTTPSLOADBALANCER`]: #BEHINDHTTPSLOADBALANCER
 [BusyBox]: https://hub.docker.com/_/busybox
 [`http port`]: {{ site.baseurl }}/docs/config.html#http port
+[`celery processes`]: {{ site.baseurl }}/docs/config.html#celery processes
