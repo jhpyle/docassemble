@@ -352,7 +352,7 @@ def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resoluti
         sys.stderr.write("ocr_page finished with pdf page " + str(page) + "\n")
         doc.commit()
         return dict(indexno=indexno, page=page, doc=doc)
-    params = ['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)]
+    params = ['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm), '--dpi', str(ocr_resolution)]
     sys.stderr.write("ocr_page: piping to command " + " ".join(params) + "\n")
     try:
         text = subprocess.check_output(params, stdin=file_to_read).decode()

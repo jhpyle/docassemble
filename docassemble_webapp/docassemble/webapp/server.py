@@ -10731,7 +10731,7 @@ def index(action_argument=None, refer=None):
       });"""
         for info in docassemble.base.functions.custom_types.values():
             if isinstance(info['javascript'], str):
-                the_js += "\n" + indent_by(info['javascript'].strip(), 6).rstrip()
+                the_js += "\n      try {\n" + indent_by(info['javascript'].strip(), 8).rstrip() + "\n      }\n      catch {\n        console.log('Error with JavaScript code of CustomDataType " + info['class'].__name__ + "');\n      }"
         if interview_status.question.interview.options.get('send question data', False):
             the_js += "\n      daQuestionData = " + json.dumps(interview_status.as_data(user_dict))
         scripts += """
