@@ -5203,14 +5203,19 @@ def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=N
         output.append(dict(message=message, datetime=the_datetime, user_email=user_email, user_first_name=user_first_name, user_last_name=user_last_name))
     return output
 
+def jsonify_with_cache(*pargs, **kwargs):
+    response = jsonify(*pargs, **kwargs)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
+
 @app.route("/checkin", methods=['POST', 'GET'])
 def checkin():
     yaml_filename = request.args.get('i', None)
     if yaml_filename is None:
-        return jsonify(success=False)
+        return jsonify_with_cache(success=False)
     session_info = get_session(yaml_filename)
     if session_info is None:
-        return jsonify(success=False)
+        return jsonify_with_cache(success=False)
     session_id = session_info['uid']
     if 'visitor_secret' in request.cookies:
         secret = request.cookies['visitor_secret']
@@ -5220,7 +5225,7 @@ def checkin():
         secret = str(secret)
     if current_user.is_anonymous:
         if 'tempuser' not in session:
-            return jsonify(success=False)
+            return jsonify_with_cache(success=False)
         the_user_id = 't' + str(session['tempuser'])
         auth_user_id = None
         temp_user_id = int(session['tempuser'])
@@ -5232,9 +5237,9 @@ def checkin():
         #sys.stderr.write("checkin: fetch_user_dict1\n")
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         if user_dict is None or user_dict['_internal']['livehelp']['availability'] != 'available':
-            return jsonify(success=False)
+            return jsonify_with_cache(success=False)
         messages = get_chat_log(user_dict['_internal']['livehelp']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
-        return jsonify(success=True, messages=messages)
+        return jsonify_with_cache(success=True, messages=messages)
     if request.form.get('action', None) == 'checkin':
         commands = list()
         checkin_code = request.form.get('checkinCode', None)
@@ -5308,7 +5313,7 @@ def checkin():
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             if user_dict is None:
                 sys.stderr.write("checkin: error accessing dictionary for %s and %s" % (session_id, yaml_filename))
-                return jsonify(success=False)
+                return jsonify_with_cache(success=False)
             obj['chatstatus'] = chatstatus
             obj['secret'] = secret
             obj['encrypted'] = is_encrypted
@@ -5475,10 +5480,10 @@ def checkin():
                         r.rpush(worker_key, worker_id)
                 workers_inspected += 1
         if peer_ok or help_ok:
-            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
+            return jsonify_with_cache(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
         else:
-            return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
-    return jsonify(success=False)
+            return jsonify_with_cache(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
+    return jsonify_with_cache(success=False)
 
 @app.before_first_request
 def setup_celery():
@@ -5497,7 +5502,10 @@ def apply_security_headers(response):
         response.headers['Strict-Transport-Security'] = 'max-age=31536000'
     if 'embed' in g:
         return response
+    response.headers["X-Content-Type-Options"] = 'nosniff'
+    response.headers["X-XSS-Protection"] = '1'
     if daconfig.get('allow embedding', False) is not True:
+        response.headers["X-Frame-Options"] = 'SAMEORIGIN'
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self';"
     elif daconfig.get('cross site domains', []):
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self' " + ' '.join(daconfig['cross site domains']) + ';'

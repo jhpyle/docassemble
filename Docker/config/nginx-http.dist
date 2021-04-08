@@ -4,7 +4,7 @@ server {
     server_name {{DAHOSTNAME}};
     client_max_body_size {{DAMAXCONTENTLENGTH}};
     gzip on;
-    gzip_types text/plain application/xml text/html text/css application/javascript;
+    gzip_types text/plain application/xml text/html text/css text/javascript application/javascript;
     {{DAREALIP}}
     {{DALOCATIONREWRITE}}
     location {{DAWSGIROOT}} { try_files $uri @docassemble; }
