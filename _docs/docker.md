@@ -222,7 +222,7 @@ then port 8080 on the host machine would be passed through to port 80
 on the [Docker] container.
 
 The `jhpyle/docassemble` tag refers to a [Docker] image that is
-[hosted on Docker Hub].  The image is about 2GB in size, and when it
+[hosted on Docker Hub].  The image is about 4GB in size, and when it
 runs, the container uses about 10GB of hard drive space.  The
 `jhpyle/docassemble` image is based on the "master" branch of the
 [docassemble repository] on [GitHub].  It is rebuilt every time the
