@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.51] - 2021-04-07
+### Changed
+- Added optimizations for network usage on first page load (requires
+  system update).
+
 ## [1.2.50] - 2021-04-04
 ### Changed
 - OCRing in background now uses one process per machine (requires

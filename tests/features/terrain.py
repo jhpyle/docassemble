@@ -17,7 +17,7 @@ default_path = "http://localhost"
 default_wait_seconds = 0
 use_firefox = False
 use_phantomjs = False
-use_headless_chrome = False
+use_headless_chrome = True
 
 class MyFirefox(webdriver.Firefox):
     def loaded(self):
