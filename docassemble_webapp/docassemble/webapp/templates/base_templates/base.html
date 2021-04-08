@@ -60,9 +60,9 @@
     <link rel="manifest" href="{{ url_for('favicon_manifest_json') }}">
     <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab') }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
     <meta name="theme-color" content="{{ config['FAVICON_THEME_COLOR'] }}">
-    <script defer src="{{ url_for('static', filename='fontawesome/js/all.js', v=config['DA_VERSION']) }}"></script>
+    <script defer src="{{ url_for('static', filename='fontawesome/js/all.min.js', v=config['DA_VERSION']) }}"></script>
     <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css', v=config['DA_VERSION']) }}{% endif %}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='app/app.css', v=config['DA_VERSION']) }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
+    <link href="{{ url_for('static', filename='app/app.min.css', v=config['DA_VERSION']) }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
   </head>
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar{% if footer_content %} da-pad-for-footer{% endif %}">
     <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark">

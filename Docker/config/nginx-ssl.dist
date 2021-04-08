@@ -7,6 +7,8 @@ server {
     ssl_certificate {{DASSLCERTIFICATE}}
     ssl_certificate_key {{DASSLCERTIFICATEKEY}}
     ssl_protocols {{DASSLPROTOCOLS}};
+    gzip on;
+    gzip_types text/plain application/xml text/html text/css application/javascript;
     {{DAREALIP}}
     {{DALOCATIONREWRITE}}
     location {{DAWSGIROOT}} { try_files $uri @docassemble; }
