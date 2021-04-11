@@ -5079,6 +5079,124 @@ then you would get an error because `can_practice_in()` is not a valid
 method for `user`, which is only an instance of the [`Individual`] class
 and not an instance of the `Attorney` class.
 
+When subclassing standard **docassemble** classes, keep in mind that
+some standard **docassemble** classes have `init()` functions that
+initialize attributes that are themselves standard **docassemble**
+classes.  For example, when an object of class [`Individual`] is
+created, the attribute `name` is defined as an object of class
+[`IndividualName`].
+
+Suppose that you wanted your `Attorney` objects to have a `name`
+attribute that was an `AttorneyName` rather than an `IndividualName`.
+One way to implement this would be to write:
+
+{% highlight python %}
+from docassemble.base.util import Individual, IndividualName
+
+class AttorneyName(IndividualName):
+    def full(self, middle='initial', use_suffix=True):
+        return super().full(middle=middle, use_suffix=use_suffix) + ', Esq.'
+
+class Attorney(Individual):
+    def init(self, *pargs, **kwargs):
+        self.initializeAttribute('name', AttorneyName)
+        super().init(*pargs, **kwargs)
+{% endhighlight %}
+
+Note that the `init()` method first initializes `name` and then calls
+the parent class `init()` method.  This works because the `init()`
+method of the [`Individual`] class defines `name` with the
+`initializeAttribute()` method, which returns without doing anything
+if the attribute is already defined.  So the `init()` method of
+`Individual` will not overwrite the `name`.
+
+There is a second way to customize standard **docassemble** classes
+that initialize attributes.  The [`Individual`] and [`Person`] classes
+have a special class attribute `NameClass` that is set to
+[`IndividualName`] for the [`Individual`] class and [`Name`] for the
+[`Person`] class.  Thus, all you need to do to to indicate that
+your `Attorney` objects should use `AttorneyName` as the class for the
+`name` is to set the class attribute `NameClass` to `AttorneyName`:
+
+{% highlight python %}
+from docassemble.base.util import Individual, IndividualName
+
+class AttorneyName(IndividualName):
+    def full(self, middle='initial', use_suffix=True):
+        return super().full(middle=middle, use_suffix=use_suffix) + ', Esq.'
+
+class Attorney(Individual):
+    NameClass = AttorneyName
+{% endhighlight %}
+
+These are the class attributes that standard **docassemble** objects
+use:
+
+* `Address`, `Event`, and `Person` set the class attribute
+  `LatitudeLongitudeClass` to `LatitudeLongitude`.  This is the class
+  used for the `location` attribute.
+* `Thing` and `Person` set the class attribute `NameClass` to `Name`.
+  This is the class used for the `name` attribute.
+* `Event` sets the class attribute `CityClass` to `City`.  This is the
+  class used for the `address` attribute.
+* `Person` sets the class attribute `NameClass` to `Name`.  This is
+  the class used for the `name` attribute.
+* `Person` sets the class attribute `AddressClass` to `Address`.  This
+  is the class used for the `address` attribute.
+* `Individual` sets the class attribute `NameClass` to
+  `IndividualName`.  This is the class used for the `name` attribute.
+* `ChildList` sets the class attribute `ChildClass` to `Individual`.
+  The `object_type` attribute is set to this class during the `init()`
+  method.
+* `FinancialList` sets the class attribute `ValueClass` to `Value`.
+  The `object_type` attribute is set to this class during the `init()`
+  method.
+* `PeriodicFinancialList` sets the class attribute
+  `PeriodicValueClass` to `PeriodicValue`.  The `object_type`
+  attribute is set to this class during the `init()` method.
+* `OfficeList` sets the class attribute `AddressClass` to `Address`.
+  The `object_type` attribute is set to this class during the `init()`
+  method.
+* `Organization` sets the class attribute `OfficeListClass` to
+  `OfficeList`.  This is the class used for the `office` attribute.
+
+In `docassemble.base.legal`:
+
+* `Case` sets the class attribute `PartyListClass` to `PartyList`.
+  This is the class used for the `plaintiff`, `defendant`,
+  `petitioner`, `respondent`, `appellee`, and `appellant` attributes.
+* `Case` sets the class attribute `CourtClass` to `Court`.  This is
+  the class used for the `court` attribute.
+
+## <a name="mixin"></a>Using mixins
+
+Sometimes it can be useful to define a method that can be used on
+multiple classes.  Python allows you to do this with "multiple
+inheritance" and "mixin" classes.
+
+Here is an example of overriding the `possessive()` method of
+subclasses of [`Individual`] and [`Person`].  By using a "mixin," you
+can avoid writing the same method in two different places.
+
+{% highlight python %}
+from docassemble.base.util import Person, Individual
+
+class MyPersonMixin(object):
+  def possessive(self, target, **kwargs):
+    the_word = str(self)
+    if the_word[-1] == 's' and 'plural' not in kwargs:
+      kwargs['plural'] = True
+    return super().possessive(target, **kwargs)
+
+class MyPerson(MyPersonMixin, Person):
+  def some_function(self):
+     return 2 + 2
+
+class MyIndividual(MyPersonMixin, Individual):
+  def some_other_function(self):
+     return 2 + 6
+{% endhighlight %}
+
 ## <a name="prevent_dependency_satisfaction"></a>Preventing dependency satisfaction
 
 **docassemble**'s dependency satisfaction process can be used from

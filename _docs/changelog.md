@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.52](https://github.com/jhpyle/docassemble/releases/tag/v1.2.52) - 2021-04-11
+
+### Changed
+- Added mechanism in classes `Person`, etc. for indicating what class
+  should be used for attributes that are objects.
+- Added support for QR codes when filling PDF files.
+
+### Fixed
+- The `.address_block()` method now supports the `international` and
+  `show_country` keyword parameters.
+
 ## [1.2.51](https://github.com/jhpyle/docassemble/releases/tag/v1.2.51) - 2021-04-07
 
 ### Changed
