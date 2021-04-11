@@ -32,7 +32,7 @@ import json
 import docassemble.base.filter
 import docassemble.base.pdftk
 import docassemble.base.file_docx
-from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError, DAAttributeError, DAIndexError
+from docassemble.base.error import DAError, DANotFoundError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError, DAAttributeError, DAIndexError
 import docassemble.base.functions
 import docassemble.base.util
 from docassemble.base.functions import pickleable_objects, word, get_language, server, RawValue, get_config
@@ -54,6 +54,8 @@ import xml.etree.ElementTree as ET
 from docassemble_textstat.textstat import textstat
 from html.parser import HTMLParser
 from io import StringIO
+import qrcode
+import qrcode.image.svg
 RangeType = type(range(1,2))
 NoneType = type(None)
 
@@ -2720,7 +2722,7 @@ class Question:
                         if new_source is None:
                             new_source = interview_source_from_string('docassemble.base:data/questions/' + re.sub(r'^data/questions/', '', questionPath))
                             if new_source is None:
-                                raise DAError('Question file ' + questionPath + ' not found')
+                                raise DANotFoundError('Question file ' + questionPath + ' not found')
                         self.interview.read_from(new_source)
             else:
                 raise DAError("An include section must be organized as a list." + self.idebug(data))
@@ -6486,7 +6488,14 @@ class Question:
                                     file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
                                     result['images'].append((key, file_info))
                                 else:
-                                    result['data_strings'].append((key, answer))
+                                    m = re.search(r'\[QR ([^\]]+)\]', answer)
+                                    if m:
+                                        im = qrcode.make(re.sub(r' *,.*', '', m.group(1)))
+                                        the_image = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False)
+                                        im.save(the_image.name)
+                                        result['images'].append((key, {'fullpath': the_image.name}))
+                                    else:
+                                        result['data_strings'].append((key, answer))
                         if 'code' in attachment['options']:
                             if attachment['options']['skip_undefined']:
                                 try:
@@ -6692,7 +6701,7 @@ def interview_source_from_string(path, **kwargs):
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update():
                 return(new_source)
-    raise DAError("Interview " + str(path) + " not found")
+    raise DANotFoundError("Interview " + str(path) + " not found")
 
 def is_boolean(field_data):
     if 'choices' not in field_data:

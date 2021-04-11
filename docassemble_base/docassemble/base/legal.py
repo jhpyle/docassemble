@@ -310,13 +310,23 @@ def _add_person_and_children_of(target, output_list):
             for child in target.child.elements:
                 _add_person_and_children_of(child, output_list)
 
+class PartyList(DAList):
+    """Represents a list of parties to a case.  The default object
+    type for items in the list is Individual."""
+    PartyClass = Individual
+    def init(self, *pargs, **kwargs):
+        self.object_type = self.PartyClass
+        return super().init(*pargs, **kwargs)
+
 class Case(DAObject):
     """Represents a case in court."""
+    PartyListClass = PartyList
+    CourtClass = Court
     def init(self, *pargs, **kwargs):
         #logmessage("Case init: running")
-        self.court = Court()
-        self.defendant = PartyList()
-        self.plaintiff = PartyList()
+        self.initializeAttribute('court', self.CourtClass)
+        self.initializeAttribute('defendant', self.PartyListClass)
+        self.initializeAttribute('plaintiff', self.PartyListClass)
         self.firstParty = self.plaintiff
         self.secondParty = self.defendant
         self.is_solo_action = False
@@ -340,7 +350,7 @@ class Case(DAObject):
             if hasattr(self, 'respondent'):
                 del self.respondent
             if not hasattr(self, 'petitioner'):
-                self.petitioner = PartyList()
+                self.initializeAttribute('petitioner', self.PartyListClass)
             #logmessage("setting firstParty to petitioner")
             self.firstParty = self.petitioner
             #logmessage("firstParty instanceName is " + self.firstParty.instanceName)
@@ -353,7 +363,7 @@ class Case(DAObject):
             if hasattr(self, 'respondent'):
                 del self.respondent
             if not hasattr(self, 'petitioner'):
-                self.petitioner = PartyList()
+                self.initializeAttribute('petitioner', self.PartyListClass)
             self.firstParty = self.petitioner
             self.is_solo_action = True
         elif the_value == 'petition':
@@ -362,17 +372,17 @@ class Case(DAObject):
             if hasattr(self, 'defendant'):
                 del self.defendant
             if not hasattr(self, 'petitioner'):
-                self.petitioner = PartyList()
+                self.initializeAttribute('petitioner', self.PartyListClass)
             if not hasattr(self, 'respondent'):
-                self.respondent = PartyList()
+                self.initializeAttribute('respondent', self.PartyListClass)
             self.firstParty = self.petitioner
             self.secondParty = self.respondent
             self.is_solo_action = True
         elif the_value == 'plaintiff defendant':
             if not hasattr(self, 'plaintiff'):
-                self.plaintiff = PartyList()
+                self.initializeAttribute('plaintiff', self.PartyListClass)
             if not hasattr(self, 'defendant'):
-                self.defendant = PartyList()
+                self.initializeAttribute('defendant', self.PartyListClass)
             self.firstParty = self.plaintiff
             self.secondParty = self.defendant
             self.is_solo_action = False
@@ -382,9 +392,9 @@ class Case(DAObject):
             if hasattr(self, 'defendant'):
                 del self.defendant
             if not hasattr(self, 'appellee'):
-                self.appellee = PartyList()
+                self.initializeAttribute('appellee', self.PartyListClass)
             if not hasattr(self, 'appellant'):
-                self.appellant = PartyList()
+                self.initializeAttribute('appellant', self.PartyListClass)
             self.firstParty = self.appellee
             self.secondParty = self.appellant
             self.is_solo_action = False
@@ -414,7 +424,7 @@ class Case(DAObject):
         case and returns the name of the party to which the person belongs.
         Returns "third party" if the person is not found among the parties."""
         for partyname in self.__dict__:
-            if not isinstance(getattr(self, partyname), PartyList):
+            if not isinstance(getattr(self, partyname), self.PartyListClass):
                 continue
             if partyname in ['firstParty', 'secondParty']:
                 continue
@@ -429,7 +439,7 @@ class Case(DAObject):
         parties."""
         output_list = list()
         for partyname in self.__dict__:
-            if not isinstance(getattr(self, partyname), PartyList):
+            if not isinstance(getattr(self, partyname), self.PartyListClass):
                 continue
             for party in getattr(self, partyname).elements:
                 _add_person_and_children_of(party, output_list)
@@ -439,7 +449,7 @@ class Case(DAObject):
         they have not been gathered yet."""
         output_list = list()
         for partyname in self.__dict__:
-            if not isinstance(getattr(self, partyname), PartyList):
+            if not isinstance(getattr(self, partyname), self.PartyListClass):
                 continue
             getattr(self, partyname)._trigger_gather()
             for indiv in getattr(self, partyname).elements:
@@ -454,8 +464,6 @@ class Case(DAObject):
 
 class Document(DAObject):
     """This is a base class for different types of documents."""
-    def init(self, *pargs, **kwargs):
-        return super().init(*pargs, **kwargs)
     def __str__(self):
         return str(self.title)
 
@@ -491,13 +499,6 @@ class LegalFiling(Document):
         if self.title is not None:
             output += "[BOLDCENTER] " + self.title.upper() + "\n"
         return(output)
-
-class PartyList(DAList):
-    """Represents a list of parties to a case.  The default object
-    type for items in the list is Individual."""
-    def init(self, *pargs, **kwargs):
-        self.object_type = Individual
-        return super().init(*pargs, **kwargs)
 
 def us_districts(bankruptcy=False):
     if bankruptcy:

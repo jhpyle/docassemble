@@ -312,8 +312,6 @@ __all__ = [
 
 class DAStore(DAObject):
     """A class used to save objects to SQL."""
-    def init(self, *pargs, **kwargs):
-        super().init(*pargs, **kwargs)
     def is_encrypted(self):
         """Returns True if the storage object is using encryption, otherwise returns False."""
         if hasattr(self, 'encrypted'):
@@ -1365,9 +1363,10 @@ class IndividualName(Name):
 
 class Address(DAObject):
     """A geographic address."""
+    LatitudeLongitudeClass = LatitudeLongitude
     def init(self, *pargs, **kwargs):
         if 'location' not in kwargs:
-            self.initializeAttribute('location', LatitudeLongitude)
+            self.initializeAttribute('location', self.LatitudeLongitudeClass)
         if 'geolocated' not in kwargs:
             self.geolocated = False
         if not hasattr(self, 'city_only'):
@@ -1752,12 +1751,13 @@ class City(Address):
 
 class Thing(DAObject):
     """Represents something with a name."""
+    NameClass = Name
     def init(self, *pargs, **kwargs):
         if not hasattr(self, 'name') and 'name' not in kwargs:
-            self.name = Name()
+            self.initializeAttribute('name', self.NameClass)
         if 'name' in kwargs and isinstance(kwargs['name'], str):
             if not hasattr(self, 'name'):
-                self.name = Name()
+                self.initializeAttribute('name', self.NameClass)
             self.name.text = kwargs['name']
             del kwargs['name']
         return super().init(*pargs, **kwargs)
@@ -1774,27 +1774,32 @@ class Event(DAObject):
     location, which is a LatitudeLongitude.
 
     """
+    CityClass = City
+    LatitudeLongitudeClass = LatitudeLongitude
     def init(self, *pargs, **kwargs):
         if 'address' not in kwargs:
-            self.address = City()
+            self.initializeAttribute('address', self.CityClass)
         if 'location' not in kwargs:
-            self.initializeAttribute('location', LatitudeLongitude)
+            self.initializeAttribute('location', self.LatitudeLongitudeClass)
         return super().init(*pargs, **kwargs)
     def __str__(self):
         return str(self.address)
 
 class Person(DAObject):
     """Represents a legal or natural person."""
+    NameClass = Name
+    AddressClass = Address
+    LatitudeLongitudeClass = LatitudeLongitude
     def init(self, *pargs, **kwargs):
         if not hasattr(self, 'name') and 'name' not in kwargs:
-            self.initializeAttribute('name', Name)
+            self.initializeAttribute('name', self.NameClass)
         if 'address' not in kwargs:
-            self.initializeAttribute('address', Address)
+            self.initializeAttribute('address', self.AddressClass)
         if 'location' not in kwargs:
-            self.initializeAttribute('location', LatitudeLongitude)
+            self.initializeAttribute('location', self.LatitudeLongitudeClass)
         if 'name' in kwargs and isinstance(kwargs['name'], str):
             if not hasattr(self, 'name'):
-                self.initializeAttribute('name', Name)
+                self.initializeAttribute('name', self.NameClass)
             self.name.text = kwargs['name']
             del kwargs['name']
         # if 'roles' not in kwargs:
@@ -1865,12 +1870,12 @@ class Person(DAObject):
     def is_user(self):
         """Returns True if the person is the user, otherwise False."""
         return self is this_thread.global_vars.user
-    def address_block(self, language=None):
+    def address_block(self, language=None, international=False, show_country=False):
         """Returns the person name address as a block, for use in mailings."""
         if this_thread.evaluation_context == 'docx':
-            return(self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block(language=language))
+            return(self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block(language=language, international=international, show_country=show_country))
         else:
-            return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block(language=language))
+            return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block(language=language, international=international, show_country=show_country))
     def sms_number(self, country=None):
         """Returns the person's mobile_number, if defined, otherwise the phone_number."""
         if hasattr(self, 'mobile_number'):
@@ -1980,9 +1985,10 @@ class Person(DAObject):
 
 class Individual(Person):
     """Represents a natural person."""
+    NameClass = IndividualName
     def init(self, *pargs, **kwargs):
         if 'name' not in kwargs and not hasattr(self, 'name'):
-            self.initializeAttribute('name', IndividualName)
+            self.initializeAttribute('name', self.NameClass)
         # if 'child' not in kwargs and not hasattr(self, 'child'):
         #     self.child = ChildList()
         # if 'income' not in kwargs and not hasattr(self, 'income'):
@@ -1992,7 +1998,7 @@ class Individual(Person):
         # if 'expense' not in kwargs and not hasattr(self, 'expense'):
         #     self.expense = Expense()
         if (not hasattr(self, 'name')) and 'name' in kwargs and isinstance(kwargs['name'], str):
-            self.initializeAttribute('name', IndividualName)
+            self.initializeAttribute('name', self.NameClass)
             self.name.uses_parts = False
             self.name.text = kwargs['name']
         return super().init(*pargs, **kwargs)
@@ -2118,68 +2124,10 @@ class Individual(Person):
 
 class ChildList(DAList):
     """Represents a list of children."""
+    ChildClass = Individual
     def init(self, *pargs, **kwargs):
-        self.object_type = Individual
+        self.object_type = self.ChildClass
         return super().init(*pargs, **kwargs)
-
-class FinancialList(DADict):
-    """Represents a set of currency amounts."""
-    def init(self, *pargs, **kwargs):
-        self.object_type = Value
-        return super().init(*pargs, **kwargs)
-    def total(self):
-        """Returns the total value in the list, gathering the list items if necessary."""
-        self._trigger_gather()
-        result = 0
-        for item in sorted(self.elements.keys()):
-            if self[item].exists:
-                result += Decimal(self[item].value)
-        return(result)
-    def existing_items(self):
-        """Returns a list of types of amounts that exist within the financial list."""
-        self._trigger_gather()
-        return [key for key in sorted(self.elements.keys()) if self[key].exists]
-    def _new_item_init_callback(self):
-        self.elements[self.new_item_name].exists = True
-        if hasattr(self, 'new_item_value'):
-            self.elements[self.new_item_name].value = self.new_item_value
-            del self.new_item_value
-        return super()._new_item_init_callback()
-    def __str__(self):
-        return str(self.total())
-
-class PeriodicFinancialList(FinancialList):
-    """Represents a set of currency items, each of which has an associated period."""
-    def init(self, *pargs, **kwargs):
-        self.object_type = PeriodicValue
-        return super().init(*pargs, **kwargs)
-    def total(self, period_to_use=1):
-        """Returns the total periodic value in the list, gathering the list items if necessary."""
-        self._trigger_gather()
-        result = 0
-        if period_to_use == 0:
-            return(result)
-        for item in sorted(self.elements.keys()):
-            if self.elements[item].exists:
-                result += Decimal(self.elements[item].value) * Decimal(self.elements[item].period)
-        return(result/Decimal(period_to_use))
-    def _new_item_init_callback(self):
-        if hasattr(self, 'new_item_period'):
-            self.elements[self.new_item_name].period = self.new_item_period
-            del self.new_item_period
-        return super()._new_item_init_callback()
-
-class Income(PeriodicFinancialList):
-    """A PeriodicFinancialList representing a person's income."""
-    pass
-
-class Asset(FinancialList):
-    """A FinancialList representing a person's assets."""
-    pass
-
-class Expense(PeriodicFinancialList):
-    """A PeriodicFinancialList representing a person's expenses."""
-    pass
 
 class Value(DAObject):
     """Represents a value in a FinancialList."""
@@ -2221,21 +2169,84 @@ class PeriodicValue(Value):
         ensure_definition(period_to_use)
         return (Decimal(self.value) * Decimal(self.period)) / Decimal(period_to_use)
 
+class FinancialList(DADict):
+    """Represents a set of currency amounts."""
+    ValueClass = Value
+    def init(self, *pargs, **kwargs):
+        self.object_type = self.ValueClass
+        return super().init(*pargs, **kwargs)
+    def total(self):
+        """Returns the total value in the list, gathering the list items if necessary."""
+        self._trigger_gather()
+        result = 0
+        for item in sorted(self.elements.keys()):
+            if self[item].exists:
+                result += Decimal(self[item].value)
+        return(result)
+    def existing_items(self):
+        """Returns a list of types of amounts that exist within the financial list."""
+        self._trigger_gather()
+        return [key for key in sorted(self.elements.keys()) if self[key].exists]
+    def _new_item_init_callback(self):
+        self.elements[self.new_item_name].exists = True
+        if hasattr(self, 'new_item_value'):
+            self.elements[self.new_item_name].value = self.new_item_value
+            del self.new_item_value
+        return super()._new_item_init_callback()
+    def __str__(self):
+        return str(self.total())
+
+class PeriodicFinancialList(FinancialList):
+    """Represents a set of currency items, each of which has an associated period."""
+    PeriodicValueClass = PeriodicValue
+    def init(self, *pargs, **kwargs):
+        self.object_type = self.PeriodicValueClass
+        return super().init(*pargs, **kwargs)
+    def total(self, period_to_use=1):
+        """Returns the total periodic value in the list, gathering the list items if necessary."""
+        self._trigger_gather()
+        result = 0
+        if period_to_use == 0:
+            return(result)
+        for item in sorted(self.elements.keys()):
+            if self.elements[item].exists:
+                result += Decimal(self.elements[item].value) * Decimal(self.elements[item].period)
+        return(result/Decimal(period_to_use))
+    def _new_item_init_callback(self):
+        if hasattr(self, 'new_item_period'):
+            self.elements[self.new_item_name].period = self.new_item_period
+            del self.new_item_period
+        return super()._new_item_init_callback()
+
+class Income(PeriodicFinancialList):
+    """A PeriodicFinancialList representing a person's income."""
+    pass
+
+class Asset(FinancialList):
+    """A FinancialList representing a person's assets."""
+    pass
+
+class Expense(PeriodicFinancialList):
+    """A PeriodicFinancialList representing a person's expenses."""
+    pass
+
 class OfficeList(DAList):
     """Represents a list of offices of a company or organization."""
+    AddressClass = Address
     def init(self, *pargs, **kwargs):
-        self.object_type = Address
+        self.object_type = self.AddressClass
         return super().init(*pargs, **kwargs)
 
 class Organization(Person):
     """Represents a company or organization."""
+    OfficeListClass = OfficeList
     def init(self, *pargs, **kwargs):
         if 'offices' in kwargs:
-            self.initializeAttribute('office', OfficeList)
+            self.initializeAttribute('office', self.OfficeListClass)
             if type(kwargs['offices']) is list:
                 for office in kwargs['offices']:
                     if type(office) is dict:
-                        new_office = self.office.appendObject(Address, **office)
+                        new_office = self.office.appendObject(**office)
                         new_office.geolocate()
             del kwargs['offices']
         return super().init(*pargs, **kwargs)

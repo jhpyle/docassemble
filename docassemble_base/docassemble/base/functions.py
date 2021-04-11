@@ -332,7 +332,7 @@ def state_name(state_code, country_code=None):
     name."""
     ensure_definition(state_code, country_code)
     if country_code is None:
-        country_code = 'US'
+        country_code = get_country() or 'US'
     for subdivision in pycountry.subdivisions.get(country_code=country_code):
         m = re.search(r'-([A-Z]+)$', subdivision.code)
         if m and m.group(1) == state_code:
@@ -619,7 +619,7 @@ def states_list(country_code=None):
     suitable for use in a multiple choice field."""
     ensure_definition(country_code)
     if country_code is None:
-        country_code = 'US'
+        country_code = get_country() or 'US'
     mapping = dict()
     for subdivision in pycountry.subdivisions.get(country_code=country_code):
         if subdivision.parent_code is not None:
@@ -4166,7 +4166,7 @@ def phone_number_in_e164(number, country=None):
     E.164 format.  Returns None if the number could not be so formatted."""
     ensure_definition(number, country)
     if country is None:
-        country = get_country()
+        country = get_country() or 'US'
     use_whatsapp = False
     if isinstance(number, str):
         m = re.search(r'^whatsapp:(.*)', number)
@@ -4186,7 +4186,7 @@ def phone_number_is_valid(number, country=None):
     """Given a phone number and a country code, returns True if the phone number is valid, otherwise False."""
     ensure_definition(number, country)
     if country is None:
-        country = get_country()
+        country = get_country() or 'US'
     if isinstance(number, str):
         m = re.search(r'^whatsapp:(.*)', number)
         if m:
@@ -4202,7 +4202,7 @@ def phone_number_is_valid(number, country=None):
 def phone_number_part(number, part, country=None):
     ensure_definition(number, part, country)
     if country is None:
-        country = get_country()
+        country = get_country() or 'US'
     if isinstance(number, str):
         m = re.search(r'^whatsapp:(.*)', number)
         if m:
@@ -4226,7 +4226,7 @@ def phone_number_formatted(number, country=None):
     if number.__class__.__name__ == 'DAEmpty':
         return str(number)
     if country is None:
-        country = get_country()
+        country = get_country() or 'US'
     if isinstance(number, str):
         m = re.search(r'^whatsapp:(.*)', number)
         if m:

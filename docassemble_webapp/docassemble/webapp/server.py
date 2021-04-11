@@ -107,14 +107,16 @@ ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "m
 try:
     if 'editable mimetypes' in daconfig and isinstance(daconfig['editable mimetypes'], list):
         for item in daconfig['editable mimetypes']:
-            ok_mimetypes[item] = 'null'
+            if isinstance(item, str):
+                ok_mimetypes[item] = 'null'
 except:
     pass
 
 try:
     if 'editable extensions' in daconfig and isinstance(daconfig['editable extensions'], list):
         for item in daconfig['editable extensions']:
-            ok_extensions[item] = 'null'
+            if isinstance(item, str):
+                ok_extensions[item] = 'null'
 except:
     pass
 
@@ -26789,7 +26791,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     recipient_email = daconfig.get('error notification email', None)
     if not recipient_email:
         return
-    if err.__class__.__name__ in ['CSRFError', 'ClientDisconnected', 'MethodNotAllowed'] + ERROR_TYPES_NO_EMAIL:
+    if err.__class__.__name__ in ['CSRFError', 'ClientDisconnected', 'MethodNotAllowed', 'DANotFoundError'] + ERROR_TYPES_NO_EMAIL:
         return
     email_recipients = list()
     if isinstance(recipient_email, list):

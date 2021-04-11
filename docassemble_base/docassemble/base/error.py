@@ -15,6 +15,9 @@ class DAError(Exception):
     def __str__(self):
         return str(self.value)
 
+class DANotFoundError(Exception):
+    pass
+
 class DAValidationError(Exception):
     """This is an Exception object that is used when raising an exception inside input validation code."""
     def __init__(self, *pargs, field=None):

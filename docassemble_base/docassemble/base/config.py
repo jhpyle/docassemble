@@ -212,7 +212,7 @@ def load(**kwargs):
                 break
         if not ok:
             daconfig['suppress error notificiations'] = []
-            sys.stderr.write("Configuration file suppress error notifications directive not valid")
+            config_error("Configuration file suppress error notifications directive not valid")
     else:
         daconfig['suppress error notificiations'] = []
     if 'maximum content length' in daconfig:

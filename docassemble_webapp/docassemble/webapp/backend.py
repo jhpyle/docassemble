@@ -293,11 +293,14 @@ else:
     DEFAULT_THEAD_CLASS = None
 del classes
 
+DEFAULT_COUNTRY = daconfig.get('country', None) or re.sub(r'^.*_', '', re.sub(r'\..*', r'', DEFAULT_LOCALE))
+
+
 docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
                                          default_dialect=DEFAULT_DIALECT,
                                          default_timezone=DEFAULT_TIMEZONE,
-                                         default_country=daconfig.get('country', re.sub(r'^.*_', '', re.sub(r'\..*', r'', DEFAULT_LOCALE))),
+                                         default_country=DEFAULT_COUNTRY,
                                          daconfig=daconfig,
                                          hostname=hostname,
                                          debug_status=DEBUG,
