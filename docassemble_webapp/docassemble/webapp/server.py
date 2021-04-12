@@ -102,7 +102,7 @@ code: |
 """
 
 ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python", "application/json": "json", "text/css": "css", 'text/html': 'htmlmixed'}
-ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json", "css": "css", "html": "htmlmixed"}
+ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json", "css": "css", "html": "htmlmixed", "feature": "gherkin"}
 
 try:
     if 'editable mimetypes' in daconfig and isinstance(daconfig['editable mimetypes'], list):
