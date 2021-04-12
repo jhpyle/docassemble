@@ -4896,7 +4896,7 @@ def github_configure():
     resp, content = http.request("https://api.github.com/user/keys", "GET")
     if int(resp['status']) == 200:
         for key in json.loads(content.decode()):
-            if key['title'] == app.config['APP_NAME']:
+            if key['title'] == app.config['APP_NAME'] or key['title'] == app.config['APP_NAME'] + '_user_' + str(current_user.id):
                 found = True
     else:
         raise DAError("github_configure: could not get information about ssh keys")
@@ -4906,7 +4906,7 @@ def github_configure():
             resp, content = http.request(next_link, "GET")
             if int(resp['status']) == 200:
                 for key in json.loads(content.decode()):
-                    if key['title'] == app.config['APP_NAME']:
+                    if key['title'] == app.config['APP_NAME'] or key['title'] == app.config['APP_NAME'] + '_user_' + str(current_user.id):
                         found = True
             else:
                 raise DAError("github_configure: could not get additional information about ssh keys")
@@ -4919,7 +4919,7 @@ def github_configure():
         with open(public_key_file, 'rU', encoding='utf-8') as fp:
             public_key = fp.read()
         headers = {'Content-Type': 'application/json'}
-        body = json.dumps(dict(title=app.config['APP_NAME'], key=public_key))
+        body = json.dumps(dict(title=app.config['APP_NAME'] + '_user_' + str(current_user.id), key=public_key))
         resp, content = http.request("https://api.github.com/user/keys", "POST", headers=headers, body=body)
         if int(resp['status']) == 201:
             flash(word("GitHub integration was successfully configured."), 'info')
@@ -4946,30 +4946,28 @@ def github_unconfigure():
         uri = flow.step1_get_authorize_url(state=state_string)
         return redirect(uri)
     http = credentials.authorize(httplib2.Http())
-    found = False
+    ids_to_remove = []
     try:
         resp, content = http.request("https://api.github.com/user/keys", "GET")
         if int(resp['status']) == 200:
             for key in json.loads(content.decode()):
-                if key['title'] == app.config['APP_NAME']:
-                    found = True
-                    id_to_remove = key['id']
+                if key['title'] == app.config['APP_NAME'] or key['title'] == app.config['APP_NAME'] + '_user_' + str(current_user.id):
+                    ids_to_remove.append(key['id'])
         else:
             raise DAError("github_configure: could not get information about ssh keys")
-        while found is False:
+        while True:
             next_link = get_next_link(resp)
             if next_link:
                 resp, content = http.request(next_link, "GET")
                 if int(resp['status']) == 200:
                     for key in json.loads(content.decode()):
-                        if key['title'] == app.config['APP_NAME']:
-                            found = True
-                            id_to_remove = key['id']
+                        if key['title'] == app.config['APP_NAME'] or key['title'] == app.config['APP_NAME'] + '_user_' + str(current_user.id):
+                            ids_to_remove.append(key['id'])
                 else:
                     raise DAError("github_unconfigure: could not get additional information about ssh keys")
             else:
                 break
-        if found:
+        for id_to_remove in ids_to_remove:
             resp, content = http.request("https://api.github.com/user/keys/" + str(id_to_remove), "DELETE")
             if int(resp['status']) != 204:
                 raise DAError("github_unconfigure: error deleting public key " + str(id_to_remove) + ": " + str(resp['status']) + " content: " + content.decode())

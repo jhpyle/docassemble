@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.53] - 2021-04-12
+### Changed
+- The GitHub integration feature now sets the name of the SSH key to
+  the `appname` followed by the user ID.
+
 ## [1.2.52] - 2021-04-11
 ### Changed
 - Added mechanism in classes `Person`, etc. for indicating what class
