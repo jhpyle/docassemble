@@ -483,7 +483,6 @@ cp ./docassemble/Docker/pip.conf /usr/share/docassemble/local3.8/
 This will install a Python 3.8 virtual environment at
 `/usr/share/docassemble/local3.8` and install **docassemble** into it.
 
-
 The `pip.conf` file is necessary because it enables the use of
 [GitHub] package references in the `setup.py` files of **docassemble**
 extension packages.
@@ -1040,8 +1039,9 @@ will be stored in the cloud if cloud [data storage] is enabled.  Using
 the [GitHub API], **docassemble** stores the public key in the user's
 [GitHub] account, using the name of the application as specified in
 the [configuration] as the value of [`appname`] (which defaults to
-`docassemble`).  (If you are using GitHub integration from more than
-one server, make sure that each server has a different [`appname`].)
+`docassemble`) and the integer ID of the **docassemble** user
+account.  (If you are using GitHub integration from more than one
+server, make sure that each server has a different [`appname`].)
 
 When users configure their [GitHub] integration, they have two
 checkboxes they can use to configure how the integration works:

@@ -6,7 +6,7 @@ description: >-
 baseurl: ""
 #url: "https://docassemble.org"
 demourl: "https://demo.docassemble.org"
-slackurl: https://join.slack.com/t/docassemble/shared_invite/zt-n3azesrq-HpDv7d3HwNNt9brxU6jD_Q
+slackurl: https://join.slack.com/t/docassemble/shared_invite/zt-ohrn8y9z-_Fb3RAl~JPBU6Km7odBPfQ
 #demourl: "http://localhost"
 repository: jhpyle/docassemble
 github_username: jhpyle

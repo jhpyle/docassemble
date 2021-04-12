@@ -228,7 +228,7 @@ the GitHub repository.  For example, if your private repository is
 called `docassemble-familylaw`, and your GitHub username is called
 `jsmith`, use `git@github.com:jsmith/docassemble-familylaw.git` as the
 GitHub URL.  Alternatively, you can use a GitHub URL that embeds an
-OAUTH code.
+OAuth code.
 
 Packages are defined with the following elements:
 
