@@ -320,39 +320,6 @@ class InterviewSourceFile(InterviewSource):
                 return(new_source)
         return(None)
 
-class InterviewSourceURL(InterviewSource):
-    def __init__(self, **kwargs):
-        self.set_path(kwargs.get('path', None))
-        return super().__init__(**kwargs)
-    def set_path(self, path):
-        self.path = path
-        if self.path is None:
-            self.directory = None
-        else:
-            self.directory = re.sub('/[^/]*$', '', re.sub('\?.*', '', self.path))
-        return
-    def update(self):
-        try:
-            h = httplib2.Http()
-            resp, content = h.request(self.path, "GET")
-            if resp['status'] >= 200 and resp['status'] < 300:
-                self.set_content(content.decode())
-                self._modtime = datetime.datetime.utcnow()
-                return True
-        except:
-            pass
-        return False
-    def append(self, path):
-        new_file = os.path.join(self.directory, path)
-        if os.path.isfile(new_file) and os.access(new_file, os.R_OK):
-            new_source = InterviewSourceFile()
-            new_source.path = path
-            new_source.directory = self.directory
-            new_source.filepath = new_file
-            if new_source.update():
-                return(new_source)
-        return None
-
 def dummy_embed_input(status, variable):
     return variable
 
@@ -6690,10 +6657,6 @@ def emoji_matcher_html(obj):
 def interview_source_from_string(path, **kwargs):
     if path is None:
         raise DAError("Passed None to interview_source_from_string")
-    if re.search(r'^https*://', path):
-        new_source = InterviewSourceURL(path=path)
-        if new_source.update():
-            return new_source
     #sys.stderr.write("Trying to find " + path + "\n")
     for the_filename in [docassemble.base.functions.package_question_filename(path), docassemble.base.functions.standard_question_filename(path), docassemble.base.functions.server.absolute_filename(path)]:
         #sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
