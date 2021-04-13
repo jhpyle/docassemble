@@ -2349,12 +2349,50 @@ database using a key that is specific to the user.  The first time the
 user uses the interview, the user is asked for their favorite fruit.
 If the user restarts the interview (which permanently erases the
 interview answers), the user's favorite fruit will be retrieved from
-the `DAStore`, and it will not need to be asked of the user.  The
-object stored in the database is a [`DAObject`], and the favorite
+the `DAStore`, and it will not need to be asked of the user.
+
+The object stored in the database is a [`DAObject`], and the favorite
 fruit is an attribute of that object.  In the database, the object is
 stored under a key containing the word `'prefs'`.  This key is
 specific to the user, so that each user will have their own personal
 `'prefs'` entry in the database.
+
+In the above interview, the object `preferences` is just a `DAObject`
+with no special properties.  It is an object stored in the interview
+answers.  You can consider it a "working copy" of the object that is
+stored in the database.  It is initialized by this line:
+
+{% highlight python %}
+preferences = userdata.get("prefs") or DAObject('preferences')
+{% endhighlight %}
+
+This means "set the variable `preferences` to the object stored in the
+database under the key `"prefs"`, but if that object has a false value
+(e.g., if `userdata.get("prefs")` returns `None`) then set
+`preferences` to a new `DAObject` with the `instanceName` of
+`preferences`."  (Running `preferences = DAObject('preferences')` is
+effectively the same thing as having an `objects` block with the item
+`preferences: DAObject`.)
+
+The interview logic (the `mandatory`<span> </span>`code` block)
+ensures that `preferences.favorite_fruit` exists.  If
+`preferences.favorite_fruit` is not defined, the `question` will be
+asked.  Then the `code` block will save the `preferences` object to
+the database, but only if there is no database entry for `"prefs"`.
+Note that this means the interview logic in this interview is only
+capable of inserting a record into the database where none exists; it
+will not update the user's preferences.
+
+Note that in the final block of the interview, the `subquestion`
+refers to `userdata.get("prefs").favorite_fruit` instead of
+`preferences.favorite_fruit`.  This is because `preferences` was only
+ever a "working copy" for purposes of 1) checking to see if
+`favorite_fruit` was defined, and 2) populating the database if no
+preferences had been stored yet.  Calling
+`userdata.get("prefs").favorite_fruit` instead of
+`preferences.favorite_fruit` ensures that the `question` always
+returns the user's favorite fruit, even if it had been changed since
+the `preferences` "working copy" was created.
 
 A user can have any number of unique keys in the database.  Typically,
 it makes sense to use a single key to store a number of different
