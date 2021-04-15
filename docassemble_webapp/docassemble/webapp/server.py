@@ -14514,7 +14514,7 @@ def update_package():
                 flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
         else:
             if form.giturl.data:
-                giturl = form.giturl.data.strip()
+                giturl = form.giturl.data.strip().rstrip('/')
                 branch = form.gitbranch.data.strip()
                 if not branch:
                     branch = get_master_branch(giturl)
@@ -25071,7 +25071,7 @@ def api_package():
                 result = docassemble.webapp.worker.update_packages.delay(restart=False)
             return jsonify_task(result)
         if 'github_url' in post_data:
-            github_url = post_data['github_url']
+            github_url = post_data['github_url'].rstrip('/')
             branch = post_data.get('branch', None)
             if branch is None:
                 branch = get_master_branch(github_url)
