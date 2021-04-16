@@ -365,7 +365,7 @@ def get_home_page_dict():
                     if line.startswith('Name: '):
                         name = line[6:]
                     elif line.startswith('Home-page: '):
-                        url = line[11:]
+                        url = line[11:].rstrip('/')
                         break
             if name:
                 home_page[name.lower()] = url
@@ -496,12 +496,12 @@ def install_package(package, start_time=None):
             commands = ['pip', 'install']
             if disable_pip_cache:
                 commands.append('--no-cache-dir')
-            commands.extend(['--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, gitprefix + str(package.giturl) + gitsuffix + branchpart + '#egg=' + package.name + '&subdirectory=' + str(package.gitsubdir)])
+            commands.extend(['--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, gitprefix + str(package.giturl).rstrip('/') + gitsuffix + branchpart + '#egg=' + package.name + '&subdirectory=' + str(package.gitsubdir)])
         else:
             commands = ['pip', 'install']
             if disable_pip_cache:
                 commands.append('--no-cache-dir')
-            commands.extend(['--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, gitprefix + str(package.giturl) + gitsuffix + branchpart + '#egg=' + package.name])
+            commands.extend(['--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, gitprefix + str(package.giturl).rstrip('/') + gitsuffix + branchpart + '#egg=' + package.name])
     elif package.type == 'pip':
         if package.limitation is None:
             limit = ""

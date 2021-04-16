@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.54] - 2021-04-15
+### Changed
+- `DAList` and `DASet` methods will now return objects of the same
+  subclass.
+
 ## [1.2.53] - 2021-04-12
 ### Changed
 - The GitHub integration feature now sets the name of the SSH key to

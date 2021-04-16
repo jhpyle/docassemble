@@ -3053,7 +3053,7 @@ def user_can_edit_package(pkgname=None, giturl=None):
         giturl = giturl.strip()
         if giturl == '' or re.search(r'\s', giturl):
             return False
-        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(and_(Package.giturl == giturl, Package.active == True))
+        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(and_(or_(Package.giturl == giturl + '/', Package.giturl == giturl), Package.active == True))
         if results.count() == 0:
             return(True)
         for d in results:
@@ -3116,9 +3116,10 @@ def install_zip_package(packagename, file_number):
 
 def install_git_package(packagename, giturl, branch):
     #logmessage("install_git_package: " + packagename + " " + str(giturl))
+    giturl = str(giturl).rstrip('/')
     if branch is None or str(branch).lower().strip() in ('none', ''):
         branch = GITHUB_BRANCH
-    if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).with_for_update().first() is None:
+    if Package.query.filter_by(name=packagename).first() is None and Package.query.filter(or_(Package.giturl == giturl, Package.giturl == giturl + '/')).with_for_update().first() is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git', upload=None, limitation=None, gitbranch=branch)
         db.session.add(package_auth)
@@ -3126,7 +3127,7 @@ def install_git_package(packagename, giturl, branch):
     else:
         existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).with_for_update().first()
         if existing_package is None:
-            existing_package = Package.query.filter_by(giturl=giturl).order_by(Package.id.desc()).with_for_update().first()
+            existing_package = Package.query.filter(or_(Package.giturl == giturl, Package.giturl == giturl + '/')).order_by(Package.id.desc()).with_for_update().first()
         if existing_package is not None:
             if existing_package.type == 'zip' and existing_package.upload is not None:
                 SavedFile(existing_package.upload).delete()
