@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.54](https://github.com/jhpyle/docassemble/releases/tag/v1.2.54) - 2021-04-15
+
+### Changed
+- `DAList` and `DASet` methods will now return objects of the same
+  subclass.
+
 ## [1.2.53](https://github.com/jhpyle/docassemble/releases/tag/v1.2.53) - 2021-04-12
 
 ### Changed
