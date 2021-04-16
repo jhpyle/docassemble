@@ -2009,7 +2009,7 @@ For more information about the progress bar, see the documentation for
 the [progress bar] initial block and the [`progress`] modifier.
 
 For more information about the navigation bar, see the documentation
-for the [navigation bar] feature.
+for the [navigation bar] feature and how to work with [`sections`].
 
 ## <a name="get_progress"></a>get_progress()
 
