@@ -361,7 +361,7 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
 def get_passwords(password):
     if password is None:
         return (None, None)
-    if type(password) in (str, unicode, bool, int, float):
+    if type(password) in (str, bool, int, float):
         owner_password = str(password).strip()
         user_password = str(password).strip()
     elif type(password) is list:

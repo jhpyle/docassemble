@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.55] - 2021-04-20
+### Added
+- `reload` option for `message()`.
+### Fixed
+- Error with protecting PDFs with password.
+
 ## [1.2.54] - 2021-04-15
 ### Changed
 - `DAList` and `DASet` methods will now return objects of the same

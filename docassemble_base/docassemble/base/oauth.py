@@ -96,7 +96,7 @@ class DAOAuth(DAObject):
                 del self.url_args['code']
                 del self.url_args['state']
             else:
-                message("Please wait.", "You are in the process of authenticating.")
+                message("Please wait.", "You are in the process of authenticating.", dead_end=True)
         storage = self._get_redis_cred_storage()
         credentials = storage.get()
         if not credentials or credentials.invalid:

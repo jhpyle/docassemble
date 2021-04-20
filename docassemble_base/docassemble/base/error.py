@@ -184,6 +184,10 @@ class QuestionError(Exception):
             self.show_exit = kwargs['show_exit'];
         else:
             self.show_exit = None
+        if 'reload' in kwargs:
+            self.reload = kwargs['reload'];
+        else:
+            self.reload = None
         if 'show_restart' in kwargs:
             self.show_restart = kwargs['show_restart'];
         else:

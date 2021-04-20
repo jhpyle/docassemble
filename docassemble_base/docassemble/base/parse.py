@@ -7678,6 +7678,8 @@ class Interview:
                         question_data['question'] = qError.question
                     if qError.subquestion:
                         question_data['subquestion'] = qError.subquestion
+                    if qError.reload:
+                        question_data['reload'] = qError.reload
                     if qError.dead_end:
                         pass
                     elif qError.buttons:
