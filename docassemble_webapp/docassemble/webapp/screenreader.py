@@ -52,7 +52,7 @@ def hidden(element):
 
 bad_list = ['div', 'option']
 
-good_list = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'button', 'textarea', 'note', 'label']
+good_list = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'button', 'textarea', 'note', 'label', 'li']
 
 def do_show(element):
     if re.match('<!--.*-->', str(element), re.DOTALL):

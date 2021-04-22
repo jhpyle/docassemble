@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.56] - 2021-04-22
+### Fixed
+- Screen reader issue with lists.
+- Problem with `DATemplate` when used in the context of a DOCX
+  template.
+
 ## [1.2.55] - 2021-04-20
 ### Added
 - `reload` option for `message()`.

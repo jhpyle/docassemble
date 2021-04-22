@@ -4282,7 +4282,7 @@ class DATemplate(DAObject):
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             #return str(self.content)
             #return str(docassemble.base.filter.docx_template_filter(self.content))
-            return str(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc('docx_template', None)))
+            return str(docassemble.base.file_docx.markdown_to_docx(self.content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
         return(str(self.content))
 
 def table_safe(text):
