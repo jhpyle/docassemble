@@ -142,7 +142,7 @@ install_requires = [
     "protobuf==3.14.0",
     "psutil==5.7.3",
     "psycopg2-binary==2.8.6",
-    "py==1.9.0",
+    "py==1.10.0",
     "pyasn1==0.4.8",
     "pyasn1-modules==0.2.8",
     "pycountry==20.7.3",
