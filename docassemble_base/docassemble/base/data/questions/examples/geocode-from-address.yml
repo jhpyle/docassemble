@@ -1,7 +1,7 @@
 metadata:
-  title: Geolocate from address
-  short title: Geolocate
-  documentation: "https://docassemble.org/docs/objects.html#Address.geolocate"
+  title: Geocode from address
+  short title: Geocode
+  documentation: "https://docassemble.org/docs/objects.html#Address.geocode"
   example start: 1
   example end: 4
 ---
@@ -15,13 +15,13 @@ fields:
 ---
 mandatory: True
 code: |
-  the_address.geolocate(address_one_line)
+  the_address.geocode(address_one_line)
 ---
 mandatory: True
 question: |
   Information about your address
 subquestion: |
-  % if the_address.geolocate_success:
+  % if the_address.geocode_success:
   The address you provided is:
     
   ${ the_address }
@@ -34,5 +34,5 @@ subquestion: |
   and
   ${ the_address.location.longitude }.
   % else:
-  That address could not be geolocated.
+  That address could not be geocoded.
   % endif

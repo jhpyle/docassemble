@@ -1,7 +1,7 @@
 metadata:
-  title: Geolocate address
-  short title: Geolocate
-  documentation: "https://docassemble.org/docs/objects.html#Address.geolocate"
+  title: Geocode address
+  short title: Geocode
+  documentation: "https://docassemble.org/docs/objects.html#Address.geocode"
   example start: 2
   example end: 5
 ---
@@ -22,7 +22,7 @@ fields:
 ---
 mandatory: True
 code: |
-  the_address.geolocate()
+  the_address.geocode()
 ---
 mandatory: True
 question: |
@@ -36,7 +36,7 @@ subquestion: |
 
   ${ indent(json.dumps(the_address.as_serializable(), indent=2)) }
 
-  % if the_address.geolocate_success:
+  % if the_address.geocode_success:
   The normalized version is:
 
   ${ the_address.norm }
@@ -74,5 +74,5 @@ subquestion: |
 
   % else:
   The address could not be
-  geolocated.
+  geocoded.
   % endif

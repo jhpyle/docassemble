@@ -685,6 +685,7 @@ class DACloudStorage(DAObject):
         else:
             return server.cloud.container
 
+
 class DAGoogleAPI(DAObject):
     def api_credentials(self, scope):
         """Returns an OAuth2 credentials object for the given scope."""
@@ -1367,6 +1368,10 @@ class Address(DAObject):
     def init(self, *pargs, **kwargs):
         if 'location' not in kwargs:
             self.initializeAttribute('location', self.LatitudeLongitudeClass)
+        if 'geolocated' in kwargs:
+            kwargs['geocoded'] = kwargs['geolocated']
+        if 'geocoded' not in kwargs:
+            self.geocoded = False
         if 'geolocated' not in kwargs:
             self.geolocated = False
         if not hasattr(self, 'city_only'):
@@ -1375,7 +1380,7 @@ class Address(DAObject):
     def __str__(self):
         return(str(self.block()))
     def on_one_line(self, include_unit=True, omit_default_country=True, language=None, show_country=None):
-        """Returns a one-line address.  Primarily used internally for geolocation."""
+        """Returns a one-line address.  Primarily used internally for geocoding."""
         output = ""
         if self.city_only is False:
             if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
@@ -1405,7 +1410,7 @@ class Address(DAObject):
             output += ", " + country_name(self._get_country())
         return output
     def _map_info(self):
-        if (self.location.gathered and self.location.known) or self.geolocate():
+        if (self.location.gathered and self.location.known) or self.geocode():
             if hasattr(self.location, 'description'):
                 the_info = self.location.description
             else:
@@ -1416,16 +1421,21 @@ class Address(DAObject):
             return [result]
         return None
     def geolocate(self, address=None, reset=False):
-        """Determines the latitude and longitude of the location from its components.  If an address is supplied, the address fields that are not already populated will be populated with the result of the geolocation of the selected address."""
+        return self.geocode(address=address, reset=reset)
+    def geocode(self, address=None, reset=False):
+        """Determines the latitude and longitude of the location from its components.  If an address is supplied, the address fields that are not already populated will be populated with the result of the geocoding of the selected address."""
         if reset:
-            self.reset_geolocation()
+            self.reset_geocoding()
         if address is None:
-            if self.geolocated:
+            if hasattr(self, 'geocoded'):
+                if self.geocoded:
+                    return self.geocode_success
+            elif self.geolocated:
                 return self.geolocate_success
             the_address = self.on_one_line(omit_default_country=False)
         else:
             the_address = address
-        #logmessage("geolocate: trying to geolocate " + str(the_address))
+        #logmessage("geocode: trying to geocode " + str(the_address))
         from geopy.geocoders import GoogleV3
         if 'google' in server.daconfig and 'api key' in server.daconfig['google'] and server.daconfig['google']['api key']:
             my_geocoder = GoogleV3(api_key=server.daconfig['google']['api key'])
@@ -1442,14 +1452,17 @@ class Address(DAObject):
                 logmessage(str(the_err))
                 try_number += 1
                 time.sleep(try_number)
+        self.geocoded = True
         self.geolocated = True
         if results:
+            self.geocode_success = True
             self.geolocate_success = True
             self.location.gathered = True
             self.location.known = True
             self.location.latitude = results.latitude
             self.location.longitude = results.longitude
-            self.geolocate_response = results.raw
+            self.geocode_response = results.raw
+            self.geolocate_response = self.geocode_response
             if hasattr(self, 'norm'):
                 delattr(self, 'norm')
             if hasattr(self, 'norm_long'):
@@ -1554,6 +1567,7 @@ class Address(DAObject):
                     self.norm.city = self.norm.neighborhood
                 if (not hasattr(self.norm_long, 'city')) and hasattr(self.norm_long, 'neighborhood'):
                     self.norm_long.city = self.norm_long.neighborhood
+            self.norm.geocoded = True
             self.norm.geolocated = True
             self.norm.location.gathered = True
             self.norm.location.known = True
@@ -1563,8 +1577,11 @@ class Address(DAObject):
                 self.norm.location.description = self.norm.block()
             except:
                 logmessage("Normalized address was incomplete")
+                self.geocode_success = False
                 self.geolocate_success = False
-            self.norm.geolocate_response = results.raw
+            self.norm.geocode_response = results.raw
+            self.norm.geolocate_response = self.norm.geocode_response
+            self.norm_long.geocoded = True
             self.norm_long.geolocated = True
             self.norm_long.location.gathered = True
             self.norm_long.location.known = True
@@ -1574,8 +1591,10 @@ class Address(DAObject):
                 self.norm_long.location.description = self.norm_long.block()
             except:
                 logmessage("Normalized address was incomplete")
+                self.geocode_success = False
                 self.geolocate_success = False
-            self.norm_long.geolocate_response = results.raw
+            self.norm_long.geocode_response = results.raw
+            self.norm_long.geolocate_response = self.norm_long.geocode_response
             if address is not None:
                 self.normalize()
             try:
@@ -1583,12 +1602,13 @@ class Address(DAObject):
             except:
                 self.location.description = ''
         else:
-            logmessage("geolocate: Valid not ok.")
+            logmessage("geocode: Valid not ok.")
+            self.geocode_success = False
             self.geolocate_success = False
         #logmessage(str(self.__dict__))
-        return self.geolocate_success
+        return self.geocode_success
     def normalize(self, long_format=False):
-        if not self.geolocate():
+        if not self.geocode():
             return False
         the_instance_name = self.instanceName
         the_norm = self.norm
@@ -1604,8 +1624,11 @@ class Address(DAObject):
         self.norm_long = the_norm_long
         return True
     def reset_geolocation(self):
-        """Resets the geolocation information"""
-        self.delattr('norm', 'geolocate_success', 'geolocate_response', 'norm_long', 'one_line')
+        return reset_geocoding()
+    def reset_geocoding(self):
+        """Resets the geocoding information"""
+        self.delattr('norm', 'geolocate_success', 'geolocate_response', 'geocode_success', 'geocode_response', 'norm_long', 'one_line')
+        self.geocoded = False
         self.geolocated = False
         self.location.delattr('gathered', 'known', 'latitude', 'longitude', 'description')
     def block(self, language=None, international=False, show_country=None):
@@ -1807,7 +1830,7 @@ class Person(DAObject):
         return super().init(*pargs, **kwargs)
     def _map_info(self):
         if not self.location.known:
-            if (self.address.location.gathered and self.address.location.known) or self.address.geolocate():
+            if (self.address.location.gathered and self.address.location.known) or self.address.geocode():
                 self.location = self.address.location
         if self.location.gathered and self.location.known:
             if self.name.defined():
@@ -2247,7 +2270,7 @@ class Organization(Person):
                 for office in kwargs['offices']:
                     if type(office) is dict:
                         new_office = self.office.appendObject(**office)
-                        new_office.geolocate()
+                        new_office.geocode()
             del kwargs['offices']
         return super().init(*pargs, **kwargs)
     def will_handle(self, problem=None, county=None):
@@ -2265,7 +2288,7 @@ class Organization(Person):
         the_response = list()
         if hasattr(self.office):
             for office in self.office:
-                if (office.location.gathered and office.location.known) or office.geolocate():
+                if (office.location.gathered and office.location.known) or office.geocode():
                     if self.name.defined():
                         the_info = self.name.full()
                     else:

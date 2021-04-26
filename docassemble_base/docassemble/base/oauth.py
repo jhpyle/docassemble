@@ -123,6 +123,14 @@ class DAOAuth(DAObject):
     def get_http(self):
         """Returns an http object that can be used to communicate with the OAuth-enabled API."""
         return self.get_credentials().authorize(httplib2.Http())
+    def authorize(self, web):
+        """Adds the appropriate headers to a DAWeb object"""
+        headers = dict()
+        self.get_credentials().apply(headers)
+        if hasattr(web, 'headers'):
+            web.headers.update(headers)
+        else:
+            web.headers = headers
     def ensure_authorized(self):
         """If the credentials are not valid, starts the authorization process."""
         self.get_http()

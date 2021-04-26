@@ -1,7 +1,7 @@
 metadata:
   title: Suppress loading util
   short: Suppress
-  documentation: https://docassemble.org/docs/initial.yml#suppress loading util
+  documentation: https://docassemble.org/docs/initial.html#suppress loading util
   example start: 1
   example end: 3
 ---

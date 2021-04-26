@@ -2,6 +2,7 @@ metadata:
   title: Billing and shipping
   example start: 1
   example end: 4
+  documentation: "https://docassemble.org/docs/fields.html#object labeler"
 ---
 objects:
   - shipping: Address

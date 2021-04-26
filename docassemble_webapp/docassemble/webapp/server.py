@@ -10359,7 +10359,7 @@ def index(action_argument=None, refer=None):
               var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
               var showHideDiv = function(speed){
                 var elem = daGetField(jsInfo['vars'][i]);
-                if (elem != null && !$(elem).parent().is($(this).parent())){
+                if (elem != null && !$(elem).parents('.form-group').first().is($(this).parents('.form-group').first())){
                   return;
                 }
                 var resultt = eval(jsExpression);
@@ -10464,7 +10464,7 @@ def index(action_argument=None, refer=None):
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var showHideDiv = function(speed){
               var elem = daGetField(varName, showIfDiv);
-              if (elem != null && !$(elem).parent().is($(this).parent())){
+              if (elem != null && !$(elem).parents('.form-group').first().is($(this).parents('.form-group').first())){
                 return;
               }
               var theVal;
@@ -12714,7 +12714,7 @@ def observer():
               var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
               var showHideDiv = function(speed){
                 var elem = daGetField(jsInfo['vars'][i]);
-                if (elem != null && !$(elem).parent().is($(this).parent())){
+                if (elem != null && !$(elem).parents('.form-group').first().is($(this).parents('.form-group').first())){
                   return;
                 }
                 var resultt = eval(jsExpression);
@@ -12810,7 +12810,7 @@ def observer():
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var showHideDiv = function(speed){
               var elem = daGetField(varName);
-              if (elem != null && !$(elem).parent().is($(this).parent())){
+              if (elem != null && !$(elem).parents('.form-group').first().is($(this).parents('.form-group').first())){
                 return;
               }
               var theVal;
@@ -17013,9 +17013,9 @@ def cloud_trash(use_gd, use_od, section, the_file, current_project):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_files():
-    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
     current_project = get_current_project()
     if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
         use_od = False
@@ -17061,6 +17061,9 @@ def playground_files():
         section = "template"
     pgarea = SavedFile(current_user.id, fix=True, section='playground')
     the_directory = directory_for(pgarea, current_project)
+    if current_project != 'default' and not os.path.isdir(the_directory):
+        current_project = set_current_project('default')
+        the_directory = directory_for(pgarea, current_project)
     pulldown_files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     current_variable_file = get_variable_file(current_project)
     if current_variable_file is not None:
@@ -17804,6 +17807,9 @@ def playground_packages():
     for sec in ('playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
         area[sec] = SavedFile(current_user.id, fix=True, section=sec)
         the_directory = directory_for(area[sec], current_project)
+        if sec == 'playground' and current_project != 'default' and not os.path.isdir(the_directory):
+            current_project = set_current_project('default')
+            the_directory = directory_for(area[sec], current_project)
         file_list[sec] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     for sec, field in section_field.items():
         the_list = []
@@ -19363,10 +19369,10 @@ def delete_variable_file(current_project):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_page():
-    setup_translation()
-    current_project = get_current_project()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
+    setup_translation()
+    current_project = get_current_project()
     if 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
         use_gd = False
@@ -19404,9 +19410,9 @@ def playground_page():
         the_file = ''
     playground = SavedFile(current_user.id, fix=True, section='playground')
     the_directory = directory_for(playground, current_project)
-    #path = os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id))
-    #if not os.path.exists(path):
-    #    os.makedirs(path)
+    if current_project != 'default' and not os.path.isdir(the_directory):
+        current_project = set_current_project('default')
+        the_directory = directory_for(playground, current_project)
     if request.method == 'POST' and 'uploadfile' in request.files:
         the_files = request.files.getlist('uploadfile')
         if the_files:

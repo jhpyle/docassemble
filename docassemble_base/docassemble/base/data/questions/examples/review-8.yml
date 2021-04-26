@@ -16,7 +16,7 @@ review:
     fields:
       - address.address
       - set:
-          - address.geolocated: False
+          - address.geocoded: False
       - recompute:
           - address.county
     button: |
@@ -48,7 +48,7 @@ fields:
 ---
 sets: address.county
 code: |
-  address.geolocate()
+  address.geocode()
 ---
 mandatory: True
 question: All done

@@ -3,6 +3,9 @@ metadata:
   documentation: "https://docassemble.org/docs/recipes.html#universal"
   example start: 1
   example end: 7
+  required privileges:
+    - admin
+    - developer
 ---
 features:
   use catchall: True

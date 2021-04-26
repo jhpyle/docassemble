@@ -2,7 +2,7 @@
 # Import any DAObject classes or functions that you will need
 from docassemble.base.util import Individual, Person, DAObject, DAFileList, DAFile, Thing, as_datetime
 # Import the SQLObject and some associated utility functions
-from docassemble.base.sql import alchemy_url, upgrade_db, SQLObject, SQLObjectRelationship, StandardRelationshipList
+from docassemble.base.sql import alchemy_url, upgrade_db, SQLObject, SQLObjectRelationship, StandardRelationshipList, connect_args
 # Import SQLAlchemy names
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, create_engine, or_, and_
 from sqlalchemy.ext.declarative import declarative_base

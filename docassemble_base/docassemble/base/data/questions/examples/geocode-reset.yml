@@ -1,7 +1,7 @@
 metadata:
-  title: Geolocate address
-  short title: Geolocate
-  documentation: "https://docassemble.org/docs/objects.html#Address.geolocate"
+  title: Geocode address
+  short title: Geocode
+  documentation: "https://docassemble.org/docs/objects.html#Address.geocode"
   example start: 1
   example end: 8
 ---
@@ -36,7 +36,7 @@ fields:
 ---
 sets: the_address.county
 code: |
-  the_address.geolocate(reset=True)
+  the_address.geocode(reset=True)
 ---
 question: |
   Information about your address

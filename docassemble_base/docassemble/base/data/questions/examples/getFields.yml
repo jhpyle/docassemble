@@ -1,6 +1,8 @@
 metadata:
   title: List of fields
   documentation: "https://docassemble.org/docs/functions.html#js_getFields"
+  example start: 1
+  example end: 2
 ---
 question: |
   Tell me about your musical tastes.

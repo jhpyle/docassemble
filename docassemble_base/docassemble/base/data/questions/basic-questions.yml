@@ -513,28 +513,28 @@ fields:
 generic object: Address
 sets: x.county
 code: |
-  x.geolocate()
+  x.geocode()
 comment: |
   This code block and the question before it illustrate the concept
   of "fallback" questions.  If the interview needs the "county"
   attribute of an address, but finds that it is not defined, it will
-  first run this code block, which "geolocates" the address.  That is,
+  first run this code block, which "geocodes" the address.  That is,
   it goes on to the internet and runs the address through a
-  geolocation service, which returns geographic information about the
+  geocoding service, which returns geographic information about the
   address.
 
   This code block uses the "sets" directive to indicate that the code
   block offers sets the attribute "county."  Normally, you don't have
   to use "sets" with code blocks because docassemble can see by
   looking at the code what variables the code will set.  In the case
-  of the code "x.geolocate()," however, it is not apparent that the
+  of the code "x.geocode()," however, it is not apparent that the
   code is offering to set the "county" attribute.  Therefore we need
   to manually specify what the code block is offering to do.
 
   It is significant that the code block merely "offers" to set these
-  variables.  The "x.geolocate()" code might fail.  The user might put
-  in an address that the geolocation service does not understand.  Or
-  the geolocation service might be down at the time.  If that happens,
+  variables.  The "x.geocode()" code might fail.  The user might put
+  in an address that the geocoding service does not understand.  Or
+  the geocoding service might be down at the time.  If that happens,
   the code block will run, but the attributes will not be set.
 
   If the variable that a code block offers to set is not actually set
@@ -542,7 +542,7 @@ comment: |
   offers to set the variables.  In the case of the "county" attribute
   of an address, the question immediately preceding this one offers to
   set the "county" attribute.  It does so by asking the user a
-  question, rather than by using a geolocation service.  This question
+  question, rather than by using a geocoding service.  This question
   serves as a "fallback" question.
 
   Note that when docassemble looks for a block that offers to set a
@@ -565,7 +565,7 @@ fields:
 generic object: City
 sets: x.county
 code: |
-  x.geolocate()
+  x.geocode()
 comment: |
 
   Suppose you have an object "birthplace" of type "City."  A "City"
@@ -627,7 +627,7 @@ sets:
   - x.country
   - x.neighborhood
 code: |
-  x.geolocate()
+  x.geocode()
 comment: |
 ---
 generic object: DAList

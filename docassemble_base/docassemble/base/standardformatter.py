@@ -507,7 +507,7 @@ def help_wrap(content, helptext, status):
     if helptext is None:
         return content
     else:
-        return '<div class="dachoicewithhelp"><div><div>' + content + '</div><div class="dachoicehelp"><a tabindex="0" data-container="body" data-toggle="popover" data-placement="left" data-content=' + noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)) + '><i class="fas fa-question-circle"></i></a></div></div></div>'
+        return '<div class="dachoicewithhelp"><div><div>' + content + '</div><div class="dachoicehelp text-primary"><a tabindex="0" data-container="body" data-toggle="popover" data-placement="left" data-content=' + noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)) + '><i class="fas fa-question-circle"></i></a></div></div></div>'
 
 def as_html(status, url_for, debug, root, validation_rules, field_error, the_progress_bar, steps):
     decorations = list()
@@ -1718,12 +1718,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 else:
                     default_email = ''
                 output += """\
-            <div id="daaccordionOne" class="da-attachment-email-all">
+            <div class="da-attachment-email-all">
               <div class="card mb-2">
                 <div class="card-header" id="daheadingOne">
-                  <a role="button" data-toggle="collapse" data-parent="#daaccordionOne" href="#dacollapseOne" aria-expanded="true" aria-controls="dacollapseOne">""" + email_header + """</a>
+                  <span>""" + email_header + """</span>
                 </div>
-                <div id="dacollapseOne" class="collapse show" aria-labelledby="daheadingOne">
+                <div aria-labelledby="daheadingOne">
                   <div class="card-body">
                     <form aria-labelledby="daheadingOne" action=\"""" + root + """\" id="daemailform" class="form-horizontal" method="POST">
                       <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name) + """/>
@@ -1747,12 +1747,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
 """
             if status.extras.get('allow_downloading', False):
                 output += """
-            <div id="daaccordionTwo" class="da-attachment-download-all">
+            <div class="da-attachment-download-all">
               <div class="card">
                 <div class="card-header" id="daheadingTwo">
-                  <a role="button" data-toggle="collapse" data-parent="#daaccordionTwo" href="#dacollapseTwo" aria-expanded="true" aria-controls="dacollapseTwo">""" + download_header + """</a>
+                  <span>""" + download_header + """</span>
                 </div>
-                <div id="dacollapseTwo" class="collapse show" aria-labelledby="daheadingTwo">
+                <div aria-labelledby="daheadingTwo">
                   <div class="card-body">
                     <form aria-labelledby="daheadingTwo" action=\"""" + root + """\" id="dadownloadform" class="form-horizontal" method="POST">
                       <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name) + """/>"""

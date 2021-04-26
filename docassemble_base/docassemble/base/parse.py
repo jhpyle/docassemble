@@ -5829,7 +5829,7 @@ class Question:
             result_list.append(self.finalize_attachment(item[0], item[1], the_user_dict))
         if self.compute_attachment is not None:
             computed_attachment_list = eval(self.compute_attachment, the_user_dict)
-            if not isinstance(computed_attachment_list, list):
+            if not (isinstance(computed_attachment_list, list) or (hasattr(computed_attachment_list, 'elements') and isinstance(computed_attachment_list.elements, list))):
                 computed_attachment_list = [computed_attachment_list]
             for the_att in computed_attachment_list:
                 if the_att.__class__.__name__ == 'DAFileCollection':

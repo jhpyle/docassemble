@@ -168,6 +168,25 @@ def click_button(step, button_name):
     assert success
     world.browser.wait_for_it()
 
+@step(r'I click the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) button "([^"]+)"')
+def click_nth_button(step, ordinal, button_name):
+    world.browser.find_element_by_id('dapagetitle').click()
+    do_wait()
+    success = False
+    try:
+        world.browser.find_element_by_xpath('(//button/span[text()="' + button_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+        success = True
+    except:
+       pass
+    if not success:
+        try:
+            world.browser.find_element_by_xpath('(//button[text()="' + button_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+            success = True
+        except:
+            pass
+    assert success
+    world.browser.wait_for_it()
+
 @step(r'I click the "([^"]+)" button')
 def click_button_post(step, choice):
     do_wait()
@@ -323,6 +342,16 @@ def set_combobox_text(step, value):
         pass
     elem.send_keys(value)
 
+@step(r'I select "([^"]+)" from the combobox dropdown')
+def select_combobox_option(step, value):
+    found = False
+    for elem in world.browser.find_elements_by_css_selector("div.combobox-container a.dropdown-item"):
+        if elem.text == value:
+            found = True
+            elem.click()
+            break
+    assert found
+
 @step(r'I select "([^"]+)" as the "([^"]+)"')
 def select_option(step, value, label):
     try:
@@ -440,6 +469,16 @@ def set_mc_option_pre(step, choice):
     label_elem = span_elem.find_element_by_xpath("..")
     label_elem.click()
 
+@step(r'I click the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) option "([^"]+)"')
+def set_nth_mc_option_pre(step, ordinal, choice):
+    try:
+        span_elem = world.browser.find_element_by_xpath('(//span[text()="' + choice + '"])[' + str(number_from_ordinal[ordinal]) + ']')
+    except NoSuchElementException:
+        span_elem = world.browser.find_element_by_xpath('(//span[text()[contains(.,"' + choice + '")]])[' + str(number_from_ordinal[ordinal]) + ']')
+    label_elem = span_elem.find_element_by_xpath("..")
+    label_elem.click()
+    #span_elem.click()
+
 @step(r'I should see "([^"]+)" as the title of the page')
 def title_of_page(step, title):
     assert world.browser.title == title
@@ -514,3 +553,12 @@ def take_screenshot():
             f.write(json.dumps(the_json, indent=1))
         world.browser.close()
         world.browser.switch_to.window(world.browser.window_handles[0])
+
+@step(r'I click the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) choice help')
+def click_nth_choice_help(step, ordinal):
+    world.browser.find_element_by_xpath('(//div[contains(@class, "dachoicehelp")])[' + str(number_from_ordinal[ordinal]) + ']').click()
+
+@step(r'I click accept in the alert')
+def accept_alert(step):
+    time.sleep(1)
+    world.browser.switch_to.alert.accept()

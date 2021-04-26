@@ -1,3 +1,9 @@
+metadata:
+  title: Excel data
+  short title: Excel
+  example start: 1
+  example end: 3
+---
 modules:
   - .fruit_database
 ---
