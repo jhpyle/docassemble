@@ -76,9 +76,9 @@ bash -c \
    six==1.15.0 \
    setuptools==50.3.2 \
 && pip3 install --upgrade \
-   certbot==1.12.0 \
-   certbot-nginx==1.12.0 \
-   certbot-apache==1.12.0 \
+   certbot==1.14.0 \
+   certbot-nginx==1.14.0 \
+   certbot-apache==1.14.0 \
 && pip3 install --upgrade \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \

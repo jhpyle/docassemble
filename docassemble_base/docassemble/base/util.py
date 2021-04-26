@@ -1369,9 +1369,9 @@ class Address(DAObject):
         if 'location' not in kwargs:
             self.initializeAttribute('location', self.LatitudeLongitudeClass)
         if 'geolocated' in kwargs:
-            kwargs['geocoded'] = kwargs['geolocated']
-        if 'geocoded' not in kwargs:
-            self.geocoded = False
+            kwargs['_geocoded'] = kwargs['geolocated']
+        if '_geocoded' not in kwargs:
+            self._geocoded = False
         if 'geolocated' not in kwargs:
             self.geolocated = False
         if not hasattr(self, 'city_only'):
@@ -1420,6 +1420,37 @@ class Address(DAObject):
                 result['icon'] = self.icon
             return [result]
         return None
+    def was_geocoded(self):
+        """Returns True or False depending on whether the geocoding process has been performed."""
+        if hasattr(self, '_geocoded'):
+            return self._geocoded
+        return self.geolocated
+    def was_geocoded_successfully(self):
+        """Returns True or False depending on whether the geocoding process has been performed and has been performed successfully."""
+        if hasattr(self, '_geocoded'):
+            if not self._geocoded:
+                return False
+        elif not self.geolocated:
+            return False
+        if hasattr(self, '_geocode_success'):
+            return self._geocode_success
+        if hasattr(self, '_geocode_response') and len(self._geocode_response):
+            return True
+        if hasattr(self, 'geolocate_response') and len(self.geolocate_response):
+            return True
+        return self.geolocate_success
+    def get_geocode_response():
+        """Returns the raw data that the geocoding service returned."""
+        if hasattr(self, '_geocode_response') :
+            return self._geocode_response
+        elif hasattr(self, 'geolocate_response'):
+            return self.geolocate_response
+        if hasattr(self, 'norm'):
+            if hasattr(self.norm, '_geocode_response'):
+                return self.norm._geocode_response
+            if hasattr(self.norm, 'geolocate_response'):
+                return self.norm.geolocate_response
+        return []
     def geolocate(self, address=None, reset=False):
         return self.geocode(address=address, reset=reset)
     def geocode(self, address=None, reset=False):
@@ -1427,9 +1458,11 @@ class Address(DAObject):
         if reset:
             self.reset_geocoding()
         if address is None:
-            if hasattr(self, 'geocoded'):
-                if self.geocoded:
-                    return self.geocode_success
+            if hasattr(self, '_geocoded'):
+                if self.geolocated != self._geocoded:
+                    self._geocoded = self.geolocated
+                if self._geocoded:
+                    return self._geocode_success
             elif self.geolocated:
                 return self.geolocate_success
             the_address = self.on_one_line(omit_default_country=False)
@@ -1452,17 +1485,17 @@ class Address(DAObject):
                 logmessage(str(the_err))
                 try_number += 1
                 time.sleep(try_number)
-        self.geocoded = True
+        self._geocoded = True
         self.geolocated = True
         if results:
-            self.geocode_success = True
+            self._geocode_success = True
             self.geolocate_success = True
             self.location.gathered = True
             self.location.known = True
             self.location.latitude = results.latitude
             self.location.longitude = results.longitude
-            self.geocode_response = results.raw
-            self.geolocate_response = self.geocode_response
+            self._geocode_response = results.raw
+            self.geolocate_response = self._geocode_response
             if hasattr(self, 'norm'):
                 delattr(self, 'norm')
             if hasattr(self, 'norm_long'):
@@ -1567,7 +1600,7 @@ class Address(DAObject):
                     self.norm.city = self.norm.neighborhood
                 if (not hasattr(self.norm_long, 'city')) and hasattr(self.norm_long, 'neighborhood'):
                     self.norm_long.city = self.norm_long.neighborhood
-            self.norm.geocoded = True
+            self.norm._geocoded = True
             self.norm.geolocated = True
             self.norm.location.gathered = True
             self.norm.location.known = True
@@ -1577,11 +1610,11 @@ class Address(DAObject):
                 self.norm.location.description = self.norm.block()
             except:
                 logmessage("Normalized address was incomplete")
-                self.geocode_success = False
+                self._geocode_success = False
                 self.geolocate_success = False
-            self.norm.geocode_response = results.raw
-            self.norm.geolocate_response = self.norm.geocode_response
-            self.norm_long.geocoded = True
+            self.norm._geocode_response = results.raw
+            self.norm.geolocate_response = self.norm._geocode_response
+            self.norm_long._geocoded = True
             self.norm_long.geolocated = True
             self.norm_long.location.gathered = True
             self.norm_long.location.known = True
@@ -1591,10 +1624,10 @@ class Address(DAObject):
                 self.norm_long.location.description = self.norm_long.block()
             except:
                 logmessage("Normalized address was incomplete")
-                self.geocode_success = False
+                self._geocode_success = False
                 self.geolocate_success = False
-            self.norm_long.geocode_response = results.raw
-            self.norm_long.geolocate_response = self.norm_long.geocode_response
+            self.norm_long._geocode_response = results.raw
+            self.norm_long.geolocate_response = self.norm_long._geocode_response
             if address is not None:
                 self.normalize()
             try:
@@ -1603,10 +1636,10 @@ class Address(DAObject):
                 self.location.description = ''
         else:
             logmessage("geocode: Valid not ok.")
-            self.geocode_success = False
+            self._geocode_success = False
             self.geolocate_success = False
         #logmessage(str(self.__dict__))
-        return self.geocode_success
+        return self._geocode_success
     def normalize(self, long_format=False):
         if not self.geocode():
             return False
@@ -1627,8 +1660,8 @@ class Address(DAObject):
         return reset_geocoding()
     def reset_geocoding(self):
         """Resets the geocoding information"""
-        self.delattr('norm', 'geolocate_success', 'geolocate_response', 'geocode_success', 'geocode_response', 'norm_long', 'one_line')
-        self.geocoded = False
+        self.delattr('norm', 'geolocate_success', 'geolocate_response', '_geocode_success', '_geocode_response', 'norm_long', 'one_line')
+        self._geocoded = False
         self.geolocated = False
         self.location.delattr('gathered', 'known', 'latitude', 'longitude', 'description')
     def block(self, language=None, international=False, show_country=None):

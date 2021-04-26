@@ -8255,6 +8255,7 @@ Feature: Example interviews
   Scenario: Test the interview "Date"
     Given I start the interview "docassemble.base:data/questions/examples/date-default.yml"
     Then I should see the phrase "What is your date of birth?"
+    And I set "Your birthday" to "04/25/1921"
     And I click the button "Continue"
     Then I should see the phrase "You were born on April 25, 1921."
 

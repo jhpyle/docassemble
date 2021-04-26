@@ -36,7 +36,7 @@ subquestion: |
 
   ${ indent(json.dumps(the_address.as_serializable(), indent=2)) }
 
-  % if the_address.geocode_success:
+  % if the_address.was_geocoded_successfully():
   The normalized version is:
 
   ${ the_address.norm }
