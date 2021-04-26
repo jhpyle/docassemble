@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.57](https://github.com/jhpyle/docassemble/releases/tag/v1.2.57) - 2021-04-26
+
+### Added
+- The `authorize()` method of `DAOAuth`, which adds OAuth2
+  authorization headers to a `DAWeb` object.
+
+### Changed
+- The `.geolocate()` method has been renamed to `.geocode()` and other
+  associated attributes have also been renamed.  Backwards
+  compatibility will be maintained until the next minor version
+  update.
+
+### Fixed
+- The `attachment code` specifier now accepts `DAList` objects.
+- Interference between `help` and operation of `show if`.
+
 ## [1.2.56](https://github.com/jhpyle/docassemble/releases/tag/v1.2.56) - 2021-04-22
 
 ### Fixed

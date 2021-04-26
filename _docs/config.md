@@ -2752,7 +2752,7 @@ google:
 This is required for the use of the [`map_of()`] feature.
 
 This will also enable you to use the [Google Maps Geocoding API] (see
-the [`.geolocate()`] method), and will also enable the [Google Cloud
+the [`.geocode()`] method), and will also enable the [Google Cloud
 Translation API] for the feature in Utilities for translating system
 words into other languages.
 
@@ -2777,7 +2777,7 @@ use a separate `google maps api key` because you can secure it
 differently.  Note that the [`map_of()`] feature and the [address
 autocomplete] feature put the API key in the [JavaScript] source, and
 the communications with Google's server will come from the user's
-computer.  By contrast, when you use the [`.geolocate()`] method, the
+computer.  By contrast, when you use the [`.geocode()`] method, the
 communications with Google's server come from your server.  Thus, you
 may wish to secure the `api key` using IP addresses, and secure the
 `google maps api key` using "Referer" headers.
@@ -4453,7 +4453,7 @@ and Facebook API keys.
 [`dispatch`]: #dispatch
 [list of available interviews]: #dispatch
 [Google Cloud Translation API]: https://cloud.google.com/translate/
-[`.geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
+[`.geocode()`]: {{ site.baseurl }}/docs/objects.html#Address.geocode
 [`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
 [favicon]: https://en.wikipedia.org/wiki/Favicon
 [ICO]: https://en.wikipedia.org/wiki/ICO_(file_format)

@@ -674,7 +674,8 @@ This example uses the [`encode_name()`] function to convert the
 variable name to the appropriate field name.  For more information on
 manipulating the **docassemble** front end, see the section on [custom
 front ends].  The example above works for easily for text fields, but
-other data types will require more work.
+other data types will require more work.  Also, the example above only
+works if the [Configuration] contains `restrict input variables: false`.
 
 # <a name="ajax"></a>Running actions with Ajax
 

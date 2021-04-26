@@ -1856,7 +1856,7 @@ filename`:
 
 {% include side-by-side.html demo="allow-downloading-true-zip-filename" %}
 
-## <a name="include download tab"></a><a name="include attachment notice"></a>Omitting parts of the display
+## <a name="include download tab"></a><a name="include attachment notice"></a><a name="manual attachment list"></a>Omitting parts of the display
 
 By default, when an attachment is available, a message appears saying
 "The following document has been created for you."  To omit this, set

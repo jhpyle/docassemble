@@ -264,13 +264,15 @@ Other methods available on a `DAList` are:
 * <a name="DAList.sort_elements"></a>`sort_elements()` - acts like
   `sort()` but does not cause the list to be gathered.
 * <a name="DAList.complete_elements"></a><a
-  name="DADict.complete_elements"></a>`complete_elements()` - returns
+  name="DADict.complete_elements"></a><a
+  name="DASet.complete_elements"></a>`complete_elements()` - returns
   the subset of elements in the list that are "complete."  This is
   useful when you have a list of objects, and some objects are still
   in a nascent state, and you only want to use the objects that are
   "complete."  (See the discussion of `.complete_attribute` below.)
 * <a name="DAList.gathered_and_complete"></a><a
-  name="DADict.gathered_and_complete"></a>`gathered_and_complete()` -
+  name="DADict.gathered_and_complete"></a><a
+  name="DASet.gathered_and_complete"></a>`gathered_and_complete()` -
   this effectively re-runs the gathering logic on the list to make
   sure that the list is "complete."  This method is run automatically
   when editing a list item using a [`table`].  If `complete_attribute`
@@ -532,22 +534,23 @@ Other methods available on a `DAList` are:
   this method to be called immediately before the `complete_attribute`
   is set.  If your class does not provide a `.hook_on_item_complete()`
   method, this method does nothing.
-* <a name="DAList.filter"></a>`filter()` - returns a shallow copy of the list
-  object where the elements of the list are filtered according to
-  criteria specified in keyword arguments.  For example, if `person`
-  is a list of [`Individual`]s, and each individual has an attribute
-  `is_witness` that is either `True` if the person is a witness and
-  `False` otherwise, you can write `person.filter(is_witness=True)` to
-  get a list of witnesses.  This only works if the list is a list of
-  objects.  By default, the list that is returned will have the same
-  instance name as the original list, but you can change this by
-  passing a single positional parameter.  Running `witness =
-  person.filter('witness', is_witness=True)`, for example, will set
-  `witness` to an object with the instance name `witness`.  However,
-  note that the instance names of the elements of the list will not be
-  changed.  While the `filter()` method can be a useful shorthand, its
-  features are very limited.  In most situations, it is probably
-  better to use a [list comprehension].
+* <a name="DAList.filter"></a><a name="DASet.filter"></a>`filter()` -
+  returns a [shallow copy] of the list object where the elements of
+  the list are filtered according to criteria specified in keyword
+  arguments.  For example, if `person` is a list of [`Individual`]s,
+  and each individual has an attribute `is_witness` that is either
+  `True` if the person is a witness and `False` otherwise, you can
+  write `person.filter(is_witness=True)` to get a list of witnesses.
+  This only works if the list is a list of objects.  By default, the
+  list that is returned will have the same instance name as the
+  original list, but you can change this by passing a single
+  positional parameter.  Running `witness = person.filter('witness',
+  is_witness=True)`, for example, will set `witness` to an object with
+  the instance name `witness`.  However, note that the instance names
+  of the elements of the list will not be changed.  While the
+  `filter()` method can be a useful shorthand, its features are very
+  limited.  In most situations, it is probably better to use a [list
+  comprehension].
 * <a name="DAList.initializeObject"></a>`initializeObject()` - Calling
   `my_list.initializeObject(0, DAObject)` will set the first item in
   the list to a `DAObject`, with an appropriate instance name.
@@ -1201,6 +1204,41 @@ given item in the list and then returns the recomputed item.  This
 should only be used if the item value is computed, not posed to the
 user as a question.
 
+<a name="DADict.slice"></a>The `.slice()` method of the `DADict`
+returns a [shallow copy] of the dictionary with a subset of the
+original key/value pairs.  It can be called in one of two ways.  If
+you give it a single positional parameter, where that parameter is a
+function, the function will be applied to the value of the key/value
+pair and if the result is true, the key/value pair will be included,
+and if it is false, the key/value pair will be excluded.  For example,
+if you have a [`DADict`] called `parties` where the values are
+[`Individual`] objects, you can take a "slice" of the dictionary that
+consists only of individuals who are 18 or older:
+
+{% highlight python %}
+adults = parties.slice(lambda y: y.age_in_years() >= 18)
+{% endhighlight %}
+
+If the values of a `DADict` are plain text phone numbers, this will
+return a version of the `DADict` where the phone numbers are valid:
+
+{% highlight python %}
+good_numbers = phone_numbers.slice(phone_number_is_valid)
+{% endhighlight %}
+
+This uses the [`phone_number_is_valid()`] function.
+
+The second way to call the `.slice()` method is to give it one or more
+keys as positional parameters.  For example, if you have a `DADict`
+called `income` where the keys are types of income and the values
+represent the amount of income in that category, you can use
+`.slice()` to get a dictionary that only contains particular keys of
+the original dictionary:
+
+{% highlight python %}
+earnings = sum(income.slice('employment', 'self-employment').values())
+{% endhighlight %}
+
 ## <a name="DAOrderedDict"></a>DAOrderedDict
 
 The `DAOrderedDict` is just like the `DADict`, except it is based on a
@@ -1241,6 +1279,12 @@ the methods of the [Python set].
 
 For more information about using [`DASet`] objects, see the section
 on [groups].
+
+<a name="DASet.hook_on_gather"></a>
+<a name="DASet.hook_after_gather"></a>
+<a name="DASet.hook_on_item_complete"></a>
+<a name="DASet.hook_on_remove"></a>The `.hook*` methods that [`DAList`]
+and [`DADict`] use are not available with [`DASet`].
 
 ## <a name="DAFile"></a>DAFile
 
@@ -1643,10 +1687,16 @@ If you do not want to edit the file in place, you can create a new
 `DAFile` with an `objects` block and pass files that you want to OCR
 as positional parameters to `make_ocr_pdf()`.
 
-Since the [OCR] process can take a long time, you might want to use
-the `make_ocr_pdf_in_background()` method instead.
+<a name="DAFile.make_ocr_pdf_in_background"></a>Since the [OCR]
+process can take a long time, you might want to use the
+`make_ocr_pdf_in_background()` method instead.
 
 {% include demo-side-by-side.html demo="make-ocr-pdf-in-background" %}
+
+The `.make_ocr_pdf_in_background()` method runs a [background action].
+It returns the same type of object as [`background_action()`].  When
+the [background action] is complete, the PDF file will be overwritten
+with the OCRed version of the PDF file.
 
 <a name="DAFile.bates_number"></a>The `.bates_number()` method overwrites
 any existing contents of the file with a [Bates numbered] PDF of the
@@ -1790,7 +1840,7 @@ obtain the [alt text].  If no `alt_text` is defined for the file, no
 [alt text] is used.
 
 <a name="DAFileCollection.set_alt_text"></a><a
-name="DAFileCollection.set_alt_text"></a>The `DAFileCollection` object
+name="DAFileCollection.get_alt_text"></a>The `DAFileCollection` object
 supports the `.set_alt_text()` and `.get_alt_text()` methods.  These
 work much like the [`set_alt_text()`] and [`get_alt_text()`] methods
 of [`DAFile`].  Unlike a `DAFile`, however, a `DAFileCollection` does
@@ -1910,7 +1960,7 @@ inspect information about a file, call the method on a specific item
 in the list.
 
 <a name="DAFileList.set_alt_text"></a><a
-name="DAFileList.set_alt_text"></a>The `DAFileList` object supports
+name="DAFileList.get_alt_text"></a>The `DAFileList` object supports
 the `.set_alt_text()` and `.get_alt_text()` methods.  These work much
 like the [`set_alt_text()`] and [`get_alt_text()`] methods of
 [`DAFile`].  Unlike a `DAFile`, however, a `DAFileList` does not have
@@ -2022,7 +2072,7 @@ URL at which the file can be accessed.
 file path that you can use to access the file on the server.
 
 <a name="DAStaticFile.set_alt_text"></a><a
-name="DAStaticFile.set_alt_text"></a>The `DAStaticFile` object
+name="DAStaticFile.get_alt_text"></a>The `DAStaticFile` object
 supports the `.set_alt_text()` and `.get_alt_text()` methods.  These
 work much like the [`set_alt_text()`] and [`get_alt_text()`] methods
 of [`DAFile`].  Like [`DAFile`] objects, [`DAStaticFile`] objects use
@@ -2825,6 +2875,30 @@ If you set a custom `unique_id` or you set `use_random_unique_id` to
 true, then the default expiration time for the credentials is 24 hours
 rather than six months.
 
+<a name="DAOAuth.authorize"></a>If you are using a [`DAWeb`] for
+communication with an API that requires [OAuth2] authentication, you
+can add something like the following to the top of your YAML:
+
+{% highlight yaml %}
+objects:
+  - auth: MyAuth.using(url_args=url_args)
+  - api: DAWeb
+---
+initial: True
+code: |
+  auth.authorize(api)
+{% endhighlight %}
+
+Here, `auth` is an instance of your `DAOAuth` subclass, and `api` is
+an instance of the [`DAWeb`] class.  Running `auth.authorize(api)`
+will perform the [OAuth2] process if necessary, and then it will
+define a default header in your [`DAWeb`] instance that will authorize
+requests to the API.  It is important that `.authorize()` always run
+in the same screen load as any calls to the web API.  This interview
+achieves this by running `.authorize()` every time the screen loads
+(with `initial: True`).  This means that if the token has expired, it
+will be refreshed.
+
 ## <a name="DAWeb"></a>DAWeb
 
 The `DAWeb` object facilitates making requests to APIs.
@@ -3041,6 +3115,10 @@ the API, these cookies will be sent.  This can be useful if the server
 needs its own cookies in order to function correctly.  By contrast, if
 you only set the cookies in a keyword parameter when calling a method,
 then the `cookies` attribute will not be updated.
+
+If you are using an API that uses [OAuth2] authentication, see the
+[`authorize()`] method of the [`DAOAuth`] class, discussed at the end
+of the previous section.
 
 The value returned by the method depends on whether the HTTP request
 succeeded and the format of the data returned by the server.  Most API
@@ -4043,60 +4121,72 @@ return `''`.  However, if it is called as
 attribute.  It takes an optional keyword argument `language`, which
 will affect the translation of the word "Unit."
 
-<a name="Address.geolocate"></a> The `.geolocate()` method determines
-the latitude and longitude of the address and stores it in the
-attribute `location`, which is a [`LatitudeLongitude`] object.  It
-uses the [`geopy.geocoders.GoogleV3`] class.  To use this, you will
-need an API key for the [Google Maps Geocoding API], which you will
-need to add to the [configuration] as the [`api key`] subdirective
-under the [`google`] directive.
+<a name="Address.geocode"></a><a name="Address.geolocate"></a> The
+`.geocode()` method determines the latitude and longitude of the
+address and stores it in the attribute `location`, which is a
+[`LatitudeLongitude`] object.  It uses the
+[`geopy.geocoders.GoogleV3`] class.  To use this, you will need an API
+key for the [Google Maps Geocoding API], which you will need to add to
+the [configuration] as the [`api key`] subdirective under the
+[`google`] directive.
 
-If you call `.geolocate()` on an [`Address`] object called
+In previous versions of **docassemble**, this method was called
+`.geolocate()`.  The `.geolocate()` method and its associated
+attributes (`.geocoded`, `.geocode_success`, `.geocode_response` will
+continue to function until the next minor version update.
+
+The following methods are available to query the status of geocoding:
+
+* `myaddress.was_geocoded()`: this will return `True` if the geocoding
+  process has been performed (whether it was successful or not).  If
+  `myaddress.was_geocoded()` returns `True`, then calling
+  `.geocode()` again will not call the API again; rather, it will
+  immediately return with whatever result was obtained the first time
+  `.geocode()` was called.  In previous versions of **docassemble**,
+  the attribute `myaddress.geocoded` was used instead of this method.
+* `myaddress.was_geocoded_successfully()`: if `.geocode()` was able to
+  successfully call the API and get a result, this will return `True`;
+  otherwise, this will return `False`.  In previous versions of
+  **docassemble**, the attribute `myaddress.geocode_success` was used
+  for this purpose.
+* `myaddress.get_geocode_response()`: if `.geocode()` was able to
+  successfully call the API and get a result, this will return the raw
+  results returned from the [Google Maps Geocoding API].  In previous
+  versions of **docassemble**, the attribute
+  `myaddress.geocode_response` was used for this purpose.
+
+If you call `.geocode()` on an [`Address`] object called
 `myaddress`, the following attributes will be set:
 
-* `myaddress.geolocated`: this will be set to `True`.  Since the
-  `.geolocate()` method uses an API, it is important not to call the
-  API repeatedly.  The `.geolocated` attribute keeps track of whether
-  the `.geolocate()` method has been called before.  If it has been
-  called before, and `.geolocated` is `True`, then calling
-  `.geolocate()` again will not call the API again; rather, it will
-  immediately return with whatever result was obtained the first time
-  `.geolocate()` was called.
-* `myaddress.geolocate_success`: if `.geolocate()` was able to
-  successfully call the API and get a result, this will be set to
-  `True`; otherwise, this will be set to `False`.
-* `myaddress.location.gathered`: if `.geolocate()` was able to
+* `myaddress.location.gathered`: if `.geocode()` was able to
   successfully call the API and get a result, this will be set to `True`.
-* `myaddress.location.known`: if `.geolocate()` was able to
+* `myaddress.location.known`: if `.geocode()` was able to
   successfully call the API and get a result, this will be set to
   `True`.
-* `myaddress.location.latitude`: if `.geolocate()` was able to
+* `myaddress.location.latitude`: if `.geocode()` was able to
   successfully call the API and get a result, this will be set to the
   latitude of the address.
-* `myaddress.location.longitude`: if `.geolocate()` was able to
+* `myaddress.location.longitude`: if `.geocode()` was able to
   successfully call the API and get a result, this will be set to the
   latitude of the address.
-* `myaddress.location.description`: if `.geolocate()` was able to
+* `myaddress.location.description`: if `.geocode()` was able to
   successfully call the API and get a result, this will be set to the
   value of `myaddress.block()`.
-* `myaddress.geolocate_response`: if `.geolocate()` was able to
-  successfully call the API and get a result, this will be set to the
-  raw results returned from the [Google Maps Geocoding API].
-* `myaddress.one_line`: if `.geolocate()` was able to
+* `myaddress.one_line`: if `.geocode()` was able to
   successfully call the API and get a result, this will be set to the
   address as the geocoder would format it to be expressed on one
   line.
-* `myaddress.norm`: if `.geolocate()` was able to successfully call
+* `myaddress.norm`: if `.geocode()` was able to successfully call
   the API and get a result, this will be set to an [`Address`] object
   containing normalized names of the address components.
-* `myaddress.norm_long`: if `.geolocate()` was able to successfully
+* `myaddress.norm_long`: if `.geocode()` was able to successfully
   call the API and get a result, this will be set to an [`Address`]
   object containing long-form normalized names of the address
   components.  (E.g., "1234 Main Street" instead of "1234 Main St" and
   "California" instead of "CA.")
 
 In addition, the following attributes will be set if the attribute was
-not already set, and if `.geolocate()` was able to successfully
+not already set, and if `.geocode()` was able to successfully
 determine the value by calling the API:
 
 * `myaddress.street_number` - the street number (e.g., `123`).
@@ -4136,38 +4226,38 @@ of the values returned from the [Google Maps Geocoding API], if applicable:
 * `myaddress.sublocality_level_5`
 * `myaddress.subpremise`
 
-Here is an example that illustrates how the `.geolocate()` method works:
+Here is an example that illustrates how the `.geocode()` method works:
 
-{% include side-by-side.html demo="geolocate" %}
+{% include side-by-side.html demo="geocode" %}
 
-There is a also a second use of the `geolocate()` method, which is to
+There is a also a second use of the `geocode()` method, which is to
 populate the attributes of an empty `Address` object using an address
 expressed as one line of text:
 
-{% include side-by-side.html demo="geolocate-from-address" %}
+{% include side-by-side.html demo="geocode-from-address" %}
 
 If this is used on an `Address` that already has populated attributes,
 the attributes of the existing address will be overwritten.
 
-Normally, calling `geolocate()` on an object (without an `address`
-parameter) after geolocation has been performed has no effect.  This
-allows you to safely insert a call to `geolocate()` in your interview
+Normally, calling `geocode()` on an object (without an `address`
+parameter) after geocoding has been performed has no effect.  This
+allows you to safely insert a call to `geocode()` in your interview
 logic without running up a large bill for your [Google API] usage.
-However, if you call `geolocate(reset=True)`, the old geolocation
-information will be deleted and the geolocation will be performed
+However, if you call `geocode(reset=True)`, the old geocoding
+information will be deleted and the geocoding will be performed
 again.  If your interview allows the user to edit an address after it
-has been geolocated, you will want to make sure that your interview
-logic will re-run the geolocation after the address is edited.  The
-`reset=True` parameter can help you ensure that this geolocation is
+has been geocoded, you will want to make sure that your interview
+logic will re-run the geocoding after the address is edited.  The
+`reset=True` parameter can help you ensure that this geocoding is
 redone.
 
-{% include side-by-side.html demo="geolocate-reset" %}
+{% include side-by-side.html demo="geocode-reset" %}
 
-You can also use the [`.reset_geolocation()`] method to delete the
-geolocation information.
+You can also use the [`.reset_geocoding()`] method to delete the
+geocoding information.
 
 <a name="Address.normalize"></a>
-The `.normalize()` method uses the results of `.geolocate()` to
+The `.normalize()` method uses the results of `.geocode()` to
 standardize the formatting of the parts of the address.  This will
 overwrite the attributes of the object.  This method takes an optional
 keyword parameter `long_format`, which defaults to `False`.  If this
@@ -4178,16 +4268,19 @@ form of the normalization.  (E.g., "California" instead of "CA.")
 
 Note that if you want to access a normalized version of the address,
 but you don't want to overwrite the original attributes of the object,
-you can simply run `.geolocate()` and then, if it is successful,
+you can simply run `.geocode()` and then, if it is successful,
 access the `.norm` attribute or the `.norm_long` attribute, both of
 which will be fully populated [`Address`] objects, with normalized
 attributes.
 
-<a name="Address.reset_geolocation"></a>
-If you need to redo the geolocation after the original address is
-edited, you can call `.reset_geolocation()` on the `Address` object
-and all of the geolocation information will be deleted.  This has the
-same effect as calling `geolocate()` with `reset=True`.
+<a name="Address.reset_geocoding"></a><a name="Address.reset_geolocation"></a>
+If you need to redo the geocoding after the original address is
+edited, you can call `.reset_geocoding()` on the `Address` object
+and all of the geocoding information will be deleted.  This has the
+same effect as calling `geocode()` with `reset=True`.
+
+This method was previously called `.reset_geolocation()`.  The old
+name still works but will be removed in the next minor version.
 
 <a name="Address.line_one"></a>
 The `.line_one()` method returns the first line of the address,
@@ -4258,7 +4351,7 @@ attempted yet.
 
 One use for the `LatitudeLongitude` object is for mapping the
 coordinates of an address.  The [`Address`] object has a method
-`.geolocate()` for this purpose.
+`.geocode()` for this purpose.
 
 <a name="LatitudeLongitude.status"></a>
 Another use for the `LatitudeLongitude` object is storing the GPS
@@ -6614,8 +6707,14 @@ the `_uid` of the table rather than the `id`.
 [ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
 [Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
 [Bates numbered]: https://en.wikipedia.org/wiki/Bates_numbering
-[`.reset_geolocation()`]: #Address.reset_geolocation
+[`.reset_geocoding()`]: #Address.reset_geocoding
 [`sorted()`]: https://docs.python.org/3.8/howto/sorting.html
 [`reconsider()`]: {{ site.baseurl }}/docs/functions.html#reconsider
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [`invalidate()`]: {{ site.baseurl }}/docs/functions.html#invalidate
+[shallow copy]: https://docs.python.org/3.8/library/copy.html
+[`phone_number_is_valid()`]: {{ site.baseurl }}/docs/functions.html#phone_number_is_valid
+[`background_action()`]: {{ site.baseurl }}/docs/background.html#background_action
+[`DAWeb`]: #DAWeb
+[`authorize()`]: #DAOAuth.authorize
+[`DAOAuth`]: #DAOAuth

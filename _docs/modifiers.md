@@ -375,7 +375,10 @@ will be highlighted in green every time they appear in the question.
 Using `auto terms` can lead to ambiguities, so it is generally better
 to use `terms` if you can.  If you have two terms, `green apple` and
 `apple`, then `auto terms` will try to make a term within a term,
-which will lead to unpredictable behavior.
+which will lead to unpredictable behavior.  `auto terms` can also
+cause problems if the term is contained inside of HTML.  So while
+`auto terms` is convenient when it works, it might not always work, so
+using `terms` is preferable.
 
 If you want to refer to a term but you want the text of the hyperlink
 to be different from the name of the term, you can use the pipe

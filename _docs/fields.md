@@ -1935,7 +1935,7 @@ attributes of the [`Address`] object that can be set by [Place Autocomplete].
 
 {% include side-by-side.html demo="address-autocomplete-test" %}
 
-## <a name="continue button field"></a>Setting a variable with the Continue button
+## <a name="continue button field"></a><a name="field"></a>Setting a variable with the Continue button
 
 Sometimes, it is useful for a `question` to set a single variable to
 `True`, along with the other variables it sets, much like the [simple
@@ -2106,7 +2106,7 @@ text associated with a choice.  You can also specify an `image
 generator` lambda function that generates the image that should be
 associated with the choice.
 
-{% include side-by-side.html demo="object-radio-fruit" %}
+{% include side-by-side.html demo="generators" %}
 
 ## <a name="embed"></a>Embedding fields within a paragraph
 
@@ -2767,22 +2767,22 @@ The following example illustrates `set`:
 
 {% include side-by-side.html demo="review-8" %}
 
-This interview demonstrates how to re-do the geolocation of an
-[`Address`].  When you call [`.geolocate()`] on an [`Address`] the
-first time, the address is geolocated and the `.geolocated` attribute
+This interview demonstrates how to re-do the geocoding of an
+[`Address`].  When you call [`.geocode()`] on an [`Address`] the
+first time, the address is geocoded and the `.geocoded` attribute
 of the object is changed from `False` to `True`.  If you call
-[`.geolocate()`] on the object again, the first thing it does is check
-the `.geolocated` attribute, and if it is `True`, it will immediately
+[`.geocode()`] on the object again, the first thing it does is check
+the `.geocoded` attribute, and if it is `True`, it will immediately
 return without doing anything.  This is useful for avoiding
 unnecessary API calls, which can slow down the responsiveness of your
 app.  However, if the user edits the underlying attributes of the
-address, you need to "reset" the geolocation in order to get it to run
+address, you need to "reset" the geocoding in order to get it to run
 again.
 
-In the above interview, the `set` command sets `address.geolocated` to
+In the above interview, the `set` command sets `address.geocoded` to
 `False`, which means that when the `address.county` is recomputed, and
-the [`.geolocate()`] method is run again by the `code` block, then the
-[`.geolocate()`] method will actually geolocate the new address.
+the [`.geocode()`] method is run again by the `code` block, then the
+[`.geocode()`] method will actually geocode the new address.
 
 The `undefine` specifier causes the values to be undefined.  The
 `invalidate` specifier works like `undefine`, except that the original
@@ -3005,7 +3005,7 @@ why this needs to be done manually as opposed to automatically:
 [`raise`]: https://docs.python.org/3.8/tutorial/errors.html#raising-exceptions
 [`date`]: #date
 [`number`]: #number
-[`.geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
+[`.geocode()`]: {{ site.baseurl }}/docs/objects.html#Address.geocode
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [`val()`]: {{ site.baseurl }}/docs/functions.html#js_val
 [`input type`]: #input type

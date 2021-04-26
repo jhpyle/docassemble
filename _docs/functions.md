@@ -1863,7 +1863,7 @@ does not work within documents.)  The arguments are expected to be
 **docassemble** [objects].  Different objects are mapped differently:
 
 * [`Address`] objects: if an [`Address`] object is provided as an argument
-  to `map_of()`, a map marker will be placed at the geolocated
+  to `map_of()`, a map marker will be placed at the geocoded
   coordinates of the address.  The description of the address will be
   the address itself.
   * _Technical details_: if the object is called `address`, the marker
@@ -1871,7 +1871,7 @@ does not work within documents.)  The arguments are expected to be
     `address.location.longitude`.  (The attribute `address.location`
     is a [`LatitudeLongitude`] object.)  The description of the marker
     will be set to `address.location.description`.  These fields are
-    set automatically during the geolocation process, which will take
+    set automatically during the geocoding process, which will take
     place the first time **docassemble** runs `map_of()`, if it has
     not taken place already.  The marker icon can be customized by
     setting `address.icon`.
@@ -1890,7 +1890,7 @@ does not work within documents.)  The arguments are expected to be
   (for a [`Person`] object called `person`).  If the [`Person`] object
   is the user, the default icon is a blue circle.
 
-{% include demo-side-by-side.html demo="testgeolocate" %}
+{% include demo-side-by-side.html demo="testgeocode" %}
 
 In order for maps to appear, you will need to configure a
 [Google API key].  From the [`google`] section of the [configuration],
@@ -4690,7 +4690,7 @@ The keys are:
 * `pypi` - whether developers have the option of integrating their
   [Playground]s with [PyPI].  See the [`pypi`] configuration.
 * `google_maps` - whether the Google Maps API (used in the [`map_of()`]
-  function and the [`geolocate()`] method) is available.  See the
+  function and the [`geocode()`] method) is available.  See the
   [`google`] configuration.
 
 ## <a name="referring_url"></a>referring_url()
@@ -7714,7 +7714,7 @@ $(document).on('daPageLoad', function(){
 [`github`]: {{ site.baseurl }}/docs/config.html#github
 [`pypi`]: {{ site.baseurl }}/docs/config.html#pypi
 [`map_of()`]: #map_of
-[`geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
+[`geocode()`]: {{ site.baseurl }}/docs/objects.html#Address.geocode
 [`google`]: {{ site.baseurl }}/docs/config.html#google
 [list of available interviews]: {{ site.baseurl }}/docs/config.html#dispatch
 [`show login`]: {{ site.baseurl }}/docs/config.html#show login
