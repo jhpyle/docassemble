@@ -5510,6 +5510,33 @@
     % for index in range(0, number_of_fruits):
     * ${ fruit[index] }
     % endfor
+"generators": |-
+  objects:
+    - bus: Thing
+    - car: Thing
+  ---
+  code: |
+    bus.name.text = 'bus'
+    car.name.text = 'car'
+    bus.help_text = 'An inexpensive form of public transportation.'
+    car.help_text = 'A vehicle you can have all to yourself.'
+    bus.image = 'bus-alt'
+    car.image = 'car-side'
+  ---
+  question: |
+    How would you prefer to travel?
+  fields:
+    - no label: transportation_method
+      datatype: object_radio
+      choices:
+        - bus
+        - car
+      object labeler: |
+        lambda y: capitalize(y)
+      help generator: |
+        lambda y: y.help_text
+      image generator: |
+        lambda y: y.image
 "generic-object": |-
   generic object: Individual
   question: |
@@ -5547,38 +5574,38 @@
       required: False
       code: |
         name_suffix()
-"geolocate": "question: |\n  Enter an address\nfields:\n  - Address: the_address.address\n\
+"geocode": "question: |\n  Enter an address\nfields:\n  - Address: the_address.address\n\
   \  - Unit: the_address.unit\n    required: False\n  - City: the_address.city\n \
   \ - State: the_address.state\n    code: states_list()\n  - Zip: the_address.zip\n\
-  \    required: False\n---\nmandatory: True\ncode: |\n  the_address.geolocate()\n\
-  ---\nmandatory: True\nquestion: |\n  Information about your address\nsubquestion:\
-  \ |\n  The address you provided is:\n    \n  ${ the_address }\n\n  As JSON, this\
-  \ is:\n\n  ${ indent(json.dumps(the_address.as_serializable(), indent=2)) }\n\n\
-  \  % if the_address.geolocate_success:\n  The normalized version is:\n\n  ${ the_address.norm\
-  \ }\n\n  As JSON, this is:\n\n  ${ indent(json.dumps(the_address.norm.as_serializable(),\
-  \ indent=2)) }\n  \n  The long-form normalized\n  version is:\n\n  ${ the_address.norm_long\
-  \ }\n\n  As JSON, this is:\n\n  ${ indent(json.dumps(the_address.norm_long.as_serializable(),\
+  \    required: False\n---\nmandatory: True\ncode: |\n  the_address.geocode()\n---\n\
+  mandatory: True\nquestion: |\n  Information about your address\nsubquestion: |\n\
+  \  The address you provided is:\n    \n  ${ the_address }\n\n  As JSON, this is:\n\
+  \n  ${ indent(json.dumps(the_address.as_serializable(), indent=2)) }\n\n  % if the_address.was_geocoded_successfully():\n\
+  \  The normalized version is:\n\n  ${ the_address.norm }\n\n  As JSON, this is:\n\
+  \n  ${ indent(json.dumps(the_address.norm.as_serializable(), indent=2)) }\n  \n\
+  \  The long-form normalized\n  version is:\n\n  ${ the_address.norm_long }\n\n \
+  \ As JSON, this is:\n\n  ${ indent(json.dumps(the_address.norm_long.as_serializable(),\
   \ indent=2)) }\n\n  The latitude and longitude are\n  ${ the_address.location.latitude\
   \ }\n  and\n  ${ the_address.location.longitude }.\n\n  % if hasattr(the_address,\
   \ 'neighborhood'):\n  The address is located in the\n  ${ the_address.neighborhood\
   \ }\n  neighborhood.\n  % endif\n\n  % if hasattr(the_address, 'county'):\n  The\
   \ address is located in\n  ${ the_address.county }.\n  % endif\n\n  ${ map_of(the_address)\
-  \ }\n\n  % else:\n  The address could not be\n  geolocated.\n  % endif"
-"geolocate-from-address": "objects:\n  - the_address: Address\n---\nquestion: |\n\
-  \  Enter an address\nfields:\n  - Address: address_one_line\n---\nmandatory: True\n\
-  code: |\n  the_address.geolocate(address_one_line)\n---\nmandatory: True\nquestion:\
-  \ |\n  Information about your address\nsubquestion: |\n  % if the_address.geolocate_success:\n\
+  \ }\n\n  % else:\n  The address could not be\n  geocoded.\n  % endif"
+"geocode-from-address": "objects:\n  - the_address: Address\n---\nquestion: |\n  Enter\
+  \ an address\nfields:\n  - Address: address_one_line\n---\nmandatory: True\ncode:\
+  \ |\n  the_address.geocode(address_one_line)\n---\nmandatory: True\nquestion: |\n\
+  \  Information about your address\nsubquestion: |\n  % if the_address.was_geocoded_successfully():\n\
   \  The address you provided is:\n    \n  ${ the_address }\n\n  The address is located\
   \ in\n  ${ the_address.city }.\n\n  The latitude and longitude are\n  ${ the_address.location.latitude\
   \ }\n  and\n  ${ the_address.location.longitude }.\n  % else:\n  That address could\
-  \ not be geolocated.\n  % endif"
-"geolocate-reset": "objects:\n  - the_address: Address\n---\nmandatory: True\ncode:\
+  \ not be geocoded.\n  % endif"
+"geocode-reset": "objects:\n  - the_address: Address\n---\nmandatory: True\ncode:\
   \ |\n  saw_address\n  saw_address_again\n  final_screen\n---\nundefine:\n  - the_address.county\n\
   question: |\n  Enter an address\nfields:\n  - Address: the_address.address\n  -\
   \ Unit: the_address.unit\n    required: False\n  - City: the_address.city\n  - State:\
   \ the_address.state\n    code: states_list()\n  - Zip: the_address.zip\n    required:\
   \ False\n---\nquestion: |\n  In what county is ${ the_address }\n  located?\nfields:\n\
-  \  - County: the_address.county\n---\nsets: the_address.county\ncode: |\n  the_address.geolocate(reset=True)\n\
+  \  - County: the_address.county\n---\nsets: the_address.county\ncode: |\n  the_address.geocode(reset=True)\n\
   ---\nquestion: |\n  Information about your address\nsubquestion: |\n  The address\
   \ you provided is:\n    \n  ${ the_address }\n\n  The address is located in\n  ${\
   \ the_address.county }.\ncontinue button field: saw_address\n---\ncode: |\n  saw_address_again\
@@ -5662,6 +5689,10 @@
         return false;
       });
     </script>
+  ---
+  mandatory: True
+  question: |
+    You like ${ comma_and_list(set([best_band, best_singer, best_composer, best_songwriter])) }.
 "googlechart": |-
   features:
     javascript: https://www.gstatic.com/charts/loader.js
@@ -7668,33 +7699,6 @@
 
     I will ship your order to
     ${ shipping.on_one_line() }.
-"object-radio-fruit": |-
-  objects:
-    - bus: Thing
-    - car: Thing
-  ---
-  code: |
-    bus.name.text = 'bus'
-    car.name.text = 'car'
-    bus.help_text = 'An inexpensive form of public transportation.'
-    car.help_text = 'A vehicle you can have all to yourself.'
-    bus.image = 'bus-alt'
-    car.image = 'car-side'
-  ---
-  question: |
-    How would you prefer to travel?
-  fields:
-    - no label: transportation_method
-      datatype: object_radio
-      choices:
-        - bus
-        - car
-      object labeler: |
-        lambda y: capitalize(y)
-      help generator: |
-        lambda y: y.help_text
-      image generator: |
-        lambda y: y.image
 "object-radio-nota": |-
   question: Who is the villain?
   fields:
@@ -9323,9 +9327,8 @@
     - label: Edit
       fields:
         - address.address
-        - set:
-            - address.geolocated: False
         - recompute:
+            - address.geocoding_reset
             - address.county
       button: |
         Your address is:
@@ -9356,7 +9359,11 @@
   ---
   sets: address.county
   code: |
-    address.geolocate()
+    address.geocode()
+  ---
+  code: |
+    address.reset_geocoding()
+    address.geocoding_reset = True
   ---
   mandatory: True
   question: All done
@@ -11048,12 +11055,6 @@
     ${ disclaimer }
 
     To get started, press **Continue**.
-"template-code": "question: |\n  Please upload the template file.\nsubquestion: |\n\
-  \  For best results, download\n  [this file] and then upload\n  it here.\n\n  [this\
-  \ file]: ${ url_of('letter_template.docx') }\nfields:\n  - File: the_template_file\n\
-  \    datatype: file\n---\nmandatory: True\nquestion: |\n  Here is your document.\n\
-  attachment:\n  - name: Your letter\n    filename: letter\n    docx template file:\
-  \ \n      code: |\n        the_template_file"
 "template-file": |-
   template: disclaimer
   content file: disclaimer.md
@@ -12320,6 +12321,25 @@
   \ }.\n\n    My favorite vegetable is\n    ${ favorite_vegetable }.\n\n    I solemnly\
   \ swear that the\n    foregoing is true and\n    correct.\n\n    ${ user.signature.show(width=\"\
   2in\") }\n\n    ${ user }"
+"fruits-database": |-
+  modules:
+    - .fruit_database
+  ---
+  question: |
+    Pick a fruit.
+  fields:
+    - Fruit: favorite_fruit
+      code: get_fruit_names()
+  ---
+  mandatory: True
+  question: |
+    Your favorite fruit,
+    ${ favorite_fruit },
+    is
+    ${ fruit_info(favorite_fruit)['color'] }
+    and has
+    ${ fruit_info(favorite_fruit)['seeds'] }
+    seeds.
 "generic-document": |-
   objects:
     - plaintiff: Individual
@@ -13320,7 +13340,7 @@
     ${ country_name(user.phone_country) }.
     % endif
   fields:
-    - Phone number: user.mobile_number
+    - Phone number: user.phone_number
       validate: |
         lambda y: phone_number_is_valid(y, country=user.phone_country) or validation_error("Please enter a valid " + country_name(user.phone_country) + " phone number." )
   ---
@@ -13796,13 +13816,13 @@
   question: |
     What is your favorite vegetable?
   fields:
-    - Fruit: favorite_vegetable
+    - Vegetable: favorite_vegetable
   ---
   depends on: version
   question: |
     What is your favorite apple?
   fields:
-    - Fruit: favorite_apple
+    - Apple: favorite_apple
   ---
   mandatory: True
   question: |
@@ -13820,6 +13840,9 @@
       action: new_version
       color: primary
 "report-version": |-
+  imports:
+    - docassemble.demo
+  ---
   mandatory: True
   code: |
     json_response({'version': docassemble.demo.__version__})
@@ -14297,9 +14320,18 @@
   subquestion: |
     ${ map_of(user, enemy) }
 "testssn": |-
+  modules:
+    - .ssn
+  ---
   mandatory: True
   question: |
     Your SSN is ${ user_ssn }.
+  ---
+  question: |
+    What is your SSN?
+  fields:
+    - SSN: user_ssn
+      datatype: ssn
 "turnips-worms": |-
   question: Do you like turnips?
   yesno: likes_turnips
@@ -14308,30 +14340,6 @@
   fields:
     - Date: worm_idolizing_stop_date
       datatype: date
-"twostage": |-
-  code: |
-    inserted_paragraph = "My favorite fruit is {{ favorite_fruit }} and I want the world to know."
-  ---
-  question: |
-    What is your favorite fruit?
-  fields:
-    - Favorite fruit: favorite_fruit
-  ---
-  attachment:
-    variable name: the_template
-    docx template file: twostage.docx
-    valid formats:
-      - docx
-  ---
-  mandatory: True
-  question: |
-    All done
-  attachment:
-    name: A Document
-    filename: a_document
-    docx template file:
-      code: |
-        the_template.docx
 "universal-document": "features:\n  use catchall: True\n---\ngeneric object: DACatchAll\n\
   question: |\n  What is ${ x.object_name() }?\nfields:\n  - no label: x.value\nvalidation\
   \ code: |\n  define(x.instanceName, x.value)\n---\nif: |\n  x.context == 'float'\
