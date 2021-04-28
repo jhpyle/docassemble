@@ -528,16 +528,6 @@ objects.
 This makes use of the [`generic object` modifier].  The template file
 [generic-document.docx] refers to the person using the variable `x`.
 
-# <a name="two stage"></a>Inserting Jinja2 with Jinja2
-
-If you use Jinja2 to insert Jinja2 template tags into a document
-assembled through [`docx template file`], you will find that the tags
-in the included text will not be evaluated.  However, you can conduct
-your document assembly in two stages, so that first you assemble a
-template and then you use the DOCX output as the input for another assembly.
-
-{% include demo-side-by-side.html demo="twostage" %}
-
 # <a name="docxproperties"></a>Altering metadata of generated DOCX files
 
 This example demonstrates using the [docx] package to modify the
