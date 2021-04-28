@@ -3,6 +3,9 @@ metadata:
   documentation: "https://docassemble.org/docs/recipes.html#document signing"
   example start: 1
   example end: 16
+  required privileges:
+    - admin
+    - developer
 ---
 mandatory: True
 code: |

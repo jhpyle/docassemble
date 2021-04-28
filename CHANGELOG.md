@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.2.58] - 2021-04-27
+### Fixed
+- Bug with `list collect` and checkboxes.
+### Changed
+- The `<fieldset>` containing a question's buttons now has the class
+  `da-button-set`.
+- The `signature_of()` method of the `SigningProcess` class in the
+  signature recipe now has a width parameter.
+
 ## [1.2.57] - 2021-04-26
 ### Added
 - The `authorize()` method of `DAOAuth`, which adds OAuth2

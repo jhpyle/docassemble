@@ -6383,7 +6383,7 @@ def index(action_argument=None, refer=None):
             authorized_fields.extend(interview_status.extras['allowed_to_set'])
         if interview_status.question.question_type == "multiple_choice":
             authorized_fields.append('_multiple_choice')
-        authorized_fields = set(authorized_fields).union(interview_status.question.fields_used)
+        authorized_fields = set(authorized_fields).union(interview_status.get_all_fields_used(user_dict))
         if interview_status.extras.get('list_collect_is_final', False) and interview_status.extras['list_collect'].auto_gather:
             if interview_status.extras['list_collect'].ask_number:
                 authorized_fields.add(interview_status.extras['list_collect'].instanceName + ".target_number")

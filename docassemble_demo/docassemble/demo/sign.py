@@ -104,10 +104,13 @@ class SigningProcess(DAObject):
     def has_signed(self, signer):
         code = self._code_for(signer)
         return self.info_by_code[code]['signed']
-    def signature_of(self, signer):
+    def signature_of(self, signer, width=None):
         code = self._code_for(signer)
         if self.info_by_code[code]['signed']:
-            return self.signature[code]
+            if width:
+                return self.signature[code].show(width=width)
+            else:
+                return self.signature[code]
         else:
             return self.blank_signature[code]
     def signature_date_of(self, signer):

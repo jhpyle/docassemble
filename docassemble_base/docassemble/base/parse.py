@@ -343,6 +343,26 @@ class InterviewStatus:
         self.followed_mc = False
         self.tentatively_answered = set()
         self.checkin = False
+    def get_all_fields_used(self, user_dict):
+        if 'list_collect' in self.extras:
+            all_fields = set()
+            allow_append = self.extras['list_collect_allow_append']
+            iterator_re = re.compile(r"\[%s\]" % (self.extras['list_iterator'],))
+            list_len = len(self.extras['list_collect'].elements)
+            if hasattr(self.extras['list_collect'], 'minimum_number') and self.extras['list_collect'].minimum_number is not None and self.extras['list_collect'].minimum_number > list_len:
+                list_len = self.extras['list_collect'].minimum_number
+            if list_len == 0:
+                list_len = 1
+            if self.extras['list_collect'].ask_object_type or not allow_append:
+                extra_amount = 0
+            else:
+                extra_amount = get_config('list collect extra count', 15)
+            for list_indexno in range(list_len + extra_amount):
+                for field_used in self.question.fields_used:
+                    all_fields.add(re.sub(iterator_re, '[' + str(list_indexno) +']', field_used))
+            return all_fields
+        else:
+            return self.question.fields_used
     def get_fields_and_sub_fields_and_collect_fields(self, user_dict):
         all_fields = self.question.get_fields_and_sub_fields(user_dict)
         if 'list_collect' in self.extras:
@@ -8952,6 +8972,7 @@ def ampersand_filter(value):
         return value
     if not isinstance(value, str):
         value = str(value)
+    value = docassemble.base.file_docx.sanitize_xml(value)
     if '<w:r>' in value or '</w:t>' in value:
         return re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', value)
     return re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', value)))

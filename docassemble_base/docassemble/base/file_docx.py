@@ -21,6 +21,8 @@ import tempfile
 import string
 from docassemble.base.error import DAError
 
+zerowidth = '\u200B'
+
 NoneType = type(None)
 
 DEFAULT_PAGE_WIDTH = '6.5in'
@@ -91,7 +93,7 @@ def transform_for_docx(text, question, tpl, width=None):
     return text
 
 def create_hyperlink(url, anchor_text, tpl):
-    return InlineHyperlink(tpl, url, anchor_text)
+    return InlineHyperlink(tpl, url, sanitize_xml(anchor_text))
 
 class InlineHyperlink(object):
     def __init__(self, tpl, url, anchor_text):
@@ -618,3 +620,6 @@ def concatenate_files(path_list):
     docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
     composer.save(docx_file.name)
     return docx_file.name
+
+def sanitize_xml(text):
+    return re.sub(r'{([{%#])', '{' + zerowidth + r'\1', re.sub(r'([}%#])}', r'\1' + zerowidth + '}', text))

@@ -26,6 +26,7 @@ NoneType = type(None)
 from docassemble.base.logger import logmessage
 from docassemble.base.rtfng.object.picture import Image
 import PIL
+zerowidth = '\u200B'
 
 DEFAULT_PAGE_WIDTH = '6.5in'
 
@@ -467,6 +468,7 @@ def docx_template_filter(text, question=None):
     text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+) *([0-9]+ *[A-Za-z]+)\] *(.+?)\n *\n', r'\3', text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[BR\]', '</w:t><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[SKIPLINE\]', '</w:t><w:br/><w:t xml:space="preserve">', text)
+    text = re.sub(r'{([{%#])', '{' + zerowidth + r'\1', re.sub(r'([}%#])}', r'\1' + zerowidth + '}', text))
     return(text)
 
 def metadata_filter(text, doc_format):

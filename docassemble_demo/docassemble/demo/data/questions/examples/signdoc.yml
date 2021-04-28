@@ -2,6 +2,9 @@ metadata:
   title:
     en: Sign
     es: Firma
+  required privileges:
+    - admin
+    - developer
 ---
 translations:
   - signdoc_es.xlsx
