@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.59](https://github.com/jhpyle/docassemble/releases/tag/v1.2.59) - 2021-04-28
+
+### Fixed
+- Problem with `reset_geolocation()`.
+
 ## [1.2.58](https://github.com/jhpyle/docassemble/releases/tag/v1.2.58) - 2021-04-27
 
 ### Fixed
