@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.59] - 2021-04-28
+### Fixed
+- Problem with `reset_geolocation()`.
+
 ## [1.2.58] - 2021-04-27
 ### Fixed
 - Bug with `list collect` and checkboxes.

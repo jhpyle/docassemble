@@ -1657,7 +1657,7 @@ class Address(DAObject):
         self.norm_long = the_norm_long
         return True
     def reset_geolocation(self):
-        return reset_geocoding()
+        return self.reset_geocoding()
     def reset_geocoding(self):
         """Resets the geocoding information"""
         self.delattr('norm', 'geolocate_success', 'geolocate_response', '_geocode_success', '_geocode_response', 'norm_long', 'one_line')
