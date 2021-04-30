@@ -33,6 +33,3 @@ subquestion: |
   In Python, `likes_fruit` is
   `${ repr(likes_fruit) }`.
 mandatory: True
----
-code: |
-  variable_as_code = str(likes_fruit.elements)

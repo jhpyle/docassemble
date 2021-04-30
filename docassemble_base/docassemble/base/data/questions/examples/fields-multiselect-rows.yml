@@ -1,19 +1,20 @@
 metadata:
-  title: Checkboxes within fields
-  short title: Checkboxes
-  documentation: "https://docassemble.org/docs/fields.html#fields checkboxes"
+  title: Rows in multiselect
+  short title: Rows
+  documentation: "https://docassemble.org/docs/fields.html#fields multiselect"
   example start: 1
-  example end: 2
+  example end: 1
 ---
 question: |
   Please tell me what you think.
 fields:
   - "Select the fruits you like": likes_fruit
-    datatype: checkboxes
+    datatype: multiselect
     choices:
       - apple
       - peach
       - pear
+    rows: 2
   - "What is your favorite fruit overall?": favorite_fruit
 ---
 question: |

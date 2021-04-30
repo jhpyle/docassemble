@@ -2156,7 +2156,7 @@ def input_for(status, field, wide=False, embedded=False):
                 output += '<p class="sr-only">' + word('Multiselect box') + '</p>'
                 emb_text = 'class="form-control' + daobject + '" '
             if 'rows' in status.extras and field.number in status.extras['rows']:
-                emb_text += 'size="' + noquote(str(status.extras['rows'][field.number])) + '" '
+                emb_text += 'size=' + noquote(str(status.extras['rows'][field.number])) + ' '
             emb_text += 'data-varname=' + myb64doublequote(from_safeid(field.saveas)) + ' ';
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'

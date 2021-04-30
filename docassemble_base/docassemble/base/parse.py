@@ -1019,9 +1019,6 @@ class InterviewStatus:
                     if d_type == 'checkbox':
                         if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
                             the_field['validation_messages']['checkatleast'] = field.validation_message('checkboxes required', self, word("Check at least one option, or check “%s”"), parameters=tuple([self.extras['nota'][field.number]]))
-                    # else:
-                    #     if hasattr(field, 'nota') and self.extras['nota'][field.number] is True:
-                    #         the_field['validation_messages']['minlength'] = field.validation_message('multiselect required', self, word("Select at least one option, or select “%s”"), parameters=tuple([self.extras['nota'][field.number]]))
                 if field.datatype == 'date':
                     the_field['validation_messages']['date'] = field.validation_message('date', self, word("You need to enter a valid date."))
                     if hasattr(field, 'extras') and 'min' in field.extras and 'min' in self.extras and 'max' in field.extras and 'max' in self.extras and field.number in self.extras['min'] and field.number in self.extras['max']:
@@ -3562,7 +3559,7 @@ class Question:
                             elif key == 'validate':
                                 field_info['validate'] = {'compute': compile(field[key], '<validate code>', 'eval'), 'sourcecode': field[key]}
                                 self.find_fields_in(field[key])
-                            elif 'input type' in field and field['input type'] == 'area' and key == 'rows':
+                            elif key == 'rows' and (('input type' in field and field['input type'] == 'area') or ('datatype' in field and field['datatype'] in ('multiselect', 'object_multiselect'))):
                                 field_info['rows'] = {'compute': compile(str(field[key]), '<rows code>', 'eval'), 'sourcecode': str(field[key])}
                                 self.find_fields_in(field[key])
                             elif key == 'maximum image size' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
@@ -5628,7 +5625,7 @@ class Question:
                         if 'accept' not in extras:
                             extras['accept'] = dict()
                         extras['accept'][field.number] = eval(field.accept['compute'], user_dict)
-                    if hasattr(field, 'rows') and hasattr(field, 'inputtype') and field.inputtype == 'area':
+                    if hasattr(field, 'rows') and ((hasattr(field, 'inputtype') and field.inputtype == 'area') or (hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect'))):
                         if 'rows' not in extras:
                             extras['rows'] = dict()
                         extras['rows'][field.number] = eval(field.rows['compute'], user_dict)
