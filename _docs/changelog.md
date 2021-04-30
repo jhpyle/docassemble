@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.60](https://github.com/jhpyle/docassemble/releases/tag/v1.2.60) - 2021-04-30
+
+### Added
+- The `multiselect` data type.
+
 ## [1.2.59](https://github.com/jhpyle/docassemble/releases/tag/v1.2.59) - 2021-04-28
 
 ### Fixed

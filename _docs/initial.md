@@ -1547,6 +1547,14 @@ used were `required` and `max`.  The complete list of codes is:
   something other than `1`.
 * `checkbox maxlength` for `Please select no more than %s.`  This is shown when there is a
   [`checkboxes`] field with a [`maxlength`] field modifier.
+* `multiselect minmaxlength` for `Please select exactly %s.`  This is shown when there is a
+  [`multiselect`] field with a [`minlength`] field modifier that is the
+  same as the [`maxlength`] field modifier.
+* `multiselect minlength` for `Please select at least %s.`  This is shown when there is a
+  [`multiselect`] field with a [`minlength`] field modifier set to
+  something other than `1`.
+* `multiselect maxlength` for `Please select no more than %s.`  This is shown when there is a
+  [`multiselect`] field with a [`maxlength`] field modifier.
 * `date` for `You need to enter a valid date.` This is shown for [`date`] fields
   when the text entered is not an actual date.
 * `date minmax` for `You need to enter a date between %s and %s.` This is shown for
@@ -2366,6 +2374,7 @@ available as the [JavaScript] variable `daQuestionData`.
 [`validation messages`]: {{ site.baseurl }}/docs/fields.html#validation messages
 [`combobox`]: {{ site.baseurl }}/docs/fields.html#combobox
 [`checkboxes`]: {{ site.baseurl }}/docs/fields.html#fields checkboxes
+[`multiselect`]: {{ site.baseurl }}/docs/fields.html#fields multiselect
 [DOM]: https://en.wikipedia.org/wiki/Document_Object_Model
 [privilege]: {{ site.baseurl }}/docs/users.html
 [privileges]: {{ site.baseurl }}/docs/users.html

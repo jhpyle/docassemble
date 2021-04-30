@@ -4286,6 +4286,47 @@
       show if: likes_fruit
       none of the above: |
         Nothing ${ "at all" }
+"fields-multiselect": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: multiselect
+      choices:
+        - apple
+        - peach
+        - pear
+    - "What is your favorite fruit overall?": favorite_fruit
+  ---
+  question: |
+    Thank you for your thoughts.
+  subquestion: |
+    % if likes_fruit['apple']:
+    You like apples.
+    % endif
+    % if likes_fruit['peach']:
+    You like peaches.
+    % endif
+    % if likes_fruit['pear']:
+    You like pears.
+    % endif
+    Your favorite, though, is ${ favorite_fruit }.
+
+    In Python, `likes_fruit` is
+    `${ repr(likes_fruit) }`.
+  mandatory: True
+"fields-multiselect-rows": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: multiselect
+      choices:
+        - apple
+        - peach
+        - pear
+      rows: 2
+    - "What is your favorite fruit overall?": favorite_fruit
 "fields-noyesmaybe": |-
   question: |
     Please answer the following question.
@@ -7571,6 +7612,14 @@
       disable others: True
     - First Name: villain.name.first
     - Last Name: villain.name.last
+"object-multiselect-dalist": |-
+  question: Who are the villains, if any?
+  fields:
+    no label: villain
+    datatype: object_multiselect
+    choices:
+      - protagonist
+      - antagonist
 "object-radio": |-
   objects:
     protagonist: Individual

@@ -1271,7 +1271,7 @@ db:
 {% endhighlight %}
 
 The `prefix` is a [SQLAlchemy] prefix.  If you use a database other
-than [PostgreSQL], change this.  For [MySQL], use `mysql://`.
+than [PostgreSQL], change this.
 
 <a name="db host"></a>**docassemble** will connect to the SQL database
 at the hostname `host` on the port `port`, and will authenticate with
@@ -4512,7 +4512,6 @@ and Facebook API keys.
 [`map_of()`]: {{ site.baseurl }}/docs/functions.html#map_of
 [decorations]: {{ site.baseurl }}/docs/modifiers.html#decoration
 [image buttons]: {{ site.baseurl }}/docs/fields.html#image button
-[MySQL]: https://en.wikipedia.org/wiki/MySQL
 [PNG]: https://en.wikipedia.org/wiki/Portable_Network_Graphics
 [JPEG]: https://en.wikipedia.org/wiki/JPEG_File_Interchange_Format
 [BMP]: https://en.wikipedia.org/wiki/BMP_file_format

@@ -352,6 +352,7 @@ The possible values of [`datatype`] are:
 * [`environment`](#environment)
 * [`camcorder`](#camcorder)
 * [`checkboxes`](#fields checkboxes)
+* [`multiselect`](#fields multiselect)
 * [`currency`](#currency)
 * [`date`](#date)
 * [`datetime`](#datetime)
@@ -369,6 +370,7 @@ The possible values of [`datatype`] are:
 * [`number`](#number)
 * [`object`](#object)
 * [`object_checkboxes`](#object_checkboxes)
+* [`object_checkboxes`](#object_multiselect)
 * [`password`](#password)
 * [`range`](#range)
 * [`text`](#text) (the default)
@@ -825,6 +827,23 @@ This also works if your code returns a [list] of [list]s:
 
 {% include side-by-side.html demo="fields-checkboxes-default-6" %}
 
+## <a name="fields multiselect"></a>Multiselect
+
+`datatype: multiselect` works much like `datatype: checkboxes`, except
+it uses the [HTML] `<select>` element with the `multiple` flag set.
+On desktop browsers, multiple items can be selected by clicking items
+while holding down the Ctrl or Command key and clicking each item.
+
+{% include side-by-side.html demo="fields-multiselect" %}
+
+Unlike `datatype: checkboxes`, the `datatype: multiselect` field does
+not support the use of a "None of the above" option.
+
+You can use the `rows` specifier to indicate how many rows tall the
+multiselect box should be:
+
+{% include side-by-side.html demo="fields-multiselect-rows" %}
+
 ## <a name="select"></a>Multiple-choice dropdown
 
 If you provide a list of [`choices`](#choices) or some
@@ -1002,6 +1021,14 @@ gets defined as a `PartyList`: marking the `objects` block with
 `mandatory: True`.  This causes each variable in the `objects` list to
 be defined as an object before the rest of the interview logic is
 evaluated.
+
+<a name="object_multiselect"></a>`datatype: object_multiselect` is
+similar to `datatype: object_checkboxes`, except it uses the [HTML]
+`<select>` element with the `multiple` flag set.  On desktop browsers,
+multiple items can be selected by clicking items while holding down
+the Ctrl or Command key and clicking each item.
+
+{% include side-by-side.html demo="object-multiselect-dalist" %}
 
 ## <a name="ml"></a><a name="mlarea"></a>Machine learning
 
