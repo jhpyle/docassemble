@@ -557,6 +557,7 @@
 "Morocco": Null
 "Move down": Null
 "Mozambique": Null
+"Multiselect box": Null
 "Must be a two-letter code": Null
 "Must be a valid e-mail address": Null
 "Must be in E.164 format.  U.S. phone numbers begin with +1.": Null
@@ -837,6 +838,7 @@
 "Sections": Null
 "Security Method": Null
 "Select a package": Null
+"Select at least one option, or select “%s”": Null
 "Select a value between": Null
 "Select box": Null
 "Select file": Null

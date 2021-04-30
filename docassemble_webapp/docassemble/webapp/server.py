@@ -6577,10 +6577,10 @@ def index(action_argument=None, refer=None):
             except:
                 safe_objname = safeid(objname)
                 if safe_objname in known_datatypes:
-                    if known_datatypes[safe_objname] == 'object_checkboxes':
+                    if known_datatypes[safe_objname] in ('object_multiselect', 'object_checkboxes'):
                         docassemble.base.parse.ensure_object_exists(objname, 'object_checkboxes', user_dict)
-                    elif known_datatypes[safe_objname] == 'checkboxes':
-                        docassemble.base.parse.ensure_object_exists(objname, 'checkboxes', user_dict)
+                    elif known_datatypes[safe_objname] in ('multiselect', 'checkboxes'):
+                        docassemble.base.parse.ensure_object_exists(objname, known_datatypes[safe_objname], user_dict)
     field_error = dict()
     validated = True
     pre_user_dict = user_dict
@@ -6668,9 +6668,9 @@ def index(action_argument=None, refer=None):
                     imported_core = True
                 if method == 'attribute':
                     attribute_name = parse_result['final_parts'][1][1:]
-                    if datatype == 'checkboxes':
+                    if datatype in ('multiselect', 'checkboxes'):
                         commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
-                    elif datatype == 'object_checkboxes':
+                    elif datatype in ('object_multiselect', 'object_checkboxes'):
                         commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
                     process_set_variable(core_key_name + '.' + attribute_name, user_dict, vars_set, old_values)
                 elif method == 'index':
@@ -6678,16 +6678,16 @@ def index(action_argument=None, refer=None):
                     orig_index_name = index_name
                     if index_name in ('i', 'j', 'k', 'l', 'm', 'n'):
                         index_name = repr(user_dict.get(index_name, index_name))
-                    if datatype == 'checkboxes':
+                    if datatype in ('multiselect', 'checkboxes'):
                         commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
-                    elif datatype == 'object_checkboxes':
+                    elif datatype in ('object_multiselect', 'object_checkboxes'):
                         commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
                     process_set_variable(core_key_name + '[' + orig_index_name + ']', user_dict, vars_set, old_values)
                 else:
                     whole_key_tr = sub_indices(whole_key, user_dict)
-                    if datatype == 'checkboxes':
+                    if datatype in ('multiselect', 'checkboxes'):
                         commands.append(whole_key + ' = docassemble.base.core.DADict(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
-                    elif datatype == 'object_checkboxes':
+                    elif datatype in ('object_multiselect', 'object_checkboxes'):
                         commands.append(whole_key + ' = docassemble.base.core.DAList(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
                     process_set_variable(whole_key, user_dict, vars_set, old_values)
                 for command in commands:
@@ -6710,7 +6710,7 @@ def index(action_argument=None, refer=None):
         is_object = False
         test_data = data
         if real_key in known_datatypes:
-            if known_datatypes[real_key] in ('boolean', 'checkboxes'):
+            if known_datatypes[real_key] in ('boolean', 'multiselect', 'checkboxes'):
                 if data == "True":
                     data = "True"
                     test_data = True
@@ -6792,14 +6792,14 @@ def index(action_argument=None, refer=None):
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
-            elif known_datatypes[real_key] == 'object_checkboxes' and bracket_expression is not None:
+            elif known_datatypes[real_key] in ('object_multiselect', 'object_checkboxes') and bracket_expression is not None:
                 if data not in ('True', 'False', 'None') or set_to_empty:
                     continue
                 do_append = True
                 if data == 'False':
                     do_opposite = True
                 data = "_internal['objselections'][" + repr(from_safeid(real_key)) + "][" + repr(bracket_expression) + "]"
-            elif set_to_empty == 'object_checkboxes':
+            elif set_to_empty in ('object_multiselect', 'object_checkboxes'):
                 continue
             elif known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
                 continue
@@ -6847,10 +6847,10 @@ def index(action_argument=None, refer=None):
                 else:
                     test_data = data
                     data = repr(data)
-            if known_datatypes[real_key] == 'object_checkboxes':
+            if known_datatypes[real_key] in ('object_multiselect', 'object_checkboxes'):
                 do_append = True
         elif orig_key in known_datatypes:
-            if known_datatypes[orig_key] in ('boolean', 'checkboxes'):
+            if known_datatypes[orig_key] in ('boolean', 'multiselect', 'checkboxes'):
                 if data == "True":
                     data = "True"
                     test_data = True
@@ -6922,7 +6922,7 @@ def index(action_argument=None, refer=None):
                 if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
-            elif set_to_empty == 'object_checkboxes':
+            elif set_to_empty in ('object_multiselect', 'object_checkboxes'):
                 continue
             elif real_key in known_datatypes and known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
                 continue
@@ -6987,7 +6987,7 @@ def index(action_argument=None, refer=None):
             else:
                 data = 'docassemble.base.util.DAModel(' + repr(key_tr) + ', text=' + repr(data) + ', store=' + repr(interview.get_ml_store()) + ', use_for_training=' + use_for_training + ')'
         if set_to_empty:
-            if set_to_empty == 'checkboxes':
+            if set_to_empty in ('multiselect', 'checkboxes'):
                 try:
                     exec("import docassemble.base.core", user_dict)
                 except Exception as errMess:
@@ -7048,8 +7048,8 @@ def index(action_argument=None, refer=None):
             if illegal_variable_name(key):
                 logmessage("Received illegal variable name " + str(key))
                 continue
-            if empty_fields[orig_key] == 'object_checkboxes':
-                docassemble.base.parse.ensure_object_exists(key, 'object_checkboxes', user_dict)
+            if empty_fields[orig_key] in ('object_multiselect', 'object_checkboxes'):
+                docassemble.base.parse.ensure_object_exists(key, empty_fields[orig_key], user_dict)
                 exec(key + '.clear()' , user_dict)
                 exec(key + '.gathered = True' , user_dict)
             elif empty_fields[orig_key] in ('object', 'object_radio'):
@@ -7845,6 +7845,7 @@ def index(action_argument=None, refer=None):
       var daVarLookupRev = Object();
       var daVarLookupMulti = Object();
       var daVarLookupRevMulti = Object();
+      var daVarLookupSelect = Object();
       var daTargetDiv;
       var daComboBoxes = Object();
       var daGlobalEval = eval;
@@ -7907,6 +7908,21 @@ def index(action_argument=None, refer=None):
         }
       }
       function getField(fieldName, notInDiv){
+        if (daVarLookupSelect[fieldName]){
+          var n = daVarLookupSelect[fieldName].length;
+          for (var i = 0; i < n; ++i){
+            var elem = daVarLookupSelect[fieldName][i].select;
+            if (!$(elem).prop('disabled')){
+              var showifParents = $(elem).parents(".dajsshowif,.dashowif");
+              if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
+                if (notInDiv && $.contains(notInDiv, elem)){
+                  continue;
+                }
+                return elem;
+              }
+            }
+          }
+        }
         var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');
         var possibleElements = [];
         daAppendIfExists(fieldNameEscaped, possibleElements);
@@ -8000,6 +8016,14 @@ def index(action_argument=None, refer=None):
             }
             else if (theVal == 'False'){
               theVal = false;
+            }
+          }
+        }
+        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('damultiselect') && daVarLookupSelect[fieldName]){
+          var n = daVarLookupSelect[fieldName].length;
+          for (var i = 0; i < n; ++i){
+            if (daVarLookupSelect[fieldName][i].select === elem){
+              return $(daVarLookupSelect[fieldName][i].option).prop('selected');
             }
           }
         }
@@ -8672,6 +8696,19 @@ def index(action_argument=None, refer=None):
             value: JSON.stringify(collectToDelete)
           }).appendTo($(form));
         }
+       $("select.damultiselect:not(:disabled)").each(function(){
+          var showifParents = $(this).parents(".dajsshowif,.dashowif");
+          if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
+            $(this).find('option').each(function(){
+              $('<input>').attr({
+                type: 'hidden',
+                name: $(this).val(),
+                value: $(this).prop('selected') ? 'True' : 'False'
+              }).appendTo($(form));
+            });
+          }
+          $(this).prop('disabled', true);
+        });
         daWhichButton = null;
         if (daSubmitter != null){
           $('<input>').attr({
@@ -9903,6 +9940,23 @@ def index(action_argument=None, refer=None):
             $('#daquestionlabel').tab('show');
           }
         });
+        $('select.damultiselect').each(function(){
+          var varname = atob($(this).data('varname'));
+          var theSelect = this;
+          $(this).find('option').each(function(){
+            var theVal = atob($(this).data('valname'));
+            var key = varname + '["' + theVal + '"]';
+            if (!daVarLookupSelect[key]){
+              daVarLookupSelect[key] = [];
+            }
+            daVarLookupSelect[key].push({'select': theSelect, 'option': this});
+            key = varname + "['" + theVal + "']"
+            if (!daVarLookupSelect[key]){
+              daVarLookupSelect[key] = [];
+            }
+            daVarLookupSelect[key].push({'select': theSelect, 'option': this});
+          });
+        })
         $('.dacurrency').each(function(){
           var theVal = $(this).val().toString();
           if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
@@ -10864,6 +10918,14 @@ def index(action_argument=None, refer=None):
         }
         else{
           return true;
+        }
+      });
+      $.validator.addMethod('selectexactly', function(value, element, params){
+        if ($(element).find('option:selected').length == params[0]){
+          return true;
+        }
+        else {
+          return false;
         }
       });
       $.validator.addMethod('mindate', function(value, element, params){
@@ -22275,10 +22337,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         uncheck_others = field
                 else:
                     data = 'None'
-            elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'checkboxes', 'object_checkboxes')) or (hasattr(field, 'inputtype') and field.inputtype == 'radio'):
+            elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes')) or (hasattr(field, 'inputtype') and field.inputtype == 'radio'):
                 cdata, choice_list = get_choices_with_abb(interview_status, field, user_dict)
                 data = None
-                if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes') and saveas is not None:
+                if hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and saveas is not None:
                     if 'command_cache' not in user_dict['_internal']:
                         user_dict['_internal']['command_cache'] = dict()
                     if field.number not in user_dict['_internal']['command_cache']:
@@ -22286,7 +22348,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     docassemble.base.parse.ensure_object_exists(saveas, field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][field.number])
                     saveas = saveas + '.gathered'
                     data = 'True'
-                if (user_entered_skip or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'))) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes')) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
+                if (user_entered_skip or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'))) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes')) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
                     logmessage("do_sms: skip accepted")
                     # user typed 'skip,' or, where checkboxes, 'none.'  Also:
                     # field is skippable, either because it has disableothers, or it is a checkbox field, or
@@ -22295,7 +22357,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         if field.datatype in ('object', 'object_radio'):
                             skip_it = True
                             data = repr('')
-                        if field.datatype in ('checkboxes', 'object_checkboxes'):
+                        if field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                             for choice in choice_list:
                                 if choice[1] is None:
                                     continue
@@ -22318,7 +22380,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         data = repr('')
                 else:
                     # There is a real value here
-                    if hasattr(field, 'datatype') and field.datatype == 'object_checkboxes':
+                    if hasattr(field, 'datatype') and field.datatype in ('object_multiselect', 'object_checkboxes'):
                         true_values = set()
                         for selection in re.split(r' *[,;] *', inp_lower):
                             for potential_abb, value in cdata['abblower'].items():
@@ -22337,7 +22399,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             else:
                                 the_string = 'if ' + choice[2] + ' in ' + the_saveas + '.elements:\n    ' + the_saveas + '.remove(' + choice[2] + ')'
                             user_dict['_internal']['command_cache'][field.number].append(the_string)
-                    elif hasattr(field, 'datatype') and field.datatype == 'checkboxes':
+                    elif hasattr(field, 'datatype') and field.datatype in ('multiselect', 'checkboxes'):
                         true_values = set()
                         for selection in re.split(r' *[,;] *', inp_lower):
                             for potential_abb, value in cdata['abblower'].items():
@@ -22488,8 +22550,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 if the_field.number not in user_dict['_internal']['command_cache']:
                                     user_dict['_internal']['command_cache'][the_field.number] = list()
                                 if hasattr(the_field, 'datatype'):
-                                    if the_field.datatype == 'object_checkboxes':
-                                        docassemble.base.parse.ensure_object_exists(the_saveas, 'object_checkboxes', user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
+                                    if the_field.datatype in ('object_multiselect', 'object_checkboxes'):
+                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.clear()')
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
                                     elif the_field.datatype in ('object', 'object_radio'):
@@ -22497,8 +22559,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                             eval(the_saveas, user_dict)
                                         except:
                                             user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')
-                                    elif the_field.datatype == 'checkboxes':
-                                        docassemble.base.parse.ensure_object_exists(the_saveas, 'checkboxes', user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
+                                    elif the_field.datatype in ('multiselect', 'checkboxes'):
+                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
                                     else:
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')

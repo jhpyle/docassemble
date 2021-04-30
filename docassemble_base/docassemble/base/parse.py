@@ -457,7 +457,7 @@ class InterviewStatus:
                         hiddens[field.saveas] = True
                     if hasattr(field, 'datatype'):
                         datatypes[field.saveas] = field.datatype
-                        if field.datatype == 'object_checkboxes':
+                        if field.datatype in ('object_multiselect', 'object_checkboxes'):
                             datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
                     continue
                 if hasattr(field, 'extras'):
@@ -495,7 +495,7 @@ class InterviewStatus:
                             checkboxes[field.saveas] = 'True'
                     elif field.datatype == 'threestate':
                         checkboxes[field.saveas] = 'None'
-                    elif field.datatype in ['checkboxes', 'object_checkboxes']:
+                    elif field.datatype in ['multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes']:
                         if field.choicetype in ['compute', 'manual']:
                             pairlist = list(self.selectcompute[field.number])
                         else:
@@ -507,7 +507,7 @@ class InterviewStatus:
                                 checkboxes[safeid(from_safeid(field.saveas) + "[R" + myb64quote(repr(pair['key'])) + "]")] = 'False'
                     elif not self.extras['required'][field.number]:
                         checkboxes[field.saveas] = 'None'
-                if field.datatype == 'object_checkboxes':
+                if field.datatype in ('object_multiselect', 'object_checkboxes'):
                     datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
             if self.extras.get('list_collect_is_final', False):
                 if self.extras['list_collect'].ask_number:
@@ -960,7 +960,7 @@ class InterviewStatus:
                          the_field['validation_messages']['required'] = field.validation_message('combobox required', self, word("You need to select one or type in a new value."))
                     else:
                         the_field['validation_messages']['required'] = field.validation_message('multiple choice required', self, word("You need to select one."))
-                elif not (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
+                elif not (hasattr(field, 'datatype') and field.datatype in ['multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes']):
                     if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
                         the_field['validation_messages']['required'] = field.validation_message('combobox required', self, word("You need to select one or type in a new value."))
                     elif hasattr(field, 'inputtype') and field.inputtype == 'ajax':
@@ -971,7 +971,7 @@ class InterviewStatus:
                         the_field['validation_messages']['required'] = field.validation_message('required', self, word("This field is required."))
                 if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide'] and hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                     the_field['validation_messages']['uncheckothers'] = field.validation_message('checkboxes required', self, word("Check at least one option, or check “%s”"), parameters=tuple([strip_tags(self.labels[field.number])]))
-                if hasattr(field, 'datatype') and field.datatype not in ('checkboxes', 'object_checkboxes'):
+                if hasattr(field, 'datatype') and field.datatype not in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                     for key in ('minlength', 'maxlength'):
                         if hasattr(field, 'extras') and key in field.extras and key in self.extras:
                             if key == 'minlength':
@@ -979,32 +979,49 @@ class InterviewStatus:
                             elif key == 'maxlength':
                                 the_field['validation_messages'][key] = field.validation_message(key, self, word("You cannot type more than %s characters."), parameters=tuple([self.extras[key][field.number]]))
             if hasattr(field, 'datatype'):
-                if field.datatype in ('checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and self.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in self.extras) or ('maxlength' in field.extras and 'maxlength' in self.extras)))):
+                if field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and self.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in self.extras) or ('maxlength' in field.extras and 'maxlength' in self.extras)))):
+                    if field.datatype.endswith('checkboxes'):
+                        d_type = 'checkbox'
+                    else:
+                        d_type = 'multiselect'
                     if hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in self.extras) or ('maxlength' in field.extras and 'maxlength' in self.extras)):
                         checkbox_messages = dict()
-                        checkbox_rules = dict()
                         if 'minlength' in field.extras and 'minlength' in self.extras and 'maxlength' in field.extras and 'maxlength' in self.extras and self.extras['minlength'][field.number] == self.extras['maxlength'][field.number] and self.extras['minlength'][field.number] > 0:
                             if 'nota' not in self.extras:
                                 self.extras['nota'] = dict()
                             self.extras['nota'][field.number] = False
-                            checkbox_messages['checkexactly'] = field.validation_message('checkbox minmaxlength', self, word("Please select exactly %s."), parameters=tuple([self.extras['maxlength'][field.number]]))
+                            if d_type == 'checkbox':
+                                checkbox_messages['checkexactly'] = field.validation_message(d_type + ' minmaxlength', self, word("Please select exactly %s."), parameters=tuple([self.extras['maxlength'][field.number]]))
+                            else:
+                                checkbox_messages['selectexactly'] = field.validation_message(d_type + ' minmaxlength', self, word("Please select exactly %s."), parameters=tuple([self.extras['maxlength'][field.number]]))
                         else:
                             if 'minlength' in field.extras and 'minlength' in self.extras:
-                                checkbox_rules['checkatleast'] = [str(field.number), self.extras['minlength'][field.number]]
-                                if self.extras['minlength'][field.number] == 1:
-                                    checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', self, word("Please select one."))
+                                if d_type == 'checkbox':
+                                    if self.extras['minlength'][field.number] == 1:
+                                        checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', self, word("Please select one."))
+                                    else:
+                                        checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', self, word("Please select at least %s."), parameters=tuple([self.extras['minlength'][field.number]]))
+                                    if int(float(self.extras['minlength'][field.number])) > 0:
+                                        if 'nota' not in self.extras:
+                                            self.extras['nota'] = dict()
+                                        self.extras['nota'][field.number] = False
                                 else:
-                                    checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', self, word("Please select at least %s."), parameters=tuple([self.extras['minlength'][field.number]]))
-                                if int(float(self.extras['minlength'][field.number])) > 0:
-                                    if 'nota' not in self.extras:
-                                        self.extras['nota'] = dict()
-                                    self.extras['nota'][field.number] = False
+                                    if self.extras['minlength'][field.number] == 1:
+                                        checkbox_messages['minlength'] = field.validation_message(d_type + ' minlength', self, word("Please select one."))
+                                    else:
+                                        checkbox_messages['minlength'] = field.validation_message(d_type + ' minlength', self, word("Please select at least %s."), parameters=tuple([self.extras['minlength'][field.number]]))
                             if 'maxlength' in field.extras and 'maxlength' in self.extras:
-                                checkbox_rules['checkatmost'] = [str(field.number), self.extras['maxlength'][field.number]]
-                                checkbox_messages['checkatmost'] = field.validation_message('checkbox maxlength', self, word("Please select no more than %s."), parameters=tuple([self.extras['maxlength'][field.number]]))
+                                if d_type == 'checkbox':
+                                    checkbox_messages['checkatmost'] = field.validation_message(d_type + ' maxlength', self, word("Please select no more than %s."), parameters=tuple([self.extras['maxlength'][field.number]]))
+                                else:
+                                    checkbox_messages['maxlength'] = field.validation_message(d_type + ' maxlength', self, word("Please select no more than %s."), parameters=tuple([self.extras['maxlength'][field.number]]))
                         the_field['validation_messages'].update(checkbox_messages)
-                    if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
-                        the_field['validation_messages']['checkatleast'] = field.validation_message('checkboxes required', self, word("Check at least one option, or check “%s”"), parameters=tuple([self.extras['nota'][field.number]]))
+                    if d_type == 'checkbox':
+                        if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
+                            the_field['validation_messages']['checkatleast'] = field.validation_message('checkboxes required', self, word("Check at least one option, or check “%s”"), parameters=tuple([self.extras['nota'][field.number]]))
+                    # else:
+                    #     if hasattr(field, 'nota') and self.extras['nota'][field.number] is True:
+                    #         the_field['validation_messages']['minlength'] = field.validation_message('multiselect required', self, word("Select at least one option, or select “%s”"), parameters=tuple([self.extras['nota'][field.number]]))
                 if field.datatype == 'date':
                     the_field['validation_messages']['date'] = field.validation_message('date', self, word("You need to enter a valid date."))
                     if hasattr(field, 'extras') and 'min' in field.extras and 'min' in self.extras and 'max' in field.extras and 'max' in self.extras and field.number in self.extras['min'] and field.number in self.extras['max']:
@@ -1078,7 +1095,7 @@ class InterviewStatus:
                     the_field['default'] = the_default
             else:
                 the_default = None
-            if self.question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'checkboxes', 'object_checkboxes', 'object_radio')):
+            if self.question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes', 'object_radio')):
                 the_field['choices'] = self.get_choices_data(field, the_default, the_user_dict, encode=encode)
             if hasattr(field, 'nota'):
                 the_field['none_of_the_above'] = docassemble.base.filter.markdown_to_html(self.extras['nota'][field.number], do_terms=False, status=self, verbatim=(not encode))
@@ -1181,21 +1198,21 @@ class InterviewStatus:
             elif hasattr(field, 'choicetype'):
                 if field.choicetype in ('compute', 'manual'):
                     pairlist = list(self.selectcompute[field.number])
-                elif field.datatype in ('checkboxes', 'object_checkboxes'):
+                elif field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                     pairlist = list()
-                if field.datatype == 'object_checkboxes':
+                if field.datatype in ('object_multiselect', 'object_checkboxes'):
                     for pair in pairlist:
                         choice_list.append([pair['label'], saveas, from_safeid(pair['key'])])
                 elif field.datatype in ('object', 'object_radio'):
                     for pair in pairlist:
                         choice_list.append([pair['label'], saveas, from_safeid(pair['key'])])
-                elif field.datatype == 'checkboxes':
+                elif field.datatype in ('multiselect', 'checkboxes'):
                     for pair in pairlist:
                         choice_list.append([pair['label'], saveas + "[" + repr(pair['key']) + "]", True])
                 else:
                     for pair in pairlist:
                         choice_list.append([pair['label'], saveas, pair['key']])
-                if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
+                if hasattr(field, 'nota') and (field.datatype.endswith('checkboxes') and self.extras['nota'][field.number] is not False): #or (field.datatype.endswith('multiselect') and self.extras['nota'][field.number] is True)
                     if self.extras['nota'][field.number] is True:
                         formatted_item = word("None of the above")
                     else:
@@ -1240,9 +1257,9 @@ class InterviewStatus:
             elif hasattr(field, 'choicetype'):
                 if field.choicetype in ('compute', 'manual'):
                     pairlist = list(self.selectcompute[field.number])
-                elif field.datatype in ('checkboxes', 'object_checkboxes'):
+                elif field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                     pairlist = list()
-                if field.datatype == 'object_checkboxes':
+                if field.datatype in ('object_multiselect', 'object_checkboxes'):
                     for pair in pairlist:
                         item = dict(label=docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), value=from_safeid(pair['key']))
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue) or (isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]) or (isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
@@ -1260,7 +1277,7 @@ class InterviewStatus:
                         if 'help' in pair:
                             item['help'] = pair['help']
                         choice_list.append(item)
-                elif field.datatype == 'checkboxes':
+                elif field.datatype in ('multiselect', 'checkboxes'):
                     for pair in pairlist:
                         item = dict(label=docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), variable_name=saveas + "[" + repr(pair['key']) + "]", value=True)
                         if encode:
@@ -3508,7 +3525,7 @@ class Question:
                             if 'current_field' in docassemble.base.functions.this_thread.misc:
                                 del docassemble.base.functions.this_thread.misc['current_field']
                             continue
-                        if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
+                        if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
                             raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
                         if 'input type' in field and field['input type'] in ('radio', 'combobox', 'pulldown') and not ('choices' in field or 'code' in field):
                             raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
@@ -3517,7 +3534,7 @@ class Question:
                         if 'note' in field and 'html' in field:
                             raise DAError("You cannot include both note and html in a field." + self.idebug(data))
                         for key in field:
-                            if key == 'default' and 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_checkboxes'):
+                            if key == 'default' and 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
                                 continue
                             if key == 'input type':
                                 field_info['inputtype'] = field[key]
@@ -3741,7 +3758,7 @@ class Question:
                                         if 'datatype' not in field and 'code' not in field and 'choices' not in field:
                                             auto_determine_type(field_info, the_value=field[key])
                             elif key == 'disable others':
-                                if 'datatype' in field and field['datatype'] in ('file', 'files', 'range', 'checkboxes', 'camera', 'user', 'environment', 'camcorder', 'microphone', 'object_checkboxes'): #'yesno', 'yesnowide', 'noyes', 'noyeswide',
+                                if 'datatype' in field and field['datatype'] in ('file', 'files', 'range', 'multiselect', 'checkboxes', 'camera', 'user', 'environment', 'camcorder', 'microphone', 'object_multiselect', 'object_checkboxes'): #'yesno', 'yesnowide', 'noyes', 'noyeswide',
                                     raise DAError("A 'disable others' directive cannot be used with this data type." + self.idebug(data))
                                 if not isinstance(field[key], (list, bool)):
                                     raise DAError("A 'disable others' directive must be True, False, or a list of variable names." + self.idebug(data))
@@ -3801,7 +3818,7 @@ class Question:
                             elif key == 'exclude':
                                 pass
                             elif key == 'choices':
-                                if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_checkboxes'):
+                                if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
                                     field_info['choicetype'] = 'compute'
                                     if not isinstance(field[key], (list, str)):
                                         raise DAError("choices is not in appropriate format" + self.idebug(data))
@@ -3877,11 +3894,11 @@ class Question:
                                     raise DAError("Missing or invalid variable name " + repr(field[key]) + " for key " + repr(key) + "." + self.idebug(data))
                                 field_info['saveas'] = field[key]
                         if 'type' in field_info:
-                            if field_info['type'] in ('checkboxes', 'object_checkboxes') and 'nota' not in field_info:
+                            if field_info['type'] in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and 'nota' not in field_info:
                                 field_info['nota'] = True
                             if field_info['type'] == 'object_radio' and 'nota' not in field_info:
                                 field_info['nota'] = False
-                        if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ('object', 'object_radio', 'object_checkboxes'):
+                        if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
                             if 'choices' not in field:
                                 raise DAError("You need to have a choices element if you want to set a variable to an object." + self.idebug(data))
                             if not isinstance(field['choices'], list):
@@ -3906,7 +3923,7 @@ class Question:
                                     default_list = field['default']
                             else:
                                 default_list = list()
-                            if field_info['type'] == 'object_checkboxes':
+                            if field_info['type'] in ('object_multiselect', 'object_checkboxes'):
                                 default_list.append('_DAOBJECTDEFAULTDA')
                             if len(default_list):
                                 select_list.append('default=[' + ", ".join(default_list) + ']')
@@ -3925,17 +3942,17 @@ class Question:
                                 raise DAError("Invalid variable name " + repr(field_info['saveas']) + "." + self.idebug(data))
                             self.fields.append(Field(field_info))
                             if 'type' in field_info:
-                                if field_info['type'] in ('checkboxes', 'object_checkboxes'):
+                                if field_info['type'] in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                                     if self.scan_for_variables:
                                         self.fields_used.add(field_info['saveas'])
                                         self.fields_used.add(field_info['saveas'] + '.gathered')
-                                        if field_info['type'] == 'checkboxes':
+                                        if field_info['type'] in ('multiselect', 'checkboxes'):
                                             for the_key in manual_keys:
                                                 self.fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
                                     else:
                                         self.other_fields_used.add(field_info['saveas'])
                                         self.other_fields_used.add(field_info['saveas'] + '.gathered')
-                                        if field_info['type'] == 'checkboxes':
+                                        if field_info['type'] in ('multiselect', 'checkboxes'):
                                             for the_key in manual_keys:
                                                 self.other_fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
                                 elif field_info['type'] == 'ml':
@@ -5394,7 +5411,7 @@ class Question:
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
                         elif test_for_objects:
-                            if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
+                            if hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                                 ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
                                 commands_to_run.append(from_safeid(field.saveas) + ".gathered = True")
                             else:
@@ -5402,7 +5419,7 @@ class Question:
                                     commands_to_run.append(from_safeid(field.saveas) + ' = None')
                     elif hasattr(field, 'choicetype') and field.choicetype == 'compute':
                         # multiple choice field in choices
-                        if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes', 'checkboxes'):
+                        if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes', 'multiselect', 'checkboxes'):
                             exec("import docassemble.base.core", user_dict)
                         if hasattr(field, 'object_labeler'):
                             labeler_func = eval(field.object_labeler['compute'], user_dict)
@@ -5426,7 +5443,7 @@ class Question:
                         else:
                             image_generator_func = None
                         to_compute = field.selections['compute']
-                        if field.datatype == 'object_checkboxes':
+                        if field.datatype in ('object_multiselect', 'object_checkboxes'):
                             default_exists = False
                             #logmessage("Testing for " + from_safeid(field.saveas))
                             try:
@@ -5445,7 +5462,7 @@ class Question:
                         else:
                             #logmessage("Doing " + field.selections.get('sourcecode', "No source code"))
                             selectcompute[field.number] = process_selections(eval(to_compute, user_dict))
-                        if field.datatype == 'object_checkboxes' and '_DAOBJECTDEFAULTDA' in user_dict:
+                        if field.datatype in ('object_multiselet', 'object_checkboxes') and '_DAOBJECTDEFAULTDA' in user_dict:
                             del user_dict['_DAOBJECTDEFAULTDA']
                         if labeler_func is not None:
                             del user_dict['_DAOBJECTLABELER']
@@ -5456,7 +5473,7 @@ class Question:
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
                         elif test_for_objects:
-                            if hasattr(field, 'datatype') and field.datatype in ('checkboxes', 'object_checkboxes'):
+                            if hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                                 ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
                                 commands_to_run.append(from_safeid(field.saveas) + '.gathered = True')
                             else:
@@ -5641,7 +5658,7 @@ class Question:
                                 the_func('')
                         except DAValidationError as err:
                             pass
-                    if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_checkboxes'):
+                    if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
                         if process_list_collect:
                             saveas_to_use = from_safeid(field.saveas)
                         else:
@@ -8793,20 +8810,20 @@ def ensure_object_exists(saveas, datatype, the_user_dict, commands=None):
         commands.append("import docassemble.base.core")
     if method == 'attribute':
         attribute_name = parse_result['final_parts'][1][1:]
-        if datatype == 'checkboxes':
+        if datatype in ('multiselect', 'checkboxes'):
             commands.append(parse_result['final_parts'][0] + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False)")
-        elif datatype == 'object_checkboxes':
+        elif datatype in ('object_multiselect', 'object_checkboxes'):
             commands.append(parse_result['final_parts'][0] + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DAList, auto_gather=False)")
     elif method == 'index':
         index_name = parse_result['final_parts'][1][1:-1]
-        if datatype == 'checkboxes':
+        if datatype in ('multiselect', 'checkboxes'):
             commands.append(parse_result['final_parts'][0] + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DADict, auto_gather=False)")
-        elif datatype == 'object_checkboxes':
+        elif datatype in ('object_multiselect', 'object_checkboxes'):
             commands.append(parse_result['final_parts'][0] + ".initializeObject(" + repr(index_name) + ", docassemble.base.core.DAList, auto_gather=False)")
     else:
-        if datatype == 'checkboxes':
+        if datatype in ('multiselect', 'checkboxes'):
             commands.append(saveas + ' = docassemble.base.core.DADict(' + repr(saveas) + ', auto_gather=False)')
-        elif datatype == 'object_checkboxes':
+        elif datatype in ('object_multiselect', 'object_checkboxes'):
             commands.append(saveas + ' = docassemble.base.core.DAList(' + repr(saveas) + ', auto_gather=False)')
     if execute:
         for command in commands:

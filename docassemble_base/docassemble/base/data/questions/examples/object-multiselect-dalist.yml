@@ -1,0 +1,38 @@
+metadata:
+  title: Set variable to list of objects
+  short title: Object
+  documentation: "https://docassemble.org/docs/fields.html#object_multiselect"
+  example start: 4
+  example end: 4
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  protagonist: Individual
+  antagonist: Individual
+---
+mandatory: True
+code: |
+  protagonist.name.first = "Harry"
+  protagonist.name.last = "Potter"
+  antagonist.name.first = "Tom"
+  antagonist.name.last = "Riddle"
+---
+question: Who are the villains, if any?
+fields:
+  no label: villain
+  datatype: object_multiselect
+  choices:
+    - protagonist
+    - antagonist
+---
+question: |
+  % if villain.number() == 0:
+  There are no villains here.
+  % else:
+  The ${ villain.as_noun() }
+  ${ villain.does_verb("include") }
+  ${ villain }.
+  % endif
+mandatory: True

@@ -295,7 +295,7 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
             if question.question_type == 'fields' and label:
                 qoutput += "\n" + label + ":" + next_label
             qoutput += "\n" + word("Type [y]es, [n]o, or [d]on't know")
-        elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ['object', 'checkboxes', 'object_checkboxes']):
+        elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ['object', 'checkboxes', 'multiselect', 'object_checkboxes', 'object_multiselect']):
             if question.question_type == 'fields' and label:
                 qoutput += "\n" + label + ":" + next_label
             data, choice_list = get_choices_with_abb(status, field, the_user_dict, terms=terms, links=links)
@@ -304,7 +304,7 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
                 random.shuffle(data['label'])
             for the_label in data['label']:
                 qoutput += "\n" + the_label
-            if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
+            if hasattr(field, 'datatype') and field.datatype in ['multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes']:
                 if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
                     qoutput += "\n" + word("Type your selection(s), separated by commas.")
                 else:
@@ -889,7 +889,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     hiddens[field.saveas] = True
                 if hasattr(field, 'datatype'):
                     datatypes[field.saveas] = field.datatype
-                    if field.datatype == 'object_checkboxes':
+                    if field.datatype in ('object_multiselect', 'object_checkboxes'):
                         datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
                 continue
             if not status.extras['ok'][field.number]:
@@ -1008,7 +1008,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                             datatypes[field.saveas] = field.datatype
                     else:
                         datatypes[field.saveas] = field.datatype
-                    if field.datatype == 'object_checkboxes':
+                    if field.datatype in ('object_multiselect', 'object_checkboxes'):
                         datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
             else:
                 field_class = ' da-field-container'
@@ -1017,6 +1017,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             elif hasattr(field, 'choicetype'):
                 if field.datatype in ['checkboxes', 'object_checkboxes']:
                     field_class += ' da-field-container-inputtype-checkboxes'
+                elif field.datatype in ['multiselect', 'object_multiselect']:
+                    field_class += ' da-field-container-inputtype-multiselect'
                 elif field.datatype == 'object_radio' or (field.datatype == 'object' and hasattr(field, 'inputtype') and field.inputtype == 'radio'):
                     field_class += ' da-field-container-inputtype-radio'
                 else:
@@ -1037,7 +1039,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     label_saveas = the_saveas
                 else:
                     label_saveas = field.saveas
-                if not (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
+                if not (hasattr(field, 'datatype') and field.datatype in ['multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes']):
                     if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('combobox required', status, word("You need to select one or type in a new value."))
                     elif hasattr(field, 'inputtype') and field.inputtype == 'ajax':
@@ -1069,7 +1071,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         validation_rules['groups'] = dict()
                     validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [the_saveas])
                     validation_rules['ignore'] = None
-                if field.datatype not in ('checkboxes', 'object_checkboxes'):
+                if field.datatype not in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                     for key in ('minlength', 'maxlength'):
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                             #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
@@ -1084,33 +1086,62 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 elif field.inputtype in ('combobox', 'ajax'):
                     validation_rules['ignore'] = list()
             if hasattr(field, 'datatype'):
-                if field.datatype in ('checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and status.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)))):
+                if field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and status.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)))):
+                    if field.datatype.endswith('checkboxes'):
+                        d_type = 'checkbox'
+                    else:
+                        d_type = 'multiselect'
                     if hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)):
                         checkbox_rules = dict()
                         checkbox_messages = dict()
-                        if 'minlength' in field.extras and 'minlength' in status.extras and 'maxlength' in field.extras and 'maxlength' in status.extras and status.extras['minlength'][field.number] == status.extras['maxlength'][field.number] and status.extras['minlength'][field.number] > 0:
+                        if 'minlength' in field.extras and 'minlength' in status.extras and 'maxlength' in field.extras and 'maxlength' in status.extras and int(status.extras['minlength'][field.number]) == int(status.extras['maxlength'][field.number]) and int(status.extras['minlength'][field.number]) > 0:
                             if 'nota' not in status.extras:
                                 status.extras['nota'] = dict()
                             status.extras['nota'][field.number] = False
-                            checkbox_rules['checkexactly'] = [str(field.number), status.extras['maxlength'][field.number]]
-                            checkbox_messages['checkexactly'] = field.validation_message('checkbox minmaxlength', status, word("Please select exactly %s."), parameters=tuple([status.extras['maxlength'][field.number]]))
+                            the_length = int(status.extras['maxlength'][field.number])
+                            if d_type == 'checkbox':
+                                checkbox_rules['checkexactly'] = [str(field.number), the_length]
+                                checkbox_messages['checkexactly'] = field.validation_message(d_type + ' minmaxlength', status, word("Please select exactly %s."), parameters=tuple([the_length]))
+                            else:
+                                checkbox_rules['selectexactly'] = [the_length]
+                                checkbox_messages['selectexactly'] = field.validation_message(d_type + ' minmaxlength', status, word("Please select exactly %s."), parameters=tuple([the_length]))
                         else:
                             if 'minlength' in field.extras and 'minlength' in status.extras:
-                                checkbox_rules['checkatleast'] = [str(field.number), status.extras['minlength'][field.number]]
-                                if status.extras['minlength'][field.number] == 1:
-                                    checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', status, word("Please select one."))
+                                if d_type == 'checkbox':
+                                    checkbox_rules['checkatleast'] = [str(field.number), status.extras['minlength'][field.number]]
+                                    if status.extras['minlength'][field.number] == 1:
+                                        checkbox_messages['checkatleast'] = field.validation_message(d_type + ' minlength', status, word("Please select one."))
+                                    else:
+                                        checkbox_messages['checkatleast'] = field.validation_message(d_type + ' minlength', status, word("Please select at least %s."), parameters=tuple([status.extras['minlength'][field.number]]))
+                                    if int(float(status.extras['minlength'][field.number])) > 0:
+                                        if 'nota' not in status.extras:
+                                            status.extras['nota'] = dict()
+                                        status.extras['nota'][field.number] = False
                                 else:
-                                    checkbox_messages['checkatleast'] = field.validation_message('checkbox minlength', status, word("Please select at least %s."), parameters=tuple([status.extras['minlength'][field.number]]))
-                                if int(float(status.extras['minlength'][field.number])) > 0:
-                                    if 'nota' not in status.extras:
-                                        status.extras['nota'] = dict()
-                                    status.extras['nota'][field.number] = False
+                                    the_length = int(status.extras['minlength'][field.number])
+                                    if the_length > 0:
+                                        checkbox_rules['required'] = True
+                                        checkbox_rules['minlength'] = the_length
+                                        if status.extras['minlength'][field.number] == 1:
+                                            checkbox_messages['minlength'] = field.validation_message(d_type + ' minlength', status, word("Please select one."))
+                                            checkbox_messages['required'] = field.validation_message(d_type + ' minlength', status, word("Please select one."))
+                                        else:
+                                            checkbox_messages['minlength'] = field.validation_message('checkbox minlength', status, word("Please select at least %s."), parameters=tuple([status.extras['minlength'][field.number]]))
+                                            checkbox_messages['required'] = field.validation_message('checkbox minlength', status, word("Please select at least %s."), parameters=tuple([status.extras['minlength'][field.number]]))
                             if 'maxlength' in field.extras and 'maxlength' in status.extras:
-                                checkbox_rules['checkatmost'] = [str(field.number), status.extras['maxlength'][field.number]]
-                                checkbox_messages['checkatmost'] = field.validation_message('checkbox maxlength', status, word("Please select no more than %s."), parameters=tuple([status.extras['maxlength'][field.number]]))
-                        validation_rules['rules']['_ignore' + str(field.number)] = checkbox_rules
-                        validation_rules['messages']['_ignore' + str(field.number)] = checkbox_messages
-                    if hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
+                                if d_type == 'checkbox':
+                                    checkbox_rules['checkatmost'] = [str(field.number), status.extras['maxlength'][field.number]]
+                                    checkbox_messages['checkatmost'] = field.validation_message(d_type + ' maxlength', status, word("Please select no more than %s."), parameters=tuple([status.extras['maxlength'][field.number]]))
+                                else:
+                                    checkbox_rules['maxlength'] = int(status.extras['maxlength'][field.number])
+                                    checkbox_messages['maxlength'] = field.validation_message(d_type + ' maxlength', status, word("Please select no more than %s."), parameters=tuple([status.extras['maxlength'][field.number]]))
+                        if d_type == 'checkbox':
+                            validation_rules['rules']['_ignore' + str(field.number)] = checkbox_rules
+                            validation_rules['messages']['_ignore' + str(field.number)] = checkbox_messages
+                        else:
+                            validation_rules['rules'][the_saveas] = checkbox_rules
+                            validation_rules['messages'][the_saveas] = checkbox_messages
+                    if d_type == 'checkbox' and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
                         if '_ignore' + str(field.number) not in validation_rules['rules']:
                             validation_rules['rules']['_ignore' + str(field.number)] = dict()
                         if 'checkatleast' not in validation_rules['rules']['_ignore' + str(field.number)]:
@@ -1223,7 +1254,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         checkboxes[field.saveas] = 'True'
                 elif field.datatype == 'threestate':
                     checkboxes[field.saveas] = 'None'
-                elif field.datatype in ['checkboxes', 'object_checkboxes']:
+                elif field.datatype in ['multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes']:
                     if field.choicetype in ['compute', 'manual']:
                         pairlist = list(status.selectcompute[field.number])
                     else:
@@ -2109,7 +2140,63 @@ def input_for(status, field, wide=False, embedded=False):
             raise Exception("Unknown choicetype " + field.choicetype)
         if hasattr(field, 'shuffle') and field.shuffle:
             random.shuffle(pairlist)
-        if field.datatype in ['checkboxes', 'object_checkboxes']:
+        if field.datatype in ['multiselect', 'object_multiselect']:
+            if field.datatype == 'object_multiselect':
+                daobject = ' damultiselect daobject'
+            else:
+                daobject = ' damultiselect'
+            if embedded:
+                emb_text = 'class="dainput-embedded' + daobject + '" '
+                if inline_width is not None:
+                    emb_text += 'style="min-width: ' + str(inline_width) + '" '
+                label_text = strip_quote(to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), dict(), list(), status).strip())
+                if label_text != 'no label':
+                    emb_text += 'title=' + fix_double_quote(str(label_text)) + ' '
+            else:
+                output += '<p class="sr-only">' + word('Multiselect box') + '</p>'
+                emb_text = 'class="form-control' + daobject + '" '
+            if 'rows' in status.extras and field.number in status.extras['rows']:
+                emb_text += 'size="' + noquote(str(status.extras['rows'][field.number])) + '" '
+            emb_text += 'data-varname=' + myb64doublequote(from_safeid(field.saveas)) + ' ';
+            if embedded:
+                output += '<span class="da-inline-error-wrapper">'
+            output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + disable_others_data + ' multiple>'
+            the_options = ''
+            for pair in pairlist:
+                if isinstance(pair['key'], str):
+                    inner_field = safeid(from_safeid(saveas_string) + "[B" + myb64quote(pair['key']) + "]")
+                    key_data = ' data-valname=' + myb64doublequote(pair['key']);
+                else:
+                    inner_field = safeid(from_safeid(saveas_string) + "[R" + myb64quote(repr(pair['key'])) + "]")
+                    key_data = ' data-valname=' + myb64doublequote(repr(pair['key']));
+                def_key = from_safeid(saveas_string) + "[" + repr(pair['key']) + "]"
+                if def_key in status.other_defaults and status.other_defaults[def_key]:
+                    isselected = ' selected="selected"'
+                elif 'default' in pair and pair['default']:
+                    isselected = ' selected="selected"'
+                elif defaultvalue is None:
+                    isselected = ''
+                elif isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue:
+                    isselected = ' selected="selected"'
+                elif isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]:
+                    isselected = ' selected="selected"'
+                elif (hasattr(defaultvalue, 'elements') and isinstance(defaultvalue.elements, dict)) and str(pair['key']) in defaultvalue.elements and defaultvalue.elements[str(pair['key'])]:
+                    isselected = ' selected="selected"'
+                elif pair['key'] is defaultvalue:
+                    isselected = ' selected="selected"'
+                elif isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue):
+                    isselected = ' selected="selected"'
+                else:
+                    isselected = ''
+                the_options += '<option value=' + fix_double_quote(inner_field) + key_data + isselected + '>' + markdown_to_html(str(pair['label']), status=status, escape='option', trim=True, do_terms=False) + '</option>'
+            output += the_options
+            if embedded:
+                output += '</select></span> '
+            else:
+                output += '</select> '
+            if field.datatype in ['object_multiselect']:
+                output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered") + '" value="True"' + disable_others_data + '/>'
+        elif field.datatype in ['checkboxes', 'object_checkboxes']:
             #if len(pairlist) == 0:
             #    return '<input type="hidden" name="' + safeid(from_safeid(saveas_string))+ '" value="None"/>'
             inner_fieldlist = list()
@@ -2278,9 +2365,9 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 output += '<p class="sr-only">' + word('Select box') + '</p>'
                 if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
-                    emb_text = 'class="form-control combobox' + daobject + '" '
+                    emb_text = 'class="form-control dasingleselect combobox' + daobject + '" '
                 else:
-                    emb_text = 'class="form-control' + daobject + '" '
+                    emb_text = 'class="form-control dasingleselect' + daobject + '" '
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
             output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '"' + datadefault + ' id="' + escape_id(saveas_string) + '" ' + disable_others_data + '>'
