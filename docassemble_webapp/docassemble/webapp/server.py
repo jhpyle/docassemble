@@ -21532,6 +21532,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             out = {'filename': interview_info['filename'], 'session': interview_info['key'], 'modtime': modtime, 'starttime': starttime, 'utc_modtime': utc_modtime, 'utc_starttime': utc_starttime, 'title': interview_title.get('full', word('Untitled')), 'subtitle': interview_title.get('sub', None), 'valid': is_valid, 'metadata': metadata, 'tags': tags, 'email': interview_info['email'], 'user_id': interview_info['user_id'], 'temp_user_id': interview_info['temp_user_id']}
             if include_dict:
                 out['dict'] = dictionary
+                out['encrypted'] = interview_info['encrypted']
             interviews.append(out)
             interviews_length += 1
         if interviews_length == PAGINATION_LIMIT or results_in_query < PAGINATION_LIMIT_PLUS_ONE:
@@ -24920,12 +24921,18 @@ def api_login_url():
             info[key] = post_data[key]
     if len(url_args):
         info['url_args'] = url_args
-    if 'i' in info and 'session' in info:
-        try:
-            steps, user_dict, is_encrypted = fetch_user_dict(info['session'], info['i'], secret=secret)
-            info['encrypted'] = is_encrypted
-        except:
-            return jsonify_with_status("Could not decrypt dictionary", 400)
+    if 'i' in info:
+        if 'session' in info:
+            try:
+                steps, user_dict, is_encrypted = fetch_user_dict(info['session'], info['i'], secret=secret)
+                info['encrypted'] = is_encrypted
+            except:
+                return jsonify_with_status("Could not decrypt dictionary", 400)
+        elif true_or_false(post_data.get('resume_existing', False)) or daconfig.get('auto login resume existing', False):
+            interviews = user_interviews(user_id=info['user_id'], secret=secret, exclude_invalid=True, filename=info['i'], include_dict=True)[0]
+            if len(interviews) > 0:
+                info['session'] = interviews[0]['session']
+                info['encrypted'] = interviews[0]['encrypted']
     encryption_key = random_string(16)
     encrypted_text = encrypt_dictionary(info, encryption_key)
     while True:
