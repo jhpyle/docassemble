@@ -880,7 +880,8 @@ Parameters:
  - `session` (optional): set to a session ID if you want to select
    only the interview session with the given session ID.
  - `include_dictionary` (optional): set to `1` if you want a [JSON]
-   version of the interview dictionary to be returned.
+   version of the interview answers to be returned.  The default is
+   not to return the interview answers.
  - `next_id` (optional): the ID that can be provided to retrieve the
    next page of results.  See the [pagination] section for more
    information.
@@ -922,6 +923,11 @@ sessions, where each object has the following keys:
   read.  This will be `false` if the interview is encrypted and the
   `secret` is missing or does not match the encryption key used by the
   interview.
+- `dict`: The interview answers as a dictionary (converted to a format
+  that can be [JSON]-serialized).  Only present if
+  `include_dictionary` is `1`.
+- `encrypted`: Whether the interview answers are encrypted on the
+  server.  Only present if `include_dictionary` is `1`.
 
 For instructions on how to use `next_id`, see the [pagination] section.
 
@@ -1155,6 +1161,10 @@ Data:
  - `session` (optional): the session ID for the interview session (if
    `i` is also provided).  Providing this here rather than in the
    `url_args` prevents sending the session ID to the user's browser.
+ - `resume_existing` (optional): set this to `1` if you do not know
+   the `session` code but you are providing an `i` filename and you
+   want the user to resume an existing session in that interview, if
+   they have one.
  - `expire` (optional): the number of seconds after which the URL will
    expire.  The default is 15 seconds.
  - `url_args` (optional): a [JSON] object containing additional URL

@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.61](https://github.com/jhpyle/docassemble/releases/tag/v1.2.61) - 2021-05-01
+
+### Added
+- The `resume_existing` option for `login_url`.
+
 ## [1.2.60](https://github.com/jhpyle/docassemble/releases/tag/v1.2.60) - 2021-04-30
 
 ### Added

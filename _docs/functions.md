@@ -4023,7 +4023,10 @@ The function returns a two-item tuple.  The first item in the tuple is
 a [Python list] of [Python dictionaries], where the items in each
 dictionary are:
 
-* `dict`: the [interview session dictionary] for the session.
+* `dict`: the [interview session dictionary] for the session (not
+  present if `include_dict` is `False`).
+* `encrypted`: whether the [interview session dictionary] is encrypted (not
+  present if `include_dict` is `False`).
 * `email`: the e-mail address of the logged-in user associated with the
   session, if any.
 * `user_id`: the user ID of the logged-in user associated with the

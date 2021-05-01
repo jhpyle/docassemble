@@ -925,48 +925,55 @@ contains newlines, the newlines will show up as spaces in the DOCX
 file.  Also, if the text contains [Markdown] formatting, it will be
 inserted into the DOCX file literally.
 
-If you text that you want to insert contains newlines, and you want
+If the text that you want to insert contains newlines, and you want
 the newlines to be reflected in the DOCX file as manual line breaks,
 write `{% raw %}{{ the_variable | manual_line_breaks }}{% endraw %}`
 instead.
 
 If the text that you want to insert contains [Markdown] formatting,
 and you want that formatting to be translated into DOCX formatting,
-insert it using `markdown` [Jinja2] filter.
+insert it using `markdown` [Jinja2] filter or the `inline_markdown`
+filter.
 
-There are two versions of the `markdown` [Jinja2] filter.  Originally,
-the `markdown` filter inserted character-level text; it could change
-paragraph-level formatting like indentation.  However, since
-[Markdown] has paragraph-level formatting features such as bullet
-lists, numbered lists, block quotes, and paragraph breaks, a new
-version of the `markdown` [Jinja2] filter was developed that inserts
-paragraph-level text.  Under the rules of [`python-docx-template`],
-you need to use the prefix `{% raw %}{{r{% endraw %}` for
-character-level text and `{% raw %}{{p{% endraw %}` for
-paragraph-level text.
+It is important that you understand the difference between
+character-level content and paragraph-level content.  You see this
+distinction in Microsoft Word when you use "Styles."  Some Styles are
+character-level or "inline" because they only affect things like bold,
+italics, underline, and color.  Other Styles are paragraph-level
+because they affect things like paragraph indentation, bullets, or
+numbering.  A paragraph break is a paragraph-level concept, whereas a
+manual line break is a character-level concept.
 
-The default behavior of **docassemble** is the original setting, where
-you need to write:
+Under the rules of [`python-docx-template`], you need to use the
+prefix `{% raw %}{{r{% endraw %}` when the contents return
+character-level DOCX text, and you need to use `{% raw %}{{p{% endraw
+%}` when the contents return paragraph-level DOCX text.  It is very
+important that you get this right, because the symptoms of a mistake
+are confusing: the contents may simply disappear, or the DOCX file may
+get corrupted because you are inserting bad XML.
 
-> {% raw %}{{r the_text \| markdown }}{% endraw %}
+The `markdown` filter will return paragraph-level text, and the
+`inline_markdown` filter will return character level text.  However,
+this depends on whether you have enabled `new markdown to docx: True`
+in your [Configuration].  If you created your server relatively
+recently (since April 2020), this will already be there in your
+[Configuration], but if your server is relatively old, you will need
+to add `new markdown to docx: True` to your [Configuration] to upgrade
+to the "new" behavior.  Just keep in mind that when you make this
+change, you may have to update your `docx template file`s.  (That's
+why you need to opt in to the new system.)
 
-The text `the_text` will be treated as [Markdown] and formatting will
-be applied to the inserted text to replicate the [Markdown]
-formatting, using character-level formatting like bold, italic, and
-manual newlines.
+Under the `new markdown to docx: True` system, the `markdown` filter
+inserts paragraph-level text, and needs to be used with `{% raw
+%}{{p{% endraw %}`.  Under the "old" Markdown-to-DOCX system, the
+`markdown` filter only inserted character-level text, and it needed to
+be used with `{% raw %}{{r{% endraw %}`.  The rest of the
+documentation will assume that you are using `new markdown to docx:
+True`, which you should.  So if you have not made that change yet, you
+should do so.
 
-If you set [`new markdown to docx`] to `True` in your [Configuration]
-(which is recommended), the `markdown` filter assumes that you are
-inserting one or more paragraphs, so you need to write:
-
-> {% raw %}{{p the_text \| markdown }}{% endraw %}
-
-The text in `the_text` will be inserted as separate paragraphs in the
-.docx, using the default DOCX style.
-
-If you have set [`new markdown to docx`] but you want to insert
-[Markdown]-formatted text within a paragraph, you can use the
-`inline_markdown` filter:
+If you want to insert [Markdown]-formatted text within a paragraph
+(character-level text), you can use the `inline_markdown` filter:
 
 > {% raw %}{{r the_text \| inline_markdown }}{% endraw %}
 
@@ -974,6 +981,38 @@ With this filter, the text in `the_text` will be inserted as
 characters into the existing paragraph.  If the [Markdown] contains
 paragraph breaks, the paragraph breaks will be manual newlines rather
 than actual paragraph breaks.
+
+If you are insert a `template` variable into a DOCX file, the
+`markdown` filter is applied automatically (and how it works depends
+on the `new markdown to docx` setting).  Suppose your YAML has:
+
+{% highlight yaml %}
+template: disclaimer
+content: |
+  I disclaim **everything**.
+  
+  I have zero liability.  ZERO.
+{% endhighlight %}
+
+In your DOCX file, you would write:
+
+> {% raw %}{{p disclaimer }}{% endraw %}
+
+Since the `{% raw %}{{p{% endraw %}` prefix is being used, this needs
+to be by itself in a DOCX paragraph.
+
+If you have a `template` but you want the contents to be inserted as
+character-level text, you can write
+
+> Here is the disclaimer.
+> {% raw %}{{r disclaimer.show_as_markdown() }}{% endraw %}
+> There you have it.
+
+A `template` block will create a [`DALazyTemplate`] object, and
+`.show_as_markdown()` is one of the methods of the [`DALazyTemplate`]
+class.  It is a variant on the method `.show()`, which is the method
+that is called implicitly when you reduce a [`DALazyTemplate`] object
+to a textual form.
 
 Note that according to the [Markdown] standard, a single newline does
 not break a paragraph; you need two newlines to break a paragraph.  If
@@ -2046,3 +2085,4 @@ interview, see the [`cache documents` feature].
 [Python built-in functions]: https://docs.python.org/3.8/library/functions.html
 [filters]: https://jinja.palletsprojects.com/en/2.11.x/templates/#filters
 [tests]: https://jinja.palletsprojects.com/en/2.11.x/templates/#list-of-builtin-tests
+[`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate

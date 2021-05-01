@@ -2261,6 +2261,11 @@ You can pass the results through the `markdown` filter or the
 `inline_markdown` filter depending on how you want the results
 formatted.
 
+For more information about how
+`DALazyTemplate` objects work when embedded into DOCX files, see the
+section on [Inserting multi-line or formatted text into a single field
+in a DOCX file].
+
 <a name="DALazyTemplate.subject_as_html"></a><a
 name="DALazyTemplate.content_as_html"></a>If you write Python modules
 that generate [HTML], you may wish to use
@@ -6718,3 +6723,4 @@ the `_uid` of the table rather than the `id`.
 [`DAWeb`]: #DAWeb
 [`authorize()`]: #DAOAuth.authorize
 [`DAOAuth`]: #DAOAuth
+[Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.htmlmarkdown to docx

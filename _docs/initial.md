@@ -847,7 +847,8 @@ re-use the text by referring to a variable.
 The `content` of a `template` may contain [Mako] and [Markdown].
 
 The name after `template:` is a [variable name] that you can refer to
-elsewhere.
+elsewhere.  The variable gets defined as a special type of object
+known as a [`DALazyTemplate`].
 
 The `template` block, like [`question`] and [`code`] blocks, offers to
 define a variable.  So when **docassemble** needs to know the
@@ -906,24 +907,13 @@ In this example, the `code` evaluated to the name of a file in the
 templates folder.  The `code` may also evaluate to a URL, [`DAFile`],
 [`DAFileList`], [`DAFileCollection`], or [`DAStaticFile`].
 
-A `template` can also be inserted into a [`docx template file`].  This
-can be useful when you want to insert multiple paragraphs of text into
-a DOCX file.  Ordinarily, when you insert text into a [`docx template
-file`], newlines are replaced with spaces.  The effect of inserting a
-[`template`] into a [`docx template file`] is controlled by the [`new
-markdown to docx`] directive in the [Configuration].  If you set `new
-markdown to docx: True` in the [Configuration], then you should insert
-a `template` using:
-
-> {% raw %}{{p the_template }}{% endraw %}
-
-However, if you don't set the [`new markdown to docx`] directive (the
-default of which is `False`), then you need to insert the [`template`]
-using:
-
-> {% raw %}{{r the_template }}{% endraw %}
-
-In the future, the default will change to `True`.
+When a `template` variable is inserted into a [`docx template file`],
+the contents are converted into paragraph-level DOCX text.  This means
+you must always use the `{% raw %}{{p{% endraw %}` prefix when
+inserting `template`s or you use `template.show()`.  For more
+information about this use of `template`s, see the section on
+[Inserting multi-line or formatted text into a single field in a DOCX
+file].
 
 # <a name="table"></a>The `table` block
 
@@ -2464,3 +2454,5 @@ available as the [JavaScript] variable `daQuestionData`.
 [`terms`]: {{ site.baseurl }}/docs/modifiers.html#terms
 [`auto terms`]: {{ site.baseurl }}/docs/modifiers.html#auto terms
 [`update_terms()`]: {{ site.baseurl }}/docs/functions.html#update_terms
+[Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.htmlmarkdown to docx
+[`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
