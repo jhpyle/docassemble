@@ -936,11 +936,19 @@ def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
             return
 
 @workerapp.task
-def reset_server(result):
-    sys.stderr.write("reset_server in worker: starting\n")
+def reset_server(result, run_create=None):
+    sys.stderr.write("reset_server in worker: starting with run_create " + repr(run_create) +  "\n")
     if hasattr(result, 'ok') and not result.ok:
         sys.stderr.write("reset_server in worker: not resetting because result did not succeed.\n")
         return result
+    if not run_create:
+        if not hasattr(worker_controller, 'loaded'):
+            initialize_db()
+        pipe = worker_controller.r.pipeline()
+        pipe.set('da:skip_create_tables', 1)
+        pipe.expire('da:skip_create_tables', 10)
+        sys.stderr.write("reset_server in worker: setting da:skip_create_tables.\n")
+        pipe.execute()
     if USING_SUPERVISOR:
         if re.search(r':(web|celery|all):', container_role):
             if result.hostname == hostname:

@@ -23,26 +23,32 @@ import pkg_resources
 import os
 from docassemble.webapp.database import alchemy_connection_string, connect_args, dbtableprefix
 import time
+import sys
 
-def get_role(db, name):
+def get_role(db, name, result=None):
+    if result is None:
+        result = dict()
     the_role = Role.query.filter_by(name=name).first()
     if the_role:
         return the_role
     the_role = Role(name=name)
     db.session.add(the_role)
     db.session.commit()
+    result['changed'] = True
     return the_role
 
-def get_user(db, role, defaults):
+def get_user(db, role, defaults, result=None):
+    if result is None:
+        result = dict()
+    the_user = UserModel.query.filter_by(nickname=defaults['nickname']).first()
+    if the_user:
+        return the_user
     while True:
         new_social = 'local$' + random_alphanumeric(32)
         existing_user = UserModel.query.filter_by(social_id=new_social).first()
         if existing_user:
             continue
         break
-    the_user = UserModel.query.filter_by(nickname=defaults['nickname']).first()
-    if the_user:
-        return the_user
     user_auth = UserAuthModel(password=app.user_manager.hash_password(defaults.get('password', 'password')))
     the_user = UserModel(
         active=defaults.get('active', True),
@@ -63,13 +69,16 @@ def get_user(db, role, defaults):
     db.session.add(user_auth)
     db.session.add(the_user)
     db.session.commit()
+    result['changed'] = True
     return the_user
 
 def populate_tables(start_time=None):
     if start_time is None:
         start_time = time.time()
-    sys.stderr.write("populate_tables: starting after " + str(time.time() - start_time) + "\n")
+    sys.stderr.write("create_tables.populate_tables: starting after " + str(time.time() - start_time) + "\n")
     user_manager = UserManager(SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel), app)
+    sys.stderr.write("create_tables.populate_tables: obtained user_manager after " + str(time.time() - start_time) + "\n")
+    result = dict()
     admin_defaults = daconfig.get('default admin account', dict())
     if 'email' not in admin_defaults:
         admin_defaults['email'] = os.getenv('DA_ADMIN_EMAIL', 'admin@admin.com')
@@ -83,45 +92,70 @@ def populate_tables(start_time=None):
         admin_defaults['password'] = os.getenv('DA_ADMIN_PASSWORD', 'password')
     cron_defaults = daconfig.get('default cron account', {'nickname': 'cron', 'email': 'cron@admin.com', 'first_name': 'Cron', 'last_name': 'User'})
     cron_defaults['active'] = False
-    user_role = get_role(db, 'user')
-    admin_role = get_role(db, 'admin')
-    cron_role = get_role(db, 'cron')
-    customer_role = get_role(db, 'customer')
-    developer_role = get_role(db, 'developer')
-    advocate_role = get_role(db, 'advocate')
-    trainer_role = get_role(db, 'trainer')
-    for user in UserModel.query.all():
-        if len(user.roles) == 0:
-            user.roles.append(user_role)
+    user_role = get_role(db, 'user', result=result)
+    admin_role = get_role(db, 'admin', result=result)
+    cron_role = get_role(db, 'cron', result=result)
+    customer_role = get_role(db, 'customer', result=result)
+    developer_role = get_role(db, 'developer', result=result)
+    advocate_role = get_role(db, 'advocate', result=result)
+    trainer_role = get_role(db, 'trainer', result=result)
+    if daconfig.get('fix user roles', False):
+        sys.stderr.write("create_tables.populate_tables: fixing user roles after " + str(time.time() - start_time) + "\n")
+        to_fix = []
+        for user in UserModel.query.all():
+            if len(user.roles) == 0:
+                to_fix.append(user)
+        if len(to_fix):
+            sys.stderr.write("create_tables.populate_tables: found user roles to fix after " + str(time.time() - start_time) + "\n")
+            for user in to_fix:
+                user.roles.append(user_role)
             db.session.commit()
-    admin = get_user(db, admin_role, admin_defaults)
-    cron = get_user(db, cron_role, cron_defaults)
+        sys.stderr.write("create_tables.populate_tables: done fixing user roles after " + str(time.time() - start_time) + "\n")
+    admin = get_user(db, admin_role, admin_defaults, result=result)
+    cron = get_user(db, cron_role, cron_defaults, result=result)
     if admin.confirmed_at is None:
         admin.confirmed_at = datetime.datetime.now()
     if cron.confirmed_at is None:
         cron.confirmed_at = datetime.datetime.now()
-    db.session.commit()
+    if result.get('changed', False):
+        db.session.commit()
+    sys.stderr.write("create_tables.populate_tables: calling add_dependencies after " + str(time.time() - start_time) + "\n")
     add_dependencies(admin.id, start_time=start_time)
+    sys.stderr.write("create_tables.populate_tables: add_dependencies finished after " + str(time.time() - start_time) + "\n")
     git_packages = Package.query.filter_by(type='git')
+    package_info_changed = False
     for package in git_packages:
         if package.name in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
-            package.giturl = None
-            package.gitsubdir = None
-            package.type = 'pip'
+            if package.giturl:
+                package.giturl = None
+                package_info_changed = True
+            if package.gitsubdir:
+                package.gitsubdir = None
+                package_info_changed = True
+            if package.type != 'pip':
+                package.type = 'pip'
+                package_info_changed = True
             if daconfig.get('stable version', False):
-                package.limitation = '<1.1.0'
-            db.session.commit()
-    sys.stderr.write("populate_tables: ending after " + str(time.time() - start_time) + "\n")
+                if package.limitation != '<1.1.0':
+                    package.limitation = '<1.1.0'
+                    package_info_changed = True
+    if package_info_changed:
+        db.session.commit()
+    sys.stderr.write("create_tables.populate_tables: ending after " + str(time.time() - start_time) + "\n")
     return
 
 def main():
+    sys.stderr.write("create_tables.main: starting\n")
+    start_time = time.time()
     from docassemble.webapp.database import dbprefix
     if dbprefix.startswith('postgresql') and not daconfig.get('force text to varchar upgrade', False):
         do_varchar_upgrade = False
     else:
         do_varchar_upgrade = True
     with app.app_context():
+        sys.stderr.write("create_tables.main: inside app context after " + str(time.time() - start_time) + "\n")
         if daconfig.get('use alembic', True):
+            sys.stderr.write("create_tables.main: running alembic after " + str(time.time() - start_time) + "\n")
             if do_varchar_upgrade:
                 changed = False
                 if db.engine.has_table(dbtableprefix + 'userdict'):
@@ -165,29 +199,26 @@ def main():
             alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
             alembic_cfg.set_main_option("script_location", os.path.join(packagedir, 'alembic'))
             if not db.engine.has_table(dbtableprefix + 'alembic_version'):
-                start_time = time.time()
-                sys.stderr.write("Creating alembic stamp\n")
+                sys.stderr.write("create_tables.main: creating alembic stamp\n")
                 command.stamp(alembic_cfg, "head")
-                sys.stderr.write("Done creating alembic stamp after " + str(time.time() - start_time) + " seconds\n")
+                sys.stderr.write("create_tables.main: done creating alembic stamp after " + str(time.time() - start_time) + " seconds\n")
             if db.engine.has_table(dbtableprefix + 'user'):
-                start_time = time.time()
-                sys.stderr.write("Creating alembic stamp\n")
-                sys.stderr.write("Running alembic upgrade\n")
+                sys.stderr.write("create_tables.main: creating alembic stamp\n")
+                sys.stderr.write("create_tables.main: running alembic upgrade\n")
                 command.upgrade(alembic_cfg, "head")
-                sys.stderr.write("Done running alembic upgrade after " + str(time.time() - start_time) + " seconds\n")
+                sys.stderr.write("create_tables.main: done running alembic upgrade after " + str(time.time() - start_time) + " seconds\n")
         #db.drop_all()
-        start_time = time.time()
         try:
-            sys.stderr.write("Trying to create tables\n")
+            sys.stderr.write("create_tables.main: trying to create tables\n")
             db.create_all()
         except:
-            sys.stderr.write("Error trying to create tables; trying a second time.\n")
+            sys.stderr.write("create_tables.main: error trying to create tables; trying a second time.\n")
             try:
                 db.create_all()
             except:
-                sys.stderr.write("Error trying to create tables; trying a third time.\n")
+                sys.stderr.write("create_tables.main: error trying to create tables; trying a third time.\n")
                 db.create_all()
-        sys.stderr.write("Finished creating tables after " + str(time.time() - start_time) + " seconds.\n")
+        sys.stderr.write("create_tables.main: finished creating tables after " + str(time.time() - start_time) + " seconds.\n")
         populate_tables(start_time=start_time)
         db.engine.dispose()
 

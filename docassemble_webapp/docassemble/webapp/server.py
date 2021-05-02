@@ -4031,7 +4031,7 @@ def restart_others():
             if host.url and host.hostname != hostname and ':cron:' in str(host.role):
                 pipe = r.pipeline()
                 pipe.set(cron_key, 1)
-                pipe.expire(cron_key, 5)
+                pipe.expire(cron_key, 10)
                 pipe.execute()
                 restart_on(host)
                 while r.get(cron_key) is not None:
@@ -14543,7 +14543,7 @@ def update_package():
                             existing_package.limitation = None
                             db.session.commit()
                         install_pip_package(existing_package.name, existing_package.limitation)
-        result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+        result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(target)))
         session['taskwait'] = result.id
         session['serverstarttime'] = START_TIME
         return redirect(url_for('update_package_wait'))
@@ -14567,7 +14567,7 @@ def update_package():
                 pkgname = get_package_name_from_zip(zippath)
                 if user_can_edit_package(pkgname=pkgname):
                     install_zip_package(pkgname, file_number)
-                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(pkgname)))
                     session['taskwait'] = result.id
                     session['serverstarttime'] = START_TIME
                     return redirect(url_for('update_package_wait'))
@@ -14589,7 +14589,7 @@ def update_package():
                 packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
                     install_git_package(packagename, giturl, branch)
-                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                     session['taskwait'] = result.id
                     session['serverstarttime'] = START_TIME
                     return redirect(url_for('update_package_wait'))
@@ -14606,7 +14606,7 @@ def update_package():
                 packagename = re.sub(r'[^A-Za-z0-9\_\-\.]', '', packagename)
                 if user_can_edit_package(pkgname=packagename):
                     install_pip_package(packagename, limitation)
-                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                     session['taskwait'] = result.id
                     session['serverstarttime'] = START_TIME
                     return redirect(url_for('update_package_wait'))
@@ -15228,7 +15228,7 @@ def create_playground_package():
             # db.session.commit()
             if do_install:
                 install_zip_package('docassemble.' + pkgname, file_number)
-                result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create('docassemble.' + pkgname)))
                 session['taskwait'] = result.id
                 session['serverstarttime'] = START_TIME
                 return redirect(url_for('update_package_wait', next=url_for('playground_packages', project=current_project, file=current_package)))
@@ -25055,6 +25055,11 @@ def jsonify_task(result):
     pipe.execute()
     return jsonify({'task_id': code})
 
+def should_run_create(package_name):
+    if package_name in ('docassemble.base', 'docassemble.webapp', 'docassemble.demo', 'docassemble'):
+        return True
+    return False
+
 @app.route('/api/package', methods=['GET', 'POST', 'DELETE'])
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)
@@ -25095,7 +25100,7 @@ def api_package():
             return jsonify_with_status("You are not allowed to uninstall that package.", 400)
         uninstall_package(target)
         if do_restart:
-            result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+            result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(target)))
         else:
             result = docassemble.webapp.worker.update_packages.delay(restart=False)
         return jsonify_task(result)
@@ -25142,7 +25147,7 @@ def api_package():
                     install_pip_package(existing_package.name, existing_package.limitation)
             db.session.commit()
             if do_restart:
-                result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(target)))
             else:
                 result = docassemble.webapp.worker.update_packages.delay(restart=False)
             return jsonify_task(result)
@@ -25160,7 +25165,7 @@ def api_package():
             if user_can_edit_package(giturl=github_url) and user_can_edit_package(pkgname=packagename):
                 install_git_package(packagename, github_url, branch)
                 if do_restart:
-                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                 else:
                     result = docassemble.webapp.worker.update_packages.delay(restart=False)
                 return jsonify_task(result)
@@ -25178,10 +25183,9 @@ def api_package():
             if user_can_edit_package(pkgname=packagename):
                 install_pip_package(packagename, limitation)
                 if do_restart:
-                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                    result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                 else:
                     result = docassemble.webapp.worker.update_packages.delay(restart=False)
-                result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
                 return jsonify_task(result)
             else:
                 return jsonify_with_status("You do not have permission to install that package.", 403)
@@ -25200,7 +25204,7 @@ def api_package():
                 if user_can_edit_package(pkgname=pkgname):
                     install_zip_package(pkgname, file_number)
                     if do_restart:
-                        result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s())
+                        result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(pkgname)))
                     else:
                         result = docassemble.webapp.worker.update_packages.delay(restart=False)
                     return jsonify_task(result)

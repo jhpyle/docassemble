@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.62] - 2021-05-01
+### Changed
+- Optimizations for the restart process.
+
 ## [1.2.61] - 2021-05-01
 ### Added
 - The `resume_existing` option for `login_url`.

@@ -10,12 +10,17 @@ def main():
     from docassemble.base.config import daconfig
     container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
     if ':all:' in container_role or ':cron:' in container_role:
-        import docassemble.webapp.create_tables
-        docassemble.webapp.create_tables.main()
+        import redis
+        from docassemble.base.config import parse_redis_uri
+        (redis_host, redis_port, redis_password, redis_offset, redis_cli) = parse_redis_uri()
+        r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password)
+        if r.get('da:skip_create_tables'):
+            sys.stderr.write("restart: skipping create_tables\n")
+            r.delete('da:skip_create_tables')
+        else:
+            import docassemble.webapp.create_tables
+            docassemble.webapp.create_tables.main()
         if ':cron:' in container_role:
-            import redis
-            (redis_host, redis_port, redis_password, redis_offset, redis_cli) = docassemble.base.config.parse_redis_uri()
-            r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password)
             r.delete('da:cron_restart')
 
     webapp_path = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
