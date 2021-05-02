@@ -4273,7 +4273,8 @@ For an [API] version of this function, see [`/api/user/new`].
 The [`get_user_list()`] function returns a list of registered users on
 the server.  If the optional keyword parameter `include_inactive` is
 set to `True`, then any inactive users are included in the results;
-otherwise they are excluded.
+otherwise they are excluded.  Privileges of `admin` or `advocate` are
+required to use this function.
 
 The function returns a two-item tuple. The first item in the tuple is
 a [Python list] of [Python dictionaries], where each dictionary has
@@ -4333,8 +4334,8 @@ an argument (e.g., `get_user_info(email='jsmith@example.com')`, in
 which case it returns information about the user with that user ID or
 e-mail address.  If no user is found, `None` is returned.
 
-Only users with `admin` [privileges] can see information about other
-users.
+Only users with `admin` or `advocate` [privileges] can see information
+about other users.
 
 This function will only work if the user running the interview that
 calls the function is logged in.

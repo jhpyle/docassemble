@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.62](https://github.com/jhpyle/docassemble/releases/tag/v1.2.62) - 2021-05-01
+
+### Changed
+- Optimizations for the restart process.
+
 ## [1.2.61](https://github.com/jhpyle/docassemble/releases/tag/v1.2.61) - 2021-05-01
 
 ### Added
