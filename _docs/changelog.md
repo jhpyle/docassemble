@@ -4,6 +4,9 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.63](https://github.com/jhpyle/docassemble/releases/tag/v1.2.63) - 2021-05-02
+- Optimizations for `interview_list()`.
+
 ## [1.2.62](https://github.com/jhpyle/docassemble/releases/tag/v1.2.62) - 2021-05-01
 
 ### Changed
