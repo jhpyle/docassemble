@@ -1792,7 +1792,7 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
                 except:
                     pass
                 record.dictionary = pack_dictionary(the_dict)
-        db.session.commit()
+            db.session.commit()
         for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).with_for_update().all():
             try:
                 phrase = decrypt_phrase(record.message, oldsecret)
@@ -21370,41 +21370,43 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
 
     while True:
         there_are_more = False
-        subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
         if user_id is not None:
             query_elements = [UserDict.indexno, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserModel.email]
-            filter_elements = [UserDictKeys.user_id == user_id]
-            group_elements = [UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserDictKeys.indexno, UserDict.indexno]
+            subq_filter_elements = [UserDictKeys.user_id == user_id]
             if include_dict:
                 query_elements.extend([UserDict.dictionary, UserDict.encrypted, UserModel.email])
-                group_elements.extend([UserDict.dictionary, UserDict.encrypted])
             else:
                 query_elements.append(UserDict.modtime)
-                group_elements.append(UserDict.modtime)
             if filename is not None:
-                filter_elements.append(UserDictKeys.filename == filename)
+                subq_filter_elements.append(UserDictKeys.filename == filename)
             if session is not None:
-                filter_elements.append(UserDictKeys.key == session)
+                subq_filter_elements.append(UserDictKeys.key == session)
             if start_id is not None:
-                filter_elements.append(UserDict.indexno > start_id)
-            interview_query = db.session.query(*query_elements).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).join(UserModel, UserModel.id == UserDictKeys.user_id).filter(and_(*filter_elements)).group_by(*group_elements).order_by(UserDict.indexno)
+                subq_filter_elements.append(UserDict.indexno > start_id)
+            subq = db.session.query(UserDictKeys.filename, UserDictKeys.key, db.func.max(UserDict.indexno).label('indexno')).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key))
+            if len(subq_filter_elements):
+                subq = subq.filter(and_(*subq_filter_elements))
+            subq = subq.group_by(UserDictKeys.filename, UserDictKeys.key).subquery()
+            interview_query = db.session.query(subq).join(UserDict, UserDict.indexno == subq.c.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).join(UserModel, UserDictKeys.user_id == UserModel.id).order_by(UserDict.indexno).with_entities(*query_elements)
         else:
-            filter_elements = []
-            group_elements = [UserDict.indexno, UserModel.email, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDictKeys.indexno, UserDict.modtime]
+            query_elements = [UserDict.indexno, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserModel.email]
+            subq_filter_elements = []
             if include_dict:
-                group_elements.extend([UserDict.dictionary, UserDict.encrypted])
+                query_elements.extend([UserDict.dictionary, UserDict.encrypted, UserModel.email])
+            else:
+                query_elements.append(UserDict.modtime)
             if filename is not None:
-                filter_elements.append(UserDict.filename == filename)
+                subq_filter_elements.append(UserDict.filename == filename)
             if session is not None:
-                filter_elements.append(UserDict.key == session)
+                subq_filter_elements.append(UserDict.key == session)
             if start_id is not None:
-                filter_elements.append(UserDict.indexno > start_id)
-            interview_query = db.session.query(UserDict).join(subq, and_(UserDict.indexno == subq.c.indexno, UserDict.key == subq.c.key, UserDict.filename == subq.c.filename)).outerjoin(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True))
-            if len(filter_elements) > 0:
-                interview_query = interview_query.filter(and_(*filter_elements))
-            interview_query = interview_query.group_by(*group_elements).order_by(UserDict.indexno).with_entities(UserDict.indexno, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserDict.dictionary, UserDict.encrypted, UserDict.modtime, UserModel.email)
+                subq_filter_elements.append(UserDict.indexno > start_id)
+            subq = db.session.query(UserDict.filename, UserDict.key, db.func.max(UserDict.indexno).label('indexno'))
+            if len(subq_filter_elements):
+                subq = subq.filter(and_(*subq_filter_elements))
+            subq = subq.group_by(UserDict.filename, UserDict.key).subquery()
+            interview_query = db.session.query(subq).join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).order_by(UserDict.indexno).with_entities(*query_elements)
         interview_query = interview_query.limit(PAGINATION_LIMIT_PLUS_ONE)
-
         stored_info = list()
         results_in_query = 0
         for interview_info in interview_query:
@@ -23421,6 +23423,7 @@ def get_user_info(user_id=None, email=None, case_sensitive=False):
         if case_sensitive:
             user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
         else:
+            email = re.sub(r'\%', '', email)
             user = UserModel.query.options(db.joinedload('roles')).filter(UserModel.email.ilike(email)).first()
     if user is None or user.social_id.startswith('disabled$'):
         return None
@@ -23929,8 +23932,12 @@ def api_get_secret():
         return jsonify_with_status(str(err), 403)
     return jsonify(secret)
 
-def get_secret(username, password):
-    user = UserModel.query.options(db.joinedload('roles')).filter_by(active=True, email=username).first()
+def get_secret(username, password, case_sensitive=False):
+    if case_sensitive:
+        user = UserModel.query.filter_by(email=username).first()
+    else:
+        username = re.sub(r'\%', '', username)
+        user = UserModel.query.filter(UserModel.email.ilike(username)).first()
     if user is None:
         raise Exception("Username not known")
     if app.config['USE_MFA'] and user.otp_secret is not None:
@@ -24559,7 +24566,7 @@ def api_session_question():
         data = get_question_data(yaml_filename, session_id, secret)
     except Exception as err:
         return jsonify_with_status(str(err), 400)
-    if data.get('questionType', None) is 'response':
+    if data.get('questionType', None) == 'response':
         return data['response']
     return jsonify(**data)
 
@@ -24907,8 +24914,12 @@ def api_login_url():
                 return jsonify_with_status("Malformed URL arguments", 400)
     else:
         url_args = dict()
-    user = UserModel.query.options(db.joinedload('roles')).filter_by(active=True, email=username).first()
+    username = re.sub(r'\%', '', username)
+    user = UserModel.query.filter(UserModel.email.ilike(username)).first()
+    if user is None:
+        return jsonify_with_status("Username not known", 403)
     info = dict(user_id=user.id, secret=secret)
+    del user
     if 'next' in post_data:
         try:
             path = get_url_from_file_reference(post_data['next'])
@@ -24933,6 +24944,7 @@ def api_login_url():
             if len(interviews) > 0:
                 info['session'] = interviews[0]['session']
                 info['encrypted'] = interviews[0]['encrypted']
+            del interviews
     encryption_key = random_string(16)
     encrypted_text = encrypt_dictionary(info, encryption_key)
     while True:
