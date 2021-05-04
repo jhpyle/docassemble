@@ -4,7 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.64](https://github.com/jhpyle/docassemble/releases/tag/v1.2.64) - 2021-05-04
+
+### Added
+- The `popover trigger` feature.
+
+### Fixed
+- Added validation error on the edit user profile page when changing
+  e-mail address to an address that is a case-insensitive match to an
+  e-mail address that already exists.
+
 ## [1.2.63](https://github.com/jhpyle/docassemble/releases/tag/v1.2.63) - 2021-05-02
+
+### Changed
 - Optimizations for `interview_list()`.
 
 ## [1.2.62](https://github.com/jhpyle/docassemble/releases/tag/v1.2.62) - 2021-05-01

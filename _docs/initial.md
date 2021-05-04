@@ -2230,6 +2230,23 @@ features:
 Then, the data structure respresenting the current question will be
 available as the [JavaScript] variable `daQuestionData`.
 
+## <a name="popover trigger"></a>Popover trigger
+
+By default, when you use [`terms`] or [`auto terms`], the definitions
+pop up when the user clicks the label.  The [Bootstrap popover
+feature] allows the triggering method to be set to `click`, `hover`,
+`focus`, or `manual`, and it allows you to specify multiple methods
+separated by spaces.
+
+The default trigger method is `focus`.  If you want to set the trigger
+method to something else, set the `popover trigger` under `features`.
+
+```
+features:
+  popover trigger: hover
+```
+
+[Bootstrap popover feature]: https://getbootstrap.com/docs/4.0/components/popovers/
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [infinite loop protection]: {{ site.baseurl }}/docs/config.html#loop limit
 [ending screen]: {{ site.baseurl }}/docs/questions.html#ending screens
