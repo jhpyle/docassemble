@@ -186,7 +186,7 @@ install_requires = [
     "retry-decorator==1.1.1",
     "rfc3339==6.2",
     "rfc3986==1.4.0",
-    "rsa==4.6",
+    "rsa==4.7",
     "ruamel.yaml==0.16.12",
     "ruamel.yaml.clib==0.2.2",
     "s3transfer==0.3.3",

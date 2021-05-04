@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.65] - 2021-05-04
+### Fixed
+- Important security vulnerability.
+
 ## [1.2.64] - 2021-05-04
 ### Added
 - The `popover trigger` feature.
