@@ -3397,7 +3397,7 @@ class DAFile(DAObject):
         if not os.path.isfile(the_path):
             raise Exception("File " + str(the_path) + " does not exist yet.")
         if auto_decode and hasattr(self, 'mimetype') and (self.mimetype.startswith('text') or self.mimetype in ('application/json', 'application/javascript')):
-            with open(the_path, 'rU', encoding='utf-8') as f:
+            with open(the_path, 'r', encoding='utf-8') as f:
                 return(f.read())
         else:
             with open(the_path, 'rb') as f:
@@ -3408,7 +3408,7 @@ class DAFile(DAObject):
         the_path = self.path()
         if not os.path.isfile(the_path):
             raise Exception("File does not exist yet.")
-        with open(the_path, 'rU', encoding='utf-8') as f:
+        with open(the_path, 'r', encoding='utf-8') as f:
             return(f.readlines())
     def write(self, content, binary=False):
         """Writes the given content to the file, replacing existing contents."""
@@ -4143,10 +4143,10 @@ class DAStaticFile(DAObject):
         if not os.path.isfile(the_path):
             raise Exception("File " + str(the_path) + " does not exist.")
         if auto_decode and hasattr(self, 'mimetype') and (self.mimetype.startswith('text') or self.mimetype in ('application/json', 'application/javascript')):
-            with open(the_path, 'rU', encoding='utf-8') as f:
+            with open(the_path, 'r', encoding='utf-8') as f:
                 return(f.read())
         else:
-            with open(the_path, 'rU') as f:
+            with open(the_path, 'r') as f:
                 return(f.read())
     def path(self):
         """Returns a path and filename at which the file can be accessed.
@@ -4681,7 +4681,7 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_ob
     objects.gathered = True
     objects.revisit = True
     is_singular = True
-    with open(file_info['fullpath'], 'rU', encoding='utf-8') as fp:
+    with open(file_info['fullpath'], 'r', encoding='utf-8') as fp:
         if 'mimetype' in file_info and file_info['mimetype'] == 'application/json':
             document = json.load(fp)
             new_objects = recurse_obj(document, recursive=recursive, use_objects=use_objects)

@@ -344,7 +344,7 @@ for word_file in word_file_list:
         continue
     if os.path.isfile(filename):
         if filename.lower().endswith('.yaml') or filename.lower().endswith('.yml'):
-            with open(filename, 'rU', encoding='utf-8') as stream:
+            with open(filename, 'r', encoding='utf-8') as stream:
                 try:
                     for document in ruamel.yaml.safe_load_all(stream):
                         if document and type(document) is dict:

@@ -1705,7 +1705,7 @@ def image_include_docx_template(match, question=None):
     if 'path' in file_info:
         if 'mimetype' in file_info and file_info['mimetype']:
             if file_info['mimetype'] in ('text/markdown', 'text/plain'):
-                with open(file_info['fullpath'], 'rU', encoding='utf-8') as f:
+                with open(file_info['fullpath'], 'r', encoding='utf-8') as f:
                     contents = f.read()
                 if file_info['mimetype'] == 'text/plain':
                     return contents

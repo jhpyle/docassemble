@@ -86,7 +86,7 @@ def main():
         sys.stderr.write("fix_postgresql_tables: skipping because alembic is in use.\n")
         return
     desired_columns = dict()
-    with open(schema_file, 'rU') as f:
+    with open(schema_file, 'r') as f:
         for line in f:
             read_in(line.rstrip(), desired_columns)
 

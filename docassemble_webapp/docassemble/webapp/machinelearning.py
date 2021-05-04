@@ -121,7 +121,7 @@ class MachineLearner(object):
         if 'fullpath' not in file_info or file_info['fullpath'] is None or not os.path.exists(file_info['fullpath']):
             return
             #raise Exception("File reference " + str(fileref) + " is invalid")
-        with open(file_info['fullpath'], 'rU', encoding='utf-8') as fp:
+        with open(file_info['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
         if 'mimetype' in file_info and file_info['mimetype'] == 'application/json':
             aref = json.loads(content)

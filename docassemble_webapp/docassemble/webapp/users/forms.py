@@ -160,8 +160,14 @@ class EditUserProfileForm(UserProfileForm):
     active = BooleanField(word('Active'))
     uses_mfa = BooleanField(word('Uses two-factor authentication'))
     def validate(self, user_id, admin_id):
+        from flask import current_app
+        user_manager = current_app.user_manager
         rv = UserProfileForm.validate(self)
         if not rv:
+            return False
+        user, user_email = user_manager.find_user_by_email(self.email.data)
+        if user is not None and user.id != user_id:
+            self.email.errors.append(word('That e-mail address is already taken.'))
             return False
         if current_user.id == user_id:
             if admin_id not in self.role_id.data:

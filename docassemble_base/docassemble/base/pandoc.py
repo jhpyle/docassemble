@@ -522,7 +522,7 @@ def word_to_markdown(in_file, in_format):
         shutil.rmtree(tempdir)
     if result == 0:
         final_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
-        with open(temp_file.name, 'rU', encoding='utf-8') as the_file:
+        with open(temp_file.name, 'r', encoding='utf-8') as the_file:
             file_contents = the_file.read()
         file_contents = re.sub(r'\\([\$\[\]])', lambda x: x.group(1), file_contents)
         with open(final_file.name, "w", encoding='utf-8') as the_file:

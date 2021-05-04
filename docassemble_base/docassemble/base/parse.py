@@ -291,7 +291,7 @@ class InterviewSourceFile(InterviewSource):
     def update(self):
         #logmessage("Update: " + str(self.filepath))
         try:
-            with open(self.filepath, 'rU', encoding='utf-8') as the_file:
+            with open(self.filepath, 'r', encoding='utf-8') as the_file:
                 self.set_content(the_file.read())
                 #sys.stderr.write("Returning true\n")
                 return True
@@ -1872,6 +1872,8 @@ class Question:
                 self.interview.bootstrap_theme = data['features']['bootstrap theme']
             if 'inverse navbar' in data['features']:
                 self.interview.options['inverse navbar'] = data['features']['inverse navbar']
+            if 'popover trigger' in data['features']:
+                self.interview.options['popover trigger'] = data['features']['popover trigger']
             if 'review button color' in data['features']:
                 self.interview.options['review button color'] = data['features']['review button color']
             if 'review button icon' in data['features']:
@@ -3400,7 +3402,7 @@ class Question:
                     #if file_to_read is not None and get_mimetype(file_to_read) != 'text/markdown':
                     #    raise DAError('The content file ' + str(data['content file']) + ' is not a markdown file ' + str(file_to_read) + self.idebug(data))
                     if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
-                        with open(file_to_read, 'rU', encoding='utf-8') as the_file:
+                        with open(file_to_read, 'r', encoding='utf-8') as the_file:
                             data['content'] += the_file.read()
                     else:
                         raise DAError('Unable to read content file ' + str(data['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(data))
@@ -4559,7 +4561,7 @@ class Question:
                             raise DAError('A content file must be specified as text, a list of text filenames, or a dictionary where the one key is code' + self.idebug(target))
                         file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
                         if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
-                            with open(file_to_read, 'rU', encoding='utf-8') as the_file:
+                            with open(file_to_read, 'r', encoding='utf-8') as the_file:
                                 target['content'] += the_file.read()
                         else:
                             raise DAError('Unable to read content file ' + str(content_file) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
@@ -6259,7 +6261,7 @@ class Question:
                     if the_filename is None or not os.path.isfile(the_filename):
                         raise DAError("prepare_attachment: error obtaining template file from code: " + repr(the_orig_filename))
                     (the_base, actual_extension) = os.path.splitext(the_filename)
-                    with open(the_filename, 'rU', encoding='utf-8') as the_file:
+                    with open(the_filename, 'r', encoding='utf-8') as the_file:
                         raw_content += the_file.read()
                 the_content = TextObject(raw_content, question=self)
             else:
@@ -8134,7 +8136,7 @@ class Interview:
                                 the_filename = None
                             if the_filename is None or not os.path.isfile(the_filename):
                                 raise DAError("askfor: error obtaining template file from code: " + repr(the_orig_filename))
-                            with open(the_filename, 'rU', encoding='utf-8') as the_file:
+                            with open(the_filename, 'r', encoding='utf-8') as the_file:
                                 raw_content += the_file.read()
                         temp_vars = dict()
                         if is_generic:

@@ -117,11 +117,11 @@ def load(**kwargs):
     if not os.path.isfile(filename):
         sys.stderr.write("Configuration file " + str(filename) + " does not exist.\n")
         sys.exit(1)
-    with open(filename, 'rU', encoding='utf-8') as stream:
+    with open(filename, 'r', encoding='utf-8') as stream:
         raw_daconfig = yaml.load(stream, Loader=yaml.FullLoader)
     if raw_daconfig is None:
         sys.stderr.write("Could not open configuration file from " + str(filename) + "\n")
-        with open(filename, 'rU', encoding='utf-8') as fp:
+        with open(filename, 'r', encoding='utf-8') as fp:
             sys.stderr.write(fp.read() + "\n")
         sys.exit(1)
     daconfig.clear()
@@ -141,7 +141,7 @@ def load(**kwargs):
     daconfig['python version'] = str(pkg_resources.get_distribution("docassemble.base").version)
     version_file = daconfig.get('version file', '/usr/share/docassemble/webapp/VERSION')
     if os.path.isfile(version_file) and os.access(version_file, os.R_OK):
-        with open(version_file, 'rU', encoding='utf-8') as fp:
+        with open(version_file, 'r', encoding='utf-8') as fp:
             daconfig['system version'] = fp.read().strip()
     else:
         daconfig['system version'] = '0.1.12'

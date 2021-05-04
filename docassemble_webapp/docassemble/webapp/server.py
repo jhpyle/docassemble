@@ -1622,7 +1622,7 @@ def user_id_dict():
 def get_base_words():
     documentation = get_info_from_file_reference('docassemble.base:data/sources/base-words.yml')
     if 'fullpath' in documentation and documentation['fullpath'] is not None:
-        with open(documentation['fullpath'], 'rU', encoding='utf-8') as fp:
+        with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
             return(ruamel.yaml.safe_load(content))
@@ -1631,7 +1631,7 @@ def get_base_words():
 def get_documentation_dict():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/documentation.yml')
     if 'fullpath' in documentation and documentation['fullpath'] is not None:
-        with open(documentation['fullpath'], 'rU', encoding='utf-8') as fp:
+        with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
             return(ruamel.yaml.safe_load(content))
@@ -1640,7 +1640,7 @@ def get_documentation_dict():
 def get_name_info():
     docstring = get_info_from_file_reference('docassemble.base:data/questions/docstring.yml')
     if 'fullpath' in docstring and docstring['fullpath'] is not None:
-        with open(docstring['fullpath'], 'rU', encoding='utf-8') as fp:
+        with open(docstring['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
             return(ruamel.yaml.safe_load(content))
@@ -1649,7 +1649,7 @@ def get_name_info():
 def get_title_documentation():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/title_documentation.yml')
     if 'fullpath' in documentation and documentation['fullpath'] is not None:
-        with open(documentation['fullpath'], 'rU', encoding='utf-8') as fp:
+        with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
             return(ruamel.yaml.safe_load(content))
@@ -1900,7 +1900,7 @@ def proc_example_list(example_list, package, directory, examples):
         if 'fullpath' not in file_info or file_info['fullpath'] is None:
             logmessage("proc_example_list: could not find " + example_file)
             continue
-        with open(file_info['fullpath'], 'rU', encoding='utf-8') as fp:
+        with open(file_info['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
             content = fix_initial.sub('', content)
@@ -1969,7 +1969,7 @@ def get_examples():
                 the_directory = ''
             if os.path.exists(example_list_file['fullpath']):
                 try:
-                    with open(example_list_file['fullpath'], 'rU', encoding='utf-8') as fp:
+                    with open(example_list_file['fullpath'], 'r', encoding='utf-8') as fp:
                         content = fp.read()
                         content = fix_tabs.sub('  ', content)
                         proc_example_list(ruamel.yaml.safe_load(content), the_package, the_directory, examples)
@@ -5118,7 +5118,7 @@ def github_configure():
         flash(word("Your GitHub integration has already been configured."), 'info')
     if not found:
         (private_key_file, public_key_file) = get_ssh_keys(user_info['email'])
-        with open(public_key_file, 'rU', encoding='utf-8') as fp:
+        with open(public_key_file, 'r', encoding='utf-8') as fp:
             public_key = fp.read()
         headers = {'Content-Type': 'application/json'}
         body = json.dumps(dict(title=app.config['APP_NAME'] + '_user_' + str(current_user.id), key=public_key))
@@ -10078,7 +10078,7 @@ def index(action_argument=None, refer=None):
         $("input.dainput-embedded").on('keyup', daAdjustInputWidth);
         $("input.dainput-embedded").each(daAdjustInputWidth);
         $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'focus', html: true});
+          $('[data-toggle="popover"]').popover({trigger: '""" + interview_status.question.interview.options.get('popover trigger', 'focus') + """', html: true});
         });
         $('[data-toggle="popover"]').on('click', function(event){
           event.preventDefault();
@@ -11737,7 +11737,7 @@ def interview_start():
             the_page = docassemble.base.functions.package_template_filename(daconfig['start page template'])
             if the_page is None:
                 raise DAError("Could not find start page template " + daconfig['start page template'])
-            with open(the_page, 'rU', encoding='utf-8') as fp:
+            with open(the_page, 'r', encoding='utf-8') as fp:
                 template_string = fp.read()
                 return render_template_string(template_string, **argu)
         else:
@@ -14776,7 +14776,7 @@ def create_playground_package():
     if os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)):
         filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)
         info = dict()
-        with open(filename, 'rU', encoding='utf-8') as fp:
+        with open(filename, 'r', encoding='utf-8') as fp:
             content = fp.read()
             info = yaml.load(content, Loader=yaml.FullLoader)
     else:
@@ -14891,7 +14891,7 @@ def create_playground_package():
         if os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)):
             filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)
             info = dict()
-            with open(filename, 'rU', encoding='utf-8') as fp:
+            with open(filename, 'r', encoding='utf-8') as fp:
                 content = fp.read()
                 info = yaml.load(content, Loader=yaml.FullLoader)
             for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
@@ -14970,7 +14970,7 @@ def create_playground_package():
                 else:
                     current_commit_file = os.path.join(directory_for(area['playgroundpackages'], current_project), '.' + github_package_name)
                     if os.path.isfile(current_commit_file):
-                        with open(current_commit_file, 'rU', encoding='utf-8') as fp:
+                        with open(current_commit_file, 'r', encoding='utf-8') as fp:
                             commit_code = fp.read()
                         commit_code = commit_code.strip()
                         resp, content = http.request("https://api.github.com/repos/" + commit_repository['full_name'] + "/commits/" + commit_code , "GET")
@@ -16783,7 +16783,7 @@ def config_page():
             flash(word('Configuration not updated.  There was an error.'), 'error')
             return redirect(url_for('interview_list'))
     if ok:
-        with open(daconfig['config file'], 'rU', encoding='utf-8') as fp:
+        with open(daconfig['config file'], 'r', encoding='utf-8') as fp:
             content = fp.read()
     if content is None:
         return ('File not found', 404)
@@ -17331,7 +17331,7 @@ def playground_files():
         filename = None
     if filename is not None:
         area.finalize()
-        with open(filename, 'rU', encoding='utf-8') as fp:
+        with open(filename, 'r', encoding='utf-8') as fp:
             try:
                 content = fp.read()
             except:
@@ -17944,7 +17944,7 @@ def playground_packages():
     if request.method == 'GET' and the_file != '':
         if the_file != '' and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
             filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)
-            with open(filename, 'rU', encoding='utf-8') as fp:
+            with open(filename, 'r', encoding='utf-8') as fp:
                 content = fp.read()
                 old_info = yaml.load(content, Loader=yaml.FullLoader)
                 if isinstance(old_info, dict):
@@ -18312,10 +18312,10 @@ def playground_packages():
                         #output += "Copying " + orig_file + "\n"
                         copy_if_different(orig_file, target_filename)
                 if filename == 'README.md' and at_top_level:
-                    with open(orig_file, 'rU', encoding='utf-8') as fp:
+                    with open(orig_file, 'r', encoding='utf-8') as fp:
                         readme_text = fp.read()
                 if filename == 'setup.py' and at_top_level:
-                    with open(orig_file, 'rU', encoding='utf-8') as fp:
+                    with open(orig_file, 'r', encoding='utf-8') as fp:
                         setup_py = fp.read()
                 elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
                     data_files['modules'].append(filename)
@@ -18414,7 +18414,7 @@ def playground_packages():
                         new_info['version'] = ".".join(versions)
                 filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)
                 if os.path.isfile(filename):
-                    with open(filename, 'rU', encoding='utf-8') as fp:
+                    with open(filename, 'r', encoding='utf-8') as fp:
                         content = fp.read()
                         old_info = yaml.load(content, Loader=yaml.FullLoader)
                     for name in ('github_url', 'github_branch', 'pypi_package_name'):
@@ -18670,7 +18670,7 @@ def playground_packages():
         commit_code = None
         current_commit_file = os.path.join(directory_for(area['playgroundpackages'], current_project), '.' + github_package_name)
         if os.path.isfile(current_commit_file):
-            with open(current_commit_file, 'rU', encoding='utf-8') as fp:
+            with open(current_commit_file, 'r', encoding='utf-8') as fp:
                 commit_code = fp.read().strip()
             if current_user.timezone:
                 the_timezone = pytz.timezone(current_user.timezone)
@@ -19490,7 +19490,7 @@ def playground_page():
                     filename = os.path.join(the_directory, filename)
                     up_file.save(filename)
                     try:
-                        with open(filename, 'rU', encoding='utf-8') as fp:
+                        with open(filename, 'r', encoding='utf-8') as fp:
                             fp.read()
                     except:
                         os.remove(filename)
@@ -19590,7 +19590,7 @@ def playground_page():
             should_save = True
             the_content = re.sub(r'\r\n', r'\n', form.playground_content.data)
             if os.path.isfile(filename):
-                with open(filename, 'rU', encoding='utf-8') as fp:
+                with open(filename, 'r', encoding='utf-8') as fp:
                     orig_content = fp.read()
                     if orig_content == the_content:
                         #logmessage("No need to save")
@@ -19642,7 +19642,7 @@ def playground_page():
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
     if the_file != '':
-        with open(filename, 'rU', encoding='utf-8') as fp:
+        with open(filename, 'r', encoding='utf-8') as fp:
             form.original_playground_name.data = the_file
             form.playground_name.data = the_file
             content = fp.read()
@@ -20421,7 +20421,7 @@ def logs():
                 lines = [word('Unable to read log file; please download.')]
         else:
             temp_file = tempfile.NamedTemporaryFile(mode='a+', encoding='utf-8')
-            with open(filename, 'rU', encoding='utf-8') as fp:
+            with open(filename, 'r', encoding='utf-8') as fp:
                 for line in fp:
                     if reg_exp.search(line):
                         temp_file.write(line)
@@ -20502,10 +20502,10 @@ def read_fields(filename, orig_file_name, input_format, output_format):
                 result_file = word_to_markdown(filename, 'docx')
                 if result_file is None:
                     raise Exception(word("Error: no fields could be found in the file"))
-                with open(result_file.name, 'rU', encoding='utf-8') as fp:
+                with open(result_file.name, 'r', encoding='utf-8') as fp:
                     result = fp.read()
             elif input_format == 'markdown':
-                with open(filename, 'rU', encoding='utf-8') as fp:
+                with open(filename, 'r', encoding='utf-8') as fp:
                     result = fp.read()
             fields = set()
             for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
@@ -20542,10 +20542,10 @@ def read_fields(filename, orig_file_name, input_format, output_format):
                 result_file = word_to_markdown(filename, 'docx')
                 if result_file is None:
                     return json.dumps(dict(fields=list()), indent=2)
-                with open(result_file.name, 'rU', encoding='utf-8') as fp:
+                with open(result_file.name, 'r', encoding='utf-8') as fp:
                     result = fp.read()
             elif input_format == 'markdown':
-                with open(filename, 'rU', encoding='utf-8') as fp:
+                with open(filename, 'r', encoding='utf-8') as fp:
                     result = fp.read()
             fields = set()
             for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
@@ -20835,7 +20835,7 @@ def ensure_training_loaded(interview):
             record = db.session.query(MachineLearning.group_id).filter(MachineLearning.group_id.like(source_filename + ':%')).first()
             if record is None:
                 if os.path.isfile(the_file):
-                    with open(the_file, 'rU', encoding='utf-8') as fp:
+                    with open(the_file, 'r', encoding='utf-8') as fp:
                         content = fp.read()
                     if len(content):
                         try:
@@ -20911,7 +20911,7 @@ def train():
             if the_file is None or not os.path.isfile(the_file):
                 flash(word("Error reading JSON file from package.  File did not exist."), 'error')
                 return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
-            json_file = open(the_file, 'rU', encoding='utf-8')
+            json_file = open(the_file, 'r', encoding='utf-8')
         if uploadform.usepackage.data == 'no' and 'jsonfile' in request.files and request.files['jsonfile'].filename:
             json_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".json")
             request.files['jsonfile'].save(json_file.name)
@@ -21678,7 +21678,7 @@ def interview_list():
         the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
         if the_page is None:
             raise DAError("Could not find start page template " + daconfig['start page template'])
-        with open(the_page, 'rU', encoding='utf-8') as fp:
+        with open(the_page, 'r', encoding='utf-8') as fp:
             template_string = fp.read()
             response = make_response(render_template_string(template_string, **argu), 200)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -25349,7 +25349,7 @@ def api_config():
         return jsonify_with_status("Access denied.", 403)
     if request.method == 'GET':
         try:
-            with open(daconfig['config file'], 'rU', encoding='utf-8') as fp:
+            with open(daconfig['config file'], 'r', encoding='utf-8') as fp:
                 content = fp.read()
             data = yaml.load(content, Loader=yaml.FullLoader)
         except:
@@ -25629,7 +25629,7 @@ def api_convert_file():
                     result = word_to_markdown(temp_file.name, the_format)
                     if result is None:
                         return jsonify_with_status("Unable to convert file.", 400)
-                    with open(result.name, 'rU', encoding='utf-8') as fp:
+                    with open(result.name, 'r', encoding='utf-8') as fp:
                         contents = fp.read()
                 response = make_response(contents, 200)
                 response.headers['Content-Type'] = 'text/plain'
@@ -26703,7 +26703,7 @@ def write_pypirc():
     # if pypi_username is None or pypi_password is None:
     #     return
     if os.path.isfile(pypirc_file):
-        with open(pypirc_file, 'rU', encoding='utf-8') as fp:
+        with open(pypirc_file, 'r', encoding='utf-8') as fp:
             existing_content = fp.read()
     else:
         existing_content = None
@@ -27167,7 +27167,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
             html += "\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=email_recipients, body=body, html=html)
             if json_filename:
-                with open(json_filename, 'rU', encoding='utf-8') as fp:
+                with open(json_filename, 'r', encoding='utf-8') as fp:
                     msg.attach('variables.json', 'application/json', fp.read())
             da_send_mail(msg)
         except Exception as zerr:
@@ -27176,7 +27176,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
             html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=email_recipients, body=body, html=html)
             if json_filename:
-                with open(json_filename, 'rU', encoding='utf-8') as fp:
+                with open(json_filename, 'r', encoding='utf-8') as fp:
                     msg.attach('variables.json', 'application/json', fp.read())
             da_send_mail(msg)
     except:

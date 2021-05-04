@@ -360,7 +360,7 @@ def get_home_page_dict():
         if os.path.isfile(metadata_path):
             name = None
             url = None
-            with open(metadata_path, 'rU', encoding='utf-8') as fp:
+            with open(metadata_path, 'r', encoding='utf-8') as fp:
                 for line in fp:
                     if line.startswith('Name: '):
                         name = line[6:]
@@ -528,7 +528,7 @@ def install_package(package, start_time=None):
         sys.stdout.flush()
     #time.sleep(4)
     pip_log.seek(0)
-    with open(pip_log.name, 'rU', encoding='utf-8') as x:
+    with open(pip_log.name, 'r', encoding='utf-8') as x:
         logfilecontents += x.read()
     pip_log.close()
     if False:
@@ -565,7 +565,7 @@ def uninstall_package(package, sleep=True, start_time=None):
         sys.stdout.flush()
     #time.sleep(4)
     pip_log.seek(0)
-    with open(pip_log.name, 'rU', encoding='utf-8') as x:
+    with open(pip_log.name, 'r', encoding='utf-8') as x:
         logfilecontents += x.read()
     pip_log.close()
     if False:

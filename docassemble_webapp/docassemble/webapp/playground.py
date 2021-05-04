@@ -330,7 +330,7 @@ class PlaygroundSection(object):
         path = self.get_file(filename)
         if path is None:
             return None
-        with open(path, 'rU', encoding='utf-8') as fp:
+        with open(path, 'r', encoding='utf-8') as fp:
             content = fp.read()
             return content
         return None
@@ -364,7 +364,7 @@ class PlaygroundSection(object):
         result_file = word_to_markdown(path, 'docx')
         if result_file is None:
             return False
-        with open(result_file.name, 'rU', encoding='utf-8') as fp:
+        with open(result_file.name, 'r', encoding='utf-8') as fp:
             result = fp.read()
         fields = set()
         for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
@@ -402,7 +402,7 @@ class PlaygroundSection(object):
             return None
         out_filename = os.path.splitext(filename)[0] + '.md'
         if convert_variables:
-            with open(temp_file.name, 'rU', encoding='utf-8') as fp:
+            with open(temp_file.name, 'r', encoding='utf-8') as fp:
                 self.write_file(out_filename, replace_square_brackets.sub(fix_variable_name, fp.read()))
         else:
             shutil.copyfile(temp_file.name, self.get_file(out_filename))
