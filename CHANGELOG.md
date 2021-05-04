@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.12] - 2021-05-04
+### Fixed
+- Important security vulnerability.
+
 ## [1.0.11] - 2020-04-15
 ### Fixed
 - Typo in `Address.on_one_line()`.

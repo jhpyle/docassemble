@@ -164,7 +164,7 @@ install_requires = [
     "requests-toolbelt==0.9.1",
     "retry-decorator==1.1.0",
     "rfc3339==6.2",
-    "rsa==4.0",
+    "rsa==4.7",
     "ruamel.yaml==0.16.5",
     "ruamel.yaml.clib==0.2.0",
     "s3transfer==0.2.1",

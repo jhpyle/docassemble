@@ -144,7 +144,7 @@ install_requires = [
     "repoze.lru==0.7",
     "requests==2.22.0",
     "requests-toolbelt==0.9.1",
-    "rsa==4.0",
+    "rsa==4.7",
     "ruamel.yaml==0.16.5",
     "ruamel.yaml.clib==0.2.0",
     "scipy==1.3.1",
