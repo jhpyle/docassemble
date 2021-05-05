@@ -1,4 +1,4 @@
-FROM jhpyle/docassemble-os
+FROM jhpyle/docassemble-os:stable
 COPY . /tmp/docassemble/
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
 bash -c \
