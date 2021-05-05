@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.66](https://github.com/jhpyle/docassemble/releases/tag/v1.2.66) - 2021-05-04
+
+### Fixed
+- Suppress Markdown deprecation warning.
+
+## [1.2.65](https://github.com/jhpyle/docassemble/releases/tag/v1.2.65) - 2021-05-04
+
+### Fixed
+- Important security vulnerability.
+
 ## [1.2.64](https://github.com/jhpyle/docassemble/releases/tag/v1.2.64) - 2021-05-04
 
 ### Added
