@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.14] - 2021-05-05
+### Fixed
+- Missing file in setup.py.
+
 ## [1.0.13] - 2021-05-04
 ### Fixed
 - Suppress Markdown deprecation warning.
