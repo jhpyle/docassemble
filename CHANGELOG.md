@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.13] - 2021-05-04
+### Fixed
+- Suppress Markdown deprecation warning.
+
 ## [1.0.12] - 2021-05-04
 ### Fixed
 - Important security vulnerability.

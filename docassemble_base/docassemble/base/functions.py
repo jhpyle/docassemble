@@ -15,7 +15,7 @@ import os
 import shutil
 import inspect
 import mimetypes
-import pkg_resources
+import da_pkg_resources as pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun
@@ -49,7 +49,6 @@ from user_agents import parse as ua_parse
 import phonenumbers
 import werkzeug.utils
 from jinja2.runtime import Undefined
-import warnings
 TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
@@ -2823,12 +2822,10 @@ def qr_code(string, width=None, alt_text=None):
             return('[QR ' + string + ', ' + width + ', ' + str(alt_text) + ']')
 
 def pkg_resources_resource_filename(package_or_requirement, resource_name):
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("error")
-        try:
-            result = pkg_resources.resource_filename(package_or_requirement, resource_name)
-        except:
-            return None
+    try:
+        result = pkg_resources.resource_filename(package_or_requirement, resource_name)
+    except:
+        return None
     return result
 
 def standard_template_filename(the_file):
