@@ -6,7 +6,13 @@
 
 ## [1.2.65] - 2021-05-04
 ### Fixed
-- Important security vulnerability.
+- A very serious security vulnerability was patched. Everyone should
+  upgrade to this version AS SOON AS POSSIBLE (upgrade to 1.2.66,
+  actually).  Upgrade by going to Package Management and clicking
+  Upgrade.  If you are on the 1.1.x series, you can upgrade to 1.1.113
+  with the Upgrade button or by entering `docassemble.webapp==1.1.113`
+  into the PyPI field.  If you are using the `stable` branch, you can
+  upgrade to 1.0.14
 
 ## [1.2.64] - 2021-05-04
 ### Added
@@ -1183,6 +1189,18 @@
 - The `_attachment` keyword parameter for `url_of()`.
 ### Changed
 - Securing of uploaded filenames less strict.
+
+## [1.0.14] - 2021-05-05
+### Fixed
+- Missing file in setup.py.
+
+## [1.0.13] - 2021-05-04
+### Fixed
+- Suppress Markdown deprecation warning.
+
+## [1.0.12] - 2021-05-04
+### Fixed
+- Important security vulnerability.
 
 ## [1.0.11] - 2020-04-15
 ### Fixed
