@@ -47,6 +47,7 @@ install_requires = [
     "convertapi==1.4.0",
     "crayons==0.3.1",
     "cryptography==3.3.2",
+    "da-pkg-resources==0.0.1",
     "dnspython==1.16.0",
     "Docassemble-Flask-User==0.6.23",
     "docassemblekvsession==0.3",
