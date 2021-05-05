@@ -65,6 +65,7 @@ install_requires = [
     "colorama==0.4.4",
     "convertapi==1.4.0",
     "cryptography==3.2.1",
+    "da-pkg-resources==0.0.1",
     "docopt==0.6.2",
     "docutils==0.16",
     "docxcompose==1.3.0",
