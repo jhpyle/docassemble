@@ -48,7 +48,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 openpyxl_version = "2.5.14" if sys.version.startswith('3.5') else "3.0.0"
 twine_version = "1.15.0" if sys.version.startswith('3.5') else "2.0.0"
 install_requires = [
-    'docassemble==1.0.13',
+    'docassemble==1.0.14',
     "3to2==1.1.1",
     "alembic==1.2.1",
     "astunparse==1.6.2",
@@ -176,7 +176,7 @@ install_requires = [
 ]
 
 setup(name='docassemble.base',
-      version='1.0.13',
+      version='1.0.14',
       python_requires='>=3.5',
       description=('The base components of the docassemble system.'),
       long_description=read("README.md"),

@@ -2,7 +2,7 @@ from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 from datetime import timedelta
 import docassemble.webapp.database
-da_version = '1.0.13'
+da_version = '1.0.14'
 import re
 app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
