@@ -27291,14 +27291,15 @@ base_words = get_base_words()
 title_documentation = get_title_documentation()
 documentation_dict = get_documentation_dict()
 base_name_info = get_name_info()
-for val in base_name_info:
-    base_name_info[val]['name'] = val
-    if 'insert' not in base_name_info[val]:
-        base_name_info[val]['insert'] = val
-    if 'show' not in base_name_info[val]:
-        base_name_info[val]['show'] = False
-    if 'exclude' not in base_name_info[val]:
-        base_name_info[val]['exclude'] = False
+if base_name_info is not None:
+    for val in base_name_info:
+        base_name_info[val]['name'] = val
+        if 'insert' not in base_name_info[val]:
+            base_name_info[val]['insert'] = val
+        if 'show' not in base_name_info[val]:
+            base_name_info[val]['show'] = False
+        if 'exclude' not in base_name_info[val]:
+            base_name_info[val]['exclude'] = False
 
 #docassemble.base.functions.set_chat_partners_available(chat_partners_available)
 

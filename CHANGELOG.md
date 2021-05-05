@@ -12,7 +12,7 @@
   Upgrade.  If you are on the 1.1.x series, you can upgrade to 1.1.113
   with the Upgrade button or by entering `docassemble.webapp==1.1.113`
   into the PyPI field.  If you are using the `stable` branch, you can
-  upgrade to 1.0.14
+  upgrade to 1.0.15.
 
 ## [1.2.64] - 2021-05-04
 ### Added
@@ -417,6 +417,12 @@
   Bootstrap theme.
 ### Fixed
 - Issue with user privileges.
+
+## [1.1.113] - 2021-05-05
+### Changed
+- The Upgrade button has been restored but it is non-functional.
+### Fixed
+- Important security vulnerability.
 
 ## [1.1.112] - 2020-11-26
 ### Changed
