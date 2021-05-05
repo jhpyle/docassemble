@@ -28,6 +28,9 @@
 	</nav>
 	<div class="col-lg-9">
 	  <header>
+            <div class="alert alert-danger" role="alert">
+              <strong>Security advisory</strong> (May 5, 2021) &ndash; A vulnerability has been found in <strong>docassemble</strong> that allows unauthorized access to private information through URL manipulation. Upgrade <strong>as soon as possible</strong> to protect your system against this vulnerability. See the <a href="/docs/changelog.html">Change Log</a> for more information.
+            </div>
             {%- if page.path == '_docs/changelog.md' %}
             <a style="float: right" target="_blank" href="{{site.github.repository_url}}/blob/master/CHANGELOG.md">Edit this page on GitHub <i class="fab fa-github-alt"></i></a>
             {%- else %}

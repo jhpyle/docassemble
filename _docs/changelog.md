@@ -12,7 +12,13 @@ short_title: Change Log
 ## [1.2.65](https://github.com/jhpyle/docassemble/releases/tag/v1.2.65) - 2021-05-04
 
 ### Fixed
-- Important security vulnerability.
+- A very serious security vulnerability was patched. Everyone should
+  upgrade to this version AS SOON AS POSSIBLE (upgrade to 1.2.66,
+  actually).  Upgrade by going to Package Management and clicking
+  Upgrade.  If you are on the 1.1.x series, you can upgrade to 1.1.113
+  with the Upgrade button or by entering `docassemble.webapp==1.1.113`
+  into the PyPI field.  If you are using the `stable` branch, you can
+  upgrade to 1.0.15.
 
 ## [1.2.64](https://github.com/jhpyle/docassemble/releases/tag/v1.2.64) - 2021-05-04
 
@@ -509,6 +515,14 @@ short_title: Change Log
 
 ### Fixed
 - Issue with user privileges.
+
+## [1.1.113](https://github.com/jhpyle/docassemble/releases/tag/v1.1.113) - 2021-05-05
+
+### Changed
+- The Upgrade button has been restored but it is non-functional.
+
+### Fixed
+- Important security vulnerability.
 
 ## [1.1.112](https://github.com/jhpyle/docassemble/releases/tag/v1.1.112) - 2020-11-26
 
@@ -1450,6 +1464,21 @@ short_title: Change Log
 
 ### Changed
 - Securing of uploaded filenames less strict.
+
+## [1.0.14](https://github.com/jhpyle/docassemble/releases/tag/v1.0.14) - 2021-05-05
+
+### Fixed
+- Missing file in setup.py.
+
+## [1.0.13](https://github.com/jhpyle/docassemble/releases/tag/v1.0.13) - 2021-05-04
+
+### Fixed
+- Suppress Markdown deprecation warning.
+
+## [1.0.12](https://github.com/jhpyle/docassemble/releases/tag/v1.0.12) - 2021-05-04
+
+### Fixed
+- Important security vulnerability.
 
 ## [1.0.11](https://github.com/jhpyle/docassemble/releases/tag/v1.0.11) - 2020-04-15
 
