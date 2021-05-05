@@ -55,3 +55,6 @@ rtftest.py
 tests/.noseids
 Docker/config/extract_words_flask.sh
 cleanup.sh
+docassemble_webapp/docassemble/webapp/static/index.html
+docassemble_webapp/docassemble/webapp/static/css
+docassemble_webapp/docassemble/webapp/static/js

@@ -8,12 +8,16 @@
 <p class="h6">{{ version }}</p>
 
 <div>
-  <p>In order to upgrade <strong>docassemble</strong>, you will need to perform a system upgrade. See
+  <p>The Upgrade button will not upload the server to the latest
+  version.  In order to upgrade <strong>docassemble</strong> to
+  version 1.2.x, you will need to perform a system upgrade. See
   <a href="https://docassemble.org/docs/docker.html#upgrading" target="_blank">Upgrading
   <strong>docassemble</strong> when using Docker</a> for instructions on how to perform
   a system upgrade.  If you are not using some form of persistent data storage
   (a Docker volume, S3, or Azure Blob Storage), you will need to manually save your data
   or else it will be deleted by the system upgrade process.</p>
+
+  <p><a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', limitation=limitation, action='update') }}">{{ word('Upgrade') }}</a></p>
 </div>
 {%- endif %}
 

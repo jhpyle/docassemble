@@ -1,13 +1,15 @@
 # Change Log
 
-## [1.2.0] - 2020-11-??
+## [1.1.113] - 2021-05-05
 ### Changed
-- Upgraded dependencies.
+- The Upgrade button has been restored but it is non-functional.
+### Fixed
+- Important security vulnerability.
 
 ## [1.1.112] - 2020-11-27
 ### Changed
 - Upgrading through Package Management is turned off because the
-  upgrade from 1.1.111 to 1.2.0 requires a system upgrade.  See
+  upgrade to 1.2.0 requires a system upgrade.  See
   https://docassemble.org/docs/docker.html#upgrading for instructions
   on how to perform a system upgrade.
 

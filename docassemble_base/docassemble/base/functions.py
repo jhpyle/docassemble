@@ -14,7 +14,7 @@ import os
 import shutil
 import inspect
 import mimetypes
-import pkg_resources
+import da_pkg_resources as pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun, DAError
@@ -3300,9 +3300,16 @@ def qr_code(string, width=None, alt_text=None):
         else:
             return('[QR ' + string + ', ' + width + ', ' + str(alt_text) + ']')
 
+def pkg_resources_resource_filename(package_or_requirement, resource_name):
+    try:
+        result = pkg_resources.resource_filename(package_or_requirement, resource_name)
+    except:
+        return None
+    return result
+
 def standard_template_filename(the_file):
     try:
-        return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/templates/" + str(the_file)))
+        return(pkg_resources_resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/templates/" + str(the_file)))
     except:
         #logmessage("Error retrieving data file\n")
         return(None)
@@ -3325,13 +3332,13 @@ def package_template_filename(the_file, **kwargs):
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
         try:
-            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
+            return(pkg_resources_resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
         except:
             return(None)
     return(None)
 
 def standard_question_filename(the_file):
-    return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/questions/" + str(the_file)))
+    return(pkg_resources_resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/questions/" + str(the_file)))
     return(None)
 
 def package_data_filename(the_file):
@@ -3360,7 +3367,7 @@ def package_data_filename(the_file):
                 return None
             return(abs_file.path)
         try:
-            result = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
+            result = pkg_resources_resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
         except:
             result = None
     #if result is None or not os.path.isfile(result):
@@ -3373,7 +3380,7 @@ def package_question_filename(the_file):
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/questions/' + parts[1]
         try:
-            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
+            return(pkg_resources_resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
         except:
             return(None)
     return(None)
