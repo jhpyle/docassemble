@@ -67,6 +67,7 @@ install_requires = [
     "cheroot==8.2.1",
     "CherryPy==18.3.0",
     "convertapi==1.1.0",
+    "da-pkg-resources==0.0.1",
     "docopt==0.6.2",
     "docutils==0.15.2",
     "docxcompose==1.0.2",
