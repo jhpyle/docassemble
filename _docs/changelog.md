@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.67](https://github.com/jhpyle/docassemble/releases/tag/v1.2.67) - 2021-05-08
+
+### Fixed
+- Possible fix to issue with `/interviews` page and `interview_list()`.
+
 ## [1.2.66](https://github.com/jhpyle/docassemble/releases/tag/v1.2.66) - 2021-05-04
 
 ### Fixed
