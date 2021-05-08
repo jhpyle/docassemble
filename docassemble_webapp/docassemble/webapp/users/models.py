@@ -69,7 +69,7 @@ class UserDictKeys(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
     temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'), index=True)
 
-db.Index(dbtableprefix + 'ix_userdictkeys_key_filename', UserDict.key, UserDict.filename)
+db.Index(dbtableprefix + 'ix_userdictkeys_key_filename', UserDictKeys.key, UserDictKeys.filename)
 
 class TempUser(db.Model):
     __tablename__ = dbtableprefix + 'tempuser'

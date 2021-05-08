@@ -18356,7 +18356,6 @@ def playground_packages():
         with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
             the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
             fp.write(str(the_yaml))
-        area['playgroundpackages'].finalize()
         for sec in area:
             area[sec].finalize()
         for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
@@ -21383,11 +21382,11 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 subq_filter_elements.append(UserDictKeys.key == session)
             if start_id is not None:
                 subq_filter_elements.append(UserDict.indexno > start_id)
-            subq = db.session.query(UserDictKeys.filename, UserDictKeys.key, db.func.max(UserDict.indexno).label('indexno')).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key))
+            subq = db.session.query(UserDictKeys).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).with_entities(UserDictKeys.filename, UserDictKeys.key, db.func.max(UserDict.indexno).label('indexno'))
             if len(subq_filter_elements):
                 subq = subq.filter(and_(*subq_filter_elements))
             subq = subq.group_by(UserDictKeys.filename, UserDictKeys.key).subquery()
-            interview_query = db.session.query(subq).join(UserDict, UserDict.indexno == subq.c.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).join(UserModel, UserDictKeys.user_id == UserModel.id).order_by(UserDict.indexno).with_entities(*query_elements)
+            interview_query = db.session.query(subq).join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).join(UserModel, UserDictKeys.user_id == UserModel.id).order_by(UserDict.indexno).with_entities(*query_elements)
         else:
             query_elements = [UserDict.indexno, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserModel.email]
             subq_filter_elements = []

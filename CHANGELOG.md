@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.67] - 2021-05-08
+### Fixed
+- Possible fix to issue with `/interviews` page and `interview_list()`.
+
 ## [1.2.66] - 2021-05-04
 ### Fixed
 - Suppress Markdown deprecation warning.
