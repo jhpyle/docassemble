@@ -56,7 +56,7 @@ install_requires = [
     "docxcompose==1.3.0",
     "docxtpl==0.11.2",
     "et-xmlfile==1.0.1",
-    "eventlet==0.29.1",
+    "eventlet==0.31.0",
     "Flask==1.1.2",
     "Flask-Babel==2.0.0",
     "Flask-Cors==3.0.9",
