@@ -161,7 +161,7 @@ install_requires = [
     "six==1.15.0",
     "sortedcontainers==2.3.0",
     "soupsieve==2.0.1",
-    "SQLAlchemy==1.3.20",
+    "SQLAlchemy==1.4.0",
     "docassemble-textstat==0.7.1",
     "titlecase==1.1.1",
     "toml==0.10.2",
