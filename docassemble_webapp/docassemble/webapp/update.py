@@ -343,11 +343,11 @@ def update_versions(start_time=None):
     for package in installed_packages:
         if package.key in package_by_name:
             if package_by_name[package.key].id in install_by_id and package.version != install_by_id[package_by_name[package.key].id].packageversion:
-                install_row = db.session.execute(select(Install).filter_by(hostname=hostname, package_id=package_by_name[package.key].id)).scalar_one()
-                install_row.packageversion = package.version
+                for install_row in db.session.execute(select(Install).filter_by(hostname=hostname, package_id=package_by_name[package.key].id)).scalars():
+                    install_row.packageversion = package.version
             if package.version != package_by_name[package.key].packageversion:
-                package_row = db.session.execute(select(Package).filter_by(active=True, name=package_by_name[package.key].name).with_for_update()).scalar_one()
-                package_row.packageversion = package.version
+                for package_row in db.session.execute(select(Package).filter_by(active=True, name=package_by_name[package.key].name).with_for_update()).scalars():
+                    package_row.packageversion = package.version
     db.session.commit()
     sys.stderr.write("update_versions: ended after " + str(time.time() - start_time) + "\n")
     return
