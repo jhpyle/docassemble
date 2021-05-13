@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.70] - 2021-05-13
+### Fixed
+- Trap potential error in SQL statement when querying admin users for
+  purposes of processing Modules in the Playground.
+
 ## [1.2.69] - 2021-05-13
 ### Fixed
 - Issue with package system where duplicate entries in the package

@@ -27469,7 +27469,10 @@ with app.app_context():
                     pass
         if app.config['ENABLE_PLAYGROUND']:
             obtain_lock('init', 'init')
-            copy_playground_modules()
+            try:
+                copy_playground_modules()
+            except Exception as err:
+                sys.stderr.write("There was an error copying the playground modules: " + err.__class__.__name__ + "\n")
             write_pypirc()
             release_lock('init', 'init')
         try:
