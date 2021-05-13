@@ -10,6 +10,7 @@ import sys
 import shutil
 import time
 import fcntl
+
 installed_distribution_cache = None
 
 from distutils.version import LooseVersion
@@ -52,8 +53,9 @@ def remove_inactive_hosts(start_time=None):
         from docassemble.webapp.app_object import app
         from docassemble.webapp.db_object import db
         from docassemble.webapp.core.models import Supervisors
+        from sqlalchemy import select, delete
         to_delete = set()
-        for host in Supervisors.query.all():
+        for host in db.session.execute(select(Supervisors)).scalars():
             if host.hostname == hostname:
                 continue
             try:
@@ -63,7 +65,7 @@ def remove_inactive_hosts(start_time=None):
             except:
                 to_delete.add(host.id)
         for id_to_delete in to_delete:
-            Supervisors.query.filter_by(id=id_to_delete).delete()
+            db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
     sys.stderr.write("remove_inactive_hosts: ended after " + str(time.time() - start_time) + " seconds\n")
 
 class DummyPackage(object):
@@ -82,14 +84,15 @@ def check_for_updates(doing_startup=False, start_time=None, invalidate_cache=Tru
     from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
     from docassemble.webapp.packages.models import Package, Install, PackageAuth
+    from sqlalchemy import select, delete
     ok = True
     here_already = dict()
     results = dict()
     if full:
         sys.stderr.write("check_for_updates: 0.5 after " + str(time.time() - start_time) + " seconds\n")
         for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2', 'azure-storage', 'Flask-User'):
-            num_deleted = Package.query.filter_by(name=package_name).delete()
-            if num_deleted > 0:
+            result = db.session.execute(delete(Package).filter_by(name=package_name))
+            if result.rowcount > 0:
                 db.session.commit()
         sys.stderr.write("check_for_updates: 1 after " + str(time.time() - start_time) + " seconds\n")
     installed_packages = get_installed_distributions(start_time=start_time)
@@ -176,23 +179,23 @@ def check_for_updates(doing_startup=False, start_time=None, invalidate_cache=Tru
     logmessages = ''
     package_by_name = dict()
     sys.stderr.write("check_for_updates: 2 after " + str(time.time() - start_time) + " seconds\n")
-    for package in Package.query.filter_by(active=True).all():
+    for package in db.session.execute(select(Package.name).filter_by(active=True)):
         package_by_name[package.name] = package
         #sys.stderr.write("check_for_updates: database includes a package called " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
     # packages is what is supposed to be installed
     sys.stderr.write("check_for_updates: 3 after " + str(time.time() - start_time) + " seconds\n")
-    for package in Package.query.filter_by(active=True).all():
+    for package in db.session.execute(select(Package).filter_by(active=True)).scalars():
         if package.type is not None:
             packages[package.id] = package
             #sys.stderr.write("check_for_updates: database includes a package called " + package.name + " that has a type after " + str(time.time() - start_time) + " seconds\n")
             #print("Found a package " + package.name)
     sys.stderr.write("check_for_updates: 4 after " + str(time.time() - start_time) + " seconds\n")
-    for package in Package.query.filter_by(active=False).all():
+    for package in db.session.execute(select(Package).filter_by(active=False)).scalars():
         if package.name not in package_by_name:
             #sys.stderr.write("check_for_updates: database says " + package.name + " should be uninstalled after " + str(time.time() - start_time) + " seconds\n")
             uninstalled_packages[package.id] = package # this is what the database says should be uninstalled
     sys.stderr.write("check_for_updates: 5 after " + str(time.time() - start_time) + " seconds\n")
-    for install in Install.query.filter_by(hostname=hostname).all():
+    for install in db.session.execute(select(Install).filter_by(hostname=hostname)).scalars():
         installs[install.package_id] = install # this is what the database says in installed on this server
         if install.package_id in uninstalled_packages and uninstalled_packages[install.package_id].name not in package_by_name:
             sys.stderr.write("check_for_updates: " + uninstalled_packages[install.package_id].name + " will be uninstalled after " + str(time.time() - start_time) + " seconds\n")
@@ -200,7 +203,7 @@ def check_for_updates(doing_startup=False, start_time=None, invalidate_cache=Tru
     changed = False
     package_owner = dict()
     sys.stderr.write("check_for_updates: 6 after " + str(time.time() - start_time) + " seconds\n")
-    for auth in PackageAuth.query.filter_by(authtype='owner').all():
+    for auth in db.session.execute(select(PackageAuth).filter_by(authtype='owner')).scalars():
         package_owner[auth.package_id] = auth.user_id
     sys.stderr.write("check_for_updates: 7 after " + str(time.time() - start_time) + " seconds\n")
     for package in packages.values():
@@ -254,10 +257,10 @@ def check_for_updates(doing_startup=False, start_time=None, invalidate_cache=Tru
         uninstall_done[package.name] = 1
         logmessages += newlog
         if returnval == 0:
-            Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
+            db.session.execute(delete(Install).filter_by(hostname=hostname, package_id=package.id))
             results[package.name] = 'pip uninstall command returned success code.  See log for details.'
         elif returnval == 1:
-            Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
+            db.session.execute(delete(Install).filter_by(hostname=hostname, package_id=package.id))
             results[package.name] = 'pip uninstall was not run because the package was not installed.'
         else:
             results[package.name] = 'pip uninstall command returned failure code'
@@ -326,12 +329,13 @@ def update_versions(start_time=None):
     from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
     from docassemble.webapp.packages.models import Package, Install, PackageAuth
+    from sqlalchemy import select
     from docassemble.webapp.daredis import r
     install_by_id = dict()
-    for install in Install.query.filter_by(hostname=hostname).all():
+    for install in db.session.execute(select(Install).filter_by(hostname=hostname)).scalars():
         install_by_id[install.package_id] = install
     package_by_name = dict()
-    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+    for package in db.session.execute(select(Package).filter_by(active=True).order_by(Package.name, Package.id.desc())).scalars():
         if package.name in package_by_name:
             continue
         package_by_name[package.name] = Object(id=package.id, packageversion=package.packageversion, name=package.name)
@@ -339,10 +343,10 @@ def update_versions(start_time=None):
     for package in installed_packages:
         if package.key in package_by_name:
             if package_by_name[package.key].id in install_by_id and package.version != install_by_id[package_by_name[package.key].id].packageversion:
-                install_row = Install.query.filter_by(hostname=hostname, package_id=package_by_name[package.key].id).first()
+                install_row = db.session.execute(select(Install).filter_by(hostname=hostname, package_id=package_by_name[package.key].id)).scalar_one()
                 install_row.packageversion = package.version
             if package.version != package_by_name[package.key].packageversion:
-                package_row = Package.query.filter_by(active=True, name=package_by_name[package.key].name).with_for_update().first()
+                package_row = db.session.execute(select(Package).filter_by(active=True, name=package_by_name[package.key].name).with_for_update()).scalar_one()
                 package_row.packageversion = package.version
     db.session.commit()
     sys.stderr.write("update_versions: ended after " + str(time.time() - start_time) + "\n")
@@ -380,8 +384,9 @@ def add_dependencies(user_id, start_time=None):
     from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
     from docassemble.webapp.packages.models import Package, Install, PackageAuth
+    from sqlalchemy import select, delete
     packages_known = set()
-    for package in Package.query.filter_by(active=True).all():
+    for package in db.session.execute(select(Package.name).filter_by(active=True)):
         packages_known.add(package.name)
     installed_packages = get_installed_distributions(start_time=start_time)
     home_pages = None
@@ -391,7 +396,7 @@ def add_dependencies(user_id, start_time=None):
             continue
         if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
             continue
-        Package.query.filter_by(name=package.key).delete()
+        db.session.execute(delete(Package).filter_by(name=package.key))
         packages_to_add.append(package)
     did_something = False
     if len(packages_to_add):
@@ -421,8 +426,9 @@ def fix_names():
     from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
     from docassemble.webapp.packages.models import Package, Install, PackageAuth
+    from sqlalchemy import select
     installed_packages = [package.key for package in get_installed_distributions()]
-    for package in Package.query.filter_by(active=True).with_for_update().all():
+    for package in db.session.execute(select(Package).filter_by(active=True).with_for_update()).scalars():
         if package.name not in installed_packages:
             pip_info = get_pip_info(package.name)
             actual_name = pip_info['Name']
@@ -657,11 +663,12 @@ if __name__ == "__main__":
         from docassemble.webapp.db_object import db
         from docassemble.webapp.packages.models import Package, Install, PackageAuth
         from docassemble.webapp.daredis import r
+        from sqlalchemy import select
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
         if mode == 'initialize':
             sys.stderr.write("updating with mode initialize after " + str(time.time() - start_time) + " seconds\n")
             update_versions(start_time=start_time)
-            any_package = Package.query.filter_by(active=True).first()
+            any_package = db.session.execute(select(Package).filter_by(active=True)).first()
             if any_package is None:
                 add_dependencies(1, start_time=start_time)
                 update_versions(start_time=start_time)

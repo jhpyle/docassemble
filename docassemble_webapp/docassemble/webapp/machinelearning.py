@@ -1,7 +1,7 @@
 from docassemble.webapp.core.models import MachineLearning
 from docassemble.base.core import DAObject, DAList, DADict
 from docassemble.webapp.db_object import db
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, select, delete
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
@@ -100,21 +100,21 @@ class MachineLearner(object):
     def dependent_in_use(self, key=None):
         in_use = set()
         if key is None:
-            query = db.session.query(MachineLearning.dependent).filter(MachineLearning.group_id == self.group_id).group_by(MachineLearning.dependent)
+            query = db.session.execute(select(MachineLearning.dependent).where(MachineLearning.group_id == self.group_id).group_by(MachineLearning.dependent))
         else:
-            query = db.session.query(MachineLearning.dependent).filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.key == key)).group_by(MachineLearning.dependent)
+            query = db.session.execute(select(MachineLearning.dependent).where(and_(MachineLearning.group_id == self.group_id, MachineLearning.key == key)).group_by(MachineLearning.dependent))
         for record in query:
             if record.dependent is not None:
                 in_use.add(fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
         return sorted(in_use)
     def is_empty(self):
-        existing_entry = MachineLearning.query.filter_by(group_id=self.group_id).first()
+        existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id)).first()
         if existing_entry is None:
             return True
         return False
     def start_from_file(self, fileref):
         #logmessage("Starting from file " + str(fileref))
-        existing_entry = MachineLearning.query.filter_by(group_id=self.group_id).first()
+        existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id)).first()
         if existing_entry is not None:
             return
         file_info = get_info_from_file_reference(fileref, folder='sources')
@@ -148,9 +148,9 @@ class MachineLearner(object):
     def save_for_classification(self, indep, key=None, info=None):
         self._initialize()
         if key is None:
-            existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, dependent=None, independent=codecs.encode(pickle.dumps(indep), 'base64').decode()).first()
+            existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, dependent=None, independent=codecs.encode(pickle.dumps(indep), 'base64').decode())).scalar()
         else:
-            existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, key=key, independent=codecs.encode(pickle.dumps(indep), 'base64').decode()).first()
+            existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, key=key, independent=codecs.encode(pickle.dumps(indep), 'base64').decode())).scalar()
         if existing_entry is not None:
             #logmessage("entry is already there")
             return existing_entry.id
@@ -160,7 +160,7 @@ class MachineLearner(object):
         return new_entry.id
     def retrieve_by_id(self, the_id):
         self._initialize()
-        existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).first()
+        existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, id=the_id)).scalar()
         if existing_entry is None:
             raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
         if existing_entry.dependent:
@@ -171,9 +171,9 @@ class MachineLearner(object):
     def one_unclassified_entry(self, key=None):
         self._initialize()
         if key is None:
-            entry = MachineLearning.query.filter_by(group_id=self.group_id, active=False).order_by(MachineLearning.id).first()
+            entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, active=False).order_by(MachineLearning.id)).scalar()
         else:
-            entry = MachineLearning.query.filter_by(group_id=self.group_id, key=key, active=False).order_by(MachineLearning.id).first()
+            entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, key=key, active=False).order_by(MachineLearning.id)).scalar()
         if entry is None:
             return None
         return MachineLearningEntry(ml=self, id=entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64')), create_time=entry.create_time, key=entry.key, info=fix_pickle_obj(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64')) if entry.info is not None else None)._set_instance_name_for_method()
@@ -184,9 +184,9 @@ class MachineLearner(object):
         results = DAList()._set_instance_name_for_method()
         results.gathered = True
         if key is None:
-            query = MachineLearning.query.filter_by(group_id=self.group_id, active=False).order_by(MachineLearning.id).all()
+            query = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, active=False).order_by(MachineLearning.id)).scalars()
         else:
-            query = MachineLearning.query.filter_by(group_id=self.group_id, key=key, active=False).order_by(MachineLearning.id).all()
+            query = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, key=key, active=False).order_by(MachineLearning.id)).scalars()
         for entry in query:
             results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64')), create_time=entry.create_time, key=entry.key, info=fix_pickle_obj(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64')) if entry.info is not None else None)
         return results
@@ -196,9 +196,9 @@ class MachineLearner(object):
         results.gathered = True
         results.set_random_instance_name()
         if key is None:
-            query = MachineLearning.query.filter_by(group_id=self.group_id, active=True).order_by(MachineLearning.id).all()
+            query = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, active=True).order_by(MachineLearning.id)).scalars()
         else:
-            query = MachineLearning.query.filter_by(group_id=self.group_id, active=True, key=key).order_by(MachineLearning.id).all()
+            query = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, active=True, key=key).order_by(MachineLearning.id)).scalars()
         for entry in query:
             results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64')), dependent=fix_pickle_obj(codecs.decode(bytearray(entry.dependent, encoding='utf-8'), 'base64')), info=fix_pickle_obj(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64')) if entry.info is not None else None, create_time=entry.create_time, key=entry.key)
         return results
@@ -210,7 +210,7 @@ class MachineLearner(object):
             the_entry = MachineLearning(group_id=self.group_id)
             existing = False
         else:
-            the_entry = MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).first()
+            the_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, id=the_id)).scalar()
             existing = True
         if the_entry is None:
             raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
@@ -235,7 +235,7 @@ class MachineLearner(object):
             self.reset()
     def set_dependent_by_id(self, the_id, the_dependent):
         self._initialize()
-        existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).with_for_update().first()
+        existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, id=the_id).with_for_update()).scalar()
         if existing_entry is None:
             db.session.commit()
             raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
@@ -245,12 +245,12 @@ class MachineLearner(object):
         db.session.commit()
     def delete_by_id(self, the_id):
         self._initialize()
-        MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).delete()
+        db.session.execute(delete(MachineLearning).filter_by(group_id=self.group_id, id=the_id))
         db.session.commit()
         self.reset()
     def delete_by_key(self, key):
         self._initialize()
-        MachineLearning.query.filter_by(group_id=self.group_id, key=key).delete()
+        db.session.execute(delete(MachineLearning).filter_by(group_id=self.group_id, key=key))
         db.session.commit()
         self.reset()
     def save(self):
@@ -260,7 +260,7 @@ class MachineLearner(object):
         self._initialize()
         nowtime = datetime.datetime.utcnow()
         success = False
-        for record in MachineLearning.query.filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id])).all():
+        for record in db.session.execute(select(MachineLearning.independent, MachineLearning.dependent).where(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id]))).all():
             #logmessage("Training...")
             self._train(fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
             success = True
@@ -268,7 +268,7 @@ class MachineLearner(object):
         return success
     def delete_training_set(self):
         self._initialize()
-        MachineLearning.query.filter_by(group_id=self.group_id).all().delete()
+        db.session.execute(delete(MachineLearning).filter_by(group_id=self.group_id))
         db.session.commit()
     def _train(self, indep, depend):
         pass
@@ -441,7 +441,7 @@ class RandomForestMachineLearner(MachineLearner):
         success = False
         data = list()
         depend_data = list()
-        for record in MachineLearning.query.filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id])).all():
+        for record in db.session.execute(select(MachineLearning).where(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id]))).scalars().all():
             indep_var = fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
             depend_var = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
             if type(depend_var) is str:

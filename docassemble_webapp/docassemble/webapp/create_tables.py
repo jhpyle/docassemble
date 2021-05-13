@@ -14,7 +14,7 @@ from docassemble.webapp.core.models import Uploads, ObjectStorage, SpeakList, Sh
 import docassemble.webapp.core.models
 from docassemble.webapp.packages.models import Package
 from docassemble.webapp.update import add_dependencies
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine, MetaData, select, delete, inspect
 #import random
 #import string
 from docassemble.base.generate_key import random_alphanumeric
@@ -28,7 +28,7 @@ import sys
 def get_role(db, name, result=None):
     if result is None:
         result = dict()
-    the_role = Role.query.filter_by(name=name).first()
+    the_role = db.session.execute(select(Role).filter_by(name=name)).first()
     if the_role:
         return the_role
     the_role = Role(name=name)
@@ -40,12 +40,12 @@ def get_role(db, name, result=None):
 def get_user(db, role, defaults, result=None):
     if result is None:
         result = dict()
-    the_user = UserModel.query.filter_by(nickname=defaults['nickname']).first()
+    the_user = db.session.execute(select(UserModel).filter_by(nickname=defaults['nickname'])).scalar()
     if the_user:
         return the_user
     while True:
         new_social = 'local$' + random_alphanumeric(32)
-        existing_user = UserModel.query.filter_by(social_id=new_social).first()
+        existing_user = db.session.execute(select(UserModel).filter_by(social_id=new_social)).scalar()
         if existing_user:
             continue
         break
@@ -102,7 +102,7 @@ def populate_tables(start_time=None):
     if daconfig.get('fix user roles', False):
         sys.stderr.write("create_tables.populate_tables: fixing user roles after " + str(time.time() - start_time) + "\n")
         to_fix = []
-        for user in UserModel.query.all():
+        for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).scalars():
             if len(user.roles) == 0:
                 to_fix.append(user)
         if len(to_fix):
@@ -122,7 +122,7 @@ def populate_tables(start_time=None):
     sys.stderr.write("create_tables.populate_tables: calling add_dependencies after " + str(time.time() - start_time) + "\n")
     add_dependencies(admin.id, start_time=start_time)
     sys.stderr.write("create_tables.populate_tables: add_dependencies finished after " + str(time.time() - start_time) + "\n")
-    git_packages = Package.query.filter_by(type='git')
+    git_packages = db.session.execute(select(Package).filter_by(type='git')).scalars().all()
     package_info_changed = False
     for package in git_packages:
         if package.name in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
@@ -156,37 +156,38 @@ def main():
         sys.stderr.write("create_tables.main: inside app context after " + str(time.time() - start_time) + "\n")
         if daconfig.get('use alembic', True):
             sys.stderr.write("create_tables.main: running alembic after " + str(time.time() - start_time) + "\n")
+            insp = inspect(db.engine)
             if do_varchar_upgrade:
                 changed = False
-                if db.engine.has_table(dbtableprefix + 'userdict'):
-                    db.session.query(UserDict).filter(db.func.length(UserDict.filename) > 255).delete(synchronize_session=False)
+                if insp.has_table(dbtableprefix + 'userdict'):
+                    db.session.execute(delete(UserDict).where(db.func.length(UserDict.filename) > 255).execution_options(synchronize_session=False))
                     changed = True
-                if db.engine.has_table(dbtableprefix + 'userdictkeys'):
-                    db.session.query(UserDictKeys).filter(db.func.length(UserDictKeys.filename) > 255).delete(synchronize_session=False)
+                if insp.has_table(dbtableprefix + 'userdictkeys'):
+                    db.session.execute(delete(UserDictKeys).where(db.func.length(UserDictKeys.filename) > 255).execution_options(synchronize_session=False))
                     changed = True
-                if db.engine.has_table(dbtableprefix + 'chatlog'):
-                    db.session.query(ChatLog).filter(db.func.length(ChatLog.filename) > 255).delete(synchronize_session=False)
+                if insp.has_table(dbtableprefix + 'chatlog'):
+                    db.session.execute(delete(ChatLog).where(db.func.length(ChatLog.filename) > 255).execution_options(synchronize_session=False))
                     changed = True
-                if db.engine.has_table(dbtableprefix + 'uploads'):
-                    db.session.query(Uploads).filter(db.func.length(Uploads.filename) > 255).delete(synchronize_session=False)
-                    db.session.query(Uploads).filter(db.func.length(Uploads.yamlfile) > 255).delete(synchronize_session=False)
+                if insp.has_table(dbtableprefix + 'uploads'):
+                    db.session.execute(delete(Uploads).where(db.func.length(Uploads.filename) > 255).execution_options(synchronize_session=False))
+                    db.session.execute(delete(Uploads).where(db.func.length(Uploads.yamlfile) > 255).execution_options(synchronize_session=False))
                     changed = True
-                if db.engine.has_table(dbtableprefix + 'objectstorage'):
-                    db.session.query(ObjectStorage).filter(db.func.length(ObjectStorage.key) > 1024).delete(synchronize_session=False)
+                if insp.has_table(dbtableprefix + 'objectstorage'):
+                    db.session.execute(delete(ObjectStorage).where(db.func.length(ObjectStorage.key) > 1024).execution_options(synchronize_session=False))
                     changed = True
-                if db.engine.has_table(dbtableprefix + 'speaklist'):
-                    db.session.query(SpeakList).filter(db.func.length(SpeakList.filename) > 255).delete(synchronize_session=False)
+                if insp.has_table(dbtableprefix + 'speaklist'):
+                    db.session.execute(delete(SpeakList).where(db.func.length(SpeakList.filename) > 255).execution_options(synchronize_session=False))
                     changed = True
-                if db.engine.has_table(dbtableprefix + 'shortener'):
-                    db.session.query(Shortener).filter(db.func.length(Shortener.filename) > 255).delete(synchronize_session=False)
-                    db.session.query(Shortener).filter(db.func.length(Shortener.key) > 255).delete(synchronize_session=False)
+                if insp.has_table(dbtableprefix + 'shortener'):
+                    db.session.execute(delete(Shortener).where(db.func.length(Shortener.filename) > 255).execution_options(synchronize_session=False))
+                    db.session.execute(delete(Shortener).where(db.func.length(Shortener.key) > 255).execution_options(synchronize_session=False))
                     changed = True
-                if db.engine.has_table(dbtableprefix + 'machinelearning'):
-                    db.session.query(MachineLearning).filter(db.func.length(MachineLearning.key) > 1024).delete(synchronize_session=False)
-                    db.session.query(MachineLearning).filter(db.func.length(MachineLearning.group_id) > 1024).delete(synchronize_session=False)
+                if insp.has_table(dbtableprefix + 'machinelearning'):
+                    db.session.execute(delete(MachineLearning).where(db.func.length(MachineLearning.key) > 1024).execution_options(synchronize_session=False))
+                    db.session.execute(delete(MachineLearning).where(db.func.length(MachineLearning.group_id) > 1024).execution_options(synchronize_session=False))
                     changed = True
-                if db.engine.has_table(dbtableprefix + 'globalobjectstorage'):
-                    db.session.query(GlobalObjectStorage).filter(db.func.length(GlobalObjectStorage.key) > 1024).delete(synchronize_session=False)
+                if insp.has_table(dbtableprefix + 'globalobjectstorage'):
+                    db.session.execute(delete(GlobalObjectStorage).where(db.func.length(GlobalObjectStorage.key) > 1024).execution_options(synchronize_session=False))
                     changed = True
                 if changed:
                     db.session.commit()
@@ -198,11 +199,11 @@ def main():
             alembic_cfg = Config(os.path.join(packagedir, 'alembic.ini'))
             alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
             alembic_cfg.set_main_option("script_location", os.path.join(packagedir, 'alembic'))
-            if not db.engine.has_table(dbtableprefix + 'alembic_version'):
+            if not insp.has_table(dbtableprefix + 'alembic_version'):
                 sys.stderr.write("create_tables.main: creating alembic stamp\n")
                 command.stamp(alembic_cfg, "head")
                 sys.stderr.write("create_tables.main: done creating alembic stamp after " + str(time.time() - start_time) + " seconds\n")
-            if db.engine.has_table(dbtableprefix + 'user'):
+            if insp.has_table(dbtableprefix + 'user'):
                 sys.stderr.write("create_tables.main: creating alembic stamp\n")
                 sys.stderr.write("create_tables.main: running alembic upgrade\n")
                 command.upgrade(alembic_cfg, "head")

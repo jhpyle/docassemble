@@ -960,7 +960,7 @@ from docassemble.webapp.setup import da_version
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm, ManageAccountForm
-from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation, Role
+from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation, Role, UserRoles
 from docassemble_flask_user import UserManager, SQLAlchemyAdapter
 from flask_cors import cross_origin
 from flask_wtf.csrf import CSRFError
@@ -1050,7 +1050,7 @@ import oauth2client.client
 import io
 from docassemblekvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, select, delete, update
 import docassemble.base.parse
 import docassemble.base.astparser
 import ast
@@ -1326,7 +1326,7 @@ def initiate_sms_session(phone_number, yaml_filename=None, uid=None, secret=None
             yaml_filename = default_yaml_filename
     temp_user_id = None
     if user_id is None and email is not None:
-        user = UserModel.query.filter_by(email=email, active=True).first()
+        user = db.session.execute(select(UserModel).where(and_(UserModel.email.ilike(email), UserModel.active == True))).scalar()
         if user is not None:
             user_id = user.id
     if user_id is None:
@@ -1607,7 +1607,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
 
 def user_id_dict():
     output = dict()
-    for user in UserModel.query.options(db.joinedload('roles')).all():
+    for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).scalars():
         output[user.id] = user
     anon = FakeUser()
     anon_role = FakeRole()
@@ -1668,18 +1668,18 @@ def decrypt_session(secret, user_code=None, filename=None):
     nowtime = datetime.datetime.utcnow()
     if user_code == None or filename == None or secret is None:
         return
-    for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).with_for_update().all():
+    for record in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename, encrypted=True).with_for_update()).scalars():
         phrase = decrypt_phrase(record.phrase, secret)
         record.phrase = pack_phrase(phrase)
         record.encrypted = False
     db.session.commit()
-    for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).with_for_update().all():
+    for record in db.session.execute(select(UserDict).filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).with_for_update()).scalars():
         the_dict = decrypt_dictionary(record.dictionary, secret)
         record.dictionary = pack_dictionary(the_dict)
         record.encrypted = False
         record.modtime = nowtime
     db.session.commit()
-    for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).with_for_update().all():
+    for record in db.session.execute(select(ChatLog).filter_by(key=user_code, filename=filename, encrypted=True).with_for_update()).scalars():
         phrase = decrypt_phrase(record.message, secret)
         record.message = pack_phrase(phrase)
         record.encrypted = False
@@ -1691,20 +1691,18 @@ def encrypt_session(secret, user_code=None, filename=None):
     nowtime = datetime.datetime.utcnow()
     if user_code == None or filename == None or secret is None:
         return
-    for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=False).with_for_update().all():
-        logmessage("record.phrase is a " + record.phrase.__class__.__name__)
+    for record in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename, encrypted=False).with_for_update()).scalars():
         phrase = unpack_phrase(record.phrase)
-        logmessage("phrase is a " + phrase.__class__.__name__)
         record.phrase = encrypt_phrase(phrase, secret)
         record.encrypted = True
     db.session.commit()
-    for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=False).order_by(UserDict.indexno).with_for_update().all():
+    for record in db.session.execute(select(UserDict).filter_by(key=user_code, filename=filename, encrypted=False).order_by(UserDict.indexno).with_for_update()).scalars():
         the_dict = unpack_dictionary(record.dictionary)
         record.dictionary = encrypt_dictionary(the_dict, secret)
         record.encrypted = True
         record.modtime = nowtime
     db.session.commit()
-    for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=False).with_for_update().all():
+    for record in db.session.execute(select(ChatLog).filter_by(key=user_code, filename=filename, encrypted=False).with_for_update()).scalars():
         phrase = unpack_phrase(record.message)
         record.message = encrypt_phrase(phrase, secret)
         record.encrypted = True
@@ -1720,7 +1718,7 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
         #logmessage("substitute_secret: returning new secret without doing anything")
         return newsecret
     #logmessage("substitute_secret: continuing")
-    for object_entry in GlobalObjectStorage.query.filter_by(user_id=user.id, encrypted=True).with_for_update().all():
+    for object_entry in db.session.execute(select(GlobalObjectStorage).filter_by(user_id=user.id, encrypted=True).with_for_update()).scalars():
         try:
             object_entry.value = encrypt_object(decrypt_object(object_entry.value, oldsecret), newsecret)
         except Exception as err:
@@ -1733,16 +1731,16 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
         if 'sessions' in session:
             for filename, info in session['sessions'].items():
                 to_do.add((filename, info['uid']))
-        for the_record in db.session.query(UserDict.filename, UserDict.key).filter_by(user_id=user.id).group_by(UserDict.filename, UserDict.key).all():
+        for the_record in db.session.execute(select(UserDict.filename, UserDict.key).filter_by(user_id=user.id).group_by(UserDict.filename, UserDict.key)):
             to_do.add((the_record.filename, the_record.key))
-        for the_record in db.session.query(UserDictKeys.filename, UserDictKeys.key).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).filter(and_(UserDictKeys.user_id == user.id)).group_by(UserDictKeys.filename, UserDictKeys.key).all():
+        for the_record in db.session.execute(select(UserDictKeys.filename, UserDictKeys.key).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).where(and_(UserDictKeys.user_id == user.id)).group_by(UserDictKeys.filename, UserDictKeys.key)):
             to_do.add((the_record.filename, the_record.key))
     else:
         to_do = set(to_convert)
     for (filename, user_code) in to_do:
         #obtain_lock(user_code, filename)
         #logmessage("substitute_secret: filename is " + str(filename) + " and key is " + str(user_code))
-        for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).with_for_update().all():
+        for record in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename, encrypted=True).with_for_update()).scalars():
             try:
                 phrase = decrypt_phrase(record.phrase, oldsecret)
                 record.phrase = encrypt_phrase(phrase, newsecret)
@@ -1750,13 +1748,13 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
             except:
                 pass
         db.session.commit()
-        for object_entry in GlobalObjectStorage.query.filter(and_(GlobalObjectStorage.key.like('da:uid:' + user_code + ':i:' + filename + ':%'), GlobalObjectStorage.encrypted == True)).with_for_update().all():
+        for object_entry in db.session.execute(select(GlobalObjectStorage).where(and_(GlobalObjectStorage.key.like('da:uid:' + user_code + ':i:' + filename + ':%'), GlobalObjectStorage.encrypted == True)).with_for_update()).scalars():
             try:
                 object_entry.value = encrypt_object(decrypt_object(object_entry.value, oldsecret), newsecret)
             except:
                 pass
         db.session.commit()
-        for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).with_for_update().all():
+        for record in db.session.execute(select(UserDict).filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).with_for_update()).scalars():
             #logmessage("substitute_secret: record was encrypted")
             try:
                 the_dict = decrypt_dictionary(record.dictionary, oldsecret)
@@ -1776,7 +1774,7 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
             record.dictionary = encrypt_dictionary(the_dict, newsecret)
         db.session.commit()
         if temp_user:
-            for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=False).order_by(UserDict.indexno).with_for_update().all():
+            for record in db.session.execute(select(UserDict).filter_by(key=user_code, filename=filename, encrypted=False).order_by(UserDict.indexno).with_for_update()).scalars():
                 try:
                     the_dict = unpack_dictionary(record.dictionary)
                 except Exception as e:
@@ -1793,7 +1791,7 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
                     pass
                 record.dictionary = pack_dictionary(the_dict)
             db.session.commit()
-        for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).with_for_update().all():
+        for record in db.session.execute(select(ChatLog).filter_by(key=user_code, filename=filename, encrypted=True).with_for_update()).scalars():
             try:
                 phrase = decrypt_phrase(record.message, oldsecret)
             except Exception as e:
@@ -1851,11 +1849,9 @@ def copy_playground_modules():
                 shutil.rmtree(os.path.join(root_dir, d))
             except:
                 sys.stderr.write("copy_playground_modules: error deleting " + os.path.join(root_dir, d) + "\n")
-    devs = list()
-    for user in UserModel.query.options(db.joinedload('roles')).filter_by(active=True).all():
-        for role in user.roles:
-            if role.name == 'admin' or role.name == 'developer':
-                devs.append(user.id)
+    devs = set()
+    for user in db.session.execute(select(UserModel.id).join(UserRoles, UserModel.id == UserRoles.user_id).join(Role, UserRoles.role_id == Role.id).where(and_(UserModel.active == True, or_(Role.name == 'admin', Role.name == 'developer')))):
+        devs.add(user.id)
     for user_id in devs:
         mod_dir = SavedFile(user_id, fix=True, section='playgroundmodules')
         local_dirs = [(os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'playground' + str(user_id)), mod_dir.directory)]
@@ -2356,7 +2352,7 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
 
 def sub_temp_user_dict_key(temp_user_id, user_id):
     temp_interviews = list()
-    for record in UserDictKeys.query.filter_by(temp_user_id=temp_user_id).with_for_update().all():
+    for record in db.session.execute(select(UserDictKeys).filter_by(temp_user_id=temp_user_id).with_for_update()).scalars():
         record.temp_user_id = None
         record.user_id = user_id
         temp_interviews.append((record.filename, record.key))
@@ -2365,22 +2361,22 @@ def sub_temp_user_dict_key(temp_user_id, user_id):
 
 def sub_temp_other(user):
     if 'tempuser' in session:
-        for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
+        for chat_entry in db.session.execute(select(ChatLog).filter_by(temp_user_id=int(session['tempuser'])).with_for_update()).scalars():
             chat_entry.user_id = user.id
             chat_entry.temp_user_id = None
         db.session.commit()
-        for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).with_for_update().all():
+        for chat_entry in db.session.execute(select(ChatLog).filter_by(temp_owner_id=int(session['tempuser'])).with_for_update()).scalars():
             chat_entry.owner_id = user.id
             chat_entry.temp_owner_id = None
         db.session.commit()
         keys_in_use = dict()
-        for object_entry in GlobalObjectStorage.query.filter_by(user_id=user.id).all():
+        for object_entry in db.session.execute(select(GlobalObjectStorage.id, GlobalObjectStorage.key).filter_by(user_id=user.id)).all():
             if object_entry.key.startswith('da:userid:{:d}:'.format(user.id)):
                 if object_entry.key not in keys_in_use:
                     keys_in_use[object_entry.key] = list()
                 keys_in_use[object_entry.key].append(object_entry.id)
         ids_to_delete = list()
-        for object_entry in GlobalObjectStorage.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
+        for object_entry in db.session.execute(select(GlobalObjectStorage).filter_by(temp_user_id=int(session['tempuser'])).with_for_update()).scalars():
             object_entry.user_id = user.id
             object_entry.temp_user_id = None
             if object_entry.key.startswith('da:userid:t{:d}:'.format(session['tempuser'])):
@@ -2394,11 +2390,9 @@ def sub_temp_other(user):
                 except Exception as err:
                     logmessage("Failure to change encryption of object " + object_entry.key + ": " + str(err))
         for the_id in ids_to_delete:
-            GlobalObjectStorage.query.filter_by(id=the_id).delete()
+            db.session.execute(delete(GlobalObjectStorage).filter_by(id=the_id))
         db.session.commit()
-        for auth_entry in UploadsUserAuth.query.filter_by(temp_user_id=int(session['tempuser'])).with_for_update().all():
-            auth_entry.user_id = user.id
-            auth_entry.temp_user_id = None
+        db.session.execute(update(UploadsUserAuth).where(UploadsUserAuth.temp_user_id == int(session['tempuser'])).values(user_id=user.id, temp_user_id=None))
         db.session.commit()
         del session['tempuser']
 
@@ -2420,14 +2414,14 @@ def save_user_dict_key(session_id, filename, priors=False, user=None):
     interview_list = set([filename])
     found = set()
     if priors:
-        for the_record in db.session.query(UserDict.filename).filter_by(key=session_id).group_by(UserDict.filename).all():
+        for the_record in db.session.execute(select(UserDict.filename).filter_by(key=session_id).group_by(UserDict.filename)):
             interview_list.add(the_record.filename)
     for filename_to_search in interview_list:
         if is_auth:
-            for the_record in UserDictKeys.query.filter_by(key=session_id, filename=filename_to_search, user_id=user_id):
+            for the_record in db.session.execute(select(UserDictKeys).filter_by(key=session_id, filename=filename_to_search, user_id=user_id)):
                 found.add(filename_to_search)
         else:
-            for the_record in UserDictKeys.query.filter_by(key=session_id, filename=filename_to_search, temp_user_id=user_id):
+            for the_record in db.session.execute(select(UserDictKeys).filter_by(key=session_id, filename=filename_to_search, temp_user_id=user_id)):
                 found.add(filename_to_search)
     for filename_to_save in (interview_list - found):
         if is_auth:
@@ -2473,7 +2467,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
         db.session.commit()
     else:
         if max_indexno is None:
-            max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()
+            max_indexno = db.session.execute(select(db.func.max(UserDict.indexno)).where(and_(UserDict.key == user_code, UserDict.filename == filename))).scalar()
         if max_indexno is None:
             if encrypt:
                 new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
@@ -2482,7 +2476,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
             db.session.add(new_record)
             db.session.commit()
         else:
-            for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).with_for_update().all():
+            for record in db.session.execute(select(UserDict).filter_by(key=user_code, filename=filename, indexno=max_indexno).with_for_update()).scalars():
                 if encrypt:
                     record.dictionary = encrypt_dictionary(user_dict, secret)
                     record.modtime = nowtime
@@ -2739,7 +2733,7 @@ def get_unique_name(filename, secret):
     while True:
         newname = random_alphanumeric(32)
         obtain_lock(newname, filename)
-        existing_key = UserDict.query.filter_by(key=newname).first()
+        existing_key = db.session.execute(select(UserDict).filter_by(key=newname)).first()
         if existing_key:
             release_lock(newname, filename)
             continue
@@ -3007,7 +3001,7 @@ def restore_session(backup):
             session[key] = backup[key]
 
 def get_existing_session(yaml_filename, secret):
-    keys = [result.key for result in db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(and_(UserDictKeys.user_id == current_user.id, UserDictKeys.filename == yaml_filename)).order_by(UserDictKeys.indexno)]
+    keys = [result.key for result in db.session.execute(select(UserDictKeys.filename, UserDictKeys.key).where(and_(UserDictKeys.user_id == current_user.id, UserDictKeys.filename == yaml_filename)).order_by(UserDictKeys.indexno))]
     for key in keys:
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(key, yaml_filename, secret=secret)
@@ -3043,7 +3037,7 @@ def user_can_edit_package(pkgname=None, giturl=None):
         pkgname = pkgname.strip()
         if pkgname == '' or re.search(r'\s', pkgname):
             return False
-        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(and_(Package.name == pkgname, Package.active == True))
+        results = db.session.execute(select(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).where(and_(Package.name == pkgname, Package.active == True)))
         if results.count() == 0:
             return(True)
         for d in results:
@@ -3053,7 +3047,7 @@ def user_can_edit_package(pkgname=None, giturl=None):
         giturl = giturl.strip()
         if giturl == '' or re.search(r'\s', giturl):
             return False
-        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(and_(or_(Package.giturl == giturl + '/', Package.giturl == giturl), Package.active == True))
+        results = db.session.execute(select(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).where(and_(or_(Package.giturl == giturl + '/', Package.giturl == giturl), Package.active == True)))
         if results.count() == 0:
             return(True)
         for d in results:
@@ -3063,12 +3057,11 @@ def user_can_edit_package(pkgname=None, giturl=None):
 
 def uninstall_package(packagename):
     #logmessage("server uninstall_package: " + packagename)
-    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
+    existing_package = db.session.execute(select(Package).filter_by(name=packagename, active=True).order_by(Package.id.desc())).first()
     if existing_package is None:
         flash(word("Package did not exist"), 'error')
         return
-    for package in Package.query.filter_by(name=packagename, active=True).with_for_update().with_for_update().all():
-        package.active = False
+    db.session.execute(update(Package).where(Package.name == packagename, Package.active == True).values(active=False))
     db.session.commit()
     return
 
@@ -3093,7 +3086,7 @@ def summarize_results(results, logmessages, html=True):
 
 def install_zip_package(packagename, file_number):
     #logmessage("install_zip_package: " + packagename + " " + str(file_number))
-    existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).with_for_update().first()
+    existing_package = db.session.execute(select(Package).filter_by(name=packagename).order_by(Package.id.desc()).with_for_update()).scalar()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, package_auth=package_auth, upload=file_number, active=True, type='zip', version=1)
@@ -3119,15 +3112,15 @@ def install_git_package(packagename, giturl, branch):
     giturl = str(giturl).rstrip('/')
     if branch is None or str(branch).lower().strip() in ('none', ''):
         branch = GITHUB_BRANCH
-    if Package.query.filter_by(name=packagename).first() is None and Package.query.filter(or_(Package.giturl == giturl, Package.giturl == giturl + '/')).with_for_update().first() is None:
+    if db.session.execute(select(Package).filter_by(name=packagename)).first() is None and db.session.execute(select(Package).where(or_(Package.giturl == giturl, Package.giturl == giturl + '/')).with_for_update()).scalar() is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git', upload=None, limitation=None, gitbranch=branch)
         db.session.add(package_auth)
         db.session.add(package_entry)
     else:
-        existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).with_for_update().first()
+        existing_package = db.session.execute(select(Package).filter_by(name=packagename).order_by(Package.id.desc()).with_for_update()).scalar()
         if existing_package is None:
-            existing_package = Package.query.filter(or_(Package.giturl == giturl, Package.giturl == giturl + '/')).order_by(Package.id.desc()).with_for_update().first()
+            existing_package = db.session.execute(select(Package).where(or_(Package.giturl == giturl, Package.giturl == giturl + '/')).order_by(Package.id.desc()).with_for_update()).scalar()
         if existing_package is not None:
             if existing_package.type == 'zip' and existing_package.upload is not None:
                 SavedFile(existing_package.upload).delete()
@@ -3149,7 +3142,7 @@ def install_git_package(packagename, giturl, branch):
 
 def install_pip_package(packagename, limitation):
     #logmessage("install_pip_package: " + packagename + " " + str(limitation))
-    existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).with_for_update().first()
+    existing_package = db.session.execute(select(Package).filter_by(name=packagename).order_by(Package.id.desc()).with_for_update()).scalar()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, package_auth=package_auth, limitation=limitation, version=1, active=True, type='pip')
@@ -3178,11 +3171,11 @@ def get_package_info(exclude_core=False):
     package_list = list()
     package_auth = dict()
     seen = dict()
-    for auth in PackageAuth.query.all():
+    for auth in db.session.execute(select(PackageAuth)).scalars():
         if auth.package_id not in package_auth:
             package_auth[auth.package_id] = dict()
         package_auth[auth.package_id][auth.user_id] = auth.authtype
-    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+    for package in db.session.execute(select(Package).filter_by(active=True).order_by(Package.name, Package.id.desc())).scalars():
         #if exclude_core and package.name in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
         #    continue
         if package.name in seen:
@@ -3623,7 +3616,10 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     has_children.add(parent)
             var_list = list()
             for var in sorted(names_used):
-                var_trans = re.sub(r'\[[0-9]\]', '[i]', var)
+                var_trans = re.sub(r'\[[0-9]+\]', '[i]', var)
+                #var_trans = re.sub(r'\[i\](.*)\[i\](.*)\[i\](.*)\[i\](.*)\[i\](.*)\[i\]', r'[i]\1[j]\2[k]\3[l]\4[m]\5[n]', var_trans)
+                #var_trans = re.sub(r'\[i\](.*)\[i\](.*)\[i\](.*)\[i\](.*)\[i\]', r'[i]\1[j]\2[k]\3[l]\4[m]', var_trans)
+                #var_trans = re.sub(r'\[i\](.*)\[i\](.*)\[i\](.*)\[i\]', r'[i]\1[j]\2[k]\3[l]', var_trans)
                 var_trans = re.sub(r'\[i\](.*)\[i\](.*)\[i\]', r'[i]\1[j]\2[k]', var_trans)
                 var_trans = re.sub(r'\[i\](.*)\[i\]', r'[i]\1[j]', var_trans)
                 info = dict(var=var, to_insert=var)
@@ -3968,7 +3964,7 @@ def wait_for_task(task_id, timeout=None):
 def trigger_update(except_for=None):
     sys.stderr.write("trigger_update: except_for is " + str(except_for) + " and hostname is " + hostname + "\n")
     if USING_SUPERVISOR:
-        for host in Supervisors.query.all():
+        for host in db.session.execute(select(Supervisors)).scalars():
             if host.url and not (except_for and host.hostname == except_for):
                 if host.hostname == hostname:
                     the_url = 'http://localhost:9001'
@@ -4007,7 +4003,7 @@ def restart_all():
 def restart_this():
     logmessage("restart_this: hostname is " + str(hostname))
     if USING_SUPERVISOR:
-        for host in Supervisors.query.all():
+        for host in db.session.execute(select(Supervisors)).scalars():
             if host.url:
                 logmessage("restart_this: considering " + str(host.hostname) + " against " + str(hostname))
                 if host.hostname == hostname:
@@ -4027,7 +4023,7 @@ def restart_others():
     if USING_SUPERVISOR:
         cron_key = 'da:cron_restart'
         cron_url = None
-        for host in Supervisors.query.all():
+        for host in db.session.execute(select(Supervisors)).scalars():
             if host.url and host.hostname != hostname and ':cron:' in str(host.role):
                 pipe = r.pipeline()
                 pipe.set(cron_key, 1)
@@ -4037,7 +4033,7 @@ def restart_others():
                 while r.get(cron_key) is not None:
                     time.sleep(1)
                 cron_url = host.url
-        for host in Supervisors.query.all():
+        for host in db.session.execute(select(Supervisors)).scalars():
             if host.url and host.url != cron_url and host.hostname != hostname:
                 restart_on(host)
     return
@@ -4398,34 +4394,12 @@ def get_locale():
     return request.accept_languages.best_match(translations)
 
 def get_user_object(user_id):
-    the_user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
+    the_user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == user_id)).scalar()
     return the_user
 
 @lm.user_loader
 def load_user(id):
-    return UserModel.query.options(db.joinedload('roles')).get(int(id))
-    # key = 'da:usercache:' + str(id)
-    # stored_user = r.get(key)
-    # if stored_user is None:
-    #     user = UserModel.query.get(int(id))
-    #     pipe = r.pipeline()
-    #     pipe.set(key, pickle.dumps(user))
-    #     pipe.expire(key, 1800)
-    #     pipe.execute()
-    #     return user
-    # return pickle.loads(stored_user)
-
-# @app.route('/post_login', methods=['GET'])
-# def post_login():
-#     #logmessage("post_login")
-#     response = redirect(request.args.get('next', url_for('interview_list')))
-#     if 'newsecret' in session:
-#         response.set_cookie('secret', session['newsecret'])
-#         #logmessage("post_login: setting the cookie to " + session['newsecret'])
-#         del session['newsecret']
-#     # else:
-#     #     logmessage("post_login: no newsecret")
-#     return response
+    return UserModel.query.options(db.joinedload(UserModel.roles)).get(int(id))
 
 @app.route('/goto', methods=['GET'])
 def run_temp():
@@ -4462,7 +4436,7 @@ def auto_login():
         info = decrypt_dictionary(info_text, decryption_key)
     except:
         abort(403)
-    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=info['user_id']).first()
+    user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == info['user_id'])).scalar()
     if (not user) or user.social_id.startswith('disabled$'):
         abort(403)
     login_user(user, remember=False)
@@ -4511,9 +4485,9 @@ def oauth_callback(provider):
     if social_id is None:
         flash(word('Authentication failed.'), 'error')
         return redirect(url_for('interview_list', from_login='1'))
-    user = UserModel.query.options(db.joinedload('roles')).filter_by(social_id=social_id).first()
+    user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(social_id=social_id)).scalar()
     if not user:
-        user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
+        user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(email=email)).scalar()
     if user and user.social_id is not None and user.social_id.startswith('local'):
         flash(word('There is already a username and password on this system with the e-mail address') + " " + str(email) + ".  " + word("Please log in."), 'error')
         return redirect(url_for('user.login'))
@@ -4631,7 +4605,7 @@ def phone_login_verify():
     if submitted or (request.method == 'POST' and form.submit.data):
         if form.validate():
             social_id = 'phone$' + str(phone_number)
-            user = UserModel.query.options(db.joinedload('roles')).filter_by(social_id=social_id).first()
+            user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(social_id=social_id)).scalar()
             if user and user.active is False:
                 flash(word("Your account has been disabled."), 'error')
                 return redirect(url_for('user.login'))
@@ -4961,7 +4935,7 @@ def manage_account():
             delete_user_data(the_user_id, r, r_user)
         else:
             sessions_to_delete = set()
-            interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.temp_user_id == temp_user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
+            interview_query = db.session.execute(select(UserDictKeys.filename, UserDictKeys.key).where(UserDictKeys.temp_user_id == temp_user_id).group_by(UserDictKeys.filename, UserDictKeys.key))
             for interview_info in interview_query:
                 sessions_to_delete.add((interview_info.key, interview_info.filename))
             for session_id, yaml_filename in sessions_to_delete:
@@ -5361,7 +5335,7 @@ def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=N
     if yaml_filename is None or session_id is None:
         return output
     user_cache = dict()
-    for record in ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id)).order_by(ChatLog.id).all():
+    for record in db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id)).order_by(ChatLog.id)).scalars():
         if record.encrypted:
             try:
                 message = decrypt_phrase(record.message, secret)
@@ -11203,7 +11177,7 @@ def index(action_argument=None, refer=None):
                 the_phrase = pack_phrase(phrase)
             the_hash = MD5Hash(data=phrase).hexdigest()
             content = re.sub(r'XXXTHEXXX' + question_type + 'XXXHASHXXX', the_hash, content)
-            existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).with_for_update().first()
+            existing_entry = db.session.execute(select(SpeakList).filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).with_for_update()).scalar()
             if existing_entry:
                 if existing_entry.encrypted:
                     existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
@@ -11600,12 +11574,12 @@ def speak_file():
     if file_format not in ('mp3', 'ogg') or not (filename and key and question and question_type and file_format and the_language and the_dialect):
         logmessage("speak_file: could not serve speak file because invalid or missing data was provided: filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         return ('File not found', 404)
-    entry = SpeakList.query.filter_by(filename=filename, key=key, question=question, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
+    entry = db.session.execute(select(SpeakList).filter_by(filename=filename, key=key, question=question, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect)).scalar()
     if not entry:
         logmessage("speak_file: could not serve speak file because no entry could be found in speaklist for filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         return ('File not found', 404)
     if not entry.upload:
-        existing_entry = SpeakList.query.filter(and_(SpeakList.phrase == entry.phrase, SpeakList.language == entry.language, SpeakList.dialect == entry.dialect, SpeakList.upload != None, SpeakList.encrypted == entry.encrypted)).first()
+        existing_entry = db.session.execute(select(SpeakList).where(and_(SpeakList.phrase == entry.phrase, SpeakList.language == entry.language, SpeakList.dialect == entry.dialect, SpeakList.upload != None, SpeakList.encrypted == entry.encrypted))).scalar()
         if existing_entry:
             logmessage("speak_file: found existing entry: " + str(existing_entry.id) + ".  Setting to " + str(existing_entry.upload))
             entry.upload = existing_entry.upload
@@ -14528,7 +14502,7 @@ def update_package():
             if action == 'uninstall' and the_package.can_uninstall:
                 uninstall_package(target)
             elif action == 'update' and the_package.can_update:
-                existing_package = Package.query.filter_by(name=target, active=True).order_by(Package.id.desc()).first()
+                existing_package = db.session.execute(select(Package).filter_by(name=target, active=True).order_by(Package.id.desc())).scalar()
                 if existing_package is not None:
                     if limitation and existing_package.limitation != limitation:
                         existing_package.limitation = limitation
@@ -14898,22 +14872,6 @@ def create_playground_package():
                 if field not in info:
                     info[field] = list()
             info['dependencies'] = [x for x in [z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info['dependencies'])] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
-            # for package in info['dependencies']:
-            #     logmessage("create_playground_package: considering " + str(package))
-            #     existing_package = Package.query.filter_by(name=package, active=True).first()
-            #     if existing_package is not None:
-            #         logmessage("create_playground_package: package " + str(package) + " exists")
-            #         if existing_package.giturl is None or existing_package.giturl == 'https://github.com/jhpyle/docassemble':
-            #             logmessage("create_playground_package: package " + str(package) + " exists but I will skip it; name is " + str(existing_package.name) + " and giturl is " + str(existing_package.giturl))
-            #             continue
-            #         # https://github.com/jhpyle/docassemble-helloworld
-            #         # git+https://github.com/fact-project/smart_fact_crawler.git@master#egg=smart_fact_crawler-0
-            #         #the_package_name = re.sub(r'.*/', '', existing_package.giturl)
-            #         #the_package_name = re.sub(r'-', '_', the_package_name)
-            #         #new_url = existing_package.giturl + '/archive/master.zip'
-            #         #new_url = 'git+' + existing_package.giturl + '#egg=' + existing_package.name + '-' + existing_package.packageversion
-            #     else:
-            #         logmessage("create_playground_package: package " + str(package) + " does not exist")
             info['modtime'] = os.path.getmtime(filename)
             author_info = dict()
             author_info['author name and email'] = name_of_user(current_user, include_email=True)
@@ -15029,7 +14987,7 @@ def create_playground_package():
                         output += subprocess.check_output(["git", "config", "user.name", json.dumps(the_user_name)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
-                        raise DAError("create_playground_package: error running git config user.email.  " + output)
+                        raise DAError("create_playground_package: error running git config user.name.  " + output)
                     output += "Doing git add README.MD\n"
                     try:
                         output += subprocess.check_output(["git", "add", "README.md"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
@@ -15212,20 +15170,6 @@ def create_playground_package():
             zip_file = docassemble.webapp.files.make_package_zip(pkgname, info, author_info, the_timezone, current_project=current_project)
             saved_file.copy_from(zip_file.name)
             saved_file.finalize()
-            # # Why do this here?  To reserve the name?  It is all done by install_zip_package
-            # # and otherwise why mess up the package listing?
-            # existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).first()
-            # if existing_package is None:
-            #     package_auth = PackageAuth(user_id=current_user.id)
-            #     package_entry = Package(name='docassemble.' + pkgname, package_auth=package_auth, upload=file_number, type='zip')
-            #     db.session.add(package_auth)
-            #     db.session.add(package_entry)
-            #     #sys.stderr.write("Ok, did the commit\n")
-            # else:
-            #     existing_package.upload = file_number
-            #     existing_package.active = True
-            #     existing_package.version += 1
-            # db.session.commit()
             if do_install:
                 install_zip_package('docassemble.' + pkgname, file_number)
                 result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create('docassemble.' + pkgname)))
@@ -15254,8 +15198,6 @@ def create_package():
         if False and not user_can_edit_package(pkgname='docassemble.' + pkgname):
             flash(word('Sorry, that package name is already in use by someone else'), 'error')
         else:
-            #foobar = Package.query.filter_by(name='docassemble_' + pkgname).first()
-            #sys.stderr.write("this is it: " + str(foobar) + "\n")
             initpy = """\
 try:
     __import__('pkg_resources').declare_namespace(__name__)
@@ -15493,19 +15435,6 @@ class Fruit(DAObject):
             saved_file.save()
             saved_file.finalize()
             shutil.rmtree(directory)
-            # do not edit the package table just because a package is created without being installed
-            # existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).order_by(Package.id.desc()).first()
-            # if existing_package is None:
-            #     package_auth = PackageAuth(user_id=current_user.id)
-            #     package_entry = Package(name='docassemble.' + pkgname, package_auth=package_auth, upload=file_number, type='zip')
-            #     db.session.add(package_auth)
-            #     db.session.add(package_entry)
-            #     #sys.stderr.write("Ok, did the commit\n")
-            # else:
-            #     existing_package.upload = file_number
-            #     existing_package.active = True
-            #     existing_package.version += 1
-            # db.session.commit()
             response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             flash(word("Package created"), 'success')
@@ -18128,7 +18057,7 @@ def playground_packages():
                                 with zf.open(zinfo) as f:
                                     the_file_obj = TextIOWrapper(f, encoding='utf8')
                                     setup_py = the_file_obj.read()
-                            elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
+                            elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
                                 need_to_restart = True
                                 data_files['modules'].append(filename)
                                 target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
@@ -18317,7 +18246,7 @@ def playground_packages():
                 if filename == 'setup.py' and at_top_level:
                     with open(orig_file, 'r', encoding='utf-8') as fp:
                         setup_py = fp.read()
-                elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
+                elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
                     data_files['modules'].append(filename)
                     target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
                     #output += "Copying " + orig_file + "\n"
@@ -18440,18 +18369,6 @@ def playground_packages():
                     else:
                         return redirect(url_for('create_playground_package', project=current_project, package=the_file, github='1', commit_message=form.commit_message.data, branch=str(the_branch), pypi_also=('1' if form.pypi_also.data else '0'), install_also=('1' if form.install_also.data else '0')))
                 the_time = formatted_current_time()
-                # existing_package = Package.query.filter_by(name='docassemble.' + the_file, active=True).order_by(Package.id.desc()).first()
-                # if existing_package is None:
-                #     package_auth = PackageAuth(user_id=current_user.id)
-                #     package_entry = Package(name='docassemble.' + the_file, package_auth=package_auth, upload=file_number, type='zip')
-                #     db.session.add(package_auth)
-                #     db.session.add(package_entry)
-                #     #sys.stderr.write("Ok, did the commit\n")
-                # else:
-                #     existing_package.upload = file_number
-                #     existing_package.active = True
-                #     existing_package.version += 1
-                # db.session.commit()
                 if show_message:
                     flash(word('The package information was saved.'), 'success')
     form.original_file_name.data = the_file
@@ -20451,10 +20368,9 @@ def request_developer():
     form = RequestDeveloperForm(request.form)
     recipients = list()
     if request.method == 'POST':
-        for user in UserModel.query.options(db.joinedload('roles')).filter_by(active=True).all():
-            for role in user.roles:
-                if role.name == 'admin':
-                    recipients.append(user.email)
+        for user in db.session.execute(select(UserModel.id, UserModel.email).join(UserRoles, UserModel.id == UserRoles.user_id).join(Role, UserRoles.role_id == Role.id).where(and_(UserModel.active == True, Role.name == 'admin'))):
+            if user.email not in recipients:
+                recipients.append(user.email)
         body = "User " + str(current_user.email) + " (" + str(current_user.id) + ") has requested developer privileges.\n\n"
         if form.reason.data:
             body += "Reason given: " + str(form.reason.data) + "\n\n"
@@ -20831,7 +20747,7 @@ def ensure_training_loaded(interview):
     if len(parts) == 3 and parts[0].startswith('docassemble.') and re.match(r'data/sources/.*\.json', parts[1]):
         the_file = docassemble.base.functions.package_data_filename(source_filename)
         if the_file is not None:
-            record = db.session.query(MachineLearning.group_id).filter(MachineLearning.group_id.like(source_filename + ':%')).first()
+            record = db.session.execute(select(MachineLearning.group_id).where(MachineLearning.group_id.like(source_filename + ':%'))).first()
             if record is None:
                 if os.path.isfile(the_file):
                     with open(the_file, 'r', encoding='utf-8') as fp:
@@ -20931,7 +20847,7 @@ def train():
                     logmessage("train: could not import part of JSON file.  Items in dictionary must be lists.")
                     continue
                 if uploadform.importtype.data == 'replace':
-                    MachineLearning.query.filter_by(group_id=the_prefix + ':' + group_id).delete()
+                    db.session.execute(delete(MachineLearning).filter_by(group_id=the_prefix + ':' + group_id))
                     db.session.commit()
                     for entry in train_list:
                         if 'independent' in entry:
@@ -20939,7 +20855,7 @@ def train():
                             db.session.add(new_entry)
                 elif uploadform.importtype.data == 'merge':
                     indep_in_use = set()
-                    for record in MachineLearning.query.filter_by(group_id=the_prefix + ':' + group_id).all():
+                    for record in db.session.execute(select(MachineLearning).filter_by(group_id=the_prefix + ':' + group_id)).scalars():
                         indep_in_use.add(fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')))
                     for entry in train_list:
                         if 'independent' in entry and entry['independent'] not in indep_in_use:
@@ -20997,19 +20913,19 @@ def train():
     else:
         playground_package = None
     if the_package is None:
-        for record in db.session.query(MachineLearning.group_id, db.func.count(MachineLearning.id).label('count')).filter(show_cond).group_by(MachineLearning.group_id):
+        for record in db.session.execute(select(MachineLearning.group_id, db.func.count(MachineLearning.id).label('cnt')).where(show_cond).group_by(MachineLearning.group_id)):
             group_id = record.group_id
             parts = group_id.split(':')
             if is_package_ml(parts):
                 if parts[0] not in package_list:
                     package_list[parts[0]] = 0
-                package_list[parts[0]] += record.count
+                package_list[parts[0]] += record.cnt
             else:
                 if '_global' not in package_list:
                     package_list['_global'] = 0
-                package_list['_global'] += record.count
+                package_list['_global'] += record.cnt
         if not show_all:
-            for record in db.session.query(MachineLearning.group_id).group_by(MachineLearning.group_id):
+            for record in db.session.execute(select(MachineLearning.group_id).group_by(MachineLearning.group_id)):
                 parts = record.group_id.split(':')
                 if is_package_ml(parts):
                     if parts[0] not in package_list:
@@ -21028,7 +20944,7 @@ def train():
         the_package_display = the_package
     if the_file is None:
         file_list = dict()
-        for record in db.session.query(MachineLearning.group_id, db.func.count(MachineLearning.id).label('count')).filter(and_(MachineLearning.group_id.like(the_package + ':%'), show_cond)).group_by(MachineLearning.group_id):
+        for record in db.session.execute(select(MachineLearning.group_id, db.func.count(MachineLearning.id).label('cnt')).where(and_(MachineLearning.group_id.like(the_package + ':%'), show_cond)).group_by(MachineLearning.group_id)):
             parts = record.group_id.split(':')
             #logmessage("Group id is " + str(parts))
             if not is_package_ml(parts):
@@ -21037,9 +20953,9 @@ def train():
                 parts[1] = re.sub(r'^data/sources/ml-|\.json$', '', parts[1])
             if parts[1] not in file_list:
                 file_list[parts[1]] = 0
-            file_list[parts[1]] += record.count
+            file_list[parts[1]] += record.cnt
         if not show_all:
-            for record in db.session.query(MachineLearning.group_id).filter(MachineLearning.group_id.like(the_package + ':%')).group_by(MachineLearning.group_id):
+            for record in db.session.execute(select(MachineLearning.group_id).where(MachineLearning.group_id.like(the_package + ':%')).group_by(MachineLearning.group_id)):
                 parts = record.group_id.split(':')
                 #logmessage("Other group id is " + str(parts))
                 if not is_package_ml(parts):
@@ -21071,7 +20987,7 @@ def train():
             output = dict()
             if the_package == '_global':
                 json_filename = 'ml-global.json'
-                for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key):
+                for record in db.session.execute(select(MachineLearning.id, MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key)):
                     if is_package_ml(record.group_id.split(':')):
                         continue
                     if record.group_id not in output:
@@ -21094,7 +21010,7 @@ def train():
             else:
                 json_filename = 'ml-' + the_file + '.json'
                 prefix = ml_prefix(the_package, the_file)
-                for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%')):
+                for record in db.session.execute(select(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).where(MachineLearning.group_id.like(prefix + ':%'))):
                     parts = record.group_id.split(':')
                     if not is_package_ml(parts):
                         continue
@@ -21118,14 +21034,14 @@ def train():
                 flash(word("No data existed in training set.  JSON file not created."), "error")
                 return redirect(url_for('train', package=the_package, file=the_file, show_all=show_all))
         if the_package == '_global':
-            for record in db.session.query(MachineLearning.group_id, db.func.count(MachineLearning.id).label('count')).filter(show_cond).group_by(MachineLearning.group_id):
+            for record in db.session.execute(select(MachineLearning.group_id, db.func.count(MachineLearning.id).label('cnt')).where(show_cond).group_by(MachineLearning.group_id)):
                 if is_package_ml(record.group_id.split(':')):
                     continue
                 if record.group_id not in group_id_list:
                     group_id_list[record.group_id] = 0
-                group_id_list[record.group_id] += record.count
+                group_id_list[record.group_id] += record.cnt
             if not show_all:
-                for record in db.session.query(MachineLearning.group_id).group_by(MachineLearning.group_id):
+                for record in db.session.execute(select(MachineLearning.group_id).group_by(MachineLearning.group_id)):
                     if is_package_ml(record.group_id.split(':')):
                         continue
                     if record.group_id not in group_id_list:
@@ -21133,15 +21049,15 @@ def train():
         else:
             the_prefix = ml_prefix(the_package, the_file)
             #logmessage("My prefix is " + the_prefix)
-            for record in db.session.query(MachineLearning.group_id, db.func.count(MachineLearning.id).label('count')).filter(and_(MachineLearning.group_id.like(the_prefix + ':%'), show_cond)).group_by(MachineLearning.group_id):
+            for record in db.session.execute(select(MachineLearning.group_id, db.func.count(MachineLearning.id).label('cnt')).where(and_(MachineLearning.group_id.like(the_prefix + ':%'), show_cond)).group_by(MachineLearning.group_id)):
                 parts = record.group_id.split(':')
                 if not is_package_ml(parts):
                     continue
                 if parts[2] not in group_id_list:
                     group_id_list[parts[2]] = 0
-                group_id_list[parts[2]] += record.count
+                group_id_list[parts[2]] += record.cnt
             if not show_all:
-                for record in db.session.query(MachineLearning.group_id).filter(MachineLearning.group_id.like(the_prefix + ':%')).group_by(MachineLearning.group_id):
+                for record in db.session.execute(select(MachineLearning.group_id).where(MachineLearning.group_id.like(the_prefix + ':%')).group_by(MachineLearning.group_id)):
                     parts = record.group_id.split(':')
                     if not is_package_ml(parts):
                         continue
@@ -21194,7 +21110,7 @@ def train():
     else:
         group_id_to_use = fix_group_id(the_package, the_file, the_group_id)
         model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
-        for record in db.session.query(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).filter(and_(MachineLearning.group_id == group_id_to_use, show_cond)):
+        for record in db.session.execute(select(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).where(and_(MachineLearning.group_id == group_id_to_use, show_cond))):
             new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')) if record.independent is not None else None, dependent=fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')) if record.dependent is not None else None, info=fix_pickle_obj(codecs.decode(bytearray(record.info, encoding='utf-8'), 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
             if isinstance(new_entry['independent'], DADict) or isinstance(new_entry['independent'], dict):
                 new_entry['independent_display'] = '<div class="damldatacontainer">' + '<br>'.join(['<span class="damldatakey">' + str(key) + '</span>: <span class="damldatavalue">' + str(val) + ' (' + str(val.__class__.__name__) + ')</span>' for key, val in new_entry['independent'].items()]) + '</div>'
@@ -21238,7 +21154,7 @@ def train():
                     new_entry['image_files'].append(dict(doc_url=doc_url, image_url=image_url))
             entry_list.append(new_entry)
         if len(entry_list) == 0:
-            record = db.session.query(MachineLearning.independent).filter(and_(MachineLearning.group_id == group_id_to_use, MachineLearning.independent != None)).first()
+            record = db.session.execute(select(MachineLearning.independent).where(and_(MachineLearning.group_id == group_id_to_use, MachineLearning.independent != None))).first()
             if record is not None:
                 sample_indep = fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
             else:
@@ -21250,12 +21166,12 @@ def train():
         else:
             is_data = False
         choices = dict()
-        for record in db.session.query(MachineLearning.dependent, db.func.count(MachineLearning.id).label('count')).filter(and_(MachineLearning.group_id == group_id_to_use)).group_by(MachineLearning.dependent):
+        for record in db.session.execute(select(MachineLearning.dependent, db.func.count(MachineLearning.id).label('cnt')).where(and_(MachineLearning.group_id == group_id_to_use)).group_by(MachineLearning.dependent)):
             #logmessage("There is a choice")
             if record.dependent is None:
                 continue
             key = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
-            choices[key] = record.count
+            choices[key] = record.cnt
         if len(choices):
             #logmessage("There are choices")
             choices = [(x, choices[x]) for x in sorted(choices, key=operator.itemgetter(0), reverse=False)]
@@ -21321,23 +21237,23 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         else:
             if user_id is None:
                 if filename is None:
-                    interview_query = db.session.query(UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key)
+                    interview_query = db.session.execute(select(UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key))
                 else:
-                    interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.filename == filename).group_by(UserDict.filename, UserDict.key)
+                    interview_query = db.session.execute(select(UserDict.filename, UserDict.key).where(UserDict.filename == filename).group_by(UserDict.filename, UserDict.key))
                 for interview_info in interview_query:
                     sessions_to_delete.add((interview_info.key, interview_info.filename, None))
             else:
                 if filename is None:
-                    interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id).group_by(UserDictKeys.filename, UserDictKeys.key)
+                    interview_query = db.session.execute(select(UserDictKeys.filename, UserDictKeys.key).where(UserDictKeys.user_id == user_id).group_by(UserDictKeys.filename, UserDictKeys.key))
                 else:
-                    interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key).filter(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserDictKeys.filename, UserDictKeys.key)
+                    interview_query = db.session.execute(select(UserDictKeys.filename, UserDictKeys.key).where(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserDictKeys.filename, UserDictKeys.key))
                 for interview_info in interview_query:
                     sessions_to_delete.add((interview_info.key, interview_info.filename, user_id))
             if user_id is not None:
                 if filename is None:
-                    interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.user_id == user_id).group_by(UserDict.filename, UserDict.key)
+                    interview_query = db.session.execute(select(UserDict.filename, UserDict.key).where(UserDict.user_id == user_id).group_by(UserDict.filename, UserDict.key))
                 else:
-                    interview_query = db.session.query(UserDict.filename, UserDict.key).filter(UserDict.user_id == user_id, UserDict.filename == filename).group_by(UserDict.filename, UserDict.key)
+                    interview_query = db.session.execute(select(UserDict.filename, UserDict.key).where(UserDict.user_id == user_id, UserDict.filename == filename).group_by(UserDict.filename, UserDict.key))
                 for interview_info in interview_query:
                     sessions_to_delete.add((interview_info.key, interview_info.filename, user_id))
         logmessage("Deleting " + str(len(sessions_to_delete)) + " interviews")
@@ -21382,11 +21298,11 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 subq_filter_elements.append(UserDictKeys.key == session)
             if start_id is not None:
                 subq_filter_elements.append(UserDict.indexno > start_id)
-            subq = db.session.query(UserDictKeys).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).with_entities(UserDictKeys.filename, UserDictKeys.key, db.func.max(UserDict.indexno).label('indexno'))
+            subq = select(UserDictKeys.filename, UserDictKeys.key, db.func.max(UserDict.indexno).label('indexno')).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key))
             if len(subq_filter_elements):
-                subq = subq.filter(and_(*subq_filter_elements))
+                subq = subq.where(and_(*subq_filter_elements))
             subq = subq.group_by(UserDictKeys.filename, UserDictKeys.key).subquery()
-            interview_query = db.session.query(subq).join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).join(UserModel, UserDictKeys.user_id == UserModel.id).order_by(UserDict.indexno).with_entities(*query_elements)
+            interview_query = select(*query_elements).select_from(subq.join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).join(UserModel, UserDictKeys.user_id == UserModel.id)).order_by(UserDict.indexno)
         else:
             query_elements = [UserDict.indexno, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDict.filename, UserDict.key, UserModel.email]
             subq_filter_elements = []
@@ -21400,15 +21316,15 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 subq_filter_elements.append(UserDict.key == session)
             if start_id is not None:
                 subq_filter_elements.append(UserDict.indexno > start_id)
-            subq = db.session.query(UserDict.filename, UserDict.key, db.func.max(UserDict.indexno).label('indexno'))
+            subq = select(UserDict.filename, UserDict.key, db.func.max(UserDict.indexno).label('indexno'))
             if len(subq_filter_elements):
-                subq = subq.filter(and_(*subq_filter_elements))
+                subq = subq.where(and_(*subq_filter_elements))
             subq = subq.group_by(UserDict.filename, UserDict.key).subquery()
-            interview_query = db.session.query(subq).join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True)).order_by(UserDict.indexno).with_entities(*query_elements)
+            interview_query = select(*query_elements).select_from(subq.join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True))).order_by(UserDict.indexno)
         interview_query = interview_query.limit(PAGINATION_LIMIT_PLUS_ONE)
         stored_info = list()
         results_in_query = 0
-        for interview_info in interview_query:
+        for interview_info in db.session.execute(interview_query):
             results_in_query += 1
             if results_in_query == PAGINATION_LIMIT_PLUS_ONE:
                 there_are_more = True
@@ -21758,9 +21674,9 @@ def on_register_hook(sender, user, **extra):
     user_invite = extra.get('user_invite', None)
     this_user_role = None
     if user_invite is not None:
-        this_user_role = Role.query.filter_by(id=user_invite.role_id).first()
+        this_user_role = db.session.execute(select(Role).filter_by(id=user_invite.role_id)).scalar()
     if this_user_role is None:
-        this_user_role = Role.query.filter_by(name='user').first()
+        this_user_role = db.session.execute(select(Role).filter_by(name='user')).scalar()
     roles_to_remove = list()
     for role in user.roles:
         roles_to_remove.append(role)
@@ -22758,7 +22674,7 @@ def api_verify(req, roles=None):
             if not matched:
                 logmessage("api_verify: authorization failure referer " + str(the_referer) + " could not be matched")
                 return False
-    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
+    user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == user_id)).scalar()
     if user is None or user.social_id.startswith('disabled$'):
         logmessage("api_verify: user does not exist")
         return False
@@ -22801,12 +22717,12 @@ def get_user_list(include_inactive=False, start_id=None):
             filter_list.append(UserModel.id > start_id)
         if not include_inactive:
             filter_list.append(UserModel.active == True)
-        the_users = UserModel.query.options(db.joinedload('roles'))
+        the_users = select(UserModel).options(db.joinedload(UserModel.roles))
         if len(filter_list):
-            the_users = the_users.filter(*filter_list)
+            the_users = the_users.where(*filter_list)
         the_users = the_users.order_by(UserModel.id).limit(PAGINATION_LIMIT_PLUS_ONE)
         results_in_query = 0
-        for user in the_users:
+        for user in db.session.execute(the_users).unique().scalars():
             results_in_query += 1
             if results_in_query == PAGINATION_LIMIT_PLUS_ONE:
                 there_are_more = True
@@ -23417,13 +23333,13 @@ def get_user_info(user_id=None, email=None, case_sensitive=False):
             raise Exception("You cannot call get_user_info() unless you are an administrator or advocate")
     user_info = dict(privileges=[])
     if user_id is not None:
-        user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
+        user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == user_id)).scalar()
     else:
         if case_sensitive:
-            user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
+            user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(email=email)).scalar()
         else:
             email = re.sub(r'\%', '', email)
-            user = UserModel.query.options(db.joinedload('roles')).filter(UserModel.email.ilike(email)).first()
+            user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.email.ilike(email))).scalar()
     if user is None or user.social_id.startswith('disabled$'):
         return None
     for role in user.roles:
@@ -23441,11 +23357,11 @@ def make_user_inactive(user_id=None, email=None):
     if user_id is None and email is None:
         raise Exception("You must call make_user_inactive() with a user ID or an e-mail address")
     if user_id is not None:
-        user = UserModel.query.filter_by(id=user_id).first()
+        user = db.session.execute(select(UserModel).filter_by(id=user_id)).scalar()
     else:
         assert isinstance(email, str)
         email = email.strip()
-        user = UserModel.query.filter_by(email=email).first()
+        user = db.session.execute(select(UserModel).filter_by(email=email)).scalar()
     if user is None:
         raise Exception("User not found")
     user.active = False
@@ -23523,7 +23439,7 @@ def api_create_user():
             return jsonify_with_status("List of privileges must be a string or a list.", 400)
         role_list = [role_list]
     valid_role_names = set()
-    for rol in Role.query.filter(Role.name != 'cron').order_by('id'):
+    for rol in db.session.execute(select(Role).where(Role.name != 'cron').order_by(Role.id)).scalars():
         valid_role_names.add(rol.name)
     for role_name in role_list:
         if role_name not in valid_role_names:
@@ -23691,7 +23607,7 @@ def get_privileges_list():
     if not (current_user.has_role('admin', 'developer')):
         raise Exception('You must have admin or developer privileges to call get_privileges_list().')
     role_names = []
-    for role in Role.query.order_by('name'):
+    for role in db.session.execute(select(Role.name).order_by(Role.name)):
         role_names.append(role.name)
     return role_names
 
@@ -23709,21 +23625,10 @@ def remove_privilege(privilege):
         raise Exception('You must have admin privileges to call remove_privilege().')
     if privilege in ['user', 'admin', 'developer', 'advocate', 'cron']:
         raise Exception('The specified privilege is built-in and cannot be deleted.')
-    user_role = Role.query.filter_by(name='user').first()
-    role = Role.query.filter_by(name=privilege).first()
+    user_role = db.session.execute(select(Role).filter_by(name='user')).scalar()
+    role = db.session.execute(select(Role).filter_by(name=privilege)).scalar()
     if role is None:
         raise Exception('The privilege ' + str(privilege) + ' did not exist.')
-    for user in db.session.query(UserModel):
-        roles_to_remove = list()
-        for the_role in user.roles:
-            if the_role.name == role.name:
-                roles_to_remove.append(the_role)
-        if len(roles_to_remove) > 0:
-            for the_role in roles_to_remove:
-                user.roles.remove(the_role)
-            if len(user.roles) == 0:
-                user.roles.append(user_role)
-    db.session.commit()
     db.session.delete(role)
     db.session.commit()
 
@@ -23771,14 +23676,14 @@ def add_user_privilege(user_id, privilege):
         raise Exception('You must have admin privileges to call add_user_privilege().')
     if privilege not in get_privileges_list():
         raise Exception('The specified privilege does not exist.')
-    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
+    user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == user_id)).scalar()
     if user is None or user.social_id.startswith('disabled$'):
         raise Exception("The specified user did not exist")
     for role in user.roles:
         if role.name == privilege:
             raise Exception("The user already had that privilege.")
     role_to_add = None
-    for role in Role.query.order_by('id'):
+    for role in db.session.execute(select(Role).order_by(Role.id)).scalars():
         if role.name == privilege:
             role_to_add = role
     if role_to_add is None:
@@ -23793,7 +23698,7 @@ def remove_user_privilege(user_id, privilege):
         raise Exception('You cannot take away the admin privilege from the current user.')
     if privilege not in get_privileges_list():
         raise Exception('The specified privilege does not exist.')
-    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
+    user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == user_id)).scalar()
     if user is None or user.social_id.startswith('disabled$'):
         raise Exception("The specified user did not exist")
     role_to_remove = None
@@ -23835,7 +23740,7 @@ def create_user(email, password, privileges=None, info=None):
     user_auth = UserAuthModel(password=app.user_manager.hash_password(password))
     while True:
         new_social = 'local$' + random_alphanumeric(32)
-        existing_user = UserModel.query.options(db.joinedload('roles')).filter_by(social_id=new_social).first()
+        existing_user = db.session.execute(select(UserModel).filter_by(social_id=new_social)).first()
         if existing_user:
             continue
         break
@@ -23857,12 +23762,12 @@ def create_user(email, password, privileges=None, info=None):
         confirmed_at = datetime.datetime.now()
     )
     num_roles = 0
-    for role in Role.query.filter(Role.name != 'cron').order_by('id'):
+    for role in db.session.execute(select(Role).where(Role.name != 'cron').order_by(Role.id)).scalars():
         if role.name in privileges:
             the_user.roles.append(role)
         num_roles +=1
     if num_roles == 0:
-        user_role = Role.query.filter_by(name='user').first()
+        user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
         the_user.roles.append(user_role)
     db.session.add(user_auth)
     db.session.add(the_user)
@@ -23880,9 +23785,9 @@ def set_user_info(**kwargs):
         if (user_id is not None and current_user.id != user_id) or (email is not None and current_user.email != email):
             raise Exception("You cannot call set_user_info() unless you are an administrator")
     if user_id is not None:
-        user = UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id).first()
+        user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
     else:
-        user = UserModel.query.options(db.joinedload('roles')).filter_by(email=email).first()
+        user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(email=email)).scalar()
     if user is None or user.social_id.startswith('disabled$'):
         raise Exception("User not found")
     for key, val in kwargs.items():
@@ -23933,10 +23838,10 @@ def api_get_secret():
 
 def get_secret(username, password, case_sensitive=False):
     if case_sensitive:
-        user = UserModel.query.filter_by(email=username).first()
+        user = db.session.execute(select(UserModel).filter_by(email=username)).scalar()
     else:
         username = re.sub(r'\%', '', username)
-        user = UserModel.query.filter(UserModel.email.ilike(username)).first()
+        user = db.session.execute(select(UserModel).where(UserModel.email.ilike(username))).scalar()
     if user is None:
         raise Exception("Username not known")
     if app.config['USE_MFA'] and user.otp_secret is not None:
@@ -24914,7 +24819,7 @@ def api_login_url():
     else:
         url_args = dict()
     username = re.sub(r'\%', '', username)
-    user = UserModel.query.filter(UserModel.email.ilike(username)).first()
+    user = db.session.execute(select(UserModel).where(UserModel.email.ilike(username))).scalar()
     if user is None:
         return jsonify_with_status("Username not known", 403)
     info = dict(user_id=user.id, secret=secret)
@@ -25145,7 +25050,7 @@ def api_package():
                 return jsonify_with_status("Package not found.", 400)
             if not the_package.can_update:
                 return jsonify_with_status("You are not allowed to update that package.", 400)
-            existing_package = Package.query.filter_by(name=target, active=True).order_by(Package.id.desc()).first()
+            existing_package = db.session.execute(select(Package).filter_by(name=target, active=True).order_by(Package.id.desc())).scalar()
             if existing_package is not None:
                 if existing_package.type == 'git' and existing_package.giturl is not None:
                     if existing_package.gitbranch:
@@ -25468,7 +25373,7 @@ def api_playground_install():
                             with zf.open(zinfo) as f:
                                 the_file_obj = TextIOWrapper(f, encoding='utf8')
                                 setup_py = the_file_obj.read()
-                        elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts:
+                        elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
                             need_to_restart = True
                             data_files['modules'].append(filename)
                             target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
@@ -25939,7 +25844,7 @@ def api_stash_data():
 def api_retrieve_stashed_data():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
-    delete = true_or_false(request.args.get('delete', False))
+    do_delete = true_or_false(request.args.get('delete', False))
     refresh = request.args.get('refresh', None)
     if refresh:
         try:
@@ -25952,7 +25857,7 @@ def api_retrieve_stashed_data():
     if stash_key is None or secret is None:
         return jsonify_with_status("The stash key and secret parameters are required.", 400)
     try:
-        data = retrieve_stashed_data(stash_key, secret, delete=delete, refresh=refresh)
+        data = retrieve_stashed_data(stash_key, secret, delete=do_delete, refresh=refresh)
         assert data is not None
     except Exception as err:
         return jsonify_with_status("The stashed data could not be retrieved: " + err.__class__.__name__ + " " + str(err) + ".", 400)
@@ -26215,7 +26120,7 @@ def api_interview():
                 user_code = None
         if user_code:
             if user_info['user_id']:
-                user = UserModel.query.filter_by(id=user_info['user_id']).first()
+                user = db.session.execute(select(UserModel).filter_by(id=user_info['user_id'])).scalar()
                 if user is None or user.social_id.startswith('disabled$') or not user.active:
                     user_code = None
                 else:
@@ -26557,12 +26462,12 @@ def whoami():
         return jsonify(logged_in=False)
 
 def retrieve_email(email_id):
-    email = Email.query.filter_by(id=email_id).first()
+    email = db.session.execute(select(Email).filter_by(id=email_id)).scalar()
     if email is None:
         raise DAError("E-mail did not exist")
-    short_record = Shortener.query.filter_by(short=email.short).first()
+    short_record = db.session.execute(select(Shortener).filter_by(short=email.short)).scalar()
     if short_record.user_id is not None:
-        user = UserModel.query.options(db.joinedload('roles')).filter_by(id=short_record.user_id, active=True).first()
+        user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=short_record.user_id, active=True)).scalar()
     else:
         user = None
     if short_record is None:
@@ -26601,12 +26506,12 @@ def retrieve_emails(**pargs):
     user_cache = dict()
     results = list()
     if key is None:
-        the_query = Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id).order_by(Shortener.modtime)
+        the_query = db.session.execute(select(Shortener).filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id).order_by(Shortener.modtime)).scalars()
     else:
         if index is None:
-            the_query = Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key).order_by(Shortener.modtime)
+            the_query = db.session.execute(select(Shortener).filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key).order_by(Shortener.modtime)).scalars()
         else:
-            the_query = Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key, index=index).order_by(Shortener.modtime)
+            the_query = db.session.execute(select(Shortener).filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key, index=index).order_by(Shortener.modtime)).scalars()
     for record in the_query:
         result_for_short = AddressEmail()
         result_for_short.address = record.short
@@ -26623,7 +26528,7 @@ def retrieve_emails(**pargs):
         else:
             user = None
             result_for_short.owner = None
-        for email in Email.query.filter_by(short=record.short).order_by(Email.datetime_received):
+        for email in db.session.execute(select(Email).filter_by(short=record.short).order_by(Email.datetime_received)).scalars():
             result_for_short.emails.append(get_email_obj(email, record, user))
         results.append(result_for_short)
     return results
@@ -26645,9 +26550,9 @@ def get_email_obj(email, short_record, user):
         email_obj.address_owner = None
     else:
         email_obj.address_owner = user.email
-    for attachment_record in EmailAttachment.query.filter_by(email_id=email.id).order_by(EmailAttachment.index):
+    for attachment_record in db.session.execute(select(EmailAttachment).filter_by(email_id=email.id).order_by(EmailAttachment.index)).scalars():
         #sys.stderr.write("Attachment record is " + str(attachment_record.id) + "\n")
-        upload = Uploads.query.filter_by(indexno=attachment_record.upload).first()
+        upload = db.session.execute(select(Uploads).filter_by(indexno=attachment_record.upload)).scalar()
         if upload is None:
             continue
         #sys.stderr.write("Filename is " + upload.filename + "\n")
@@ -26812,7 +26717,7 @@ def get_short_code(**pargs):
         user_id = current_user.id
         temp_user_id = None
     short_code = None
-    for record in Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key, index=index):
+    for record in db.session.execute(select(Shortener.short).filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key, index=index)):
         short_code = record.short
     if short_code is not None:
         return short_code
@@ -26821,7 +26726,7 @@ def get_short_code(**pargs):
     while counter < 20:
         existing_id = None
         new_short = random_lower_string(6)
-        for record in Shortener.query.filter_by(short=new_short):
+        for record in db.session.execute(select(Shortener.id).filter_by(short=new_short)):
             existing_id = record.id
         if existing_id is None:
             new_record = Shortener(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, short=new_short, key=key, index=index)
@@ -27497,7 +27402,7 @@ from docassemble.webapp.core.models import Uploads, UploadsUserAuth, SpeakList, 
 def random_social():
     while True:
         new_social = 'local$' + random_alphanumeric(32)
-        existing_user = UserModel.query.filter_by(social_id=new_social).first()
+        existing_user = db.session.execute(select(UserModel).filter_by(social_id=new_social)).first()
         if existing_user:
             continue
         break

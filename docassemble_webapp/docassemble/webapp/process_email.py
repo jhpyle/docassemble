@@ -15,6 +15,7 @@ from email.utils import parseaddr, parsedate, getaddresses
 from time import mktime
 import datetime
 import mimetypes
+from sqlalchemy import select
 
 def main():
     fp = open("/tmp/mail.log", "a")
@@ -52,7 +53,7 @@ def main():
     else:
         short_code = None
     #fp.write("short code is " + str(short_code) + "\n")
-    record = db.session.query(Shortener).filter_by(short=short_code).first()
+    record = db.session.execute(select(Shortener).filter_by(short=short_code)).scalar()
     if record is None:
         fp.write("short code not found\n")
         sys.exit("short code not found")
@@ -122,7 +123,7 @@ def main():
     fp.close()
     user = None
     if record.user_id is not None:
-        user = db.session.query(UserModel).options(db.joinedload('roles')).filter_by(id=record.user_id).first()
+        user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=record.user_id)).scalar()
     if user is None:
         user_info = dict(email=None, the_user_id='t' + str(record.temp_user_id), theid=record.temp_user_id, roles=list())
     else:

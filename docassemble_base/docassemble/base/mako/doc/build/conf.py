@@ -208,8 +208,8 @@ htmlhelp_basename = 'Makodoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'mako_%s.tex' % release.replace('.', '_'), ur'Mako Documentation',
-   ur'Mike Bayer', 'manual'),
+  ('index', 'mako_%s.tex' % release.replace('.', '_'), r'Mako Documentation',
+   r'Mike Bayer', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

@@ -19,7 +19,7 @@ from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from flask import session
 from flask_login import current_user
 from docassemble.webapp.db_object import db
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, select
 import docassemble.base.config
 import sys
 from docassemble.base.generate_key import random_lower_string
@@ -271,15 +271,15 @@ def get_info_from_file_number(file_number, privileged=False, filename=None, uids
         else:
             uids = []
     result = dict()
-    upload = Uploads.query.filter_by(indexno=file_number).first()
+    upload = db.session.execute(select(Uploads).filter_by(indexno=file_number)).scalar()
     if not privileged and upload is not None and upload.private and upload.key not in uids:
         has_access = False
         if current_user and current_user.is_authenticated:
-            if UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=current_user.id).first() or db.session.query(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).filter(UploadsRoleAuth.uploads_indexno == file_number).first():
+            if db.session.execute(select(UserDictKeys).filter_by(key=upload.key, user_id=current_user.id)).first() or db.session.execute(select(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=current_user.id)).first() or db.session.execute(select(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).where(UploadsRoleAuth.uploads_indexno == file_number)).first():
                 has_access = True
         elif session and 'tempuser' in session:
             temp_user_id = int(session['tempuser'])
-            if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user_id).first():
+            if db.session.execute(select(UserDictKeys).filter_by(key=upload.key, temp_user_id=temp_user_id)).first() or db.session.execute(select(UploadsUserAuth).filter_by(uploads_indexno=file_number, temp_user_id=temp_user_id)).first():
                 has_access = True
         if not has_access:
             upload = None

@@ -1,8 +1,20 @@
 # Change Log
 
+## [1.2.68] - 2021-05-12
+### Changed
+- The Docker image now uses Python 3.8.10 rather than 3.8.6.
+- Upgraded various dependencies, including `docxtpl`,
+  the new version of which allows images to be inserted into headers
+  and footers of DOCX files.
+### Fixed
+- Issue with `interview_url()` and related functions when `style` is
+  used.
+
 ## [1.2.67] - 2021-05-08
 ### Fixed
-- Possible fix to issue with `/interviews` page and `interview_list()`.
+- Possible fix to issue with `/interviews` page and `interview_list()`
+  (this turned out to have been caused by a third-party package that
+  some people were using).
 
 ## [1.2.66] - 2021-05-04
 ### Fixed

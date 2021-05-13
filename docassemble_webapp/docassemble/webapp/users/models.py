@@ -18,7 +18,7 @@ class UserModel(db.Model, UserMixin):
     organization = db.Column(db.String(255))
     timezone = db.Column(db.String(64))
     language = db.Column(db.String(64))
-    user_auth = db.relationship('UserAuthModel', uselist=False, primaryjoin="UserAuthModel.user_id==UserModel.id")
+    user_auth = db.relationship('UserAuthModel', uselist=False, primaryjoin="UserAuthModel.user_id==UserModel.id", back_populates="user")
     roles = db.relationship('Role', secondary=dbtableprefix + 'user_roles', backref=db.backref(dbtableprefix + 'user', lazy='dynamic')) 
     password = db.Column(db.String(255), nullable=False, server_default='') # work around a bug
     otp_secret = db.Column(db.String(255), nullable=True)
@@ -35,7 +35,7 @@ class UserAuthModel(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False, server_default='')
     reset_password_token = db.Column(db.String(100), nullable=False, server_default='')
     #active = db.Column(db.Boolean(), nullable=False, server_default='0')
-    user = db.relationship('UserModel', uselist=False, primaryjoin="UserModel.id==UserAuthModel.user_id")
+    user = db.relationship('UserModel', uselist=False, primaryjoin="UserModel.id==UserAuthModel.user_id", back_populates="user_auth")
 
 class Role(db.Model):
     __tablename__ = dbtableprefix + 'role'

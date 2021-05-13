@@ -7,12 +7,13 @@ if __name__ == "__main__":
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
 from docassemble.webapp.core.models import Supervisors
+from sqlalchemy import delete
 
 def main():
     from docassemble.base.config import hostname
     supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
     if supervisor_url:
-        Supervisors.query.filter_by(hostname=hostname).delete()
+        db.session.execute(delete(Supervisors).filter_by(hostname=hostname))
         db.session.commit()
         new_entry = Supervisors(hostname=hostname, url="http://" + hostname + ":9001", role=os.environ.get('CONTAINERROLE', None))
         db.session.add(new_entry)

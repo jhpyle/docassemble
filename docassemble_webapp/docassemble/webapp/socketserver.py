@@ -15,7 +15,7 @@ docassemble.base.functions.server_context.context = 'websockets'
 from flask_socketio import join_room, disconnect
 from docassemble.webapp.app_socket import app, db, socketio
 
-from sqlalchemy import create_engine, MetaData, or_, and_
+from sqlalchemy import create_engine, MetaData, or_, and_, select
 from simplekv.memory.redisstore import RedisStore
 import docassemble.base.util
 import redis
@@ -107,7 +107,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
         user_is_temp = True
     else:
         with session_scope() as dbsession:
-            person = dbsession.query(UserModel).options(joinedload('roles')).filter_by(id=user_id).first()
+            person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
         user_is_temp = False
     if person is not None and person.timezone is not None:
         the_timezone = pytz.timezone(person.timezone)
@@ -271,7 +271,7 @@ def chat_message(data):
         dbsession.add(record)
         dbsession.commit()
         if user_id is not None:
-            person = dbsession.query(UserModel).options(joinedload('roles')).filter_by(id=user_id).first()
+            person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
         else:
             person = None
         modtime = nice_utc_date(nowtime)
@@ -466,7 +466,7 @@ def monitor_thread(sid=None, user_id=None):
     sys.stderr.write("Started monitor thread for " + str(sid) + " who is " + str(user_id) + "\n")
     with session_scope() as dbsession:
         if user_id is not None:
-            person = dbsession.query(UserModel).options(joinedload('roles')).filter_by(id=user_id).first()
+            person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
         else:
             person = None
         if person is not None and person.timezone is not None:
@@ -519,7 +519,7 @@ def monitor_thread(sid=None, user_id=None):
                         if str(data['userid']).startswith('t'):
                             name = word("anonymous visitor") + ' ' + str(data['userid'])[1:]
                         else:
-                            person = dbsession.query(UserModel).options(joinedload('roles')).filter_by(id=data['userid']).first()
+                            person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=data['userid'])).scalar()
                             if person.first_name:
                                 name = str(person.first_name) + ' ' + str(person.last_name)
                             else:
@@ -840,7 +840,7 @@ def monitor_chat_message(data):
         user_id = session.get('user_id', None)
         if user_id is not None:
             user_id = int(user_id)
-        person = dbsession.query(UserModel).options(joinedload('roles')).filter_by(id=user_id).first()
+        person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
         chat_mode = user_dict['_internal']['livehelp']['mode']
         m = re.match('t([0-9]+)', chat_user_id)
         if m:

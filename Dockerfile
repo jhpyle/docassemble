@@ -54,32 +54,15 @@ USER www-data
 RUN LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
 bash -c \
 "cd /tmp \
-&& python3.8 -m venv --copies /usr/share/docassemble/local3.8 \
+&& /usr/bin/python3.8 -m venv --copies /usr/share/docassemble/local3.8 \
 && source /usr/share/docassemble/local3.8/bin/activate \
-&& pip3 install --upgrade pip==21.0.1 \
+&& pip3 install --upgrade pip==21.1.1 \
 && pip3 install --upgrade mod_wsgi==4.7.1 \
-&& pip3 install --upgrade \
-   3to2==1.1.1 \
-   cython==0.29.21 \
-   numpy==1.19.4 \
-   bcrypt==3.2.0 \
-   flask==1.1.2 \
-   flask-login==0.5.0 \
-   flask-mail==0.9.1 \
-   flask-sqlalchemy==2.4.4 \
-   flask-wtf==0.14.3 \
-   s4cmd==2.1.0 \
-   uwsgi==2.0.19.1 \
-   passlib==1.7.4 \
-   pycryptodome==3.9.9 \
-   pycryptodomex==3.9.9 \
-   six==1.15.0 \
-   setuptools==50.3.2 \
-&& pip3 install --upgrade \
-   certbot==1.14.0 \
-   certbot-nginx==1.14.0 \
-   certbot-apache==1.14.0 \
-&& pip3 install --upgrade \
+&& pip3 install --upgrade --use-deprecated=legacy-resolver \
+   certbot==1.15.0 \
+   certbot-nginx==1.15.0 \
+   certbot-apache==1.15.0 \
+&& pip3 install --use-feature=in-tree-build --use-deprecated=legacy-resolver \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \

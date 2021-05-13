@@ -10,7 +10,7 @@ from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
 from docassemble.webapp.translations import setup_translation
 from docassemble.base.generate_key import random_alphanumeric
-from sqlalchemy import or_, and_, not_
+from sqlalchemy import or_, and_, not_, select
 
 import random
 import string
@@ -39,7 +39,7 @@ def privilege_list():
       </thead>
       <tbody>
 """
-    for role in db.session.query(Role).order_by(Role.name):
+    for role in db.session.execute(select(Role).order_by(Role.name)).scalars():
         if role.name not in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
             output += '        <tr><td>' + str(role.name) + '</td><td><a class="btn ' + app.config['BUTTON_CLASS'] + 'danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
         else:
@@ -68,13 +68,13 @@ def user_list():
     else:
         page = 0
     users = list()
-    user_query = db.session.query(UserModel).options(db.joinedload('roles')).filter(UserModel.nickname != 'cron', not_(UserModel.social_id.like('disabled$%'))).order_by(UserModel.id)
+    user_query = select(UserModel).options(db.joinedload(UserModel.roles)).where(and_(UserModel.nickname != 'cron', not_(UserModel.social_id.like('disabled$%')))).order_by(UserModel.id)
     if page > 0:
         user_query = user_query.offset(PAGINATION_LIMIT*page)
     user_query = user_query.limit(PAGINATION_LIMIT_PLUS_ONE)
     results_in_query = 0
     there_are_more = False
-    for user in user_query:
+    for user in db.session.execute(user_query).unique().scalars():
         results_in_query += 1
         if results_in_query == PAGINATION_LIMIT_PLUS_ONE:
             there_are_more = True
@@ -121,12 +121,12 @@ def user_list():
 @roles_required('admin')
 def delete_privilege(id):
     setup_translation()
-    role = Role.query.filter_by(id=id).first()
-    user_role = Role.query.filter_by(name='user').first()
+    role = db.session.execute(select(Role).filter_by(id=id)).scalar_one()
+    user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
     if role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron']:
         flash(word('The role could not be deleted.'), 'error')
     else:
-        for user in db.session.query(UserModel).options(db.joinedload('roles')):
+        for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).scalars():
             roles_to_remove = list()
             for the_role in user.roles:
                 if the_role.name == role.name:
@@ -148,7 +148,7 @@ def delete_privilege(id):
 @roles_required('admin')
 def edit_user_profile_page(id):
     setup_translation()
-    user = UserModel.query.options(db.joinedload('roles')).filter_by(id=id).first()
+    user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=id)).unique().scalar_one()
     the_tz = user.timezone if user.timezone else get_default_timezone()
     if user is None or user.social_id.startswith('disabled$'):
         return redirect(url_for('user_list'))
@@ -181,19 +181,20 @@ def edit_user_profile_page(id):
             return redirect(url_for('user_list'))
     the_role_id = list()
     for role in user.roles:
-        the_role_id.append(str(role.id))
+        the_role_id.append(role.id)
     if len(the_role_id) == 0:
-        the_role_id = [str(Role.query.filter_by(name='user').first().id)]
+        the_role_id = [db.session.execute(select(Role.id).filter_by(name='user')).scalar_one()]
     form = EditUserProfileForm(request.form, obj=user, role_id=the_role_id)
     if request.method == 'POST' and form.cancel.data:
         flash(word('The user profile was not changed.'), 'success')
         return redirect(url_for('user_list'))
     if user.social_id.startswith('local$') or daconfig.get('allow external auth with admin accounts', False):
-        form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
+        form.role_id.choices = [(r.id, r.name) for r in db.session.execute(select(Role.id, Role.name).where(Role.name != 'cron').order_by('name'))]
         privileges_note = None
     else:
-        form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name')]
+        form.role_id.choices = [(r.id, r.name) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name'))]
         privileges_note = word("Note: only users with e-mail/password accounts can be given admin privileges.")
+    form.role_id.process_data(the_role_id)
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
     form.timezone.default = the_tz
     if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
@@ -202,7 +203,7 @@ def edit_user_profile_page(id):
         form.uses_mfa.data = False
     else:
         form.uses_mfa.data = True
-    admin_id = Role.query.filter_by(name='admin').first().id
+    admin_id = db.session.execute(select(Role.id).filter_by(name='admin')).scalar_one()
     if request.method == 'POST' and form.validate(user.id, admin_id):
         form.populate_obj(user)
         roles_to_remove = list()
@@ -211,7 +212,7 @@ def edit_user_profile_page(id):
             roles_to_remove.append(role)
         for role in roles_to_remove:
             user.roles.remove(role)
-        for role in Role.query.order_by('id'):
+        for role in db.session.execute(select(Role).order_by('id')).scalars():
             if role.id in form.role_id.data:
                 user.roles.append(role)
                 the_role_id.append(role.id)
@@ -219,7 +220,6 @@ def edit_user_profile_page(id):
         #docassemble.webapp.daredis.clear_user_cache()
         flash(word('The information was saved.'), 'success')
         return redirect(url_for('user_list'))
-    form.role_id.default = the_role_id
     confirmation_feature = True if user.id > 2 else False
     script = """
     <script>
@@ -241,7 +241,7 @@ def add_privilege():
     form = NewPrivilegeForm(request.form, obj=current_user)
 
     if request.method == 'POST' and form.validate():
-        for role in db.session.query(Role).order_by(Role.name):
+        for role in db.session.execute(select(Role).order_by(Role.name)).scalars():
             if role.name == form.name.data:
                 flash(word('The privilege could not be added because it already exists.'), 'error')
                 return redirect(url_for('privilege_list'))
@@ -302,12 +302,9 @@ def invite():
     next = request.args.get('next',
                             _endpoint_url(user_manager.after_invite_endpoint))
 
-    user_role = Role.query.filter_by(name='user').first()
+    user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
     invite_form = MyInviteForm(request.form)
-    invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.query(Role).filter(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name')]
-    invite_form.role_id.default = str(user_role.id)
-    if str(invite_form.role_id.data) == 'None':
-        invite_form.role_id.data = str(user_role.id)
+    invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name'))]
     if request.method=='POST' and invite_form.validate():
         email_addresses = list()
         for email_address in re.split(r'[\n\r]+', invite_form.email.data.strip()):
@@ -316,7 +313,7 @@ def invite():
 
         the_role_id = None
 
-        for role in Role.query.order_by('id'):
+        for role in db.session.execute(select(Role).order_by('id')).scalars():
             if role.id == int(invite_form.role_id.data) and role.name != 'admin' and role.name != 'cron':
                 the_role_id = role.id
 
@@ -345,6 +342,7 @@ def invite():
             try:
                 logmessage("Trying to send e-mail to " + str(user_invite.email))
                 emails.send_invite_email(user_invite, accept_invite_link)
+                logmessage("Sent e-mail invite to " + str(user_invite.email))
             except Exception as e:
                 try:
                     logmessage("Failed to send e-mail: " + str(e))
@@ -362,7 +360,8 @@ def invite():
         else:
             flash(word('Invitation has been sent.'), 'success')
         return redirect(next)
-
+    if invite_form.role_id.data is None:
+        invite_form.role_id.process_data(str(user_role.id))
     response = make_response(render_template('flask_user/invite.html', version_warning=None, bodyclass='daadminbody', page_title=word('Invite User'), tab_title=word('Invite User'), form=invite_form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -372,9 +371,9 @@ def invite():
 @roles_required('admin')
 def user_add():
     setup_translation()
-    user_role = Role.query.filter_by(name='user').first()
+    user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
     add_form = UserAddForm(request.form, role_id=[str(user_role.id)])
-    add_form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
+    add_form.role_id.choices = [(r.id, r.name) for r in db.session.execute(select(Role.id, Role.name).where(Role.name != 'cron').order_by('name'))]
     add_form.role_id.default = user_role.id
     if str(add_form.role_id.data) == 'None':
         add_form.role_id.data = user_role.id
@@ -386,7 +385,7 @@ def user_add():
         user_auth = UserAuthModel(password=app.user_manager.hash_password(add_form.password.data))
         while True:
             new_social = 'local$' + random_alphanumeric(32)
-            existing_user = UserModel.query.filter_by(social_id=new_social).first()
+            existing_user = db.session.execute(select(UserModel).filter_by(social_id=new_social)).scalar()
             if existing_user:
                 continue
             break
@@ -401,7 +400,7 @@ def user_add():
             confirmed_at = datetime.datetime.now()
         )
         num_roles = 0
-        for role in Role.query.order_by('id'):
+        for role in db.session.execute(select(Role).order_by('id')).scalars():
             if role.id in add_form.role_id.data:
                 the_user.roles.append(role)
                 num_roles +=1

@@ -6059,6 +6059,8 @@ class Question:
                             docassemble.base.functions.reset_context()
                         elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                             #logmessage("field_data is " + repr(result['field_data']))
+                            if result['template'].current_rendering_part is None:
+                                result['template'].current_rendering_part = result['template'].docx._part
                             docassemble.base.functions.set_context('docx', template=result['template'])
                             docassemble.base.functions.this_thread.misc['docx_subdocs'] = []
                             try:
@@ -6398,6 +6400,8 @@ class Question:
                                 result['template'].da_hyperlink_style = 'InternetLink'
                             else:
                                 result['template'].da_hyperlink_style = None
+                            if result['template'].current_rendering_part is None:
+                                result['template'].current_rendering_part = result['template'].docx._part
                             docassemble.base.functions.set_context('docx', template=result['template'])
                             if isinstance(attachment['options']['fields'], str):
                                 result['field_data'] = the_user_dict

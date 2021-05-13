@@ -25,26 +25,26 @@ import docassemble.base.util
 import docassemble.base.functions
 import pickle
 import codecs
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, select
 from docassemble.webapp.daredis import r, r_user
 
 set_request_active(False)
 
 def get_filenames():
     results = list()
-    for record in db.session.query(UserDict.filename).filter(UserDict.encrypted == False).group_by(UserDict.filename):
+    for record in db.session.execute(select(UserDict.filename).where(UserDict.encrypted == False).group_by(UserDict.filename)):
         results.append(record.filename)
     return results
 
 def get_records(filename, last_index):
-    subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).filter(UserDict.filename == filename, UserDict.encrypted == False, UserDict.indexno > last_index).subquery()
+    subq = select(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('cnt')).group_by(UserDict.filename, UserDict.key).where(UserDict.filename == filename, UserDict.encrypted == False, UserDict.indexno > last_index).subquery()
     results = list()
-    for record in db.session.query(UserDict.key, UserDict.filename, UserDict.dictionary, subq.c.indexno, subq.c.count).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(200):
-        results.append((record.indexno, record.key, record.filename, record.dictionary, record.count))
+    for record in db.session.execute(select(UserDict.key, UserDict.filename, UserDict.dictionary, subq.c.indexno, subq.c.cnt).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(200)):
+        results.append((record.indexno, record.key, record.filename, record.dictionary, record.cnt))
     return results
 
 def get_cron_user():
-    for user in UserModel.query.options(db.joinedload('roles')).all():
+    for user in UserModel.query.options(db.joinedload(UserModel.roles)).all():
         for role in user.roles:
             if role.name == 'cron':
                 return(user)
@@ -93,7 +93,7 @@ def delete_inactive_users():
     cutoff_date = datetime.datetime.utcnow() - dateutil.relativedelta.relativedelta(days=cutoff_days)
     default_date = datetime.datetime(2020, 2, 24, 0, 0)
     candidates = list()
-    for item in db.session.query(UserModel.id, UserModel.last_login).join(UserRoles, UserModel.id == UserRoles.user_id).filter(or_(*filters)).all():
+    for item in db.session.execute(select(UserModel.id, UserModel.last_login).join(UserRoles, UserModel.id == UserRoles.user_id).where(or_(*filters))).all():
         if item.last_login is None:
             the_date = default_date
         else:
@@ -101,7 +101,7 @@ def delete_inactive_users():
         if the_date < cutoff_date:
             candidates.append(item.id)
     for user_id in candidates:
-        last_interview = db.session.query(UserDictKeys.user_id, db.func.max(UserDict.modtime).label('last_activity')).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).filter(UserDictKeys.user_id == user_id).group_by(UserDictKeys.user_id).first()
+        last_interview = db.session.execute(select(UserDictKeys.user_id, db.func.max(UserDict.modtime).label('last_activity')).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key)).where(UserDictKeys.user_id == user_id).group_by(UserDictKeys.user_id)).first()
         if last_interview is not None and last_interview.last_activity > cutoff_date:
             continue
         sys.stderr.write("delete_inactive_users: deleting %d\n" % (user_id,))
@@ -128,8 +128,8 @@ def clear_old_interviews():
     for filename, days in days_by_filename.items():
         last_index = -1
         while True:
-            subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).filter(UserDict.indexno > last_index, UserDict.filename == filename).group_by(UserDict.filename, UserDict.key).subquery()
-            results = db.session.query(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(1000)
+            subq = select(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).where(UserDict.indexno > last_index, UserDict.filename == filename).group_by(UserDict.filename, UserDict.key).subquery()
+            results = db.session.execute(select(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(1000))
             if results.count() == 0:
                 break
             stale = list()
@@ -149,8 +149,8 @@ def clear_old_interviews():
         return
     last_index = -1
     while True:
-        subq = db.session.query(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).filter(UserDict.indexno > last_index, UserDict.filename.notin_(days_by_filename.keys())).group_by(UserDict.filename, UserDict.key).subquery()
-        results = db.session.query(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(1000)
+        subq = select(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).where(UserDict.indexno > last_index, UserDict.filename.notin_(days_by_filename.keys())).group_by(UserDict.filename, UserDict.key).subquery()
+        results = db.session.execute(select(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(1000))
         if results.count() == 0:
             break
         stale = list()

@@ -7,7 +7,7 @@ from docassemble.webapp.users.models import UserModel, Role, ChatLog, UserDict, 
 from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage, Email, EmailAttachment
 from docassemble.webapp.packages.models import PackageAuth
 from docassemble.base.generate_key import random_string, random_bytes, random_alphanumeric
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, select, delete
 import docassemble.webapp.database
 import logging
 import pickle
@@ -74,12 +74,12 @@ def write_record(key, data):
 
 def read_records(key):
     results = dict()
-    for record in ObjectStorage.query.filter_by(key=key).order_by(ObjectStorage.id):
+    for record in db.session.execute(select(ObjectStorage).filter_by(key=key).order_by(ObjectStorage.id)).scalars():
         results[record.id] = unpack_object(record.value)
     return results
 
 def delete_record(key, id):
-    ObjectStorage.query.filter_by(key=key, id=id).delete()
+    db.session.execute(delete(ObjectStorage).filter_by(key=key, id=id))
     db.session.commit()
 
 #@elapsed('save_numbered_file')
@@ -137,7 +137,7 @@ def write_ml_source(playground, playground_number, current_project, filename, fi
     if re.match(r'ml-.*\.json', filename):
         output = dict()
         prefix = 'docassemble.playground' + str(playground_number) + project_name(current_project) + ':data/sources/' + str(filename)
-        for record in [record for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%'))]:
+        for record in db.session.execute(select(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).where(MachineLearning.group_id.like(prefix + ':%'))).all():
             parts = record.group_id.split(':')
             if not is_package_ml(parts):
                 continue
@@ -226,7 +226,7 @@ def url_for(*pargs, **kwargs):
     return base_url_for(*pargs, **kwargs)
 
 def sql_get(key, secret=None):
-    for record in GlobalObjectStorage.query.filter_by(key=key):
+    for record in db.session.execute(select(GlobalObjectStorage).filter_by(key=key)).scalars():
         if record.encrypted:
             try:
                 result = decrypt_object(record.value, secret)
@@ -241,7 +241,7 @@ def sql_get(key, secret=None):
     return None
 
 def sql_defined(key):
-    record = GlobalObjectStorage.query.filter_by(key=key).with_entities(GlobalObjectStorage.id).first()
+    record = db.session.execute(select(GlobalObjectStorage.id).filter_by(key=key)).first()
     if record is None:
         return False
     return True
@@ -249,7 +249,7 @@ def sql_defined(key):
 def sql_set(key, val, encrypted=True, secret=None, the_user_id=None):
     user_id, temp_user_id = parse_the_user_id(the_user_id)
     updated = False
-    for record in GlobalObjectStorage.query.filter_by(key=key).with_for_update():
+    for record in db.session.execute(select(GlobalObjectStorage).filter_by(key=key).with_for_update()).scalars():
         record.user_id = user_id
         record.temp_user_id = temp_user_id
         record.encrypted = encrypted
@@ -267,12 +267,13 @@ def sql_set(key, val, encrypted=True, secret=None, the_user_id=None):
     db.session.commit()
 
 def sql_delete(key):
-    GlobalObjectStorage.query.filter_by(key=key).delete()
+    db.session.execute(delete(GlobalObjectStorage).filter_by(key=key))
     db.session.commit()
 
 def sql_keys(prefix):
     n = len(prefix)
-    return list(set([y.key[n:] for y in db.session.query(GlobalObjectStorage.key).filter(GlobalObjectStorage.key.like(prefix + '%')).all()]))
+    stmt = select(GlobalObjectStorage.key).where(GlobalObjectStorage.key.like(prefix + '%'))
+    return list(set([y.key[n:] for y in db.session.execute(stmt)]))
 
 def get_info_from_file_reference_with_uids(*pargs, **kwargs):
     if 'uids' not in kwargs:
@@ -509,7 +510,7 @@ from docassemble.base.functions import pickleable_objects
 
 #@elapsed('can_access_file_number')
 def can_access_file_number(file_number, uids=None):
-    upload = Uploads.query.filter(Uploads.indexno == file_number).first()
+    upload = db.session.execute(select(Uploads).where(Uploads.indexno == file_number)).scalar()
     if upload is None:
         return False
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
@@ -525,11 +526,11 @@ def can_access_file_number(file_number, uids=None):
     if upload.key in uids:
         return True
     if current_user and current_user.is_authenticated:
-        if UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=current_user.id).first() or db.session.query(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).filter(UploadsRoleAuth.uploads_indexno == file_number).first():
+        if db.session.execute(select(UserDictKeys).filter_by(key=upload.key, user_id=current_user.id)).first() or db.session.execute(select(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=current_user.id)).first() or db.session.execute(select(UploadsRoleAuth).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).where(UploadsRoleAuth.uploads_indexno == file_number)).first():
             return True
     elif session and 'tempuser' in session:
         temp_user_id = int(session['tempuser'])
-        if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user_id).first():
+        if db.session.execute(select(UserDictKeys).filter_by(key=upload.key, temp_user_id=temp_user_id)).first() or db.session.execute(select(UploadsUserAuth).filter_by(uploads_indexno=file_number, temp_user_id=temp_user_id)).first():
             return True
     return False
 
@@ -654,10 +655,10 @@ def fetch_user_dict(user_code, filename, secret=None):
     user_dict = None
     steps = 1
     encrypted = True
-    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()
-    results = [d for d in db.session.query(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)]
-    #logmessage("fetch_user_dict: 01 query is " + str(results))
-    for d in results:
+    subq = select(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('cnt')).where(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()
+    stmt = select(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.cnt).join(subq, subq.c.indexno == UserDict.indexno)
+    result = db.session.execute(stmt)
+    for d in [d for d in result]:
         #logmessage("fetch_user_dict: indexno is " + str(d.indexno))
         if d.dictionary:
             if d.encrypted:
@@ -669,14 +670,14 @@ def fetch_user_dict(user_code, filename, secret=None):
                 user_dict = unpack_dictionary(d.dictionary)
                 #logmessage("fetch_user_dict: unpacked dictionary")
                 encrypted = False
-        if d.count:
-            steps = d.count
+        if d.cnt:
+            steps = d.cnt
         break
     return steps, user_dict, encrypted
 
 #@elapsed('user_dict_exists')
 def user_dict_exists(user_code, filename):
-    result = UserDict.query.filter(and_(UserDict.key == user_code, UserDict.filename == filename)).first()
+    result = db.session.execute(select(UserDict).where(and_(UserDict.key == user_code, UserDict.filename == filename))).first()
     if result:
         return True
     return False
@@ -684,9 +685,9 @@ def user_dict_exists(user_code, filename):
 #@elapsed('fetch_previous_user_dict')
 def fetch_previous_user_dict(user_code, filename, secret):
     user_dict = None
-    max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()
+    max_indexno = db.session.execute(select(db.func.max(UserDict.indexno)).where(and_(UserDict.key == user_code, UserDict.filename == filename))).scalar()
     if max_indexno is not None:
-        UserDict.query.filter_by(indexno=max_indexno).delete()
+        db.session.execute(delete(UserDict).where(UserDict.indexno == max_indexno))
         db.session.commit()
     return fetch_user_dict(user_code, filename, secret=secret)
 
@@ -709,25 +710,25 @@ def advance_progress(user_dict, interview):
     return
 
 def delete_temp_user_data(temp_user_id, r):
-    UserDictKeys.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.execute(delete(UserDictKeys).where(UserDictKeys.temp_user_id == temp_user_id))
     db.session.commit()
-    UploadsUserAuth.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.execute(delete(UploadsUserAuth).where(UploadsUserAuth.temp_user_id == temp_user_id))
     db.session.commit()
-    ChatLog.query.filter_by(temp_owner_id=temp_user_id).delete()
+    db.session.execute(delete(ChatLog).where(ChatLog.temp_owner_id == temp_user_id))
     db.session.commit()
-    ChatLog.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.execute(delete(ChatLog).where(ChatLog.temp_user_id == temp_user_id))
     db.session.commit()
-    GlobalObjectStorage.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.execute(delete(GlobalObjectStorage).where(GlobalObjectStorage.temp_user_id == temp_user_id))
     db.session.commit()
     files_to_delete = list()
-    for short_code_item in Shortener.query.filter_by(temp_user_id=temp_user_id).all():
-        for email in Email.query.filter_by(short=short_code_item.short).all():
-            for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+    for short_code_item in db.session.execute(select(Shortener).filter_by(temp_user_id=temp_user_id)).scalars():
+        for email in db.session.execute(select(Email).filter_by(short=short_code_item.short)).scalars():
+            for attachment in db.session.execute(select(EmailAttachment).filter_by(email_id=email.id)).scalars():
                 files_to_delete.append(attachment.upload)
     for file_number in files_to_delete:
         the_file = SavedFile(file_number)
         the_file.delete()
-    Shortener.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.execute(delete(Shortener).where(Shortener.temp_user_id == temp_user_id))
     db.session.commit()
     keys_to_delete = set()
     for key in r.keys('*userid:t' + str(temp_user_id)):
@@ -738,34 +739,34 @@ def delete_temp_user_data(temp_user_id, r):
         r.delete(key)
 
 def delete_user_data(user_id, r, r_user):
-    UserDict.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(UserDict).where(UserDict.user_id == user_id))
     db.session.commit()
-    UserDictKeys.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(UserDictKeys).where(UserDictKeys.user_id == user_id))
     db.session.commit()
-    UploadsUserAuth.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(UploadsUserAuth).where(UploadsUserAuth.user_id == user_id))
     db.session.commit()
-    ChatLog.query.filter_by(owner_id=user_id).delete()
+    db.session.execute(delete(ChatLog).where(ChatLog.owner_id == user_id))
     db.session.commit()
-    ChatLog.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(ChatLog).where(ChatLog.user_id == user_id))
     db.session.commit()
-    GlobalObjectStorage.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(GlobalObjectStorage).where(GlobalObjectStorage.user_id == user_id))
     db.session.commit()
-    for package_auth in PackageAuth.query.filter_by(user_id=user_id).all():
+    for package_auth in db.session.execute(select(PackageAuth).filter_by(user_id=user_id)).scalars():
         package_auth.user_id = 1
     db.session.commit()
     files_to_delete = list()
-    for short_code_item in Shortener.query.filter_by(user_id=user_id).all():
-        for email in Email.query.filter_by(short=short_code_item.short).all():
-            for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+    for short_code_item in db.session.execute(select(Shortener).filter_by(user_id=user_id)).scalars():
+        for email in db.session.execute(select(Email).filter_by(short=short_code_item.short)).scalars():
+            for attachment in db.session.execute(select(EmailAttachment).filter_by(email_id=email.id)).scalars():
                 files_to_delete.append(attachment.upload)
     for file_number in files_to_delete:
         the_file = SavedFile(file_number)
         the_file.delete()
-    Shortener.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(Shortener).where(Shortener.user_id == user_id))
     db.session.commit()
-    UserRoles.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(UserRoles).where(UserRoles.user_id == user_id))
     db.session.commit()
-    for user_auth in UserAuthModel.query.filter_by(user_id=user_id):
+    for user_auth in db.session.execute(select(UserAuthModel).filter_by(user_id=user_id).with_for_update()).scalars():
         user_auth.password = ''
         user_auth.reset_password_token = ''
     db.session.commit()
@@ -773,7 +774,7 @@ def delete_user_data(user_id, r, r_user):
         the_section = SavedFile(user_id, section=section)
         the_section.delete()
     old_email = None
-    for user_object in UserModel.query.filter_by(id=user_id):
+    for user_object in db.session.execute(select(UserModel).filter_by(id=user_id)).scalars():
         old_email = user_object.email
         user_object.active = False
         user_object.first_name = ''
@@ -827,36 +828,36 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
             user_type = 'tempuser'
             the_user_id = temp_user_id
     if the_user_id is None:
-        UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.execute(delete(UserDictKeys).filter_by(key=user_code, filename=filename))
         db.session.commit()
         do_delete = True
     else:
         if user_type == 'user':
-            UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=the_user_id).delete()
+            db.session.execute(delete(UserDictKeys).filter_by(key=user_code, filename=filename, user_id=the_user_id))
         else:
-            UserDictKeys.query.filter_by(key=user_code, filename=filename, temp_user_id=the_user_id).delete()
+            db.session.execute(delete(UserDictKeys).filter_by(key=user_code, filename=filename, temp_user_id=the_user_id))
         db.session.commit()
-        existing_user_dict_key = UserDictKeys.query.filter_by(key=user_code, filename=filename).first()
+        existing_user_dict_key = db.session.execute(select(UserDictKeys).filter_by(key=user_code, filename=filename)).scalar()
         if not existing_user_dict_key:
             do_delete = True
         else:
             do_delete = False
     if not force:
         files_to_save = list()
-        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=True).all():
+        for upload in db.session.execute(select(Uploads).filter_by(key=user_code, yamlfile=filename, persistent=True)).scalars():
             files_to_save.append(upload.indexno)
         if len(files_to_save):
             something_added = False
             if user_type == 'user':
                 for uploads_indexno in files_to_save:
-                    existing_auth = UploadsUserAuth.query.filter_by(user_id=the_user_id, uploads_indexno=uploads_indexno).first()
+                    existing_auth = db.session.execute(select(UploadsUserAuth).filter_by(user_id=the_user_id, uploads_indexno=uploads_indexno)).scalar()
                     if not existing_auth:
                         new_auth_record = UploadsUserAuth(user_id=the_user_id, uploads_indexno=uploads_indexno)
                         db.session.add(new_auth_record)
                         something_added = True
             else:
                 for uploads_indexno in files_to_save:
-                    existing_auth = UploadsUserAuth.query.filter_by(temp_user_id=the_user_id, uploads_indexno=uploads_indexno).first()
+                    existing_auth = db.session.execute(select(UploadsUserAuth).filter_by(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)).scalar()
                     if not existing_auth:
                         new_auth_record = UploadsUserAuth(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)
                         db.session.add(new_auth_record)
@@ -864,27 +865,27 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
             if something_added:
                 db.session.commit()
     if do_delete:
-        UserDict.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.execute(delete(UserDict).filter_by(key=user_code, filename=filename))
         db.session.commit()
         files_to_delete = list()
-        for speaklist in SpeakList.query.filter_by(key=user_code, filename=filename).all():
+        for speaklist in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename)).scalars():
             if speaklist.upload is not None:
                 files_to_delete.append(speaklist.upload)
-        SpeakList.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.execute(delete(SpeakList).filter_by(key=user_code, filename=filename))
         db.session.commit()
-        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
+        for upload in db.session.execute(select(Uploads).filter_by(key=user_code, yamlfile=filename, persistent=False)).scalars():
             files_to_delete.append(upload.indexno)
-        Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
+        db.session.execute(delete(Uploads).filter_by(key=user_code, yamlfile=filename, persistent=False))
         db.session.commit()
-        GlobalObjectStorage.query.filter(GlobalObjectStorage.key.like('da:uid:' + user_code + ':i:' + filename + ':%')).delete(synchronize_session=False)
+        db.session.execute(delete(GlobalObjectStorage).where(GlobalObjectStorage.key.like('da:uid:' + user_code + ':i:' + filename + ':%')).execution_options(synchronize_session=False))
         db.session.commit()
-        ChatLog.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.execute(delete(ChatLog).filter_by(key=user_code, filename=filename))
         db.session.commit()
-        for short_code_item in Shortener.query.filter_by(uid=user_code, filename=filename).all():
-            for email in Email.query.filter_by(short=short_code_item.short).all():
-                for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+        for short_code_item in db.session.execute(select(Shortener).filter_by(uid=user_code, filename=filename)).scalars():
+            for email in db.session.execute(select(Email).filter_by(short=short_code_item.short)).scalars():
+                for attachment in db.session.execute(select(EmailAttachment).filter_by(email_id=email.id)).scalars():
                     files_to_delete.append(attachment.upload)
-        Shortener.query.filter_by(uid=user_code, filename=filename).delete()
+        db.session.execute(delete(Shortener).filter_by(uid=user_code, filename=filename))
         db.session.commit()
         # docassemble.base.functions.server.delete_answer_json(user_code, filename, delete_all=True)
         for file_number in files_to_delete:
@@ -896,7 +897,7 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
 def get_person(user_id, cache):
     if user_id in cache:
         return cache[user_id]
-    for record in UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id):
+    for record in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=user_id)).scalars():
         cache[record.id] = record
         return record
     return None
@@ -927,9 +928,9 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
         open_to_peer = False
     if chat_person_type == 'auth':
         if chat_mode in ['peer', 'peerhelp']:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.owner_id == chat_person_id))).order_by(ChatLog.id).all()
+            records = db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.owner_id == chat_person_id))).order_by(ChatLog.id)).scalars().all()
         else:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.owner_id == chat_person_id)).order_by(ChatLog.id).all()
+            records = db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.owner_id == chat_person_id)).order_by(ChatLog.id)).scalars().all()
         for record in records:
             if record.encrypted:
                 try:
@@ -963,9 +964,9 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
     else:
         if chat_mode in ['peer', 'peerhelp']:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.temp_owner_id == chat_person_id))).order_by(ChatLog.id).all()
+            records = db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.temp_owner_id == chat_person_id))).order_by(ChatLog.id)).scalars().all()
         else:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.temp_owner_id == chat_person_id)).order_by(ChatLog.id).all()
+            records = db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.temp_owner_id == chat_person_id)).order_by(ChatLog.id)).scalars().all()
         for record in records:
             if record.encrypted:
                 try:
@@ -1002,7 +1003,7 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
 
 #@elapsed('file_set_attributes')
 def file_set_attributes(file_number, **kwargs):
-    upload = Uploads.query.filter_by(indexno=file_number).with_for_update().first()
+    upload = db.session.execute(select(Uploads).filter_by(indexno=file_number).with_for_update()).scalar()
     if upload is None:
         db.session.commit()
         raise Exception("file_set_attributes: file number " + str(file_number) + " not found.")
@@ -1020,11 +1021,11 @@ def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow
     something_added = False
     if allow_user_id:
         for user_id in set(allow_user_id):
-            existing_user = UserModel.query.filter_by(id=user_id).first()
+            existing_user = db.session.execute(select(UserModel).filter_by(id=user_id)).first()
             if not existing_user:
                 logmessage("file_user_access: invalid user ID " + repr(user_id))
                 continue
-            if UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=user_id).first():
+            if db.session.execute(select(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=user_id)).first():
                 continue
             new_auth_record = UploadsUserAuth(uploads_indexno=file_number, user_id=user_id)
             db.session.add(new_auth_record)
@@ -1034,11 +1035,11 @@ def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow
     something_added = False
     if allow_email:
         for email in set(allow_email):
-            existing_user = UserModel.query.filter_by(email=email).first()
+            existing_user = db.session.execute(select(UserModel).filter_by(email=email)).first()
             if not existing_user:
                 logmessage("file_user_access: invalid email " + repr(email))
                 continue
-            if UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=existing_user.id).first():
+            if db.session.execute(select(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=existing_user.id)).first():
                 continue
             new_auth_record = UploadsUserAuth(uploads_indexno=file_number, user_id=existing_user.id)
             db.session.add(new_auth_record)
@@ -1047,21 +1048,21 @@ def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow
         db.session.commit()
     if disallow_user_id:
         for user_id in set(disallow_user_id):
-            UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=user_id).delete()
+            db.session.execute(delete(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=user_id))
         db.session.commit()
     if disallow_email:
         for email in set(disallow_email):
-            existing_user = UserModel.query.filter_by(email=email).first()
+            existing_user = db.session.execute(select(UserModel).filter_by(email=email)).scalar()
             if not existing_user:
                 logmessage("file_user_access: invalid email " + repr(email))
                 continue
-            UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=existing_user.id).delete()
+            db.session.execute(delete(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=existing_user.id))
         db.session.commit()
     if disallow_all:
-        UploadsUserAuth.query.filter_by(uploads_indexno=file_number).delete()
+        db.session.execute(delete(UploadsUserAuth).filter_by(uploads_indexno=file_number))
     if not (allow_user_id or allow_email or disallow_user_id or disallow_email or disallow_all):
         result = dict(user_ids=list(), emails=list(), temp_user_ids=list())
-        for auth in db.session.query(UploadsUserAuth.user_id, UploadsUserAuth.temp_user_id, UserModel.email).outerjoin(UserModel, UploadsUserAuth.user_id == UserModel.id).filter(UploadsUserAuth.uploads_indexno == file_number).all():
+        for auth in db.session.execute(select(UploadsUserAuth.user_id, UploadsUserAuth.temp_user_id, UserModel.email).outerjoin(UserModel, UploadsUserAuth.user_id == UserModel.id).where(UploadsUserAuth.uploads_indexno == file_number)).scalars().all():
             if auth.user_id is not None:
                 result['user_ids'].append(auth.user_id)
             if auth.temp_user_id is not None:
@@ -1074,11 +1075,11 @@ def file_privilege_access(file_number, allow=None, disallow=None, disallow_all=F
     something_added = False
     if allow:
         for privilege in set(allow):
-            existing_role = Role.query.filter_by(name=privilege).first()
+            existing_role = db.session.execute(select(Role).filter_by(name=privilege)).scalar_one()
             if not existing_role:
                 logmessage("file_privilege_access: invalid privilege " + repr(privilege))
                 continue
-            if UploadsRoleAuth.query.filter_by(uploads_indexno=file_number, role_id=existing_role.id).first():
+            if db.session.execute(select(UploadsRoleAuth).filter_by(uploads_indexno=file_number, role_id=existing_role.id)).first():
                 continue
             new_auth_record = UploadsRoleAuth(uploads_indexno=file_number, role_id=existing_role.id)
             db.session.add(new_auth_record)
@@ -1087,17 +1088,17 @@ def file_privilege_access(file_number, allow=None, disallow=None, disallow_all=F
         db.session.commit()
     if disallow:
         for privilege in set(disallow):
-            existing_role = Role.query.filter_by(name=privilege).first()
+            existing_role = db.session.execute(select(Role).filter_by(name=privilege)).scalar_one()
             if not existing_role:
                 logmessage("file_privilege_access: invalid privilege " + repr(privilege))
                 continue
-            UploadsRoleAuth.query.filter_by(uploads_indexno=file_number, role_id=existing_role.id).delete()
+            db.session.execute(delete(UploadsRoleAuth).filter_by(uploads_indexno=file_number, role_id=existing_role.id))
         db.session.commit()
     if disallow_all:
-        UploadsRoleAuth.query.filter_by(uploads_indexno=file_number).delete()
+        db.session.execute(delete(UploadsRoleAuth).filter_by(uploads_indexno=file_number))
     if not (allow or disallow or disallow_all):
         result = list()
-        for auth in db.session.query(UploadsRoleAuth.id, Role.name).join(Role, UploadsRoleAuth.role_id == Role.id).filter(UploadsRoleAuth.uploads_indexno == file_number).all():
+        for auth in db.session.execute(select(UploadsRoleAuth.id, Role.name).join(Role, UploadsRoleAuth.role_id == Role.id).where(UploadsRoleAuth.uploads_indexno == file_number)).scalars():
             result.append(auth.name)
         return result
 
@@ -1141,7 +1142,7 @@ def get_session(i):
 def unattached_uid():
     while True:
         newname = random_alphanumeric(32)
-        existing_key = UserDict.query.filter_by(key=newname).first()
+        existing_key = db.session.execute(select(UserDict).filter_by(key=newname)).first()
         if existing_key:
             continue
         return newname

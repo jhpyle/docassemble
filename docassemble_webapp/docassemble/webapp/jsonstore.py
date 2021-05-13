@@ -1,5 +1,5 @@
 from docassemble.base.config import daconfig
-from sqlalchemy import Column, ForeignKey, Boolean, Integer, String, Text, DateTime, func, create_engine, or_, and_, true, false
+from sqlalchemy import Column, ForeignKey, Boolean, Integer, String, Text, DateTime, func, create_engine, or_, and_, true, false, delete, select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql.json import JSONB
@@ -48,16 +48,16 @@ else:
 def read_answer_json(user_code, filename, tags=None, all_tags=False):
     if all_tags:
         entries = list()
-        for entry in JsonDb.query(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags).all():
+        for entry in JsonDb.execute(select(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags)).scalars():
             entries.append(dict(data=entry.data, tags=entry.tags, modtime=entry.modtime))
         return entries
-    existing_entry = JsonDb.query(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags).first()
+    existing_entry = JsonDb.execute(select(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags)).scalar()
     if existing_entry is not None:
         return existing_entry.data
     return None
 
 def write_answer_json(user_code, filename, data, tags=None, persistent=False):
-    existing_entry = JsonDb.query(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags).with_for_update().first()
+    existing_entry = JsonDb.execute(select(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags).with_for_update()).scalar()
     if existing_entry:
         existing_entry.data = data
         existing_entry.modtime = datetime.datetime.utcnow()
@@ -70,9 +70,9 @@ def write_answer_json(user_code, filename, data, tags=None, persistent=False):
 def delete_answer_json(user_code, filename, tags=None, delete_all=False, delete_persistent=False):
     if delete_all:
         if delete_persistent:
-            JsonDb.query(JsonStorage).filter_by(filename=filename, key=user_code).delete()
+            JsonDb.execute(delete(JsonStorage).filter_by(filename=filename, key=user_code))
         else:
-            JsonDb.query(JsonStorage).filter_by(filename=filename, key=user_code, persistent=False).delete()
+            JsonDb.execute(delete(JsonStorage).filter_by(filename=filename, key=user_code, persistent=False))
     else:
-        JsonDb.query(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags).delete()
+        JsonDb.execute(delete(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags))
     JsonDb.commit()

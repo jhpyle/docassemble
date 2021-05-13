@@ -837,13 +837,13 @@ def interview_url(**kwargs):
     if 'style' in args and args['style'] in ('short', 'short_package'):
         the_style = args['style']
         del args['style']
-        url = None
         try:
             if int(args['new_session']):
                 is_new = True
                 del args['new_session']
         except:
             is_new = False
+        url = None
         if the_style == 'short':
             for k, v in server.daconfig.get('dispatch').items():
                 if v == args['i']:
@@ -853,6 +853,7 @@ def interview_url(**kwargs):
                         url = url_of('run_new_dispatch', **args)
                     else:
                         url = url_of('run_dispatch', **args)
+                    break
         if url is None:
             package, filename = re.split(r':', args['i'])
             package = re.sub(r'^docassemble\.', '', package)
@@ -1088,6 +1089,7 @@ def interview_url_action(action, **kwargs):
                         url = url_of('run_new_dispatch', **args)
                     else:
                         url = url_of('run_dispatch', **args)
+                    break
         if url is None:
             package, filename = re.split(r':', args['i'])
             package = re.sub(r'^docassemble\.', '', package)

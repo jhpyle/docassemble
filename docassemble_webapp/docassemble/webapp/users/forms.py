@@ -48,12 +48,12 @@ class MySignInForm(LoginForm):
                         from docassemble.webapp.users.models import UserModel, Role
                         while True:
                             new_social = 'ldap$' + random_alphanumeric(32)
-                            existing_user = UserModel.query.filter_by(social_id=new_social).first()
+                            existing_user = db.session.execute(select(UserModel).filter_by(social_id=new_social)).scalar()
                             if existing_user:
                                 continue
                             break
                         user = UserModel(social_id=new_social, email=self.email.data, nickname='', active=True)
-                        user_role = Role.query.filter_by(name='user').first()
+                        user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
                         user.roles.append(user_role)
                         db.session.add(user)
                         db.session.commit()
@@ -183,7 +183,7 @@ class PhoneUserProfileForm(UserProfileForm):
             if current_user.social_id.startswith('phone$'):
                 from docassemble.webapp.users.models import UserModel
                 from flask import flash
-                existing_user = UserModel.query.filter_by(email=self.email.data, active=True).first()
+                existing_user = db.session.execute(select(UserModel).filter_by(email=self.email.data, active=True)).scalar()
                 if existing_user is not None and existing_user.id != current_user.id:
                     flash(word("Please choose a different e-mail address."), 'error')
                     return False
