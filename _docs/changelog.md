@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.69](https://github.com/jhpyle/docassemble/releases/tag/v1.2.69) - 2021-05-13
+
+### Fixed
+- Issue with package system where duplicate entries in the package
+  list cause the upgrade process to raise an exception.
+
 ## [1.2.68](https://github.com/jhpyle/docassemble/releases/tag/v1.2.68) - 2021-05-13
 
 ### Changed
