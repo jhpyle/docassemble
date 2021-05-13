@@ -272,16 +272,20 @@ reference will be treated as a reference to a [Font Awesome] icon.
 
 As explained in the [Configuration], only one "style" of [Font
 Awesome] icon (by default, the "solid" style) can be used at one time.
-If you need to use a different "style" for a particular icon, or you
-want to apply additional formatting to an icon, you can include the
-raw [HTML] for the icon.  For example:
+If you need to use a different "style" for a particular icon, you need
+to specify the CSS classes more explicitly.  For example, you can
+write `:fab-fa-amazon:` to get the `amazon` icon in the "brand" style
+(`fab`).
+
+If you want to apply additional formatting to an icon, you can include
+the raw [HTML] for the icon.  For example:
 
 {% highlight yaml %}
 ---
 question: |
   Social media usage
 subquestion: |
-  Do you use <i class="fab fa-facebook-f"></i>?
+  Do you use <i class="fab fa-facebook-f fa-spin"></i>?
 yesno: user_is_on_facebook
 ---
 {% endhighlight %}

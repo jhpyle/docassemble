@@ -4,10 +4,31 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.68](https://github.com/jhpyle/docassemble/releases/tag/v1.2.68) - 2021-05-13
+
+### Changed
+- Upgraded various dependencies, including `docxtpl`,
+  the new version of which allows images to be inserted into headers
+  and footers of DOCX files.
+- DO NOT ATTEMPT TO INSTALL 1.2.68 WITHOUT DOWNGRADING PIP FIRST.  The
+  latest versions of `pip` will stall indefinitely or use up all of
+  the memory in your system because of the way that `pip`'s new
+  dependency resolution system works.  To downgrade `pip`, go to
+  Package Management, enter `pip==20.1.1` into the "Package on PyPI"
+  field, then click "Update."  Only then should you attempt to click
+  "Upgrade" to upgrade docassemble to 1.2.68.
+- The Docker image now uses Python 3.8.10 rather than 3.8.6.
+
+### Fixed
+- Issue with `interview_url()` and related functions when `style` is
+  used.
+
 ## [1.2.67](https://github.com/jhpyle/docassemble/releases/tag/v1.2.67) - 2021-05-08
 
 ### Fixed
-- Possible fix to issue with `/interviews` page and `interview_list()`.
+- Possible fix to issue with `/interviews` page and `interview_list()`
+  (this turned out to have been caused by a third-party package that
+  some people were using).
 
 ## [1.2.66](https://github.com/jhpyle/docassemble/releases/tag/v1.2.66) - 2021-05-04
 
