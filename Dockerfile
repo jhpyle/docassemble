@@ -56,13 +56,13 @@ bash -c \
 "cd /tmp \
 && /usr/bin/python3.8 -m venv --copies /usr/share/docassemble/local3.8 \
 && source /usr/share/docassemble/local3.8/bin/activate \
-&& pip3 install --upgrade pip==21.1.1 \
+&& pip3 install --upgrade pip==20.1.1 \
 && pip3 install --upgrade mod_wsgi==4.7.1 \
-&& pip3 install --upgrade --use-deprecated=legacy-resolver \
+&& pip3 install --upgrade \
    certbot==1.15.0 \
    certbot-nginx==1.15.0 \
    certbot-apache==1.15.0 \
-&& pip3 install --use-feature=in-tree-build --use-deprecated=legacy-resolver \
+&& pip3 install \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \

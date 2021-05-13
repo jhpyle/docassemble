@@ -1,11 +1,18 @@
 # Change Log
 
-## [1.2.68] - 2021-05-12
+## [1.2.68] - 2021-05-13
 ### Changed
-- The Docker image now uses Python 3.8.10 rather than 3.8.6.
 - Upgraded various dependencies, including `docxtpl`,
   the new version of which allows images to be inserted into headers
   and footers of DOCX files.
+- DO NOT ATTEMPT TO INSTALL 1.2.68 WITHOUT DOWNGRADING PIP FIRST.  The
+  latest versions of `pip` will stall indefinitely or use up all of
+  the memory in your system because of the way that `pip`'s new
+  dependency resolution system works.  To downgrade `pip`, go to
+  Package Management, enter `pip==20.1.1` into the "Package on PyPI"
+  field, then click "Update."  Only then should you attempt to click
+  "Upgrade" to upgrade docassemble to 1.2.68.
+- The Docker image now uses Python 3.8.10 rather than 3.8.6.
 ### Fixed
 - Issue with `interview_url()` and related functions when `style` is
   used.
