@@ -153,20 +153,6 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "It seems that you are fairly content with your current work."
 
-  Scenario: Test the interview "Machine Learning" 2
-    Given I start the interview "docassemble.demo:data/questions/examples/predict-happy-sad-area.yml"
-    Then I should see the phrase "Describe how you feel."
-    And I set the text area to "Lousy"
-    And I click the button "Continue"
-    Then I should see the phrase "You sound sad."
-
-  Scenario: Test the interview "Machine Learning" 3
-    Given I start the interview "docassemble.demo:data/questions/examples/predict-happy-sad.yml"
-    Then I should see the phrase "Describe how you feel."
-    And I set the text box to "Lousy"
-    And I click the button "Continue"
-    Then I should see the phrase "You sound sad."
-
   Scenario: Test the interview "Address autocomplete"
     Given I start the interview "docassemble.base:data/questions/examples/address-autocomplete.yml"
     Then I should see the phrase "What is the address of the adverse party?"
@@ -274,3 +260,29 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Information about your address"
     And I should see the phrase "The address is located in Philadelphia County."
+
+  Scenario: Test the interview "Companies"
+    Given I start the interview "docassemble.demo:data/questions/examples/companies.yml"
+    Then I should see the phrase "Companies"
+
+  Scenario: Test the interview "SQL Mirror"
+    Given I start the interview "docassemble.demo:data/questions/examples/testdatabase.yml"
+    Then I should see the phrase "What is the customer’s SSN?"
+    And I click the button "Continue"
+    Then I should see the phrase "What is the bank’s routing number?"
+    And I click the button "Continue"
+    Then I should see the phrase "The bank is PSFS and the customer is John Smith."
+
+  Scenario: Test the interview "Machine Learning" 2
+    Given I start the interview "docassemble.demo:data/questions/examples/predict-happy-sad-area.yml"
+    Then I should see the phrase "Describe how you feel."
+    And I set the text area to "Lousy"
+    And I click the button "Continue"
+    Then I should see the phrase "You sound sad."
+
+  Scenario: Test the interview "Machine Learning" 3
+    Given I start the interview "docassemble.demo:data/questions/examples/predict-happy-sad.yml"
+    Then I should see the phrase "Describe how you feel."
+    And I set the text box to "Lousy"
+    And I click the button "Continue"
+    Then I should see the phrase "You sound sad."

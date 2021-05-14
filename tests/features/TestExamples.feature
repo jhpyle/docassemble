@@ -8689,10 +8689,6 @@ Feature: Example interviews
     Then I should see the phrase "Your documents"
     And I should see the phrase "Download bundle"
 
-  Scenario: Test the interview "Companies"
-    Given I start the interview "docassemble.demo:data/questions/examples/companies.yml"
-    Then I should see the phrase "Companies"
-
   Scenario: Test the interview "Court filing"
     Given I start the interview "docassemble.demo:data/questions/examples/courtfile.yml"
     Then I should see the phrase "Please provide your name and e-mail address."
@@ -9047,14 +9043,6 @@ Feature: Example interviews
 
   # Scenario: Test the interview "Stage two"
   #   Given I start the interview "docassemble.demo:data/questions/examples/stage-two.yml"
-
-  Scenario: Test the interview "SQL Mirror"
-    Given I start the interview "docassemble.demo:data/questions/examples/testdatabase.yml"
-    Then I should see the phrase "What is the customer’s SSN?"
-    And I click the button "Continue"
-    Then I should see the phrase "What is the bank’s routing number?"
-    And I click the button "Continue"
-    Then I should see the phrase "The bank is PSFS and the customer is John Smith."
 
   Scenario: Test the interview "SSN"
     Given I start the interview "docassemble.demo:data/questions/examples/testssn.yml"

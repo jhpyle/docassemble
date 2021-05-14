@@ -4,6 +4,10 @@ from wtforms import validators, ValidationError, StringField, SubmitField, TextA
 import re
 import sys
 
+class NonValidatingSelectField(SelectField):
+    def pre_validate(self, form):
+        pass
+
 def validate_project_name(form, field):
     if re.search('^[0-9]', field.data):
         raise ValidationError(word('Project name cannot begin with a number'))
@@ -125,7 +129,7 @@ class PlaygroundPackagesForm(FlaskForm):
     static_files = SelectMultipleField(word('Static files'))
     sources_files = SelectMultipleField(word('Source files'))
     readme = TextAreaField(word('README file'), default='')
-    github_branch = SelectField(word('Branch'))
+    github_branch = NonValidatingSelectField(word('Branch'))
     github_branch_new = StringField(word('Name of new branch'))
     commit_message = StringField(word('Commit message'), default="")
     pypi_also = BooleanField(word('Publish on PyPI also'))

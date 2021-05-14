@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.2.71] - 2021-05-14
+### Changed
+- The Docker image now uses Debian `testing` and Python 3.8.10 rather
+  than 3.8.6.
+### Fixed
+- Issue with validation of Playground Packages form.
+
 ## [1.2.70] - 2021-05-13
 ### Fixed
 - Trap potential error in SQL statement when querying admin users for
@@ -22,7 +29,6 @@
   Package Management, enter `pip==20.1.1` into the "Package on PyPI"
   field, then click "Update."  Only then should you attempt to click
   "Upgrade" to upgrade docassemble to 1.2.68.
-- The Docker image now uses Python 3.8.10 rather than 3.8.6.
 ### Fixed
 - Issue with `interview_url()` and related functions when `style` is
   used.
