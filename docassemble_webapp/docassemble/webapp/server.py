@@ -6235,14 +6235,19 @@ def index(action_argument=None, refer=None):
     for kv_key, kv_var in known_varnames.items():
         try:
             field_identifier = myb64unquote(kv_key)
-            m = re.search(r'_field_([0-9]+)', field_identifier)
+            m = re.search(r'_field(?:_[0-9]+)?_([0-9]+)', field_identifier)
             if m:
                 numbered_fields[kv_var] = kv_key
                 if kv_key in raw_visible_fields or kv_var in raw_visible_fields:
                     field_numbers[kv_var] = int(m.group(1))
+            m = re.search(r'_field_((?:[0-9]+_)?[0-9]+)', field_identifier)
+            if m:
                 if kv_var not in all_field_numbers:
                     all_field_numbers[kv_var] = set()
-                all_field_numbers[kv_var].add(int(m.group(1)))
+                if '_' in m.group(1):
+                    all_field_numbers[kv_var].add(m.group(1))
+                else:
+                    all_field_numbers[kv_var].add(int(m.group(1)))
         except:
             logmessage("index: error where kv_key is " + str(kv_key) + " and kv_var is " + str(kv_var))
     list_collect_list = None
@@ -6296,7 +6301,7 @@ def index(action_argument=None, refer=None):
                         if not (known_varnames[key] in post_data and post_data[known_varnames[key]] != '' and post_data[key] == ''):
                             the_key = from_safeid(known_varnames[key])
                     else:
-                        m = re.search(r'^(_field_[0-9]+)(\[.*\])', key)
+                        m = re.search(r'^(_field(?:_[0-9]+)?_[0-9]+)(\[.*\])', key)
                         if m:
                             base_orig_key = safeid(m.group(1))
                             if base_orig_key in known_varnames:
@@ -6536,7 +6541,7 @@ def index(action_argument=None, refer=None):
                     post_data[known_varnames[orig_key]] = post_data[orig_key]
                     key_to_orig_key[from_safeid(known_varnames[orig_key])] = orig_key
             else:
-                m = re.search(r'^(_field_[0-9]+)(\[.*\])', key)
+                m = re.search(r'^(_field(?:_[0-9]+)?_[0-9]+)(\[.*\])', key)
                 if m:
                     base_orig_key = safeid(m.group(1))
                     if base_orig_key in known_varnames:
@@ -6971,6 +6976,12 @@ def index(action_argument=None, refer=None):
                 data = 'None'
         if do_append and not set_to_empty:
             key_to_use = from_safeid(real_key)
+            if illegal_variable_name(data):
+                logmessage("Received illegal variable name " + str(data))
+                continue
+            if illegal_variable_name(key_to_use):
+                logmessage("Received illegal variable name " + str(key_to_use))
+                continue
             if do_opposite:
                 the_string = 'if ' + data + ' in ' + key_to_use + '.elements:\n    ' + key_to_use + '.remove(' + data + ')'
             else:
@@ -10221,6 +10232,20 @@ def index(action_argument=None, refer=None):
               $(elem).prop("checked", false);
               $(elem).trigger('change');
             }
+          }
+        });
+        $(".dauncheckspecificothers").each(function(){
+          var theIds = $.parseJSON(atob($(this).data('unchecklist')));
+          var n = theIds.length;
+          var oThis = this;
+          for (var i = 0; i < n; ++i){
+            var elem = document.getElementById(theIds[i]);
+            $(elem).on('change', function(){
+              if ($(this).is(":checked")){
+                $(oThis).prop("checked", false);
+                $(oThis).trigger('change');
+              }
+            });
           }
         });
         $(".dauncheckothers").on('change', function(){
