@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.72] - 2021-05-15
+### Fixed
+- Upgraded dependencies.
+
 ## [1.2.71] - 2021-05-14
 ### Changed
 - The Docker image now uses Debian `testing` and Python 3.8.10 rather
