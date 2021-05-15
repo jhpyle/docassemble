@@ -748,7 +748,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
         chown -R postgres.postgres "$PGBACKUPDIR"
         for db in $( ls ); do
             echo "Restoring postgres database $db" >&2
-            pg_restore -f - -F c -C -c -d $db | su -c psql postgres
+            pg_restore -f - -F c -C -c $db | su -c psql postgres
         done
         if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
             cd /
