@@ -13,7 +13,7 @@ short_title: Change Log
 
 ### Changed
 - The Docker image now uses Debian `testing` and Python 3.8.10 rather
-  than 3.8.6.
+  than `buster` and 3.8.6.
 
 ### Fixed
 - Issue with validation of Playground Packages form.
