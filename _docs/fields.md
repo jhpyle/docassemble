@@ -370,7 +370,7 @@ The possible values of [`datatype`] are:
 * [`number`](#number)
 * [`object`](#object)
 * [`object_checkboxes`](#object_checkboxes)
-* [`object_checkboxes`](#object_multiselect)
+* [`object_multiselect`](#object_multiselect)
 * [`password`](#password)
 * [`range`](#range)
 * [`text`](#text) (the default)

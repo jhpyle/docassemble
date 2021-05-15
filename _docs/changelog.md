@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.73](https://github.com/jhpyle/docassemble/releases/tag/v1.2.73) - 2021-05-15
+
+### Fixed
+- Issue with the "none of the above" option when `uncheck others`
+  refers to a list.
+- Issue with `validate` and `list collect`.
+- Issue with `pg_restore`.
+
 ## [1.2.72](https://github.com/jhpyle/docassemble/releases/tag/v1.2.72) - 2021-05-15
 
 ### Fixed
