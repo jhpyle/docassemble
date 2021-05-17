@@ -13,7 +13,8 @@ if __name__ == "__main__":
         print('export LOCALE="' + str(daconfig['os locale']) + '"')
     else:
         print('export LOCALE="en_US.UTF-8 UTF-8"')
-    print('export DAPYTHONVERSION="3"')
+    if '--limited' in sys.argv:
+        sys.exit(0)
     if 'web server' in daconfig and isinstance(daconfig['web server'], str):
         print('export DAWEBSERVER="' + daconfig['web server'] + '"')
     else:
@@ -37,9 +38,9 @@ if __name__ == "__main__":
     max_content_length = daconfig.get('maximum content length', 16 * 1024 * 1024)
     if isinstance(max_content_length, (int, type(None))):
         if max_content_length is None or max_content_length <= 0:
-            print('DAMAXCONTENTLENGTH=0')
+            print('export DAMAXCONTENTLENGTH=0')
         else:
-            print('DAMAXCONTENTLENGTH=' + str(max_content_length))
+            print('export DAMAXCONTENTLENGTH=' + str(max_content_length))
     else:
         print('DAMAXCONTENTLENGTH=' + str(16 * 1024 * 1024))
     if 'celery processes' in daconfig and isinstance(daconfig['celery processes'], int):

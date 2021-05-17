@@ -194,7 +194,6 @@ def edit_user_profile_page(id):
     else:
         form.role_id.choices = [(r.id, r.name) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name'))]
         privileges_note = word("Note: only users with e-mail/password accounts can be given admin privileges.")
-    form.role_id.process_data(the_role_id)
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
     form.timezone.default = the_tz
     if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
@@ -230,6 +229,9 @@ def edit_user_profile_page(id):
         }
       });
     </script>"""
+    form.role_id.process_data(the_role_id)
+    if user.active:
+        form.active.default = 'checked'
     response = make_response(render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id), extra_js=Markup(script)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response

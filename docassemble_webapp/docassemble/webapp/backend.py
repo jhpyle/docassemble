@@ -897,7 +897,7 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
 def get_person(user_id, cache):
     if user_id in cache:
         return cache[user_id]
-    for record in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=user_id)).scalars():
+    for record in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=user_id)).unique().scalars():
         cache[record.id] = record
         return record
     return None

@@ -1607,7 +1607,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
 
 def user_id_dict():
     output = dict()
-    for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).scalars():
+    for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).unique().scalars():
         output[user.id] = user
     anon = FakeUser()
     anon_role = FakeRole()

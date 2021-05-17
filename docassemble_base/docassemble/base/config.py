@@ -5,16 +5,11 @@ import sys
 import httplib2
 import socket
 import pkg_resources
+import threading
+import base64
+import json
 from docassemble.base.generate_key import random_string
 from distutils.version import LooseVersion
-# def trenv(key):
-#     if os.environ[key] == 'null':
-#         return None
-#     elif os.environ[key] == 'true':
-#         return True
-#     elif os.environ[key] == 'false':
-#         return False
-#     return os.environ[key]
 
 dbtableprefix = None
 daconfig = dict()
@@ -84,6 +79,81 @@ def cleanup_filename(filename):
         return parts[0] + ':' + 'data/questions/' + parts[1]
     return filename
 
+def delete_environment():
+    for var in ('DBSSLMODE', 'DBSSLCERT', 'DBSSLKEY', 'DBSSLROOTCERT', 'DBTYPE', 'DBPREFIX', 'DBNAME', 'DBUSER', 'DBPASSWORD', 'DBHOST', 'DBPORT', 'DBTABLEPREFIX', 'DBBACKUP', 'DASECRETKEY', 'DABACKUPDAYS', 'ENVIRONMENT_TAKES_PRECEDENCE', 'DASTABLEVERSION', 'DASSLPROTOCOLS', 'SERVERADMIN', 'REDIS', 'REDISCLI', 'RABBITMQ', 'DACELERYWORKERS', 'S3ENABLE', 'S3ACCESSKEY', 'S3SECRETACCESSKEY', 'S3BUCKET', 'S3REGION', 'S3ENDPOINTURL', 'AZUREENABLE', 'AZUREACCOUNTKEY', 'AZUREACCOUNTNAME', 'AZURECONTAINER', 'AZURECONNECTIONSTRING', 'EC2', 'COLLECTSTATISTICS', 'KUBERNETES', 'LOGSERVER', 'USECLOUDURLS', 'USEMINIO', 'USEHTTPS', 'USELETSENCRYPT', 'LETSENCRYPTEMAIL', 'BEHINDHTTPSLOADBALANCER', 'XSENDFILE', 'DAUPDATEONSTART', 'URLROOT', 'DAHOSTNAME', 'DAEXPOSEWEBSOCKETS', 'DAWEBSOCKETSIP', 'DAWEBSOCKETSPORT', 'POSTURLROOT', 'DAWEBSERVER', 'DASQLPING', 'PORT', 'OTHERLOCALES', 'DAMAXCONTENTLENGTH', 'DACELERYWORKERS', 'PACKAGES', 'PYTHONPACKAGES', 'DAALLOWUPDATES', 'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'S4CMD_OPTS', 'WSGIROOT', 'DATIMEOUT'):
+        if var in os.environ:
+            del os.environ[var]
+
+this_thread = threading.local()
+this_thread.botoclient = dict()
+
+def aws_get_region(arn):
+    m = re.search(r'arn:aws:secretsmanager:([^:]+):', arn)
+    if m:
+        return m.group(1)
+    return 'us-east-1'
+
+def aws_get_secret(data):
+    region = aws_get_region(data)
+    if region not in this_thread.botoclient:
+        import boto3
+        if env_exists('AWSACCESSKEY') and env_exists('AWSSECRETACCESSKEY'):
+            sys.stderr.write("Using access keys\n")
+            session = boto3.session.Session(aws_access_key_id=os.environ['AWSACCESSKEY'], aws_secret_access_key=os.environ['AWSSECRETACCESSKEY'])
+        else:
+            sys.stderr.write("Not using access keys\n")
+            session = boto3.session.Session()
+        this_thread.botoclient[region] = session.client(
+            service_name='secretsmanager',
+	    region_name=region,
+        )
+    try:
+        response = this_thread.botoclient[region].get_secret_value(SecretId=data)
+    except Exception as e:
+        if e.__class__.__name__ == 'ClientError':
+            if e.response['Error']['Code'] == 'DecryptionFailureException':
+                sys.stderr.write("aws_get_secret: Secrets Manager can't decrypt the protected secret text using the provided KMS key.\n")
+            elif e.response['Error']['Code'] == 'InternalServiceErrorException':
+                sys.stderr.write("aws_get_secret: An error occurred on the server side.\n")
+            elif e.response['Error']['Code'] == 'InvalidParameterException':
+                sys.stderr.write("aws_get_secret: You provided an invalid value for a parameter.\n")
+            elif e.response['Error']['Code'] == 'InvalidRequestException':
+                sys.stderr.write("aws_get_secret: You provided a parameter value that is not valid for the current state of the resource.\n")
+            elif e.response['Error']['Code'] == 'ResourceNotFoundException':
+                sys.stderr.write("aws_get_secret: We can't find the resource that you asked for.")
+            else:
+                sys.stderr.write("aws_get_secret: " + e.__class__.__name__ + ": " + str(e) + "\n")
+        else:
+            sys.stderr.write("aws_get_secret: " + e.__class__.__name__ + ": " + str(e) + "\n")
+        return data
+    if 'SecretString' in response:
+        result = response['SecretString']
+    else:
+        result = base64.b64decode(response['SecretBinary'])
+    try:
+        result = json.loads(result)
+    except:
+        sys.stderr.write("aws_get_secret: problem decoding JSON\n")
+    return result
+
+def recursive_fetch_cloud(data):
+    if isinstance(data, str):
+        if data.startswith('arn:aws:secretsmanager:'):
+            data = aws_get_secret(data.strip())
+        return data
+    elif isinstance(data, (int, float, bool)):
+        return data
+    elif isinstance(data, list):
+        return [recursive_fetch_cloud(y) for y in data]
+    elif isinstance(data, dict):
+        return {k: recursive_fetch_cloud(v) for k, v in data.items()}
+    elif isinstance(data, set):
+        return {recursive_fetch_cloud(y) for y in data}
+    elif isinstance(data, tuple):
+        return tuple([recursive_fetch_cloud(y) for y in data])
+    else:
+        return data
+
 def load(**kwargs):
     global daconfig
     global s3_config
@@ -98,9 +168,14 @@ def load(**kwargs):
     global in_celery
     global env_messages
     # changed = False
-    if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1 and kwargs['arguments'][1] != '':
-        filename = kwargs['arguments'][1]
-    else:
+    filename = None
+    if 'arguments' in kwargs and isinstance(kwargs['arguments'], list) and len(kwargs['arguments']) > 1:
+        for arg in kwargs['arguments'][1:]:
+            if arg.startswith('--'):
+                continue
+            if os.path.isfile(arg):
+                filename = arg
+    if filename is None:
         filename = kwargs.get('filename', os.getenv('DA_CONFIG_FILE', '/usr/share/docassemble/config/config.yml'))
     if 'in_celery' in kwargs and kwargs['in_celery']:
         in_celery = True
@@ -125,6 +200,10 @@ def load(**kwargs):
             sys.stderr.write(fp.read() + "\n")
         sys.exit(1)
     daconfig.clear()
+    raw_daconfig = recursive_fetch_cloud(raw_daconfig)
+    if raw_daconfig.get('config from', None) and isinstance(raw_daconfig['config from'], dict):
+        raw_daconfig.update(raw_daconfig['config from'])
+        del raw_daconfig['config from']
     for key, val in raw_daconfig.items():
         if re.search(r'_', key):
             config_error("Configuration keys may not contain underscores.  Your configuration key " + str(key) + " has been converted.")
@@ -149,12 +228,6 @@ def load(**kwargs):
         daconfig['has_celery_single_queue'] = True
     else:
         daconfig['has_celery_single_queue'] = False
-    # for key in [['REDIS', 'redis'], ['RABBITMQ', 'rabbitmq'], ['EC2', 'ec2'], ['LOGSERVER', 'log server'], ['LOGDIRECTORY', 'log'], ['USEHTTPS', 'use https'], ['USELETSENCRYPT', 'use lets encrypt'], ['BEHINDHTTPSLOADBALANCER', 'behind https load balancer'], ['LETSENCRYPTEMAIL', 'lets encrypt email'], ['DAHOSTNAME', 'external hostname']]:
-    #     if key[0] in os.environ:
-    #         val = trenv(os.environ[key[0]])
-    #         if key[1] not in daconfig or daconfig[key[1]] != val:
-    #             daconfig[key[1]] = val
-    #             changed = True
     if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
         null_messages = list()
         for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
@@ -170,6 +243,10 @@ def load(**kwargs):
         S3_ENABLED = False
     else:
         S3_ENABLED = True
+        if not s3_config.get('access key id', None) and env_exists('AWSACCESSKEY'):
+            s3_config['access key id'] = os.environ['AWSACCESSKEY']
+        if not s3_config.get('secret access key', None) and env_exists('AWSSECRETACCESSKEY'):
+            s3_config['secret access key'] = os.environ['AWSSECRETACCESSKEY']
     gc_config = daconfig.get('google cloud', None)
     if not gc_config or ('enable' in gc_config and not gc_config['enable']) or not ('access key id' in gc_config and gc_config['access key id']) or not ('secret access key' in gc_config and gc_config['secret access key']):
         GC_ENABLED = False
@@ -333,22 +410,6 @@ def load(**kwargs):
         config_error("The configuration directive vim is deprecated.  Please use keymap instead.")
         if daconfig['vim'] and 'keymap' not in daconfig:
             daconfig['keymap'] = 'vim'
-    # for key in [['S3BUCKET', 'bucket'], ['S3SECRETACCESSKEY', 'secret access key'], ['S3ACCESSKEY', 'access key id'], ['S3ENABLE', 'enable']]:
-    #     if key[0] in os.environ:
-    #         if 's3' not in daconfig:
-    #             daconfig['s3'] = dict()
-    #         val = trenv(os.environ[key[0]])
-    #         if key[1] not in daconfig['s3'] or daconfig['s3'][key[1]] != val:
-    #             daconfig['s3'][key[1]] = val
-    #             changed = True
-    # for key in [['AZURECONTAINER', 'container'], ['AZUREACCOUNTKEY', 'account key'], ['AZUREACCOUNTNAME', 'account name'], ['AZUREENABLE', 'enable']]:
-    #     if key[0] in os.environ:
-    #         if 'azure' not in daconfig:
-    #             daconfig['azure'] = dict()
-    #         val = trenv(os.environ[key[0]])
-    #         if key[1] not in daconfig['azure'] or daconfig['azure'][key[1]] != val:
-    #             daconfig['azure'][key[1]] = val
-    #             changed = True
     if 'db' not in daconfig:
         daconfig['db'] = dict(name="docassemble", user="docassemble", password="abc123")
     dbtableprefix = daconfig['db'].get('table prefix', None)

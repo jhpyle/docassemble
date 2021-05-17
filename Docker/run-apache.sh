@@ -3,7 +3,6 @@
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 export DEBIAN_FRONTEND=noninteractive
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
-export DAPYTHONVERSION="${DAPYTHONVERSION:-3}"
 export DA_DEFAULT_LOCAL="local3.8"
 
 if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
