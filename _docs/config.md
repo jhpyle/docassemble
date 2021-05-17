@@ -754,21 +754,21 @@ on your server.
 ## <a name="page after login"></a>Customizing the page that appears after login
 
 By default, the user is directed to the [My Interviews] page after
-logging in.  This can be customized with the `page after login`
-directive:
+logging in or registering.  This can be customized with the `page
+after login` directive:
 
 {% highlight yaml %}
 page after login: profile
 {% endhighlight %}
 
 In this example, the user will be directed to the "Profile" page after
-logging in.  See the documentation for the [`url_of()`] function to
-see what names to use for each page of the web site.  (The name you
-give is effectively passed to [`url_of()`].)  Instead of passing the
-name of a page of a web site, you can also pass a URL beginning with
-`http://` or `https://`, or a path beginning with `/`, such as
-`/start/taxes`, in which case the user will be taken to that page on
-the server.
+logging in or registering.  See the documentation for the [`url_of()`]
+function to see what names to use for each page of the web site.  (The
+name you give is effectively passed to [`url_of()`].)  Instead of
+passing the name of a page of a web site, you can also pass a URL
+beginning with `http://` or `https://`, or a path beginning with `/`,
+such as `/start/taxes`, in which case the user will be taken to that
+page on the server.
 
 You can also set up different pages for users with different
 [privileges]:
@@ -787,6 +787,10 @@ If a user has [privileges] of both `admin` and `developer`, the user
 will be directed to `config`.  Each item in `page after login` is
 processed in order, and the first match is used.  If no items match,
 the user is directed to "My Interviews."
+
+If a `next` parameter is present on the login or register page, the
+user will be redirected to that location instead of the `page after
+login`.
 
 ## <a name="global css"></a><a name="global javascript"></a><a name="raw global css"></a><a name="raw global javascript"></a>CSS and Javascript customization
 

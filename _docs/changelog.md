@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.74](https://github.com/jhpyle/docassemble/releases/tag/v1.2.74) - 2021-05-17
+
+### Added
+- Support for using AWS Secrets Manager ARNs in the Configuration.
+- The `config from` Configuration directive.
+
+### Fixed
+- Issues with the Active checkbox and the Roles multiselect on the edit
+  user profile page.
+- Issue with SQL query for finding a user.
+
 ## [1.2.73](https://github.com/jhpyle/docassemble/releases/tag/v1.2.73) - 2021-05-15
 
 ### Fixed
