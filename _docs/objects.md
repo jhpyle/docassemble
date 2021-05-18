@@ -1520,8 +1520,8 @@ To disallow access completely, set `disallow` to `'all'`:
 my_file.user_access(disallow='all')
 {% endhighlight %}
 
-To find out which users have been assigned privileges, call
-`user_access()` on a `DAFile` (not a [`DAFileList`] or
+To find out which users have been assigned privileges, run the
+`.user_access()` method on a `DAFile` (not a [`DAFileList`] or
 [`DAFileCollection`]) without any arguments.  The result will be a
 dictionary with the following keys:
 
@@ -1530,7 +1530,7 @@ dictionary with the following keys:
 * `temp_user_ids`: a list of temporary user IDs for non-logged in
   users who have access (such users cannot be assigned).
 
-Note that the `user_access()` function only reports users who have
+Note that the `user_access()` method only reports users who have
 been given explicit access; users who have joined the interview also
 have access; to take away their access, you would need to delete their
 session.

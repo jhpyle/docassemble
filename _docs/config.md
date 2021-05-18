@@ -4286,6 +4286,165 @@ limit` directive.
 pagination limit: 50
 {% endhighlight %}
 
+## <a name="config from"></a>Importing configuration directives
+
+The following section, [Using AWS Secrets Manager](#aws_secrets), discusses
+how you can refer to an [AWS Secret] in your Configuration by its
+[Amazon Reference Name], and **docassemble** will transparently
+replace the [ARN] string with the contents of the [AWS Secret].  The
+`config from` directive allows you to import Configuration directives
+from an [AWS Secret].  For example, suppose your entire Configuration
+consisted of this:
+
+{% highlight yaml %}
+debug: False
+timezone: America/New_York
+config from: arn:aws:secretsmanager:us-west-2:916432579235:secret:Config-AHE2yI
+{% endhighlight %}
+
+Suppose that your [AWS Secret], which in this case is named `Config`,
+consists of the following [JSON] string:
+
+{% highlight javascript %}
+{
+  "language": "en",
+  "debug": true,
+  "my db": {
+    "name": "demo",
+    "user": "docassemble",
+    "password": "abc123",
+    "host": "localhost",
+    "port": "5432"
+  }
+}
+{% endhighlight %}
+
+When the Configuration loads, the [ARN] string will be replaced with
+the dictionary data structure represented by the [JSON], and it will
+be as though the Configuration consisted of this:
+
+{% highlight yaml %}
+debug: False
+timezone: America/New_York
+config from:
+  language: en
+  debug: true
+  my db:
+    name: demo
+    user: docassemble
+    password: abc123
+    host: localhost
+    port: 5432
+{% endhighlight %}
+
+The `config from` directive overlays its contents on top of the
+Configuration.  (It uses the Python `update()` method of the `dict`
+object.)  The result is that your Configuration will effectively be
+the following:
+
+{% highlight yaml %}
+debug: True
+timezone: America/New_York
+language: en
+my db:
+  name: demo
+  user: docassemble
+  password: abc123
+  host: localhost
+  port: 5432
+{% endhighlight %}
+
+However, the `config.yml` file on your server will only consist of:
+
+{% highlight yaml %}
+debug: False
+timezone: America/New_York
+config from: arn:aws:secretsmanager:us-west-2:916432579235:secret:Config-AHE2yI
+{% endhighlight %}
+
+The `config from` directive allows you to maintain all of your
+Configuration (or as much of your Configuration as you want) in JSON
+format in an [AWS Secret].  Every time the server restarts, the server
+will retrieve the `config from` secret from [AWS Secrets Manager] and
+apply it to your Configuration.  The contents of the Configuration
+will not be stored in a file on the server; only the [ARN] reference
+will be visible in the `config.yml` file.
+
+# <a name="aws_secrets"></a>Using AWS Secrets Manager
+
+The Configuration supports the use of [AWS Secrets Manager].  When the
+Configuration YAML is parsed, any string that begins with
+`arn:aws:secretsmanager:` (even if it is inside of a nested structure)
+will be treated as a request to incorporate by reference the contents
+of an [AWS Secret] stored in the [AWS Secrets Manager] system.
+
+For example, suppose your Configuration contains:
+
+```
+db: arn:aws:secretsmanager:us-west-2:916432579235:secret:DbConfig-AHE2yI
+```
+
+This indicates that you want the [`db`] configuration to be retrieved
+from the [AWS Secret] called `DbConfig` that you have defined in your
+[AWS Secrets Manager] account.  The string
+`arn:aws:secretsmanager:us-west-2:916432579235:secret:DbConfig-AHE2yI`
+is an [Amazon Resource Name] that you can find in the properties of
+the [AWS Secret].
+
+The contents of the `DbConfig` secret will need to be a valid [JSON]
+string referring to a [JavaScript] "object."  For example, this would
+be a valid value for the `DbConfig` secret:
+
+{% highlight javascript %}
+{
+  "prefix": "postgresql+psycopg2://",
+  "name": "docassembledb",
+  "user": "docassemble",
+  "password": "ofiwf2438f34ferw",
+  "host": "db.example.com",
+}
+{% endhighlight %}
+
+This will have the same effect as having the following in your
+Configuration:
+
+{% highlight yaml %}
+db:
+  prefix: postgresql+psycopg2://
+  name: docassembledb
+  user: docassemble
+  password: ofiwf2438f34ferw
+  host: db.example.com
+{% endhighlight %}
+
+Effectively, the server replaces the [ARN] string with a [JSON]-converted
+version of the [AWS Secret].  The contents of the secret are not
+placed into the `config.yml` file.  The contents exist in the memory
+of **docassemble** but not on the file system.
+
+In order to retrieve the contents of an [AWS Secret], **docassemble**
+needs to authenticate with [AWS].  There are two ways this
+authentication can happen:
+
+1. Through EC2 role authentication (recommended);
+2. With the `AWSACCESSKEY` and `AWSSECRETACCESSKEY` environment
+   variables (possible, not not recommended).
+
+The first method only works if you are running **docassemble** from an
+[EC2] instance or some other server that can assume an "instance role."
+If your server requests an [AWS Secret] from [AWS Secrets Manager] and
+[AWS] can tell that the request is coming from a server that has an
+[IAM] role to which is attached a "policy" that allows access to
+secrets, then [AWS Secrets Manager] will allow access to the contents
+of the secret even though your server did not provide any
+authentication keys.  This is a very clean way of retrieving secrets
+because it does not involve storing access keys in the environment or
+in a file.
+
+You can use the second method (setting the `AWSACCESSKEY` and
+`AWSSECRETACCESSKEY` environment variables) if your server is not
+running on [EC2].  However, this is less secure because on [Docker],
+it involves placing sensitive access keys in the environment.
 
 # <a name="get_config"></a>Adding your own configuration variables
 
@@ -4651,3 +4810,9 @@ and Facebook API keys.
 [XLSX]: https://en.wikipedia.org/wiki/Office_Open_XML
 [XLIFF]: https://en.wikipedia.org/wiki/XLIFF
 [libpq]: https://www.postgresql.org/docs/current/libpq-ssl.html
+[ARN]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+[Amazon Resource Name]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
+[AWS Secret]: https://aws.amazon.com/secrets-manager/
+[AWS Secrets Manager]: https://aws.amazon.com/secrets-manager/
+[AWS]: https://aws.amazon.com
+[IAM]: https://aws.amazon.com/iam/
