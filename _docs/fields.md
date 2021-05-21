@@ -173,6 +173,12 @@ specified with code:
 
 {% include side-by-side.html demo="buttons-code-list-partial" %}
 
+Instead of using key-value pairs to represent what the variable is set
+to and the label, you can use `value` and `label` as
+keys in the dictionary:
+
+{% include side-by-side.html demo="buttons-code-list-label-value" %}
+
 As explained [below](#image button), you can also use code to
 [decorate the buttons with images](#image button).
 
@@ -1369,6 +1375,13 @@ including a `'help'` key in the dictionary indicating the help text
 that should be available to the user.
 
 {% include side-by-side.html demo="fields-mc-8" %}
+
+Instead of specifying the choices using key-value pairs where the keys
+are what the variable is set to and the values are the labels, you can
+use keys `label` and `value` to reference the label and the
+corresponding variable value.
+
+{% include side-by-side.html demo="fields-mc-9" %}
 
 ## <a name="exclude"></a>`exclude`
 

@@ -1109,7 +1109,9 @@
     you understand this?
   buttons:
     code: |
-      [{'understands':"I understand"}, {'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
+      [{'understands': "I understand"},
+       {'does not understand': "I do not understand"},
+       {'unsure': "I'm not sure"}]
 "buttons-code-list-equivalent": |-
   field: target_variable
   question: |
@@ -1120,6 +1122,17 @@
     - "I understand": understands
     - "I do not understand": does not understand
     - "I'm not sure": unsure
+"buttons-code-list-label-value": |-
+  field: target_variable
+  question: |
+    Your use of this system does not
+    mean that you have a lawyer.  Do
+    you understand this?
+  buttons:
+    code: |
+      [{'label': "I understand", 'value': 'understands'},
+       {'label': "I do not understand", 'value': 'does not understand'},
+       {'label': "I'm not sure", 'value': 'unsure'}]
 "buttons-code-list-partial": |-
   field: target_variable
   question: |
@@ -4197,6 +4210,16 @@
                    'help': "Oranges are a type of citrus fruit."},
                   {'pear': "Pears",
                    'help': "Pears are an acquired taste."}
+                ]
+"fields-mc-9": |-
+  code: |
+    myoptions = [
+                  {'label': "Apples",
+                   'value': 'apple'},
+                  {'label': "Oranges",
+                   'value': 'orange'},
+                  {'label': "Pears",
+                   'value': 'pear'}
                 ]
 "fields-mc-exclude": |-
   question: |

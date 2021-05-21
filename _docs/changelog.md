@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.75](https://github.com/jhpyle/docassemble/releases/tag/v1.2.75) - 2021-05-21
+
+### Changed
+- When specifying multiple choices using code containing dictionary
+  items, you can use the keys `label` and `value` in a dictionary to
+  represent the label that appears on the screen and the value to
+  which the variable should be set.
+- Widths in percentage format (e.g., `50%`) are now valid when
+  inserting images into PDF files assembled from Markdown.
+
 ## [1.2.74](https://github.com/jhpyle/docassemble/releases/tag/v1.2.74) - 2021-05-17
 
 ### Added
