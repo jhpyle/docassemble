@@ -6729,10 +6729,10 @@ def is_threestate(field_data):
     for entry in field_data['choices']:
         if 'key' in entry and 'label' in entry:
             if isinstance(entry['key'], TextObject):
-                if not isinstance(entry['key'].original_text, (bool, NoneType)):
+                if not (isinstance(entry['key'].original_text, (bool, NoneType)) or (isinstance(entry['key'].original_text, str) and entry['key'].original_text == 'None')):
                     return False
             else:
-                if not isinstance(entry['key'], (bool, NoneType)):
+                if not (isinstance(entry['key'], (bool, NoneType)) or (isinstance(entry['key'], str) and entry['key'].original_text == 'None')):
                     return False
     return True
 
@@ -8627,7 +8627,7 @@ def process_selections(data, manual=False, exclude=None):
                 the_item = dict()
                 for key in entry:
                     if len(entry) > 1:
-                        if key in ['default', 'help', 'image']:
+                        if key in ['default', 'help', 'image', 'label']:
                             continue
                         if 'default' in entry:
                             the_item['default'] = entry['default']
@@ -8651,14 +8651,22 @@ def process_selections(data, manual=False, exclude=None):
                                 the_item['image'] = dict(type='url', value=entry['image'].url_for())
                             else:
                                 the_item['image'] = dict(type='decoration', value=entry['image'])
-                    the_item['key'] = key
-                    the_item['label'] = entry[key]
-                    is_not_boolean = False
-                    for val in entry.values():
-                        if val not in (True, False):
-                            is_not_boolean = True
-                    if key not in to_exclude and (is_not_boolean or entry[key] is True):
-                        result.append(the_item)
+                    if key == 'value' and 'label' in entry:
+                        the_item['key'] = entry[key]
+                        the_item['label'] = entry['label']
+                        if entry[key] not in to_exclude and ((not isinstance(entry['label'], bool)) or entry['label'] is True):
+                            result.append(the_item)
+                    else:
+                        the_item['key'] = key
+                        the_item['label'] = entry[key]
+                        is_not_boolean = False
+                        for key, val in entry.items():
+                            if key in ['default', 'help', 'image', 'label']:
+                                continue
+                            if val not in (True, False):
+                                is_not_boolean = True
+                        if key not in to_exclude and (is_not_boolean or entry[key] is True):
+                            result.append(the_item)
             if (isinstance(entry, (list, tuple)) or (hasattr(entry, 'elements') and isinstance(entry.elements, list))) and len(entry) > 0:
                 if entry[0] not in to_exclude:
                     if len(entry) >= 4:

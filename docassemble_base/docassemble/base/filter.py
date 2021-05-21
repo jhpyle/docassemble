@@ -1030,6 +1030,10 @@ def convert_pixels(match):
     pixels = match.group(1)
     return (str(int(pixels)/72.0) + "in")
 
+def convert_percent(match):
+    percentage = match.group(1)
+    return (str(float(percentage)/100.0) + '\\textwidth')
+
 def image_include_string(match, emoji=False, question=None):
     file_reference = match.group(1)
     if question and file_reference in question.interview.images:
@@ -1038,6 +1042,7 @@ def image_include_string(match, emoji=False, question=None):
         width = match.group(2)
         assert width != 'None'
         width = re.sub(r'^(.*)px', convert_pixels, width)
+        width = re.sub(r'^(.*)%', convert_percent, width)
         if width == "full":
             width = '\\textwidth'
     except:

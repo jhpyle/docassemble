@@ -1,5 +1,5 @@
 metadata:
-  title: Buttons defined with code
+  title: Buttons defined with code using label and value
   short title: Buttons code
   documentation: "https://docassemble.org/docs/fields.html#code button"
 ---
@@ -10,9 +10,9 @@ question: |
   you understand this?
 buttons:
   code: |
-    [{'understands': "I understand"},
-     {'does not understand': "I do not understand"},
-     {'unsure': "I'm not sure"}]
+    [{'label': "I understand", 'value': 'understands'},
+     {'label': "I do not understand", 'value': 'does not understand'},
+     {'label': "I'm not sure", 'value': 'unsure'}]
 ---
 question: Result of question
 subquestion: |
