@@ -8266,6 +8266,15 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "The date is April 1, 1989."
 
+  Scenario: Test the interview "Date limits"
+    Given I start the interview "docassemble.base:data/questions/examples/date-limit.yml"
+    Then I should see the phrase "What is your date of birth?"
+    And I set "Your birthday" to "04/19/2099"
+    Then I should see the phrase "You need to enter a date on or before"
+    And I set "Your birthday" to "04/19/1989"
+    And I click the button "Continue"
+    Then I should see the phrase "You were born on April 19, 1989."
+
   Scenario: Test the interview "Device local"
     Given I start the interview "docassemble.base:data/questions/examples/device-local.yml"
     Then I should see the phrase "How are you doing today?"
