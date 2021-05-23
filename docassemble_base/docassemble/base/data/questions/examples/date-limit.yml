@@ -1,5 +1,6 @@
 metadata:
-  title: Date
+  title: Date Maximum
+  short title: Maximum
   documentation: "https://docassemble.org/docs/fields.html#date"
 ---
 question: What is your date of birth?

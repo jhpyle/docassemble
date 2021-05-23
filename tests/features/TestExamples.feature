@@ -8270,6 +8270,8 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/date-limit.yml"
     Then I should see the phrase "What is your date of birth?"
     And I set "Your birthday" to "04/19/2099"
+    And I unfocus
+    And I wait 1 second
     Then I should see the phrase "You need to enter a date on or before"
     And I set "Your birthday" to "04/19/1989"
     And I click the button "Continue"
