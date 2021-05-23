@@ -494,7 +494,7 @@ class Playground(PlaygroundSection):
             undefined_names.discard(var)
         names_used = names_used.difference( undefined_names )
         all_names = names_used | undefined_names | fields_used
-        all_names_reduced = all_names.difference( set(['url_args']) )
+        all_names_reduced = all_names.difference( set(['url_args', 'device_local', 'session_local', 'user_local']) )
         return dict(names_used=names_used, undefined_names=undefined_names, fields_used=fields_used, all_names=all_names, all_names_reduced=all_names_reduced)
 
 def fix_variable_name(match):

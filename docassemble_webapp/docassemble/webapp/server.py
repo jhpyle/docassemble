@@ -712,6 +712,8 @@ def custom_login():
 
     safe_next = _get_safe_next_param('next', user_manager.after_login_endpoint)
     safe_reg_next = _get_safe_next_param('reg_next', user_manager.after_register_endpoint)
+    if safe_next and '/officeaddin' in safe_next:
+        g.embed = True
 
     if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
         if safe_next == url_for(user_manager.after_login_endpoint):
@@ -811,7 +813,10 @@ def custom_login():
 
 def add_secret_to(response):
     if 'newsecret' in session:
-        response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
+        if 'embed' in g:
+            response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite='None')
+        else:
+            response.set_cookie('secret', session['newsecret'], httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
         del session['newsecret']
     return response
 
