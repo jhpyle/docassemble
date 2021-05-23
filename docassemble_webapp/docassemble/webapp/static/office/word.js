@@ -47,6 +47,9 @@ function flash(message, priority) {
 function fixServer(serverName) {
   var l = document.createElement("a");
   l.href = serverName;
+  if (!l.origin) {
+    return l.protocol + "//" + l.hostname;
+  }
   return l.origin;
 }
 
