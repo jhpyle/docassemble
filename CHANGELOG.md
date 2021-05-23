@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.76] - 2021-05-23
+### Added
+- Support for using Azure Key Vault References in the Configuration.
+
 ## [1.2.75] - 2021-05-21
 ### Changed
 - When specifying multiple choices using code containing dictionary

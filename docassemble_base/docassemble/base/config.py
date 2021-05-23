@@ -86,6 +86,7 @@ def delete_environment():
 
 this_thread = threading.local()
 this_thread.botoclient = dict()
+this_thread.azureclient = dict()
 
 def aws_get_region(arn):
     m = re.search(r'arn:aws:secretsmanager:([^:]+):', arn)
@@ -136,10 +137,77 @@ def aws_get_secret(data):
         sys.stderr.write("aws_get_secret: problem decoding JSON\n")
     return result
 
+def azure_get_secret(data):
+    vault_name = None
+    secret_name = None
+    secret_version = None
+    m = re.search('^@Microsoft.KeyVault\(([^\)]+)\)', data)
+    if m:
+        parts = m.group(1).split(';')
+        for part in parts:
+            mm = re.search(r'^([^=]+)=(.*)', part)
+            if mm:
+                if mm.group(1) == 'VaultName':
+                    vault_name = mm.group(2)
+                elif mm.group(1) == 'SecretName':
+                    secret_name = mm.group(2)
+                elif mm.group(1) == 'SecretVersion':
+                    secret_version = mm.group(2)
+                elif mm.group(1) == 'SecretUri':
+                    mmm = re.search(r'https://([^\.]+).vault.azure.net/secrets/([^\/]+)/?$', mm.group(2))
+                    if mmm:
+                        vault_name = mmm.group(1)
+                        secret_name = mmm.group(2)
+                    else:
+                        mmmm = re.search(r'https://([^\.]+).vault.azure.net/secrets/([^\/]+)/([^\/]+)/?$', mm.group(2))
+                        if mmmm:
+                            vault_name = mmmm.group(1)
+                            secret_name = mmmm.group(2)
+                            secret_version = mmmm.group(3)
+    if vault_name is None or secret_name is None:
+        return data
+    if vault_name not in this_thread.azureclient:
+        from azure.identity import DefaultAzureCredential
+        from azure.keyvault.secrets import SecretClient
+        try:
+            credential = DefaultAzureCredential()
+            this_thread.azureclient[vault_name] = SecretClient(vault_url="https://" + vault_name + ".vault.azure.net/", credential=credential)
+        except Exception as err:
+            sys.stderr.write("azure_get_secret: unable to create key vault client: " + err.__class__.__name__ + str(err) + "\n")
+            return data
+    try:
+        if secret_version is not None:
+            secret_data = this_thread.azureclient[vault_name].get_secret(secret_name, secret_version)
+        else:
+            secret_data = this_thread.azureclient[vault_name].get_secret(secret_name)
+    except Exception as err:
+        sys.stderr.write("azure_get_secret: unable to retrieve secret: " + err.__class__.__name__ + str(err) + "\n")
+        return data
+    if isinstance(secret_data.properties.content_type, str):
+        if secret_data.properties.content_type == 'application/json':
+            try:
+                data = json.loads(secret_data.value)
+            except:
+                sys.stderr.write("azure_get_secret: problem decoding JSON\n")
+                data = secret_data.value
+        elif secret_data.properties.content_type in ('application/x-yaml', 'application/yaml'):
+            try:
+                data = yaml.load(secret_data.value, Loader=yaml.FullLoader)
+            except:
+                sys.stderr.write("azure_get_secret: problem decoding YAML\n")
+                data = secret_data.value
+        else:
+            data = secret_data.value
+    else:
+        data = secret_data.value
+    return data
+
 def recursive_fetch_cloud(data):
     if isinstance(data, str):
         if data.startswith('arn:aws:secretsmanager:'):
             data = aws_get_secret(data.strip())
+        elif data.startswith('@Microsoft.KeyVault('):
+            data = azure_get_secret(data.strip())
         return data
     elif isinstance(data, (int, float, bool)):
         return data
