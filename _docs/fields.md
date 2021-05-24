@@ -468,7 +468,7 @@ be understood as a date.
 Likewise, to set limits, you can set `min` and/or `max` to a string
 that can be recognized as a date.
 
-{% include side-by-side.html demo="date-default" %}
+{% include side-by-side.html demo="date-limit" %}
 
 ## <a name="time"></a>Times
 

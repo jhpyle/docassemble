@@ -2100,6 +2100,12 @@
     In three days, it will be
     ${ format_date( current_datetime() + date_interval(days=3) ) }.
   mandatory: True
+"date-limit": |-
+  question: What is your date of birth?
+  fields:
+    - Your birthday: birthdate
+      datatype: date
+      max: ${ today() }
 "date-parts": |-
   mandatory: True
   question: |

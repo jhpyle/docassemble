@@ -4288,13 +4288,14 @@ pagination limit: 50
 
 ## <a name="config from"></a>Importing configuration directives
 
-The following section, [Using AWS Secrets Manager](#aws_secrets), discusses
-how you can refer to an [AWS Secret] in your Configuration by its
-[Amazon Reference Name], and **docassemble** will transparently
-replace the [ARN] string with the contents of the [AWS Secret].  The
-`config from` directive allows you to import Configuration directives
-from an [AWS Secret].  For example, suppose your entire Configuration
-consisted of this:
+The following sections, [Using AWS Secrets Manager](#aws_secrets) and
+[Using Azure Key Vault](#azure_secrets), discuss how you can refer to
+an [AWS Secret] or an [Azure Key Vault] Secret in your Configuration
+using an [Amazon Resource Name] or [Key Vault Reference], and
+**docassemble** will transparently replace reference with the contents
+of the secret.  The `config from` directive allows you to import
+multiple Configuration directives from one of these secrets.  For
+example, suppose your entire Configuration consisted of this:
 
 {% highlight yaml %}
 debug: False
@@ -4302,8 +4303,8 @@ timezone: America/New_York
 config from: arn:aws:secretsmanager:us-west-2:916432579235:secret:Config-AHE2yI
 {% endhighlight %}
 
-Suppose that your [AWS Secret], which in this case is named `Config`,
-consists of the following [JSON] string:
+Suppose that your [AWS Secret], which in this example is named
+`Config`, consists of the following [JSON] string:
 
 {% highlight javascript %}
 {
@@ -4328,7 +4329,7 @@ debug: False
 timezone: America/New_York
 config from:
   language: en
-  debug: true
+  debug: True
   my db:
     name: demo
     user: docassemble
@@ -4362,13 +4363,17 @@ timezone: America/New_York
 config from: arn:aws:secretsmanager:us-west-2:916432579235:secret:Config-AHE2yI
 {% endhighlight %}
 
+Note that in this example, the `debug` directive was overridden from
+`False` to `True` by the importing of directives from the `config
+from` reference.
+
 The `config from` directive allows you to maintain all of your
-Configuration (or as much of your Configuration as you want) in JSON
-format in an [AWS Secret].  Every time the server restarts, the server
-will retrieve the `config from` secret from [AWS Secrets Manager] and
+Configuration (or as much of your Configuration as you want) in a
+secret on [AWS] or [Microsoft Azure].  Every time the server restarts,
+the server will retrieve the `config from` secret from the cloud and
 apply it to your Configuration.  The contents of the Configuration
 will not be stored in a file on the server; only the [ARN] reference
-will be visible in the `config.yml` file.
+or [Key Vault Reference] will be visible in the `config.yml` file.
 
 # <a name="aws_secrets"></a>Using AWS Secrets Manager
 
@@ -4445,6 +4450,169 @@ You can use the second method (setting the `AWSACCESSKEY` and
 `AWSSECRETACCESSKEY` environment variables) if your server is not
 running on [EC2].  However, this is less secure because on [Docker],
 it involves placing sensitive access keys in the environment.
+
+# <a name="azure_secrets"></a>Using Azure Key Vault
+
+The Configuration supports the use of [Azure Key Vault].  When the
+Configuration [YAML] is parsed, any string that begins with
+`@Microsoft.KeyVault(` (even if it is inside of a nested structure)
+will be treated as a request to incorporate by reference the contents
+of a Secret stored in the [Azure Key Vault] system.
+
+To reference a secret in your Configuration, use a [Key Vault
+Reference].  For example, suppose you have a [Key Vault] named
+`abcincsecrets` that has a secret in it named `OAuthConfig` with a
+"content type" of `application/x-yaml` and the following contents:
+
+{% highlight yaml %}
+github:
+  enable: True
+  id: ba45316c5951436328bc
+  secret: 68e37cebd352f1ea36b6147cd52ff661c413f4b1
+{% endhighlight %}
+
+You could set the following in your Configuration:
+
+{% highlight yaml %}
+oauth: "@Microsoft.KeyVault(VaultName=abcincsecrets;SecretName=OAuthConfig)"
+{% endhighlight %}
+
+If authentication with [Azure Key Vault] succeeds, this will have the
+same effect as having the following in your Configuration:
+
+{% highlight yaml %}
+oauth:
+  github:
+    enable: True
+    id: ba45316c5951436328bc
+    secret: 68e37cebd352f1ea36b6147cd52ff661c413f4b1
+{% endhighlight %}
+
+If authentication does not succeed, the `oauth` directive will be
+defined as the string `'@Microsoft.KeyVault(VaultName=abcincsecrets;SecretName=OAuthConfig)'`.
+
+A [Key Vault Reference] can be expressed a number of ways:
+
+{% highlight text %}
+@Microsoft.KeyVault(VaultName=abcincsecrets;SecretName=OAuthConfig)
+@Microsoft.KeyVault(VaultName=abcincsecrets;SecretName=OAuthConfig;SecretVersion=812ebcd3b1273de76ed5405537f7ff27)
+@Microsoft.KeyVault(SecretUri=https://abcincsecrets.vault.azure.net/secrets/OAuthConfig/)
+@Microsoft.KeyVault(SecretUri=https://abcincsecrets.vault.azure.net/secrets/OAuthConfig)
+@Microsoft.KeyVault(SecretUri=https://abcincsecrets.vault.azure.net/secrets/OAuthConfig/812ebcd3b1273de76ed5405537f7ff27/)
+@Microsoft.KeyVault(SecretUri=https://abcincsecrets.vault.azure.net/secrets/OAuthConfig/812ebcd3b1273de76ed5405537f7ff27)
+{% endhighlight %}
+
+To start using [Azure Key Vault], open the [Azure Portal], search for
+"Key vaults," and click "New" to create a new [Key Vault].  Give it a
+name.  Under "Access policy," choose "Azure role-based access
+control."
+
+There are two ways you can set up authentication to allow your
+**docassemble** server to read secrets from your [Key Vault]:
+
+* You can tell the [Key Vault] to allow access to your [Azure Virtual
+  Machine] on the basis of the machine's [Identity].  This is the
+  recommended method because it does not require storing any IDs or
+  secrets in your **docassemble** server.
+* [Registering] an Azure "app," telling the [Key Vault] to allow access to
+  the "service principal" of that "app," and then passing the "app"'s
+  "client ID," "secret," and "tenant ID" to **docassemble** as
+  environment variables through Docker.
+
+To use the first method, go to [Azure Portal] and open the Virtual
+Machine that will run your **docassemble** server.  Go to the
+"Identity" section.  Under the "System assigned" tab, set Status to
+"On."  Press "Save."  Then open your [Key Vault] and go to the "Access
+control (IAM)" section.  Click the "Add role assignment" button.
+Choose the role called "Key Vault Secrets User" and click Next.  Under
+"Assign access to," select "Managed identity."  Click "Select
+members."  Select "Virtual Machine."  Your Virtual Machine should now
+appear as an option; click it.  Then press "Select."  Then press
+"Next."  Then press "Review + assign."
+
+To use the second method, go to [Azure Portal] and search for "App
+registrations."
+
+If you already have an app that you are using for **docassemble**, you
+can use this app for retrieving secrets, if you want; you just need to
+note the "Application (client) ID" and the "Directory (tenant) ID" in
+the "Overview" section of the "app."  If you have already created a
+"secret" for the "app" and you know what it is, go find it.  If you
+have not created any "client secrets" for the "app" yet, or you can't
+locate the value of a secret you have created, go to the "Certificates
+& secrets" section, create a new "client secret, and note the "Value"
+of the secret.
+
+If you do not already have an app, create one by clicking "New
+registration."  Give it a name and press "Register."  Then open the
+app and go to the "Certificates & secrets" section and click "New
+client secret."  Type in a description of the secret, set an
+expiration date, and click "Add."  Then, copy and save the "Value" of
+the secret you just created; [Azure Portal] will not let you see this
+value later, so you need to copy and save it now.  Then go to the
+Overview section and note the "Application (client) ID" and "Directory
+(tenant) ID."
+
+You will need to pass these three environment variables to `docker
+run`:
+
+* `AZURE_CLIENT_ID` -- the "Application (client) ID" associated with
+  the "app."
+* `AZURE_TENANT_ID` -- the "Directory (tenant) ID" associated with the
+  "app."
+* `AZURE_CLIENT_SECRET` -- the "Value" of a "client secret" listed in
+  the "Certificates & secrets" section of the "app."
+
+Note that Azure forces you to choose an expiration date for the secret
+in the next two years.  This means that before the secret expires, you
+will need to re-run `docker run` with a new secret.
+
+Once you have an "app" and you know what values you are going to use
+for `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_CLIENT_SECRET`,
+open your [Key Vault] and go to the "Access control (IAM)" section.
+Click the "Add role assignment" button.  Choose the role called "Key
+Vault Secrets User" and click Next.  Under "Assign access to," select
+"User, group, or service principal."  Then click "Select members."
+Under "Select," type in the name of your "app"; when it comes up,
+click it, and press "Select."  Then press "Next."  Then
+press "Review + assign."  Now you have told your Key Vault to allow
+access to your "app," which means that anyone with the "Application
+(client) ID," "Directory (tenant) ID," and "secret" associated with the
+"app" can access the values of "Secrets" in your Key Vault.
+
+Now that you have a "Key Vault" and you have told the "Key Vault" to
+allow access to your **docassemble** server, you can create one or
+more "Secrets" in the "Key Vault."  Open your "Key Vault" and go to
+the "Secrets" section.  Click "Generate/Import."  Give your secret a
+name like "Test."  For the Value, you can type anything you want, but
+[Azure Portal] only allows you to enter a single line.  If you want
+the secret to be interpreted as [JSON], set the "Content type" to
+`application/json`.  If you want your secret to contain a complex data
+structure, you will need to use [Azure PowerShell] or [Azure CLI].
+For example, you could create a file called `secrets.json` containing
+a [JSON] data structure you want to use in your Configuration, and
+then you could upload it to your [Azure Key Vault] by running the
+following [Azure CLI] commands:
+
+{% highlight bash %}
+az keyvault secret set --vault-name=abcincsecrets --name=SomeSecrets --file=secrets.json --encoding=utf-8
+az keyvault secret set-attributes --vault-name=abcincsecrets --name=SomeSecrets --content-type="application/json"
+{% endhighlight %}
+
+**docassemble** respects the following content types:
+
+* `application/json` for [JSON]
+* `application/x-yaml` for [YAML]
+
+If the content type of the secret is set to something else, or it is
+left unset, **docassemble** will process the secret as plain text.
+
+For example, if you just want to store a single string in a secret,
+you can do:
+
+{% highlight bash %}
+az keyvault secret set --vault-name=abcincsecrets --name=myapikey --value="AD42C533B22A5343F32D27E"
+{% endhighlight %}
 
 # <a name="get_config"></a>Adding your own configuration variables
 
@@ -4816,3 +4984,13 @@ and Facebook API keys.
 [AWS Secrets Manager]: https://aws.amazon.com/secrets-manager/
 [AWS]: https://aws.amazon.com
 [IAM]: https://aws.amazon.com/iam/
+[Key Vault Reference]: https://docs.microsoft.com/en-us/azure/app-service/app-service-key-vault-references
+[Azure Key Vault]: https://azure.microsoft.com/en-us/services/key-vault/
+[Key Vault]: https://azure.microsoft.com/en-us/services/key-vault/
+[Azure Portal]: https://portal.azure.com
+[Identity]: https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
+[Azure Virtual Machine]: https://azure.microsoft.com/en-us/services/virtual-machines/
+[Registering]: https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app
+[Azure PowerShell]: https://docs.microsoft.com/en-us/powershell/azure/
+[Azure CLI]: https://docs.microsoft.com/en-us/cli/azure/
+[Microsoft Azure]: https://azure.microsoft.com

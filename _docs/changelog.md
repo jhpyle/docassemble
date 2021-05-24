@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.76](https://github.com/jhpyle/docassemble/releases/tag/v1.2.76) - 2021-05-24
+
+### Added
+- Support for using Azure Key Vault References in the Configuration.
+
+### Fixed
+- Internet Explorer issue with Word sidebar.
+- Issue with Wizard and global variables.
+
 ## [1.2.75](https://github.com/jhpyle/docassemble/releases/tag/v1.2.75) - 2021-05-21
 
 ### Changed
