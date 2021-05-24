@@ -245,6 +245,7 @@ subquestion: |
   [Templates section]: ${ url_of('playgroundtemplate', project=current_project) }
 buttons:
   - Exit: exit
+    url: ${ url_of('playground', project=current_project, file=yaml_file) }
 ---
 generic object: DAQuestion
 question: |

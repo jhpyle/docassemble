@@ -1,8 +1,11 @@
 # Change Log
 
-## [1.2.76] - 2021-05-23
+## [1.2.76] - 2021-05-24
 ### Added
 - Support for using Azure Key Vault References in the Configuration.
+### Fixed
+- Internet Explorer issue with Word sidebar.
+- Issue with Wizard and global variables.
 
 ## [1.2.75] - 2021-05-21
 ### Changed
