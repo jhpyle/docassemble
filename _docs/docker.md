@@ -333,10 +333,28 @@ order.
 
 # <a name="troubleshooting"></a>Troubleshooting
 
-You should not need to access the running container in order to get
-**docassemble** to work, and all the log files you need will hopefully
-be available from [Logs] in the web browser.  However, you might want
-to gain access to the running container for some reason.
+If you are having trouble with your **docassemble** server, do not
+assume that "turning it off and turning it on again" is a solution
+that will fix whatever problems you are having.  Maybe that is true
+with some systems, but it is not true with Linux or **docassemble**.
+In fact, if you are new to **docassemble**, "turning it off and
+turning it on again" may make your problems much worse.  Instead of
+forcibly rebooting your system and hoping for the best, learn how to
+access log files and uncover evidence about why your system is not
+working as it should.  (This section explains how.)  If you would like
+to be able to "pull the plug" on your **docassemble** system without
+negative repercussions, you can, if you first configure an external
+SQL server, an external Redis server, and a cloud-based persistent
+storage system.  But until you have an external SQL server, an
+external Redis server, and cloud-based persistent storage system, you
+need to be extremely careful about how you shut down your Docker
+container.  (See the section on [shutting down](#shutdown) to learn
+why.)
+
+Normally, you will not need to access the running container in order
+to get **docassemble** to work, and all the log files you need will be
+available from [Logs] in the web browser.  However, you might want or
+need to gain access to the running container in some circumstances.
 
 To do so, find out the ID of the running container by doing
 [`docker ps`].  You will see output like the following:
@@ -353,7 +371,7 @@ docker exec -t -i e4fa52ba540e /bin/bash
 {% endhighlight %}
 
 using your own ID in place of `e4fa52ba540e`.  This will give you a
-command prompt within the running container.
+[bash] command prompt within the running container.
 
 The first thing to check when you connect to a container is:
 
@@ -2330,3 +2348,4 @@ line), as the containers depend on the images.
 [BusyBox]: https://hub.docker.com/_/busybox
 [`http port`]: {{ site.baseurl }}/docs/config.html#http port
 [`celery processes`]: {{ site.baseurl }}/docs/config.html#celery processes
+[bash]: https://en.wikipedia.org/wiki/Bash_(Unix_shell)
