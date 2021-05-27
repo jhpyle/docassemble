@@ -874,10 +874,12 @@ your container for the new configuration to take effect.
   accepts connections in HTTPS and forwards them to your server or
   servers as HTTP.  This lets **docassemble** know that when it forms
   URLs, it should use the `https` scheme even though requests appear
-  to be coming in as HTTP requests.  You also need to make sure that
-  your proxy server is setting the `X-Forwarded-*` HTTP headers when
-  it passes HTTP requests to your server or servers.  See the [`behind
-  https load balancer`] configuration directive for more information.
+  to be coming in as HTTP requests, and when it sends cookies, it
+  should set the `secure` flag on the cookies.  You also need to make
+  sure that your proxy server is setting the `X-Forwarded-*` HTTP
+  headers when it passes HTTP requests to your server or servers.  See
+  the [`behind https load balancer`] configuration directive for more
+  information.
 * <a name="XSENDFILE"></a>`XSENDFILE`: Set this to `false` if the
   X-Sendfile header is not functional in your configuration for
   whatever reason.  See the [`xsendfile`] configuration directive.

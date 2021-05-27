@@ -3376,7 +3376,19 @@ port 80 or a non-standard [HTTP] port.
 This variable is typically set using the [Docker] environment variable
 [`BEHINDHTTPSLOADBALANCER`].
 
-Make sure that the proxy server you are using sets the
+This is important because if **docassemble** thinks that it is serving
+requests on port 80, it won't set the `secure` flag on cookies.
+However, if the user's browser actually is accessing the site over
+HTTPS, then users will get cookies that lack the `secure` flag.  The
+mismatch between the use of HTTPS and the flag on the cookies can
+cause site to reject the cookies.  The symptom of the browser
+rejecting cookies can be the continual reloading of the screen or the
+Continue button acting like a reload button.  Cookies are necessary
+for **docassemble**'s session system, so the site will not function
+unless cookies work.  Thus it is very important to set `behind https
+load balancer` if you are using a load balancer or proxy.
+
+Also make sure that the proxy server you are using sets the
 `X-Forwarded-*` headers.  **docassemble** needs these headers in
 certain circumstances in order to form correct URLs.  Specifically,
 the proxy server should set the following headers:

@@ -18,20 +18,44 @@ When a user registers in the **docassemble** system, their default
 "privilege" is that of "user," which has the lowest privileges.  There
 are seven privileges defined by default in **docassemble**:
 
-* user
-* admin
-* cron
-* customer
-* developer
-* advocate
-* trainer
+* `user` - users with this privilege have no elevated privileges;
+  anyone who registers can be a `user`.
+* `admin` - users with this privilege can do everything.  `admin`
+  privileges are required for editing the Configuration and
+  administering user accounts.
+* `cron` - this privilege is exclusively held by the `cron` user.
+  When [scheduled tasks] run, they are run by the `cron` user with
+  this privilege.
+* `customer` - nothing in the **docassemble** code gives the
+  `customer` privilege any greater power than a `user`.  This
+  privilege exists because some **docassemble** developers might want
+  to make a distinction between users who have paid money and users
+  who have not.
+* `developer` - users with the `developer` privilege can use the
+  Train, Package Management, Logs, Playground, and Utilities
+  features.
+* `advocate` - users with the `advocate` privilege can use the Monitor
+  feature.  They have the ability to access user data.  This privilege
+  is intended for users who are not developers or administrators but
+  who are expected to use the "multi-user interview" feature to enter
+  users' interviews for purposes of providing support.
+* `trainer` - users with the `trainer` privilege can access the Train
+  feature.
 
-A user who has the "admin" privilege can upgrade the privleges of any
-user by going to the [User List] on the menu.  The user can add
-additional privileges by going to the [Privileges List].
+The documentation will mention when a feature or function requires a
+particular privilege.  For example, access to [API] endpoints depends
+on the privileges of the user whose [API] key is used to access the
+[API].
 
-The "cron" user privilege is used exclusively by the code that runs
-[scheduled tasks].
+A user who has the `admin` privilege can upgrade the privleges of any
+user by going to the [User List] on the menu and editing the user.
+There is also an [API] endpoint for editing user privileges.
+
+The "privileges" system is intended to be used by **docassemble**
+developers in their interviews.  An `admin` user can add additional
+privileges by going to the [Privileges List].  In interview logic, you
+can call [`user_has_privilege()`] to send the user down a different
+logical path depending on what privilege or privileges the user has.
 
 When **docassemble** is first installed, it creates a user with
 "admin" privileges with the following login information:
@@ -42,10 +66,6 @@ When **docassemble** is first installed, it creates a user with
 As soon as **docassemble** is set up, you should log in as this user,
 go to [User List], edit the admin@admin.com user, and change its e-mail
 address and password.
-
-You can also change these defaults during [installation] by editing the
-[configuration] before running the [`create_tables.py`] script from the
-[`docassemble.webapp`] package.
 
 Users can log in with Facebook, Google, Twitter, or Microsoft Azure.
 This requires obtaining API keys with those companies.  See the
@@ -295,3 +315,4 @@ will run after [`imports`] and [`modules`] blocks, but before
 [`imports`]: {{ site.baseurl }}/docs/initial.html#imports
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [action]: {{ site.baseurl }}/docs/functions.html#actions
+[API]: {{ site.baseurl }}/docs/api.html

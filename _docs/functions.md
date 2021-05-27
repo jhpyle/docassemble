@@ -2292,6 +2292,8 @@ attributes describing the current user:
 * `package` the package of the current filename
 * `question_id` the `id` of the current `question`, or `None` if there is
   no current `question` or the `question` does not have an `id`.
+* `current_filename` the filename of the currently executing block
+* `current_package` the package of the filename of the currently executing block
 * `variable` the name of the last variable to be sought, or
   `None` if there was no variable being sought.
 * `language` the user's language, if set (an [ISO-639-1] or
