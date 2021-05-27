@@ -7433,7 +7433,7 @@ def index(action_argument=None, refer=None):
                 steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     if validated:
         for var_name in vars_set:
-            if var_name in interview.invalidation or var_name in interview.onchange:
+            if var_name in interview.invalidation_todo or var_name in interview.onchange_todo:
                 interview.invalidate_dependencies(var_name, user_dict, old_values)
             try:
                 del user_dict['_internal']['dirty'][var_name]
@@ -24370,7 +24370,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 break
     if question_name is not None:
         for var_name in vars_set:
-            if var_name in interview.invalidation or var_name in interview.onchange:
+            if var_name in interview.invalidation_todo or var_name in interview.onchange_todo:
                 interview.invalidate_dependencies(var_name, user_dict, old_values)
             try:
                 del user_dict['_internal']['dirty'][var_name]
