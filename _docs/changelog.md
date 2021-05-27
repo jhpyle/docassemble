@@ -8,6 +8,7 @@ short_title: Change Log
 
 ### Fixed
 - Error with `depends on` and `generic object` variables.
+- Error with websockets.
 
 ## [1.2.77](https://github.com/jhpyle/docassemble/releases/tag/v1.2.77) - 2021-05-27
 
