@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.77] - 2021-05-27
+### Added
+- The `current_package` and `current_filename` attributes of
+  `user_info()`.
+- The `progress can go backward` setting under `features`.
+
 ## [1.2.76] - 2021-05-24
 ### Added
 - Support for using Azure Key Vault References in the Configuration.

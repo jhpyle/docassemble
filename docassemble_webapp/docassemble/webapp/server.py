@@ -7563,7 +7563,7 @@ def index(action_argument=None, refer=None):
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None:
         if interview_status.question.progress == -1:
             user_dict['_internal']['progress'] = None
-        elif user_dict['_internal']['progress'] is None or interview_status.question.progress > user_dict['_internal']['progress']:
+        elif user_dict['_internal']['progress'] is None or interview_status.question.interview.options.get('strict progress', False) or interview_status.question.progress > user_dict['_internal']['progress']:
             user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
         user_dict['nav'].set_section(interview_status.question.section)
@@ -24553,7 +24553,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     if advance_progress_meter:
         if interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
             advance_progress(user_dict, interview)
-        if interview.use_progress_bar and interview_status.question.progress is not None and (user_dict['_internal']['progress'] is None or interview_status.question.progress > user_dict['_internal']['progress']):
+        if interview.use_progress_bar and interview_status.question.progress is not None and (user_dict['_internal']['progress'] is None or interview_status.question.interview.options.get('strict progress', False) or interview_status.question.progress > user_dict['_internal']['progress']):
             user_dict['_internal']['progress'] = interview_status.question.progress
     if save:
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=post_setting, steps=steps)

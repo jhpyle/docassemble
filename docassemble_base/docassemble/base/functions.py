@@ -711,6 +711,14 @@ def user_info():
         user.variable = this_thread.current_variable[-1]
     except:
         user.variable = None
+    try:
+        user.current_package = this_thread.current_question.from_source.package
+    except:
+        user.current_package = None
+    try:
+        user.current_filename = this_thread.current_question.from_source.path
+    except:
+        user.current_filename = None
     return user
 
 def action_arguments():

@@ -1826,6 +1826,8 @@ class Question:
                 self.interview.table_width = data['features']['table width']
             if 'progress bar' in data['features']:
                 self.interview.use_progress_bar = True if data['features']['progress bar'] else False
+            if 'progress can go backwards' in data['features'] and data['features']['progress can go backwards']:
+                self.interview.options['strict progress'] = True
             if 'show progress bar percentage' in data['features'] and data['features']['show progress bar percentage']:
                 self.interview.show_progress_bar_percentage = True
             if 'progress bar method' in data['features'] and isinstance(data['features']['progress bar method'], str):
