@@ -1730,6 +1730,17 @@ features:
   progress bar method: default
 {% endhighlight %}
 
+By default, the progress bar will not regress if the `progress`
+specifier of the current `question` has a lower value than the current
+progress value.  You can turn off this limit by setting `progress can
+go backwards` to `True`:
+
+{% highlight yaml %}
+features:
+  progress bar: True
+  progress can go backwards: True
+{% endhighlight %}
+
 ## <a name="navigation bar"></a>Navigation bar
 
 The `navigation` feature controls whether a navigation bar is
