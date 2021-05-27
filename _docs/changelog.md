@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.78](https://github.com/jhpyle/docassemble/releases/tag/v1.2.78) - 2021-05-27
+
+### Fixed
+- Error with `depends on` and `generic object` variables.
+
 ## [1.2.77](https://github.com/jhpyle/docassemble/releases/tag/v1.2.77) - 2021-05-27
 
 ### Added
