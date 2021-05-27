@@ -12,7 +12,6 @@ docassemble_webapp/build
 *.egg-info
 docassemble/dist
 docassemble_base/dist
-docassemble_base/docassemble/base/markdown_docx.py
 docassemble_demo/dist
 docassemble_webapp/dist
 make_session_store.py
@@ -32,8 +31,6 @@ full-requirements.txt
 taskdefinition.json
 TODO.md
 testpubsub.py
-docassemble_webapp/docassemble/webapp/templates/pages/twiliotest.html
-docassemble_demo/docassemble/demo/data/questions/testfillsig.yml
 send
 save-db-schema-html.sh
 audit.py

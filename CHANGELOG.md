@@ -3,6 +3,7 @@
 ## [1.2.78] - 2021-05-27
 ### Fixed
 - Error with `depends on` and `generic object` variables.
+- Error with websockets.
 
 ## [1.2.77] - 2021-05-27
 ### Added

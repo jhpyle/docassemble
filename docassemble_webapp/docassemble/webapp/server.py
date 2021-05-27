@@ -13193,7 +13193,7 @@ def monitor():
         forwarding_phone_number = twilio_config['name']['default'].get('number', None)
         if forwarding_phone_number is not None:
             call_forwarding_on = 'true'
-    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.js', v=da_version) + '"></script>' + "\n" + """    <script type="text/javascript" charset="utf-8">
+    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js', v=da_version) + '"></script>' + "\n" + """    <script type="text/javascript" charset="utf-8">
       var daAudioContext = null;
       var daSocket;
       var daSoundBuffer = Object();
@@ -14715,7 +14715,7 @@ def get_master_branch(giturl):
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
-#     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
+#     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
 #     var daSocket;
 #     $(document).ready(function(){
 #         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
@@ -20191,7 +20191,7 @@ def playground_css_bundle():
 def js_bundle():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = ''
-    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['app', 'socket.io.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js']]:
+    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -20221,7 +20221,7 @@ def js_admin_bundle():
 def js_bundle_wrap():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = '(function($) {'
-    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['app', 'socket.io.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js']]:
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -20232,7 +20232,7 @@ def js_bundle_wrap():
 def js_bundle_no_query():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
     output = ''
-    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['app', 'socket.io.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js']]:
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
