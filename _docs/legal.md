@@ -101,8 +101,8 @@ mandatory: True
 code: |
   del case.plaintiff
   del case.defendant
-  case.initializeAttribute(name='petitioner', objectType=PartyList)
-  case.initializeAttribute(name='respondent', objectType=PartyList)
+  case.initializeAttribute('petitioner', PartyList)
+  case.initializeAttribute('respondent', PartyList)
   case.firstParty = case.petitioner
   case.secondParty = case.respondent
 ---
