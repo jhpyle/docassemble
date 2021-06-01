@@ -74,7 +74,19 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
             logmessage("Skipping field " + repr(field))
             continue
         if isinstance(rect, PDFObjRef):
+            # For some PDFs, the position on-page is left as a PDFObjRef. We need to resolve it
             rect = resolve1(rect)
+            try:
+                temp_rect = []
+                if len(rect):
+                    for coord in rect:
+                        if isinstance(coord, PDFObjRef):
+                            temp_rect.append(resolve1(coord))
+                        else:
+                            temp_rect.append(coord) # This branch may never occur
+                rect = temp_rect
+            except:
+                rect = []
         if name is not None:
             if not isinstance(name, bytes):
                 name = bytes(str(name), encoding='utf-8')
