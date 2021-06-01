@@ -73,6 +73,8 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
         except:
             logmessage("Skipping field " + repr(field))
             continue
+        if isinstance(rect, PDFObjRef):
+            rect = resolve1(rect)
         if name is not None:
             if not isinstance(name, bytes):
                 name = bytes(str(name), encoding='utf-8')
