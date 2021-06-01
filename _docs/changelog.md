@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.79](https://github.com/jhpyle/docassemble/releases/tag/v1.2.79) - 2021-06-01
+
+### Added
+- The methods `disable()`, `enable()`, and `enabled()` of the `nav`
+  object.
+
+### Fixed
+- Adjusted `.get_pdf_fields()` so that it works with PDF files in
+  which the dimensions of a form field are object references.
+
 ## [1.2.78](https://github.com/jhpyle/docassemble/releases/tag/v1.2.78) - 2021-05-27
 
 ### Fixed

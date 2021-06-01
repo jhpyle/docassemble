@@ -3526,7 +3526,7 @@ If you do not want your container to go through this update process
 when the container starts, you can set:
 
 {% highlight yaml %}
-update on start: False
+update on start: false
 {% endhighlight %}
 
 Alternatively, if you want the update process to run during the

@@ -42,6 +42,8 @@ is small.
 navigation bar in the web app in place of the `title` and `short
 title`.  The content of the `logo` should be raw [HTML].  If you
 include an image, you should size it to be about 20 pixels in height.
+Make sure that your raw [HTML] does not contain any errors, or else
+the formatting of the page will become corrupted.
 
 <a name="tab title"></a>If a `tab title` is provided, it will be
 displayed as the title of the browser tab.  Otherwise, the `title`

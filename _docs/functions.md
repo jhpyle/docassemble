@@ -2100,6 +2100,21 @@ been defined, it will look to that language.  If sections are defined
 and the navigation bar has not been hidden with `nav.hide()`,
 `nav.visible()` will return `True`.
 
+## <a name="DANav.disable"></a>nav.disable()
+
+If your navigation bar has clickable links, but you want to make the
+links inoperable, run `nav.disable()`.
+
+## <a name="DANav.enable"></a>nav.enable()
+
+Calling `nav.enable()` will undo the effect of calling `nav.disable()`.
+
+## <a name="DANav.enabled"></a>nav.enabled()
+
+To test whether clickable links in the navigation bar are currently
+enabled or disabled, call `nav.enabled()`.  `True` will be returned
+unless the navigation bar had been disabled with `nav.disable()`.
+
 # <a name="globalvars"></a>Functions for managing global variables
 
 If you try writing your own functions, you will learn that functions
