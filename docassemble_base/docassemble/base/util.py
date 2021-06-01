@@ -3186,7 +3186,7 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
     """Overlays a page from a PDF file on top of the pages of another PDF file."""
     if isinstance(main_pdf, DAFileCollection):
         main_file = main_pdf.pdf.path()
-    elif isinstance(main_pdf, DAFile) or isinstance(main_pdf, DAFileList):
+    elif isinstance(main_pdf, DAFile) or isinstance(main_pdf, DAStaticFile) or isinstance(main_pdf, DAFileList):
         main_file = main_pdf.path()
     elif isinstance(main_pdf, str):
         main_file = main_pdf
@@ -3194,7 +3194,7 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
         raise Exception("overlay_pdf: bad main filename")
     if isinstance(logo_pdf, DAFileCollection):
         logo_file = logo_pdf.pdf.path()
-    elif isinstance(logo_pdf, DAFile) or isinstance(logo_pdf, DAFileList):
+    elif isinstance(logo_pdf, DAFile) or isinstance(logo_pdf, DAStaticFile) or isinstance(logo_pdf, DAFileList):
         logo_file = logo_pdf.path()
     elif isinstance(logo_pdf, str):
         logo_file = logo_pdf
