@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.2.79] - 2021-06-01
+### Added
+- The methods `disable()`, `enable()`, and `enabled()` of the `nav`
+  object.
+### Fixed
+- Adjusted `.get_pdf_fields()` so that it works with PDF files in
+  which the dimensions of a form field are object references.
+
 ## [1.2.78] - 2021-05-27
 ### Fixed
 - Error with `depends on` and `generic object` variables.

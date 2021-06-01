@@ -69,11 +69,25 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
         fields = resolve1(fields)
     for i in fields:
         field = resolve1(i)
+        if isinstance(field, PDFObjRef):
+            field = resolve1(field)
         try:
             name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
         except:
             logmessage("Skipping field " + repr(field))
             continue
+        if isinstance(rect, PDFObjRef):
+            rect = resolve1(rect)
+        if isinstance(rect, list):
+            new_list = []
+            for item in rect:
+                if isinstance(item, PDFObjRef):
+                    new_list.append(resolve1(item))
+                else:
+                    new_list.append(item)
+            rect = new_list
+        else:
+            rect = []
         if name is not None:
             if not isinstance(name, bytes):
                 name = bytes(str(name), encoding='utf-8')

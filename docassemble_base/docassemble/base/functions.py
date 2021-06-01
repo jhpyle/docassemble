@@ -1233,6 +1233,7 @@ class DANav:
         self.current = None
         self.progressive = True
         self.hidden = False
+        self.disabled = False
 
     def __str__(self):
         return self.show_sections()
@@ -1344,11 +1345,23 @@ class DANav:
         """Unhides the navigation bar if it was hidden."""
         self.hidden = False
 
+    def disable(self):
+        """Disabled clickable links in the navigation bar."""
+        self.disabled = True
+
+    def enable(self):
+        """Enables clickable links in the navigation bar, if links had been disabled."""
+        self.disabled = False
+
     def visible(self, language=None):
         """Returns False if the navigation bar is hidden, and True otherwise."""
         if self.sections is None or len(self.get_sections(language=language)) == 0:
             return False
         return not (hasattr(self, 'hidden') and self.hidden)
+
+    def enabled(self):
+        """Returns False if clickable links in the navigation bar are disabled, and True otherwise."""
+        return not (hasattr(self, 'disabled') and self.disabled)
 
     def set_sections(self, sections, language=None):
         """Sets the sections of the navigation to the given list."""
@@ -1366,8 +1379,13 @@ class DANav:
             language = '*'
         return self.sections.get(language, list())
 
-    def show_sections(self, style='inline', show_links=True):
+    def show_sections(self, style='inline', show_links=None):
         """Returns the sections of the navigation as HTML."""
+        if show_links is None:
+            if hasattr(self, 'disabled') and self.disabled:
+                show_links = False
+            else:
+                show_links = True
         if style == "inline":
             the_class = 'danavlinks dainline'
             interior_class = 'dainlineinside'

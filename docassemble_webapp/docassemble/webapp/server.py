@@ -2519,7 +2519,12 @@ def test_for_valid_var(varname):
     if not valid_python_var.match(varname):
         raise DAError(varname + " is not a valid name.  A valid name consists only of letters, numbers, and underscores, and begins with a letter.")
 
-def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div_extra=None, show_links=True, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False, always_open=False, return_dict=None):
+def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div_extra=None, show_links=None, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False, always_open=False, return_dict=None):
+    if show_links is None:
+        if hasattr(nav, 'disabled') and nav.disabled:
+            show_links = False
+        else:
+            show_links = True
     if inner_div_class is None:
         inner_div_class = 'nav flex-column nav-pills danav danavlinks danav-vertical danavnested'
     if inner_div_extra is None:

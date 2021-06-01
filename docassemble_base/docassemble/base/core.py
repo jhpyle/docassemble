@@ -539,6 +539,8 @@ class DAObject:
         client.initializeAttribute('mother', Individual) initializes client.mother as an
         Individual with instanceName "client.mother"."""
         pargs = [x for x in pargs]
+        if len(pargs) < 2:
+            raise Exception("initializeAttribute requires an attribute name and an object type")
         name = pargs.pop(0)
         objectType = pargs.pop(0)
         new_object_parameters = dict()
