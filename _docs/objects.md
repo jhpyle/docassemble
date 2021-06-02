@@ -1741,6 +1741,40 @@ started for whatever reason, for example if you are constructing files
 manually, you can start the process by running `.make_pngs()`.  This
 will launch background processes and wait until they are completed.
 
+<a name="DAFile.fix_up"></a>The `.fix_up()` method edits files in
+place in order to correct any errors that are correctable.  Currently,
+the only function of `.fix_up()` is to run PDF files through [qpdf] if
+they cannot be opened by [PyPDF2].  Additional operations may be
+supported in the future.
+
+The `.fix_up()` method will raise an exception if the file is invalid
+even after correction.  A helpful way to use `.fix_up()` is in
+`validation code`:
+
+{% highlight yaml %}
+question: |
+  Upload a PDF file.
+fields:
+  - File: myfile
+    datatype: file
+validation code: |
+  try:
+    for item in myfile:
+      assert item.mimetype == 'application/pdf'
+    myfile.fix_up()
+  except:
+    raise validation_error("Sorry, that is not a valid PDF file")
+{% endhighlight %}
+
+If a user uploads a PDF file that is corrupted but correctable with
+[qpdf], then the contents of the file will be replaced with the output
+of [qpdf].  If [qpdf] fails or the file is still not readable after
+correction, an exception will be raised.
+
+In this example, `myfile` is a [`DAFileList`] rather than a
+[`DAFile`], but the `.fix_up()` method of [`DAFileList`] simply
+applies `.fix_up()` to each [`DAFile`] in `myfile`.
+
 <a name="DAFile.set_alt_text"></a><a
 name="DAFile.get_alt_text"></a>The `.set_alt_text()` and
 `.get_alt_text()` methods can be used to set and retrieve the [alt
@@ -1756,6 +1790,10 @@ objects of all types, such as [`DAStaticFile`], [`DAFileList`], and
 my_file.set_alt_text("A photograph of the Shanghai skyline")
 the_alt_text = my_file.get_alt_text()
 {% endhighlight %}
+
+<a name="DAFile.uses_acroform"></a>The `.uses_acroform()` method
+returns `True` if the file is a PDF file that contains form fields in
+the `AcroForm` format.  Otherwise, it returns `False`.
 
 <a name="DAFile.is_encrypted"></a>The `.is_encrypted()` method returns
 `True` if the file is a PDF file and the PDF file is encrypted.
@@ -1839,6 +1877,12 @@ browser.  If an `alt_text` keyword argument is not supplied,
 obtain the [alt text].  If no `alt_text` is defined for the file, no
 [alt text] is used.
 
+<a name="DAFileCollection.fix_up"></a>The `.fix_up()` method edits files in
+place in order to correct any errors that are correctable.  Currently,
+the only function of `.fix_up()` is to run PDF files through [qpdf] if
+they cannot be opened by [PyPDF2].  Additional operations may be
+supported in the future.
+
 <a name="DAFileCollection.set_alt_text"></a><a
 name="DAFileCollection.get_alt_text"></a>The `DAFileCollection` object
 supports the `.set_alt_text()` and `.get_alt_text()` methods.  These
@@ -1867,6 +1911,11 @@ list.
 the [`DAFile`]s in the list.  If called with no parameters, it returns
 `None`; if you want to inspect information about a file, call the
 method on a specific item in the list.
+
+<a name="DAFileCollection.uses_acroform"></a>The `.uses_acroform()`
+method returns `True` if the collection contains a PDF file and the
+PDF file contains form fields in the `AcroForm` format.  Otherwise, it
+returns `False`.
 
 <a name="DAFileCollection.is_encrypted"></a>The `.is_encrypted()`
 method returns `True` if there is a PDF version of the
@@ -1959,6 +2008,12 @@ list.  If called with no parameters, it returns `None`; if you want to
 inspect information about a file, call the method on a specific item
 in the list.
 
+<a name="DAFileList.fix_up"></a>The `.fix_up()` method edits the files
+in the list in-place in order to correct any errors that are
+correctable.  Currently, the only function of `.fix_up()` is to run
+PDF files through [qpdf] if they cannot be opened by [PyPDF2].
+Additional operations may be supported in the future.
+
 <a name="DAFileList.set_alt_text"></a><a
 name="DAFileList.get_alt_text"></a>The `DAFileList` object supports
 the `.set_alt_text()` and `.get_alt_text()` methods.  These work much
@@ -1968,6 +2023,11 @@ a `.alt_text` attribute.  If you run `set_alt_text()` on a
 [`DAFileList`], it is like calling `set_alt_text()` on each of the
 items in the list.  If you run `get_alt_text()` on a `DAFileList`, it
 is like calling [`get_alt_text()`] on the first item in the list.
+
+<a name="DAFileList.uses_acroform"></a>The `.uses_acroform()` method
+returns `True` if the first file in the list is a PDF file that
+contains form fields in the `AcroForm` format.  Otherwise, it returns
+`False`.
 
 <a name="DAFileList.is_encrypted"></a>The `.is_encrypted()` method
 returns `True` if the first file in the list is a PDF file that file
@@ -2084,6 +2144,10 @@ Here is an example that shows how [`DAStaticFile`],
 used interchangeably.
 
 {% include side-by-side.html demo="file-types" %}
+
+<a name="DAStaticFile.uses_acroform"></a>The `.uses_acroform()` method
+returns `True` if the file is a PDF file that contains form fields in
+the `AcroForm` format.  Otherwise, it returns `False`.
 
 <a name="DAStaticFile.is_encrypted"></a>The `.is_encrypted()` method
 returns `True` if the file is a PDF file and it is encrypted.
@@ -6724,3 +6788,5 @@ the `_uid` of the table rather than the `id`.
 [`authorize()`]: #DAOAuth.authorize
 [`DAOAuth`]: #DAOAuth
 [Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.htmlmarkdown to docx
+[qpdf]: http://qpdf.sourceforge.net/
+[PyPDF2]: https://pythonhosted.org/PyPDF2/
