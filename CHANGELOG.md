@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.2.80] - 2021-06-02
+### Added
+- The methods `fix_up()` and `uses_acroform()` of `DAFile` and related
+  classes.
+### Changed
+- If a PDF file cannot be opened by `PyPDF2`, an attempt will be made
+  to convert the file with `qpdf`.
+
 ## [1.2.79] - 2021-06-01
 ### Added
 - The methods `disable()`, `enable()`, and `enabled()` of the `nav`

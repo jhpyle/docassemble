@@ -23,9 +23,12 @@ from sqlalchemy import or_, and_, select
 import docassemble.base.config
 import sys
 from docassemble.base.generate_key import random_lower_string
+import subprocess
 
 import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
+
+QPDF_PATH = 'qpdf'
 
 def url_if_exists(file_reference, **kwargs):
     attach_parameter = '&attachment=1' if kwargs.get('_attachment', False) else ''
@@ -228,21 +231,49 @@ def get_info_from_file_reference(file_reference, **kwargs):
         sys.stderr.write("File reference " + str(file_reference) + " DID NOT EXIST.\n")
     return(result)
 
+def safe_pypdf_reader(filename):
+    try:
+        return PyPDF2.PdfFileReader(open(filename, 'rb'))
+    except PyPDF2.utils.PdfReadError:
+        new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+        qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
+        try:
+            result = subprocess.run(qpdf_subprocess_arguments, timeout=60).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
+        if result != 0:
+            raise Exception("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
+        return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'))
+
 def add_info_about_file(filename, basename, result):
     if result['extension'] == 'pdf':
-        try:
-            reader = PyPDF2.PdfFileReader(open(filename, 'rb'))
+#        try:
+            reader = safe_pypdf_reader(filename)
             result['encrypted'] = reader.isEncrypted
+#            try:
+            if '/AcroForm' in reader.trailer['/Root']:
+                result['acroform'] = True
+            else:
+                result['acroform'] = False
+#            except:
+#                result['acroform'] = False
             result['pages'] = reader.getNumPages()
-        except:
-            result['pages'] = 1
+#        except:
+#            result['pages'] = 1
     elif os.path.isfile(basename + '.pdf'):
-        try:
-            reader = PyPDF2.PdfFileReader(open(basename + '.pdf', 'rb'))
+#        try:
+            reader = safe_pypdf_reader(basename + '.pdf')
             result['encrypted'] = reader.isEncrypted
+#            try:
+            if '/AcroForm' in reader.trailer['/Root']:
+                result['acroform'] = True
+            else:
+                result['acroform'] = False
+#            except:
+#                result['acroform'] = False
             result['pages'] = reader.getNumPages()
-        except:
-            result['pages'] = 1
+#        except:
+#            result['pages'] = 1
     elif result['extension'] in ['png', 'jpg', 'gif']:
         im = Image.open(filename)
         result['width'], result['height'] = im.size

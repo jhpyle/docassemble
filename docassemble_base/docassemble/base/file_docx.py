@@ -19,10 +19,12 @@ import stat
 import mimetypes
 import tempfile
 import string
+import subprocess
 from docassemble.base.error import DAError
 
 zerowidth = '\u200B'
 
+QPDF_PATH = 'qpdf'
 NoneType = type(None)
 
 DEFAULT_PAGE_WIDTH = '6.5in'
@@ -557,6 +559,20 @@ def markdown_to_docx(text, question, tpl):
     else:
         return inline_markdown_to_docx(text, question, tpl)
 
+def safe_pypdf_reader(filename):
+    try:
+        return PyPDF2.PdfFileReader(open(filename, 'rb'))
+    except PyPDF2.utils.PdfReadError:
+        new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+        qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
+        try:
+            result = subprocess.run(qpdf_subprocess_arguments, timeout=60).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
+        if result != 0:
+            raise Exception("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
+        return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'))
+
 def pdf_pages(file_info, width):
     output = ''
     if width is None:
@@ -566,7 +582,7 @@ def pdf_pages(file_info, width):
             server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
     if 'pages' not in file_info:
         try:
-            reader = PyPDF2.PdfFileReader(open(file_info['path'] + '.pdf', 'rb'))
+            reader = safe_pypdf_reader(file_info['path'] + '.pdf')
             file_info['pages'] = reader.getNumPages()
         except:
             file_info['pages'] = 1

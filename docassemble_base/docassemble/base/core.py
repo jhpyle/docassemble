@@ -3288,6 +3288,13 @@ class DAFile(DAObject):
         server.SavedFile(input_number).delete()
         self.commit()
         self.retrieve()
+    def fix_up(self):
+        """Makes corrections to the file and changes it in-place if necessary.
+        Raises an exception if the file is corrupt and cannot be fixed."""
+        if not self.ok:
+            raise DAError("Cannot call fix_up on a DAFile object that is just a shell.")
+        if hasattr(self, 'extension') and self.extension == 'pdf':
+            docassemble.base.pdftk.apply_qpdf(self.path())
     def set_alt_text(self, alt_text):
         """Sets the alt text for the file."""
         self.alt_text = alt_text
@@ -3584,6 +3591,11 @@ class DAFile(DAObject):
         if status_code >= 400:
             raise Exception("from_url: Error %s" % (status_code,))
         self.retrieve()
+    def uses_acroform(self):
+        """Returns True if the file uses AcroForm, otherwise returns False."""
+        if not hasattr(self, 'file_info'):
+            self.retrieve()
+        return self.file_info.get('acroform', False)
     def is_encrypted(self):
         """Returns True if the file is a PDF file and it is encrypted, otherwise returns False."""
         if not hasattr(self, 'file_info'):
@@ -3855,6 +3867,12 @@ class DAFileCollection(DAObject):
         if hasattr(self, 'info') and 'formats' in self.info:
             return self.info['formats']
         return ['pdf', 'docx', 'rtf']
+    def fix_up(self):
+        """Makes corrections to the files and changes them in-place if necessary.
+        Raises an exception if a file is corrupt and cannot be fixed."""
+        for ext in self._extension_list():
+            if hasattr(self, ext):
+                getattr(self, ext).fix_up()
     def set_alt_text(self, alt_text):
         """Sets the alt text of each of the files in the collection."""
         for ext in self._extension_list():
@@ -3869,6 +3887,11 @@ class DAFileCollection(DAObject):
             if hasattr(self, ext):
                 return getattr(self, ext).get_alt_text()
         return None
+    def uses_acroform(self):
+        """Returns True if there is a PDF file and it uses AcroForm, otherwise returns False."""
+        if hasattr(self, 'pdf'):
+            return self.pdf.uses_acroform()
+        return False
     def is_encrypted(self):
         """Returns True if there is a PDF file and it is encrypted, otherwise returns False."""
         if hasattr(self, 'pdf'):
@@ -3956,6 +3979,11 @@ class DAFileList(DAList):
     """
     def __str__(self):
         return str(self.show())
+    def fix_up(self):
+        """Makes corrections to the files and changes them in-place if necessary.
+        Raises an exception if a file is corrupt and cannot be fixed."""
+        for item in self.elements:
+            item.fix_up()
     def set_alt_text(self, alt_text):
         """Sets the alt text of each of the files in the list."""
         for item in self:
@@ -3975,6 +4003,11 @@ class DAFileList(DAList):
             if element.ok:
                 result += element.num_pages()
         return result
+    def uses_acroform(self):
+        """Returns True if the first file is a PDF file and it uses AcroForm, otherwise returns False."""
+        if len(self.elements) == 0:
+            return None
+        return self.elements[0].uses_acroform()
     def is_encrypted(self):
         """Returns True if the first file is a PDF file and it is encrypted, otherwise returns False."""
         if len(self.elements) == 0:
@@ -4131,6 +4164,10 @@ class DAStaticFile(DAObject):
         file_info['path'] = os.path.splitext(pdf_file.name)[0]
         shutil.copyfile(self.path(), pdf_file.name)
         return docassemble.base.file_docx.pdf_pages(file_info, width)
+    def uses_acroform(self):
+        """Returns True if the file is a PDF file and it uses AcroForm, otherwise returns False."""
+        file_info = server.file_finder(self._get_unqualified_reference())
+        return the_file.get('acroform', False)
     def is_encrypted(self):
         """Returns True if the file is a PDF file and it is encrypted, otherwise returns False."""
         file_info = server.file_finder(self._get_unqualified_reference())

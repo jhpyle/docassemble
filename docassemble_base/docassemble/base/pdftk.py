@@ -217,6 +217,22 @@ def recursive_add_bookmark(reader, writer, outlines, parent=None):
                 cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ)
             #logmessage("Added bookmark " + destination.title)
 
+def safe_pypdf_reader(filename):
+    try:
+        return pypdf.PdfFileReader(open(filename, 'rb'))
+    except pypdf.utils.PdfReadError:
+        new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+        qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
+        try:
+            result = subprocess.run(qpdf_subprocess_arguments, timeout=60).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
+            logmessage("fill_template: call to qpdf took too long")
+        if result != 0:
+            logmessage("Failed to convert PDF template " + str(filename))
+            raise DAError("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
+        return pypdf.PdfFileReader(open(new_filename.name, 'rb'))
+
 def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None, template_password=None, default_export_value=None):
     if pdf_url is None:
         pdf_url = 'file.pdf'
@@ -330,38 +346,35 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
             if result == 1:
                 logmessage("failed to make overlay: " + " ".join(args))
                 continue
-            image_todo.append({'overlay_stream': open(overlay_pdf_file.name, "rb"), 'pageno': fields[field]['pageno']})
+            image_todo.append({'overlay_file': overlay_pdf_file.name, 'pageno': fields[field]['pageno']})
         if len(image_todo):
             new_pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf")
-            with open(pdf_file.name, "rb") as inFile:
-                original = pypdf.PdfFileReader(inFile)
-                original.idnum_to_page = get_page_hash(original.trailer)
-                catalog = original.trailer["/Root"]
-                writer = DAPdfFileWriter()
-                tree = dict()
-                for part in pdf_parts:
-                    if part in catalog:
-                        tree[part] = catalog[part]
-                for i in range(original.getNumPages()):
-                    for item in image_todo:
-                        if (item['pageno'] - 1) == i:
-                            page = original.getPage(i)
-                            foreground_file = pypdf.PdfFileReader(item['overlay_stream'])
-                            foreground_page = foreground_file.getPage(0)
-                            page.mergePage(foreground_page)
-                for i in range(original.getNumPages()):
-                    newpage = original.getPage(i)
-                    writer.addPage(newpage)
-                for key, val in tree.items():
-                    writer._root_object.update({pypdf.generic.NameObject(key): val})
-                writer.page_list = list()
-                recursive_get_pages(writer._root_object['/Pages'], writer.page_list)
-                recursive_add_bookmark(original, writer, original.getOutlines())
-                with open(new_pdf_file.name, "wb") as outFile:
-                    writer.write(outFile)
+            original = safe_pypdf_reader(pdf_file.name)
+            original.idnum_to_page = get_page_hash(original.trailer)
+            catalog = original.trailer["/Root"]
+            writer = DAPdfFileWriter()
+            tree = dict()
+            for part in pdf_parts:
+                if part in catalog:
+                    tree[part] = catalog[part]
+            for i in range(original.getNumPages()):
+                for item in image_todo:
+                    if (item['pageno'] - 1) == i:
+                        page = original.getPage(i)
+                        foreground_file = safe_pypdf_reader(item['overlay_file'])
+                        foreground_page = foreground_file.getPage(0)
+                        page.mergePage(foreground_page)
+            for i in range(original.getNumPages()):
+                newpage = original.getPage(i)
+                writer.addPage(newpage)
+            for key, val in tree.items():
+                writer._root_object.update({pypdf.generic.NameObject(key): val})
+            writer.page_list = list()
+            recursive_get_pages(writer._root_object['/Pages'], writer.page_list)
+            recursive_add_bookmark(original, writer, original.getOutlines())
+            with open(new_pdf_file.name, "wb") as outFile:
+                writer.write(outFile)
             shutil.copyfile(new_pdf_file.name, pdf_file.name)
-            for item in image_todo:
-                item['overlay_stream'].close()
     if (not editable) and len(images):
         flatten_pdf(pdf_file.name)
     if pdfa:
@@ -536,7 +549,7 @@ def remove_nonprintable_limited(text):
 
 def replicate_js_and_calculations(template_filename, original_filename, password):
     #logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename + " and password is " + repr(password))
-    template = pypdf.PdfFileReader(open(template_filename, 'rb'))
+    template = safe_pypdf_reader(template_filename)
     co_field_names = list()
     if '/AcroForm' in template.trailer['/Root']:
         #logmessage("Found AcroForm")
@@ -576,7 +589,7 @@ def replicate_js_and_calculations(template_filename, original_filename, password
         if password:
             pdf_encrypt(original_filename, password)
         return
-    original = pypdf.PdfFileReader(open(original_filename, 'rb'))
+    original = safe_pypdf_reader(original_filename)
     #logmessage("Opening " + original_filename)
     writer = DAPdfFileWriter()
     writer.cloneReaderDocumentRoot(original)
@@ -649,8 +662,8 @@ def flatten_pdf(filename):
     shutil.move(outfile.name, filename)
 
 def overlay_pdf(main_file, logo_file, out_file, first_page=None, last_page=None, logo_page=None, only=None):
-    main_pdf = pypdf.PdfFileReader(main_file)
-    logo_pdf = pypdf.PdfFileReader(logo_file)
+    main_pdf = safe_pypdf_reader(main_file)
+    logo_pdf = safe_pypdf_reader(logo_file)
     output_pdf = pypdf.PdfFileWriter()
     if first_page is None or first_page < 1:
         first_page = 1
@@ -678,3 +691,28 @@ def overlay_pdf(main_file, logo_file, out_file, first_page=None, last_page=None,
         output_pdf.addPage(page)
     with open(out_file, 'wb') as fp:
         output_pdf.write(fp)
+
+def apply_qpdf(filename):
+    try:
+        pypdf.PdfFileReader(open(filename, 'rb'))
+        pdf_ok = True
+    except pypdf.utils.PdfReadError:
+        pdf_ok = False
+    if pdf_ok:
+        return
+    try:
+        new_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+        qpdf_subprocess_arguments = [QPDF_PATH, filename, new_file.name]
+        try:
+            result = subprocess.run(qpdf_subprocess_arguments, timeout=60).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
+            logmessage("fill_template: call to qpdf took too long")
+        if result != 0:
+            logmessage("Failed to convert PDF template " + str(filename))
+            logmessage("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
+            raise Exception("qpdf error")
+        pypdf.PdfFileReader(open(new_file.name, 'rb'))
+    except:
+        raise DAError("Could not fix PDF")
+    shutil.copyfile(new_file.name, filename)

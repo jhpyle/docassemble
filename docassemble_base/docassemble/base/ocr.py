@@ -3,7 +3,7 @@ import subprocess
 from PIL import Image, ImageEnhance
 from docassemble.base.functions import get_config, get_language, ReturnValue
 from docassemble.base.core import DAFile, DAFileList, DAFileCollection, DAStaticFile
-from PyPDF2 import PdfFileReader
+import PyPDF2
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 import pycountry
@@ -11,6 +11,22 @@ import sys
 import os
 import shutil
 import re
+
+QPDF_PATH = 'qpdf'
+
+def safe_pypdf_reader(filename):
+    try:
+        return PyPDF2.PdfFileReader(open(filename, 'rb'))
+    except PyPDF2.utils.PdfReadError:
+        new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+        qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
+        try:
+            result = subprocess.run(qpdf_subprocess_arguments, timeout=60).returncode
+        except subprocess.TimeoutExpired:
+            result = 1
+        if result != 0:
+            raise Exception("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
+        return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'))
 
 def ocr_finalize(*pargs, **kwargs):
     #sys.stderr.write("ocr_finalize started")
@@ -155,12 +171,12 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
                 raise Exception("document with extension " + doc.extension + " is not a readable image file")
             if doc.extension == 'pdf':
                 #doc.page_path(1, 'page')
-                for i in range(PdfFileReader(open(doc.path(), 'rb')).getNumPages()):
+                for i in range(safe_pypdf_reader(doc.path()).getNumPages()):
                     todo.append(dict(doc=doc, page=i+1, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code, user=user, pdf=pdf, preserve_color=preserve_color))
             elif doc.extension in ("docx", "doc", "odt", "rtf"):
                 import docassemble.base.util
                 doc_conv = docassemble.base.util.pdf_concatenate(doc)
-                for i in range(PdfFileReader(open(doc_conv.path(), 'rb')).getNumPages()):
+                for i in range(safe_pypdf_reader(doc_conv.path()).getNumPages()):
                     todo.append(dict(doc=doc_conv, page=i+1, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code, user=user, pdf=pdf, preserve_color=preserve_color))
             else:
                 todo.append(dict(doc=doc, page=None, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code, user=user, pdf=pdf, preserve_color=preserve_color))
