@@ -839,6 +839,12 @@ def logout():
         if next.startswith('/'):
             next = get_base_url() + next
         next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
+    if current_user.is_authenticated and 'keycloak' in daconfig['oauth']: # using keycloak
+        if next.startswith('/'):
+            next = get_base_url() + next
+        next = ('https://' + daconfig['oauth']['keycloak']['domain'] + '/auth/realms/' + daconfig['oauth']['keycloak']['realm'] +
+            '/protocol/openid-connect/logout?' + urlencode(dict(post_logout_redirect_uri=next))
+        )
     set_cookie = False
     docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
