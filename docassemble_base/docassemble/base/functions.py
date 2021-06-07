@@ -688,6 +688,8 @@ def user_info():
     if user_logged_in():
         user.first_name = this_thread.current_info['user']['firstname']
         user.last_name = this_thread.current_info['user']['lastname']
+        user.id = this_thread.current_info['user']['theid']
+        user.nickname = this_thread.current_info['user']['nickname']
         user.email = this_thread.current_info['user']['email']
         user.country = this_thread.current_info['user']['country']
         user.subdivision_first = this_thread.current_info['user']['subdivisionfirst']
@@ -1544,7 +1546,7 @@ def url_of(file_reference, **kwargs):
 
 def server_capabilities():
     """Returns a dictionary with true or false values indicating various capabilities of the server."""
-    result = dict(sms=False, fax=False, google_login=False, facebook_login=False, auth0_login=False, twitter_login=False, azure_login=False, phone_login=False, voicerss=False, s3=False, azure=False, github=False, pypi=False, googledrive=False, google_maps=False)
+    result = dict(sms=False, fax=False, google_login=False, facebook_login=False, auth0_login=False, keycloak_login=False, twitter_login=False, azure_login=False, phone_login=False, voicerss=False, s3=False, azure=False, github=False, pypi=False, googledrive=False, google_maps=False)
     if 'twilio' in server.daconfig and isinstance(server.daconfig['twilio'], (list, dict)):
         if type(server.daconfig['twilio']) is list:
             tconfigs = server.daconfig['twilio']
@@ -1571,6 +1573,9 @@ def server_capabilities():
         if 'auth0' in server.daconfig['oauth'] and type(server.daconfig['oauth']['auth0']) is dict:
             if not ('enable' in server.daconfig['oauth']['auth0'] and not server.daconfig['oauth']['auth0']['enable']):
                 result['auth0_login'] = True
+        if 'keycloak' in server.daconfig['oauth'] and type(server.daconfig['oauth']['keycloak']) is dict:
+            if not ('enable' in server.daconfig['oauth']['keycloak'] and not server.daconfig['oauth']['keycloak']['enable']):
+                result['keycloak_login'] = True
         if 'twitter' in server.daconfig['oauth'] and type(server.daconfig['oauth']['twitter']) is dict:
             if not ('enable' in server.daconfig['oauth']['twitter'] and not server.daconfig['oauth']['twitter']['enable']):
                 result['twitter_login'] = True

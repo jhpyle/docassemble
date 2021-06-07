@@ -1173,6 +1173,7 @@ app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
 app.config['USE_TWITTER_LOGIN'] = False
 app.config['USE_AUTH0_LOGIN'] = False
+app.config['USE_KEYCLOAK_LOGIN'] = False
 app.config['USE_AZURE_LOGIN'] = False
 app.config['USE_GOOGLE_DRIVE'] = False
 app.config['USE_ONEDRIVE'] = False
@@ -1202,6 +1203,10 @@ if 'oauth' in daconfig:
         app.config['USE_AUTH0_LOGIN'] = True
     else:
         app.config['USE_AUTH0_LOGIN'] = False
+    if 'keycloak' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['keycloak'] and daconfig['oauth']['keycloak']['enable'] is False):
+        app.config['USE_KEYCLOAK_LOGIN'] = True
+    else:
+        app.config['USE_KEYCLOAK_LOGIN'] = False
     if 'azure' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['azure'] and daconfig['oauth']['azure']['enable'] is False):
         app.config['USE_AZURE_LOGIN'] = True
     else:
@@ -4362,6 +4367,44 @@ class Auth0SignIn(OAuthSignIn):
         email = me.get('email')
         if user_id is None or username is None or email is None:
             raise Exception("Error: could not get necessary information from Auth0")
+        return social_id, username, email, {'name': me.get('name', None)}
+
+class KeycloakSignIn(OAuthSignIn):
+    def __init__(self):
+        super().__init__('keycloak')
+        self.service = OAuth2Service(
+            name='keycloak',
+            client_id=self.consumer_id,
+            client_secret=self.consumer_secret,
+            authorize_url='https://' + str(self.consumer_domain) + '/auth/realms/'+daconfig['oauth']['keycloak']['realm']+'/protocol/openid-connect/auth',
+            access_token_url='https://' + str(self.consumer_domain) + '/auth/realms/'+daconfig['oauth']['keycloak']['realm']+'/protocol/openid-connect/token',
+            base_url='https://' + str(self.consumer_domain)
+        )
+    def authorize(self):
+        if 'oauth' in daconfig and 'keycloak' in daconfig['oauth'] and daconfig['oauth']['keycloak'].get('enable', True) and self.consumer_domain is None:
+            raise Exception("To use keycloak, you need to set your domain in the configuration.")
+        return redirect(self.service.get_authorize_url(
+            response_type='code',
+            scope='openid profile email',
+            redirect_uri=self.get_callback_url())
+        )
+    def callback(self):
+        if 'code' not in request.args:
+            return None, None, None, None
+        oauth_session = self.service.get_auth_session(
+            decoder=safe_json_loads,
+            data={'code': request.args['code'],
+                  'grant_type': 'authorization_code',
+                  'redirect_uri': self.get_callback_url()}
+        )
+        me = oauth_session.get('auth/realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/userinfo').json()
+        #logmessage("keycloak returned " + json.dumps(me))
+        user_id = me.get('sub')
+        social_id = 'keycloak$' + str(user_id)
+        username = me.get('preferred_username')
+        email = me.get('email')
+        if user_id is None or username is None or email is None:
+            raise Exception("Error: could not get necessary information from keycloak")
         return social_id, username, email, {'name': me.get('name', None)}
 
 class TwitterSignIn(OAuthSignIn):
