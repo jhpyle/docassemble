@@ -839,7 +839,7 @@ def logout():
         if next.startswith('/'):
             next = get_base_url() + next
         next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
-    if current_user.is_authenticated and 'keycloak' in daconfig['oauth']: # using keycloak
+    if current_user.is_authenticated and 'keycloak' in daconfig['oauth'] and 'domain' in daconfig['oauth']['keycloak']:
         if next.startswith('/'):
             next = get_base_url() + next
         next = ('https://' + daconfig['oauth']['keycloak']['domain'] + '/auth/realms/' + daconfig['oauth']['keycloak']['realm'] +
