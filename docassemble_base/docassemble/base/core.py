@@ -31,6 +31,8 @@ import random
 import pandas
 import subprocess
 from PIL import Image
+from docx import Document
+
 NoneType = type(None)
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAStaticFile', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DAEmpty', 'DALink', 'RelationshipTree', 'DAContext']
@@ -39,6 +41,36 @@ __all__ = ['DAObject', 'DAList', 'DADict', 'DAOrderedDict', 'DASet', 'DAFile', '
 
 match_inside_and_outside_brackets = re.compile('(.*)\[([^\]]+)\]$')
 is_number = re.compile(r'^[0-9]+$')
+
+def fix_word_processing(filename, extension):
+    from docassemble.base.pandoc import word_to_markdown
+    result = word_to_markdown(filename, extension)
+    assert result is not None
+
+def fix_docx(filename):
+    document = Document(filename)
+
+def fix_jpg(filename):
+    image = Image.open(filename)
+    assert image.format == 'JPEG'
+    image.close()
+
+def fix_png(filename):
+    image = Image.open(filename)
+    assert image.format == 'PNG'
+    image.close()
+
+def fix_gif(filename):
+    image = Image.open(filename)
+    assert image.format == 'GIF'
+    if image.is_animated:
+        new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".gif")
+        image.seek(0)
+        image.save(new_filename.name)
+        image.close()
+        shutil.copyfile(new_filename.name, filename)
+    else:
+        image.close()
 
 def noquote(text):
     return re.sub(r'["\']', '', text)
@@ -3293,8 +3325,19 @@ class DAFile(DAObject):
         Raises an exception if the file is corrupt and cannot be fixed."""
         if not self.ok:
             raise DAError("Cannot call fix_up on a DAFile object that is just a shell.")
-        if hasattr(self, 'extension') and self.extension == 'pdf':
-            docassemble.base.pdftk.apply_qpdf(self.path())
+        if hasattr(self, 'extension'):
+            if self.extension == 'pdf':
+                docassemble.base.pdftk.apply_qpdf(self.path())
+            elif self.extension == 'gif':
+                fix_gif(self.path())
+            elif self.extension == 'png':
+                fix_png(self.path())
+            elif self.extension == 'jpg':
+                fix_jpg(self.path())
+            elif self.extension == 'docx':
+                fix_docx(self.path())
+            elif self.extension in ('odt', 'doc', 'rtf'):
+                fix_word_processing(self.path(), self.extension)
     def set_alt_text(self, alt_text):
         """Sets the alt text for the file."""
         self.alt_text = alt_text
@@ -4203,7 +4246,7 @@ class DAStaticFile(DAObject):
         import docassemble.base.pdftk
         all_items = docassemble.base.pdftk.read_fields(self.path())
         if all_items is not None:
-            for item in all_items: 
+            for item in all_items:
                 the_type = re.sub(r'[^/A-Za-z]', '', str(item[4]))
                 if the_type == 'None':
                     the_type = None

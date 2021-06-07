@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.81] - 2021-06-07
+### Added
+- Support for additional file types in `fix_up()`.
+
 ## [1.2.80] - 2021-06-02
 ### Added
 - The methods `fix_up()` and `uses_acroform()` of `DAFile` and related

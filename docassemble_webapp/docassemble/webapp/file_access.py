@@ -247,33 +247,33 @@ def safe_pypdf_reader(filename):
 
 def add_info_about_file(filename, basename, result):
     if result['extension'] == 'pdf':
-#        try:
+        try:
             reader = safe_pypdf_reader(filename)
             result['encrypted'] = reader.isEncrypted
-#            try:
-            if '/AcroForm' in reader.trailer['/Root']:
-                result['acroform'] = True
-            else:
+            try:
+                if '/AcroForm' in reader.trailer['/Root']:
+                    result['acroform'] = True
+                else:
+                    result['acroform'] = False
+            except:
                 result['acroform'] = False
-#            except:
-#                result['acroform'] = False
             result['pages'] = reader.getNumPages()
-#        except:
-#            result['pages'] = 1
+        except:
+            result['pages'] = 1
     elif os.path.isfile(basename + '.pdf'):
-#        try:
+        try:
             reader = safe_pypdf_reader(basename + '.pdf')
             result['encrypted'] = reader.isEncrypted
-#            try:
-            if '/AcroForm' in reader.trailer['/Root']:
-                result['acroform'] = True
-            else:
+            try:
+                if '/AcroForm' in reader.trailer['/Root']:
+                    result['acroform'] = True
+                else:
+                    result['acroform'] = False
+            except:
                 result['acroform'] = False
-#            except:
-#                result['acroform'] = False
             result['pages'] = reader.getNumPages()
-#        except:
-#            result['pages'] = 1
+        except:
+            result['pages'] = 1
     elif result['extension'] in ['png', 'jpg', 'gif']:
         im = Image.open(filename)
         result['width'], result['height'] = im.size
