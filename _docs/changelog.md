@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.81](https://github.com/jhpyle/docassemble/releases/tag/v1.2.81) - 2021-06-07
+
+### Added
+- Support for additional file types in `fix_up()`.
+
 ## [1.2.80](https://github.com/jhpyle/docassemble/releases/tag/v1.2.80) - 2021-06-02
 
 ### Added
