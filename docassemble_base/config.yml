@@ -20,10 +20,16 @@ oauth:
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
   auth0:
-    enable: True
+    enable: False
     id: ceyd6imTYxTNmuj2CYpwH_cEhdWt93e6
     secret: LLGEBDrrgDFDfBsFjErsdSdsntkrtAbfa4ee3ss_adfdSDFEWEsfgHTerjNsd3dD
     domain: example.auth0.com
+  keycloak:
+    enable: False
+    id: ceyd6imTYxTNmuj2CYpwH_cEhdWt93e6
+    secret: LLGEBDrrgDFDfBsFjErsdSdsntkrtAbfa4ee3ss_adfdSDFEWEsfgHTerjNsd3dD
+    domain: keycloak.example.com
+    realm: default
   twitter:
     enable: False
     id: Iweh63ReKfOCttaUBE3t27TET
