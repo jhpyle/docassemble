@@ -609,7 +609,8 @@ necessary information about the uploaded files.
 
 <a name="accept"></a>If you want to limit uploads to particular file
 types, you can use `accept` to specify [Python] code that returns a
-custom [accept] attribute.
+custom [accept] attribute.  The value of `accept` is passed directly
+into the [accept] attribute in the HTML.
 
 {% include side-by-side.html demo="upload-accept" %}
 

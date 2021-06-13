@@ -2294,6 +2294,8 @@ example, if the user has the [privilege] of "developer",
 The `user_info()` function will return an object with the following
 attributes describing the current user:
 
+* `id` the integer ID of the user, which is used in the API and
+  appears in the URLs of Playground files.
 * `first_name`
 * `last_name`
 * `email`

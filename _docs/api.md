@@ -1772,7 +1772,7 @@ Data:
  - `secret` (optional): the encryption key to use with the interview,
    if the interview uses server-side encryption.
  - `action`: the name of the action you want to run.
- - `persistent` (optional): set this to `1` if you indent the action
+ - `persistent` (optional): set this to `1` if you intend the action
    to show a `question`, as opposed to merely execute some code.  The
    default behavior is for the action to run in a non-persistent
    fashion.
