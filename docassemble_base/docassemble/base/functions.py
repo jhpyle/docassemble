@@ -689,7 +689,6 @@ def user_info():
         user.first_name = this_thread.current_info['user']['firstname']
         user.last_name = this_thread.current_info['user']['lastname']
         user.id = this_thread.current_info['user']['theid']
-        user.nickname = this_thread.current_info['user']['nickname']
         user.email = this_thread.current_info['user']['email']
         user.country = this_thread.current_info['user']['country']
         user.subdivision_first = this_thread.current_info['user']['subdivisionfirst']

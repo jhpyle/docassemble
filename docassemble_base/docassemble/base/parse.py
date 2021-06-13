@@ -8234,7 +8234,7 @@ class Interview:
                         try:
                             eval(missing_var, user_dict)
                             #question.mark_as_answered(user_dict)
-                        except:
+                        except Exception as err:
                             logmessage("Problem with attachments block: " + err.__class__.__name__ + ": " + str(err))
                             continue
                         question.post_exec(user_dict)

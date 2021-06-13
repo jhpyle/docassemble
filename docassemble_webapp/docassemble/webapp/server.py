@@ -835,16 +835,16 @@ def logout():
         next = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
     else:
         next = _endpoint_url(user_manager.after_logout_endpoint)
-    if current_user.is_authenticated and current_user.social_id.startswith('auth0$') and 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and 'domain' in daconfig['oauth']['auth0']:
-        if next.startswith('/'):
-            next = get_base_url() + next
-        next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
-    if current_user.is_authenticated and 'keycloak' in daconfig['oauth'] and 'domain' in daconfig['oauth']['keycloak']:
-        if next.startswith('/'):
-            next = get_base_url() + next
-        next = ('https://' + daconfig['oauth']['keycloak']['domain'] + '/auth/realms/' + daconfig['oauth']['keycloak']['realm'] +
-            '/protocol/openid-connect/logout?' + urlencode(dict(post_logout_redirect_uri=next))
-        )
+    if current_user.is_authenticated:
+        if current_user.social_id.startswith('auth0$') and 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and 'domain' in daconfig['oauth']['auth0']:
+            if next.startswith('/'):
+                next = get_base_url() + next
+            next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
+        if current_user.social_id.startswith('keycloak$') and 'oauth' in daconfig and 'keycloak' in daconfig['oauth'] and 'domain' in daconfig['oauth']['keycloak']:
+            if next.startswith('/'):
+                next = get_base_url() + next
+            next = ('https://' + daconfig['oauth']['keycloak']['domain'] + '/auth/realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/logout?' + urlencode(dict(post_logout_redirect_uri=next))
+            )
     set_cookie = False
     docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
@@ -24324,6 +24324,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     if use_lock:
         obtain_lock(session_id, yaml_filename)
     device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
+    session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
     if secret is None:
         secret = docassemble.base.functions.this_thread.current_info.get('secret', None)
     try:
@@ -24355,7 +24356,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 break
     if pre_assembly_necessary:
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-        ci = current_info(yaml=yaml_filename, req=request, secret=secret, device_id=device_id)
+        ci = current_info(yaml=yaml_filename, req=request, secret=secret, device_id=device_id, session_uid=session_uid)
         ci['session'] = session_id
         ci['encrypted'] = is_encrypted
         ci['secret'] = secret
@@ -24510,7 +24511,8 @@ def create_new_interview(yaml_filename, secret, url_args=None, referer=None, req
                 val = val.encode('unicode_escape').decode()
             exec("url_args['" + key + "'] = " + repr(val), user_dict)
     device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
-    ci = current_info(yaml=yaml_filename, req=req, secret=secret, device_id=device_id)
+    session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
+    ci = current_info(yaml=yaml_filename, req=req, secret=secret, device_id=device_id, session_uid=session_uid)
     ci['session'] = session_id
     ci['encrypted'] = True
     ci['secret'] = secret
@@ -24570,7 +24572,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             raise Exception("Unable to obtain interview dictionary: " + str(err))
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
-    ci = current_info(yaml=yaml_filename, req=request, secret=secret, device_id=device_id, action=action)
+    session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
+    ci = current_info(yaml=yaml_filename, req=request, secret=secret, device_id=device_id, action=action, session_uid=session_uid)
     ci['session'] = session_id
     ci['encrypted'] = is_encrypted
     ci['secret'] = secret
@@ -24819,7 +24822,8 @@ def api_session_action():
         return jsonify_with_status("Unable to obtain interview dictionary.", 400)
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
-    ci = current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments), secret=secret, device_id=device_id)
+    session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
+    ci = current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments), secret=secret, device_id=device_id, session_uid=session_uid)
     ci['session'] = session_id
     ci['encrypted'] = is_encrypted
     ci['secret'] = secret

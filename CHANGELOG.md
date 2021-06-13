@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.82] - 2021-06-13
+### Added
+- Support for login using Keycloak.
+### Fixed
+- API sessions could not follow action paths.
+
 ## [1.2.81] - 2021-06-07
 ### Added
 - Support for additional file types in `fix_up()`.
