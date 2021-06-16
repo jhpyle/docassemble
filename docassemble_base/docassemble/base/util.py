@@ -302,7 +302,8 @@ __all__ = [
     'stash_data',
     'retrieve_stashed_data',
     'update_terms',
-    'chain'
+    'chain',
+    'register_jinja_filter'
 ]
 
 #knn_machine_learner = DummyObject
@@ -3336,6 +3337,13 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         return output
     if using_temporary_file:
         return output_path
+
+def register_jinja_filter(filtername, func):
+    # can't import docassemble.base.parse at top level due to circular
+    # references, so we import it on first use instead
+    from docassemble.base.parse import register_jinja_filter as orig_register_jinja_filter
+    return orig_register_jinja_filter(filtername, func)
+
 
 from docassemble.base.oauth import DAOAuth
 
