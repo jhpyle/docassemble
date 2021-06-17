@@ -2364,7 +2364,7 @@ navigation bar.  For this reason, you should make sure your
 You should also make the [`subquestion`] text as brief as possible.
 Although you may be developing your app on a desktop or laptop
 monitor, your users are probably using smartphones, so test your app
-on a smartphone.
+on a small smartphone.
 
 By default, the `signature` screen will not let the user continue if
 the signature box is empty.  If you want to allow users to submit

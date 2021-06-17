@@ -1964,8 +1964,9 @@ For example, if you present the same document in two different
 [`question`]s using [`attachment code`], the same document that was
 assembled for the first [`question`] will be presented in the second
 [`question`], even if changes were made to the underlying variables in
-the interim.  To force the re-assembly of the document, use [`code`]
-to deletes the variable that represents the document.  Here is an example:
+the interim.  To force the re-assembly of the document, you can use
+[`code`] to delete the variable that represents the document.  Here is
+an example:
 
 {% include side-by-side.html demo="document-cache-invalidate" %}
 
