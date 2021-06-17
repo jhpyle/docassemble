@@ -1261,6 +1261,16 @@ class DAList(DAObject):
             the_list.set_random_instance_name()
             return the_list
         return self.elements + other
+    def __radd__(self, other):
+        self._trigger_gather()
+        if isinstance(other, DAEmpty):
+            return self
+        if isinstance(other, DAList):
+            other._trigger_gather()
+            the_list = self.__class__(elements=other.elements + self.elements, gathered=True, auto_gather=False)
+            the_list.set_random_instance_name()
+            return the_list
+        return other + self.elements
     def index(self, *pargs, **kwargs):
         """Returns the first index at which a given item may be found."""
         self._trigger_gather()
