@@ -4305,8 +4305,9 @@ class Question:
         for field_name in self.fields_for_invalidation:
             try:
                 old_values[field_name] = eval(field_name, user_dict)
-            except:
-                pass
+            except Exception as err:
+                if field_name in user_dict['_internal']['dirty']:
+                    old_values[field_name] = user_dict['_internal']['dirty'][field_name]
         return old_values
     def invalidate_dependencies_of_variable(self, the_user_dict, field_name, old_value):
         if field_name in self.interview.invalidation_todo or field_name in self.interview.onchange_todo:
@@ -6773,6 +6774,17 @@ def restore_backup_vars(the_user_dict, backups):
     for var, val in backups.items():
         the_user_dict[var] = val
 
+def illegal_variable_name(var):
+    if re.search(r'[\n\r]', var):
+        return True
+    try:
+        t = ast.parse(var)
+    except:
+        return True
+    detector = docassemble.base.astparser.detectIllegal()
+    detector.visit(t)
+    return detector.illegal
+
 class Interview:
     def __init__(self, **kwargs):
         self.source = None
@@ -7420,10 +7432,14 @@ class Interview:
                     if interview_status.current_info['action'] in ('_da_list_remove', '_da_list_add', '_da_list_complete'):
                         for the_key in ('list', 'item', 'items'):
                             if the_key in interview_status.current_info['arguments']:
+                                if illegal_variable_name(interview_status.current_info['arguments'][the_key]):
+                                    raise DAError("Invalid name " + interview_status.current_info['arguments'][the_key])
                                 interview_status.current_info['action_' + the_key] = eval(interview_status.current_info['arguments'][the_key], user_dict)
                     if interview_status.current_info['action'] in ('_da_dict_remove', '_da_dict_add', '_da_dict_complete'):
                         for the_key in ('dict', 'item', 'items'):
                             if the_key in interview_status.current_info['arguments']:
+                                if illegal_variable_name(interview_status.current_info['arguments'][the_key]):
+                                    raise DAError("Invalid name " + interview_status.current_info['arguments'][the_key])
                                 interview_status.current_info['action_' + the_key] = eval(interview_status.current_info['arguments'][the_key], user_dict)
                 #else:
                 #    logmessage("assemble: there is no action in the current_info")

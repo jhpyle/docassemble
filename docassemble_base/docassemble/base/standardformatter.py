@@ -648,6 +648,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         else:
             output += word('Sign Your Name')
         output += '</div>\n                </div>\n              </div>\n              <div class="dasigtoppart" id="dasigtoppart">\n                <div id="daerrormess" class="dasigerrormessage dasignotshowing">' + word("You must sign your name to continue.") + '</div>\n'
+        if status.pre:
+            output += '                <div class="d-none d-sm-block">' + status.pre + '</div>\n'
         if status.questionText:
             output += '                <div class="da-page-header d-none d-sm-block"><h1 class="h3">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         output += '              </div>'
@@ -659,6 +661,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         if showUnderText:
             output += '                <div class="d-none d-sm-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-sm-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'
         output += "\n              </div>"
+        if status.submit:
+            output += '                <div class="d-none d-sm-block">' + status.submit + '</div>\n'
         output += """
               <fieldset class="da-button-set d-none d-sm-block da-signature">
                 <legend class="sr-only">""" + word('Press one of the following buttons:') + """</legend>

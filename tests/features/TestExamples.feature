@@ -809,14 +809,6 @@ Feature: Example interviews
     Then I should see the phrase "El documento está listo."
     And I should see the phrase "Alimentos"
 
-  Scenario: Test the interview "Language" 2
-    Given I start the interview "docassemble.base:data/questions/examples/document-language.yml"
-    Then I should see the phrase "El documento está listo."
-    And I should see the phrase "Alimentos"
-    And I click the link "Avance"
-    And I wait 1 second
-    Then I should see the phrase "This customer would like to order fries and a Coke."
-
   Scenario: Test the interview "Document links" 1
     Given I start the interview "docassemble.base:data/questions/examples/document-links-limited.yml"
     Then I should see the phrase "This interview is all done."

@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.2.83] - 2021-06-16
+### Changed
+- The `depends on` invalidation will now be triggered when a variable
+  is defined while invalidated.
+### Fixed
+- Misplacement of buttons on desktop `signature` page when
+  `subquestion` is lengthy.
+
 ## [1.2.82] - 2021-06-13
 ### Added
 - Support for login using Keycloak.

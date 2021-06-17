@@ -7927,6 +7927,12 @@ def index(action_argument=None, refer=None):
           }
         }
       }
+      function dabtoa(str) {
+        return window.btoa(str).replace(/[\\n=]/g, '');
+      }
+      function daatob(str) {
+        return window.atob(str);
+      }
       function getFields(){
         var allFields = [];
         for (var rawFieldName in daVarLookup){
@@ -7967,7 +7973,7 @@ def index(action_argument=None, refer=None):
             }
           }
         }
-        var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');
+        var fieldNameEscaped = dabtoa(fieldName);
         var possibleElements = [];
         daAppendIfExists(fieldNameEscaped, possibleElements);
         if (daVarLookupMulti.hasOwnProperty(fieldNameEscaped)){
@@ -11564,7 +11570,7 @@ def get_history(interview, interview_status):
                 else:
                     output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
             elif 'variable' in stage:
-                output += "          <h5>Needed definition of <code>" + str(stage['variable']) + "</code>" + the_time + "</h5>\n"
+                output += '          <h5>Needed definition of <code class="da-variable-needed">' + str(stage['variable']) + "</code>" + the_time + "</h5>\n"
             elif 'done' in stage:
                 output += "          <h5>Completed processing" + the_time + "</h5>\n"
                 seen_done = True
@@ -12299,6 +12305,12 @@ def observer():
           }, 500);
         }
       }
+      function dabtoa(str) {
+        return window.btoa(str).replace(/[\\n=]/g, '');
+      }
+      function daatob(str) {
+        return window.atob(str);
+      }
       function getFields(){
         var allFields = [];
         for (var rawFieldName in daVarLookup){
@@ -12313,7 +12325,7 @@ def observer():
       }
       var daGetFields = getFields;
       function getField(fieldName, notInDiv){
-        var fieldNameEscaped = btoa(fieldName).replace(/[\\n=]/g, '');
+        var fieldNameEscaped = dabtoa(fieldName);
         var possibleElements = [];
         daAppendIfExists(fieldNameEscaped, possibleElements);
         if (daVarLookupMulti.hasOwnProperty(fieldNameEscaped)){

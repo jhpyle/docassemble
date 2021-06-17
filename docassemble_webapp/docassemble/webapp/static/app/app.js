@@ -19,7 +19,9 @@ function daInitializeSignature() {
     }
     daNewCanvas();
     $(document).on("touchmove", function (event) {
-      event.preventDefault();
+      if (window.matchMedia("(max-width: 575px)").matches) {
+        event.preventDefault();
+      }
     });
   }, 500);
   $(window).on("resize", function () {
@@ -118,7 +120,7 @@ function daNewCanvas() {
   if (cheight > $(window).height() - otherHeights) {
     cheight = $(window).height() - otherHeights;
   }
-  if (cheight > 275) {
+  if (cheight > 275 || cheight < 30) {
     cheight = 275;
   }
   $("#dasigcontent").height(cheight);
