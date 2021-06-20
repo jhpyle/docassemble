@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.84](https://github.com/jhpyle/docassemble/releases/tag/v1.2.84) - 2021-06-20
+
+### Fixed
+- Variable not marked as defined if defined by `code` block triggered
+  by a different missing variable name.
+- Instance names not reset after reordering.
+
 ## [1.2.83](https://github.com/jhpyle/docassemble/releases/tag/v1.2.83) - 2021-06-16
 
 ### Changed
