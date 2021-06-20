@@ -1836,6 +1836,7 @@ class DAList(DAObject):
         for item in pargs:
             if item[0] < maximum and item[1] < maximum:
                 self.elements[item[1]] = old_elements[item[0]]
+        self._reset_instance_names()
     def item_actions(self, *pargs, **kwargs):
         """Returns HTML for editing the items in a list"""
         the_args = list(pargs)
