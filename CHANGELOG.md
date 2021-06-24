@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.86] - 2021-06-24
+### Fixed
+- Missing `.delta` attribute of the output of `date_difference()`.
+- Syntax error introduced in 1.2.85.
+
 ## [1.2.85] - 2021-06-24
 ### Added
 - The `backup file storage` Configuration directive (requires system

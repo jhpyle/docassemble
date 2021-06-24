@@ -1014,6 +1014,7 @@ def date_difference(starting=None, ending=None, timezone=None):
     output.minutes = (delta.days * 1440.0) + (delta.seconds / 60.0)
     output.seconds = (delta.days * 86400) + delta.seconds
     output.years = (delta.days + delta.seconds / 86400.0) / 365.2425
+    output.delta = delta
     return output
 
 def fax_string(person, country=None):

@@ -2907,7 +2907,7 @@ class DASet(DAObject):
             delattr(self, 'gathered')
         if hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
-            if mark_incomplete and self.complete_attribute is not None:
+        if mark_incomplete and self.complete_attribute is not None:
             for item in list(self.elements):
                 if hasattr(item, self.complete_attribute):
                     try:
