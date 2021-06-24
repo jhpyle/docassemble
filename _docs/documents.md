@@ -799,15 +799,17 @@ illustrates this.
 
 {% include side-by-side.html demo="docx-table-columns" %}
 
-## <a name="particfields"></a>Passing values only for particular fields
+## <a name="particfields"></a>Passing values for particular fields
 
 By default, all of the variables in your interview will be available
-in the DOCX template.  If you do not want this, perhaps because your
-DOCX template uses a different variable naming convention, you can
-use the `fields` specifier to indicate a mapping between the fields in
-the DOCX template and the values that you want to be filled in.  This
-operates much like the [PDF fill-in fields](#pdf template file)
-feature.
+in the DOCX template.  If your DOCX template uses different variable
+names than are present in your interview, you can use the `fields` or
+`field code` specifiers to indicate a mapping between variable names
+in the DOCX template and the values that you want to be filled in.
+This operates much like the [PDF fill-in fields](#pdf template file)
+feature.  If a variable in the DOCX file is not explicitly
+defined in the `fields` or `field code` list, definitions will be
+sought in the interview answers.
 
 The content of `fields` is converted into a data structure, which is
 passed to the `render()` method of [`python-docx-template`].  The data
@@ -822,9 +824,6 @@ in order to process the list of ingredients.  Here is an example of a
 DOCX file that uses the above data structure:
 
 ![recipe template source]({{ site.baseurl }}/img/recipe_template.png){: .maybe-full-width }
-
-For more information on using [Jinja2] in DOCX templates, see the
-documentation of [`python-docx-template`].
 
 ## <a name="raw field variables"></a>Turning off automatic conversion of DOCX variables
 
