@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.86](https://github.com/jhpyle/docassemble/releases/tag/v1.2.86) - 2021-06-24
+
+### Fixed
+- Missing `.delta` attribute of the output of `date_difference()`.
+- Syntax error introduced in 1.2.85.
+
 ## [1.2.85](https://github.com/jhpyle/docassemble/releases/tag/v1.2.85) - 2021-06-24
 
 ### Added
