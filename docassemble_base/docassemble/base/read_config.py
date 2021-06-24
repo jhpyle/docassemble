@@ -144,6 +144,10 @@ if __name__ == "__main__":
         print('export DABACKUPDAYS="' + str(days) + '"')
     else:
         print('export DABACKUPDAYS="14"')
+    if 'backup file storage' in daconfig and not daconfig['backup file storage']:
+        print('export BACKUPFILESTORAGE=false')
+    else:
+        print('export BACKUPFILESTORAGE=true')
     if 's3' in daconfig:
         if 'enable' in daconfig['s3'] and daconfig['s3']['enable']:
             print('export S3ENABLE=true')

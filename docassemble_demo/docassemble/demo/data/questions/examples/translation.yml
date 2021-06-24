@@ -1,0 +1,44 @@
+metadata:
+  title: Translation
+  short title: Translate
+---
+modules:
+  - .translate
+---
+objects:
+  - blurb: DAObject
+---
+mandatory: True
+code: |
+  blurb.done
+  final_screen
+---
+depends on: blurb.original
+code: |
+  blurb.translated = translate_phrase(blurb.original, 'fr', 'en')
+  blurb.corrected
+  blurb.done = True
+---
+question: |
+  Write a paragraph in French.
+fields:
+  - no label: blurb.original
+    input type: area
+---
+depends on: blurb.original
+question: |
+  Revise the English translation.
+subquestion: |
+  French:
+
+  ${ blurb.original }
+fields:
+  - no label: blurb.translated
+    input type: area
+continue button field: blurb.corrected
+---
+event: final_screen
+question: |
+  Translated text
+subquestion: |
+  ${ blurb.translated }

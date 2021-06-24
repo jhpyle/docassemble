@@ -565,12 +565,12 @@ class InterviewStatus:
                     the_field = copy.deepcopy(field)
                     the_field.number = str(list_indexno) + '_' + str(the_field.number)
                     if hasattr(the_field, 'saveas'):
-                        the_field.saveas = safeid(re.sub(iterator_re, '[' + str(list_indexno) +']', from_safeid(the_field.saveas)))
+                        the_field.saveas = safeid(re.sub(iterator_re, '[' + str(list_indexno) + ']', from_safeid(the_field.saveas)))
                         if hasattr(the_field, 'disableothers') and the_field.disableothers:
                             list_of_other_fields = list()
                             if isinstance(the_field.disableothers, list):
                                 for other_saveas in the_field.disableothers:
-                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) +']', other_saveas))
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) + ']', other_saveas))
                             else:
                                 for other_field in field_list:
                                     if not hasattr(other_field, 'saveas'):
@@ -4662,6 +4662,29 @@ class Question:
                         for key in jinja2meta.find_undeclared_variables(parsed_content):
                             if not key.startswith('_'):
                                 self.mako_names.add(key)
+                    for key in ('field code', 'fields'):
+                        if key in target:
+                            if isinstance(target[key], list):
+                                for item in target[key]:
+                                    for field_name in item.keys():
+                                        try:
+                                            self.names_used.remove(field_name)
+                                        except:
+                                            pass
+                                        try:
+                                            self.mako_names.remove(field_name)
+                                        except:
+                                            pass
+                            elif isinstance(target[key], dict):
+                                for field_name in target[key].keys():
+                                    try:
+                                        self.names_used.remove(field_name)
+                                    except:
+                                        pass
+                                    try:
+                                        self.mako_names.remove(field_name)
+                                    except:
+                                        pass
                 else:
                     options[template_type + '_template_file'] = FileInPackage(target[template_type + ' template file'], 'template', package=self.package)
                 if field_mode == 'manual':
@@ -4699,7 +4722,7 @@ class Question:
                             if not isinstance(item, dict):
                                 raise DAError('The field code must be expressed in the form of a dictionary' + self.idebug(target))
                             for key, val in item.items():
-                                options['code dict'][key] = compile(val, '<expression>', 'eval')
+                                options['code dict'][key] = compile(str(val), '<expression>', 'eval')
                                 self.find_fields_in(val)
             if 'valid formats' in target:
                 if isinstance(target['valid formats'], str):
@@ -6416,7 +6439,11 @@ class Question:
                                         if isinstance(item, dict):
                                             new_field_data.update(item)
                                     the_field_data = new_field_data
-                                result['field_data'] = the_field_data
+                                result['field_data'] = copy.deepcopy(pickleable_objects(the_user_dict))
+                                self.interview.populate_non_pickleable(result['field_data'])
+                                if 'alpha' not in result['field_data']:
+                                    raise Exception("fuck this")
+                                result['field_data'].update(the_field_data)
                             result['field_data']['_codecs'] = codecs
                             result['field_data']['_array'] = array
                             if 'code' in attachment['options']:
@@ -7342,6 +7369,22 @@ class Interview:
                 help_item['content'] = source['content'].text(the_user_dict)
                 result.append(help_item)
         return result
+    def populate_non_pickleable(self, user_dict_copy):
+        if not self.imports_util and not self.consolidated_metadata.get('suppress loading util', False):
+            exec(import_util, user_dict_copy)
+        for question in self.questions_list:
+            if question.question_type == 'imports':
+                for module_name in question.module_list:
+                    if module_name.startswith('.'):
+                        exec('import ' + str(question.package) + module_name, user_dict_copy)
+                    else:
+                        exec('import ' + module_name, user_dict_copy)
+            if question.question_type == 'modules':
+                for module_name in question.module_list:
+                    if module_name.startswith('.'):
+                        exec('from ' + str(question.package) + module_name + ' import *', user_dict_copy)
+                    else:
+                        exec('from ' + module_name + ' import *', user_dict_copy)
     def assemble(self, user_dict, interview_status=None, old_user_dict=None, force_question=None):
         #sys.stderr.write("assemble\n")
         user_dict['_internal']['tracker'] += 1

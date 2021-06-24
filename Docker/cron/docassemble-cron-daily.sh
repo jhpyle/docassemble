@@ -121,7 +121,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
     rm -rf $BACKUPDIR
     mkdir -p $BACKUPDIR
     if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then
-	if [[ $CONTAINERROLE =~ .*:all:.* ]] && [ "${S3ENABLE:-false}" == "false" ] && [ "${AZUREENABLE:-false}" == "false" ]; then
+	if [ "${BACKUPFILESTORAGE:-true}" == "true" ] && [[ $CONTAINERROLE =~ .*:all:.* ]] && [ "${S3ENABLE:-false}" == "false" ] && [ "${AZUREENABLE:-false}" == "false" ]; then
 	    rsync -auq "${DA_ROOT}/files" "${BACKUPDIR}/"
 	fi
 	rsync -auq "${DA_ROOT}/config" "${BACKUPDIR}/"

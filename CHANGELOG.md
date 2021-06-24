@@ -1,5 +1,18 @@
 # Change Log
 
+## [1.2.85] - 2021-06-24
+### Added
+- The `backup file storage` Configuration directive (requires system
+  upgrade).
+### Changed
+- When using `docx template file` in combination with `fields` or
+  `field code`, the interview answers will be used for any variables
+  not defined in the `fields` or `field code`.
+### Fixed
+- Issue with exceptions being triggered because keycloak OAuth
+  information not defined in the Configuration.
+- Non-string values in `field code` raised exceptions.
+
 ## [1.2.84] - 2021-06-20
 ### Fixed
 - Variable not marked as defined if defined by `code` block triggered

@@ -4378,12 +4378,16 @@ class Auth0SignIn(OAuthSignIn):
 class KeycloakSignIn(OAuthSignIn):
     def __init__(self):
         super().__init__('keycloak')
+        try:
+            realm = daconfig['oauth']['keycloak']['realm']
+        except:
+            realm = None
         self.service = OAuth2Service(
             name='keycloak',
             client_id=self.consumer_id,
             client_secret=self.consumer_secret,
-            authorize_url='https://' + str(self.consumer_domain) + '/auth/realms/'+daconfig['oauth']['keycloak']['realm']+'/protocol/openid-connect/auth',
-            access_token_url='https://' + str(self.consumer_domain) + '/auth/realms/'+daconfig['oauth']['keycloak']['realm']+'/protocol/openid-connect/token',
+            authorize_url='https://' + str(self.consumer_domain) + '/auth/realms/' + str(realm) + '/protocol/openid-connect/auth',
+            access_token_url='https://' + str(self.consumer_domain) + '/auth/realms/' + str(realm) + '/protocol/openid-connect/token',
             base_url='https://' + str(self.consumer_domain)
         )
     def authorize(self):
