@@ -9144,49 +9144,6 @@ class DAStrictUndefined(StrictUndefined):
         __rsub__= __iter__ = __str__ = __len__ = __nonzero__ = __eq__ = \
         __ne__ = __bool__ = __hash__ = _fail_with_undefined_error
 
-def custom_jinja_env():
-    env = DAEnvironment(undefined=DAStrictUndefined, extensions=[DAExtension])
-    env.filters['ampersand_filter'] = ampersand_filter
-    env.filters['markdown'] = markdown_filter
-    env.filters['add_separators'] = docassemble.base.functions.add_separators
-    env.filters['inline_markdown'] = inline_markdown_filter
-    env.filters['paragraphs'] = docassemble.base.functions.single_to_double_newlines
-    env.filters['manual_line_breaks'] = docassemble.base.functions.manual_line_breaks
-    env.filters['RichText'] = docassemble.base.file_docx.RichText
-    env.filters['groupby'] = groupby_filter
-    env.filters['max'] = max_filter
-    env.filters['min'] = min_filter
-    env.filters['sum'] = sum_filter
-    env.filters['unique'] = unique_filter
-    env.filters['join'] = join_filter
-    env.filters['attr'] = attr_filter
-    env.filters['selectattr'] = selectattr_filter
-    env.filters['rejectattr'] = rejectattr_filter
-    env.filters['sort'] = sort_filter
-    env.filters['dictsort'] = dictsort_filter
-    env.filters['nice_number'] = docassemble.base.functions.nice_number
-    env.filters['ordinal'] = docassemble.base.functions.ordinal
-    env.filters['ordinal_number'] = docassemble.base.functions.ordinal_number
-    env.filters['currency'] = docassemble.base.functions.currency
-    env.filters['comma_list'] = docassemble.base.functions.comma_list
-    env.filters['comma_and_list'] = docassemble.base.functions.comma_and_list
-    env.filters['capitalize'] = docassemble.base.functions.capitalize
-    env.filters['salutation'] = docassemble.base.functions.salutation
-    env.filters['alpha'] = docassemble.base.functions.alpha
-    env.filters['roman'] = docassemble.base.functions.roman
-    env.filters['word'] = docassemble.base.functions.word
-    env.filters['bold'] = docassemble.base.functions.bold
-    env.filters['italic'] = docassemble.base.functions.italic
-    env.filters['title_case'] = docassemble.base.functions.title_case
-    env.filters['single_paragraph'] = docassemble.base.functions.single_paragraph
-    env.filters['phone_number_formatted'] = docassemble.base.functions.phone_number_formatted
-    env.filters['phone_number_in_e164'] = docassemble.base.functions.phone_number_in_e164
-    env.filters['country_name'] = docassemble.base.functions.country_name
-    env.filters['fix_punctuation'] = docassemble.base.functions.fix_punctuation
-    env.filters['redact'] = docassemble.base.functions.redact
-    env.filters['verbatim'] = docassemble.base.functions.verbatim
-    env.filters['map'] = map_filter
-    return env
 
 def mygetattr(y, attr):
     for attribute in attr.split('.'):
@@ -9367,6 +9324,63 @@ def markdown_filter(text):
 
 def inline_markdown_filter(text):
     return docassemble.base.file_docx.inline_markdown_to_docx(str(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
+
+builtin_jinja_filters = {
+    'ampersand_filter': ampersand_filter,
+    'markdown': markdown_filter,
+    'add_separators': docassemble.base.functions.add_separators,
+    'inline_markdown': inline_markdown_filter,
+    'paragraphs': docassemble.base.functions.single_to_double_newlines,
+    'manual_line_breaks': docassemble.base.functions.manual_line_breaks,
+    'RichText': docassemble.base.file_docx.RichText,
+    'groupby': groupby_filter,
+    'max': max_filter,
+    'min': min_filter,
+    'sum': sum_filter,
+    'unique': unique_filter,
+    'join': join_filter,
+    'attr': attr_filter,
+    'selectattr': selectattr_filter,
+    'rejectattr': rejectattr_filter,
+    'sort': sort_filter,
+    'dictsort': dictsort_filter,
+    'nice_number': docassemble.base.functions.nice_number,
+    'ordinal': docassemble.base.functions.ordinal,
+    'ordinal_number': docassemble.base.functions.ordinal_number,
+    'currency': docassemble.base.functions.currency,
+    'comma_list': docassemble.base.functions.comma_list,
+    'comma_and_list': docassemble.base.functions.comma_and_list,
+    'capitalize': docassemble.base.functions.capitalize,
+    'salutation': docassemble.base.functions.salutation,
+    'alpha': docassemble.base.functions.alpha,
+    'roman': docassemble.base.functions.roman,
+    'word': docassemble.base.functions.word,
+    'bold': docassemble.base.functions.bold,
+    'italic': docassemble.base.functions.italic,
+    'title_case': docassemble.base.functions.title_case,
+    'single_paragraph': docassemble.base.functions.single_paragraph,
+    'phone_number_formatted': docassemble.base.functions.phone_number_formatted,
+    'phone_number_in_e164': docassemble.base.functions.phone_number_in_e164,
+    'country_name': docassemble.base.functions.country_name,
+    'fix_punctuation': docassemble.base.functions.fix_punctuation,
+    'redact': docassemble.base.functions.redact,
+    'verbatim': docassemble.base.functions.verbatim,
+    'map': map_filter
+}
+
+registered_jinja_filters = {}
+
+def custom_jinja_env():
+    env = DAEnvironment(undefined=DAStrictUndefined, extensions=[DAExtension])
+    env.filters.update(registered_jinja_filters)
+    env.filters.update(builtin_jinja_filters)
+    return env
+
+def register_jinja_filter(filtername, func):
+    if filtername in builtin_jinja_filters:
+        raise DAError("Cannot register filter with same name as built-in filter %s" % filtername) 
+    registered_jinja_filters[filtername] = func
+
 
 def get_docx_variables(the_path):
     import docassemble.base.legal
