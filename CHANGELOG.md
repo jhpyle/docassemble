@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.87] - 2021-06-27
+### Added
+- The `register_jinja_filter()` function.
+- The `sv-words.yml` file in the `data/sources` folder of
+  `docassemble.base` with system phrases in Swedish.
+
 ## [1.2.86] - 2021-06-24
 ### Fixed
 - Missing `.delta` attribute of the output of `date_difference()`.

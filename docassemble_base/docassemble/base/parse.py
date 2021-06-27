@@ -9376,11 +9376,10 @@ def custom_jinja_env():
     env.filters.update(builtin_jinja_filters)
     return env
 
-def register_jinja_filter(filtername, func):
-    if filtername in builtin_jinja_filters:
-        raise DAError("Cannot register filter with same name as built-in filter %s" % filtername) 
-    registered_jinja_filters[filtername] = func
-
+def register_jinja_filter(filter_name, func):
+    if filter_name in builtin_jinja_filters:
+        raise DAError("Cannot register filter with same name as built-in filter %s" % filter_name)
+    registered_jinja_filters[filter_name] = func
 
 def get_docx_variables(the_path):
     import docassemble.base.legal

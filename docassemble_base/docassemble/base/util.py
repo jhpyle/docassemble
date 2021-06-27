@@ -302,8 +302,7 @@ __all__ = [
     'stash_data',
     'retrieve_stashed_data',
     'update_terms',
-    'chain',
-    'register_jinja_filter'
+    'chain'
 ]
 
 #knn_machine_learner = DummyObject
@@ -3339,12 +3338,24 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
     if using_temporary_file:
         return output_path
 
-def register_jinja_filter(filtername, func):
-    # can't import docassemble.base.parse at top level due to circular
-    # references, so we import it on first use instead
-    from docassemble.base.parse import register_jinja_filter as orig_register_jinja_filter
-    return orig_register_jinja_filter(filtername, func)
+def register_jinja_filter(filter_name, func):
+    """Add a custom Jinja2 filter.
 
+    This function can only be called from a module file that contains
+    the line "# pre-load" so that the module will run when the server
+    starts.  The register_jinja_filter() function must run when the module
+    loads.  For example:
+
+    # pre-load
+    from docassemble.base.util import register_jinja_filter
+
+    def omg_filter(text):
+        return "OMG! " + text + " OMG!"
+
+    register_jinja_filter('omg', omg_filter)
+    """
+    import docassemble.base.parse
+    return docassemble.base.parse.register_jinja_filter(filter_name, func)
 
 from docassemble.base.oauth import DAOAuth
 
