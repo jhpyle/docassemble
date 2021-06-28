@@ -64,13 +64,13 @@ fields:
   - "Birth date": date_of_birth
   - "Marriage date": date_of_marriage
     datatype: date
-    show if: 
+    show if:
       code: married
 {% endhighlight %}
 
 You might be tempted to write something like this in a DOCX template:
 
-> {% raw %}{% if defined('date_of_marriage') %}{% endraw %}Plaintiff is married and was 
+> {% raw %}{% if defined('date_of_marriage') %}{% endraw %}Plaintiff is married and was
 > married on {% raw %}{{ date_of_marriage }}.{% endif %}{% endraw %}
 
 This will work if your interview does not allow the user to go back
@@ -85,7 +85,7 @@ an error.
 
 The solution is to always base your logic off of actual facts:
 
-> {% raw %}{% if married %}{% endraw %}Plaintiff is married and was 
+> {% raw %}{% if married %}{% endraw %}Plaintiff is married and was
 > married on {% raw %}{{ date_of_marriage }}.{% endif %}{% endraw %}
 
 By analogy, suppose that a lawyer worked on a case and wrote on a
@@ -3498,11 +3498,18 @@ closing_ja)`.  Unless `**kwargs` is used, the keyword parameter
 `formal` would trigger an error when used outside of a Japanese context.
 
 Note that updates to language functions are not [thread-safe]; they
-have a server-wide effect.  The best practice for calling
-`update_language_function()` is to call it in main body of a module.
-The code will be run once, when the server starts.
+have a server-wide effect.  `update_language_function()` needs to be
+called in main body of a module so that it has an effect on all
+threads.  The code needs to run when the server starts and loads
+modules.  Module files are only loaded when the server starts if 1)
+they contain a `class` definition; 2) they contain the literal text
+`docassemble.base.util.update` somewhere; or 3) they contain a line
+that starts with `# pre-load`.  Therefore, if your module runs
+`from docassemble.base.util import update_language_function`, then you
+need to include a line that starts with `# pre-load`.
 
-Listed below are some of the existing language functions that can be customized.
+Listed below are some of the existing language functions that can be
+customized.
 
 ## <a name="capitalize"></a>capitalize()
 
@@ -6615,7 +6622,7 @@ database.  If you connect to the database with the credentials from
 # <a name="stash_data"></a><a name="retrieve_stashed_data"></a>Temporarily stashing encrypted data
 
 The `stash_data()` and `retrieve_stashed_data()` functions can be used
-to store encrypted data in [Redis] for a period of time.  
+to store encrypted data in [Redis] for a period of time.
 
 # <a name="docx"></a>Functions for working with DOCX templates
 

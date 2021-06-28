@@ -1071,6 +1071,31 @@ either discussed above or are the names of [functions].
 * `verbatim`
 * `word`
 
+<a name="register_jinja_filter"></a>You can also write your own
+filters. To do so, you need to write a module file.  For example, here
+is a module file that creates a filter called `no_ssn` for removing
+Social Security Numbers.
+
+{% highlight python %}
+    # pre-load
+    import re
+    from docassemble.base.util import register_jinja_filter
+
+    def remove_ssn(text):
+        return re.sub(r'[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]', 'XXX-XX-XXXX', text)
+
+    register_jinja_filter('no_ssn', remove_ssn)
+{% endhighlight %}
+
+For this to work, the module file has to be installed on the server or
+present in the Modules folder of a user's Playground.
+
+The `register_jinja_filter()` function is similar to
+[`update_language_function()`] in that it needs to run when the server
+starts and the server loads modules.  That is why the line `#
+pre-load` is at the top.  Also note that `register_jinja_filter` is
+not exported when you do `from docassemble.base.util import *`.
+
 ## <a name="macros"></a>Inserting blocks of text more than once in a document
 
 [Jinja2] supports the use of "[macros]," which are like [Python]
@@ -2086,3 +2111,4 @@ interview, see the [`cache documents` feature].
 [filters]: https://jinja.palletsprojects.com/en/2.11.x/templates/#filters
 [tests]: https://jinja.palletsprojects.com/en/2.11.x/templates/#list-of-builtin-tests
 [`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
+[`update_language_function()`]: {{ site.baseurl }}/docs/functions.html#linguistic

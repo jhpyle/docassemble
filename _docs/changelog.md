@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.87](https://github.com/jhpyle/docassemble/releases/tag/v1.2.87) - 2021-06-27
+
+### Added
+- The `register_jinja_filter()` function.
+- The `sv-words.yml` file in the `data/sources` folder of
+  `docassemble.base` with system phrases in Swedish.
+
 ## [1.2.86](https://github.com/jhpyle/docassemble/releases/tag/v1.2.86) - 2021-06-24
 
 ### Fixed
