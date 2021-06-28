@@ -940,48 +940,6 @@ shorthand is to use [`only sets`].
 
 {% include side-by-side.html demo="only-sets" %}
 
-# <a name="sets"></a>Specifying which variables a block `sets`
-
-As discussed in the previous section, **docassemble** looks at every
-block in your interview and tries to discern what variables each block
-is capable of setting.  However, sometimes it is not able to determine
-this correctly.
-
-For example, if you have a [`code`] block that uses a method to set an
-attribute on an object, **docassemble** will not be able to see that
-the code block is capable of setting the attribute.  Here is one such
-[`code`] block:
-
-{% highlight yaml %}
----
-code: |
-  user.initializeAttribute('allergies', DAList)
----
-{% endhighlight %}
-
-If you want **docassemble** to run this [`code`] block when it needs a
-definition of `user.allergies`, then you need to add a `sets` modifier:
-
-{% highlight yaml %}
----
-sets: user.allergies
-code: |
-  user.initializeAttribute('allergies', DAList)
----
-{% endhighlight %}
-
-You can also give `sets` a list of variables:
-
-{% highlight yaml %}
----
-sets: 
-  - user.allergies
-  - user.skills
-code: |
-  user.initializeAttribute('allergies', DAList)
-  user.initializeAttribute('skills', DAList)
----
-{% endhighlight %}
 
 # <a name="need"></a>Indicate variables that are prerequisites
 
