@@ -226,7 +226,12 @@ def device(ip=False):
 
     """
     if ip:
+        if this_thread.current_info['headers'].get('X-Real-Ip', None):
+            return this_thread.current_info['headers']['X-Real-Ip']
+        if this_thread.current_info['headers'].get('X-Forwarded-For', None):
+            return this_thread.current_info['headers']['X-Forwarded-For']
         return this_thread.current_info['clientip']
+        
     if 'headers' in this_thread.current_info:
         ua_string = this_thread.current_info['headers'].get('User-Agent', None)
         if ua_string is not None:
