@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.2.88] - 2021-07-01
+- device(ip=True) now works with reverse proxies by returning X-Real-Ip or X-Forwarded-For if one of those is present.
+
 ## [1.2.87] - 2021-06-27
 ### Added
 - The `register_jinja_filter()` function.
