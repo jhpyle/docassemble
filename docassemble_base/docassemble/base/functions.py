@@ -4057,7 +4057,7 @@ def value(var):
         return eval(var, dict())
     except:
         pass
-    if re.search(r'[\(\)\n\r]|lambda', var):
+    if re.search(r'[\(\)\n\r]|lambda:|lambda ', var):
         raise Exception("value() is invalid: " + repr(var))
     frame = inspect.stack()[1][0]
     components = components_of(var)
