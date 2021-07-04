@@ -9,6 +9,17 @@ from docassemble.base.functions import LazyWord as word, LazyArray
 from docassemble.base.config import daconfig
 from flask_login import current_user
 import email.utils
+HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
+
+def get_requester_ip(req):
+    if not req:
+        return '127.0.0.1'
+    if HTTP_TO_HTTPS:
+        if 'X-Real-Ip' in req.headers:
+            return req.headers['X-Real-Ip']
+        elif 'X-Forwarded-For' in req.headers:
+            return req.headers['X-Forwarded-For']
+    return req.remote_addr
 
 try:
     import ldap
@@ -25,7 +36,7 @@ class MySignInForm(LoginForm):
     def validate(self):
         from docassemble.webapp.daredis import r
         from flask import request, abort
-        key = 'da:failedlogin:ip:' + str(request.remote_addr)
+        key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
         failed_attempts = r.get(key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
             abort(404)
@@ -239,7 +250,7 @@ class PhoneLoginVerifyForm(FlaskForm):
         from docassemble.base.logger import logmessage
         from flask import request, abort
         result = True
-        key = 'da:failedlogin:ip:' + str(request.remote_addr)
+        key = 'da:failedlogin:ip:' + str(get_requester_ip(request.remote_addr))
         failed_attempts = r.get(key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
             abort(404)

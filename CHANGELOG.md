@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.2.88] - 2021-07-04
+### Changed
+- If `behind https load balancer` is set, the IP address will be
+  obtained from `X-Real-Ip` or `X-Forwarded-For` rather than from the
+  remote IP address.
+### Fixed
+- The `DELETE` endpoint of `/api/interviews` did not delete sessions
+  owned by non-logged-in users.
+- The `refresh` button generated a spurious warning in some
+  circumstances.
+
 ## [1.2.87] - 2021-06-27
 ### Added
 - The `register_jinja_filter()` function.

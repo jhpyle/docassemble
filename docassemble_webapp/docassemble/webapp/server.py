@@ -1837,7 +1837,7 @@ def syslog_message(message):
         the_user = "anonymous"
     if request_active:
         try:
-            sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': docassemble.base.functions.this_thread.current_info.get('yaml_filename', 'na'), 'user': the_user, 'session': docassemble.base.functions.this_thread.current_info.get('session', 'na')})
+            sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': get_requester_ip(request), 'yamlfile': docassemble.base.functions.this_thread.current_info.get('yaml_filename', 'na'), 'user': the_user, 'session': docassemble.base.functions.this_thread.current_info.get('session', 'na')})
         except Exception as err:
             sys.stderr.write("Error writing log message " + str(message) + "\n")
             try:
@@ -2009,7 +2009,7 @@ def fresh_dictionary():
     add_timestamps(the_dict)
     return the_dict
 
-def manual_checkout(manual_session_id=None, manual_filename=None, user_id=None, delete_session=False):
+def manual_checkout(manual_session_id=None, manual_filename=None, user_id=None, delete_session=False, temp_user_id=None):
     if manual_filename is not None:
         yaml_filename = manual_filename
     else:
@@ -2027,10 +2027,13 @@ def manual_checkout(manual_session_id=None, manual_filename=None, user_id=None, 
     if session_id is None:
         return
     if user_id is None:
-        if current_user.is_anonymous:
-            the_user_id = 't' + str(session.get('tempuser', None))
+        if temp_user_id is not None:
+            the_user_id = 't' + str(temp_user_id)
         else:
-            the_user_id = current_user.id
+            if current_user.is_anonymous:
+                the_user_id = 't' + str(session.get('tempuser', None))
+            else:
+                the_user_id = current_user.id
     else:
         the_user_id = user_id
     if delete_session:
@@ -4059,6 +4062,16 @@ def restart_others():
                 restart_on(host)
     return
 
+def get_requester_ip(req):
+    if not req:
+        return '127.0.0.1'
+    if HTTP_TO_HTTPS:
+        if 'X-Real-Ip' in req.headers:
+            return req.headers['X-Real-Ip']
+        elif 'X-Forwarded-For' in req.headers:
+            return req.headers['X-Forwarded-For']
+    return req.remote_addr
+
 def current_info(yaml=None, req=None, action=None, location=None, interface='web', session_info=None, secret=None, device_id=None, session_uid=None):
     #logmessage("interface is " + str(interface))
     if current_user.is_authenticated and not current_user.is_anonymous:
@@ -4082,7 +4095,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
             secret = req.cookies.get('secret', None)
         for key, value in req.headers.items():
             headers[key] = value
-        clientip = req.remote_addr
+        clientip = get_requester_ip(req)
         method = req.method
         if session_uid is None:
             if 'session' in req.cookies:
@@ -4611,7 +4624,7 @@ def phone_login():
             user_agent = request.headers.get('User-Agent', '')
             if detect_mobile.search(user_agent):
                 message += '  ' + word("You can also follow this link: ") + url_for('phone_login_verify', _external=True, p=phone_number, c=verification_code)
-            tracker_prefix = 'da:phonelogin:ip:' + str(request.remote_addr) + ':phone:'
+            tracker_prefix = 'da:phonelogin:ip:' + str(get_requester_ip(request)) + ':phone:'
             tracker_key = tracker_prefix + str(phone_number)
             pipe = r.pipeline()
             pipe.incr(tracker_key)
@@ -4622,7 +4635,7 @@ def phone_login():
                 val = r.get(key.decode())
                 total_attempts += int(val)
             if total_attempts > daconfig['attempt limit']:
-                logmessage("IP address " + str(request.remote_addr) + " attempted to log in too many times.")
+                logmessage("IP address " + str(get_requester_ip(request)) + " attempted to log in too many times.")
                 flash(word("You have made too many login attempts."), 'error')
                 return redirect(url_for('user.login'))
             total_attempts = 0
@@ -4678,7 +4691,7 @@ def phone_login_verify():
                 db.session.commit()
             login_user(user, remember=False)
             update_last_login(user)
-            r.delete('da:phonelogin:ip:' + str(request.remote_addr) + ':phone:' + phone_number)
+            r.delete('da:phonelogin:ip:' + str(get_requester_ip(request)) + ':phone:' + phone_number)
             to_convert = list()
             if 'i' in session: #TEMPORARY
                 get_session(session['i'])
@@ -4695,7 +4708,7 @@ def phone_login_verify():
             response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
             return response
         else:
-            logmessage("IP address " + str(request.remote_addr) + " made a failed login attempt using phone number " + str(phone_number) + ".")
+            logmessage("IP address " + str(get_requester_ip(request)) + " made a failed login attempt using phone number " + str(phone_number) + ".")
             flash(word("Your verification code is invalid or expired.  Please try again."), 'error')
             return redirect(url_for('user.login'))
     return render_template('flask_user/phone_login_verify.html', form=form, version_warning=None, title=word("Verify your phone"), tab_title=word("Enter code"), page_title=word("Enter code"), description=word("We just sent you a text message with a verification code.  Enter the verification code to proceed."))
@@ -4935,7 +4948,7 @@ def mfa_login():
             del session['next']
         else:
             safe_next = form.next.data
-        fail_key = 'da:failedlogin:ip:' + str(request.remote_addr)
+        fail_key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
         failed_attempts = r.get(fail_key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
             return ('File not found', 404)
@@ -5951,6 +5964,15 @@ else:
     index_path = '/interview'
     html_index_path = '/i'
 
+def refresh_or_continue(interview, post_data):
+    return_val = False
+    try:
+        if interview.questions_by_name[post_data['_question_name']].fields[0].choices[int(post_data['X211bHRpcGxlX2Nob2ljZQ'])]['key'].question_type in ('refresh', 'continue'):
+            return_val = True
+    except:
+        pass
+    return return_val
+
 @app.route(index_path, methods=['POST', 'GET'])
 def index(action_argument=None, refer=None):
     if request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']):
@@ -6371,8 +6393,7 @@ def index(action_argument=None, refer=None):
                                 the_key = myb64unquote(known_varnames[base_orig_key]) + m.group(2)
                 if key_requires_preassembly.search(the_key):
                     if the_key == '_multiple_choice' and '_question_name' in post_data:
-                        question_name = post_data.get('_question_name', -100)
-                        if question_name in interview.questions_by_name and len(interview.questions_by_name[question_name].fields[0].choices) > int(post_data[key]) and 'key' in interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])] and hasattr(interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[int(post_data[key])]['key'].question_type in ('refresh', 'continue'):
+                        if refresh_or_continue(interview, post_data):
                             continue
                     should_assemble = True
                     break
@@ -6396,7 +6417,7 @@ def index(action_argument=None, refer=None):
         interview.assemble(user_dict, interview_status=interview_status)
         already_assembled = True
         if STRICT_MODE and ('_question_name' not in post_data or post_data['_question_name'] != interview_status.question.name):
-            if action is None and len([key for key in post_data if not (key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'))]) > 0:
+            if refresh_or_continue(interview, post_data) is False and action is None and len([key for key in post_data if not (key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'))]) > 0:
                 error_messages.append(("success", word("Input not processed.  Please try again.")))
             post_data = dict()
             disregard_input = True
@@ -21312,7 +21333,7 @@ def train():
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
 
-def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True, delete_shared=False, admin=False, start_id=None):
+def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True, delete_shared=False, admin=False, start_id=None, temp_user_id=None):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
     if user_id is None and (current_user.is_anonymous or not current_user.has_role('admin', 'advocate')):
         raise Exception('user_interviews: only administrators and advocates can access information about other users')
@@ -21329,50 +21350,57 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         if tag:
             start_id = None
             while True:
-                (the_list, start_id) = user_interviews(user_id=user_id, secret=secret, tag=tag, include_dict=False, start_id=start_id)
+                (the_list, start_id) = user_interviews(user_id=user_id, secret=secret, tag=tag, include_dict=False, start_id=start_id, temp_user_id=temp_user_id)
                 for interview_info in the_list:
-                    sessions_to_delete.add((interview_info['session'], interview_info['filename'], interview_info['user_id']))
+                    sessions_to_delete.add((interview_info['session'], interview_info['filename'], interview_info['user_id'], interview_info['temp_user_id']))
                 if start_id is None:
                     break
         else:
-            if user_id is None:
+            if temp_user_id is not None:
                 if filename is None:
-                    interview_query = db.session.execute(select(UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key))
+                    interview_query = db.session.execute(select(UserDictKeys.filename, UserDictKeys.key).where(UserDictKeys.temp_user_id == temp_user_id).group_by(UserDictKeys.filename, UserDictKeys.key))
                 else:
-                    interview_query = db.session.execute(select(UserDict.filename, UserDict.key).where(UserDict.filename == filename).group_by(UserDict.filename, UserDict.key))
+                    interview_query = db.session.execute(select(UserDictKeys.filename, UserDictKeys.key).where(UserDictKeys.temp_user_id == temp_user_id, UserDictKeys.filename == filename).group_by(UserDictKeys.filename, UserDictKeys.key))
                 for interview_info in interview_query:
-                    sessions_to_delete.add((interview_info.key, interview_info.filename, None))
-            else:
+                    sessions_to_delete.add((interview_info.key, interview_info.filename, None, temp_user_id))
+            elif user_id is not None:
                 if filename is None:
                     interview_query = db.session.execute(select(UserDictKeys.filename, UserDictKeys.key).where(UserDictKeys.user_id == user_id).group_by(UserDictKeys.filename, UserDictKeys.key))
                 else:
                     interview_query = db.session.execute(select(UserDictKeys.filename, UserDictKeys.key).where(UserDictKeys.user_id == user_id, UserDictKeys.filename == filename).group_by(UserDictKeys.filename, UserDictKeys.key))
                 for interview_info in interview_query:
-                    sessions_to_delete.add((interview_info.key, interview_info.filename, user_id))
+                    sessions_to_delete.add((interview_info.key, interview_info.filename, user_id, None))
+            else:
+                if filename is None:
+                    interview_query = db.session.execute(select(UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key))
+                else:
+                    interview_query = db.session.execute(select(UserDict.filename, UserDict.key).where(UserDict.filename == filename).group_by(UserDict.filename, UserDict.key))
+                for interview_info in interview_query:
+                    sessions_to_delete.add((interview_info.key, interview_info.filename, None, None))
             if user_id is not None:
                 if filename is None:
                     interview_query = db.session.execute(select(UserDict.filename, UserDict.key).where(UserDict.user_id == user_id).group_by(UserDict.filename, UserDict.key))
                 else:
                     interview_query = db.session.execute(select(UserDict.filename, UserDict.key).where(UserDict.user_id == user_id, UserDict.filename == filename).group_by(UserDict.filename, UserDict.key))
                 for interview_info in interview_query:
-                    sessions_to_delete.add((interview_info.key, interview_info.filename, user_id))
+                    sessions_to_delete.add((interview_info.key, interview_info.filename, user_id, None))
         logmessage("Deleting " + str(len(sessions_to_delete)) + " interviews")
         if len(sessions_to_delete):
-            for session_id, yaml_filename, the_user_id in sessions_to_delete:
-                manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename, user_id=the_user_id, delete_session=True)
+            for session_id, yaml_filename, the_user_id, the_temp_user_id in sessions_to_delete:
+                manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename, user_id=the_user_id, delete_session=True, temp_user_id=the_temp_user_id)
                 #obtain_lock(session_id, yaml_filename)
                 if the_user_id is None or delete_shared:
-                    reset_user_dict(session_id, yaml_filename, user_id=the_user_id, force=True)
+                    reset_user_dict(session_id, yaml_filename, user_id=the_user_id, temp_user_id=the_temp_user_id, force=True)
                 else:
-                    reset_user_dict(session_id, yaml_filename, user_id=the_user_id)
+                    reset_user_dict(session_id, yaml_filename, user_id=the_user_id, temp_user_id=the_temp_user_id)
                 #release_lock(session_id, yaml_filename)
         return len(sessions_to_delete)
     if action == 'delete':
         if filename is None or session is None:
             raise Exception("user_interviews: filename and session must be provided in order to delete interview")
-        manual_checkout(manual_session_id=session, manual_filename=filename, user_id=user_id, delete_session=True)
+        manual_checkout(manual_session_id=session, manual_filename=filename, user_id=user_id, temp_user_id=temp_user_id, delete_session=True)
         #obtain_lock(session, filename)
-        reset_user_dict(session, filename, user_id=user_id, force=delete_shared)
+        reset_user_dict(session, filename, user_id=user_id, temp_user_id=temp_user_id, force=delete_shared)
         #release_lock(session, filename)
         return True
     if admin is False and current_user and current_user.is_authenticated and current_user.timezone:
@@ -21385,7 +21413,25 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
 
     while True:
         there_are_more = False
-        if user_id is not None:
+        if temp_user_id is not None:
+            query_elements = [UserDict.indexno, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserModel.email]
+            subq_filter_elements = [UserDictKeys.temp_user_id == temp_user_id]
+            if include_dict:
+                query_elements.extend([UserDict.dictionary, UserDict.encrypted, UserModel.email])
+            else:
+                query_elements.append(UserDict.modtime)
+            if filename is not None:
+                subq_filter_elements.append(UserDictKeys.filename == filename)
+            if session is not None:
+                subq_filter_elements.append(UserDictKeys.key == session)
+            if start_id is not None:
+                subq_filter_elements.append(UserDict.indexno > start_id)
+            subq = select(UserDictKeys.filename, UserDictKeys.key, db.func.max(UserDict.indexno).label('indexno')).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key))
+            if len(subq_filter_elements):
+                subq = subq.where(and_(*subq_filter_elements))
+            subq = subq.group_by(UserDictKeys.filename, UserDictKeys.key).subquery()
+            interview_query = select(*query_elements).select_from(subq.join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, 0 == 1)).order_by(UserDict.indexno)
+        elif user_id is not None:
             query_elements = [UserDict.indexno, UserDictKeys.user_id, UserDictKeys.temp_user_id, UserDictKeys.filename, UserDictKeys.key, UserModel.email]
             subq_filter_elements = [UserDictKeys.user_id == user_id]
             if include_dict:
@@ -22750,8 +22796,9 @@ def api_verify(req, roles=None):
         logmessage("api_verify: API information was in the wrong format")
         return False
     if len(info['constraints']):
-        if info['method'] == 'ip' and request.remote_addr not in info['constraints']:
-            logmessage("api_verify: IP address " + str(request.remote_addr) + " did not match")
+        clientip = get_requester_ip(request)
+        if info['method'] == 'ip' and clientip not in info['constraints']:
+            logmessage("api_verify: IP address " + str(clientip) + " did not match")
             return False
         if info['method'] == 'referer':
             if not request.referrer:
@@ -25058,7 +25105,10 @@ def api_interviews():
             except:
                 return jsonify_with_status("Error reading interview list.", 400)
             for info in the_list:
-                user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
+                if info['user_id'] is not None:
+                    user_interviews(user_id=info['user_id'], action='delete', filename=info['filename'], session=info['session'])
+                else:
+                    user_interviews(temp_user_id=info['temp_user_id'], action='delete', filename=info['filename'], session=info['session'])
             if start_id is None:
                 break
         return ('', 204)
@@ -26066,10 +26116,7 @@ def manage_api():
 </script>
 """)
     form.method.choices = [('ip', 'IP Address'), ('referer', 'Referring URL'), ('none', 'No authentication')]
-    try:
-        ip_address = request.remote_addr
-    except:
-        ip_address = None
+    ip_address = get_requester_ip(request)
     if request.method == 'POST' and form.validate():
         action = form.action.data
         try:
@@ -26143,7 +26190,7 @@ def manage_api():
                 form.key.data = api_key
                 form.name.data = info.get('name')
                 argu['constraints'] = info.get('constraints')
-        if ip_address:
+        if ip_address != '127.0.0.1':
             argu['description'] = Markup(word("Your IP address is") + " <code>" + str(ip_address) + "</code>.")
     if action == 'list':
         argu['title'] = word("API Keys")
@@ -27110,10 +27157,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
             referer = str(the_request.referrer)
         except:
             referer = None
-        try:
-            ipaddress = the_request.remote_addr
-        except:
-            ipaddress = None
+        ipaddress = get_requester_ip(the_request)
     else:
         referer = None
         ipaddress = None
