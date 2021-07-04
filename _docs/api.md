@@ -1884,6 +1884,12 @@ Response on success: [204]
 
 Body of response: empty.
 
+This will delete a session only for the user who owns the API key.  If
+the session has been accessed by more than one user, the other users
+will still be able to access the session.  To delete a session for all
+users of multi-user session, use the [`DELETE` endpoint of
+`/api/interviews`].
+
 ## <a name="session_retrieve"></a>Retrieve a stored file
 
 Description: Retrieves a stored file
@@ -2925,3 +2931,4 @@ function.
 [`.as_serializable()`]: {{ site.baseurl }}/docs/objects.html#DAObject.as_serializable
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DELETE` endpoint of `/api/interviews`]: #interviews_delete
