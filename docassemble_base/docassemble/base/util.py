@@ -1474,7 +1474,7 @@ class Address(DAObject):
         if 'google' in server.daconfig and 'api key' in server.daconfig['google'] and server.daconfig['google']['api key']:
             my_geocoder = GoogleV3(api_key=server.daconfig['google']['api key'])
         else:
-            my_geocoder = GoogleV3()
+            logmessage("You need a valid API key to geocode an address.")
         try_number = 0
         success = False
         results = None
