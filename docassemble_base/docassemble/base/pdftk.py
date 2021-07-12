@@ -219,7 +219,7 @@ def recursive_add_bookmark(reader, writer, outlines, parent=None):
 
 def safe_pypdf_reader(filename):
     try:
-        return pypdf.PdfFileReader(open(filename, 'rb'))
+        return pypdf.PdfFileReader(open(filename, 'rb'), overwriteWarnings=False)
     except pypdf.utils.PdfReadError:
         new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
         qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
@@ -231,7 +231,7 @@ def safe_pypdf_reader(filename):
         if result != 0:
             logmessage("Failed to convert PDF template " + str(filename))
             raise DAError("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
-        return pypdf.PdfFileReader(open(new_filename.name, 'rb'))
+        return pypdf.PdfFileReader(open(new_filename.name, 'rb'), overwriteWarnings=False)
 
 def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=[], images=[], pdf_url=None, editable=True, pdfa=False, password=None, template_password=None, default_export_value=None):
     if pdf_url is None:
@@ -694,7 +694,7 @@ def overlay_pdf(main_file, logo_file, out_file, first_page=None, last_page=None,
 
 def apply_qpdf(filename):
     try:
-        pypdf.PdfFileReader(open(filename, 'rb'))
+        pypdf.PdfFileReader(open(filename, 'rb'), overwriteWarnings=False)
         pdf_ok = True
     except pypdf.utils.PdfReadError:
         pdf_ok = False
@@ -712,7 +712,7 @@ def apply_qpdf(filename):
             logmessage("Failed to convert PDF template " + str(filename))
             logmessage("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
             raise Exception("qpdf error")
-        pypdf.PdfFileReader(open(new_file.name, 'rb'))
+        pypdf.PdfFileReader(open(new_file.name, 'rb'), overwriteWarnings=False)
     except:
         raise DAError("Could not fix PDF")
     shutil.copyfile(new_file.name, filename)

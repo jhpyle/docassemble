@@ -443,8 +443,8 @@ def _call_or_get(function_or_property):
 
 def _get_safe_next_param(param_name, default_endpoint):
     if param_name in request.args:
-        #safe_next = current_app.user_manager.make_safe_url_function(unquote(request.args[param_name]))
-        safe_next = request.args[param_name]
+        safe_next = current_app.user_manager.make_safe_url_function(urllibunquote(request.args[param_name]))
+        #safe_next = request.args[param_name]
     else:
         safe_next = _endpoint_url(default_endpoint)
     return safe_next
@@ -751,7 +751,7 @@ def custom_login():
         #if not user and daconfig['ldap login'].get('enabled', False):
         if user:
             safe_next = user_manager.make_safe_url_function(login_form.next.data)
-            safe_next = login_form.next.data
+            #safe_next = login_form.next.data
             #safe_next = url_for('post_login', next=login_form.next.data)
             if app.config['USE_MFA']:
                 if user.otp_secret is None and len(app.config['MFA_REQUIRED_FOR_ROLE']) and user.has_role(*app.config['MFA_REQUIRED_FOR_ROLE']):
@@ -979,7 +979,7 @@ db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserI
 from docassemble.webapp.users.views import user_profile_page
 from docassemble.webapp.translations import setup_translation
 user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, register_view_function=custom_register, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm, password_validator=password_validator)
+user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, register_view_function=custom_register, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm, password_validator=password_validator, make_safe_url_function=make_safe_url)
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
@@ -4544,7 +4544,7 @@ def oauth_authorize(provider):
     if not current_user.is_anonymous:
         return redirect(url_for('interview_list', from_login='1'))
     oauth = OAuthSignIn.get_provider(provider)
-    next_url = request.args.get('next', '')
+    next_url = user_manager.make_safe_url_function(request.args.get('next', ''))
     if next_url:
         session['next'] = next_url
     return oauth.authorize()
@@ -5274,7 +5274,10 @@ def post_sign_in():
 
 @app.route("/leave", methods=['GET'])
 def leave():
-    the_exit_page = request.args.get('next', exit_page)
+    if 'language' in session:
+        the_exit_page = request.args.get('next', exit_page)
+    else:
+        the_exit_page = exit_page
     # if current_user.is_authenticated:
     #     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     #     logout_user()
@@ -5324,7 +5327,10 @@ def new_session():
 
 @app.route("/exit", methods=['GET'])
 def exit():
-    the_exit_page = request.args.get('next', exit_page)
+    if 'language' in session:
+        the_exit_page = request.args.get('next', exit_page)
+    else:
+        the_exit_page = exit_page
     yaml_filename = request.args.get('i', None)
     if yaml_filename is not None:
         session_info = get_session(yaml_filename)
@@ -5336,7 +5342,10 @@ def exit():
 
 @app.route("/exit_logout", methods=['GET'])
 def exit_logout():
-    the_exit_page = request.args.get('next', exit_page)
+    if 'language' in session:
+        the_exit_page = request.args.get('next', exit_page)
+    else:
+        the_exit_page = exit_page
     yaml_filename = request.args.get('i', guess_yaml_filename())
     if yaml_filename is not None:
         session_info = get_session(yaml_filename)
@@ -7926,6 +7935,7 @@ def index(action_argument=None, refer=None):
       var daFetchAjaxTimeout = null;
       var daFetchAjaxTimeoutRunning = null;
       var daFetchAjaxTimeoutFetchAfter = null;
+      var daShowHideHappened = false;
       if (daJsEmbed){
         daTargetDiv = '#' + daJsEmbed;
       }
@@ -10469,6 +10479,10 @@ def index(action_argument=None, refer=None):
           }
         }
         daShowIfInProcess = true;
+        var daTriggerQueries = [];
+        function daOnlyUnique(value, index, self){
+          return self.indexOf(value) === index;
+        }
         $(".dajsshowif").each(function(){
           var showIfDiv = this;
           var jsInfo = JSON.parse(atob($(this).data('jsshowif')));
@@ -10508,6 +10522,9 @@ def index(action_argument=None, refer=None):
                 var resultt = eval(jsExpression);
                 if(resultt){
                   if (showIfSign){
+                    if ($(showIfDiv).data('isVisible') != '1'){
+                      daShowHideHappened = true;
+                    }
                     if (showIfMode == 0){
                       $(showIfDiv).show(speed);
                     }
@@ -10518,6 +10535,9 @@ def index(action_argument=None, refer=None):
                     });
                   }
                   else{
+                    if ($(showIfDiv).data('isVisible') != '0'){
+                      daShowHideHappened = true;
+                    }
                     if (showIfMode == 0){
                       $(showIfDiv).hide(speed);
                     }
@@ -10530,6 +10550,9 @@ def index(action_argument=None, refer=None):
                 }
                 else{
                   if (showIfSign){
+                    if ($(showIfDiv).data('isVisible') != '0'){
+                      daShowHideHappened = true;
+                    }
                     if (showIfMode == 0){
                       $(showIfDiv).hide(speed);
                     }
@@ -10540,6 +10563,9 @@ def index(action_argument=None, refer=None):
                     });
                   }
                   else{
+                    if ($(showIfDiv).data('isVisible') != '1'){
+                      daShowHideHappened = true;
+                    }
                     if (showIfMode == 0){
                       $(showIfDiv).show(speed);
                     }
@@ -10567,12 +10593,15 @@ def index(action_argument=None, refer=None):
               var showHideDivFast = function(){
                 showHideDiv.apply(this, ['fast']);
               }
-              $("#" + showIfVarEscaped).each(showHideDivImmediate);
+              daTriggerQueries.push("#" + showIfVarEscaped);
+              daTriggerQueries.push("input[type='radio'][name='" + showIfVarEscaped + "']");
+              daTriggerQueries.push("input[type='checkbox'][name='" + showIfVarEscaped + "']");
               $("#" + showIfVarEscaped).change(showHideDivFast);
-              $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
               $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
               $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+              $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
+              $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
+              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
             }
           }
         });
@@ -10649,6 +10678,9 @@ def index(action_argument=None, refer=None):
               //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
               if(daShowIfCompare(theVal, showIfVal)){
                 if (showIfSign){
+                  if ($(showIfDiv).data('isVisible') != '1'){
+                    daShowHideHappened = true;
+                  }
                   if (showIfMode == 0){
                     $(showIfDiv).show(speed);
                   }
@@ -10659,6 +10691,9 @@ def index(action_argument=None, refer=None):
                   });
                 }
                 else{
+                  if ($(showIfDiv).data('isVisible') != '0'){
+                    daShowHideHappened = true;
+                  }
                   if (showIfMode == 0){
                     $(showIfDiv).hide(speed);
                   }
@@ -10671,6 +10706,9 @@ def index(action_argument=None, refer=None):
               }
               else{
                 if (showIfSign){
+                  if ($(showIfDiv).data('isVisible') != '0'){
+                    daShowHideHappened = true;
+                  }
                   if (showIfMode == 0){
                     $(showIfDiv).hide(speed);
                   }
@@ -10681,6 +10719,9 @@ def index(action_argument=None, refer=None):
                   });
                 }
                 else{
+                  if ($(showIfDiv).data('isVisible') != '1'){
+                    daShowHideHappened = true;
+                  }
                   if (showIfMode == 0){
                     $(showIfDiv).show(speed);
                   }
@@ -10708,14 +10749,36 @@ def index(action_argument=None, refer=None):
             var showHideDivFast = function(){
               showHideDiv.apply(this, ['fast']);
             }
-            $("#" + showIfVarEscaped).each(showHideDivImmediate);
+            daTriggerQueries.push("#" + showIfVarEscaped);
+            daTriggerQueries.push("input[type='radio'][name='" + showIfVarEscaped + "']");
+            daTriggerQueries.push("input[type='checkbox'][name='" + showIfVarEscaped + "']");
             $("#" + showIfVarEscaped).change(showHideDivFast);
-            $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+            $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
             $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-            $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+            $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+            $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
           }
         });
+        function daTriggerAllShowHides(){
+          var daUniqueTriggerQueries = daTriggerQueries.filter(daOnlyUnique);
+          var daFirstTime = true;
+          var daTries = 0;
+          while ((daFirstTime || daShowHideHappened) && ++daTries < 100){
+            daShowHideHappened = false;
+            daFirstTime = false;
+            var n = daUniqueTriggerQueries.length;
+            for (var i = 0; i < n; ++i){
+              $(daUniqueTriggerQueries[i]).trigger('daManualTrigger');
+            }
+          }
+          if (daTries >= 100){
+            console.log("Too many contradictory 'show if' conditions");
+          }
+        }
+        if (daTriggerQueries.length > 0){
+          daTriggerAllShowHides();
+        }
         $("a.danavlink").last().addClass('thelast');
         $("a.danavlink").each(function(){
           if ($(this).hasClass('btn') && !$(this).hasClass('danotavailableyet')){
@@ -12226,11 +12289,13 @@ def observer():
       var daVarLookupRev = Object();
       var daVarLookupMulti = Object();
       var daVarLookupRevMulti = Object();
+      var daVarLookupSelect = Object();
       var daTargetDiv = "#dabody";
       var daLocationBar = """ + json.dumps(url_for('index', i=i)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
       var daYamlFilename = """ + json.dumps(i) + """;
       var daGlobalEval = eval;
+      var daShowHideHappened = false;
       function daShowSpinner(){
         if ($("#daquestion").length > 0){
           $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="dacol-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
@@ -12350,6 +12415,21 @@ def observer():
       }
       var daGetFields = getFields;
       function getField(fieldName, notInDiv){
+        if (daVarLookupSelect[fieldName]){
+          var n = daVarLookupSelect[fieldName].length;
+          for (var i = 0; i < n; ++i){
+            var elem = daVarLookupSelect[fieldName][i].select;
+            if (!$(elem).prop('disabled')){
+              var showifParents = $(elem).parents(".dajsshowif,.dashowif");
+              if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
+                if (notInDiv && $.contains(notInDiv, elem)){
+                  continue;
+                }
+                return elem;
+              }
+            }
+          }
+        }
         var fieldNameEscaped = dabtoa(fieldName);
         var possibleElements = [];
         daAppendIfExists(fieldNameEscaped, possibleElements);
@@ -12821,9 +12901,46 @@ def observer():
           e.preventDefault();
           $(this).tab('show');
         });
-        $("#dapagetitle").click(function(e) {
-          e.preventDefault();
-          $('#daquestionlabel').tab('show');
+        $('#dapagetitle').click(function(e) {
+          if ($(this).prop('href') == '#'){
+            e.preventDefault();
+            $('#daquestionlabel').tab('show');
+          }
+        });
+        $('select.damultiselect').each(function(){
+          var varname = atob($(this).data('varname'));
+          var theSelect = this;
+          $(this).find('option').each(function(){
+            var theVal = atob($(this).data('valname'));
+            var key = varname + '["' + theVal + '"]';
+            if (!daVarLookupSelect[key]){
+              daVarLookupSelect[key] = [];
+            }
+            daVarLookupSelect[key].push({'select': theSelect, 'option': this});
+            key = varname + "['" + theVal + "']"
+            if (!daVarLookupSelect[key]){
+              daVarLookupSelect[key] = [];
+            }
+            daVarLookupSelect[key].push({'select': theSelect, 'option': this});
+          });
+        })
+        $('.dacurrency').each(function(){
+          var theVal = $(this).val().toString();
+          if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
+            var num = parseFloat(theVal);
+            var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """);
+            $(this).val(cleanNum);
+          }
+        });
+        $('.dacurrency').on('blur', function(){
+          var theVal = $(this).val().toString();
+          if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
+            var num = parseFloat(theVal);
+            var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """);
+            if (cleanNum != 'NaN') {
+              $(this).val(cleanNum);
+            }
+          }
         });
         $("#dahelp").on("shown.bs.tab", function(){
           window.scrollTo(0, 1);
@@ -12839,10 +12956,15 @@ def observer():
           $('#daquestionlabel').tab('show');
         });
         daShowIfInProcess = true;
+        var daTriggerQueries = [];
+        function daOnlyUnique(value, index, self){
+          return self.indexOf(value) === index;
+        }
         $(".dajsshowif").each(function(){
           var showIfDiv = this;
           var jsInfo = JSON.parse(atob($(this).data('jsshowif')));
           var showIfSign = jsInfo['sign'];
+          var showIfMode = jsInfo['mode'];
           var jsExpression = jsInfo['expression'];
           var n = jsInfo['vars'].length;
           for (var i = 0; i < n; ++i){
@@ -12877,7 +12999,12 @@ def observer():
                 var resultt = eval(jsExpression);
                 if(resultt){
                   if (showIfSign){
-                    $(showIfDiv).show(speed);
+                    if ($(showIfDiv).data('isVisible') != '1'){
+                      daShowHideHappened = true;
+                    }
+                    if (showIfMode == 0){
+                      $(showIfDiv).show(speed);
+                    }
                     $(showIfDiv).data('isVisible', '1');
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
@@ -12885,7 +13012,12 @@ def observer():
                     });
                   }
                   else{
-                    $(showIfDiv).hide(speed);
+                    if ($(showIfDiv).data('isVisible') != '0'){
+                      daShowHideHappened = true;
+                    }
+                    if (showIfMode == 0){
+                      $(showIfDiv).hide(speed);
+                    }
                     $(showIfDiv).data('isVisible', '0');
                     $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                     $(showIfDiv).find('input.combobox').each(function(){
@@ -12895,7 +13027,12 @@ def observer():
                 }
                 else{
                   if (showIfSign){
-                    $(showIfDiv).hide(speed);
+                    if ($(showIfDiv).data('isVisible') != '0'){
+                      daShowHideHappened = true;
+                    }
+                    if (showIfMode == 0){
+                      $(showIfDiv).hide(speed);
+                    }
                     $(showIfDiv).data('isVisible', '0');
                     $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                     $(showIfDiv).find('input.combobox').each(function(){
@@ -12903,7 +13040,12 @@ def observer():
                     });
                   }
                   else{
-                    $(showIfDiv).show(speed);
+                    if ($(showIfDiv).data('isVisible') != '1'){
+                      daShowHideHappened = true;
+                    }
+                    if (showIfMode == 0){
+                      $(showIfDiv).show(speed);
+                    }
                     $(showIfDiv).data('isVisible', '1');
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
@@ -12928,18 +13070,22 @@ def observer():
               var showHideDivFast = function(){
                 showHideDiv.apply(this, ['fast']);
               }
-              $("#" + showIfVarEscaped).each(showHideDivImmediate);
+              daTriggerQueries.push("#" + showIfVarEscaped);
+              daTriggerQueries.push("input[type='radio'][name='" + showIfVarEscaped + "']");
+              daTriggerQueries.push("input[type='checkbox'][name='" + showIfVarEscaped + "']");
               $("#" + showIfVarEscaped).change(showHideDivFast);
-              $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
               $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
               $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+              $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
+              $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
+              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
             }
           }
         });
         $(".dashowif").each(function(){
           var showIfVars = [];
           var showIfSign = $(this).data('showif-sign');
+          var showIfMode = parseInt($(this).data('showif-mode'));
           var initShowIfVar = $(this).data('showif-var');
           var varName = atob(initShowIfVar);
           var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
@@ -12966,7 +13112,7 @@ def observer():
             var showIfVar = showIfVars[i];
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var showHideDiv = function(speed){
-              var elem = daGetField(varName);
+              var elem = daGetField(varName, showIfDiv);
               if (elem != null && !$(elem).parents('.form-group').first().is($(this).parents('.form-group').first())){
                 return;
               }
@@ -13009,7 +13155,12 @@ def observer():
               //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
               if(daShowIfCompare(theVal, showIfVal)){
                 if (showIfSign){
-                  $(showIfDiv).show(speed);
+                  if ($(showIfDiv).data('isVisible') != '1'){
+                    daShowHideHappened = true;
+                  }
+                  if (showIfMode == 0){
+                    $(showIfDiv).show(speed);
+                  }
                   $(showIfDiv).data('isVisible', '1');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                   $(showIfDiv).find('input.combobox').each(function(){
@@ -13017,7 +13168,12 @@ def observer():
                   });
                 }
                 else{
-                  $(showIfDiv).hide(speed);
+                  if ($(showIfDiv).data('isVisible') != '0'){
+                    daShowHideHappened = true;
+                  }
+                  if (showIfMode == 0){
+                    $(showIfDiv).hide(speed);
+                  }
                   $(showIfDiv).data('isVisible', '0');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                   $(showIfDiv).find('input.combobox').each(function(){
@@ -13027,7 +13183,12 @@ def observer():
               }
               else{
                 if (showIfSign){
-                  $(showIfDiv).hide(speed);
+                  if ($(showIfDiv).data('isVisible') != '0'){
+                    daShowHideHappened = true;
+                  }
+                  if (showIfMode == 0){
+                    $(showIfDiv).hide(speed);
+                  }
                   $(showIfDiv).data('isVisible', '0');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                   $(showIfDiv).find('input.combobox').each(function(){
@@ -13035,7 +13196,12 @@ def observer():
                   });
                 }
                 else{
-                  $(showIfDiv).show(speed);
+                  if ($(showIfDiv).data('isVisible') != '1'){
+                    daShowHideHappened = true;
+                  }
+                  if (showIfMode == 0){
+                    $(showIfDiv).show(speed);
+                  }
                   $(showIfDiv).data('isVisible', '1');
                   $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                   $(showIfDiv).find('input.combobox').each(function(){
@@ -13060,14 +13226,53 @@ def observer():
             var showHideDivFast = function(){
               showHideDiv.apply(this, ['fast']);
             }
-            $("#" + showIfVarEscaped).each(showHideDivImmediate);
+            daTriggerQueries.push("#" + showIfVarEscaped);
+            daTriggerQueries.push("input[type='radio'][name='" + showIfVarEscaped + "']");
+            daTriggerQueries.push("input[type='checkbox'][name='" + showIfVarEscaped + "']");
             $("#" + showIfVarEscaped).change(showHideDivFast);
-            $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+            $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
             $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-            $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDivImmediate);
+            $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+            $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
           }
         });
+        function daTriggerAllShowHides(){
+          var daUniqueTriggerQueries = daTriggerQueries.filter(daOnlyUnique);
+          var daFirstTime = true;
+          var daTries = 0;
+          while ((daFirstTime || daShowHideHappened) && ++daTries < 100){
+            daShowHideHappened = false;
+            daFirstTime = false;
+            var n = daUniqueTriggerQueries.length;
+            for (var i = 0; i < n; ++i){
+              $(daUniqueTriggerQueries[i]).trigger('daManualTrigger');
+            }
+          }
+          if (daTries >= 100){
+            console.log("Too many contradictory 'show if' conditions");
+          }
+        }
+        if (daTriggerQueries.length > 0){
+          daTriggerAllShowHides();
+        }
+        $("a.danavlink").last().addClass('thelast');
+        $("a.danavlink").each(function(){
+          if ($(this).hasClass('btn') && !$(this).hasClass('danotavailableyet')){
+            var the_a = $(this);
+            var the_delay = 1000 + 250 * parseInt($(this).data('index'));
+            setTimeout(function(){
+              $(the_a).removeClass('""" + app.config['BUTTON_STYLE'] + """secondary');
+              if ($(the_a).hasClass('active')){
+                $(the_a).addClass('""" + app.config['BUTTON_STYLE'] + """success');
+              }
+              else{
+                $(the_a).addClass('""" + app.config['BUTTON_STYLE'] + """warning');
+              }
+            }, the_delay);
+          }
+        });
+        daShowIfInProcess = false;
         // daDisable = setTimeout(function(){
         //   $("#daform").find('button[type="submit"]').prop("disabled", true);
         //   //$("#daform").find(':input').prop("disabled", true);
@@ -14394,7 +14599,7 @@ def monitor():
 @roles_required(['admin', 'developer'])
 def update_package_wait():
     setup_translation()
-    next_url = request.args.get('next', url_for('update_package'))
+    next_url = user_manager.make_safe_url_function(request.args.get('next', url_for('update_package')))
     my_csrf = generate_csrf()
     script = """
     <script>
@@ -15589,7 +15794,7 @@ def restart_page():
         setTimeout(daRestart, 100);
       });
     </script>"""
-    next_url = request.args.get('next', url_for('interview_list', post_restart=1))
+    next_url = user_manager.make_safe_url_function(request.args.get('next', url_for('interview_list', post_restart=1)))
     extra_meta = """\n    <meta http-equiv="refresh" content="8;URL='""" + next_url + """'">"""
     response = make_response(render_template('pages/restart.html', version_warning=None, bodyclass='daadminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting')), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -15904,7 +16109,7 @@ def sync_with_google_drive():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
-    next = request.args.get('next', url_for('playground_page', project=current_project))
+    next = user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
     auto_next = request.args.get('auto_next', None)
     if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
@@ -15930,7 +16135,7 @@ def gd_sync_wait():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
-    next_url = request.args.get('next', url_for('playground_page', project=current_project))
+    next_url = user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
     auto_next_url = request.args.get('auto_next', None)
     my_csrf = generate_csrf()
     script = """
@@ -16318,7 +16523,7 @@ def sync_with_onedrive():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
-    next = request.args.get('next', url_for('playground_page', project=get_current_project()))
+    next = user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=get_current_project())))
     auto_next = request.args.get('auto_next', None)
     if app.config['USE_ONEDRIVE'] is False:
         flash(word("OneDrive is not configured"), "error")
@@ -16344,7 +16549,7 @@ def od_sync_wait():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
-    next_url = request.args.get('next', url_for('playground_page', project=current_project))
+    next_url = user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
     auto_next_url = request.args.get('auto_next', None)
     my_csrf = generate_csrf()
     script = """
@@ -21664,7 +21869,7 @@ def interview_list():
     #    else:
     #        return redirect(url_for('index', i=session['i']))
     if request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer)):
-        next_page = request.args.get('next', page_after_login())
+        next_page = user_manager.make_safe_url_function(request.args.get('next', page_after_login()))
         if next_page is None:
             logmessage("Invalid page " + str(next_page))
             next_page = 'interview_list'
@@ -27625,7 +27830,7 @@ with app.app_context():
             release_lock('init', 'init')
         try:
             macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
-            if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7774:
+            if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7786:
                 sys.stderr.write("Removing " + macro_path + " because it is out of date\n")
                 os.remove(macro_path)
             # else:

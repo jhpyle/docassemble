@@ -561,7 +561,7 @@ def markdown_to_docx(text, question, tpl):
 
 def safe_pypdf_reader(filename):
     try:
-        return PyPDF2.PdfFileReader(open(filename, 'rb'))
+        return PyPDF2.PdfFileReader(open(filename, 'rb'), overwriteWarnings=False)
     except PyPDF2.utils.PdfReadError:
         new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
         qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
@@ -571,7 +571,7 @@ def safe_pypdf_reader(filename):
             result = 1
         if result != 0:
             raise Exception("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
-        return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'))
+        return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'), overwriteWarnings=False)
 
 def pdf_pages(file_info, width):
     output = ''

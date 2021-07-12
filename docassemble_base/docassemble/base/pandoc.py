@@ -372,14 +372,17 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                 subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',False,' + method + ')']
         if use_libreoffice:
             initialize_libreoffice()
+            start_time = time.time()
             #logmessage("Trying libreoffice with " + repr(subprocess_arguments))
             docassemble.base.functions.server.applock('obtain', 'libreoffice')
+            logmessage("Obtained libreoffice lock after {:.4f} seconds.".format(time.time() - start_time))
             try:
                 result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120).returncode
             except subprocess.TimeoutExpired:
                 logmessage("word_to_pdf: libreoffice took too long")
                 result = 1
                 tries = 5
+            logmessage("Finished libreoffice after {:.4f} seconds.".format(time.time() - start_time))
             docassemble.base.functions.server.applock('release', 'libreoffice')
         if os.path.isfile(to_file):
             break

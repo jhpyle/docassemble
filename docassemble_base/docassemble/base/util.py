@@ -51,6 +51,7 @@ import requests
 from requests.auth import HTTPDigestAuth, HTTPBasicAuth
 from requests.exceptions import RequestException
 import i18naddress
+import docassemble.base.geocode
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
@@ -1470,32 +1471,44 @@ class Address(DAObject):
         else:
             the_address = address
         #logmessage("geocode: trying to geocode " + str(the_address))
-        from geopy.geocoders import GoogleV3
-        if 'google' in server.daconfig and 'api key' in server.daconfig['google'] and server.daconfig['google']['api key']:
-            my_geocoder = GoogleV3(api_key=server.daconfig['google']['api key'])
+        geocoder_service = server.daconfig.get('geocoder service', 'google maps')
+        if geocoder_service == 'google maps':
+            geocoder = docassemble.base.geocode.GoogleV3GeoCoder(server=server)
+        elif geocoder_service == 'azure maps':
+            geocoder = docassemble.base.geocode.AzureMapsGeoCoder(server=server)
         else:
-            my_geocoder = GoogleV3()
+            self._geocoded = True
+            self.geolocated = True
+            self._geocode_success = False
+            self.geolocate_success = False
+            return False
+        if not geocoder.config_ok():
+            self._geocoded = True
+            self.geolocated = True
+            self._geocode_success = False
+            self.geolocate_success = False
+            return False
+        geocoder.initialize()
         try_number = 0
         success = False
-        results = None
         while not success and try_number < 2:
             try:
-                results = my_geocoder.geocode(the_address)
-                success = True
+                success = geocoder.geocode(the_address, language=get_language())
+                assert success
             except Exception as the_err:
-                logmessage(str(the_err))
+                logmessage(the_err.__class__.__name__ + ": " + str(the_err))
                 try_number += 1
                 time.sleep(try_number)
         self._geocoded = True
         self.geolocated = True
-        if results:
+        if success:
             self._geocode_success = True
             self.geolocate_success = True
             self.location.gathered = True
             self.location.known = True
-            self.location.latitude = results.latitude
-            self.location.longitude = results.longitude
-            self._geocode_response = results.raw
+            self.location.latitude = geocoder.data.latitude
+            self.location.longitude = geocoder.data.longitude
+            self._geocode_response = geocoder.data.raw
             self.geolocate_response = self._geocode_response
             if hasattr(self, 'norm'):
                 delattr(self, 'norm')
@@ -1503,131 +1516,34 @@ class Address(DAObject):
                 delattr(self, 'norm_long')
             self.initializeAttribute('norm', self.__class__)
             self.initializeAttribute('norm_long', self.__class__)
-            if 'formatted_address' in results.raw:
-                self.one_line = results.raw['formatted_address']
-                self.norm.one_line = results.raw['formatted_address']
-                self.norm_long.one_line = results.raw['formatted_address']
-            if 'address_components' in results.raw:
-                geo_types = {
-                    'administrative_area_level_1': ('state', 'short_name'),
-                    'administrative_area_level_2': ('county', 'long_name'),
-                    'administrative_area_level_3': ('administrative_area_level_3', 'long_name'),
-                    'administrative_area_level_4': ('administrative_area_level_4', 'long_name'),
-                    'administrative_area_level_5': ('administrative_area_level_5', 'long_name'),
-                    'colloquial_area': ('colloquial_area', 'long_name'),
-                    'country': ('country', 'short_name'),
-                    'floor': ('floor', 'long_name'),
-                    'intersection': ('intersection', 'long_name'),
-                    'locality': ('city', 'long_name'),
-                    'neighborhood': ('neighborhood', 'long_name'),
-                    'post_box': ('post_box', 'long_name'),
-                    'postal_code': ('postal_code', 'long_name'),
-                    'postal_code_prefix': ('postal_code_prefix', 'long_name'),
-                    'postal_code_suffix': ('postal_code_suffix', 'long_name'),
-                    'postal_town': ('postal_town', 'long_name'),
-                    'premise': ('premise', 'long_name'),
-                    'room': ('room', 'long_name'),
-                    'route': ('street', 'short_name'),
-                    'street_number': ('street_number', 'short_name'),
-                    'sublocality': ('sublocality', 'long_name'),
-                    'sublocality_level_1': ('sublocality_level_1', 'long_name'),
-                    'sublocality_level_2': ('sublocality_level_2', 'long_name'),
-                    'sublocality_level_3': ('sublocality_level_3', 'long_name'),
-                    'sublocality_level_4': ('sublocality_level_4', 'long_name'),
-                    'sublocality_level_5': ('sublocality_level_5', 'long_name'),
-#                    'subpremise': ('unit', 'long_name'),
-                }
-                for component in results.raw['address_components']:
-                    if 'types' in component and 'long_name' in component:
-                        for geo_type, addr_type in geo_types.items():
-                            if geo_type in component['types'] and ((not hasattr(self, addr_type[0])) or getattr(self, addr_type[0]) == '' or getattr(self, addr_type[0]) is None):
-                                setattr(self, addr_type[0], component[addr_type[1]])
-                        if (not hasattr(self, geo_type)) or getattr(self, geo_type) == '' or getattr(self, geo_type) is None:
-                            setattr(self, geo_type, component['long_name'])
-                geo_types = {
-                    'administrative_area_level_1': 'state',
-                    'administrative_area_level_2': 'county',
-                    'administrative_area_level_3': 'administrative_area_level_3',
-                    'administrative_area_level_4': 'administrative_area_level_4',
-                    'administrative_area_level_5': 'administrative_area_level_5',
-                    'colloquial_area': 'colloquial_area',
-                    'country': 'country',
-                    'floor': 'floor',
-                    'intersection': 'intersection',
-                    'locality': 'city',
-                    'neighborhood': 'neighborhood',
-                    'post_box': 'post_box',
-                    'postal_code': 'postal_code',
-                    'postal_code_prefix': 'postal_code_prefix',
-                    'postal_code_suffix': 'postal_code_suffix',
-                    'postal_town': 'postal_town',
-                    'premise': 'premise',
-                    'room': 'room',
-                    'route': 'street',
-                    'street_number': 'street_number',
-                    'sublocality': 'sublocality',
-                    'sublocality_level_1': 'sublocality_level_1',
-                    'sublocality_level_2': 'sublocality_level_2',
-                    'sublocality_level_3': 'sublocality_level_3',
-                    'sublocality_level_4': 'sublocality_level_4',
-                    'sublocality_level_5': 'sublocality_level_5',
-#                    'subpremise': 'unit'
-                }
-                for component in results.raw['address_components']:
-                    if 'types' in component:
-                        for geo_type, addr_type in geo_types.items():
-                            if geo_type in component['types']:
-                                if 'short_name' in component:
-                                    setattr(self.norm, addr_type, component['short_name'])
-                                    if addr_type != geo_type:
-                                        setattr(self.norm, geo_type, component['short_name'])
-                                if 'long_name' in component:
-                                    setattr(self.norm_long, addr_type, component['long_name'])
-                                    if addr_type != geo_type:
-                                        setattr(self.norm_long, geo_type, component['long_name'])
-                if hasattr(self.norm, 'unit'):
-                    self.norm.unit = '#' + str(self.norm.unit)
-                if hasattr(self.norm_long, 'unit'):
-                    self.norm_long.unit = '#' + str(self.norm_long.unit)
-                if hasattr(self.norm, 'street_number') and hasattr(self.norm, 'street'):
-                    self.norm.address = self.norm.street_number + " " + self.norm.street
-                if hasattr(self.norm_long, 'street_number') and hasattr(self.norm_long, 'street'):
-                    self.norm_long.address = self.norm_long.street_number + " " + self.norm_long.street
-                if (not hasattr(self.norm, 'city')) and hasattr(self.norm, 'administrative_area_level_3'):
-                    self.norm.city = self.norm.administrative_area_level_3
-                if (not hasattr(self.norm_long, 'city')) and hasattr(self.norm_long, 'administrative_area_level_3'):
-                    self.norm_long.city = self.norm_long.administrative_area_level_3
-                if (not hasattr(self.norm, 'city')) and hasattr(self.norm, 'neighborhood'):
-                    self.norm.city = self.norm.neighborhood
-                if (not hasattr(self.norm_long, 'city')) and hasattr(self.norm_long, 'neighborhood'):
-                    self.norm_long.city = self.norm_long.neighborhood
+            geocoder.populate_address(self)
             self.norm._geocoded = True
             self.norm.geolocated = True
             self.norm.location.gathered = True
             self.norm.location.known = True
-            self.norm.location.latitude = results.latitude
-            self.norm.location.longitude = results.longitude
+            self.norm.location.latitude = geocoder.data.latitude
+            self.norm.location.longitude = geocoder.data.longitude
             try:
                 self.norm.location.description = self.norm.block()
-            except:
-                logmessage("Normalized address was incomplete")
+            except Exception as err:
+                logmessage("Normalized address was incomplete: " + str(err))
                 self._geocode_success = False
                 self.geolocate_success = False
-            self.norm._geocode_response = results.raw
+            self.norm._geocode_response = geocoder.data.raw
             self.norm.geolocate_response = self.norm._geocode_response
             self.norm_long._geocoded = True
             self.norm_long.geolocated = True
             self.norm_long.location.gathered = True
             self.norm_long.location.known = True
-            self.norm_long.location.latitude = results.latitude
-            self.norm_long.location.longitude = results.longitude
+            self.norm_long.location.latitude = geocoder.data.latitude
+            self.norm_long.location.longitude = geocoder.data.longitude
             try:
                 self.norm_long.location.description = self.norm_long.block()
             except:
                 logmessage("Normalized address was incomplete")
                 self._geocode_success = False
                 self.geolocate_success = False
-            self.norm_long._geocode_response = results.raw
+            self.norm_long._geocode_response = geocoder.data.raw
             self.norm_long.geolocate_response = self.norm_long._geocode_response
             if address is not None:
                 self.normalize()
