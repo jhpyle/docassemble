@@ -28,6 +28,6 @@ field.
 
 [make a financial contribution]: https://www.merlinfoundation.org/donate
 [Merlin Legal Open Source Foundation]: https://www.merlinfoundation.org
-[add-on package]: {{ site.baseurl }}/packages.html
+[add-on package]: {{ site.baseurl }}/docs/packages.html
 [Docacon]: https://docacon.com
 [Slack]: {{ site.slackurl }}
