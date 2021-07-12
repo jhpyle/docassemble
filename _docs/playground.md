@@ -282,8 +282,9 @@ At the bottom of the page, you can press one of the following buttons:
   the [PyPI configuration].
 * **GitHub**: Publishes the package on [GitHub] so that you can manage
   versions of your package, and also so that other people can install
-  it and .  This will not be displayed unless you have set up the
-  [GitHub configuration].
+  it.  This will not be displayed unless you have set up the [GitHub
+  configuration].  For more information about how the GitHub button
+  works, see [Publishing on GitHub].
 * **Delete**: Deletes the package definition.  If you installed the
   package on the system, it does not uninstall the package.
 
@@ -885,3 +886,4 @@ Then the editing screen will load.
 [Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
 [`office addin url`]: {{ site.baseurl }}/docs/config.html#office addin url
 [uWSGI]: https://uwsgi-docs.readthedocs.io/en/latest/
+[Publishing on GitHub]: {{ site.baseurl }}/docs/packages.html#github

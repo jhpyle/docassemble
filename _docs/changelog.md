@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.89](https://github.com/jhpyle/docassemble/releases/tag/v1.2.89) - 2021-07-11
+
+### Added
+- The `azure maps` and `geocoder service` Configuration directives.
+
+### Changed
+- Removed wait times and explicit application exit in LibreOffice PDF
+  conversion macro.
+
+### Fixed
+- PyPDF2 raised exception when another package tried to issue a
+  warning.
+- Nested `show if` conditions did not always show the correct showing
+  and hiding when the screen first loaded.
+- Security issue with `next` parameters in URLs.
+
 ## [1.2.88](https://github.com/jhpyle/docassemble/releases/tag/v1.2.88) - 2021-07-04
 
 ### Changed

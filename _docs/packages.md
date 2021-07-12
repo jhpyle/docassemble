@@ -517,9 +517,73 @@ a commit (containing a `LICENSE` file only) and then the addition of
 the files of your package caused a second commit.
 
 Once your package is on [GitHub], then on the **docassemble** menu,
-you can go to Package Management and [install the package](#github_install) using its [GitHub] URL.
+you can go to Package Management and
+[install the package](#github_install) using its [GitHub] URL.
 
 ![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
+
+## <a name="github_how_works"></a>How GitHub integration works
+
+When you commit changes to [GitHub], **docassemble** will first decide
+whether to create a new repository or commit the changes to an
+existing repository.  It will use the [GitHub] API to look for a
+repository that has the same name as your package.  That is, if your
+package is named `familylaw`, and your GitHub username is `jsmith`, it
+will look for the repository
+`https://github.com/jsmith/docassemble-familylaw`.  If that repository
+does not exist, **docassemble** will look through the repositories to
+which you are permitted to commit
+(`https://api.github.com/user/repos`).  If no repository called
+`docassemble-familylaw` is found, it will search through [GitHub]
+"organizations" of which you are a member
+(`https://api.github.com/user/orgs`).  For example, if you are a
+member of an organization called `abcinc`, it will look for a
+repository called `https://github.com/abcinc/docassemble-familylaw`.
+
+When [GitHub] integration is enabled, then at the bottom of the
+Packages screen, you will see a box that says "This package is not yet
+published on your GitHub account" or "This package is published on
+GitHub."  If it says "This package is not yet published on your GitHub
+account," this means that **docassemble** was not able to find a
+package called `docassemble-familylaw` among your repositories or
+repositories to which you have access.  Thus, when you press the
+Commit button, a new repository
+`https://github.com/jsmith/docassemble-familylaw` will be created.
+
+If you expect to be able to push changes to a repository in another
+account, but **docassemble** is reporting "This package is published
+on GitHub," make sure that you actually have access to that
+repository.  One known issue is that if a repository belongs to an
+organization, and the administrator of that organization adds you as a
+collaborator on that repository, [GitHub] will not list that
+repository in its response to `https://api.github.com/user/orgs`.
+Thus, if you want to be able to make commits to a repository owned by
+an organization, ask the administrator of the organization to make you
+a member of the organization.
+
+When you press the "Commit" button, the Git actions that are performed
+are as follows:
+
+* `git clone` is used to copy the files from GitHub to the server.
+* If a commit or pull had previously been performed using the
+  Playground, `git checkout` is used to switch to the commit that was
+  current as of the time the commit or pull took place.
+* The Playground files that are selected to be part of the package are
+  copied on top of the cloned files.
+* A new branch is created and committed.
+* The new branch is merged into the master branch of the repository
+  and pushed.
+
+This means that the changes you have made in the Playground will not
+overwrite changes that have been made to the remote repository since
+the last time you did a "pull" or "commit" in the Playground.
+
+This means that if you delete a file in your Playground, and that file
+is already part of a [GitHub] repository, then the next time you do a
+"pull" or "commit," that file will be recreated in your Playground.
+There is no feature in docassemble that implements `git rm`.  Thus, if
+you want to delete such a file, delete it both on GitHub and in the
+Playground.
 
 # <a name="bestpractices"></a>Best practices for packaging your interviews
 

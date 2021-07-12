@@ -2757,6 +2757,55 @@ object storage [S3], the URLs to files will point directly to files
 stored in the cloud, so there would be no reason for a **docassemble**
 file server.
 
+## <a name="geocoder service"></a>Geocoding
+
+The [`.geocode()`] and [`.normalize`] methods of [`Address`] depend on
+an API for geocoding.  By default, the [Google Maps Geocoding API] is
+used.  You can use the [Azure Maps API] instead by setting `geocoder
+service` to `azure maps`:
+
+{% highlight yaml %}
+geocoder service: azure maps
+{% endhighlight %}
+
+The `azure maps` setting requires you to set the `primary key`
+directive under the `azure maps` directive.  See the [Azure Maps API
+key section](#azure_maps) for more information.
+
+The default value is `google maps`:
+
+{% highlight yaml %}
+geocoder service: google maps
+{% endhighlight %}
+
+The `google maps` setting requires you to set the `api key` directive
+under the `google` directive.  See the
+[Google API key section](#google) for more information.
+
+To disable geocoding, set `geocoder service` to `null`.
+
+{% highlight yaml %}
+geocoder service: null
+{% endhighlight %}
+
+Geocoding is performed by the [GeoPy] package, which supports a number
+of other geocoders besides Google Maps and Azure Maps.  The
+`docassemble.base.geocode` module can be extended to include support
+other geocoders.  Make a request on the [Slack] if you need support
+for a different geocoding service.
+
+## <a name="azure_maps"></a>Azure Maps API key
+
+If you set [`geocoder service`] to `azure maps`, you need to enable
+the [Azure Maps API] on your [Azure] account and obtain a [primary
+key].  Then plug this [primary key] into your Configuration as
+follows:
+
+{% highlight yaml %}
+azure maps:
+  primary key: AS9W5FS2HS5EFAEFafASFARefa
+{% endhighlight %}
+
 ## <a name="google"></a>Google API key
 
 If you have a Google API key, you can include it as follows:
@@ -4819,7 +4868,9 @@ and Facebook API keys.
 [`dispatch`]: #dispatch
 [list of available interviews]: #dispatch
 [Google Cloud Translation API]: https://cloud.google.com/translate/
+[`Address`]: {{ site.baseurl }}/docs/objects.html#Address
 [`.geocode()`]: {{ site.baseurl }}/docs/objects.html#Address.geocode
+[`.normalize()`]: {{ site.baseurl }}/docs/objects.html#Address.normalize
 [`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
 [favicon]: https://en.wikipedia.org/wiki/Favicon
 [ICO]: https://en.wikipedia.org/wiki/ICO_(file_format)
@@ -5029,3 +5080,8 @@ and Facebook API keys.
 [Azure PowerShell]: https://docs.microsoft.com/en-us/powershell/azure/
 [Azure CLI]: https://docs.microsoft.com/en-us/cli/azure/
 [Microsoft Azure]: https://azure.microsoft.com
+[Azure Maps API]: https://docs.microsoft.com/en-us/azure/azure-maps/
+[GeoPy]: https://geopy.readthedocs.io/en/latest/#geocoders
+[Slack]: {{ site.slackurl }}
+[`geocoder service`]: #geocoder service
+[primary key]: https://docs.microsoft.com/en-us/azure/azure-maps/how-to-manage-authentication#view-authentication-details

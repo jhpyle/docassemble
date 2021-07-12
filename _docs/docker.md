@@ -1311,14 +1311,27 @@ a container, followed by `docker rm`, and then re-run your original
 the same place it was before, with the same uploaded files, the same
 SQL database.
 
-During `docker stop -t 600`, files are saved in the [data storage]
-area.  During `docker run` (and `docker start` as well), files are
-restored from the [data storage] area.
+During the `docker stop` process, application data are saved into
+files and directories in the [data storage] area.  During `docker run`
+(and `docker start` as well), application data are restored from the
+[data storage] area before the server attempts to start.  Included in
+the application data is a the list of Python packages installed on
+your system; when the server starts, `pip` will be used to install the
+same list of packages.
+
+This backup-on-shutdown/restore-on-startup feature is very powerful
+because it means you can shut down, delete your Docker container, pull
+a new Docker image, and then re-run `docker run`, and all of your
+application data and Python packages will be restored.  Between the
+old Docker image and the new Docker image, the versions of the
+operating system, PostgreSQL, and Python might have changed, but the
+restore process will adjust for this.
 
 However, if your server has an unsafe shutdown, the files in the [data
 storage] area might be corrupted.  They might also be missing or very
-old (perhaps dating from the last time there was a safe shutdown).
-If this happens, not all is lost, because you can restore from a backup.
+old (dating from the last time there was a safe shutdown).  If this
+happens, not all is lost, because you can restore from one of the
+daily backup snapshots.
 
 If you are using [S3](#persistent s3) or [Azure blob
 storage](#persistent azure), the files and directories that are saved
@@ -1343,10 +1356,13 @@ during the shutdown process are:
 The `files` folder, the `config.yml` file, and the
 `letsencrypt.tar.gz` (if Let's Encrypt is used) are important for
 restoring the system on startup, but they are always up-to-date; they
-are not copied from the server during the shutdown process.
+are not copied from the server during the shutdown process.  So even
+if you have an unsafe shutdown, you will have up-to-date versions of
+`files`, `config.yml`, and `letsencrypt.tar.gz`.
 
-If you are using [persistent volumes], the files and directories that
-are saved during the shutdown process are:
+If you are not using [S3](#persistent s3) or [Azure blob
+storage](#persistent azure), then during a safe shutdown process,
+application data is saved into the following files and folders:
 
 * `/usr/share/docassemble/backup/postgres` - a folder containing a
   "dump" of each database hosted by the [PostgreSQL] server.  Usually
@@ -1362,7 +1378,9 @@ are saved during the shutdown process are:
   exist, but it will be an empty database.
 * `/usr/share/docassemble/backup/files` - a directory containing all
   of the stored files in your system (document uploads, assembled
-  documents, ZIP files for installed packages, etc.).
+  documents, ZIP files for installed packages, etc.).  If [`backup file
+  storage`] in the [Configuration] is set to `false`, then this will
+  not exist.
 * `/usr/share/docassemble/backup/log` - a folder containing
   **docassemble** log files.
 * `/usr/share/docassemble/backup/nginxlogs` - a folder containing the
@@ -1372,10 +1390,10 @@ are saved during the shutdown process are:
 * `/usr/share/docassemble/backup/config/config.yml` - a file
   containing the Configuration of your system.
 
-The file `/usr/share/docassemble/backup/letsencrypt.tar` is important
-for restoring the system (if Let's Encrypt is used), but it is always
-up-to-date; it is not copied from the server during the shutdown
-process.
+The file `/usr/share/docassemble/backup/letsencrypt.tar.gz` is
+important for restoring the system (if Let's Encrypt is used), but it
+is always up-to-date; it is not copied from the server during the
+shutdown process.
 
 Whenever a **docassemble** container starts up, the [PostgreSQL]
 database in `postgres/docassemble` is used to restore
@@ -1406,7 +1424,7 @@ copy files from the daily backup location to the places where they
 will be used when the system starts up again.  In particular, you will
 copy the following out of the daily backup folder:
 
-* `config/config.yml to `config.yml` in the root of the cloud storage.
+* `config/config.yml` to `config.yml` in the root of the cloud storage.
 * `files` to `files` in the root of the cloud storage.
 * `postgres` to `postgres` in the root of the cloud storage.
 * `redis.rdb` to `redis.rdb` in the root of the cloud storage.
@@ -1415,21 +1433,22 @@ copy the following out of the daily backup folder:
 Copying `log` is optional.  The contents of log files are not critical
 to the functionality of the systems.
 
-If you are using persistent volumes, the disaster recovery backup
-files are in folders named `/usr/share/docassemble/backup/MM-DD` where
-`MM` is the month and `DD` is the day the backup was made.  If you
-want to restore your system to a snapshot of where it was when a daily
-backup was made, you will first need to shut down your server with
-`docker stop -t 600` if it is still running.  Then you will need to
-copy files from the daily backup location to the places where they
-will be used when the system starts up again.  In particular, you will
-copy the following out of the daily backup folder:
+If you are not using [S3](#persistent s3) or [Azure blob
+storage](#persistent azure), the disaster recovery backup files are in
+folders named `/usr/share/docassemble/backup/MM-DD` where `MM` is the
+month and `DD` is the day the backup was made.  If you want to restore
+your system to a snapshot of where it was when a daily backup was
+made, you will first need to shut down your server with `docker stop
+-t 600` if it is still running.  Then you will need to copy files from
+the daily backup location to the places where they will be used when
+the system starts up again.  In particular, you will copy the
+following out of the daily backup folder:
 
-* `config/config.yml` to `/usr/share/docassemble/backup/config.yml`
-* `files` to `/usr/share/docassemble/backup/files`
-* `postgres` `/usr/share/docassemble/backup/postgres`
-* `redis.rdb` to `/usr/share/docassemble/backup/redis.rdb`
-* `log` to `/usr/share/docassemble/backup/log`
+* the `config/config.yml` file to `/usr/share/docassemble/backup/config.yml`
+* the `files` folder to `/usr/share/docassemble/backup/files`
+* the `postgres` folder to `/usr/share/docassemble/backup/postgres`
+* the `redis.rdb` file to `/usr/share/docassemble/backup/redis.rdb`
+* the `log` folder to `/usr/share/docassemble/backup/log`
 
 Copying `log` is optional.  The contents of log files are not critical
 to the functionality of the systems.
@@ -2351,3 +2370,4 @@ line), as the containers depend on the images.
 [`http port`]: {{ site.baseurl }}/docs/config.html#http port
 [`celery processes`]: {{ site.baseurl }}/docs/config.html#celery processes
 [bash]: https://en.wikipedia.org/wiki/Bash_(Unix_shell)
+[`backup file storage`]: {{ site.baseurl }}/docs/config.html#backup file storage
