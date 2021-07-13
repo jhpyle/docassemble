@@ -108,6 +108,12 @@ Setting `debug` to `True` enables the following features:
 
 This can be overridden using the [`debug` feature].
 
+Note that even if `debug` is `False`, the "Source" button will still
+be present when running interviews in the [Playground].  This is
+because the [Playground] is a development tool, not a means of
+deploying interviews in production.  For more information on how to
+install your interviews as packages, see the [Packages] section.
+
 ## <a name="collect statistics"></a>Allow statistics collection
 
 If you set `collect statistics` to `True`, then **docassemble** will

@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.90](https://github.com/jhpyle/docassemble/releases/tag/v1.2.90) - 2021-07-12
+
+### Fixed
+- Security improvements.
+
 ## [1.2.89](https://github.com/jhpyle/docassemble/releases/tag/v1.2.89) - 2021-07-11
 
 ### Added
