@@ -1595,11 +1595,12 @@ field instead of showing it.
 
 ## <a name="enable if"></a><a name="disable if"></a>`enable if` and `disable if`
 
-The `enable if` and `disable if` field modifiers work just like `show
-if` and `hide if`, except that instead of visibly hiding the fields
-and labels, it disables the input elements.
+The `enable if` and `disable if` field modifiers work almost the same as `show
+if` and `hide if`. There are two main differences. First, instead of visibly
+hiding the fields and labels, it disables the input elements.  Secondly, the
+use of `code` inside of `enable if` and `disable if` is not supported.
 
-The use of `code` inside of `enable if` and `disable if` is not supported.
+Just like a hidden field, a disabled field will leave its variable undefined.
 
 ## <a name="js show if"></a>`js show if`
 
