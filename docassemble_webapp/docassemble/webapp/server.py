@@ -12044,6 +12044,8 @@ def serve_uploaded_file_with_filename_and_extension_download(number, filename, e
     return do_serve_uploaded_file_with_filename_and_extension(number, filename, extension, download=True)
 
 def do_serve_uploaded_file_with_filename_and_extension(number, filename, extension, download=False):
+    filename = werkzeug.utils.secure_filename(filename)
+    extension = werkzeug.utils.secure_filename(extension)
     if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
         privileged = True
     else:
@@ -12094,6 +12096,7 @@ def serve_uploaded_file_with_extension_download(number, extension):
     return do_serve_uploaded_file_with_extension(number, extension, download=True)
 
 def do_serve_uploaded_file_with_extension(number, extension, download=False):
+    extension = werkzeug.utils.secure_filename(extension)
     if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
         privileged = True
     else:
@@ -12140,12 +12143,9 @@ def do_serve_uploaded_file(number, download=False):
         file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
     except:
         return ('File not found', 404)
-    #file_info = get_info_from_file_reference(number)
     if 'path' not in file_info:
         return ('File not found', 404)
     else:
-        #block_size = 4096
-        #status = '200 OK'
         if not os.path.isfile(file_info['path']):
             return ('File not found', 404)
         response = send_file(file_info['path'], mimetype=file_info['mimetype'])
@@ -15052,6 +15052,8 @@ def create_playground_package():
     current_project = get_current_project()
     form = CreatePlaygroundPackageForm(request.form)
     current_package = request.args.get('package', None)
+    if current_package is not None:
+        current_package = werkzeug.utils.secure_filename(current_package)
     do_pypi = request.args.get('pypi', False)
     do_github = request.args.get('github', False)
     do_install = request.args.get('install', False)
@@ -15067,6 +15069,7 @@ def create_playground_package():
     else:
         branch_is_new = False
     force_branch_creation = False
+    sanitize_arguments(do_pypi, do_github, do_install, branch, new_branch)
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
@@ -15338,9 +15341,9 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git remote add origin.  " + output)
-                    output += "Doing " + git_prefix + "git push -u origin " + commit_branch + "\n"
+                    output += "Doing " + git_prefix + "git push -u origin " + '"' + commit_branch + '"' + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git push -u origin " + commit_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(git_prefix + "git push -u origin " + '"' + commit_branch + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running first git push.  " + output)
@@ -15356,7 +15359,7 @@ def create_playground_package():
                 if pulled_already:
                     output += "Doing git checkout " + commit_code + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git checkout " + commit_code, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(git_prefix + "git checkout " + '"' + commit_code + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         #raise DAError("create_playground_package: error running git checkout.  " + output)
@@ -15417,14 +15420,14 @@ def create_playground_package():
                     raise DAError("create_playground_package: error running git commit.  " + output)
                 output += "Trying git checkout " + the_branch + "\n"
                 try:
-                    output += subprocess.check_output(git_prefix + "git checkout " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    output += subprocess.check_output(git_prefix + "git checkout " + '"' + the_branch + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     branch_exists = True
                 except subprocess.CalledProcessError as err:
                     branch_exists = False
                 if not branch_exists:
                     output += "Doing git checkout -b " + the_branch + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git checkout -b " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(git_prefix + "git checkout -b " + '"' + the_branch + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git checkout -b " + the_branch + ".  " + output)
@@ -15449,7 +15452,7 @@ def create_playground_package():
                         raise DAError("create_playground_package: error running git remote add origin.  " + output)
                     output += "Doing " + git_prefix + "git push -u origin " + the_branch + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git push -u origin " + the_branch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(git_prefix + "git push -u origin " + '"' + the_branch + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running first git push.  " + output)
@@ -15457,7 +15460,7 @@ def create_playground_package():
                     if branch:
                         output += "Doing " + git_prefix + "git push --set-upstream origin " + str(branch) + "\n"
                         try:
-                            output += subprocess.check_output(git_prefix + "git push --set-upstream origin " + str(branch), cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                            output += subprocess.check_output(git_prefix + "git push --set-upstream origin " + '"' + str(branch) + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                         except subprocess.CalledProcessError as err:
                             output += err.output.decode()
                             raise DAError("create_playground_package: error running git push.  " + output)
@@ -16551,6 +16554,8 @@ def od_sync_wait():
     current_project = get_current_project()
     next_url = user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
     auto_next_url = request.args.get('auto_next', None)
+    if auto_next_url is not None:
+        auto_next_url = user_manager.make_safe_url_function(auto_next_url)
     my_csrf = generate_csrf()
     script = """
     <script>
@@ -17349,13 +17354,13 @@ def playground_files():
         is_ajax = True
     else:
         is_ajax = False
-    section = request.args.get('section', 'template')
-    the_file = request.args.get('file', '')
+    section = werkzeug.utils.secure_filename(request.args.get('section', 'template'))
+    the_file = werkzeug.utils.secure_filename(request.args.get('file', ''))
     scroll = False
     if the_file != '':
         scroll = True
     if request.method == 'GET':
-        is_new = request.args.get('new', False)
+        is_new = true_or_false(request.args.get('new', False))
     else:
         is_new = False
     if is_new:
@@ -18062,7 +18067,7 @@ def playground_packages():
     current_project = get_current_project()
     form = PlaygroundPackagesForm(request.form)
     fileform = PlaygroundUploadForm(request.form)
-    the_file = request.args.get('file', '')
+    the_file = werkzeug.utils.secure_filename(request.args.get('file', ''))
     if the_file == '':
         no_file_specified = True
     else:
@@ -18110,7 +18115,7 @@ def playground_packages():
     # if the_file:
     #     scroll = True
     if request.method == 'GET':
-        is_new = request.args.get('new', False)
+        is_new = true_or_false(request.args.get('new', False))
     else:
         is_new = False
     if is_new:
@@ -18436,7 +18441,8 @@ def playground_packages():
         if branch in ('', 'None'):
             branch = None
         if branch:
-            branch_option = '-b ' + branch + ' '
+            branch = werkzeug.utils.secure_filename(branch)
+            branch_option = '-b "' + branch + '" '
         else:
             branch_option = ''
         need_to_restart = False
@@ -18451,7 +18457,7 @@ def playground_packages():
         github_url = None
         pypi_package = None
         if 'github_url' in request.args:
-            github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github_url'])
+            github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\#\[\]\@\$\+\,\=]', '', request.args['github_url'])
             if github_url.startswith('git@') and can_publish_to_github and github_user_name and github_email:
                 expected_name = re.sub(r'.*/', '', github_url)
                 expected_name = re.sub(r'\.git', '', expected_name)
@@ -18467,7 +18473,7 @@ def playground_packages():
                 git_prefix = "GIT_SSH=" + ssh_script.name + " "
                 output += "Doing " + git_prefix + "git clone " + branch_option + github_url + "\n"
                 try:
-                    output += subprocess.check_output(git_prefix + "git clone " + branch_option + github_url, cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
+                    output += subprocess.check_output(git_prefix + "git clone " + branch_option + '"' + github_url + '"', cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("playground_packages: error running git clone.  " + output)
@@ -18511,7 +18517,7 @@ def playground_packages():
                 area['playgroundpackages'].finalize()
                 return redirect(url_for('create_playground_package', **the_args))
         elif 'pypi' in request.args:
-            pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
+            pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\:\/\@\+\=]', '', request.args['pypi'])
             pypi_package = 'docassemble.' + re.sub(r'^docassemble\.', '', pypi_package)
             package_file = tempfile.NamedTemporaryFile(suffix='.tar.gz')
             try:
@@ -19351,7 +19357,9 @@ def variables_report():
     setup_translation()
     playground = SavedFile(current_user.id, fix=True, section='playground')
     the_file = request.args.get('file', None)
-    current_project = request.args.get('project', 'default')
+    if the_file is not None:
+        the_file = werkzeug.utils.secure_filename(the_file)
+    current_project = werkzeug.utils.secure_filename(request.args.get('project', 'default'))
     the_directory = directory_for(playground, current_project)
     files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     if len(files) == 0:
@@ -19476,7 +19484,7 @@ def playground_page_run():
         return ('File not found', 404)
     setup_translation()
     current_project = get_current_project()
-    the_file = request.args.get('file')
+    the_file = werkzeug.utils.secure_filename(request.args.get('file'))
     if the_file:
         active_interview_string = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file
         the_url = url_for('index', reset=1, i=active_interview_string)
@@ -19617,6 +19625,8 @@ def set_current_project(new_name):
 
 def get_current_project():
     current_project = request.args.get('project', None)
+    if current_project is not None:
+        current_project = werkzeug.utils.secure_filename(current_project)
     key = 'da:playground:project:' + str(current_user.id)
     if current_project is None:
         current_project = r.get(key)
@@ -19697,13 +19707,13 @@ def playground_page():
     fileform = PlaygroundUploadForm(request.form)
     form = PlaygroundForm(request.form)
     interview = None
-    the_file = request.args.get('file', get_current_file(current_project, 'questions'))
+    the_file = werkzeug.utils.secure_filename(request.args.get('file', get_current_file(current_project, 'questions')))
     valid_form = None
     if request.method == 'POST':
         valid_form = form.validate()
     if request.method == 'GET':
-        is_new = request.args.get('new', False)
-        debug_mode = request.args.get('debug', False)
+        is_new = true_or_false(request.args.get('new', False))
+        debug_mode = true_or_false(request.args.get('debug', False))
     else:
         debug_mode = False
         if not valid_form and form.status.data == 'new':
@@ -19746,7 +19756,7 @@ def playground_page():
         return redirect(url_for('playground_page', project=current_project))
     if request.method == 'POST' and (form.submit.data or form.run.data or form.delete.data):
         if form.validate() and form.playground_name.data:
-            the_file = form.playground_name.data
+            the_file = werkzeug.utils.secure_filename(form.playground_name.data)
             the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
             if the_file != '':
                 if not re.search(r'\.ya?ml$', the_file):
@@ -20587,7 +20597,7 @@ def logfile(filename):
 def logs():
     setup_translation()
     form = LogForm(request.form)
-    use_zip = request.args.get('zip', None)
+    use_zip = true_or_false(request.args.get('zip', None))
     if LOGSERVER is None and use_zip:
         timezone = get_default_timezone()
         zip_archive = tempfile.NamedTemporaryFile(mode="wb", prefix="datemp", suffix=".zip", delete=False)
@@ -20608,11 +20618,15 @@ def logs():
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
     the_file = request.args.get('file', None)
+    if the_file is not None:
+        the_file = werkzeug.utils.secure_filename(the_file)
     default_filter_string = request.args.get('q', '')
     if request.method == 'POST' and form.file_name.data:
         the_file = form.file_name.data
     if the_file is not None and (the_file.startswith('.') or the_file.startswith('/') or the_file == ''):
         the_file = None
+    if the_file is not None:
+        the_file = werkzeug.utils.secure_filename(the_file)
     total_bytes = 0;
     if LOGSERVER is None:
         call_sync()
@@ -21136,7 +21150,11 @@ def ml_prefix(the_package, the_file):
 def train():
     setup_translation()
     the_package = request.args.get('package', None)
+    if the_package is not None:
+        the_package = werkzeug.utils.secure_filename(the_package)
     the_file = request.args.get('file', None)
+    if the_file is not None:
+        the_file = werkzeug.utils.secure_filename(the_file)
     the_group_id = request.args.get('group_id', None)
     show_all = int(request.args.get('show_all', 0))
     form = TrainingForm(request.form)
@@ -21822,6 +21840,8 @@ def interview_list():
         session['language'] = request.form['lang']
         docassemble.base.functions.set_language(session['language'])
     tag = request.args.get('tag', None)
+    if tag is not None:
+        tag = werkzeug.utils.secure_filename(tag)
     if 'newsecret' in session:
         #logmessage("interview_list: fixing cookie")
         the_args = dict()
@@ -23053,7 +23073,7 @@ def jsonify_with_status(data, code):
     return resp
 
 def true_or_false(text):
-    if text is False or text == 0 or str(text).lower().strip() in ('0', 'false', 'f'):
+    if text in (False, None) or text == 0 or str(text).lower().strip() in ('0', 'false', 'f'):
         return False
     return True
 
@@ -24509,15 +24529,17 @@ def api_file(file_number):
             return ('File not found', 404)
         else:
             if 'extension' in request.args:
-                if os.path.isfile(file_info['path'] + '.' + request.args['extension']):
-                    the_path = file_info['path'] + '.' + request.args['extension']
-                    extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + request.args['extension'])
+                extension = werkzeug.utils.secure_filename(request.args['extension'])
+                if os.path.isfile(file_info['path'] + '.' + extension):
+                    the_path = file_info['path'] + '.' + extension
+                    extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
                 else:
                     return ('File not found', 404)
             elif 'filename' in request.args:
-                if os.path.isfile(os.path.join(os.path.dirname(file_info['path']), request.args['filename'])):
-                    the_path = os.path.join(os.path.dirname(file_info['path']), request.args['filename'])
-                    extension, mimetype = get_ext_and_mimetype(request.args['filename'])
+                the_filename = werkzeug.utils.secure_filename(request.args['filename'])
+                if os.path.isfile(os.path.join(os.path.dirname(file_info['path']), the_filename)):
+                    the_path = os.path.join(os.path.dirname(file_info['path']), the_filename)
+                    extension, mimetype = get_ext_and_mimetype(the_filename)
                 else:
                     return ('File not found', 404)
             else:
@@ -25833,13 +25855,14 @@ def api_playground():
     if request.method == 'GET':
         if 'filename' not in request.args:
             return jsonify(pg_section.file_list)
-        if not pg_section.file_exists(request.args['filename']):
+        the_filename = werkzeug.utils.secure_filename(request.args['filename'])
+        if not pg_section.file_exists(the_filename):
             return jsonify_with_status("File not found", 404)
-        response_to_send = send_file(pg_section.get_file(request.args['filename']), mimetype=pg_section.get_mimetype(request.args['filename']))
+        response_to_send = send_file(pg_section.get_file(the_filename), mimetype=pg_section.get_mimetype(the_filename))
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response_to_send
     elif request.method == 'DELETE':
-        pg_section.delete_file(request.args['filename'])
+        pg_section.delete_file(werkzeug.utils.secure_filename(request.args['filename']))
         if section == 'modules':
             restart_all()
         return ('', 204)
@@ -26818,11 +26841,13 @@ def whoami():
         return jsonify(logged_in=False)
 
 def retrieve_email(email_id):
+    if not isinstance(email_id, int):
+        raise DAError("email_id not provided")
     email = db.session.execute(select(Email).filter_by(id=email_id)).scalar()
     if email is None:
         raise DAError("E-mail did not exist")
     short_record = db.session.execute(select(Shortener).filter_by(short=email.short)).scalar()
-    if short_record.user_id is not None:
+    if short_record is not None and short_record.user_id is not None:
         user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=short_record.user_id, active=True)).scalar()
     else:
         user = None
@@ -27046,6 +27071,12 @@ def secure_filename(filename):
     extension, mimetype = get_ext_and_mimetype(filename)
     filename = re.sub(r'\.[^\.]+$', '', filename) + '.' + extension
     return filename
+
+def sanitize_arguments(*pargs):
+    for item in pargs:
+        if isinstance(item, str):
+            if item.startswith('/') or item.startswith('.') or re.search(r'\s', item):
+                raise Exception("Invalid parameter " + item)
 
 def get_short_code(**pargs):
     key = pargs.get('key', None)
@@ -27568,19 +27599,25 @@ sys_logger.setLevel(logging.DEBUG)
 LOGFORMAT = daconfig.get('log format', 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s')
 
 #if LOGSERVER is None:
-if True:
-    docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
-    sys_logger.addHandler(docassemble_log_handler)
-else:
+tries = 0
+while tries < 5:
     try:
-        import logging.handlers
-        handler = logging.handlers.SysLogHandler(address=(LOGSERVER, 514), socktype=socket.SOCK_STREAM)
-        sys_logger.addHandler(handler)
-    except:
-        sys.stderr.write("Error connecting to syslog server\n")
         docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
-        sys_logger.addHandler(docassemble_log_handler)
-        LOGSERVER = None
+    except PermissionError:
+        time.sleep(1)
+        next
+    sys_logger.addHandler(docassemble_log_handler)
+    break
+# else:
+#     try:
+#         import logging.handlers
+#         handler = logging.handlers.SysLogHandler(address=(LOGSERVER, 514), socktype=socket.SOCK_STREAM)
+#         sys_logger.addHandler(handler)
+#     except:
+#         sys.stderr.write("Error connecting to syslog server\n")
+#         docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
+#         sys_logger.addHandler(docassemble_log_handler)
+#         LOGSERVER = None
 
 if not in_celery:
     if LOGSERVER is None:

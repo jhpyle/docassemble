@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.90] - 2021-07-12
+### Fixed
+- Security improvements.
+
 ## [1.2.89] - 2021-07-11
 ### Added
 - The `azure maps` and `geocoder service` Configuration directives.

@@ -41,7 +41,7 @@ def privilege_list():
 """
     for role in db.session.execute(select(Role).order_by(Role.name)).scalars():
         if role.name not in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
-            output += '        <tr><td>' + str(role.name) + '</td><td><a class="btn ' + app.config['BUTTON_CLASS'] + 'danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
+            output += '        <tr><td>' + str(role.name) + '</td><td><a class="btn ' + app.config['BUTTON_CLASS'] + ' btn-danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
         else:
             output += '        <tr><td>' + str(role.name) + '</td><td>&nbsp;</td></tr>\n'
 
@@ -116,17 +116,20 @@ def user_list():
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
-@app.route('/privilege/<id>/delete', methods=['GET'])
+@app.route('/privilege/<int:id>/delete', methods=['GET'])
 @login_required
 @roles_required('admin')
 def delete_privilege(id):
     setup_translation()
+    if not id:
+        flash(word('The role could not be deleted.'), 'error')
+        return redirect(url_for('privilege_list'))
     role = db.session.execute(select(Role).filter_by(id=id)).scalar_one()
     user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
-    if role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron']:
+    if user_role is None or role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron']:
         flash(word('The role could not be deleted.'), 'error')
     else:
-        for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).scalars():
+        for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).unique().scalars():
             roles_to_remove = list()
             for the_role in user.roles:
                 if the_role.name == role.name:
@@ -143,12 +146,18 @@ def delete_privilege(id):
         #docassemble.webapp.daredis.clear_user_cache()
     return redirect(url_for('privilege_list'))
 
-@app.route('/user/<id>/editprofile', methods=['GET', 'POST'])
+@app.route('/user/<int:id>/editprofile', methods=['GET', 'POST'])
 @login_required
 @roles_required('admin')
 def edit_user_profile_page(id):
     setup_translation()
+    if not id:
+        flash(word('The user account did not exit.'), 'danger')
+        return redirect(url_for('user_list'))
     user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=id)).unique().scalar_one()
+    if not user:
+        flash(word('The user account did not exit.'), 'danger')
+        return redirect(url_for('user_list'))
     the_tz = user.timezone if user.timezone else get_default_timezone()
     if user is None or user.social_id.startswith('disabled$'):
         return redirect(url_for('user_list'))

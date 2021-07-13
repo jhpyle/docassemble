@@ -1362,7 +1362,7 @@ class IndividualName(Name):
         if with_period:
             return self.middle[0].strip() + '.'
         else:
-            return self.middle[0].strip() + '.'
+            return self.middle[0].strip()
 
 class Address(DAObject):
     """A geographic address."""

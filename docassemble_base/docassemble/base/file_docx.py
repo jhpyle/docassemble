@@ -142,6 +142,7 @@ def fix_subdoc(masterdoc, subdoc_info):
 
 def include_docx_template(template_file, **kwargs):
     """Include the contents of one docx file inside another docx file."""
+    use_jinja = kwargs.get('_use_jinja2', True)
     if this_thread.evaluation_context is None:
         return 'ERROR: not in a docx file'
     if template_file.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile', 'DAStaticFile'):
@@ -150,6 +151,8 @@ def include_docx_template(template_file, **kwargs):
         template_path = package_template_filename(template_file, package=this_thread.current_package)
     sd = this_thread.misc['docx_template'].new_subdoc()
     sd.subdocx = Document(template_path)
+    if not use_jinja:
+        return sanitize_xml(str(sd))
     if '_inline' in kwargs:
         single_paragraph = True
         del kwargs['_inline']

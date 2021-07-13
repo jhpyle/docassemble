@@ -3809,7 +3809,7 @@ class DAFile(DAObject):
             return the_content
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-                return docassemble.base.file_docx.include_docx_template(self)
+                return docassemble.base.file_docx.include_docx_template(self, _use_jinja2=False)
             else:
                 if self.mimetype in ('application/pdf', 'application/rtf', 'application/vnd.oasis.opendocument.text', 'application/msword'):
                     return self._pdf_pages(width)
