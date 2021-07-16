@@ -583,7 +583,7 @@ The `DAList` uses the following attributes:
   `plaintiff` and `defendant` will still exist, but if your interview
   refers to an undefined attribute `plaintiff.net_worth`, the
   interview will seek a definition of `parties[0].net_worth`.
-* `are_there_any`: a boolean value, initially undefined, indicating
+* `there_are_any`: a boolean value, initially undefined, indicating
   whether any values should be gathered.  The expectation is that the
   interview will define a [question] or [code block] that defines this
   attribute.
