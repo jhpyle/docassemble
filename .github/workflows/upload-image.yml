@@ -1,4 +1,4 @@
-name: Fake deploy with normal Dockerfile
+name: Build and Push to GCR
 on: [push]
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
         id: prep
         run: |
           TAG=$(echo $GITHUB_SHA | head -c7)
-          IMAGE="my.docker.registry/jheyer159/docassemble"
+          IMAGE="ghcr.io/jheyer159/docassemble"
           echo ::set-output name=tagged_image::${IMAGE}:${TAG}
           echo ::set-output name=tag::${TAG}
       - name: Set up Docker Buildx
@@ -41,7 +41,7 @@ jobs:
           context: .
           builder: ${{ steps.buildx.outputs.name }}
           file: Dockerfile
-          push: false # This would be set to true in a real world deployment scenario.
+          push: true # This would be set to true in a real world deployment scenario.
           tags: ${{ steps.prep.outputs.tagged_image }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
