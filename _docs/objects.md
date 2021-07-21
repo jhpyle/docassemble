@@ -1699,6 +1699,10 @@ It returns the same type of object as [`background_action()`].  When
 the [background action] is complete, the PDF file will be overwritten
 with the OCRed version of the PDF file.
 
+If you do not want to edit the file in place, you can create a new
+`DAFile` with an `objects` block and pass files that you want to OCR
+as positional parameters to `make_ocr_pdf_in_background()`.
+
 <a name="DAFile.bates_number"></a>The `.bates_number()` method overwrites
 any existing contents of the file with a [Bates numbered] PDF of the
 file.
