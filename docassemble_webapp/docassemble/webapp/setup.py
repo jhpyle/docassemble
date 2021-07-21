@@ -109,3 +109,4 @@ if 'session lifetime seconds' in daconfig:
 app.config['SOCIAL'] = daconfig['social']
 app.config['OG_LOCALE'] = re.sub(r'\..*', '', daconfig.get('locale', 'en_US.utf8'))
 app.config['ENABLE_MONITOR'] = daconfig.get('enable monitor', True)
+app.config['INVERSE_NAVBAR'] = True if daconfig.get('inverse navbar', True) else False

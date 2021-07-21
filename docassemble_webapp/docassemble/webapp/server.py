@@ -10509,7 +10509,7 @@ def index(action_argument=None, refer=None):
               }
             }
             if (showIfVars.length == 0){
-              console.log("ERROR: could not set " + jsInfo['vars'][i]);
+              console.log("ERROR: reference to non-existent field " + jsInfo['vars'][i]);
             }
             for (var j = 0; j < showIfVars.length; ++j){
               var showIfVar = showIfVars[j];
@@ -12986,7 +12986,7 @@ def observer():
               }
             }
             if (showIfVars.length == 0){
-              console.log("ERROR: could not set " + jsInfo['vars'][i]);
+              console.log("ERROR: reference to non-existent field " + jsInfo['vars'][i]);
             }
             for (var j = 0; j < showIfVars.length; ++j){
               var showIfVar = showIfVars[j];

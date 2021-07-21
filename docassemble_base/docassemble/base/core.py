@@ -1329,12 +1329,14 @@ class DAList(DAObject):
         self._trigger_gather()
         self.elements = sorted(self.elements, **kwargs)
         self._reset_instance_names()
+        self.hook_after_gather()
         return self
     def reverse(self, *pargs, **kwargs):
         """Reverse the order of the elements of the list in place and returns the object."""
         self._trigger_gather()
         self.elements.reverse()
         self._reset_instance_names()
+        self.hook_after_gather()
         return self
     def sort_elements(self, *pargs, **kwargs):
         """Reorders the elements of the list and returns the object, without
@@ -1837,6 +1839,8 @@ class DAList(DAObject):
             if item[0] < maximum and item[1] < maximum:
                 self.elements[item[1]] = old_elements[item[0]]
         self._reset_instance_names()
+        if hasattr(self, 'gathered') and self.gathered:
+            self.hook_after_gather()
     def item_actions(self, *pargs, **kwargs):
         """Returns HTML for editing the items in a list"""
         the_args = list(pargs)

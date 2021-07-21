@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.2.91] - 2021-07-21
+### Changed
+- Re-ordering a list now triggers `hook_after_gather()`.
+- The `inverse navbar` Configuration directive now affects
+  administrative screens.
+### Fixed
+- Word-to-Markdown conversion now uses Pandoc's `markdown_phpextra`
+  format.
+
 ## [1.2.90] - 2021-07-12
 ### Fixed
 - Security improvements.
