@@ -255,9 +255,10 @@ Other methods available on a `DAList` are:
 * <a name="DAList.clear"></a><a name="DADict.clear"></a><a
   name="DASet.clear"></a>`clear()` - makes the list empty.
 * <a name="DAList.sort"></a>`sort()` - reorders the elements of the
-  list, saves the reordered items, and returns the object.  If you
-  pass keyword parameters to `sort()`, those parameters will be passed
-  directly to Python's [`sorted()`] function.
+  list, saves the reordered items, runs `hook_after_gather()`, and
+  returns the object.  If you pass keyword parameters to `sort()`,
+  those parameters will be passed directly to Python's [`sorted()`]
+  function.
 
 {% include side-by-side.html demo="sort" %}
 
@@ -299,8 +300,8 @@ Other methods available on a `DAList` are:
 * <a name="DAList.insert"></a>`insert()` - inserts an item into the
   list.  Just like the [Python list] method of the same name.
 * <a name="DAList.reverse"></a>`reverse()` - reverses the order of
-  elements in the list.  Just like the [Python list] method of the
-  same name.
+  elements in the list, runs `hook_after_gather()`, and returns the
+  object.  Just like the [Python list] method of the same name.
 * <a name="DAList.count"></a>`count()` - returns the number of times a
   given item appears in the list.  Just like the [Python list] method
   of the same name.
