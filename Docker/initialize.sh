@@ -34,6 +34,8 @@ function cmd_retry() {
     done
 }
 
+chsh -s /bin/bash www-data
+
 echo "config.yml is at" $DA_CONFIG_FILE >&2
 
 echo "1" >&2

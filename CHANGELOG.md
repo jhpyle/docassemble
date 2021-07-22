@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.92] - 2021-07-22
+### Fixed
+- Issue with `www-data` losing its shell.
+
 ## [1.2.91] - 2021-07-21
 ### Changed
 - Re-ordering a list now triggers `hook_after_gather()`.
