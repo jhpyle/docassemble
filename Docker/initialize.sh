@@ -34,8 +34,6 @@ function cmd_retry() {
     done
 }
 
-chsh -s /bin/bash www-data
-
 echo "config.yml is at" $DA_CONFIG_FILE >&2
 
 echo "1" >&2
@@ -45,6 +43,8 @@ if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     apt-get clean &> /dev/null
     apt-get -q -y update &> /dev/null
 fi
+
+chsh -s /bin/bash www-data
 
 echo "2" >&2
 
