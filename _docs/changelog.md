@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.93](https://github.com/jhpyle/docassemble/releases/tag/v1.2.93) - 2021-07-22
+
+### Fixed
+- Issue with `www-data` losing its shell.
+
+## [1.2.92](https://github.com/jhpyle/docassemble/releases/tag/v1.2.92) - 2021-07-22
+
+### Fixed
+- Issue with `www-data` losing its shell.
+
 ## [1.2.91](https://github.com/jhpyle/docassemble/releases/tag/v1.2.91) - 2021-07-21
 
 ### Changed

@@ -1694,14 +1694,17 @@ process can take a long time, you might want to use the
 
 {% include demo-side-by-side.html demo="make-ocr-pdf-in-background" %}
 
-The `.make_ocr_pdf_in_background()` method runs a [background action].
-It returns the same type of object as [`background_action()`].  When
-the [background action] is complete, the PDF file will be overwritten
-with the OCRed version of the PDF file.
+The `.make_ocr_pdf_in_background()` method operates just like
+`.make_ocr_pdf()`, but does the work in a [background action].  It
+returns the same type of object as [`background_action()`].  When the
+[background action] is complete, the `DAFile` instance will be
+overwritten with the OCRed version of the PDF file.
 
-If you do not want to edit the file in place, you can create a new
+If you do not want to edit a PDF file in place, you can create a new
 `DAFile` with an `objects` block and pass files that you want to OCR
 as positional parameters to `make_ocr_pdf_in_background()`.
+
+{% include demo-side-by-side.html demo="make-ocr-pdf-in-background-2" %}
 
 <a name="DAFile.bates_number"></a>The `.bates_number()` method overwrites
 any existing contents of the file with a [Bates numbered] PDF of the

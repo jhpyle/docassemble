@@ -12714,6 +12714,9 @@
     Your OCR PDF
   subquestion: |
     ${ uploaded_file }
+"make-ocr-pdf-in-background-2": |-
+  objects:
+    - final_file: DAFile
 "markdown-template": "template: the_template\ncontent: |\n  This is *italic text*.\n\
   \  This is **bold text**.\n  This is __some *bold italic* text__.\n\n  **bold**\
   \ at beginning of paragraph.\n\n  *italic* at beginning of paragraph.\n\n  > This\
@@ -14410,6 +14413,9 @@
   fields:
     - SSN: user_ssn
       datatype: ssn
+"translation": |-
+  modules:
+    - .translate
 "turnips-worms": |-
   question: Do you like turnips?
   yesno: likes_turnips
