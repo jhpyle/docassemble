@@ -4456,6 +4456,19 @@ def get_user_object(user_id):
     the_user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == user_id)).scalar()
     return the_user
 
+@lm.request_loader
+def load_request(request):
+    auth = request.cookies.get('auth', None)
+    verifyURI = daconfig.get('verify id token URI')
+    if auth:
+        unquoted = urllibunquote(auth)
+        data = json.loads(unquoted)
+        uid = data['uid']
+        r = requests.post(verifyURI,None,data)
+        if r.status_code == 200:
+            user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.email == uid)).scalar()
+            return user
+    return None
 @lm.user_loader
 def load_user(id):
     return UserModel.query.options(db.joinedload(UserModel.roles)).get(int(id))
