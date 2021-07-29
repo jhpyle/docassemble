@@ -5,7 +5,7 @@ on: [push]
 jobs:
   container:
     runs-on: ubuntu-latest
-    container: jhpyle:docassemble
+    container: jhpyle:docassemble@latest
     steps:
       - run: |
           echo This job does specify a container.
