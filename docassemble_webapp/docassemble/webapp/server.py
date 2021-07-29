@@ -24659,11 +24659,15 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             if isinstance(val, (str, bool, int, float, NoneType)):
                 exec(str(key) + ' = ' + repr(val), user_dict)
             else:
-                user_dict['_internal']['_tempvar'] = copy.deepcopy(val)
-                exec(str(key) + ' = _internal["_tempvar"]', user_dict)
-                del user_dict['_internal']['_tempvar']
+                if key == '_xxxtempvarxxx':
+                    continue
+                user_dict['_xxxtempvarxxx'] = copy.deepcopy(val)
+                exec(str(key) + ' = _xxxtempvarxxx', user_dict)
+                del user_dict['_xxxtempvarxxx']
             process_set_variable(str(key), user_dict, vars_set, old_values)
     except Exception as the_err:
+        if '_xxxtempvarxxx' in user_dict:
+            del user_dict['_xxxtempvarxxx']
         if use_lock:
             release_lock(session_id, yaml_filename)
         raise Exception("Problem setting variables:" + str(the_err))

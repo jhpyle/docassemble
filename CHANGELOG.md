@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.2.94] - 2021-07-29
+### Fixed
+- Issue with `[SKIPLINE]` interfering with other formatting
+  directives.
+- `_internal` could not be set with `set_session_variables()`.
+- `docassemble.webapp.createminio` was not updated for the latest
+  version of the `minio` package.
+
 ## [1.2.93] - 2021-07-22
 ### Fixed
 - Issue with `www-data` losing its shell.

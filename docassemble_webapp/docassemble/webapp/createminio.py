@@ -1,5 +1,4 @@
 from minio import Minio
-from minio.error import ResponseError, BucketAlreadyOwnedByYou, BucketAlreadyExists
 import sys
 import re
 
@@ -12,9 +11,5 @@ minioClient = Minio(hostname,
 
 try:
     minioClient.make_bucket(sys.argv[4])
-except BucketAlreadyOwnedByYou as err:
-    sys.stderr.write("Bucket already exists\n")
-except BucketAlreadyExists as err:
-    sys.stderr.write("Bucket already exists\n")
-except ResponseError as err:
-    raise
+except Exception as err:
+    sys.stderr.write("Error: " + err.__class__.__name__ + "\n")

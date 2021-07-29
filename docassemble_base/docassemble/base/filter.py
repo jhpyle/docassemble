@@ -529,7 +529,6 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[PAGENUM\]', r'\\myshow{\\thepage\\xspace}', text)
     text = re.sub(r'\[TOTALPAGES\]', r'\\myshow{\\pageref*{LastPage}\\xspace}', text)
     text = re.sub(r'\[SECTIONNUM\]', r'\\myshow{\\thesection\\xspace}', text)
-    text = re.sub(r'\s*\[SKIPLINE\]\s*', r'\\par\\myskipline ', text)
     text = re.sub(r'\[VERTICALSPACE\] *', r'\\rule[-24pt]{0pt}{0pt}', text)
     text = re.sub(r'\[NEWLINE\] *', r'\\newline ', text)
     text = re.sub(r'\[NEWPAR\] *', r'\\par ', text)
@@ -544,6 +543,7 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+)\] *(.+?)\n *\n', indentby_left_pdf, text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+) *([0-9]+ *[A-Za-z]+)\] *(.+?)\n *\n', indentby_both_pdf, text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[BORDER\] *(.+?)\n *\n', border_pdf, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\s*\[SKIPLINE\]\s*', r'\\par\\myskipline ', text)
     return(text)
 
 def html_filter(text, status=None, question=None, embedder=None, default_image_width=None, external=False):
