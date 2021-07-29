@@ -20,6 +20,7 @@ jobs:
           pip install build
       - name: Build package
         run: python -m build
+        working-directory: docassemble_webapp
       #     pip install flake8 pytest
       #     if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       # - name: Lint with flake8
