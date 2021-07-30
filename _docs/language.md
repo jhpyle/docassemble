@@ -153,6 +153,7 @@ objects:
 initial: True
 code: |
   set_language(user.language)
+  process_action()
 ---
 question: |
   What language do you speak?
@@ -161,6 +162,15 @@ choices:
   - "English": en
   - "Español": es
 {% endhighlight %}
+
+Note that the function [`process_action()`] is called after setting
+`set_language()`.  By default, [actions] are processed at the very
+beginning of your interview logic, before your YAML's `initial` and
+`mandatory` blocks are processed.  However, if you have an `initial`
+block that needs to define some "ground rules," such as setting the
+operative language, you need to explicitly call `process_action()` in
+your `initial` block so that the "ground rules" are defined before
+actions are processed.
 
 Note that when a user is logged in, they have a user profile, and a
 `language` field is part of their user profile.  The value of this
@@ -177,6 +187,7 @@ objects:
 initial: True
 code: |
   set_language(user.language)
+  process_action()
 ---
 mandatory: True
 code: |
@@ -203,6 +214,7 @@ objects:
 initial: True
 code: |
   set_language(user.language)
+  process_action()
 ---
 mandatory: True
 code: |
@@ -232,6 +244,7 @@ objects:
 initial: True
 code: |
   set_language(user.language)
+  process_action()
 ---
 mandatory: True
 code: |
@@ -280,6 +293,7 @@ initial: True
   else:
     user = client
   set_language(user.language)
+  process_action()
 ---
 generic object: Individual
 question: |
@@ -317,6 +331,7 @@ The contents of `code.yml` are:
 initial: True
 code: |
   set_language(user_language)
+  process_action()
   need(final_screen)
 ---
 question: |
@@ -616,3 +631,5 @@ docassemble.base.functions.update_language_function('fr', 'currency_symbol', lam
 [`get_user_info()`]: {{ site.baseurl }}/docs/functions.html#get_user_info
 [`set_user_info()`]: {{ site.baseurl }}/docs/functions.html#set_user_info
 [`language_from_browser()`]: {{ site.baseurl }}/docs/functions.html#language_from_browser
+[`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
+[actions]: {{ site.baseurl }}/docs/functions.html#url_action
