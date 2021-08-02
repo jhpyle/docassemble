@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.2.95] - 2021-08-02
+### Added
+- API for managing Playground projects.
+### Fixed
+- Exception raised from cron job.
+- Issue with newlines being converted to spaces when inline Markdown
+  added to DOCX.
+- Issue with numbering ordered lists with `markdown` filter.
+
 ## [1.2.94] - 2021-07-29
 ### Fixed
 - Issue with `[SKIPLINE]` interfering with other formatting

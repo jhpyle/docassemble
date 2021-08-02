@@ -989,6 +989,7 @@
 "The privilege could not be added because it already exists.": Null
 "The privilege was added.": Null
 "The project name %s is not available.": Null
+"The project %s was deleted.": Null
 "The README.md file for the package": Null
 "There are no active sessions.": Null
 "There are unsaved changes.  Are you sure you wish to leave this page?": Null
@@ -1188,6 +1189,7 @@
 "You are now set up with two factor authentication.": Null
 "You are renaming the project called %s.": Null
 "You can also follow this link: ": Null
+"You can divide up your Playground into multiple separate areas, apart from your default Playground area.  Each Project has its own question files and Folders.": Null
 "You cannot log in this way.": Null
 "You cannot log in until your e-mail address has been confirmed.": Null
 "You cannot pull from GitHub and PyPI at the same time.  Please fill in one and leave the other blank.": Null

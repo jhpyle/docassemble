@@ -4807,7 +4807,7 @@ class Question:
             if 'content' not in target:
                 if 'content file code' in options:
                     return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': None, 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'orig_variable_name': variable_name, 'options': options, 'raw': target['raw']})
-                raise DAError("No content provided in attachment")
+                raise DAError("No content provided in attachment." + self.idebug(target))
             #logmessage("The content is " + str(target['content']))
             return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': TextObject("\n".join(defs) + "\n" + target['content'], question=self), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'orig_variable_name': variable_name, 'options': options, 'raw': target['raw']})
         elif isinstance(orig_target, str):
@@ -9320,10 +9320,10 @@ def map_filter(*pargs, **kwargs):
             raise DAError('map() must refer to a function, index, attribute, or filter')
 
 def markdown_filter(text):
-    return docassemble.base.file_docx.markdown_to_docx(str(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
+    return docassemble.base.file_docx.markdown_to_docx(text, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
 
 def inline_markdown_filter(text):
-    return docassemble.base.file_docx.inline_markdown_to_docx(str(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
+    return docassemble.base.file_docx.inline_markdown_to_docx(text, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
 
 builtin_jinja_filters = {
     'ampersand_filter': ampersand_filter,

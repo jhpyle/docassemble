@@ -403,7 +403,7 @@ def docx_filter(text, metadata=None, question=None):
     text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+) *([0-9]+ *[A-Za-z]+)\] *(.+?)\n *\n', r'\3', text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
-def docx_template_filter(text, question=None):
+def docx_template_filter(text, question=None, replace_newlines=True):
     #logmessage('docx_template_filter')
     if text == 'True':
         return True
@@ -455,7 +455,8 @@ def docx_template_filter(text, question=None):
     text = re.sub(r'\[VERTICALSPACE\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[NEWLINE\] *', '</w:t><w:br/><w:t xml:space="preserve">', text)
     #text = re.sub(r'\n *\n', '[NEWPAR]', text)
-    text = re.sub(r'\n', ' ', text)
+    if replace_newlines:
+        text = re.sub(r'\n', ' ', text)
     text = re.sub(r'\[NEWPAR\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[TAB\] *', '\t', text)
     text = re.sub(r'\[NEWPAR\]', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
