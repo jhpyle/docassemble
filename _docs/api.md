@@ -574,6 +574,7 @@ Path: `/api/fields`
 Method: [POST]
 
 Data:
+
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    cookie or header).
  - `format` (optional): the desired output format.  The default is
@@ -749,6 +750,7 @@ Path: `/api/privileges`
 Method: [GET]
 
 Parameters:
+
 - `key`: the API key (optional if the API key is passed in an
   `X-API-Key` cookie or header).
 
@@ -939,8 +941,6 @@ Path: `/api/interviews`
 
 Method: [DELETE]
 
-Required privileges: `admin`.
-
 Parameters:
 
  - `key`: the API key (optional if the API key is passed in an
@@ -951,6 +951,8 @@ Parameters:
    only those interview sessions with the given interview filename.
  - `session` (optional): set to a session ID if you want to delete
    only the interview session with the given session ID.
+
+Required privileges: `admin`.
 
 Responses on failure:
  - [403] "Access Denied" if the API key did not authenticate.
@@ -982,6 +984,7 @@ Path: `/api/user/interviews`
 Method: [GET]
 
 Parameters:
+
  - `next_id` (optional): the ID that can be provided to retrieve the
    next page of results.  See the [pagination] section for more
    information.
@@ -1049,9 +1052,6 @@ Path: `/api/user/<user_id>/interviews`
 
 Method: [DELETE]
 
-Required privileges: `admin` or `advocate`, or `user_id` is the same
-as the user ID of the API owner.
-
 Parameters:
 
  - `key`: the API key (optional if the API key is passed in an
@@ -1061,6 +1061,9 @@ Parameters:
    delete only those sessions for a given interview file.
  - `tag` (optional): set to a tag if you want to delete only those
    interview sessions with the given tag.
+
+Required privileges: `admin` or `advocate`, or `user_id` is the same
+as the user ID of the API owner.
 
 This works just like the [`/api/interviews`], except it only deletes
 interviews belonging to the user with user ID `user_id`.
@@ -2103,6 +2106,112 @@ Response on success: [204]
 
 Body of response: empty.
 
+## <a name="playground_get_projects"></a>List projects in Playground
+
+Description: Returns a list of projects that exist in the [Playground]
+(other than the default project).
+
+Path: `/api/playground/project`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `user_id` (optional): the user ID of the user whose [Playground]
+   should be read.  Only users with `admin` privileges can read from a
+   different user's [Playground].  The default is the user ID of the
+   owner of the API key.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Invalid user_id" if the user does not have administrative
+   privileges and the `user_id` is different from the current user's
+   user ID.
+
+Response on success: [200]
+
+Body of response: a [JSON] array of project names
+
+## <a name="playground_delete_project"></a>Delete a project in the Playground
+
+Description: Deletes a project in the [Playground].
+
+Path: `/api/playground/project`
+
+Method: [DELETE]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `user_id` (optional): the user ID of the user whose [Playground]
+   should be used.  Only users with `admin` privileges can delete from
+   a different user's [Playground].  The default is the user ID of the
+   owner of the API key.
+ - `project`: the project in the [Playground] to delete.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Invalid user_id" if the user does not have administrative
+   privileges and the `user_id` is different from the current user's
+   user ID.
+ - [400] "Invalid project" if the project given by `project` does not
+   exist or an attempt was made to delete the default project.
+ - [400] "Project not provided" if the request did not indicate a
+   project.
+
+Response on success: [204]
+
+Body of response: empty.
+
+## <a name="playground_post_project"></a>Create a project in the Playground
+
+Description: Creates a new project in the [Playground].
+
+Path: `/api/playground/project`
+
+Method: [POST]
+
+Data:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `user_id` (optional): the user ID of the user whose [Playground]
+   should be used.  Only users with `admin` privileges can delete from
+   a different user's [Playground].  The default is the user ID of the
+   owner of the API key.
+ - `project`: the project in the [Playground] to delete.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Invalid user_id" if the user does not have administrative
+   privileges and the `user_id` is different from the current user's
+   user ID.
+ - [400] "Invalid project" if the project given by `project` already
+   exists.
+ - [400] "Invalid project name" if the project name given by `project` begins
+   with a number or contains a non-alphanumeric character.
+ - [400] "Project not provided" if the request did not indicate a
+   project.
+
+Response on success: [204]
+
+Body of response: empty.
+
 ## <a name="clear_cache"></a>Clear the interview cache
 
 Description: Clears the interview cache, causing the [YAML] of each
@@ -2112,7 +2221,7 @@ Path: `/api/clear_cache`
 
 Method: [POST]
 
-Parameters:
+Data:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
@@ -2376,6 +2485,7 @@ Path: `/api/user/api`
 Method: [GET]
 
 Parameters:
+
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
  - `api_key` (optional): the API key for which information should be
@@ -2646,6 +2756,7 @@ Path: `/api/interview_data`
 Method: [GET]
 
 Parameters:
+
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
  - `i`: the filename of the interview that should be inspected (e.g.,
@@ -2747,6 +2858,7 @@ Path: `/api/retrieve_stashed_data`
 Method: [GET]
 
 Parameters:
+
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
  - `stash_key`: the identifier for the data, as returned by the
