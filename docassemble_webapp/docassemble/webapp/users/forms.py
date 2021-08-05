@@ -250,7 +250,7 @@ class PhoneLoginVerifyForm(FlaskForm):
         from docassemble.base.logger import logmessage
         from flask import request, abort
         result = True
-        key = 'da:failedlogin:ip:' + str(get_requester_ip(request.remote_addr))
+        key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
         failed_attempts = r.get(key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
             abort(404)
