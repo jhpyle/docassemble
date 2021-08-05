@@ -1,7 +1,7 @@
 import tempfile
 import subprocess
 from PIL import Image, ImageEnhance
-from docassemble.base.functions import get_config, get_language, ReturnValue
+from docassemble.base.functions import get_config, get_language, ReturnValue, word
 from docassemble.base.core import DAFile, DAFileList, DAFileCollection, DAStaticFile
 import PyPDF2
 from docassemble.base.logger import logmessage
