@@ -2589,15 +2589,24 @@ def map_of(*pargs, **kwargs):
         return '[MAP ' + re.sub(r'\n', '', codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode()) + ']'
     return word('(Unable to display map)')
 
+def int_or_none(number):
+    if number is None:
+        return number
+    try:
+        return int(number)
+    except:
+        logmessage("Non-number passed to x, y, W, or H")
+    return None
+
 def ocr_file_in_background(*pargs, **kwargs):
     """Starts optical character recognition on one or more image files or PDF
     files and returns an object representing the background task created."""
     language = kwargs.get('language', None)
     psm = kwargs.get('psm', 6)
-    x = kwargs.get('x', None)
-    y = kwargs.get('y', None)
-    W = kwargs.get('W', None)
-    H = kwargs.get('H', None)
+    x = int_or_none(kwargs.get('x', None))
+    y = int_or_none(kwargs.get('y', None))
+    W = int_or_none(kwargs.get('W', None))
+    H = int_or_none(kwargs.get('H', None))
     message = kwargs.get('message', None)
     image_file = pargs[0]
     if len(pargs) > 1:
@@ -2630,6 +2639,10 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
     files and returns the recognized text."""
     if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
+    x = int_or_none(x)
+    y = int_or_none(y)
+    W = int_or_none(W)
+    H = int_or_none(H)
     pdf_to_ppm = get_config("pdftoppm")
     if pdf_to_ppm is None:
         pdf_to_ppm = 'pdftoppm'
@@ -2699,6 +2712,10 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
     """Reads QR codes from a file or files and returns a list of codes found."""
     if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
+    x = int_or_none(x)
+    y = int_or_none(y)
+    W = int_or_none(W)
+    H = int_or_none(H)
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     pdf_to_ppm = get_config("pdftoppm")

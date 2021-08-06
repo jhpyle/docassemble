@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.2.96] - 2021-08-05
+### Fixed
+- Exception with phone verification.
+- Bad error message with OCR functions under certain circumstances.
+
 ## [1.2.95] - 2021-08-02
 ### Added
 - API for managing Playground projects.
