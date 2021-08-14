@@ -12035,6 +12035,31 @@ def do_serve_temporary_file(code, filename, extension, download=False):
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
     return response
 
+@app.route('/packagezip', methods=['GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def download_zip_package():
+    package_name = request.args.get('package', None)
+    if not package_name:
+        return ('File not found', 404)
+    package_name = werkzeug.utils.secure_filename(package_name)
+    package = db.session.execute(select(Package).filter_by(active=True, name=package_name, type='zip')).scalar()
+    if package is None:
+        return ('File not found', 404)
+    if not current_user.has_role('admin'):
+        auth = db.session.execute(select(PackageAuth).filter_by(package_id=package.id, user_id=current_user.id)).scalar()
+        if auth is None:
+            return ('File not found', 404)
+    try:
+        file_info = get_info_from_file_number(package.upload, privileged=True)
+    except:
+        return ('File not found', 404)
+    response = send_file(file_info['path'] + '.zip', mimetype='application/zip')
+    filename = re.sub(r'\.', '-', package_name) + '.zip'
+    response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return(response)
+
 @app.route('/uploadedfile/<number>/<filename>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_filename_and_extension(number, filename, extension):
     return do_serve_uploaded_file_with_filename_and_extension(number, filename, extension)

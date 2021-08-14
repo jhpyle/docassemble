@@ -1441,7 +1441,7 @@ class Address(DAObject):
         if hasattr(self, 'geolocate_response') and len(self.geolocate_response):
             return True
         return self.geolocate_success
-    def get_geocode_response():
+    def get_geocode_response(self):
         """Returns the raw data that the geocoding service returned."""
         if hasattr(self, '_geocode_response') :
             return self._geocode_response

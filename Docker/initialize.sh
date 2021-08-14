@@ -38,6 +38,14 @@ echo "config.yml is at" $DA_CONFIG_FILE >&2
 
 echo "1" >&2
 
+RESTOREFROMBACKUP=true
+
+if [ -f /etc/da_running ]; then
+    RESTOREFROMBACKUP=false
+fi
+
+touch /etc/da_running
+
 export DEBIAN_FRONTEND=noninteractive
 if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     apt-get clean &> /dev/null
@@ -190,181 +198,181 @@ fi
 
 echo "13" >&2
 
-if [ "${S3ENABLE:-false}" == "true" ]; then
-    if [ "${EC2:-false}" == "true" ]; then
-        export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
-    else
-        export LOCAL_HOSTNAME=`hostname --fqdn`
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/letsencrypt.tar.gz") ]]; then
-        rm -f /tmp/letsencrypt.tar.gz
-        s4cmd get "s3://${S3BUCKET}/letsencrypt.tar.gz" /tmp/letsencrypt.tar.gz
-        cd /
-        tar -xf /tmp/letsencrypt.tar.gz
-        rm -f /tmp/letsencrypt.tar.gz
-    else
-        rm -f /etc/letsencrypt/da_using_lets_encrypt
-    fi
-    if [ "${DABACKUPDAYS}" != "0" ] && [[ $(s4cmd ls "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}") ]]; then
-        s4cmd dsync "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}" "${DA_ROOT}/backup"
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/apache") ]]; then
-        s4cmd dsync "s3://${S3BUCKET}/apache" /etc/apache2/sites-available
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-        if [[ $(s4cmd ls "s3://${S3BUCKET}/apachelogs") ]]; then
-            s4cmd dsync "s3://${S3BUCKET}/apachelogs" /var/log/apache2
-            chown root.adm /var/log/apache2/*
-            chmod 640 /var/log/apache2/*
-        fi
-        if [[ $(s4cmd ls "s3://${S3BUCKET}/nginxlogs") ]]; then
-            s4cmd dsync "s3://${S3BUCKET}/nginxlogs" /var/log/nginx
-            chown www-data.adm /var/log/nginx/*
-            chmod 640 /var/log/nginx/*
-        fi
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/log") ]]; then
-        s4cmd dsync "s3://${S3BUCKET}/log" "${LOGDIRECTORY:-${DA_ROOT}/log}"
-        chown -R www-data.www-data "${LOGDIRECTORY:-${DA_ROOT}/log}"
-    fi
-    if [[ $(s4cmd ls "s3://${S3BUCKET}/config.yml") ]]; then
-        rm -f "$DA_CONFIG_FILE"
-        s4cmd get "s3://${S3BUCKET}/config.yml" "$DA_CONFIG_FILE"
-        chown www-data.www-data "$DA_CONFIG_FILE"
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/redis.rdb") ]] && [ "$REDISRUNNING" = false ]; then
-        s4cmd -f get "s3://${S3BUCKET}/redis.rdb" "/var/lib/redis/dump.rdb"
-        chown redis.redis "/var/lib/redis/dump.rdb"
-    fi
-elif [ "${AZUREENABLE:-false}" == "true" ]; then
-    if [ "${EC2:-false}" == "true" ]; then
-        export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
-    else
-        export LOCAL_HOSTNAME=`hostname --fqdn`
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud letsencrypt.tar.gz) ]]; then
-        rm -f /tmp/letsencrypt.tar.gz
-        echo "Copying let's encrypt" >&2
-        cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz" "/tmp/letsencrypt.tar.gz"
-        cd /
-        tar -xf /tmp/letsencrypt.tar.gz
-        rm -f /tmp/letsencrypt.tar.gz
-    else
-        rm -f /etc/letsencrypt/da_using_lets_encrypt
-    fi
-    if [ "${DABACKUPDAYS}" != "0" ] && [[ $(python -m docassemble.webapp.list-cloud backup/${LOCAL_HOSTNAME}/) ]]; then
-        BACKUPDIR="backup/${LOCAL_HOSTNAME}/"
-        let BACKUPDIRLENGTH=${#BACKUPDIR}+1
-        for the_file in $(python -m docassemble.webapp.list-cloud $BACKUPDIR | cut -c ${BACKUPDIRLENGTH}-); do
-            echo "Found $the_file on Azure" >&2
-            if ! [[ $the_file =~ /$ ]]; then
-                if [ ! -f "${DA_ROOT}/backup/${the_file}" ]; then
-                   echo "Copying backup file" $the_file >&2
-                   cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}/${the_file}" "${DA_ROOT}/backup/${the_file}"
-                fi
-            fi
-        done
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud apache/) ]]; then
-        echo "There are apache files on Azure" >&2
-        for the_file in $(python -m docassemble.webapp.list-cloud apache/ | cut -c 8-); do
-            echo "Found $the_file on Azure" >&2
-            if ! [[ $the_file =~ /$ ]]; then
-                echo "Copying apache file" $the_file >&2
-                cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${the_file}" "/etc/apache2/sites-available/${the_file}"
-            fi
-        done
-    else
-        rm -f /etc/letsencrypt/da_using_lets_encrypt
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-        if [[ $(python -m docassemble.webapp.list-cloud apachelogs/) ]]; then
-            echo "There are apache log files on Azure" >&2
-            for the_file in $(python -m docassemble.webapp.list-cloud apachelogs/ | cut -c 12-); do
-                echo "Found $the_file on Azure" >&2
-                if ! [[ $the_file =~ /$ ]]; then
-                    echo "Copying log file $the_file" >&2
-                    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apachelogs/${the_file}" "/var/log/apache2/${the_file}"
-                fi
-            done
-            chown root.adm /var/log/apache2/*
-            chmod 640 /var/log/apache2/*
-        fi
-        if [[ $(python -m docassemble.webapp.list-cloud nginxlogs/) ]]; then
-            echo "There are nginx log files on Azure" >&2
-            for the_file in $(python -m docassemble.webapp.list-cloud nginxlogs/ | cut -c 11-); do
-                echo "Found $the_file on Azure" >&2
-                if ! [[ $the_file =~ /$ ]]; then
-                    echo "Copying log file $the_file" >&2
-                    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginxlogs/${the_file}" "/var/log/nginx/${the_file}"
-                fi
-            done
-            chown www-data.adm /var/log/nginx/*
-            chmod 640 /var/log/nginx/*
-        fi
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud log) ]]; then
-        echo "There are log files on Azure" >&2
-        for the_file in $(python -m docassemble.webapp.list-cloud log/ | cut -c 5-); do
-            echo "Found $the_file on Azure" >&2
-            if ! [[ $the_file =~ /$ ]]; then
-                echo "Copying log file $the_file" >&2
-                cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/${the_file}" "${LOGDIRECTORY:-${DA_ROOT}/log}/${the_file}"
-            fi
-        done
-        chown -R www-data.www-data "${LOGDIRECTORY:-${DA_ROOT}/log}"
-    fi
-    if [[ $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
-        rm -f "$DA_CONFIG_FILE"
-        echo "Copying config.yml" >&2
-        cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml" "${DA_CONFIG_FILE}"
-        chown www-data.www-data "${DA_CONFIG_FILE}"
-        ls -l "${DA_CONFIG_FILE}" >&2
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(python -m docassemble.webapp.list-cloud redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
-        echo "Copying redis" >&2
-        cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb" "/var/lib/redis/dump.rdb"
-        chown redis.redis "/var/lib/redis/dump.rdb"
-    fi
+if [ "${EC2:-false}" == "true" ]; then
+    export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
+    export PUBLIC_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/public-hostname`
 else
-    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ -f "${DA_ROOT}/backup/letsencrypt.tar.gz" ]; then
-        cd /
-        tar -xf "${DA_ROOT}/backup/letsencrypt.tar.gz"
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d "${DA_ROOT}/backup/apache" ]; then
-        rsync -auq "${DA_ROOT}/backup/apache/" /etc/apache2/sites-available/
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [ -d "${DA_ROOT}/backup/apachelogs" ]; then
-        rsync -auq "${DA_ROOT}/backup/apachelogs/" /var/log/apache2/
-        chown root.adm /var/log/apache2/*
-        chmod 640 /var/log/apache2/*
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [ -d "${DA_ROOT}/backup/nginxlogs" ]; then
-        rsync -auq "${DA_ROOT}/backup/nginxlogs/" /var/log/nginx/
-        chown www-data.adm /var/log/nginx/*
-        chmod 640 /var/log/nginx/*
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ -d "${DA_ROOT}/backup/log" ]; then
-        rsync -auq "${DA_ROOT}/backup/log/" "${LOGDIRECTORY:-${DA_ROOT}/log}/"
-        chown -R www-data.www-data "${LOGDIRECTORY:-${DA_ROOT}/log}"
-    fi
-    if [ -f "${DA_ROOT}/backup/config.yml" ]; then
-        cp "${DA_ROOT}/backup/config.yml" "${DA_CONFIG_FILE}"
-        chown www-data.www-data "${DA_CONFIG_FILE}"
-    fi
-    if [ -d "${DA_ROOT}/backup/files" ]; then
-        rsync -auq "${DA_ROOT}/backup/files" "${DA_ROOT}/"
-        chown -R www-data.www-data "${DA_ROOT}/files"
-    fi
-    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ -f "${DA_ROOT}/backup/redis.rdb" ] && [ "$REDISRUNNING" = false ]; then
-        cp "${DA_ROOT}/backup/redis.rdb" /var/lib/redis/dump.rdb
-        chown redis.redis "/var/lib/redis/dump.rdb"
+    export LOCAL_HOSTNAME=`hostname --fqdn`
+    export PUBLIC_HOSTNAME="${LOCAL_HOSTNAME}"
+fi
+
+echo "13.5" >&2
+
+if [ "${RESTOREFROMBACKUP}" == "true" ]; then
+    if [ "${S3ENABLE:-false}" == "true" ]; then
+	if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/letsencrypt.tar.gz") ]]; then
+            rm -f /tmp/letsencrypt.tar.gz
+            s4cmd get "s3://${S3BUCKET}/letsencrypt.tar.gz" /tmp/letsencrypt.tar.gz
+            cd /
+            tar -xf /tmp/letsencrypt.tar.gz
+            rm -f /tmp/letsencrypt.tar.gz
+	else
+            rm -f /etc/letsencrypt/da_using_lets_encrypt
+	fi
+	if [ "${DABACKUPDAYS}" != "0" ] && [[ $(s4cmd ls "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}") ]]; then
+	    s4cmd dsync "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}" "${DA_ROOT}/backup"
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/apache") ]]; then
+	    s4cmd dsync "s3://${S3BUCKET}/apache" /etc/apache2/sites-available
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+	    if [[ $(s4cmd ls "s3://${S3BUCKET}/apachelogs") ]]; then
+		s4cmd dsync "s3://${S3BUCKET}/apachelogs" /var/log/apache2
+		chown root.adm /var/log/apache2/*
+		chmod 640 /var/log/apache2/*
+	    fi
+	    if [[ $(s4cmd ls "s3://${S3BUCKET}/nginxlogs") ]]; then
+		s4cmd dsync "s3://${S3BUCKET}/nginxlogs" /var/log/nginx
+		chown www-data.adm /var/log/nginx/*
+		chmod 640 /var/log/nginx/*
+	    fi
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/log") ]]; then
+	    s4cmd dsync "s3://${S3BUCKET}/log" "${LOGDIRECTORY:-${DA_ROOT}/log}"
+	    chown -R www-data.www-data "${LOGDIRECTORY:-${DA_ROOT}/log}"
+	fi
+	if [[ $(s4cmd ls "s3://${S3BUCKET}/config.yml") ]]; then
+	    rm -f "$DA_CONFIG_FILE"
+	    s4cmd get "s3://${S3BUCKET}/config.yml" "$DA_CONFIG_FILE"
+	    chown www-data.www-data "$DA_CONFIG_FILE"
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/redis.rdb") ]] && [ "$REDISRUNNING" = false ]; then
+	    s4cmd -f get "s3://${S3BUCKET}/redis.rdb" "/var/lib/redis/dump.rdb"
+	    chown redis.redis "/var/lib/redis/dump.rdb"
+	fi
+    elif [ "${AZUREENABLE:-false}" == "true" ]; then
+	if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud letsencrypt.tar.gz) ]]; then
+	    rm -f /tmp/letsencrypt.tar.gz
+	    echo "Copying let's encrypt" >&2
+	    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz" "/tmp/letsencrypt.tar.gz"
+	    cd /
+	    tar -xf /tmp/letsencrypt.tar.gz
+	    rm -f /tmp/letsencrypt.tar.gz
+	else
+	    rm -f /etc/letsencrypt/da_using_lets_encrypt
+	fi
+	if [ "${DABACKUPDAYS}" != "0" ] && [[ $(python -m docassemble.webapp.list-cloud backup/${LOCAL_HOSTNAME}/) ]]; then
+	    BACKUPDIR="backup/${LOCAL_HOSTNAME}/"
+	    let BACKUPDIRLENGTH=${#BACKUPDIR}+1
+	    for the_file in $(python -m docassemble.webapp.list-cloud $BACKUPDIR | cut -c ${BACKUPDIRLENGTH}-); do
+		echo "Found $the_file on Azure" >&2
+		if ! [[ $the_file =~ /$ ]]; then
+		    if [ ! -f "${DA_ROOT}/backup/${the_file}" ]; then
+		       echo "Copying backup file" $the_file >&2
+		       cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}/${the_file}" "${DA_ROOT}/backup/${the_file}"
+		    fi
+		fi
+	    done
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud apache/) ]]; then
+	    echo "There are apache files on Azure" >&2
+	    for the_file in $(python -m docassemble.webapp.list-cloud apache/ | cut -c 8-); do
+		echo "Found $the_file on Azure" >&2
+		if ! [[ $the_file =~ /$ ]]; then
+		    echo "Copying apache file" $the_file >&2
+		    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${the_file}" "/etc/apache2/sites-available/${the_file}"
+		fi
+	    done
+	else
+	    rm -f /etc/letsencrypt/da_using_lets_encrypt
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+	    if [[ $(python -m docassemble.webapp.list-cloud apachelogs/) ]]; then
+		echo "There are apache log files on Azure" >&2
+		for the_file in $(python -m docassemble.webapp.list-cloud apachelogs/ | cut -c 12-); do
+		    echo "Found $the_file on Azure" >&2
+		    if ! [[ $the_file =~ /$ ]]; then
+			echo "Copying log file $the_file" >&2
+			cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apachelogs/${the_file}" "/var/log/apache2/${the_file}"
+		    fi
+		done
+		chown root.adm /var/log/apache2/*
+		chmod 640 /var/log/apache2/*
+	    fi
+	    if [[ $(python -m docassemble.webapp.list-cloud nginxlogs/) ]]; then
+		echo "There are nginx log files on Azure" >&2
+		for the_file in $(python -m docassemble.webapp.list-cloud nginxlogs/ | cut -c 11-); do
+		    echo "Found $the_file on Azure" >&2
+		    if ! [[ $the_file =~ /$ ]]; then
+			echo "Copying log file $the_file" >&2
+			cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginxlogs/${the_file}" "/var/log/nginx/${the_file}"
+		    fi
+		done
+		chown www-data.adm /var/log/nginx/*
+		chmod 640 /var/log/nginx/*
+	    fi
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud log) ]]; then
+	    echo "There are log files on Azure" >&2
+	    for the_file in $(python -m docassemble.webapp.list-cloud log/ | cut -c 5-); do
+		echo "Found $the_file on Azure" >&2
+		if ! [[ $the_file =~ /$ ]]; then
+		    echo "Copying log file $the_file" >&2
+		    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/${the_file}" "${LOGDIRECTORY:-${DA_ROOT}/log}/${the_file}"
+		fi
+	    done
+	    chown -R www-data.www-data "${LOGDIRECTORY:-${DA_ROOT}/log}"
+	fi
+	if [[ $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
+	    rm -f "$DA_CONFIG_FILE"
+	    echo "Copying config.yml" >&2
+	    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml" "${DA_CONFIG_FILE}"
+	    chown www-data.www-data "${DA_CONFIG_FILE}"
+	    ls -l "${DA_CONFIG_FILE}" >&2
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(python -m docassemble.webapp.list-cloud redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
+	    echo "Copying redis" >&2
+	    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb" "/var/lib/redis/dump.rdb"
+	    chown redis.redis "/var/lib/redis/dump.rdb"
+	fi
+    else
+	if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ -f "${DA_ROOT}/backup/letsencrypt.tar.gz" ]; then
+	    cd /
+	    tar -xf "${DA_ROOT}/backup/letsencrypt.tar.gz"
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d "${DA_ROOT}/backup/apache" ]; then
+	    rsync -auq "${DA_ROOT}/backup/apache/" /etc/apache2/sites-available/
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [ -d "${DA_ROOT}/backup/apachelogs" ]; then
+	    rsync -auq "${DA_ROOT}/backup/apachelogs/" /var/log/apache2/
+	    chown root.adm /var/log/apache2/*
+	    chmod 640 /var/log/apache2/*
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [ -d "${DA_ROOT}/backup/nginxlogs" ]; then
+	    rsync -auq "${DA_ROOT}/backup/nginxlogs/" /var/log/nginx/
+	    chown www-data.adm /var/log/nginx/*
+	    chmod 640 /var/log/nginx/*
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ -d "${DA_ROOT}/backup/log" ]; then
+	    rsync -auq "${DA_ROOT}/backup/log/" "${LOGDIRECTORY:-${DA_ROOT}/log}/"
+	    chown -R www-data.www-data "${LOGDIRECTORY:-${DA_ROOT}/log}"
+	fi
+	if [ -f "${DA_ROOT}/backup/config.yml" ]; then
+	    cp "${DA_ROOT}/backup/config.yml" "${DA_CONFIG_FILE}"
+	    chown www-data.www-data "${DA_CONFIG_FILE}"
+	fi
+	if [ -d "${DA_ROOT}/backup/files" ]; then
+	    rsync -auq "${DA_ROOT}/backup/files" "${DA_ROOT}/"
+	    chown -R www-data.www-data "${DA_ROOT}/files"
+	fi
+	if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ -f "${DA_ROOT}/backup/redis.rdb" ] && [ "$REDISRUNNING" = false ]; then
+	    cp "${DA_ROOT}/backup/redis.rdb" /var/lib/redis/dump.rdb
+	    chown redis.redis "/var/lib/redis/dump.rdb"
+	fi
     fi
 fi
 
 echo "14" >&2
-
-DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
 
 echo "15" >&2
 
@@ -373,6 +381,7 @@ if [ "${BEHINDHTTPSLOADBALANCER:-null}" == "true" ] && [ "${XSENDFILE:-null}" ==
 fi
 
 if [ ! -f "$DA_CONFIG_FILE" ]; then
+    DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
     echo "There is no config file.  Creating one from source." >&2
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2:\/\/}"'@' \
         -e 's/{{DBNAME}}/'"${DBNAME:-docassemble}"'/' \
@@ -515,14 +524,6 @@ if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.
 fi
 
 echo "20" >&2
-
-if [ "${EC2:-false}" == "true" ]; then
-    export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
-    export PUBLIC_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/public-hostname`
-else
-    export LOCAL_HOSTNAME=`hostname --fqdn`
-    export PUBLIC_HOSTNAME="${LOCAL_HOSTNAME}"
-fi
 
 echo "21" >&2
 
@@ -727,36 +728,38 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
     if [ -z "$roleexists" ]; then
         echo "create role "${DBUSER:-docassemble}" with login password '"${DBPASSWORD:-abc123}"';" | su -c psql postgres || exit 1
     fi
-    if [ "${S3ENABLE:-false}" == "true" ] && [[ $(s4cmd ls s3://${S3BUCKET}/postgres) ]]; then
-        PGBACKUPDIR=`mktemp -d`
-        s4cmd dsync "s3://${S3BUCKET}/postgres" "$PGBACKUPDIR"
-    elif [ "${AZUREENABLE:-false}" == "true" ] && [[ $(python -m docassemble.webapp.list-cloud postgres) ]]; then
-        echo "There are postgres files on Azure" >&2
-        PGBACKUPDIR=`mktemp -d`
-        for the_file in $(python -m docassemble.webapp.list-cloud postgres/); do
-            echo "Found $the_file on Azure" >&2
-            if ! [[ $the_file =~ /$ ]]; then
-                target_file=`basename "${the_file}"`
-                echo "Copying $the_file to $target_file" >&2
-                cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "$PGBACKUPDIR/${target_file}"
-            fi
-        done
-    else
-        PGBACKUPDIR="${DA_ROOT}/backup/postgres"
-    fi
-    if [ -d "${PGBACKUPDIR}" ]; then
-        echo "Postgres database backup directory is $PGBACKUPDIR" >&2
-        cd "$PGBACKUPDIR"
-        chown -R postgres.postgres "$PGBACKUPDIR"
-        for db in $( ls ); do
-            echo "Restoring postgres database $db" >&2
-            pg_restore -f - -F c -C -c $db | su -c psql postgres
-        done
-        if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
-            cd /
-            rm -rf $PGBACKUPDIR
-        fi
-        cd /tmp
+    if [ "${RESTOREFROMBACKUP}" == "true" ]; then
+	if [ "${S3ENABLE:-false}" == "true" ] && [[ $(s4cmd ls s3://${S3BUCKET}/postgres) ]]; then
+	    PGBACKUPDIR=`mktemp -d`
+	    s4cmd dsync "s3://${S3BUCKET}/postgres" "$PGBACKUPDIR"
+	elif [ "${AZUREENABLE:-false}" == "true" ] && [[ $(python -m docassemble.webapp.list-cloud postgres) ]]; then
+	    echo "There are postgres files on Azure" >&2
+	    PGBACKUPDIR=`mktemp -d`
+	    for the_file in $(python -m docassemble.webapp.list-cloud postgres/); do
+		echo "Found $the_file on Azure" >&2
+		if ! [[ $the_file =~ /$ ]]; then
+		    target_file=`basename "${the_file}"`
+		    echo "Copying $the_file to $target_file" >&2
+		    cmd_retry blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "$PGBACKUPDIR/${target_file}"
+		fi
+	    done
+	else
+	    PGBACKUPDIR="${DA_ROOT}/backup/postgres"
+	fi
+	if [ -d "${PGBACKUPDIR}" ]; then
+	    echo "Postgres database backup directory is $PGBACKUPDIR" >&2
+	    cd "$PGBACKUPDIR"
+	    chown -R postgres.postgres "$PGBACKUPDIR"
+	    for db in $( ls ); do
+		echo "Restoring postgres database $db" >&2
+		pg_restore -f - -F c -C -c $db | su -c psql postgres
+	    done
+	    if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
+		cd /
+		rm -rf $PGBACKUPDIR
+	    fi
+	    cd /tmp
+	fi
     fi
     dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='${DBNAME:-docassemble}'\"" postgres`
     if [ -z "$dbexists" ]; then
@@ -930,9 +933,6 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                     rm -f /tmp/letsencrypt.tar.gz
                 fi
             fi
-            #if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud nginx) ]]; then
-            #    s4cmd dsync "/etc/nginx/sites-available" "s3://${S3BUCKET}/nginx"
-            #fi
         elif [ "${AZUREENABLE:-false}" == "true" ]; then
             if [ "${USELETSENCRYPT:-false}" == "true" ]; then
                 cd /
@@ -944,13 +944,6 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                     rm -f /tmp/letsencrypt.tar.gz
                 fi
             fi
-            #if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud nginx) ]]; then
-            #    for the_file in $(find /etc/nginx/sites-available/ -type f); do
-            #        target_file=`basename "${the_file}"`
-            #        echo "Saving nginx" >&2
-            #        cmd_retry blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginx/${target_file}"
-            #    done
-            #fi
         else
             if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
                 if [ "${USELETSENCRYPT:-false}" == "true" ]; then
@@ -958,9 +951,6 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
                     rm -f "${DA_ROOT}/backup/letsencrypt.tar.gz"
                     tar -zcf "${DA_ROOT}/backup/letsencrypt.tar.gz" etc/letsencrypt
                 fi
-                #rm -rf "${DA_ROOT}/backup/nginx"
-                #mkdir -p "${DA_ROOT}/backup/nginx"
-                #rsync -auq /etc/nginx/sites-available/ "${DA_ROOT}/backup/nginx/"
             fi
         fi
     }
@@ -1366,6 +1356,7 @@ function deregister {
             rsync -auq "${DA_ROOT}/files" "${DA_ROOT}/backup/"
         fi
     fi
+    rm -f /etc/da_running
     echo "finished shutting down initialize" >&2
     kill %1
     exit 0

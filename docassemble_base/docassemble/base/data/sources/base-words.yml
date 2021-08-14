@@ -230,6 +230,7 @@
 "Download all files": Null
 "Download All": Null
 "Download an interview phrase translation file": Null
+"Download installed package": Null
 "Download": Null
 "Download Office add-in manifest file": Null
 "Download the current package": Null
@@ -257,6 +258,7 @@
 "E-mail address is required": Null
 "Email address is required": Null
 "E-mail address": Null
+"Email Confirmation": Null
 "E-mail is required": Null
 "Email is required": Null
 "E-mail": Null
@@ -406,14 +408,18 @@
 "I do not understand what you mean by": Null
 "I don't know": Null
 "If you did not initiate this confirmation, you may safely ignore this email.": Null
+"If you did not initiate this password change, click the link below to reset it.": Null
 "If you did not initiate this password change,": Null
 "If you did not initiate this password reset, you may safely ignore this email.": Null
 "If you did not initiate this registration, you may safely ignore this email.": Null
 "If you did not initiate this username change, please": Null
+"If you did not initiate this username change, please sign in (using your email address) and change your password.": Null
 "If you have a GitHub account, you can turn on GitHub integration.  This will allow you to use GitHub as a version control system for packages from inside the Playground.": Null
 "If you initiated this confirmation, please click on the link below:": Null
 "If you initiated this registration, please click on the link below:": Null
 "If you initiated this registration, please click on the link below to sign in to your existing account:": Null
+"If you initiated this registration, please visit the link below:": Null
+"If you initiated this registration, please visit the link below to sign in to your existing account:": Null
 "If you initiated this request, please click on the link below:": Null
 "Import method": Null
 "Import": Null
@@ -456,6 +462,7 @@
 "Invalid invitation token": Null
 "Invalid phone number.": Null
 "Invitation has been sent.": Null
+"Invitation": Null
 "Invitations have been sent.": Null
 "Invite a user": Null
 "Invite!": Null
@@ -779,6 +786,7 @@
 "Register with Google": Null
 "Register with Twitter": Null
 "Register with your mobile phone": Null
+"Registration attempt": Null
 "Registration is invite only": Null
 "remaining on disk": Null
 "Remember me": Null
@@ -949,6 +957,7 @@
 "Terms used:": Null
 "Test": Null
 "Thailand": Null
+"Thank you for registering": Null
 "Thank you for registering with": Null
 "That e-mail address is already taken.": Null
 "That package name is already in use by someone else.  Please change the name.": Null
@@ -1037,6 +1046,7 @@
 "to proceed.": Null
 "To reach an advocate who can assist you, call": Null
 "To read the question again, type question.": Null
+"To register for an account, please click on the link below.": Null
 "Trainer privilege": Null
 "Training data were successfully imported.": Null
 "Train machine learning models": Null
@@ -1271,6 +1281,7 @@
 "Your information was saved.": Null
 "Your IP address is": Null
 "Your new API key, known internally as %s, is %s": Null
+"Your password has been changed": Null
 "Your password has been changed.": Null
 "Your password has been changed successfully.": Null
 "Your password has been reset successfully.": Null
@@ -1284,6 +1295,7 @@
 "Your screen is being controlled by an operator.": Null
 "yourself": Null
 "Your status: ": Null
+"Your username has been changed": Null
 "Your username has been changed.": Null
 "Your username has been changed to '%(username)s'.": Null
 "Your verification code is invalid or expired.  Please try again.": Null
