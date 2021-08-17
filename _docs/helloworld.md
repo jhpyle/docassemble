@@ -27,7 +27,8 @@ are:
 The default password ("password") will need to be changed.  Change it
 to something that is at least eight characters long with at least one
 lowercase letter and one number.  You should also change the e-mail
-address by going to [User List].
+address by going to [User List] and clicking "Edit" next to the
+admin@admin.com user.
 
 Then, from the menu, select [Playground].  The [Playground] is a
 "sandbox" area where you can develop interviews and test them, all

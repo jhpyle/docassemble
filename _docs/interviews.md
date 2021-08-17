@@ -970,6 +970,98 @@ For other exiting options, see the `'exit'`, `'leave'`, `'logout'`, and
 `'exit_logout'` options for the [`url_of()`] and [`command()`]
 functions.
 
+# <a name="jinja2"></a>Using Jinja2 templating to build the YAML of an interview
+
+When specifying the [YAML] of an interview, you have the option of
+using [Jinja2] templating to construct your [YAML].  The vast majority
+of **docassemble** developers will not need to do this, so this should
+be considered an advanced feature.
+
+By default, interview YAML files are not processed with [Jinja2].  To
+turn on [Jinja2] processing, add `# use jinja` to the very first line
+of a [YAML] file.  (This needs to be written exactly this way on the
+first line.)
+
+{% include demo-side-by-side.html demo="jinjayaml" %}
+
+This example demonstrates the use of the `include` command.  The
+`jinjayaml-included.yml` file is located in the same directory as the
+YAML file.  Its contents are:
+
+{% highlight yaml %}
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+{% endhighlight %}
+
+In this context, the [Jinja2] `include` command acts much like the
+**docassemble** [`include` block].  However, the [Jinja2] command can
+do things that the [`include` block] cannot do; for example, you can
+set the contents of a [YAML] file to be a partial block, such as a
+list of `fields`, and then include that file in the middle of one or
+more `question` blocks.
+
+Note that all that [Jinja2] does is take [YAML] and convert it to
+[YAML].  The way that [Jinja2] is used in this context is very
+different from the way that [Mako] is used inside [Markdown] text or
+the way that [Jinja2] is used to assemble [DOCX documents]. For
+example, you cannot run **docassemble** [functions] or refer to
+variables in the interview answers.  The [YAML] is processed by
+[Jinja2] when the interview is first loaded into the memory of the web
+server process.  [Jinja2] functions as a preprocessor only; it cannot
+be used to make dynamic changes to the way an interview works.
+
+In the above example, the [Jinja2] `include` directive was used to
+include a file in the "questions" folder of the same package.  If you
+want to refer to a file in another package, you can write a complete
+filename such as `docassemble.missouri:data/questions/toinclude.yml`.
+
+The following variables are available in the [Jinja2] context:
+
+  * `__version__`: the current version of **docassemble** installed on
+    the server.
+  * `__architecture__`: the value returned by `platform.machine()` (e.g., `'x86_64'`).
+  * `__filename__`: the name of the [YAML] file for which [Jinja2] was invoked.
+  * `__current_package__`: the package containing the [YAML] file for which [Jinja2] was invoked.
+  * `__interview_filename__`: the name of the [YAML] file that was
+    invoked to run the current interview.
+  * `__interview_package__`: the package containing the [YAML] file that was
+    invoked to run the current interview.
+  * `__parent_filename__`: if the current [YAML] file (`__filename__`)
+    was included through an [`include` block], `__parent_filename__`
+    will contain the name of the [YAML] file that contained the
+    [`include` block].  Otherwise, `__parent_filename__` will be the
+    same as `__interview_filename__`.
+  * `__parent_package__`: the package containing `__parent_filename`.
+
+In addition, you can make variables available in the [Jinja2] context on
+your server by setting the [`jinja data`] directive in your
+[Configuration].  For example:
+
+{% highlight yaml %}
+jinja data:
+  verbosity: 2
+  region: Delaware
+{% endhighlight %}
+
+This will make the variables `verbosity` and `region` available for
+use in [Jinja2] directives.
+
+Note that the variables passed to [Jinja2] are fixed at the time that
+[Jinja2] is invoked.  For example, if you use the [Jinja2] `include`
+directive, the `__filename__` will not be the filename of the included
+file; it will continue to be whatever it was when the [YAML] filename
+containing `# use jinja` was encountered.
+
+[`include` block]: {{ site.baseurl }}/docs/initial.html#include
+[`jinja data`]: {{ site.baseurl }}/docs/config.html#jinja data
+[Configuration]: {{ site.baseurl }}/docs/config.html
+[functions]: {{ site.baseurl }}/docs/functions.html
+[DOCX documents]: {{ site.baseurl }}/docs/documents.html#docx template file
+[Markdown]: https://daringfireball.net/projects/markdown/
+[Mako]: http://www.makotemplates.org/
 [YAML specification]: http://yaml.org/spec/1.2/spec.html
 [if/else statements]: {{ site.baseurl }}/docs/code.html#if
 [graphical user interface]: https://en.wikipedia.org/wiki/Graphical_user_interface
@@ -1058,3 +1150,4 @@ functions.
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
 [`SQLObject`]: {{ site.baseurl }}/docs/objects.html#SQLObject
 [`allow embedding`]: {{ site.baseurl }}/docs/config.html#allow embedding
+[Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/

@@ -2043,7 +2043,7 @@ interview, see the [`cache documents` feature].
 [using `docx` as one of the `valid formats`]: #docx
 [`python-docx-template`]: http://docxtpl.readthedocs.io/en/latest/
 [documentation of that package]: http://docxtpl.readthedocs.io/en/latest/
-[Jinja2]: http://jinja.pocoo.org/docs/2.9/
+[Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
 [Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
 [insert an image]: {{ site.baseurl }}/docs/markup.html#inserting images
 [updated]: https://docs.python.org/3/library/stdtypes.html#dict.update

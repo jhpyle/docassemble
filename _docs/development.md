@@ -15,8 +15,11 @@ installing **docassemble** on your personal laptop or desktop using
 You can log in using the default username of `admin@admin.com` and the
 default password of `password`.  After you change your password, you
 can use the menu in the upper-right hand corner to navigate to the
-[Playground], where you can try modifying the default interview, or go
-through the steps of the [tutorial].
+User List, where you can click "Edit" next to the `admin@admin.com`
+user and change its e-mail address to a real e-mail address.  Then you
+can use the menu to go to the [Playground], where you can try
+modifying the default interview, or go through the steps of the
+[tutorial].
 
 Using the [Playground], you can start developing and testing
 interviews of your own, with the help of the [documentation] and the

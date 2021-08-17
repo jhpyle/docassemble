@@ -509,7 +509,7 @@ information about this feature, see the section on
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [Microsoft Word templates]: {{ site.baseurl}}/docs/documents.html#docx template file
-[Jinja2]: http://jinja.pocoo.org/docs/2.9/
+[Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
 [`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [`include_docx_template()`]: {{ site.baseurl }}/docs/functions.html#include_docx_template

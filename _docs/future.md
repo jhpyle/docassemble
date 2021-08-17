@@ -43,7 +43,7 @@ the top priorities are:
 * A Microsoft Word add-in that provides [Jinja2] linting and/or syntax
   highlighting.
 
-[Jinja2]: http://jinja.pocoo.org/docs/2.9/
+[Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
 [`pattern`]: http://www.clips.ua.ac.be/pages/pattern-en
 [`python-docx-template`]: http://docxtpl.readthedocs.io/en/latest/
 [`docx`]: https://python-docx.readthedocs.io/en/latest/

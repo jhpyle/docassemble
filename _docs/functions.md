@@ -7752,7 +7752,7 @@ $(document).on('daPageLoad', function(){
 [status callback values]: https://www.twilio.com/docs/api/fax/rest/faxes#fax-status-callback
 [fax status values]: https://www.twilio.com/docs/api/fax/rest/faxes#fax-status-values
 [DOCX template file]: {{ site.baseurl }}/docs/documents.html#docx template file
-[Jinja2]: http://jinja.pocoo.org/docs/2.9/
+[Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
 [`/api/list`]: {{ site.baseurl }}/docs/api.html#list
 [`/api/interviews`]: {{ site.baseurl }}/docs/api.html#interviews
 [`/api/user/interviews`]: {{ site.baseurl }}/docs/api.html#user_interviews

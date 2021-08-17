@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.98](https://github.com/jhpyle/docassemble/releases/tag/v1.2.98) - 2021-08-17
+
+### Added
+- Feature for using Jinja2 as a preprocessor to construct YAML.
+
+### Changed
+- Disabled `DAGoogleAPI` when the architecture is not `amd64`.
+- Adjusted use of `\xspace` for new version of Pandoc.
+- If an inactive server in the cluster is detected during the restart
+  process, the server will be removed from the list of servers.
+
 ## [1.2.97](https://github.com/jhpyle/docassemble/releases/tag/v1.2.97) - 2021-08-13
 
 ### Added

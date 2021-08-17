@@ -12658,6 +12658,22 @@
   \ user.legume_picks['String beans'] \\\n     and user.legume_picks['Peanut'] \\\n\
   \     and not user.legume_picks['Mango'] \\\n     and not user.legume_picks['Potato']:\n\
   \    user.knows_legumes = True\n  else:\n    user.knows_legumes = False"
+"jinjayaml": |-
+  # use jinja
+  {% include "jinjayaml-included.yml" %}
+  mandatory: True
+  question: |
+    Your favorite fruit is ${ favorite_fruit }.
+  subquestion: |
+    * `__version__`: {{ __version__ }}
+    * `__architecture__`: {{ __architecture__ }}
+    * `__filename__`: {{ __filename__ }}
+    * `__current_package__`: {{ __current_package__ }}
+    * `__interview_filename__`: {{ __interview_filename__ }}
+    * `__interview_package__`: {{ __interview_package__ }}
+    * `__parent_filename__`: {{ __parent_filename__ }}
+    * `__parent_package__`: {{ __parent_package__ }}
+"jinjayaml-included": ""
 "jsondemo": "objects:\n  - user: Individual\n  - user.favorite_fruit: DAList.using(object_type=Thing)\n\
   ---\nmandatory: True\ncode: |\n  user.favorite_fruit.gather()\n  final_screen\n\
   ---\nquestion: |\n  Do you have any favorite fruit?\nyesno: user.favorite_fruit.there_are_any\n\

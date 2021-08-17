@@ -1524,6 +1524,13 @@ also, of course, need to change the web server configuration file.
 passwords, or to let users of a [multi-user interview] know that it is
 their turn to start answering questions.
 
+Before you set up your e-mail configuration, make sure that you are
+not using the default fake e-mail address of `admin@admin.com` as the
+e-mail address of the administrative user.  If you forget your
+password, you will want to be able to reset it using the "forgot my
+password" feature, which relies on e-mailing an address you can
+access.
+
 By default, **docassemble** assumes that an [SMTP] server is installed
 on the same machine as the web server and that it uses port 25.
 
@@ -4376,6 +4383,17 @@ limit` directive.
 pagination limit: 50
 {% endhighlight %}
 
+## <a name="jinja data"></a>Variables for Jinja2 YAML preprocessor
+
+When using [Jinja2] as a [YAML preprocessor], you can pass variables
+from the Configuration to the [Jinja2] context.
+
+{% highlight yaml %}
+jinja data:
+  verbosity: 2
+  region: Delaware
+{% endhighlight %}
+
 ## <a name="config from"></a>Importing configuration directives
 
 The following sections, [Using AWS Secrets Manager](#aws_secrets) and
@@ -4903,7 +4921,7 @@ and Facebook API keys.
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [`pdf/a` features setting]: {{ site.baseurl }}/docs/initial.html#pdfa
 [`tagged pdf` features setting]: {{ site.baseurl }}/docs/initial.html#tagged pdf
-[Jinja2]: http://jinja.pocoo.org/docs/2.9/
+[Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
 [Flask]: http://flask.pocoo.org/
 [`interviews.html`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/templates/pages/interviews.html
 [`start.html`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/templates/pages/start.html

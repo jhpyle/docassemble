@@ -114,7 +114,8 @@ First, make sure you are running [Docker] on a computer or virtual
 computer with at least 4GB of memory and 20GB of hard drive space.
 The **docassemble** installation will use up about 10GB of space, and
 you should always have at least 10GB free when you are running
-**docassemble**.
+**docassemble**.  **docassemble** works on 64-bit Intel/AMD
+processors.
 
 If you have a Windows PC, follow the
 [Docker installation instructions for Windows]{:target="_blank"}.  You
@@ -209,7 +210,9 @@ order to allow web browsers to connect to your [EC2] instance.
 
 Using the web browser, you can log in using the default username
 ("admin@admin.com") and password ("password"), and make changes to the
-configuration from the menu.
+configuration from the menu.  You should also go to User List from the
+menu, click "Edit" next to the `admin@admin.com` user, and change that
+e-mail address to an actual e-mail address you can access.
 
 In the [`docker run`] command, the `-d` flag means that the container
 will run in the background.
@@ -1965,6 +1968,20 @@ Or push it to [Docker Hub]:
 {% highlight bash %}
 docker push yourdockerhubusername/mydocassemble
 {% endhighlight %}
+
+# <a name="arm"></a>ARM support
+
+Using **docassemble** on the [ARM] architecture is considered
+experimental.  The images on [Docker Hub] are `amd64`-only, so if you
+want to run **docassemble** on [ARM], you will need to use `docker
+build` to build the `jhpyle/docassemble-os` and `jhpyle/docassemble`
+images.  The known issues with [ARM] compatibility are:
+
+* The `DAGoogleAPI` object cannot be used because the dependency
+  package it relies on causes a C memory allocation error to be
+  raised.
+* Google Chrome is not installed if the architecture is [ARM], so you
+  cannot use headless Chrome for web browser automation.
 
 # <a name="upgrading"></a>Upgrading docassemble when using Docker
 
