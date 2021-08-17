@@ -66,6 +66,7 @@ def remove_inactive_hosts(start_time=None):
                 to_delete.add(host.id)
         for id_to_delete in to_delete:
             db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
+            db.session.commit()
     sys.stderr.write("remove_inactive_hosts: ended after " + str(time.time() - start_time) + " seconds\n")
 
 class DummyPackage(object):

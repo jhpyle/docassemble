@@ -3988,6 +3988,7 @@ def wait_for_task(task_id, timeout=None):
 def trigger_update(except_for=None):
     sys.stderr.write("trigger_update: except_for is " + str(except_for) + " and hostname is " + hostname + "\n")
     if USING_SUPERVISOR:
+        to_delete = set()
         for host in db.session.execute(select(Supervisors)).scalars():
             if host.url and not (except_for and host.hostname == except_for):
                 if host.hostname == hostname:
@@ -4001,6 +4002,10 @@ def trigger_update(except_for=None):
                     sys.stderr.write("trigger_update: sent update to " + str(host.hostname) + " using " + the_url + "\n")
                 else:
                     sys.stderr.write("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful\n")
+                    to_delete.add(host.id)
+        for id_to_delete in to_delete:
+            db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
+            db.session.commit()
     return
 
 def restart_on(host):
@@ -4015,7 +4020,8 @@ def restart_on(host):
         logmessage("restart_on: sent reset to " + str(host.hostname))
     else:
         logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
-    return
+        return False
+    return True
 
 def restart_all():
     for interview_path in [x.decode() for x in r.keys('da:interviewsource:*')]:
@@ -4027,13 +4033,17 @@ def restart_all():
 def restart_this():
     logmessage("restart_this: hostname is " + str(hostname))
     if USING_SUPERVISOR:
+        to_delete = set()
         for host in db.session.execute(select(Supervisors)).scalars():
             if host.url:
                 logmessage("restart_this: considering " + str(host.hostname) + " against " + str(hostname))
                 if host.hostname == hostname:
-                    restart_on(host)
-            #else:
-            #    logmessage("restart_this: unable to get host url")
+                    result = restart_on(host)
+                    if not result:
+                        to_delete.add(host.id)
+        for id_to_delete in to_delete:
+            db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
+            db.session.commit()
     else:
         logmessage("restart_this: touching wsgi file")
         wsgi_file = WEBAPP_PATH
@@ -4047,19 +4057,27 @@ def restart_others():
     if USING_SUPERVISOR:
         cron_key = 'da:cron_restart'
         cron_url = None
+        to_delete = set()
         for host in db.session.execute(select(Supervisors)).scalars():
             if host.url and host.hostname != hostname and ':cron:' in str(host.role):
                 pipe = r.pipeline()
                 pipe.set(cron_key, 1)
                 pipe.expire(cron_key, 10)
                 pipe.execute()
-                restart_on(host)
+                result = restart_on(host)
+                if not result:
+                    to_delete.add(host.id)
                 while r.get(cron_key) is not None:
                     time.sleep(1)
                 cron_url = host.url
         for host in db.session.execute(select(Supervisors)).scalars():
-            if host.url and host.url != cron_url and host.hostname != hostname:
-                restart_on(host)
+            if host.url and host.url != cron_url and host.hostname != hostname and host.id not in to_delete:
+                result = restart_on(host)
+                if not result:
+                    to_delete.add(host.id)
+        for id_to_delete in to_delete:
+            db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
+            db.session.commit()
     return
 
 def get_requester_ip(req):

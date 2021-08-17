@@ -628,6 +628,10 @@ def load(**kwargs):
         daconfig['enable monitor'] = False
     else:
         daconfig['enable monitor'] = True
+    try:
+        assert isinstance(daconfig['jinja data'], dict)
+    except:
+        daconfig['jinja data'] = dict()
     if daconfig.get('default icons', None) == 'font awesome':
         daconfig['use font awesome'] = True
     if 'websockets port' in daconfig and daconfig['websockets port']:

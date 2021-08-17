@@ -81,7 +81,7 @@ install_requires = [
     "geographiclib==1.50",
     "geopy==2.1.0",
     "google-api-core==1.26.3",
-    "google-api-python-client==2.3.0",
+    "google-api-python-client==2.15.0",
     "google-auth-httplib2==0.1.0",
     "google-auth-oauthlib==0.4.4",
     "google-auth==1.30.0",
