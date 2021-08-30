@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.99](https://github.com/jhpyle/docassemble/releases/tag/v1.2.99) - 2021-08-30
+
+### Changed
+- The `on_success` and `on_failure` parameters of `DAWeb` methods can
+  be set to `content`, `text`, or `status_code` in order to return the
+  undecoded response, decoded response, or status code of the HTTP
+  request.
+
+### Fixed
+- The `pdf_concatenate()` function will no longer try to guess an
+  appropriate `instanceName` for the returned `DAFile` object.
+
 ## [1.2.98](https://github.com/jhpyle/docassemble/releases/tag/v1.2.98) - 2021-08-17
 
 ### Added

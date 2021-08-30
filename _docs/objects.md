@@ -469,18 +469,38 @@ Other methods available on a `DAList` are:
   optional keyword parameter `url_only` to `True`, the method will
   return only the URL for the action, not the HTML for a button.
 * <a name="DAList.item_actions"></a><a
-  name="DADict.item_actions"></a>`item_actions()` - returns HTML for "Edit" and
-  "Delete" buttons.  This method is primarily used internally; there
-  are specifiers for the [`table`] that control it.  It takes two
-  positional parameters: the item itself (`the_group[the_index]`) and
-  its index (`the_index`).  It also accepts optional keyword
-  parameters.  If `edit` is false, the edit button is not shown.  If
-  `delete` is false, the delete button is not shown.  If
-  `edit_url_only` is true, a plain URL for the edit action is
-  returned, rather than HTML.  If `delete_url_only` is true, a plain
-  URL for the delete action is returned, rather than HTML.  If
-  `confirm` is true, the user will be asked to confirm before an item
-  is deleted.
+  name="DADict.item_actions"></a>`item_actions()` - returns HTML for
+  "Edit" and "Delete" buttons.  This method is primarily used
+  internally; there are specifiers for [`table`] that control it.  It
+  takes two positional parameters: the item itself
+  (`the_group[the_index]`) and its index (`the_index`).  The remaining
+  positional parameters, which are optional, are attribute names that
+  should be edited when the user presses the "Edit" button.  For
+  example, if you want the "Edit" button to show the user a screen for
+  editing the `favorite_fruit` attribute, you would write
+  `the_group.item_actions(the_group[the_index], the_index,
+  'favorite_fruit')`.  If you wanted the "Edit" button to show two
+  screens, one for editing the `favorite_fruit` attribute and one for
+  editing the `name.first` attribute, you would write
+  `the_group.item_actions(the_group[the_index], the_index,
+  'favorite_fruit', 'name.first')`.  The `item_actions()` method also
+  accepts the optional keyword parameters `edit` (defaults to `True`),
+  `delete` (defaults to `True`), `reorder` (defaults to `False`),
+  `ensure_complete` (defaults to `True`), `confirm` (defaults to
+  `False`), `edit_url_only` (defaults to `False`), and
+  `delete_url_only` (defaults to `False`).  If the value of `edit` is
+  false, the edit button is not shown.  If the value of `delete` is
+  false, the delete button is not shown.  If `reorder` is true,
+  up/down buttons for reordering items are shown.  If
+  `ensure_complete` is true, then after the user edits the attributes
+  given as positional parameters, **docassemble** will run
+  `.gathered_and_complete()` on the group.  If `confirm` is true, the
+  user will be asked to confirm before an item is deleted.  The
+  `edit_url_only` and `delete_url_only` parameters, if set to true,
+  will alter the default output of `item_actions()` so that instead of
+  outputting HTML of buttons, the method will output a single URL that
+  can be used in the web interface as the URL of an edit button or a
+  delete button, respectively.
 * <a name="DAList.hook_on_gather"></a><a
   name="DADict.hook_on_gather"></a>`hook_on_gather()` - this method is
   run automatically as part of the list gathering process.  It is run
@@ -3251,10 +3271,16 @@ setting the `on_failure` attribute (or keyword parameter).  If you set
 returned in case of an error.  The default value is `None`, meaning
 that `None` is returned in case the request is not successful.
 
-<a name="DAWebError"></a>There is a special value of `on_failure` that
-you might want to use: if you set `on_failure` to `'raise'`, then if
-the request is unsuccessful, an exception of type `DAWebError` is
-raised, which you can trap:
+<a name="DAWebError"></a>There are special values of `on_failure` that
+you might want to use:
+
+* if you set `on_failure` to `text`, then the UTF-8-decoded text
+  response is returned.
+* if you set `on_failure` to `content`, then the raw (not UTF-8 decoded)
+  response is returned.
+* if you set `on_failure` to `'raise'`, then if
+  the request is unsuccessful, an exception of type `DAWebError` is
+  raised, which you can trap:
 
 {% highlight yaml %}
 objects:
@@ -3295,7 +3321,28 @@ The `DAWebError` object has the following attributes:
 * `success`: `True` or `False` indicating whether the request was successful
 
 Similarly, you can also control what is returned when the request is
-successful by setting `on_success` to a value.  The `on_success`
+successful by setting `on_success` to a value.  If you set
+`on_success` to `True`, then `True` will be returned if the request
+was successful.
+
+There are three special values of `on_success` that you might want to
+use:
+* if you set `on_success` to `text`, then the UTF-8-decoded text
+  response is returned.  You may want to use this if you don't want
+  **docassemble** to attempt to convert the response to [JSON], and
+  you just want the plain text of the response
+* if you set `on_success` to `content`, then the raw (not UTF-8
+  decoded) response is returned.  You may want to use this if the
+  request might return a binary file, such as an image or a PDF file.
+  For example, you could download a file by setting
+  `on_success=content` and then passing the result to the
+  [`write()`](#DAFile.write) method of the `DAFile` class, along with
+  `binary=True`.
+* if you set `on_failure` to `'raise'`, then if
+  the request is unsuccessful, an exception of type `DAWebError` is
+  raised, which you can trap:
+
+The `on_success`
 feature also supports the special `'raise'` result, in case you want
 to inspect the output of a successful call.  Although if you are this
 interested in inspecting the results of a successful call, you should
