@@ -574,12 +574,24 @@ class DAWeb(DAObject):
         if success and task is not None:
             mark_task_as_performed(task, persistent=task_persistent)
         if not success:
-            if on_failure == 'raise':
+            if on_failure == 'content':
+                return r.content
+            elif on_failure == 'text':
+                return r.text
+            elif on_failure == 'status_code':
+                return r.status_code
+            elif on_failure == 'raise':
                 raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
             else:
                 return on_failure
         if success and on_success is not None:
-            if on_success == 'raise':
+            if on_success == 'content':
+                return r.content
+            elif on_success == 'text':
+                return r.text
+            elif on_success == 'status_code':
+                return r.status_code
+            elif on_success == 'raise':
                 raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
             else:
                 return on_success
@@ -2896,7 +2908,8 @@ def pdf_concatenate(*pargs, **kwargs):
     if len(paths) == 0:
         raise DAError("pdf_concatenate: no valid files to concatenate")
     pdf_path = docassemble.base.pandoc.concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=kwargs.get('password', None))
-    pdf_file = DAFile()._set_instance_name_for_function()
+    pdf_file = DAFile()
+    pdf_file.set_random_instance_name()
     pdf_file.initialize(filename=kwargs.get('filename', 'file.pdf'))
     pdf_file.copy_into(pdf_path)
     pdf_file.retrieve()

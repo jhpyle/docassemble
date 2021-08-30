@@ -14716,7 +14716,7 @@ def update_package_wait():
         }
       }
       function daUpdate(){
-        if (pollDelay > 5){
+        if (pollDelay > 25){
           $("#notification").html(""" + json.dumps(word("Server did not respond to request for update.")) + """);
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
