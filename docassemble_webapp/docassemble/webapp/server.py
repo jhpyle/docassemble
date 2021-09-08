@@ -3988,6 +3988,7 @@ def wait_for_task(task_id, timeout=None):
 def trigger_update(except_for=None):
     sys.stderr.write("trigger_update: except_for is " + str(except_for) + " and hostname is " + hostname + "\n")
     if USING_SUPERVISOR:
+        to_delete = set()
         for host in db.session.execute(select(Supervisors)).scalars():
             if host.url and not (except_for and host.hostname == except_for):
                 if host.hostname == hostname:
@@ -4001,6 +4002,10 @@ def trigger_update(except_for=None):
                     sys.stderr.write("trigger_update: sent update to " + str(host.hostname) + " using " + the_url + "\n")
                 else:
                     sys.stderr.write("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful\n")
+                    to_delete.add(host.id)
+        for id_to_delete in to_delete:
+            db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
+            db.session.commit()
     return
 
 def restart_on(host):
@@ -4015,7 +4020,8 @@ def restart_on(host):
         logmessage("restart_on: sent reset to " + str(host.hostname))
     else:
         logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
-    return
+        return False
+    return True
 
 def restart_all():
     for interview_path in [x.decode() for x in r.keys('da:interviewsource:*')]:
@@ -4027,13 +4033,17 @@ def restart_all():
 def restart_this():
     logmessage("restart_this: hostname is " + str(hostname))
     if USING_SUPERVISOR:
+        to_delete = set()
         for host in db.session.execute(select(Supervisors)).scalars():
             if host.url:
                 logmessage("restart_this: considering " + str(host.hostname) + " against " + str(hostname))
                 if host.hostname == hostname:
-                    restart_on(host)
-            #else:
-            #    logmessage("restart_this: unable to get host url")
+                    result = restart_on(host)
+                    if not result:
+                        to_delete.add(host.id)
+        for id_to_delete in to_delete:
+            db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
+            db.session.commit()
     else:
         logmessage("restart_this: touching wsgi file")
         wsgi_file = WEBAPP_PATH
@@ -4047,19 +4057,27 @@ def restart_others():
     if USING_SUPERVISOR:
         cron_key = 'da:cron_restart'
         cron_url = None
+        to_delete = set()
         for host in db.session.execute(select(Supervisors)).scalars():
             if host.url and host.hostname != hostname and ':cron:' in str(host.role):
                 pipe = r.pipeline()
                 pipe.set(cron_key, 1)
                 pipe.expire(cron_key, 10)
                 pipe.execute()
-                restart_on(host)
+                result = restart_on(host)
+                if not result:
+                    to_delete.add(host.id)
                 while r.get(cron_key) is not None:
                     time.sleep(1)
                 cron_url = host.url
         for host in db.session.execute(select(Supervisors)).scalars():
-            if host.url and host.url != cron_url and host.hostname != hostname:
-                restart_on(host)
+            if host.url and host.url != cron_url and host.hostname != hostname and host.id not in to_delete:
+                result = restart_on(host)
+                if not result:
+                    to_delete.add(host.id)
+        for id_to_delete in to_delete:
+            db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
+            db.session.commit()
     return
 
 def get_requester_ip(req):
@@ -10509,7 +10527,7 @@ def index(action_argument=None, refer=None):
               }
             }
             if (showIfVars.length == 0){
-              console.log("ERROR: could not set " + jsInfo['vars'][i]);
+              console.log("ERROR: reference to non-existent field " + jsInfo['vars'][i]);
             }
             for (var j = 0; j < showIfVars.length; ++j){
               var showIfVar = showIfVars[j];
@@ -12035,6 +12053,31 @@ def do_serve_temporary_file(code, filename, extension, download=False):
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
     return response
 
+@app.route('/packagezip', methods=['GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def download_zip_package():
+    package_name = request.args.get('package', None)
+    if not package_name:
+        return ('File not found', 404)
+    package_name = werkzeug.utils.secure_filename(package_name)
+    package = db.session.execute(select(Package).filter_by(active=True, name=package_name, type='zip')).scalar()
+    if package is None:
+        return ('File not found', 404)
+    if not current_user.has_role('admin'):
+        auth = db.session.execute(select(PackageAuth).filter_by(package_id=package.id, user_id=current_user.id)).scalar()
+        if auth is None:
+            return ('File not found', 404)
+    try:
+        file_info = get_info_from_file_number(package.upload, privileged=True)
+    except:
+        return ('File not found', 404)
+    response = send_file(file_info['path'] + '.zip', mimetype='application/zip')
+    filename = re.sub(r'\.', '-', package_name) + '.zip'
+    response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return(response)
+
 @app.route('/uploadedfile/<number>/<filename>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_filename_and_extension(number, filename, extension):
     return do_serve_uploaded_file_with_filename_and_extension(number, filename, extension)
@@ -12986,7 +13029,7 @@ def observer():
               }
             }
             if (showIfVars.length == 0){
-              console.log("ERROR: could not set " + jsInfo['vars'][i]);
+              console.log("ERROR: reference to non-existent field " + jsInfo['vars'][i]);
             }
             for (var j = 0; j < showIfVars.length; ++j){
               var showIfVar = showIfVars[j];
@@ -14673,7 +14716,7 @@ def update_package_wait():
         }
       }
       function daUpdate(){
-        if (pollDelay > 5){
+        if (pollDelay > 25){
           $("#notification").html(""" + json.dumps(word("Server did not respond to request for update.")) + """);
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
@@ -19604,13 +19647,14 @@ def playground_project():
                         except:
                             logmessage("playground_project: unable to delete project on OneDrive.")
                 delete_project(current_user.id, current_project)
+                flash(word("The project %s was deleted.") % (current_project,), "success")
                 current_project = set_current_project('default')
-                mode = 'standard'
+                return redirect(url_for('playground_project', project=current_project))
     else:
         form = None
         mode = 'standard'
         page_title = word("Projects")
-        description = "You can divide up your Playground into multiple separate areas, apart from your default Playground area.  Each Project has its own question files and Folders."
+        description = word("You can divide up your Playground into multiple separate areas, apart from your default Playground area.  Each Project has its own question files and Folders.")
     response = make_response(render_template('pages/manage_projects.html', version_warning=None, bodyclass='daadminbody', tab_title=word("Projects"), description=description, page_title=page_title, projects=get_list_of_projects(current_user.id), current_project=current_project, mode=mode, form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -24659,11 +24703,15 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             if isinstance(val, (str, bool, int, float, NoneType)):
                 exec(str(key) + ' = ' + repr(val), user_dict)
             else:
-                user_dict['_internal']['_tempvar'] = copy.deepcopy(val)
-                exec(str(key) + ' = _internal["_tempvar"]', user_dict)
-                del user_dict['_internal']['_tempvar']
+                if key == '_xxxtempvarxxx':
+                    continue
+                user_dict['_xxxtempvarxxx'] = copy.deepcopy(val)
+                exec(str(key) + ' = _xxxtempvarxxx', user_dict)
+                del user_dict['_xxxtempvarxxx']
             process_set_variable(str(key), user_dict, vars_set, old_values)
     except Exception as the_err:
+        if '_xxxtempvarxxx' in user_dict:
+            del user_dict['_xxxtempvarxxx']
         if use_lock:
             release_lock(session_id, yaml_filename)
         raise Exception("Problem setting variables:" + str(the_err))
@@ -25802,6 +25850,55 @@ def api_playground_install():
     if do_restart and need_to_restart:
         restart_all()
     return ('', 204)
+
+@app.route('/api/playground/project', methods=['GET', 'POST', 'DELETE'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)
+def api_playground_projects():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    if request.method in ('GET', 'DELETE'):
+        try:
+            if current_user.has_role('admin'):
+                user_id = int(request.args.get('user_id', current_user.id))
+            else:
+                if 'user_id' in request.args:
+                    assert int(request.args['user_id']) == current_user.id
+                user_id = current_user.id
+        except:
+            return jsonify_with_status("Invalid user_id.", 400)
+    if request.method == 'GET':
+        return jsonify(get_list_of_projects(user_id))
+    if request.method == 'DELETE':
+        if 'project' not in request.args:
+            return jsonify_with_status("Project not provided.", 400)
+        project = request.args['project']
+        if project not in get_list_of_projects(user_id) or project == 'default':
+            return jsonify_with_status("Invalid project.", 400)
+        delete_project(user_id, project)
+        return ('', 204)
+    if request.method == 'POST':
+        post_data = request.get_json(silent=True)
+        if post_data is None:
+            post_data = request.form.copy()
+        try:
+            if current_user.has_role('admin'):
+                user_id = int(post_data.get('user_id', current_user.id))
+            else:
+                if 'user_id' in post_data:
+                    assert int(post_data['user_id']) == current_user.id
+                user_id = current_user.id
+        except:
+            return jsonify_with_status("Invalid user_id.", 400)
+        if 'project' not in post_data:
+            return jsonify_with_status("Project not provided.", 400)
+        project = post_data['project']
+        if re.search('^[0-9]', project) or re.search('[^A-Za-z0-9]', project):
+            return jsonify_with_status("Invalid project name.", 400)
+        if project in get_list_of_projects(user_id) or project == 'default':
+            return jsonify_with_status("Invalid project.", 400)
+        create_project(user_id, project)
+        return ('', 204)
 
 @app.route('/api/playground', methods=['GET', 'POST', 'DELETE'])
 @csrf.exempt

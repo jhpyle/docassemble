@@ -403,7 +403,7 @@ def docx_filter(text, metadata=None, question=None):
     text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+) *([0-9]+ *[A-Za-z]+)\] *(.+?)\n *\n', r'\3', text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
-def docx_template_filter(text, question=None):
+def docx_template_filter(text, question=None, replace_newlines=True):
     #logmessage('docx_template_filter')
     if text == 'True':
         return True
@@ -455,7 +455,8 @@ def docx_template_filter(text, question=None):
     text = re.sub(r'\[VERTICALSPACE\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[NEWLINE\] *', '</w:t><w:br/><w:t xml:space="preserve">', text)
     #text = re.sub(r'\n *\n', '[NEWPAR]', text)
-    text = re.sub(r'\n', ' ', text)
+    if replace_newlines:
+        text = re.sub(r'\n', ' ', text)
     text = re.sub(r'\[NEWPAR\] *', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
     text = re.sub(r'\[TAB\] *', '\t', text)
     text = re.sub(r'\[NEWPAR\]', '</w:t><w:br/><w:br/><w:t xml:space="preserve">', text)
@@ -526,10 +527,9 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[BLANK\]', r'\\leavevmode{\\xrfill[-2pt]{0.4pt}}', text)
     text = re.sub(r'\[BLANKFILL\]', r'\\leavevmode{\\xrfill[-2pt]{0.4pt}}', text)
     text = re.sub(r'\[PAGEBREAK\]\s*', r'\\clearpage ', text)
-    text = re.sub(r'\[PAGENUM\]', r'\\myshow{\\thepage\\xspace}', text)
-    text = re.sub(r'\[TOTALPAGES\]', r'\\myshow{\\pageref*{LastPage}\\xspace}', text)
-    text = re.sub(r'\[SECTIONNUM\]', r'\\myshow{\\thesection\\xspace}', text)
-    text = re.sub(r'\s*\[SKIPLINE\]\s*', r'\\par\\myskipline ', text)
+    text = re.sub(r'\[PAGENUM\]', r'\\myshow{\\thepage\\myxspace}', text)
+    text = re.sub(r'\[TOTALPAGES\]', r'\\myshow{\\pageref*{LastPage}\\myxspace}', text)
+    text = re.sub(r'\[SECTIONNUM\]', r'\\myshow{\\thesection\\myxspace}', text)
     text = re.sub(r'\[VERTICALSPACE\] *', r'\\rule[-24pt]{0pt}{0pt}', text)
     text = re.sub(r'\[NEWLINE\] *', r'\\newline ', text)
     text = re.sub(r'\[NEWPAR\] *', r'\\par ', text)
@@ -544,6 +544,7 @@ def pdf_filter(text, metadata=None, question=None):
     text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+)\] *(.+?)\n *\n', indentby_left_pdf, text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+) *([0-9]+ *[A-Za-z]+)\] *(.+?)\n *\n', indentby_both_pdf, text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[BORDER\] *(.+?)\n *\n', border_pdf, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\s*\[SKIPLINE\]\s*', r'\\par\\myskipline ', text)
     return(text)
 
 def html_filter(text, status=None, question=None, embedder=None, default_image_width=None, external=False):

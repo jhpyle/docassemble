@@ -261,6 +261,7 @@ class SoupParser(object):
             # logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + str(self.indentation))
             self.current_paragraph['params']['style'] = self.style
             self.current_paragraph['params']['indentation'] = self.indentation
+            self.list_number += 1
             return
         # logmessage("new_paragraph where style is " + self.style + " and indentation is " + str(self.indentation))
         self.current_paragraph = dict(params=dict(style=self.style, indentation=self.indentation, list_number=self.list_number), runs=[RichText('')])
@@ -536,6 +537,14 @@ class InlineSoupParser(object):
                 logmessage("Encountered a " + part.__class__.__name__)
 
 def inline_markdown_to_docx(text, question, tpl):
+    old_context = docassemble.base.functions.this_thread.evaluation_context
+    docassemble.base.functions.this_thread.evaluation_context = None
+    try:
+        text = str(text)
+    except:
+        docassemble.base.functions.this_thread.evaluation_context = old_context
+        raise
+    docassemble.base.functions.this_thread.evaluation_context = old_context
     source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
     source_code = re.sub("\n", ' ', source_code)
     source_code = re.sub(">\s+<", '><', source_code)
@@ -544,10 +553,17 @@ def inline_markdown_to_docx(text, question, tpl):
     for elem in soup.find_all(recursive=False):
         parser.traverse(elem)
     output = str(parser)
-    # logmessage(output)
-    return docassemble.base.filter.docx_template_filter(output, question=question)
+    return docassemble.base.filter.docx_template_filter(output, question=question, replace_newlines=False)
 
 def markdown_to_docx(text, question, tpl):
+    old_context = docassemble.base.functions.this_thread.evaluation_context
+    docassemble.base.functions.this_thread.evaluation_context = None
+    try:
+        text = str(text)
+    except:
+        docassemble.base.functions.this_thread.evaluation_context = old_context
+        raise
+    docassemble.base.functions.this_thread.evaluation_context = old_context
     if get_config('new markdown to docx', False):
         source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
         source_code = re.sub("\n", ' ', source_code)

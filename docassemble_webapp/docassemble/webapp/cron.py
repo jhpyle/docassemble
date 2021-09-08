@@ -130,15 +130,17 @@ def clear_old_interviews():
         while True:
             subq = select(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).where(UserDict.indexno > last_index, UserDict.filename == filename).group_by(UserDict.filename, UserDict.key).subquery()
             results = db.session.execute(select(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(1000))
-            if results.count() == 0:
-                break
             stale = list()
+            results_count = 0
             for record in results:
+                results_count += 1
                 last_index = record.indexno
                 delta = nowtime - record.modtime
                 #sys.stderr.write("clear_old_interviews: delta days is " + str(delta.days) + "\n")
                 if delta.days > days:
                     stale.append(dict(key=record.key, filename=record.filename))
+            if results_count == 0:
+                break
             for item in stale:
                 obtain_lock_patiently(item['key'], item['filename'])
                 reset_user_dict(item['key'], item['filename'], force=True)
@@ -151,15 +153,17 @@ def clear_old_interviews():
     while True:
         subq = select(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno')).where(UserDict.indexno > last_index, UserDict.filename.notin_(days_by_filename.keys())).group_by(UserDict.filename, UserDict.key).subquery()
         results = db.session.execute(select(UserDict.indexno, UserDict.key, UserDict.filename, UserDict.modtime).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(1000))
-        if results.count() == 0:
-            break
         stale = list()
+        results_count = 0
         for record in results:
+            results_count += 1
             last_index = record.indexno
             delta = nowtime - record.modtime
             #sys.stderr.write("clear_old_interviews: delta days is " + str(delta.days) + "\n")
             if delta.days > interview_delete_days:
                 stale.append(dict(key=record.key, filename=record.filename))
+        if results_count == 0:
+            break
         for item in stale:
             obtain_lock_patiently(item['key'], item['filename'])
             reset_user_dict(item['key'], item['filename'], force=True)

@@ -5,6 +5,7 @@ from requests.auth import HTTPBasicAuth
 from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail as SGMail, Attachment, FileContent, FileName, FileType, Disposition, ContentId, Email, To, ReplyTo
+from docassemble.base.functions import word
 import sys
 import base64
 

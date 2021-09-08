@@ -516,7 +516,7 @@ def word_to_markdown(in_file, in_format):
     else:
         if in_format_to_use == 'markdown':
             in_format_to_use = "markdown+smart"
-    subprocess_arguments.extend(['--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)])
+    subprocess_arguments.extend(['--from=%s' % str(in_format_to_use), '--to=markdown_phpextra', str(in_file_to_use), '-o', str(temp_file.name)])
     try:
         result = subprocess.run(subprocess_arguments, timeout=60).returncode
     except subprocess.TimeoutExpired:

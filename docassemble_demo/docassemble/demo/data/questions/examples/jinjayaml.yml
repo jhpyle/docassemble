@@ -1,0 +1,21 @@
+# use jinja
+{% include "jinjayaml-included.yml" %}
+mandatory: True
+question: |
+  Your favorite fruit is ${ favorite_fruit }.
+subquestion: |
+  * `__version__`: {{ __version__ }}
+  * `__architecture__`: {{ __architecture__ }}
+  * `__filename__`: {{ __filename__ }}
+  * `__current_package__`: {{ __current_package__ }}
+  * `__interview_filename__`: {{ __interview_filename__ }}
+  * `__interview_package__`: {{ __interview_package__ }}
+  * `__parent_filename__`: {{ __parent_filename__ }}
+  * `__parent_package__`: {{ __parent_package__ }}
+---
+metadata:
+  title: Using Jinja2 in YAML
+  short title: Jinja2
+  documentation: "https://docassemble.org/docs/interviews.html#jinja2"
+  example start: 0
+  example end: 0

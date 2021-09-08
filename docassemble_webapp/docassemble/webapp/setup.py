@@ -3,7 +3,7 @@ from docassemble.base.config import daconfig
 from datetime import timedelta
 import docassemble.webapp.database
 import re
-da_version = '1.2.90'
+da_version = '1.2.99'
 app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
@@ -109,3 +109,4 @@ if 'session lifetime seconds' in daconfig:
 app.config['SOCIAL'] = daconfig['social']
 app.config['OG_LOCALE'] = re.sub(r'\..*', '', daconfig.get('locale', 'en_US.utf8'))
 app.config['ENABLE_MONITOR'] = daconfig.get('enable monitor', True)
+app.config['INVERSE_NAVBAR'] = True if daconfig.get('inverse navbar', True) else False

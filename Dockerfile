@@ -3,7 +3,7 @@ COPY . /tmp/docassemble/
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm \
 bash -c \
 "apt-get -y update \
-&& apt-get -y upgrade \
+&& chsh -s /bin/bash www-data \
 && ln -s /var/mail/mail /var/mail/root \
 && cp /tmp/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/*.sh /usr/share/docassemble/webapp/ \

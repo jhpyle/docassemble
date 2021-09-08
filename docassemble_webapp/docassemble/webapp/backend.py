@@ -472,8 +472,6 @@ if 'currency symbol' in daconfig:
 import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
 
-import docassemble.webapp.google_api
-
 cloud_cache = dict()
 
 def cloud_custom(provider, config):
@@ -488,8 +486,12 @@ def cloud_custom(provider, config):
     return cloud_cache[config_id]
 
 docassemble.base.functions.update_server(cloud=cloud,
-                                         cloud_custom=cloud_custom,
-                                         google_api=docassemble.webapp.google_api)
+                                         cloud_custom=cloud_custom)
+
+import platform
+if platform.machine() == 'x86_64':
+    import docassemble.webapp.google_api
+    docassemble.base.functions.update_server(google_api=docassemble.webapp.google_api)
 
 initial_dict = dict(_internal=dict(session_local=dict(), device_local=dict(), user_local=dict(), dirty=dict(), progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
 #else:
