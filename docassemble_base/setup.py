@@ -46,7 +46,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 install_requires = [
-    'docassemble==1.2.90',
+    'docassemble==1.2.99',
     "3to2==1.1.1",
     "alembic==1.6.2",
     "astunparse==1.6.3",
@@ -81,7 +81,7 @@ install_requires = [
     "geographiclib==1.50",
     "geopy==2.1.0",
     "google-api-core==1.26.3",
-    "google-api-python-client==2.3.0",
+    "google-api-python-client==2.15.0",
     "google-auth-httplib2==0.1.0",
     "google-auth-oauthlib==0.4.4",
     "google-auth==1.30.0",
@@ -191,7 +191,7 @@ install_requires = [
 ]
 
 setup(name='docassemble.base',
-      version='1.2.90',
+      version='1.2.99',
       python_requires='>=3.8',
       description=('The base components of the docassemble system.'),
       long_description=read("README.md"),

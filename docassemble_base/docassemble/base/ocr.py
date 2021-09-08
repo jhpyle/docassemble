@@ -1,7 +1,7 @@
 import tempfile
 import subprocess
 from PIL import Image, ImageEnhance
-from docassemble.base.functions import get_config, get_language, ReturnValue
+from docassemble.base.functions import get_config, get_language, ReturnValue, word
 from docassemble.base.core import DAFile, DAFileList, DAFileCollection, DAStaticFile
 import PyPDF2
 from docassemble.base.logger import logmessage
@@ -35,7 +35,6 @@ def ocr_finalize(*pargs, **kwargs):
         dafilelist = kwargs['dafilelist']
         filename = kwargs['filename']
         file_list = []
-        input_number = target.number
         for parg in pargs:
             if type(parg) is list:
                 for item in parg:
@@ -125,8 +124,8 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
     #sys.stderr.write("ocr_page_tasks running\n")
     if isinstance(image_file, set):
         return []
-    if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
-        return word("(Not a DAFile or DAFileList object)")
+    if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList) or isinstance(image_file, list)):
+        return word("(Not a DAFile, DAFileList, or list object)")
     pdf_to_ppm = get_config("pdftoppm")
     if pdf_to_ppm is None:
         pdf_to_ppm = 'pdftoppm'
@@ -219,6 +218,9 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
     for other_file in pargs:
         if isinstance(other_file, DAFileList):
             for other_file_sub in other_file.elements:
+                docs.append(other_file_sub)
+        elif isinstance(other_file, list):
+            for other_file_sub in other_file:
                 docs.append(other_file_sub)
         elif isinstance(other_file, DAFileCollection):
             if hasattr(other_file, 'pdf'):

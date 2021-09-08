@@ -1,5 +1,74 @@
 # Change Log
 
+## [1.2.99] - 2021-08-30
+### Changed
+- The `on_success` and `on_failure` parameters of `DAWeb` methods can
+  be set to `content`, `text`, or `status_code` in order to return the
+  undecoded response, decoded response, or status code of the HTTP
+  request.
+### Fixed
+- The `pdf_concatenate()` function will no longer try to guess an
+  appropriate `instanceName` for the returned `DAFile` object.
+
+## [1.2.98] - 2021-08-17
+### Added
+- Feature for using Jinja2 as a preprocessor to construct YAML.
+### Changed
+- Disabled `DAGoogleAPI` when the architecture is not `amd64`.
+- Adjusted use of `\xspace` for new version of Pandoc.
+- If an inactive server in the cluster is detected during the restart
+  process, the server will be removed from the list of servers.
+
+## [1.2.97] - 2021-08-13
+### Added
+- Feature for downloading the installed version of a package installed
+  by uploading a ZIP file or installing a Playground package.
+### Changed
+- No restoration from backup files is performed if system had an
+  unsafe shutdown (requires system upgrade).
+### Fixed
+- Error in `get_geocode_response()`.
+- Missing entries in system phrases file for e-mails sent from Flask.
+
+## [1.2.96] - 2021-08-05
+### Fixed
+- Exception with phone verification.
+- Bad error message with OCR functions under certain circumstances.
+
+## [1.2.95] - 2021-08-02
+### Added
+- API for managing Playground projects.
+### Fixed
+- Exception raised from cron job.
+- Issue with newlines being converted to spaces when inline Markdown
+  added to DOCX.
+- Issue with numbering ordered lists with `markdown` filter.
+
+## [1.2.94] - 2021-07-29
+### Fixed
+- Issue with `[SKIPLINE]` interfering with other formatting
+  directives.
+- `_internal` could not be set with `set_session_variables()`.
+- `docassemble.webapp.createminio` was not updated for the latest
+  version of the `minio` package.
+
+## [1.2.93] - 2021-07-22
+### Fixed
+- Issue with `www-data` losing its shell.
+
+## [1.2.92] - 2021-07-22
+### Fixed
+- Issue with `www-data` losing its shell.
+
+## [1.2.91] - 2021-07-21
+### Changed
+- Re-ordering a list now triggers `hook_after_gather()`.
+- The `inverse navbar` Configuration directive now affects
+  administrative screens.
+### Fixed
+- Word-to-Markdown conversion now uses Pandoc's `markdown_phpextra`
+  format.
+
 ## [1.2.90] - 2021-07-12
 ### Fixed
 - Security improvements.

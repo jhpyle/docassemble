@@ -4,6 +4,7 @@ import re
 from jinja2.runtime import StrictUndefined, UndefinedError
 from jinja2.exceptions import TemplateError
 from jinja2.environment import Environment
+from jinja2 import FileSystemLoader, select_autoescape, TemplateNotFound
 from jinja2.environment import Template as JinjaTemplate
 from jinja2 import meta as jinja2meta
 from jinja2.lexer import Token
@@ -29,6 +30,7 @@ import array
 import random
 import tempfile
 import json
+from docassemble.base import __version__ as da_version
 import docassemble.base.filter
 import docassemble.base.pdftk
 import docassemble.base.file_docx
@@ -58,6 +60,8 @@ import qrcode
 import qrcode.image.svg
 RangeType = type(range(1,2))
 NoneType = type(None)
+import platform
+da_arch = platform.machine()
 
 debug = True
 import_core = compile("from docassemble.base.core import objects_from_file, objects_from_structure", '<code block>', 'exec')
@@ -131,6 +135,25 @@ def set_initial_dict(the_dict):
 
 def get_initial_dict():
     return copy.deepcopy(initial_dict);
+
+class DAFileSystemLoader(FileSystemLoader):
+    def get_source(self, environment, template):
+        if ':' not in template:
+            return super().get_source(environment, template)
+        template_path = None
+        for the_filename in [docassemble.base.functions.package_question_filename(template), docassemble.base.functions.standard_question_filename(template), docassemble.base.functions.server.absolute_filename(template)]:
+            if the_filename is not None:
+                template_path = the_filename
+                break
+        if template_path is None or not os.path.isfile(template_path):
+            raise TemplateNotFound(template)
+        fspath = os.fspath(os.path.dirname(template_path))
+        if fspath not in self.searchpath:
+            self.searchpath.append(fspath)
+        mtime = os.path.getmtime(template_path)
+        with open(template_path) as fp:
+            source = fp.read()
+        return source, template_path, lambda: mtime == os.path.getmtime(template_path)
 
 class PackageImage:
     def __init__(self, **kwargs):
@@ -210,7 +233,7 @@ class InterviewSource:
     def set_package(self, package):
         self.package = package
         return
-    def update(self):
+    def update(self, **kwargs):
         return True
     def get_modtime(self):
         return self._modtime
@@ -288,17 +311,34 @@ class InterviewSourceFile(InterviewSource):
                 os.utime(self.filepath, None)
         except:
             logmessage("InterviewSourceFile: could not reset modification time on interview")
-    def update(self):
-        #logmessage("Update: " + str(self.filepath))
+    def update(self, **kwargs):
         try:
             with open(self.filepath, 'r', encoding='utf-8') as the_file:
-                self.set_content(the_file.read())
-                #sys.stderr.write("Returning true\n")
-                return True
-        except Exception as errmess:
-            #sys.stderr.write("Error: " + str(errmess) + "\n")
-            pass
-        return False
+                orig_text = the_file.read()
+        except:
+            return False
+        if not orig_text.startswith('# use jinja'):
+            self.set_content(orig_text)
+            return True
+        env = Environment(
+            loader=DAFileSystemLoader(self.directory),
+            autoescape=select_autoescape()
+        )
+        template = env.get_template(os.path.basename(self.filepath))
+        data = copy.deepcopy(get_config('jinja data'))
+        data['__version__'] = da_version
+        data['__architecture__'] = da_arch
+        data['__filename__'] = self.path
+        data['__current_package__'] = self.package
+        data['__parent_filename__'] = kwargs.get('parent_source', self).path
+        data['__parent_package__'] = kwargs.get('parent_source', self).package
+        data['__interview_filename__'] = kwargs.get('interview_source', self).path
+        data['__interview_package__'] = kwargs.get('interview_source', self).package
+        try:
+            self.set_content(template.render(data))
+        except Exception as err:
+            self.set_content("__error__: " + repr("Jinja2 rendering error: " + err.__class__.__name__ + ": " + str(err)))
+        return True
     def get_modtime(self):
         #logmessage("get_modtime called in parse where path is " + str(self.path))
         if self.playground is not None:
@@ -1748,6 +1788,8 @@ class Question:
     def __init__(self, orig_data, caller, **kwargs):
         if not isinstance(orig_data, dict):
             raise DAError("A block must be in the form of a dictionary." + self.idebug(orig_data))
+        if '__error__' in orig_data:
+            raise DAError(orig_data['__error__'])
         data = dict()
         for key, value in orig_data.items():
             data[key.lower()] = value
@@ -2721,11 +2763,11 @@ class Question:
             if isinstance(data['include'], list):
                 for questionPath in data['include']:
                     if ':' in questionPath:
-                        self.interview.read_from(interview_source_from_string(questionPath))
+                        self.interview.read_from(interview_source_from_string(questionPath, interview_source=self.interview.source, parent_source=self.from_source))
                     else:
                         new_source = self.from_source.append(questionPath)
                         if new_source is None:
-                            new_source = interview_source_from_string('docassemble.base:data/questions/' + re.sub(r'^data/questions/', '', questionPath))
+                            new_source = interview_source_from_string('docassemble.base:data/questions/' + re.sub(r'^data/questions/', '', questionPath), interview_source=self.interview.source, parent_source=self.from_source)
                             if new_source is None:
                                 raise DANotFoundError('Question file ' + questionPath + ' not found')
                         self.interview.read_from(new_source)
@@ -4807,7 +4849,7 @@ class Question:
             if 'content' not in target:
                 if 'content file code' in options:
                     return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': None, 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'orig_variable_name': variable_name, 'options': options, 'raw': target['raw']})
-                raise DAError("No content provided in attachment")
+                raise DAError("No content provided in attachment." + self.idebug(target))
             #logmessage("The content is " + str(target['content']))
             return({'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': TextObject("\n".join(defs) + "\n" + target['content'], question=self), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'orig_variable_name': variable_name, 'options': options, 'raw': target['raw']})
         elif isinstance(orig_target, str):
@@ -6732,7 +6774,7 @@ def interview_source_from_string(path, **kwargs):
         #sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
-            if new_source.update():
+            if new_source.update(**kwargs):
                 return(new_source)
     raise DANotFoundError("Interview " + str(path) + " not found")
 
@@ -9320,10 +9362,10 @@ def map_filter(*pargs, **kwargs):
             raise DAError('map() must refer to a function, index, attribute, or filter')
 
 def markdown_filter(text):
-    return docassemble.base.file_docx.markdown_to_docx(str(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
+    return docassemble.base.file_docx.markdown_to_docx(text, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
 
 def inline_markdown_filter(text):
-    return docassemble.base.file_docx.inline_markdown_to_docx(str(text), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
+    return docassemble.base.file_docx.inline_markdown_to_docx(text, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
 
 builtin_jinja_filters = {
     'ampersand_filter': ampersand_filter,

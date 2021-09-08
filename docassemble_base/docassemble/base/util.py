@@ -574,12 +574,24 @@ class DAWeb(DAObject):
         if success and task is not None:
             mark_task_as_performed(task, persistent=task_persistent)
         if not success:
-            if on_failure == 'raise':
+            if on_failure == 'content':
+                return r.content
+            elif on_failure == 'text':
+                return r.text
+            elif on_failure == 'status_code':
+                return r.status_code
+            elif on_failure == 'raise':
                 raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
             else:
                 return on_failure
         if success and on_success is not None:
-            if on_success == 'raise':
+            if on_success == 'content':
+                return r.content
+            elif on_success == 'text':
+                return r.text
+            elif on_success == 'status_code':
+                return r.status_code
+            elif on_success == 'raise':
                 raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
             else:
                 return on_success
@@ -1441,7 +1453,7 @@ class Address(DAObject):
         if hasattr(self, 'geolocate_response') and len(self.geolocate_response):
             return True
         return self.geolocate_success
-    def get_geocode_response():
+    def get_geocode_response(self):
         """Returns the raw data that the geocoding service returned."""
         if hasattr(self, '_geocode_response') :
             return self._geocode_response
@@ -2589,15 +2601,24 @@ def map_of(*pargs, **kwargs):
         return '[MAP ' + re.sub(r'\n', '', codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode()) + ']'
     return word('(Unable to display map)')
 
+def int_or_none(number):
+    if number is None:
+        return number
+    try:
+        return int(number)
+    except:
+        logmessage("Non-number passed to x, y, W, or H")
+    return None
+
 def ocr_file_in_background(*pargs, **kwargs):
     """Starts optical character recognition on one or more image files or PDF
     files and returns an object representing the background task created."""
     language = kwargs.get('language', None)
     psm = kwargs.get('psm', 6)
-    x = kwargs.get('x', None)
-    y = kwargs.get('y', None)
-    W = kwargs.get('W', None)
-    H = kwargs.get('H', None)
+    x = int_or_none(kwargs.get('x', None))
+    y = int_or_none(kwargs.get('y', None))
+    W = int_or_none(kwargs.get('W', None))
+    H = int_or_none(kwargs.get('H', None))
     message = kwargs.get('message', None)
     image_file = pargs[0]
     if len(pargs) > 1:
@@ -2630,6 +2651,10 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
     files and returns the recognized text."""
     if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
+    x = int_or_none(x)
+    y = int_or_none(y)
+    W = int_or_none(W)
+    H = int_or_none(H)
     pdf_to_ppm = get_config("pdftoppm")
     if pdf_to_ppm is None:
         pdf_to_ppm = 'pdftoppm'
@@ -2699,6 +2724,10 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
     """Reads QR codes from a file or files and returns a list of codes found."""
     if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
+    x = int_or_none(x)
+    y = int_or_none(y)
+    W = int_or_none(W)
+    H = int_or_none(H)
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     pdf_to_ppm = get_config("pdftoppm")
@@ -2879,7 +2908,8 @@ def pdf_concatenate(*pargs, **kwargs):
     if len(paths) == 0:
         raise DAError("pdf_concatenate: no valid files to concatenate")
     pdf_path = docassemble.base.pandoc.concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=kwargs.get('password', None))
-    pdf_file = DAFile()._set_instance_name_for_function()
+    pdf_file = DAFile()
+    pdf_file.set_random_instance_name()
     pdf_file.initialize(filename=kwargs.get('filename', 'file.pdf'))
     pdf_file.copy_into(pdf_path)
     pdf_file.retrieve()
