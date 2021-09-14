@@ -17,6 +17,7 @@ import datetime
 from io import StringIO
 from html.parser import HTMLParser
 
+NoneType = type(None)
 STRICT_MODE = daconfig.get('restrict input variables', False)
 DECORATION_SIZE = daconfig.get('decoration size', 2.0)
 DECORATION_UNITS = daconfig.get('decoration units', 'em')
@@ -1374,7 +1375,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '            </form>\n'
     elif status.question.question_type == "multiple_choice":
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
-        if status.question.fields[0].number in status.defaults and isinstance(status.defaults[status.question.fields[0].number], (str, int, float)):
+        if status.question.fields[0].number in status.defaults and isinstance(status.defaults[status.question.fields[0].number], (str, int, float, bool, NoneType)):
             defaultvalue = str(status.defaults[status.question.fields[0].number])
             #logmessage("Default value is " + str(defaultvalue))
         else:
@@ -1416,7 +1417,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     if 'default' in pair and pair['default'] and defaultvalue is None:
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                     formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=True, do_terms=False)
-                    if defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue):
+                    if (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float, NoneType)) and str(pair['key']) == str(defaultvalue)):
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                         found_default = True
                     if status.question.question_variety == "radio":
@@ -2291,7 +2292,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and defaultvalue_printable and str(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype in ('object_radio', 'object') and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and defaultvalue_printable and str(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype in ('object_radio', 'object') and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']) or (defaultvalue_set and defaultvalue is None and str(pair['key']) == 'None'):
                         ischecked = ' checked="checked"'
                         default_selected = True
                     else:
@@ -2324,7 +2325,7 @@ def input_for(status, field, wide=False, embedded=False):
                     if True or pair['key'] is not None:
                         #sys.stderr.write(str(saveas_string) + "\n")
                         formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
-                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and defaultvalue_is_printable and str(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype in ('object_radio', 'object') and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']):
+                        if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and defaultvalue_is_printable and str(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype in ('object_radio', 'object') and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']) or (defaultvalue_set and defaultvalue is None and str(pair['key']) == 'None'):
                             ischecked = ' checked="checked"'
                             default_selected = True
                         else:
@@ -2401,7 +2402,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if True or pair['key'] is not None:
                     #logmessage("Considering " + repr(pair['key']) + " and " + repr(pair['label']))
                     other_options += '<option value=' + fix_double_quote(str(pair['key']))
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and defaultvalue_is_printable and str(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype == 'object' and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and defaultvalue_is_printable and str(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype == 'object' and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']) or (defaultvalue_set and defaultvalue is None and str(pair['key']) == 'None'):
                         other_options += ' selected="selected"'
                         found_default = True
                     other_options += '>' + markdown_to_html(str(pair['label']), status=status, escape='option', trim=True, do_terms=False) + '</option>'
@@ -2515,7 +2516,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     helptext = pair.get('help', None)
-                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
+                    if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)) or (defaultvalue_set and defaultvalue is None and str(pair['key']) == 'None'):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''

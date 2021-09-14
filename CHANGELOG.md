@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.2.100] - 2021-09-14
+### Changed
+- Added descriptive log messages to `initialize` service.
+- Traceback now included in API when error message is "failure to
+  assemble interview."
+### Fixed
+- Issue with package update screen being unresponsive under some
+  conditions due to HTTP timeout.
+- Issue with duplicative entries in `install` table.
+- Default in multiple choice question not shown when selected value
+  was `None`.
+- Problem setting code-generated checkbox fields when `restrict input
+  variables` in effect.
+
 ## [1.2.99] - 2021-08-30
 ### Changed
 - The `on_success` and `on_failure` parameters of `DAWeb` methods can

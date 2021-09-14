@@ -398,11 +398,11 @@ class InterviewStatus:
             else:
                 extra_amount = get_config('list collect extra count', 15)
             for list_indexno in range(list_len + extra_amount):
-                for field_used in self.question.fields_used:
-                    all_fields.add(re.sub(iterator_re, '[' + str(list_indexno) +']', field_used))
+                for field_used in self.question.get_fields_and_sub_fields_used(user_dict):
+                    all_fields.add(re.sub(iterator_re, '[' + str(list_indexno) + ']', field_used))
             return all_fields
         else:
-            return self.question.fields_used
+            return self.question.get_fields_and_sub_fields_used(user_dict)
     def get_fields_and_sub_fields_and_collect_fields(self, user_dict):
         all_fields = self.question.get_fields_and_sub_fields(user_dict)
         if 'list_collect' in self.extras:
@@ -4864,6 +4864,14 @@ class Question:
         new_interview = new_interview_source.get_interview()
         reproduce_basics(self.interview, new_interview)
         return Question(dict(question='n/a', fields=field_list), new_interview, source=new_interview_source, package=self.package)
+    def get_fields_and_sub_fields_used(self, user_dict):
+        result = set()
+        result.update(self.fields_used)
+        for field in self.fields:
+            if hasattr(field, 'extras') and 'fields_code' in field.extras:
+                the_question = self.get_question_for_field_with_sub_fields(field, user_dict)
+                result.update(the_question.fields_used)
+        return result
     def get_fields_and_sub_fields(self, user_dict):
         all_fields = list()
         for field in self.fields:
@@ -8898,7 +8906,7 @@ def recurse_indices(expression_array, variable_list, pre_part, final_list, var_s
     if len(var_subs) == 0 and len(generic) == 0:
         recurse_indices(copy.copy(expression_array), variable_list, ['x'], final_list, var_subs_dict, var_subs, generic_dict, copy.copy(pre_part))
 
-def ensure_object_exists(saveas, datatype, the_user_dict, commands=None):
+def ensure_object_exists(saveas, datatype, the_user_dict, commands=None, post_data=None):
     # logmessage("ensure object exists: " + str(saveas))
     if commands is None:
         execute = True

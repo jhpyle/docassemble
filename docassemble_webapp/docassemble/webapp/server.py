@@ -6668,9 +6668,9 @@ def index(action_argument=None, refer=None):
                 safe_objname = safeid(objname)
                 if safe_objname in known_datatypes:
                     if known_datatypes[safe_objname] in ('object_multiselect', 'object_checkboxes'):
-                        docassemble.base.parse.ensure_object_exists(objname, 'object_checkboxes', user_dict)
+                        docassemble.base.parse.ensure_object_exists(objname, 'object_checkboxes', user_dict, post_data=post_data)
                     elif known_datatypes[safe_objname] in ('multiselect', 'checkboxes'):
-                        docassemble.base.parse.ensure_object_exists(objname, known_datatypes[safe_objname], user_dict)
+                        docassemble.base.parse.ensure_object_exists(objname, known_datatypes[safe_objname], user_dict, post_data=post_data)
     field_error = dict()
     validated = True
     pre_user_dict = user_dict
@@ -7145,7 +7145,7 @@ def index(action_argument=None, refer=None):
                 logmessage("Received illegal variable name " + str(key))
                 continue
             if empty_fields[orig_key] in ('object_multiselect', 'object_checkboxes'):
-                docassemble.base.parse.ensure_object_exists(key, empty_fields[orig_key], user_dict)
+                docassemble.base.parse.ensure_object_exists(key, empty_fields[orig_key], user_dict, post_data=post_data)
                 exec(key + '.clear()' , user_dict)
                 exec(key + '.gathered = True' , user_dict)
             elif empty_fields[orig_key] in ('object', 'object_radio'):
@@ -14649,6 +14649,7 @@ def update_package_wait():
       var daCheckinInterval = null;
       var resultsAreIn = false;
       var pollDelay = 0;
+      var pollFail = 0;
       var pollPending = false;
       function daRestartCallback(data){
         //console.log("Restart result: " + data.success);
@@ -14662,6 +14663,10 @@ def update_package_wait():
           dataType: 'json'
         });
         return true;
+      }
+      function daBadCallback(data){
+        pollPending = false;
+        pollFail += 1;
       }
       function daUpdateCallback(data){
         pollPending = false;
@@ -14716,7 +14721,7 @@ def update_package_wait():
         }
       }
       function daUpdate(){
-        if (pollDelay > 25){
+        if (pollDelay > 25 || pollFail > 5){
           $("#notification").html(""" + json.dumps(word("Server did not respond to request for update.")) + """);
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
@@ -14740,6 +14745,8 @@ def update_package_wait():
           url: """ + json.dumps(url_for('update_package_ajax')) + """,
           data: 'csrf_token=""" + my_csrf + """',
           success: daUpdateCallback,
+          error: daBadCallback,
+          timeout: 10000,
           dataType: 'json'
         });
         return true;
@@ -22678,7 +22685,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         user_dict['_internal']['command_cache'] = dict()
                     if field.number not in user_dict['_internal']['command_cache']:
                         user_dict['_internal']['command_cache'][field.number] = list()
-                    docassemble.base.parse.ensure_object_exists(saveas, field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][field.number])
+                    docassemble.base.parse.ensure_object_exists(saveas, field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][field.number], post_data={safeid(saveas + '.gathered'): 'True'})
                     saveas = saveas + '.gathered'
                     data = 'True'
                 if (user_entered_skip or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'))) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes')) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
@@ -22884,7 +22891,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                     user_dict['_internal']['command_cache'][the_field.number] = list()
                                 if hasattr(the_field, 'datatype'):
                                     if the_field.datatype in ('object_multiselect', 'object_checkboxes'):
-                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
+                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number], post_data={safeid(the_saveas): data})
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.clear()')
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
                                     elif the_field.datatype in ('object', 'object_radio'):
@@ -22893,7 +22900,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                         except:
                                             user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')
                                     elif the_field.datatype in ('multiselect', 'checkboxes'):
-                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
+                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number], post_data={safeid(the_saveas): data})
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
                                     else:
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')
@@ -24866,7 +24873,11 @@ def create_new_interview(yaml_filename, secret, url_args=None, referer=None, req
         release_lock(session_id, yaml_filename)
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
-        raise Exception("create_new_interview: failure to assemble interview: " + e.__class__.__name__ + ": " + str(e))
+        if hasattr(e, 'traceback'):
+            the_trace = e.traceback
+        else:
+            the_trace = traceback.format_exc()
+        raise Exception("create_new_interview: failure to assemble interview: " + e.__class__.__name__ + ": " + str(e) + "\n" + str(the_trace))
     restore_session(sbackup)
     docassemble.base.functions.restore_thread_variables(tbackup)
     if user_dict.get('multi_user', False) is True:
