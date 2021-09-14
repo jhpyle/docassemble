@@ -386,35 +386,46 @@ The output should be something like:
 
 {% highlight text %}
 apache2                          STOPPED   Not started
-celery                           RUNNING   pid 1865, uptime 0:14:45
-cron                             STOPPED   Not started
-initialize                       RUNNING   pid 1014, uptime 0:14:53
-nginx                            RUNNING   pid 1088, uptime 0:14:16
-postgres                         RUNNING   pid 1020, uptime 0:14:42
-rabbitmq                         RUNNING   pid 1045, uptime 0:14:38
-redis                            RUNNING   pid 1067, uptime 0:14:35
-reset                            STOPPED   Not started
-sync                             EXITED    Dec 22 07:22 AM
+celery                           RUNNING   pid 8539, uptime 6:52:59
+celerysingle                     RUNNING   pid 8547, uptime 6:52:52
+cron                             RUNNING   pid 1442, uptime 20 days, 20:58:38
+exim4                            RUNNING   pid 1452, uptime 20 days, 20:58:37
+initialize                       RUNNING   pid 7, uptime 20 days, 21:00:05
+nascent                          STOPPED   Aug 14 04:20 PM
+nginx                            RUNNING   pid 7679, uptime 6:54:28
+postgres                         RUNNING   pid 321, uptime 20 days, 21:00:02
+rabbitmq                         RUNNING   pid 8410, uptime 6:53:02
+redis                            RUNNING   pid 479, uptime 20 days, 20:59:46
+reset                            EXITED    Sep 04 06:26 AM
+sync                             STOPPED   Not started
 syslogng                         STOPPED   Not started
 update                           STOPPED   Not started
-uwsgi                            RUNNING   pid 1070, uptime 0:14:15
-watchdog                         RUNNING   pid 1013, uptime 0:14:53
-websockets                       RUNNING   pid 1904, uptime 0:14:40
+uwsgi                            RUNNING   pid 880, uptime 20 days, 20:59:10
+watchdog                         RUNNING   pid 9, uptime 20 days, 21:00:05
+websockets                       RUNNING   pid 8590, uptime 6:52:42
 {% endhighlight %}
 
 If you are running **docassemble** in a single-server arrangement, the
-processes that should be "RUNNING" include `celery`, `initialize`,
-`nginx`, `postgres`, `rabbitmq`, `redis`, `uwsgi`, `watchdog`, and
-`websockets`.
+processes that should be "RUNNING" include `celery`, `celerysingle`,
+`cron`, `exim4`, `initialize`, `nginx`, `postgres`, `rabbitmq`,
+`redis`, `uwsgi`, `watchdog`, and `websockets`.
 
-Log files on the container that you might wish to check include:
+[Supervisor] is the application that orchestrates the various services
+that are necessary for the server to start up and operate. It creates
+various log files in the `/var/log/supervisor` directory on the
+server.  For example, these files show the log for the `initialize`
+process, which is responsible for starting the server:
+
+* `/var/log/supervisor/initialize-stderr---supervisor-*.log`
+* `/var/log/supervisor/initialize-stdout---supervisor-*.log`
+
+Other log files on the container that you might wish to check, in
+declining order of importance, are:
 
 * `/usr/share/docassemble/log/docassemble.log` (log for the web application)
 * `/usr/share/docassemble/log/worker.log` (log for [background processes])
 * `/usr/share/docassemble/log/uwsgi.log` (log for the core of the web application)
 * `/var/log/nginx/error.log` (log for the web server)
-* `/var/log/supervisor/initialize-stderr---supervisor-*.log` (log for
-  the startup process)
 * `/var/log/supervisor/postgres-stderr---supervisor-*.log` (log for
   the SQL server)
 * Other files in `/var/log/supervisor/` (logs for other services)
@@ -445,6 +456,11 @@ indicating what went wrong that prevented **docassemble** from
 initializing.  You will need to fix that problem, then type `exit` to
 leave the container, and then restart your container by doing `docker
 stop -t 600 <containerid>` followed by `docker start <containerid>`.
+
+If `initialize` is `RUNNING` but `celery` is not `RUNNING`, and
+`nascent` is still `RUNNING`, then your server is still in the process
+of starting up.  If it is taking a really long time to start up, check
+the above log files to see where in the process it is getting stuck.
 
 If you are get a "server error" in your web browser when trying to
 access **docassemble**, there should be an error message in

@@ -548,22 +548,17 @@ starts interacting with it.
 There is a [Drupal module] and a [WordPress plugin] for embedding
 interviews using an [iframe].
 
+When embedding using an [iframe], set the [`allow embedding`]
+directive in the [Configuration] to `True`.  When you do this,
+**docassemble** will refrain from setting the `X-Frame-Options` header
+to `SAMEORIGIN` (which would otherwise tell the browser not to show
+the [iframe]).  In addition, this will cause a flag on the cookies to
+be set so that cross-site cookie sharing is allowed.
+
 Web browsers are generally permissive about allowing [iframe]s even
 when the host domain and [iframe] domain are different.  However, some
 browsers, such as Safari, might block the content because of
 [Cross-Origin Resource Sharing] concerns.
-
-If you set the [`allow embedding`] directive in the [Configuration] to
-`True`, then a flag on the cookies will be set so that cross-site
-cookie sharing is allowed.
-
-If this doesn't solve the problem, you may want to configure your
-**docassemble** site so that it runs on the same domain as your host
-site.  You can do this if you can configure the host site to use a
-proxy.  For instructions on how to do this, see the subsection on
-[installing on a machine already using a web server].  Unfortunately,
-this is a fairly complex set-up, and it may not be possible to
-configure this set-up on all sites.
 
 It may also help to set [`cross site domains`] in your [Configuration]
 to include the protocol and domain of the host site.  For example:
@@ -630,7 +625,8 @@ can change at any time.  Thus, the most stable solution to any future
 cross-site scripting problems you might encounter is to make the host
 site act as a proxy for the **docassemble** server, following the
 model discussed in the section on [installing on a machine already
-using a web server].
+using a web server].  Unfortunately, this is a fairly complex set-up,
+and it may not be possible to configure this set-up on all sites.
 
 ## <a name="div"></a>Embedding the interview into a web page directly
 
@@ -801,15 +797,16 @@ If you want to load all of the [JavaScript] dependencies except for
     <script src="https://interview.example.com/static/app/bundlenojquery.js"></script>
 {% endhighlight %}
 
-Another complication of embedding using a `<div>` is avoidance of
-problems with [CORS].  Problems with [CORS] were discussed in the
-previous section on [using an iframe], and these problems are even
-more likely to arise when embedding in a `<div>`.
+Another complication of embedding is avoidance of problems with
+[CORS].  Problems with [CORS] were discussed in the previous section
+on [using an iframe], and these problems are even more likely to arise
+when embedding in a `<div>`.
 
 To get around these problems, set [`cross site domains`] in your
 [Configuration] to the URL of your site:
 
 {% highlight yaml %}
+allow embedding: True
 cross site domains:
   - https://example.com
 {% endhighlight %}
