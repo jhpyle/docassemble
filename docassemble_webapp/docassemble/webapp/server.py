@@ -4495,11 +4495,14 @@ def get_user_object(user_id):
 def load_request(request):
     auth = request.cookies.get('auth', None)
     verifyURI = daconfig.get('verify id token URI')
+    logmessage('verifyURI' + verifyURI)
     if auth:
         unquoted = urllibunquote(auth)
         data = json.loads(unquoted)
         uid = data['uid']
         r = requests.post(verifyURI,None,data)
+        logmessage('verify uid' + uid)
+        logmessage('status code' + r.status_code)
         if r.status_code == 200:
             user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.email == uid)).scalar()
             return user
