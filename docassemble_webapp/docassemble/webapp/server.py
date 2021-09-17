@@ -4496,6 +4496,7 @@ def load_request(request):
     auth = request.cookies.get('auth', None)
     verifyURI = daconfig.get('verify id token URI')
     logmessage('verifyURI' + str(verifyURI))
+    logmessage('auth ' + str(auth))
     if auth:
         unquoted = urllibunquote(auth)
         data = json.loads(unquoted)
