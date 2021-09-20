@@ -472,12 +472,32 @@ Previously, the URL to your interview ended with something like
 [Playground].  The link that ends with
 `?i=docassemble.helloworld:data/questions/hello.yml` is a link to the
 snapshot that you installed.  This will be the "stable" version of your
-interview.
+interview.  The "filename" of your interview is
+`docassemble.helloworld:data/questions/hello.yml`, which tells the
+server "go into the Python package `docassemble.helloworld`, then go
+into the `data` directory in that package, then go into the
+`questions` subdirectory under `data`, and access the file `hello.yml`
+in that subdirectory."
 
-You can then continue to make changes to the [Playground] version,
-while your users are using the snapshot that you installed.  When you
-have made further modifications and you have a new version you want to
-make available again, you can just click the "Install" button again.
+Alternatively, you can use a more presentable URL, which is like a
+shorthand version of the above URL:
+
+> https://interview.example.com/start/helloworld/hello/
+
+When you run this interview, the URL in the location bar will switch
+to https://interview.example.com/run/helloworld/hello/.  The
+difference between `start` and `run` is that the `start` URL will
+always start a new interview, while the `run` version will resume an
+interview session that has already started.
+
+It is also possible to make these URLs even shorter by using the
+[`dispatch`] Configuration directive.
+
+Now that your interview is installed, you can continue to make changes
+to the [Playground] version, while your users are using the snapshot
+that you installed.  When you have made further modifications and you
+have a new version you want to make available again, you can just
+click the "Install" button again.
 
 For serious deployment of interviews, [it is recommended] that you use
 separate "development" and "production" servers.
@@ -691,3 +711,4 @@ the [GitHub subsection] of the [packages] section.
 [Freepik]: http://www.flaticon.com/authors/freepik
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
+[`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
