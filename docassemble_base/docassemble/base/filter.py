@@ -684,8 +684,8 @@ def html_caption(match):
     firstcol = re.sub(r'\s+$', '', firstcol)
     secondcol = re.sub(r'^\s+', '', secondcol)
     secondcol = re.sub(r'\s+$', '', secondcol)
-    firstcol = re.sub(r'\n{2,}', '<br>', firstcol)
-    secondcol = re.sub(r'\n{2,}', '<br>', secondcol)
+    firstcol = markdown_to_html(firstcol)
+    secondcol = markdown_to_html(secondcol)
     return '<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">' + firstcol + '</td><td style="padding-left: 1em; width: 50%;">' + secondcol + '</td></tr></table>'
 
 def html_two_col(match):

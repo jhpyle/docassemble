@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.2.101] - 2021-09-21
+### Fixed
+- `[BEGIN_CAPTION]` in HTML mode now behaves like `[BEGIN_TWOCOL]` in
+  that the columns are converted from Markdown and inserted in the
+  table as paragraphs.
+
 ## [1.2.100] - 2021-09-14
 ### Changed
 - Added descriptive log messages to `initialize` service.
