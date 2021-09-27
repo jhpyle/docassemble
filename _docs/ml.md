@@ -1297,7 +1297,7 @@ If you are a [Python] developer, you may want to make other machine
 learning algorithms available in interviews.
 
 The `SimpleTextMachineLearner` class is a subclass of the generic
-`MachineLearner` class.  The `MachineLearner` object handles the
+`MachineLearner` class.  The `MachineLearner` class handles the
 overhead of storing independent and dependent variables in a database,
 while the `SimpleTextMachineLearner` class handles the specific
 implementation.  The `SimpleTextMachineLearner` class uses the `KNN()`
