@@ -1566,9 +1566,8 @@ If you are hosting **docassemble** in the cloud, you will probably
 have to use a separate [SMTP] server in order to send e-mail.
 
 A free option is [Mailgun].  You can sign up with [Mailgun], provide a
-credit card (which will only be charged if you exceed the free tier),
-configure some [DNS] entries, and then set your configuration to
-something like this:
+credit card, configure some [DNS] entries, and then set your
+configuration to something like this:
 
 {% highlight yaml %}
 mail:

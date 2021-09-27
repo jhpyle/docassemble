@@ -7532,7 +7532,7 @@ $(document).on('daPageLoad', function(){
 [modifier]: {{ site.baseurl }}/docs/modifiers.html#prevent_going_back
 [multi-user interviews]: {{ site.baseurl }}/docs/roles.html
 [objects]: {{ site.baseurl }}/docs/objects.html
-[pattern.en]: http://www.clips.ua.ac.be/pages/pattern-en
+[pattern.en]: https://github.com/clips/pattern/wiki/pattern-en
 [question]: {{ site.baseurl }}/docs/questions.html
 [roles]: {{ site.baseurl }}/docs/roles.html
 [scheduled task]: {{ site.baseurl }}/docs/background.html#scheduled

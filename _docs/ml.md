@@ -1300,8 +1300,8 @@ The `SimpleTextMachineLearner` class is a subclass of the generic
 `MachineLearner` class.  The `MachineLearner` object handles the
 overhead of storing independent and dependent variables in a database,
 while the `SimpleTextMachineLearner` class handles the specific
-implementation (which uses the `KNN()` function of the
-[`pattern.vector`]).
+implementation.  The `SimpleTextMachineLearner` class uses the `KNN()`
+function from the [`pattern.vector`] package.
 
 One way you can make machine learning algorithms available in
 interviews is by creating your own subclasses of `MachineLearner` that
@@ -1331,7 +1331,7 @@ object.)
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [sources folder]: {{ site.baseurl }}/docs/playground.html#sources
 [Playground]: {{ site.baseurl }}/docs/playground.html
-[`pattern.vector`]: http://www.clips.ua.ac.be/pages/pattern-vector
+[`pattern.vector`]: https://github.com/clips/pattern/wiki/pattern-vector
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [`docassemble.webapp.machinelearning`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/machinelearning.py
 [`.reset()`]: #SimpleTextMachineLearner.reset

@@ -44,7 +44,7 @@ the top priorities are:
   highlighting.
 
 [Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
-[`pattern`]: http://www.clips.ua.ac.be/pages/pattern-en
+[`pattern`]: https://github.com/clips/pattern/wiki
 [`python-docx-template`]: http://docxtpl.readthedocs.io/en/latest/
 [`docx`]: https://python-docx.readthedocs.io/en/latest/
 [Docusign integration]: https://github.com/radiant-law/docassemble-docusign
