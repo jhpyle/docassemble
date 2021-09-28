@@ -8,13 +8,15 @@ from docassemble.base.config import daconfig
 from docassemble.base.functions import word
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
-from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserDict, UserDictKeys, ChatLog
+from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserDict, UserDictKeys, ChatLog, TempUser, MyUserInvitation, UserRoles
 from docassemble.webapp.core.models import Uploads, ObjectStorage, SpeakList, Shortener, MachineLearning, GlobalObjectStorage, JsonStorage
 
 import docassemble.webapp.core.models
+import docassemble.webapp.packages.models
 from docassemble.webapp.packages.models import Package
 from docassemble.webapp.update import add_dependencies
 from sqlalchemy import create_engine, MetaData, select, delete, inspect
+from sqlalchemy.sql import text
 #import random
 #import string
 from docassemble.base.generate_key import random_alphanumeric
@@ -71,6 +73,41 @@ def get_user(db, role, defaults, result=None):
     db.session.commit()
     result['changed'] = True
     return the_user
+
+def test_for_errors(start_time=None):
+    todo = [['chatlog', 'id', ChatLog],
+            ['email', 'id', docassemble.webapp.core.models.Email],
+            ['emailattachment', 'id', docassemble.webapp.core.models.EmailAttachment],
+            ['globalobjectstorage', 'id', docassemble.webapp.core.models.GlobalObjectStorage],
+            ['install', 'id', docassemble.webapp.packages.models.Install],
+            ['jsonstorage', 'id', docassemble.webapp.core.models.JsonStorage],
+            ['machinelearning', 'id', docassemble.webapp.core.models.MachineLearning],
+            ['objectstorage', 'id', docassemble.webapp.core.models.ObjectStorage],
+            ['package_auth', 'id', docassemble.webapp.packages.models.PackageAuth],
+            ['package', 'id', Package],
+            ['role', 'id', Role],
+            ['shortener', 'id', docassemble.webapp.core.models.Shortener],
+            ['speaklist', 'id', docassemble.webapp.core.models.SpeakList],
+            ['supervisors', 'id', docassemble.webapp.core.models.Supervisors],
+            ['tempuser', 'id', TempUser],
+            ['uploads', 'indexno', docassemble.webapp.core.models.Uploads],
+            ['uploadsroleauth', 'id', docassemble.webapp.core.models.UploadsRoleAuth],
+            ['uploadsuserauth', 'id', docassemble.webapp.core.models.UploadsUserAuth],
+            ['user_auth', 'id', UserAuthModel],
+            ['user', 'id', UserModel],
+            ['user_invite', 'id', MyUserInvitation],
+            ['user_roles', 'id', UserRoles],
+            ['userdict', 'indexno', UserDict],
+            ['userdictkeys', 'indexno', UserDictKeys]]
+    for table, column, tableclass in todo:
+        last_value = 0
+        for results in db.session.execute(text("select last_value from " + table + "_" + column + "_seq")):
+            last_value = results[0]
+        max_value = db.session.execute(select(db.func.max(getattr(tableclass, column)))).scalar()
+        if max_value is not None and max_value > last_value:
+            sys.stderr.write('create_tables.test_for_errors: ' + table + " has an error: " + str(last_value) + " " + str(max_value) + " after " + str(time.time() - start_time) + "\n")
+            db.session.execute(text("alter sequence " + table + "_" + column + "_seq restart with :newval"), {'newval': last_value})
+            db.session.commit()
 
 def populate_tables(start_time=None):
     if start_time is None:
@@ -220,6 +257,11 @@ def main():
                 sys.stderr.write("create_tables.main: error trying to create tables; trying a third time.\n")
                 db.create_all()
         sys.stderr.write("create_tables.main: finished creating tables after " + str(time.time() - start_time) + " seconds.\n")
+        if dbprefix.startswith('postgresql'):
+            try:
+                test_for_errors(start_time=start_time)
+            except:
+                sys.stderr.write("create_tables.main: unable to test for errors after " + str(time.time() - start_time) + " seconds.\n")
         populate_tables(start_time=start_time)
         db.engine.dispose()
 

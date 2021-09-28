@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.2.102] - 2021-09-28
+### Changed
+- Added a check during startup to see if PostgreSQL primary key
+  sequences have been reset and if so set their values to the maximum
+  value id in the table.
+### Fixed
+- Error getting JSON version of question involving `list collect`.
+
 ## [1.2.101] - 2021-09-21
 ### Fixed
 - `[BEGIN_CAPTION]` in HTML mode now behaves like `[BEGIN_TWOCOL]` in

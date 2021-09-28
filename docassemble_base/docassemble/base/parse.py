@@ -1136,14 +1136,17 @@ class InterviewStatus:
                 the_field['choices'] = self.get_choices_data(field, the_default, the_user_dict, encode=encode)
             if hasattr(field, 'nota'):
                 the_field['none_of_the_above'] = docassemble.base.filter.markdown_to_html(self.extras['nota'][field.number], do_terms=False, status=self, verbatim=(not encode))
-            the_field['active'] = self.extras['ok'][field.number]
+            if field.number in self.extras['ok']:
+                the_field['active'] = self.extras['ok'][field.number]
+            else:
+                the_field['active'] = True
             if field.number in self.extras['required']:
                 the_field['required'] = self.extras['required'][field.number]
                 if the_field['required']:
                     validation_rules_used.add('required')
             if 'validation messages' in self.extras and field.number in self.extras['validation messages']:
                 the_field['validation_messages'].update(self.extras['validation messages'][field.number])
-            if 'permissions' in self.extras:
+            if 'permissions' in self.extras and field.number in self.extras['permissions']:
                 the_field['permissions'] = self.extras['permissions'][field.number]
             if hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment') and 'max_image_size' in self.extras and self.extras['max_image_size']:
                 the_field['max_image_size'] = self.extras['max_image_size']
