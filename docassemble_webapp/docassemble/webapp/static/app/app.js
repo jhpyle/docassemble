@@ -512,7 +512,7 @@ function daFillInAddress(origId) {
   var street_number;
   var route;
   var savedValues = {};
-
+  var toChange = [];
   for (var i = 0; i < place.address_components.length; i++) {
     var addressType = place.address_components[i].types[0];
     savedValues[addressType] = place.address_components[i]["long_name"];
@@ -533,6 +533,7 @@ function daFillInAddress(origId) {
         document.getElementById(
           id_for_part[componentTrans[addressType]]
         ).value = val;
+        toChange.push("#" + id_for_part[componentTrans[addressType]]);
       }
       if (componentTrans[addressType] != addressType) {
         val = place.address_components[i]["long_name"];
@@ -542,6 +543,7 @@ function daFillInAddress(origId) {
           document.getElementById(id_for_part[addressType]) != null
         ) {
           document.getElementById(id_for_part[addressType]).value = val;
+          toChange.push("#" + id_for_part[addressType]);
         }
       }
     } else if (
@@ -552,6 +554,7 @@ function daFillInAddress(origId) {
       var val = place.address_components[i]["long_name"];
       if (typeof val != "undefined") {
         document.getElementById(id_for_part[addressType]).value = val;
+        toChange.push("#" + id_for_part[addressType]);
       }
     }
   }
@@ -567,6 +570,7 @@ function daFillInAddress(origId) {
       the_address += route;
     }
     document.getElementById(id_for_part["address"]).value = the_address;
+    toChange.push("#" + id_for_part["address"]);
   }
   if (
     typeof id_for_part["city"] != "undefined" &&
@@ -593,6 +597,9 @@ function daFillInAddress(origId) {
       document.getElementById(id_for_part["city"]).value =
         savedValues["administrative_area_level_3"];
     }
+  }
+  for (var i = 0; i < toChange.length; i++) {
+    $(toChange[i]).trigger("change");
   }
 }
 

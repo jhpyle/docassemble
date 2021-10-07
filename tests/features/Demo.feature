@@ -3,7 +3,6 @@ Feature: Demonstration interview
   to run the example interviews.
 
   Scenario: Test whole interview
-    Given I am using the server "http://localhost"
     And I start the interview "docassemble.demo:data/questions/questions.yml"
     Then I should see the phrase "What language do you speak?"
     And I click the "English" option

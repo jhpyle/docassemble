@@ -5534,8 +5534,10 @@ def checkin():
             #sys.stderr.write("checkin: fetch_user_dict2\n")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters), session_info=session_info, secret=secret, device_id=request.cookies.get('ds', None)))
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, session_info=session_info, secret=secret, device_id=request.cookies.get('ds', None)))
             interview_status.checkin = True
+            interview.assemble(user_dict, interview_status=interview_status)
+            interview_status.current_info.update(dict(action=do_action, arguments=parameters))
             interview.assemble(user_dict, interview_status=interview_status)
             if interview_status.question.question_type == "backgroundresponse":
                 the_response = interview_status.question.backgroundresponse

@@ -1,0 +1,36 @@
+metadata:
+  title: Simple logic
+  short title: Simple
+  documentation: "https://docassemble.org/docs/logic.html#intro_mandatory"
+  example start: 1
+  example end: 4
+---
+mandatory: True
+question: |
+  Welcome to the interview!
+continue button field: intro
+---
+mandatory: True
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+mandatory: True
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+mandatory: True
+question: |
+  Here is your document.
+attachment:
+  content: |
+    Your favorite fruit is ${ favorite_fruit }.
+
+    % if favorite_fruit == 'apple':
+    You will never need to see a doctor.
+
+    % endif
+    Your favorite vegetable is ${ favorite_vegetable }.
