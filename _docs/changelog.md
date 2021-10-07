@@ -4,6 +4,23 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.103](https://github.com/jhpyle/docassemble/releases/tag/v1.2.103) - 2021-10-07
+
+### Fixed
+- `check in` actions were not aware of the current `x`, `i`, `j`, etc.
+- Population of fields by address autocomplete did not trigger the
+  `change` event on the fields.
+
+## [1.2.102](https://github.com/jhpyle/docassemble/releases/tag/v1.2.102) - 2021-09-28
+
+### Changed
+- Added a check during startup to see if PostgreSQL primary key
+  sequences have been reset and if so set their values to the maximum
+  value id in the table.
+
+### Fixed
+- Error getting JSON version of question involving `list collect`.
+
 ## [1.2.101](https://github.com/jhpyle/docassemble/releases/tag/v1.2.101) - 2021-09-21
 
 ### Fixed
