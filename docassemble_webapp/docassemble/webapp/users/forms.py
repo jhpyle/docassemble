@@ -192,6 +192,7 @@ class PhoneUserProfileForm(UserProfileForm):
         if self.email.data:
             from flask_login import current_user
             if current_user.social_id.startswith('phone$'):
+                from docassemble.webapp.db_object import db
                 from docassemble.webapp.users.models import UserModel
                 from flask import flash
                 existing_user = db.session.execute(select(UserModel).filter_by(email=self.email.data, active=True)).scalar()
