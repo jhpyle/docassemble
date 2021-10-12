@@ -3061,8 +3061,11 @@ def user_can_edit_package(pkgname=None, giturl=None):
         pkgname = pkgname.strip()
         if pkgname == '' or re.search(r'\s', pkgname):
             return False
-        results = db.session.execute(select(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).where(and_(Package.name == pkgname, Package.active == True)))
-        if results.count() == 0:
+        results = db.session.execute(select(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).where(and_(Package.name == pkgname, Package.active == True))).all()
+        the_count = 0
+        for result in results:
+            the_count += 1
+        if the_count == 0:
             return(True)
         for d in results:
             if d.user_id == current_user.id:
@@ -3071,8 +3074,11 @@ def user_can_edit_package(pkgname=None, giturl=None):
         giturl = giturl.strip()
         if giturl == '' or re.search(r'\s', giturl):
             return False
-        results = db.session.execute(select(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).where(and_(or_(Package.giturl == giturl + '/', Package.giturl == giturl), Package.active == True)))
-        if results.count() == 0:
+        results = db.session.execute(select(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).where(and_(or_(Package.giturl == giturl + '/', Package.giturl == giturl), Package.active == True))).all()
+        the_count = 0
+        for result in results:
+            the_count += 1
+        if the_count == 0:
             return(True)
         for d in results:
             if d.user_id == current_user.id:

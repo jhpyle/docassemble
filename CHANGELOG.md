@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.104] - 2021-10-11
+### Fixed
+- Issue with counting SQL results for non-admin developers.
+
 ## [1.2.103] - 2021-10-07
 ### Fixed
 - `check in` actions were not aware of the current `x`, `i`, `j`, etc.
