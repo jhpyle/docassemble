@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.104](https://github.com/jhpyle/docassemble/releases/tag/v1.2.104) - 2021-10-11
+
+### Fixed
+- Issue with counting SQL results for non-admin developers.
+
 ## [1.2.103](https://github.com/jhpyle/docassemble/releases/tag/v1.2.103) - 2021-10-07
 
 ### Fixed
