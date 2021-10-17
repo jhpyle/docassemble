@@ -253,7 +253,7 @@ class SavedFile:
         new_file = os.path.join(self.directory, filename)
         new_file_dir = os.path.dirname(new_file)
         if not os.path.isdir(new_file_dir):
-            os.path.makedirs(new_file_dir)
+            os.makedirs(new_file_dir)
         shutil.copyfile(orig_path, new_file)
         if 'filename' not in kwargs:
             self.save()
