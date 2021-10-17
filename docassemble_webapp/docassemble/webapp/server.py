@@ -1148,6 +1148,31 @@ store = RedisStore(r_store)
 
 kv_session = KVSessionExtension(store, app)
 
+if 'clicksend' in daconfig and isinstance(daconfig['clicksend'], (list, dict)):
+    import docassemble.webapp.clicksend
+    clicksend_config = {'name': {}, 'number': {}}
+    if isinstance(daconfig['clicksend'], dict):
+        config_list = [daconfig['clicksend']]
+    else:
+        config_list = daconfig['clicksend']
+    for the_config in config_list:
+        if isinstance(the_config, dict) and 'api username' in the_config and 'api key' in the_config and 'number' in the_config:
+            if 'country' not in the_config:
+                the_config['country'] = docassemble.webapp.backend.DEFAULT_COUNTRY or 'US'
+            if 'from email' not in the_config:
+                the_config['from email'] = app.config['MAIL_DEFAULT_SENDER']
+            clicksend_config['number'][str(the_config['number'])] = the_config
+            if 'default' not in clicksend_config['name']:
+                clicksend_config['name']['default'] = the_config
+            if 'name' in the_config:
+                clicksend_config['name'][the_config['name']] = the_config
+        else:
+            sys.stderr.write("improper setup in twilio configuration\n")
+    if 'default' not in clicksend_config['name']:
+        clicksend_config = None
+else:
+    clicksend_config = None
+
 if 'twilio' in daconfig:
     twilio_config = dict()
     twilio_config['account sid'] = dict()
@@ -22146,6 +22171,31 @@ def fax_callback():
     pipe.execute()
     return ('', 204)
 
+@app.route("/clicksend_fax_callback", methods=['POST'])
+@csrf.exempt
+def clicksend_fax_callback():
+    if clicksend_config is None:
+        logmessage("clicksend_fax_callback: Clicksend not enabled")
+        return ('', 204)
+    post_data = request.form.copy()
+    if 'message_id' not in post_data:
+        logmessage("clicksend_fax_callback: message_id missing")
+        return ('', 204)
+    the_key = 'da:faxcallback:sid:' + post_data['message_id']
+    the_json = r.get(the_key)
+    try:
+        params = json.loads(the_json)
+    except:
+        logmessage("clicksend_fax_callback: message_id not found")
+        return ('', 204)
+    for param in ('timestamp_send', 'timestamp', 'message_id', 'status', 'status_code', 'status_text', 'error_code', 'error_text', 'custom_string', 'user_id', 'subaccount_id', 'message_type'):
+        params[param] = post_data.get(param, None)
+    pipe = r.pipeline()
+    pipe.set(the_key, json.dumps(params))
+    pipe.expire(the_key, 86400)
+    pipe.execute()
+    return ('', 204)
+
 @app.route("/voice", methods=['POST', 'GET'])
 @csrf.exempt
 def voice():
@@ -27074,7 +27124,17 @@ def get_email_obj(email, short_record, user):
         email_obj.body_html = None
     return email_obj
 
-def da_send_fax(fax_number, the_file, config):
+def da_send_fax(fax_number, the_file, config, country=None):
+    if clicksend_config is not None:
+        if config not in clicksend_config['name']:
+            raise Exception("There is no ClickSend configuration called " + str(config))
+        info = docassemble.webapp.clicksend.send_fax(fax_number, the_file, clicksend_config['name'][config], country)
+        the_key = 'da:faxcallback:sid:' + info['message_id']
+        pipe = r.pipeline()
+        pipe.set(the_key, json.dumps(info['params']))
+        pipe.expire(the_key, 86400)
+        pipe.execute()
+        return info['message_id']
     if twilio_config is None:
         logmessage("da_send_fax: ignoring call to da_send_fax because Twilio not enabled")
         return None

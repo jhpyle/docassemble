@@ -2409,7 +2409,11 @@ class FaxStatus:
         if the_json is None:
             return 'no-information'
         info = json.loads(the_json)
-        return info['FaxStatus']
+        if 'FaxStatus' in info:
+            return info['FaxStatus']
+        if 'status_text' in info:
+            return info['status_text']
+        return 'no-information'
     def pages(self):
         if self.sid is None:
             return 0
@@ -2417,7 +2421,11 @@ class FaxStatus:
         if the_json is None:
             return 0
         info = json.loads(the_json)
-        return info.get('NumPages', 0)
+        if 'NumPages' in info:
+            return info['NumPages']
+        if 'message_pages' in info:
+            return info['message_pages']
+        return 0
     def info(self):
         if self.sid is None:
             return dict(FaxStatus='not-configured')
@@ -2430,7 +2438,7 @@ class FaxStatus:
         the_status = self.status()
         if the_status in ('no-information', 'not-configured'):
             return None
-        if the_status in ('received', 'delivered'):
+        if the_status in ('received', 'delivered', 'Fax successfully sent'):
             return True
         else:
             return False
@@ -2446,7 +2454,7 @@ def send_fax(fax_number, file_object, config='default', country=None):
     if 'fax' not in tconfig or tconfig['fax'] in [False, None]:
         logmessage("send_fax: ignoring because fax not enabled")
         return FaxStatus(None)
-    return FaxStatus(server.send_fax(fax_string(fax_number, country=country), file_object, config))
+    return FaxStatus(server.send_fax(fax_string(fax_number, country=country), file_object, config, country=country))
 
 def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, task_persistent=False, attachments=None, mailgun_variables=None, dry_run=False):
     """Sends an e-mail and returns whether sending the e-mail was successful."""

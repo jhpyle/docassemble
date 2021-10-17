@@ -44,6 +44,7 @@ install_requires = [
     "click-plugins==1.1.1",
     "click-repl==0.1.6",
     "click==7.1.2",
+    "clicksend-client==5.0.72",
     "colorama==0.4.4",
     "configparser==5.0.2",
     "convertapi==1.4.0",
