@@ -2,7 +2,8 @@ import clicksend_client
 from clicksend_client import FaxMessage
 from clicksend_client.rest import ApiException
 import codecs
-import json
+import ast
+from docassemble.base.logger import logmessage
 
 def send_fax(fax_number, the_file, config, country=None):
     if (hasattr(the_file, 'extension') and the_file.extension == 'pdf') or (hasattr(the_file, 'mimetype') and the_file.mimetype == 'application/pdf'):
@@ -24,12 +25,15 @@ def send_fax(fax_number, the_file, config, country=None):
         except ApiException as e:
             raise Exception("Exception when calling UploadApi->uploads_post: %s\n" % e)
         try:
-            response = json.loads(api_response)
+            response = ast.literal_eval(api_response)
         except:
-            raise Exception("Exception when calling UploadApi->uploads_post: response not JSON: " + api_response)
+            logmessage(api_response)
+            raise Exception("Exception when calling UploadApi->uploads_post: response could not be parsed: " + api_response)
         if response.get('http_code', 0) != 200:
+            logmessage(api_response)
             raise Exception("Exception when calling UploadApi->uploads_post: response code not 200: " + api_response)
         if '_url' not in response:
+            logmessage(api_response)
             raise Exception("Exception when calling UploadApi->uploads_post: url not returned " + api_response)
         file_url = response['_url']
     fax_message = clicksend_client.FaxMessageCollection(file_url=file_url, messages=fax_message_list)
@@ -38,10 +42,12 @@ def send_fax(fax_number, the_file, config, country=None):
     except ApiException as e:
         raise Exception("Exception when calling FAXApi->fax_send_post: %s\n" % e)
     try:
-        response = json.loads(api_response)
+        response = ast.literal_eval(api_response)
     except:
-        raise Exception("Exception when calling FAXApi->fax_send_post: response not JSON: " + api_response)
+        logmessage(api_response)
+        raise Exception("Exception when calling FAXApi->fax_send_post: response could not be parsed: " + api_response)
     if response.get('http_code', 0) != 200:
+        logmessage(api_response)
         raise Exception("Exception when calling FAXApi->fax_send_post: response code not 200: " + api_response)
     try:
         message_id = response['data']['messages'][0]['message_id']
