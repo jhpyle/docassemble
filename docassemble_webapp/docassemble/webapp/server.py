@@ -18,6 +18,7 @@ from urllib.parse import quote as urllibquote
 from urllib.parse import unquote as urllibunquote
 from urllib.parse import urlparse, urlunparse, urlencode, urlsplit, parse_qsl
 from urllib.request import urlretrieve
+import unicodedata
 the_method_type = types.FunctionType
 equals_byte = bytes('=', 'utf-8')
 
@@ -12120,7 +12121,7 @@ def serve_uploaded_file_with_filename_and_extension_download(number, filename, e
     return do_serve_uploaded_file_with_filename_and_extension(number, filename, extension, download=True)
 
 def do_serve_uploaded_file_with_filename_and_extension(number, filename, extension, download=False):
-    filename = werkzeug.utils.secure_filename(filename)
+    filename = secure_filename_spaces_ok(filename)
     extension = werkzeug.utils.secure_filename(extension)
     if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
         privileged = True
@@ -17438,7 +17439,7 @@ def playground_files():
     else:
         is_ajax = False
     section = werkzeug.utils.secure_filename(request.args.get('section', 'template'))
-    the_file = werkzeug.utils.secure_filename(request.args.get('file', ''))
+    the_file = secure_filename_spaces_ok(request.args.get('file', ''))
     scroll = False
     if the_file != '':
         scroll = True
@@ -18150,7 +18151,7 @@ def playground_packages():
     current_project = get_current_project()
     form = PlaygroundPackagesForm(request.form)
     fileform = PlaygroundUploadForm(request.form)
-    the_file = werkzeug.utils.secure_filename(request.args.get('file', ''))
+    the_file = secure_filename_spaces_ok(request.args.get('file', ''))
     if the_file == '':
         no_file_specified = True
     else:
@@ -19441,7 +19442,7 @@ def variables_report():
     playground = SavedFile(current_user.id, fix=True, section='playground')
     the_file = request.args.get('file', None)
     if the_file is not None:
-        the_file = werkzeug.utils.secure_filename(the_file)
+        the_file = secure_filename_spaces_ok(the_file)
     current_project = werkzeug.utils.secure_filename(request.args.get('project', 'default'))
     the_directory = directory_for(playground, current_project)
     files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
@@ -19567,7 +19568,7 @@ def playground_page_run():
         return ('File not found', 404)
     setup_translation()
     current_project = get_current_project()
-    the_file = werkzeug.utils.secure_filename(request.args.get('file'))
+    the_file = secure_filename_spaces_ok(request.args.get('file'))
     if the_file:
         active_interview_string = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file
         the_url = url_for('index', reset=1, i=active_interview_string)
@@ -19791,7 +19792,7 @@ def playground_page():
     fileform = PlaygroundUploadForm(request.form)
     form = PlaygroundForm(request.form)
     interview = None
-    the_file = werkzeug.utils.secure_filename(request.args.get('file', get_current_file(current_project, 'questions')))
+    the_file = secure_filename_spaces_ok(request.args.get('file', get_current_file(current_project, 'questions')))
     valid_form = None
     if request.method == 'POST':
         valid_form = form.validate()
@@ -19840,8 +19841,8 @@ def playground_page():
         return redirect(url_for('playground_page', project=current_project))
     if request.method == 'POST' and (form.submit.data or form.run.data or form.delete.data):
         if form.validate() and form.playground_name.data:
-            the_file = werkzeug.utils.secure_filename(form.playground_name.data)
-            the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
+            the_file = secure_filename_spaces_ok(form.playground_name.data)
+            #the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
             if the_file != '':
                 if not re.search(r'\.ya?ml$', the_file):
                     the_file = re.sub(r'\..*', '', the_file) + '.yml'
@@ -19855,7 +19856,7 @@ def playground_page():
         else:
             #flash(word('You need to type in a name for the interview'), 'error')
             is_new = True
-    the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
+    #the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
     files = sorted([dict(name=f, modtime=os.path.getmtime(os.path.join(the_directory, f))) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])
     file_listing = [x['name'] for x in files]
     assign_opacity(files)
@@ -20703,14 +20704,14 @@ def logs():
         return(response)
     the_file = request.args.get('file', None)
     if the_file is not None:
-        the_file = werkzeug.utils.secure_filename(the_file)
+        the_file = secure_filename_spaces_ok(the_file)
     default_filter_string = request.args.get('q', '')
     if request.method == 'POST' and form.file_name.data:
         the_file = form.file_name.data
     if the_file is not None and (the_file.startswith('.') or the_file.startswith('/') or the_file == ''):
         the_file = None
     if the_file is not None:
-        the_file = werkzeug.utils.secure_filename(the_file)
+        the_file = secure_filename_spaces_ok(the_file)
     total_bytes = 0;
     if LOGSERVER is None:
         call_sync()
@@ -21238,7 +21239,7 @@ def train():
         the_package = werkzeug.utils.secure_filename(the_package)
     the_file = request.args.get('file', None)
     if the_file is not None:
-        the_file = werkzeug.utils.secure_filename(the_file)
+        the_file = secure_filename_spaces_ok(the_file)
     the_group_id = request.args.get('group_id', None)
     show_all = int(request.args.get('show_all', 0))
     form = TrainingForm(request.form)
@@ -24645,7 +24646,7 @@ def api_file(file_number):
                 else:
                     return ('File not found', 404)
             elif 'filename' in request.args:
-                the_filename = werkzeug.utils.secure_filename(request.args['filename'])
+                the_filename = secure_filename_spaces_ok(request.args['filename'])
                 if os.path.isfile(os.path.join(os.path.dirname(file_info['path']), the_filename)):
                     the_path = os.path.join(os.path.dirname(file_info['path']), the_filename)
                     extension, mimetype = get_ext_and_mimetype(the_filename)
@@ -26021,14 +26022,14 @@ def api_playground():
     if request.method == 'GET':
         if 'filename' not in request.args:
             return jsonify(pg_section.file_list)
-        the_filename = werkzeug.utils.secure_filename(request.args['filename'])
+        the_filename = secure_filename_spaces_ok(request.args['filename'])
         if not pg_section.file_exists(the_filename):
             return jsonify_with_status("File not found", 404)
         response_to_send = send_file(pg_section.get_file(the_filename), mimetype=pg_section.get_mimetype(the_filename))
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response_to_send
     elif request.method == 'DELETE':
-        pg_section.delete_file(werkzeug.utils.secure_filename(request.args['filename']))
+        pg_section.delete_file(secure_filename_spaces_ok(request.args['filename']))
         if section == 'modules':
             restart_all()
         return ('', 204)
@@ -27131,7 +27132,7 @@ def da_send_fax(fax_number, the_file, config, country=None):
         info = docassemble.webapp.clicksend.send_fax(fax_number, the_file, clicksend_config['name'][config], country)
         the_key = 'da:faxcallback:sid:' + info['message_id']
         pipe = r.pipeline()
-        pipe.set(the_key, json.dumps(info['params']))
+        pipe.set(the_key, json.dumps(info))
         pipe.expire(the_key, 86400)
         pipe.execute()
         return info['message_id']
@@ -27241,6 +27242,15 @@ def path_from_reference(file_reference):
     if 'fullpath' not in file_info:
         raise Exception("File not found")
     return file_info['fullpath']
+
+def secure_filename_spaces_ok(filename):
+    filename = unicodedata.normalize("NFKD", filename)
+    filename = filename.encode("ascii", "ignore").decode("ascii")
+    for sep in os.path.sep, os.path.altsep:
+        if sep:
+            filename = filename.replace(sep, " ")
+    filename = str(re.sub(r'[^A-Za-z0-9\_\.\- ]', '', "_".join(filename.split()))).strip("._ ")
+    return filename
 
 def secure_filename(filename):
     filename = werkzeug.utils.secure_filename(filename)

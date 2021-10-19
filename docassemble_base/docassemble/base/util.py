@@ -2412,7 +2412,7 @@ class FaxStatus:
         if 'FaxStatus' in info:
             return info['FaxStatus']
         if 'status_text' in info:
-            return info['status_text']
+            return info['status_text'] or 'no-information'
         return 'no-information'
     def pages(self):
         if self.sid is None:
@@ -2424,7 +2424,7 @@ class FaxStatus:
         if 'NumPages' in info:
             return info['NumPages']
         if 'message_pages' in info:
-            return info['message_pages']
+            return info['message_pages'] or 0
         return 0
     def info(self):
         if self.sid is None:

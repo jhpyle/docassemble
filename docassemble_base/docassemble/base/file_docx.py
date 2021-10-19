@@ -244,6 +244,7 @@ class SoupParser(object):
         self.current_paragraph = self.paragraphs[-1]
         self.run = self.current_paragraph['runs'][-1]
         self.bold = False
+        self.center = False
         self.list_number = 1
         self.list_type = list_types[-1]
         self.italic = False
@@ -256,26 +257,93 @@ class SoupParser(object):
         self.charstyle = None
         self.color = None
         self.tpl = tpl
-    def new_paragraph(self):
+    def new_paragraph(self, classes, styles):
         if self.still_new:
             # logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + str(self.indentation))
             self.current_paragraph['params']['style'] = self.style
             self.current_paragraph['params']['indentation'] = self.indentation
+            self.set_attribs(classes, styles)
             self.list_number += 1
             return
         # logmessage("new_paragraph where style is " + self.style + " and indentation is " + str(self.indentation))
         self.current_paragraph = dict(params=dict(style=self.style, indentation=self.indentation, list_number=self.list_number), runs=[RichText('')])
+        self.set_attribs(classes, styles)
         self.list_number += 1
         self.paragraphs.append(self.current_paragraph)
         self.run = self.current_paragraph['runs'][-1]
         self.still_new = True
+    def set_attribs(self, classes, styles):
+        if 'dacenter' in classes:
+            self.current_paragraph['params']['align'] = 'center'
+        elif 'daflushright' in classes:
+            self.current_paragraph['params']['align'] = 'end'
+        else:
+            self.current_paragraph['params']['align'] = 'start'
+        if len(classes):
+            if 'daspacingtight' in classes:
+                self.current_paragraph['params']['spacing'] = 240
+                self.current_paragraph['params']['after'] = 0
+            elif 'daspacingsingle' in classes:
+                self.current_paragraph['params']['spacing'] = 240
+                self.current_paragraph['params']['after'] = 240
+            elif 'daspacingdouble' in classes:
+                self.current_paragraph['params']['spacing'] = 480
+                self.current_paragraph['params']['after'] = 0
+            elif 'daspacingoneandahalf' in classes:
+                self.current_paragraph['params']['spacing'] = 260
+                self.current_paragraph['params']['after'] = 0
+            elif 'daspacingtriple' in classes:
+                self.current_paragraph['params']['spacing'] = 700
+                self.current_paragraph['params']['after'] = 0
+        if styles:
+            m = re.search(r'margin-left:([0-9\.]+)px', styles)
+            if m:
+                self.current_paragraph['params']['leftindent'] = 20 * int(m.group(1))
+            m = re.search(r'margin-right:([0-9\.]+)px', styles)
+            if m:
+                self.current_paragraph['params']['rightindent'] = 20 * int(m.group(1))
+            m = re.search(r'text-indent:([0-9\.]+)px', styles)
+            if m:
+                self.current_paragraph['params']['firstline'] = 20 * int(m.group(1))
     def __str__(self):
         output = ''
         for para in self.paragraphs:
             # logmessage("Got a paragraph where style is " + para['params']['style'] + " and indentation is " + str(para['params']['indentation']))
             output += '<w:p><w:pPr><w:pStyle w:val="Normal"/>'
-            if para['params']['style'] in ('ul', 'blockquote') or para['params']['style'].startswith('ol'):
-                output += '<w:ind w:left="' + str(36*para['params']['indentation']) + '" w:right="0" w:hanging="0"/>'
+            if para['params']['align'] == 'center':
+                output += '<w:jc w:val="center"/>'
+            elif para['params']['align'] == 'end':
+                output += '<w:jc w:val="end"/>'
+            if 'spacing' in para['params']:
+                output += '<w:spacing w:before="0" w:after="' + str(para['params']['after']) + '" w:line="' + str(para['params']['spacing']) + '" w:lineRule="auto" w:beforeAutospacing="0" w:afterAutospacing="0"/>'
+            if para['params']['style'] == 'ul' or para['params']['style'].startswith('ol'):
+                if 'leftindent' in para['params']:
+                    left_indent = para['params']['leftindent']
+                else:
+                    left_indent = 36*para['params']['indentation']
+                if 'rightindent' in para['params']:
+                    right_indent = para['params']['rightindent']
+                else:
+                    right_indent = 0
+                output += '<w:ind w:left="' + str(left_indent) + '" w:right="' + str(right_indent) + '" w:hanging="0"/>'
+            elif para['params']['style'] == 'blockquote':
+                if 'spacing' not in para['params']:
+                    output += '<w:spacing w:before="0" w:after="240" w:line="240" w:lineRule="auto" w:beforeAutospacing="0" w:afterAutospacing="0"/>'
+                output += '<w:ind w:left="' + str(36*para['params']['indentation']) + '" w:right="' + str(36*para['params']['indentation']) + '" w:hanging="0"/>'
+            elif 'leftindent' in para['params'] or 'rightindent' in para['params'] or 'firstline' in para['params']:
+                if 'leftindent' in para['params']:
+                    left_indent = para['params']['leftindent']
+                else:
+                    left_indent = 0
+                if 'rightindent' in para['params']:
+                    right_indent = para['params']['rightindent']
+                else:
+                    right_indent = 0
+                if 'firstline' in para['params']:
+                    first_line = para['params']['firstline']
+                else:
+                    first_line = 0
+                output += '<w:ind w:left="' + str(left_indent) + '" w:right="' + str(right_indent) + '" w:hanging="0" w:firstLine="' + str(first_line) + '"/>'
             output += '<w:rPr></w:rPr></w:pPr>'
             if para['params']['style'] == 'ul':
                 output += str(RichText("•\t"))
@@ -313,10 +381,30 @@ class SoupParser(object):
             elif isinstance(part, Tag):
                 # logmessage("Part name is " + str(part.name))
                 if part.name == 'p':
-                    self.new_paragraph()
+                    if 'class' in part.attrs:
+                        classes = part.attrs['class']
+                    else:
+                        classes = []
+                    if 'style' in part.attrs:
+                        styles = part.attrs['style']
+                    else:
+                        styles = ""
+                    self.new_paragraph(classes, styles)
+                    if 'dabold' in classes:
+                        self.bold = True
                     self.traverse(part)
+                    if 'dabold' in classes:
+                        self.bold = False
                 elif part.name == 'li':
-                    self.new_paragraph()
+                    if 'class' in part.attrs:
+                        classes = part.attrs['class']
+                    else:
+                        classes = []
+                    if 'style' in part.attrs:
+                        styles = part.attrs['style']
+                    else:
+                        styles = ""
+                    self.new_paragraph(classes, styles)
                     self.traverse(part)
                 elif part.name == 'ul':
                     # logmessage("Entering a UL")
@@ -374,7 +462,15 @@ class SoupParser(object):
                 elif re.match(r'h[1-6]', part.name):
                     oldsize = self.size
                     self.size = 60 - ((int(part.name[1]) - 1) * 10)
-                    self.new_paragraph()
+                    if 'class' in part.attrs:
+                        classes = part.attrs['class']
+                    else:
+                        classes = []
+                    if 'style' in part.attrs:
+                        styles = part.attrs['style']
+                    else:
+                        styles = ""
+                    self.new_paragraph(classes, styles)
                     self.bold = True
                     self.traverse(part)
                     self.bold = False

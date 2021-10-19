@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.2.105] - 2021-10-18
+### Added
+- ClickSend fax support.
+### Changed
+- Additional bracket expressions now valid with Jinja2 `markdown`
+  filter.
+- The blockquote Markdown format now indented on right and
+  single-spaced when used the the Jinja2 `markdown` filter.
+- Filename security in the Playground now allows reading existing
+  Playground files with names that contain spaces, although the
+  filename will be changed.
+
 ## [1.2.104] - 2021-10-11
 ### Fixed
 - Issue with counting SQL results for non-admin developers.
