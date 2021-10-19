@@ -11878,6 +11878,36 @@
   \  \n  # Pretend we have to think\n  # about the answer.\n  import time\n  time.sleep(1)\n\
   \  \n  if favorite_fruit.lower() == action_argument('fruit').lower():\n    success\
   \ = True\n  else:\n    success = False\n  json_response(dict(success=success, fruit=favorite_fruit))"
+"all-mandatory": |-
+  mandatory: True
+  question: |
+    Welcome to the interview!
+  continue button field: intro
+  ---
+  mandatory: True
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  ---
+  mandatory: True
+  question: |
+    What is your favorite vegetable?
+  fields:
+    - Vegetable: favorite_vegetable
+  ---
+  mandatory: True
+  question: |
+    Here is your document.
+  attachment:
+    content: |
+      Your favorite fruit is ${ favorite_fruit }.
+
+      % if favorite_fruit == 'apple':
+      You will never need to see a doctor.
+
+      % endif
+      Your favorite vegetable is ${ favorite_vegetable }.
 "background-tail": "objects:\n  r: DARedis\n---\nmandatory: True\ncode: |\n  log_key\
   \ = r.key('log:' + user_info().session)\n  messages = list()\n---\nmandatory: True\n\
   code: |\n  if the_task.ready():\n    last_messages_retrieved\n    final_screen\n\
@@ -11920,6 +11950,35 @@
 "bootstrap-theme": |-
   features:
     bootstrap theme: lumen.min.css
+"branch-mandatory": |-
+  mandatory: True
+  question: |
+    Welcome to the interview!
+  continue button field: intro
+  ---
+  mandatory: True
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  ---
+  mandatory: favorite_fruit == 'apple'
+  question: |
+    What is your favorite type of apple?
+  fields:
+    - Type of apple: favorite_apple
+  ---
+  mandatory: True
+  question: |
+    Here is your document.
+  attachment:
+    content: |
+      Your favorite fruit is ${ favorite_fruit }.
+
+      % if favorite_fruit == 'apple':
+      Your favorite type of apple is ${ favorite_apple }.
+
+      % endif
 "clauses": "objects:\n  - markdown_clause: DADict\n  - edited_clause: DADict\n---\n\
   code: |\n  markdown_clause[i] = assemble_docx('data/templates/contract.docx', fields={'clause':\
   \ i}, output_format='md', return_content=True)\n---\ncode: |\n  # This variable\
@@ -12302,6 +12361,56 @@
     % endif
 
     % endfor
+"dependency-demo": |-
+  mandatory: True
+  question: |
+    Your favorite fruit is ${ favorite_fruit }.
+  subquestion: |
+    % if favorite_fruit == 'grapes':
+    Your favorite vineyard is ${ favorite_vineyard }.
+    % endif
+  ---
+  question: |
+    Which vineyard do you think produces the best grapes?
+  fields:
+    - Fruit: favorite_vineyard
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+"dependency-demo-code": |-
+  mandatory: True
+  code: |
+    if favorite_fruit == `grapes`:
+      favorite_vineyard
+    favorite_vegetable
+    final_screen
+  ---
+  event: final_screen
+  question: |
+    Your favorite fruit is ${ favorite_fruit }.
+  subquestion: |
+    Your favorite vegetable is ${ favorite_vegetable }.
+
+    % if favorite_fruit == 'grapes':
+    Your favorite vineyard is ${ favorite_vineyard }.
+    % endif
+  ---
+  question: |
+    Which vineyard do you think produces the best grapes?
+  fields:
+    - Fruit: favorite_vineyard
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  ---
+  question: |
+    What is your favorite vegetable?
+  fields:
+    - Vegetable: favorite_vegetable
 "discovery": |-
   template: discovery['rent records']
   content: |

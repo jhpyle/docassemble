@@ -37,7 +37,7 @@ set [`mandatory`] to `True` every time, but we can actually set
 [`mandatory`] to a [Python expression] that evaluates to either `True`
 or `False`.  For example:
 
-{% include demo-side-by-side.html demo="all-mandatory" %}
+{% include demo-side-by-side.html demo="branch-mandatory" %}
 
 Here, the "What is your favorite type of fruit" [`question`] is only
 "mandatory" if the user says that `apple` is their favorite type of
