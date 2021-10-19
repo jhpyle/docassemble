@@ -4156,6 +4156,74 @@ If no configuration is named `default`, the first configuration will
 be used as the default.  The [call forwarding] feature uses the
 default configuration.
 
+## <a name="clicksend"></a>ClickSend configuration
+
+The [fax sending] feature was previously provided by [Twilio], but
+[Twilio] has discontinued support for sending faxes.  If you need to
+use the [`send_fax()`] function, you will need to create an
+account with [ClickSend].
+
+These features are enabled using a `clicksend` configuration directive.
+Here is an example:
+
+{% highlight yaml %}
+twilio:
+  api username: "dev@example.com"
+  api key: "F8BE02C1-D95E-D3A9-297B-0028EFB6163B"
+  number: "+12762510247"
+  from email: "jsmith@example.com"
+{% endhighlight %}
+
+The `api username` is the username that you use to log into
+[ClickSend].  This is usually the e-mail address that you used when
+you created the account.
+
+The `api key` is a code that you can find in the [ClickSend] dashboard
+under "API credentials."  You may need to generate the API Key.
+
+The `number` is the fax phone number you purchased.  You can find the
+phone number under Numbers, Fax in the [ClickSend] dashboard.  The
+phone number must be written in [E.164] format.
+
+The `from email` is a field that [ClickSend] uses in its Fax API.  The
+documentation describes it as "An email address where the reply should
+be emailed to."
+
+### <a name="multiple clicksend"></a>Multiple ClickSend configurations
+
+You can use multiple [ClickSend] configurations on the same server.
+You might wish to do this if you want to use more than one [ClickSend]
+fax number and/or account to send faxes.  You can do this by
+specifying the `clicksend` directive as a list of dictionaries, and
+giving each dictionary a `name`.  In this example, there are two
+configurations, one named `default`, and one named `bankruptcy`:
+
+{% highlight yaml %}
+clicksend:
+  - name: default
+    api username: "dev@example.com"
+    api key: "F8BE02C1-D95E-D3A9-297B-0028EFB6163B"
+    number: "+12762510247"
+    from email: "jsmith@example.com"
+  - name: bankruptcy
+    api username: "dev2@example.com"
+    api key: "E7CE2453-253F-E3C1-3562-0129EDB727BC"
+    number: "+13012503257"
+    from email: "help@example.com"
+{% endhighlight %}
+
+When you call [`send_fax()`], you can indicate which configuration
+should be used:
+
+{% highlight python %}
+send_fax(to='202-943-0949', welcome_fax, config='bankruptcy')
+{% endhighlight %}
+
+This will cause the fax to be sent from 301-250-3257.
+
+If no configuration is named `default`, the first configuration will
+be used as the default.
+
 ## <a name="user agent"></a>User agent for downloading files
 
 Functions such as [`path_and_mimetype()`] will download files from the
@@ -4827,6 +4895,7 @@ and Facebook API keys.
 [`speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text
 [call forwarding]: {{ site.baseurl }}/docs/livehelp.html#phone
 [`send_sms()`]: {{ site.baseurl }}/docs/functions.html#send_sms
+[`send_fax()`]: {{ site.baseurl }}/docs/functions.html#send_fax
 [text messaging interface]: {{ site.baseurl }}/docs/sms.html
 [Twilio]: https://twilio.com
 [Redis]: http://redis.io/

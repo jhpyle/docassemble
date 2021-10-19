@@ -127,8 +127,9 @@ services:
 
 * An [SMTP] server for [sending](#email) (as opposed to receiving)
   e-mails;
-* [Twilio] for receiving text messages, sending text messages, sending
-  faxes, and forwarding phone calls;
+* [Twilio] for receiving text messages, sending text messages, and
+  forwarding phone calls;
+* [ClickSend] for sending faxes;
 * [VoiceRSS] for converting text to an audio file;
 * [Google APIs] for autocompleting addresses, normalizing addresses,
   drawing maps, translating text;
@@ -1584,6 +1585,7 @@ All of these system administration headaches can be avoided by
 [`docassemble.webapp.fix_postgresql_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/fix_postgresql_tables.py
 [`docassemble.webapp.create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
 [Twilio]: https://twilio.com
+[ClickSend]: https://clicksend.com
 [multi-server arrangement]: {{ site.baseurl }}/docs/scalability.html
 [through the web interface]: {{ site.baseurl }}/docs/packages.html#updating
 [Docker for Windows]: https://docs.docker.com/engine/installation/windows/

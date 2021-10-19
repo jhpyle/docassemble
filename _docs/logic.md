@@ -6,331 +6,1413 @@ short_title: Interview Logic
 
 # <a name="intro"></a>Introduction
 
-Unlike other guided interview systems, in which the interview developer
-maps out a decision tree or flowchart to indicate which questions
-should be asked and in which order, **docassemble** implicitly figures
-out what questions to ask and when to ask them.
+Unlike other guided interview systems, in which the interview
+developer maps out a decision tree or flowchart to indicate which
+questions should be asked and in which order, **docassemble** figures
+out what questions to ask and when to ask them based on rules that
+you specify.  You specify these rules using [YAML] blocks.
 
-For example, if the point of your interview is to assemble a document,
-and one of the fields in the document is the user's Social Security
-Number (SSN), the interview will ask the user for his or her SSN;
-**docassemble** does not need to be told to ask for the SSN.
+## <a name="intro_mandatory"></a>Simple interviews: all blocks mandatory
 
-However, if your document only displays the SSN conditionally,
-**docassemble** will only ask for the SSN if that condition is met.
-For example, your document template might include:
+The simplest rule is to mark a block as [`mandatory`].
+
+{% include demo-side-by-side.html demo="all-mandatory" %}
+
+When **docassemble** runs an interview, it looks at the [YAML] and
+tries to run each block that is marked as "mandatory." It will run
+them in the order in which they appear in the [YAML].  So in this
+example, first the "Welcome to the interview!" [`question`] is asked.
+When the user clicks the Continue button, **docassemble** moves on to
+the second [`mandatory`] block, which asks "What is your favorite
+fruit?"  When that question is answered, **docassemble** asks "What is
+your favorite vegetable?" When that question is answered
+**docassemble** moves on to the final [`question`], "Here is your
+document," which lets the user download a document.
+
+This is a very simple interview because there is no branching logic.
+Suppose that instead of asking for the user's favorite vegetable, you
+wanted to ask for the user's favorite apple, but only if the user said
+that their favorite fruit is "apple."  In the previous interview, we
+set [`mandatory`] to `True` every time, but we can actually set
+[`mandatory`] to a [Python expression] that evaluates to either `True`
+or `False`.  For example:
+
+{% include demo-side-by-side.html demo="all-mandatory" %}
+
+Here, the "What is your favorite type of fruit" [`question`] is only
+"mandatory" if the user says that `apple` is their favorite type of
+fruit.  Thus, if the `favorite_fruit` variable is `'banana'`, then
+**docassemble** will skip over the "What is your favorite type of
+apple?" [`question`] and proceed directly to the "Here is your document"
+[`question`].
+
+By setting the [`mandatory`] directive to a [Python expression] that
+uses variables defined in previous [`question`] blocks, you can write
+complex interviews that branch in a lot of different directions
+depending on the interview answers.
+
+However, in a complex interview with a number of nested branches of
+logic, the [Python expressions] you will need to write to indicate
+whether a [`question`] should be asked could be very long and
+complicated.  In the next section, we will discuss another way of
+implementing branching logic that avoids this complication.
+
+## <a name="intro_dependency"></a>Complex interviews: dependency satisfaction
+
+As explained in the previous section, when **docassemble** runs your
+interview, it goes through your [YAML] from beginning to end and
+attempts to run each block that is marked as [`mandatory`].  Marking a
+[`question`] as "mandatory" is one way to tell **docassemble** you
+want a [`question`] to be displayed.
+
+**docassemble** can also do "dependency satisfaction."  For example,
+you can write an interview like this:
+
+{% include demo-side-by-side.html demo="dependency-demo" %}
+
+In this interview, there is a mandatory question and then two
+questions that do not have a `mandatory` directive on them.  If you
+run the interview, the first question asked is "What is your favorite
+fruit?"  How did **docassemble** know it needed to ask that question,
+even though it was not marked as [`mandatory`]?  What happened was
+that **docassemble** tried to display the "Your favorite fruit is ..."
+question, but in the process of doing so, it encountered an undefined
+variable `favorite_fruit`.  So then it looked for a block that defines
+the 'favorite_fruit' variable, and it found one, so it asked the "What
+is your favorite fruit?" question.
+
+If the user types `grapes` in answer to that question, the interview
+asks a follow-up question, "Which vineyard do you think produces the
+best grapes?" and then proceeds to the final screen, which says "Your
+favorite fruit is grapes."  However, if the user says their favorite
+fruit is "apples," the interview will skip the "Which vineyard do you
+think produces the best grapes?" question and will proceed directly to
+the final screen, which says "Your favorite fruit is apples."  Thus,
+with a single [`mandatory`] question, the interview does branching
+logic.
+
+The branching logic is a by-product of the attempt to display the
+single [`mandatory`] question.  If you were to change the text of the
+question and remove the reference to `favorite_vineyard`, the "Which
+vineyard do you think produces the best grapes?" question would never
+be asked.  Or, if you were to change the `question` text to `Your
+favorite fruit is ${ favorite_fruit } and your favorite vegetable is
+${ favorite_vegetable }.` then the order of questions would change,
+and the question that defines `favorite_vegetable` question would be
+asked right after the `favorite_fruit` question.  When dependency
+satisfaction is used to ask questions, the order of questions is
+determined by which variables **docassemble** sees first.
+
+Note that the order in which non-[`mandatory`] questions appear in the
+[YAML] does not affect the order in which questions are asked.  Each
+block in in your [YAML] is a just a "rule," and you can specify as
+many "rules" in your [YAML] as you want, in any order.
+
+For example, the following block is a rule that indicates whether the
+user is eligible for a benefit.
+
+{% highlight yaml %}
+code: |
+  if user.age_in_years() >= 60 or user.is_disabled:
+    user.eligible = True
+  else:
+    user.eligible = False
+{% endhighlight %}
+
+The rule says that the user is eligible if they are 60 or older, or if
+they are disabled, otherwise the user is not eligible.
+
+Rules in **docassemble** are instructions for how to define a
+particular variable.  The [`code`] block above is a rule for how to
+define `user.eligible`.  [`question`] blocks are also rules.  Here is
+a rule that specifies how to define `user.is_disabled`:
+
+{% highlight yaml %}
+question: Are you disabled?
+yesno: user.is_disabled
+{% endhighlight %}
+
+This says that the rule for defining `user.disabled` is to ask the
+user a yes/no question.
+
+It is possible to specify rules in fairly complex ways, as we will see
+later; you can write multiple blocks that define the same variable, so
+you can have alternative rules for different circumstances, or you can
+have a general rule that is overridden by a more specific rule in
+certain circumstances.  You can write generic rules that apply to a
+variety of different variables.
+
+When **docassemble** runs your interview, it will try to run your
+[`mandatory`] blocks, in the order in which the blocks appear in your
+[YAML].  In the course of trying to run a block, **docassemble** might
+encounter a variable that hasn't been defined yet.  When this happens,
+**docassemble** will evaluate the "rules" you have defined, and it
+will run [`code`] blocks, [`question`] blocks, or other types of
+blocks in order to try to obtain a definition of the undefined
+variable.
+
+In the course of trying to define a variable, **docassemble** might
+encounter yet another undefined variable, in which case it will try to
+obtain a definition of that variable, and in the course of trying to
+define that variable, it may encounter yet another undefined variable.
+A rule that defines a variable may "depend on" the values of other
+variables.  **docassemble**'s logic engine will perform "dependency
+satisfaction" by automatically figuring out what variable definitions
+are necessary and running the appropriate [`code`] blocks or showing
+the appropriate [`question`] screens to the user.
+
+This allows you, as the interview author, to specify rules and use
+variables in your interview or in your documents as you see fit, while
+**docassemble** does all the thinking about which questions need to
+be asked and in what order to ask them.
+
+**docassemble** automatically refrains from asking unnecessary
+questions.  For example, consider this example:
+
+{% highlight yaml %}
+code: |
+  if user.age_in_years() >= 60 or user.is_disabled:
+    user.eligible = True
+  else:
+    user.eligible = False
+{% endhighlight %}
+
+If the user is 60 or older, there is no need to ask the user if they
+are disabled.  It would waste the user's time to ask that question.
+**docassemble** infers this from the rule.  Thus "how to conduct the
+interview" and "what the legal rules are" are effectively the same
+thing, and can be specified in a single location.
+
+## <a name="intro_manual_order"></a>Manually specifying the order of questions
+
+Sometimes, you might not want the order of questions in the interview
+to be implicitly determined by the way **docassemble** processes
+rules; you might want to explicitly specify the order of questions.
+You can do this using a [`code`] block.
+
+{% include demo-side-by-side.html demo="dependency-demo-code" %}
+
+In this interview, the mandatory [`code`] block drives the interview
+using dependency satisfaction, but in an explicit order.  This block
+contains a few lines of [Python] code.  The first variable encountered
+is `favorite_fruit`, which means that the `favorite_fruit` question
+will be asked.  If `favorite_fruit` is `'grapes'`, then
+`favorite_vineyard` is evaluated, which means that `favorite_vineyard`
+will be asked.  Then `favorite_vegetable` is asked, and then
+`final_screen` is sought.  Because `final_screen` is a special screen,
+and the `event` directive is set to `final_screen`, the variable
+`final_screen` will actually not be defined; the screen is a dead-end
+screen with no fields and no "Continue" button.
+
+If the mandatory [`code`] block was not present, and instead the
+`final_screen` block was marked [`mandatory`], then the questions
+would have been asked in a different order: first `favorite_fruit`,
+then `favorite_vegetable`, and then `favorite_vineyard` (if the
+`favorite_fruit` was `'grapes'`).  We were able to instruct
+**docassemble** to ask for `favorite_vineyard` immediately after
+`favorite_fruit` by specifying different interview logic in the
+[`code`] block.
+
+This mandatory [`code`] block serves as an "outline" for the
+interview.  Instead of ordering blocks in your [YAML], you can simply
+order lines in your mandatory [`code`] block.  The [`code`] block lets
+you see the order of your interview at a glance, without having to
+page through a long interview.  The indentation of text under `if`
+statements makes clear where there is a "branch" in the logic.
+
+If you are familiar with [Python], you might think that the mandatory
+[`code`] block is weird, because simply putting the name of a variable
+by itself on a line doesn't do anything; it's not something that
+programmers normally do.  However, it does something in
+**docassemble**, because if the variable is undefined, a [Python
+exception] will be "raised," and the raising of that exception will
+tell **docassemble** that a definition of that variable needs to be
+obtained.  **docassemble**'s dependency satisfaction system operates
+through the triggering of undefined variable exceptions.
+
+So far, we have discussed three different techniques for specifying
+interview logic in **docassemble**:
+
+#. A series of `question` blocks with `mandatory` directives on them;
+#. Allowing `question` blocks to be asked implicitly as a result of
+   dependency satisfaction; and
+#. Writing a `code` block marked as `mandatory` containing an explicit
+   outline of the variables that need to be gathered and the
+   conditions under which each variable definition should be sought.
+
+These three techniques are not mutually exclusive; you can use them
+together.  For example, you might have a mandatory [`question`] block
+followed by a mandatory [`code`] block, followed by a mandatory
+[`question`] block.
+
+{% highlight yaml %}
+mandatory: True
+question: |
+  Welcome!
+continue button field: intro_screen
+---
+mandatory: True
+code: |
+  intro_screen
+  user.name.first
+  final_screen
+---
+mandatory: True
+question: |
+  Your preferences.
+subquestion: |
+  Your favorite fruit is ${ favorite_fruit }.
+
+  Your favorite vegetable is ${ favorite_vegetable }.
+
+  % if favorite_vegetable == 'turnip' and user.grows_own_turnips:
+  I grow turnips too!
+  % endif
+{% endhighlight %}
+
+Or you could have a mandatory [`code`] block that only partially
+specifies the order of questions, and allows many questions to be
+asked explicitly.  For example:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  intro_screen
+  user.name.first
+  final_screen
+---
+question: |
+  Welcome!
+continue button field: intro_screen
+---
+event: final_screen
+question: |
+  Your preferences.
+subquestion: |
+  Your favorite fruit is ${ favorite_fruit }.
+
+  Your favorite vegetable is ${ favorite_vegetable }.
+
+  % if favorite_vegetable == 'turnip' and user.grows_own_turnips:
+  I grow turnips too!
+  % endif
+{% endhighlight %}
+
+Here, the mandatory [`code`] block ensures that `intro_screen` and
+`user.name.first` are asked up front, but then uses dependency
+satisfaction to trigger the asking of `favorite_fruit` and
+`favorite_vegetable`, as well as the display of the `final_screen`.
+
+# <a name="legal_logic"></a>Writing law as code to drive the interview
+
+**docassemble**'s "rules"-based logic system is particularly
+well-suited for legal applications.  You can write legal logic in
+Python code, and **docassemble** will figure out how to ask the
+necessary questions to arrive at a legal judgment.
+
+For example, suppose your interview needs to determine whether the
+user has legal standing as a grandparent to seek custody of a child.
+The relevant statute states that a grandparent can seek custody under
+the following circumstance:
 
 {% highlight text %}
-The petitioner is ${ petitioner }.  Petitioner is a
-% if petitioner.is_citizen:
-citizen of the United States.
-Petitioner's SSN is ${ petitioner.ssn }.
-% else:
-lawful resident of the United States.
-% endif
+(3) A grandparent of the child who is not in loco parentis to the child:
+
+   (i) whose relationship with the child began either with the consent
+       of a parent of the child or under a court order;
+
+   (ii) who assumes or is willing to assume responsibility for the
+        child; and
+
+   (iii) when one of the following conditions is met:
+
+      (A) the child has been determined to be a dependent child under
+          42 Pa.C.S. Ch. 63 (relating to juvenile matters);
+
+      (B) the child is substantially at risk due to parental abuse,
+          neglect, drug or alcohol abuse or incapacity; or
+
+      (C) the child has, for a period of at least 12 consecutive
+          months, resided with the grandparent, excluding brief
+          temporary absences of the child from the home, and is
+          removed from the home by the parents, in which case the
+          action must be filed within six months after the removal of
+          the child from the home.
 {% endhighlight %}
 
-This will cause the interview to ask for the petitioner's name and
-whether the petitioner is a citizen, because that information is
-necessary.  The interview will ask for the SSN only if the petitioner
-is a citizen.
+The interview developer can rewrite this statute in Python, converting
+each legal concept into a variable.
 
-In other guided interview systems, the logic of the document assembly
-is separate from the logic that determines what interview questions
-are asked.  In the case of the template above, the dependence of the
-SSN on citizenship would need to be mapped out both in the document
-and in the specification of the interview questions.  In
-**docassemble**, however, the logic of the interview is determined
-implicitly from the requirements of the end result (in this case, a
-document).  So the logic only needs to be specified in one place.
+{% highlight yaml %}
+comment: 23 Pa. C.S.A. 5324(3)
+code: |
+  if relationship == 'Grandparent' \
+     and (relationship_began_with_consent \
+          or relationship_began_with_court_order) \
+     and willing_to_assume_responsibility \
+     and (child_is_dependent \
+          or child_is_at_risk \
+          or cared_for_child_for_a_year):
+    has_grandparent_standing = True
+  else:
+    has_grandparent_standing = False
+{% endhighlight %}
 
-# <a name="endgoals"></a>End goals and the satisfaction of prerequisites
+Note: if you are wondering why there are `\` marks at the end of some
+of the lines, this is Python syntax for formatting source code and
+avoiding writing a very long line of code.  If the `\` was not
+present, there would be a syntax error, because Python would interpret
+the newline to mean that you were done specifying a condition, and it
+would think you forgot to write a `:` to indicate the end of the
+condition.  The `\` basically means "ignore the following newline and
+pretend this is all one long line."
 
-By default, all questions in a **docassemble** interview are asked
-only if and when they are needed.
+The values of a variable like `relationship_began_with_consent` could
+be determined by asking the user a `question`.
 
-However, in order to start asking questions, **docassemble** needs to
-be given some direction.  You need to provide this direction by
-marking at least one [`question`] block or [`code`] block as
-[`mandatory`] (or one [`code`] block as [`initial`]).
+{% highlight yaml %}
+question: |
+  At some point, did one of the child's parents agree to let you care
+  for the child?
+yesno: relationship_began_with_consent
+{% endhighlight %}
 
-If **docassemble** does not know what question to ask, it will give
-you an error that looks like this:
+Other variables, like `cared_for_child_for_a_year`, might be too
+complex to reduce to a single question.  In that case, rather than
+using a [`question`] as the "rule" for what the variable means, you
+can use a [`code`] block instead, and you can break the legal concept
+down into smaller pieces.
 
-{% include side-by-side.html demo="no-mandatory" %}
+{% highlight yaml %}
+code: |
+  if (not child_lives_with_client) \
+     and child_used_to_live_with_client \
+     and child_taken_from_client_by_parent \
+     and child_taken_within_last_six_months \
+     and child_moved_in_at_least_12_months_before \
+     and child_lived_with_client_continuously:
+       cared_for_child_for_a_year = True
+  else:
+       cared_for_child_for_a_year = False
+{% endhighlight %}
 
-To prevent this error in this interview, we can mark as `mandatory`
-the final `question` block -- the screen that is the endpoint for the
-interview.
+The rules for what these variables mean can in turn be specified as
+`question` or `code` blocks:
 
-{% include side-by-side.html demo="with-mandatory" %}
+{% highlight yaml %}
+question: |
+  Does the child currently live with you?
+yesno: child_lives_with_client
+---
+code: |
+  if as_datetime(date_child_taken_away) >= date_as_of_six_months_ago:
+    child_taken_within_last_six_months = True
+  else:
+    child_taken_within_last_six_months = False
+{% endhighlight %}
 
-Now **docassemble** knows what to do: it needs to present the final
-screen.
+Given [YAML] rules like this, **docassemble** can automatically
+conduct a parsimonious interview; that is, it will not ask any
+unnecessary questions.  For example, if
+`willing_to_assume_responsibility` is `False`, it will not ask
+`child_is_dependent`.  The only thing you need to do to trigger this
+process is to set up a [`mandatory`] block that requires a definition
+of `has_grandparent_standing`.
 
-Note that the two questions in the interview ("How are you doing?"
-and "What is your favorite color?") were not marked as `mandatory`,
-but are nevertheless still asked during the interview.  Since the text
-of the final `question` depends on the answers to these questions, the
-questions are asked automatically.  The order in which the questions
-are asked depends on the order in which **docassemble** needs the
-answers (not the order in which the questions appear in the
-interview text).
+{% highlight yaml %}
+mandatory: True
+code: |
+  if relationship == 'Grandparent' and not has_grandparent_standing:
+    grandparent_not_eligible
+  final_screen
+---
+event: grandparent_not_eligible
+question: |
+  Sorry, you do not have standing as a grandparent to seek custody
+  under Pennsylvania law.
+{% endhighlight %}
 
-The interview above effectively tells **docassemble** the following:
+Many beginners find this style of rule-based logic specificiation to
+be confusing; they would rather specify exactly which questions are
+asked, and exactly what happens as a result of the answer to each
+question.  However, when there are numerous legal rules and the
+interaction of the legal rules leads to a large number of possible
+scenarios, planning in advance the interview process for each one of
+these scenarios is time-consuming, and the work involved is mechanical
+rather than substantive.  If you are going to offer users the ability
+to spot-edit any of their prior answers to questions in the middle of
+the interview, you will need to think about exactly which follow-up
+processes are necessary when the user makes such changes.
 
-1. If a definition of `how_doing` is needed, but `how_doing` is
-   undefined, you can get a definition of `how_doing` by asking the "How
-   are you doing?" question.
-2. If a definition of `favorite_color` is needed, but `favorite_color`
-   is undefined, you can get a definition of `favorite_color` by
-   asking the "What is your favorite color?" question.
-3. You must present the "Your favorite color is . . ."  screen to the
-   user.
+The "declarative" style of logic is very useful in these
+circumstances.  All you need to do is the work of a lawyer --
+concentrate on specifying rules that are legally correct.  You can
+specify multiple overlapping rules, covering special cases and general
+cases.
 
-Here is what happens in this interview:
+# <a name="interview_logic"></a>How rules determine interview process
 
-1. The user clicks on a link and goes to the **docassemble** interview.
-1. **docassemble** tries to present the "Your favorite color is . . ."
-   screen to the user.
-2. **docassemble** realizes it needs the definition of the
-   `favorite_color` variable, but it is undefined, so it asks the
-   "What is your favorite color?" question.
-3. When the user answers the question, the variable `favorite_color`
-   is set to the user's answer.
-4. **docassemble** again tries to present the "Your favorite color is
-   . . ." screen to the user.
-5. **docassemble** realizes it needs the definition of the `how_doing`
-   variable, but it is undefined, so it asks the "How
-   are you doing?" question.
-6. When the user answers the question, the variable `how_doing`
-   is set to the user's answer.
-7. **docassemble** again tries to present the "Your favorite color is
-   . . ." screen to the user.
-8. **docassemble** does not encounter any undefined variables, so it
-   is able to present the "Your favorite color is . . ." screen to
-   the user.
-9. The interview is now over because the "Your favorite color is
-   . . ."  screen does not allow the user to press any buttons to move
-   forward.
+Many people envision a guided interview as a process whereby an
+interviewee starts at the beginning screen, then moves through a
+series of screens and then arrives at the end screen of the interview.
+At any point in time, the interviewee is envisioned as being located
+at a certain "place" in the interview process.
 
-By making only the final screen `mandatory`, this interview takes
-advantage of **docassemble**'s feature for automatically satifying
-prerequisites.  The developer simply needs to provide a collection of
-questions, in any order, and **docassemble** will figure out if and
-when to ask those questions, depending on what is necessary during any
-given interview.
+However, when the interview is driven by rules, this way of
+envisioning the interview process is misleading.  For example,
+consider the following structure for an interview:
 
-Alternatively, you could make every question `mandatory`:
+#. Ask "What is your name?"
+#. Ask "When were you injured?"
+#. If the injury took place more than two years ago, say, "Sorry, the
+   statute of limitations has expired, so you cannot file a complaint."
+#. Ask "Where did the injury take place?"
+#. Ask "How much did you pay in medical bills?"
+#. Ask "How much time did you have to take off from work?"
+#. etc.
+#. Here is a complaint you can file in court.
 
-{% include side-by-side.html demo="all-mandatory" %}
+Suppose the user started the interview one day before the statute of
+limitations expired, and proceeded as far as the "How much did you pay
+in medical bills?" question, but then took a few days to locate their
+medical bills, and didn't complete the interview until a week after
+the statute of limitations expired.  Should the guided interview allow
+the user to download a complaint, or should it tell the user, "Sorry,
+the statute of limitations has expired, so you cannot file a
+complaint."?  If you think of the interview process as one where the
+interviewee is "located" at a particular "place" in the interview, you
+would say that since the user has "gone past" the part of the
+interview process that checked for a statute of limitations problem,
+the user should be allowed to proceed.
 
-Here is what happens in this version of the interview:
+The philosophy behind **docassemble** is that a robust interview
+process is one where the "current question" in the interview is
+determined not by which question "comes after" the previous question,
+but rather by the application of a set of rules to a set of facts.  If
+there is a legal rule about the statute of limitations, it should be
+applied every time the screen loads, not just once at the beginning of
+the interview.
 
-1. The user clicks a link to the **docassemble** interview.
-2. **docassemble** presents the mandatory "How are you doing?"
-   question to the user.
-3. When the user answers the question, the variable `how_doing`
-   is set to the user's answer.
-4. **docassemble** presents the mandatory "What is your favorite color?"
-   question to the user.
-5. When the user answers the question, the variable `favorite_color`
-   is set to the user's answer.
-6. **docassemble** presents the mandatory "Your favorite color is
-   . . ." screen to the user.  It does not need to ask any questions
-   because the variables this screen depends on, `favorite_color` and
-   `how_doing`, are already defined.
+In **docassemble**, the interview logic is envisioned more as a
+"checklist" than a process.  Each time the screen loads,
+**docassemble** reviews the checklist.  What it does next depends on
+the application of the checklist to the current state of affairs.
 
-The approach of marking everything as `mandatory` bypasses
-**docassemble**'s process of automatically satisfying prerequisites.
+By analogy, an airplane pilot will go through a checklist prior to
+takeoff.  Whether the airline pilot turns onto the runway or goes back
+to the gate depends on the application of the checklist to the state
+of the aircraft and external factors like the weather.  Likewise, what
+**docassemble** does when the screen loads depends on the application
+of the interview logic (specified in the [YAML]) to the current state
+of the interview answers and external factors like the date.
 
-When interview developers first start using **docassemble**, they tend to
-use the approach of marking all questions as `mandatory` and listing
-them one after another.  For simple, linear interviews, this approach
-is attractive; it gives the developer tight control over the interview
-flow.
+From the user's perspective, the **docassemble** interview process
+looks like something that has a beginning, an end, and a "current
+location," but this is really just the by-product of **docassemble**
+running through a checklist every time the screen loads.  "Do we know
+the user's name?  Check.  Has the statute of limitations expired?
+Check.  Do we know where the injury took place?  Check."
 
-But what if there are questions that only need to be asked in certain
-circumstances?  If you make all the questions `mandatory`, some of
-your users will spend time providing information that is never used.
+If you observe an airplane pilot at work, you might think, "gosh, the
+pilot spends so much time going through boring repetitive checklists,
+can't he just grab the controls and fly the plane?"  Similarly, you
+might look at what **docassemble** does every time the screen loads,
+and you might think, "ugh, why is it wasting time going through all of
+this logic, can't it just move on to the next question?"  Although the
+checklist method is repetitive, it is robust and is capable of
+catching hard-to-foresee problems.
 
-Furthermore, when the complexity of your interview increases, you will
-find that the questions can no longer be represented in a simple
-linear list, because your interview has branching paths.
+The **docassemble** interview developer's job is to design the
+checklist that leads to the interview process, not to specify the
+process directly.  In most situations, this is a distinction without a
+difference, because the developer can write something like this:
 
-And as the complexity increases even more, you will find that the
-questions cannot even feasibly be represented in a flowchart, because
-any flowchart that can accommodate every possible path of a
-complicated interview would look like a plate of spaghetti.
+{% highlight yaml %}
+mandatory: True
+code: |
+  user.name.first
+  favorite_fruit
+  favorite_vegetable
+  final_screen
+{% endhighlight %}
 
-The automatic satisfaction of prerequisites is a powerful feature of
-**docassemble**.  It allows interview developers to build any level of
-complexity into their interviews.  It frees the developer from having to
-envision all of the possible paths that could lead to the endpoint of
-an interview.  This allows the interview developer to concentrate on the
-substance of the interview's end goal rather than the process of
-gathering the information.
+This is a checklist for what should be considered every time the
+screen loads: "if the name is not known, ask the name.  If the
+favorite fruit is not known, ask for the favorite fruit.  If the
+favorite vegetable is not known, ask for the favorite vegetable.  Then
+show the 'final_screen' screen."  This translates directly into a
+process: "first ask for the name, then the favorite fruit, then the
+favorite vegetable, then show the final screen."
 
-The most "scalable" approach to building an interview is to allow
-**docassemble**'s prerequisite-satisfying algorithm to do the heavy
-lifting.  This means using `mandatory` as little as possible.
+In more complicated interviews, the connection between the checklist
+and the process is less explicit.  For example:
 
-## <a name="changeorder"></a>Changing the order of questions
+{% highlight yaml %}
+mandatory: True
+code: |
+  user.name.first
+  plaintiffs.gather()
+  defendants.gather()
+  if not jurisdiction_is_proper:
+    kick_out_user
+  final_screen
+{% endhighlight %}
 
-You may encounter situations where you don't like the order
-in which **docassemble** asks questions.  You can always tweak the
-order of questions.  For example, suppose you want to make sure that
-your interview asks "How are you doing?" as the first question, rather
-than "What is your favorite color?"
+In this interview, after the user is asked for their name,
+**docassemble** gathers a list of plaintiffs and then gathers a list
+of defendants.  The process of [gathering groups] is complex and
+involves multiple `question` blocks.  The line `plaintiffs.gather()`
+is effectively a checklist item that means "make sure the plaintiffs
+are gathered."  Groups can be gathered in a variety of ways.  The
+questions might be "What is the name of the first plaintiff?", "Are
+there any other plaintiffs?", "What is the name of the second
+plaintiff?", "Are there any other plaintiffs?", etc.  The line `if not
+jurisdiction_is_proper` implicitly triggers the defining of
+`jurisdiction_is_proper`, which is defined by a `code` block.
 
-One approach to change the order of questions is to use the
-[`need` specifier] (explained in more detail [below](#need)):
+By specifying a checklist, you can ensure the integrity of your
+interview's logic, control the order of questions, and use to trigger
+the asking of questions that it would be too tedious to specify
+individually.  There are things you need to think about, however, to
+ensure that your checklist results in a process that makes sense.
 
-{% include side-by-side.html demo="with-mandatory-tweak-a" %}
+# <a name="idempotency"></a>Beware of non-idempotency
 
-In this example, the [`need` specifier] says that before can present
-the "Your favorite color is . . ."  screen to the user, it needs to
-make sure that the variables `how_doing` and `favorite_color` are
-defined.  It also indicates that **docassemble** should seek the
-definitions of these variables in a specific order.  Thus, "How are
-you doing?" is asked first.
+When designing the checklist that **docassemble** runs every time the
+screen loads, you need to be careful about how you specify the
+checklist items.  For example, you wouldn't want the checklist to be
+the following:
 
-Another approach to tweaking the order of questions is to use a
-[`code`] block as the single `mandatory` block that will control the
-course of the interview.
+#. Ask for the user's name.
+#. Ask for the user's date of birth.
+#. Give the user an assembled document.
 
-{% include side-by-side.html demo="with-mandatory-tweak-b" %}
+That would mean that every time the screen loads, it would ask for the
+user's name.  Instead, the checklist should be:
 
-In this example, the [`code`] block effectively tells **docassemble**:
+#. If the user's name is unknown, ask them for it.
+#. If the user's date of birth is unknown, ask them for it.
+#. Give the user an assembled document.
 
-1. Before doing anything else, make sure that `how_doing` is defined.
-2. Next, do what is necessary to show the [special screen] called
-   `final_screen`.
+When you write a checklist in Python format, it looks like this:
 
-The prerequisite-satisfying process also works with [`code`] blocks.
+{% highlight yaml %}
+mandatory: True
+code: |
+  user.name.first
+  user.birthdate
+  final_screen
+{% endhighlight %}
 
-{% include side-by-side.html demo="code" %}
+In **docassemble**, referencing the name of a variable like
+`user.birthdate` effectively means "if `user.birthdate` is undefined,
+stop what we are doing and seek out a definition of `user.birthdate`;
+otherwise, proceed to the next line."
 
-In this example, when **docassemble** seeks the definition of
-`fruits`, it sees that it will find it by running the [`code`] block.
-When it tries to run this block, it will find that it does not know the
-definition of `peaches`, so it will ask a question to gather it.  Then
-it will find that it does not know the definition of `pears`, so it
-will ask a question to gather it.
+By contrast, if you use the [`force_ask()`] function, it will always
+ask the question:
 
-There are two important things to know about how **docassemble**
-satisfies prerequisites.
+{% highlight yaml %}
+mandatory: True
+code: |
+  force_ask('user.name.first')
+  force_ask('user.birthdate')
+  final_screen
+{% endhighlight %}
 
-First, remember that **docassemble** asks questions when it encounters
-a variable that is _undefined_.  In the above example, if `fruits` had
-already been defined, **docassemble** would not have run the [`code`]
-block; it would have proceeded to display the final screen.  There are
-some exceptions to this.  The [`reconsider`] specifier [discussed
-below](#reconsider) is one such exception; the [`force_ask()`]
-function is another.
+Here, the first "checklist" item says that **docassemble** must ask a
+question to determine the value of `user.name.first` even if the
+variable is already defined.  This is not what you want to do in a
+checklist; the user will be confused about why the interview asks for
+their name again when they just provided it.  (This is is one of the
+reasons why the [`force_ask()`] function is rarely used.)
 
-Second, note that the process of satisfying a prerequisite is
-triggered whenever **docassemble** needs to know the value of a variable,
-but finds the variable is undefined.  If you write [Python] code
-(which is what [`code`] blocks are), keep in mind that under the rules
-of [Python], the mere mention of a variable name can trigger the
-process.
+**docassemble** allows you to run Python functions inside of a
+checklist, and in most situations this works as expected.  For
+example:
 
-Suppose that in the example above, the [`code`] block was the following:
+{% highlight yaml %}
+mandatory: True
+code: |
+  user.name.first
+  user.birthdate
+  if not record_exists_in_database_for(user):
+    error_screen
+  final_screen
+{% endhighlight %}
+
+Here, there is a function called `record_exists_in_database_for()`
+that looks up the user based on the user's name and birthdate.  It is
+ok if this function runs every time the screen loads.
+
+However, beginning developers sometimes assume that they can do this:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  user.name.first
+  user.email
+  send_email(to=user, subject="Welcome", body="Welcome to the interview!")
+  user.birthdate
+  final_screen
+{% endhighlight %}
+
+This means that after the user provides their name and e-mail address,
+**docassemble** will send them an e-mail.  However, it also means that
+every time the screen loads thereafter, **docassemble** will send
+another e-mail!  The checklist item should have been written in such a
+way that the e-mail is only sent once:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  user.name.first
+  user.email
+  if not task_performed('welcome_email'):
+    send_email(to=user, subject="Welcome", body="Welcome to the interview!", task='welcome_email')
+  user.birthdate
+  final_screen
+{% endhighlight %}
+
+The [`task_performed()`] function, combined with the `task` paramater
+of the [`send_email()`] function, is one way to ensure that code only
+runs once.  Another method is to use a separate [`code`] block that
+defines a variable:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  user.name.first
+  user.email
+  email_sent
+  user.birthdate
+  final_screen
+---
+code: |
+  send_email(to=user, subject="Welcome", body="Welcome to the interview!")
+  email_sent = True
+{% endhighlight %}
+
+The logic behind the `email_sent` line is: "if `email_sent` is not
+defined, run the code block in order to define it; otherwise continue
+to the next line."
+
+Another mistake that beginning developers sometimes make is writing a
+checklist that results in the user seeing a different screen if they
+refresh the screen without providing input.  For example, consider
+this interview:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  user.name.first
+  user.email
+  if not task_performed('data_stored'):
+    store_data(user)
+    mark_task_as_performed('data_stored')
+    user.wants_email
+    if user.wants_email:
+      send_email(to=user, template=confirmation_email)
+  user.birthdate
+  final_screen
+---
+question: |
+  Do you want a confirmation e-mail?
+yesno: user.wants_email
+{% endhighlight %}
+
+In this example, after the user provides their e-mail address,
+**docassemble** will run the `store_data()` function, then it will
+mark the `data_stored` "task" as having been completed, and then it
+will see that `user.wants_email` is undefined, so it will ask the user
+if they would like to receive a confirmation e-mail.  Suppose that the
+user, instead of answering the question, refreshes the screen.  The
+interview logic will be evaluated again.  Now, since the `data_stored`
+"task" has been marked as complete, the Python code skips the `if`
+clause and asks the user for `user.birthdate`.  But this defeats the
+user's expectation; the user reasonably expects that when they refresh
+the screen, they will see the `user.wants_email` question again.  The
+problem is with the interview logic.
+
+Software developers use the term "idempotent" to describe a system
+that produces the same result if an action is repeated.  The interview
+logic in this circumstance is not idempotent because when it is
+repeated, a different result is produced.
+
+Normally, your "checklist" should be designed to result in idempotent
+behavior.  The exception would be if the passage of time has made the
+"current question" obsolete.  For example, if the user started the
+interview before the statute of limitations period expired, and then
+tried to continue with the interview after the statute of limitations
+period expired, it would be reasonable for the user to see a different
+screen when they refreshed the screen.
+
+Another consequence of non-idempotent logic is that users might see a
+pop-up message saying "Input not processed."  This is because of a
+security feature in **docassemble**: if the browser tries to submit
+input for a `question` that is different from what the current
+`question` is according to the interview logic, **docassemble** will
+reject the browser's attempt to change the interview answers.  In the
+example above, if the user clicked "Yes" or "No" in response to the
+question "Do you want a confirmation e-mail?", the user would have
+seen an "Input not processed" error and been sent to the
+`user.birthdate` question.
+
+To fix the idempotency problem, you could take the e-mail sending code
+out of the conditional statement:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  user.name.first
+  user.email
+  if not task_performed('data_stored'):
+    store_data(user)
+    mark_task_as_performed('data_stored')
+  user.wants_email
+  if user.wants_email:
+    send_email(to=user, template=confirmation_email)
+  user.birthdate
+  final_screen
+{% endhighlight %}
+
+Writing idempotent logic is also important because of the way that
+**docassemble** runs ['code'] blocks.  Consider the following
+interview, which has a `code` block for calculating the user's total
+income:
+
+{% highlight yaml %}
+mandatory: True
+question: |
+  Tell me about your income and expenses.
+fields:
+  - Benefits income: benefits_income
+    datatype: currency
+  - Business income: business_income
+    datatype: currency
+  - Business expenses: business_expenses
+    datatype: currency
+---
+mandatory: True
+code: |
+  total_income = 0.0
+---
+mandatory: True
+code: |
+  total_income = total_income + benefits_income
+  total_income = total_income + net_business_income
+---
+code: |
+  net_business_income = business_income - business_expenses
+---
+mandatory: True
+question: |
+  Your total income is ${ currency(total_income) }.
+{% endhighlight %}
+
+At first glance, this logic looks correct; the interview gathers
+information from the user, initializes `total_income` to zero, then
+adds the benefits income and the net business income to
+`total_income`.  However, you will find that the calculation is
+incorrect; `benefits_income` will be counted twice.
+
+The problem is that this `code` block is not idempotent:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  total_income = total_income + benefits_income
+  total_income = total_income + net_business_income
+{% endhighlight %}
+
+If this code runs more than once, the `total_income` will be increased
+each time.  If you try to run this interview, this code block will run
+more than once.  The first time it runs, it adds `benefits_income` to
+`total_income`, but then stops because `net_business_income` is
+undefined.  **docassemble** obtains a definition of
+`net_business_income` in microseconds by running the `code` block that
+defines `net_business_income`.  But after it does that, it does not
+resumt where it left off (adding `net_business_income` to
+`total_income`).  It will repeat the `code` block again, from the
+beginning.  So `benefits_income` will be added to `total_income` a
+second time, and then `net_business_income` will be added, and then
+the "mandatory" block will be marked as having been completed, because
+it ran through all the way to the end.
+
+If you are familiar with computer programming, **docassemble** works
+by trapping exceptions.  When Python encounters an undefined variable,
+it raises an exception.  **docassemble** traps that exception, figures
+out what variable was undefined, and then tries to define it.  It does
+this either by asking the user a `question` or by running a 'code'
+block.  Either way, the exception halts code execution, and Python is
+unable pick up exactly where it left off when the exception was
+raised.
+
+The solution to this problem is to write the `code` block so that it
+can be run repeatedly without making a miscalculation:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  total_income = 0
+  total_income = total_income + benefits_income
+  total_income = total_income + net_business_income
+{% endhighlight %}
+
+This way, the code will produce the correct total no matter how many
+undefined variables **docassemble** encounters along the way.
+
+Inexperienced developers also sometimes make the error of assuming
+that all `code` blocks will run to completion.  For example, suppose
+that the above interview was written like this, with only one
+`mandatory` block:
+
+{% highlight yaml %}
+question: |
+  Tell me about your income and expenses.
+fields:
+  - Benefits income: benefits_income
+    datatype: currency
+  - Business income: business_income
+    datatype: currency
+  - Business expenses: business_expenses
+    datatype: currency
+---
+code: |
+  total_income = 0.0
+  total_income = total_income + benefits_income
+  total_income = total_income + net_business_income
+---
+code: |
+  net_business_income = business_income - business_expenses
+---
+mandatory: True
+question: |
+  Your total income is ${ currency(total_income) }.
+{% endhighlight %}
+
+This interview appears to be reasonable, but actually it contains a
+flaw.  When **docassemble** tries to show the `mandatory` question, it
+encounters an undefined variable `total_income`, so it seeks out a
+definition of `total_income`.  It tries to run this [`code`] block:
+
+```
+code: |
+  total_income = 0.0
+  total_income = total_income + benefits_income
+  total_income = total_income + net_business_income
+```
+
+**docassemble** sets `total_income` to zero, and then encounters an
+undefined variable, `benefits_income`, so it asks the `question` that
+defines `benefits_income`.  However, what if the user refreshed the
+screen on the question that asks for the `benefits_income`?
+**docassemble** would attempt to show the `mandatory` question again,
+and this time `total_income` is defined, so **docassemble** can
+display the screen, which says that the total income is zero.  "But
+wait," you say, "it didn't finish running the `code` block that
+defines `total_income`!"  True, but the rule of **docassemble**'s
+logic is that it goes through your [YAML], runs `mandatory` blocks
+that haven't been run before, and tries to obtain definitions for any
+undefined variables that are encountered along the way.  Nothing in
+this rule says that it will remember if it left a `code` block early
+and go back to it.
+
+The moral of the story is that if you are going to use dependency
+satisfaction, do not allow your dependencies to be satisfied
+prematurely.  The `code` block should be written instead as:
+
+{% highlight yaml %}
+code: |
+  total_income = benefits_income + net_business_income
+{% endhighlight %}
+
+or
+{% highlight yaml %}
+code: |
+  total_income = benefits_income + net_business_income
+  draft_total_income = 0.0
+  draft_total_income = total_income + benefits_income
+  draft_total_income = total_income + net_business_income
+  total_income = draft_total_income
+  del draft_total_income
+{% endhighlight %}
+
+You can think of the undefined-ness of a variable as **docassemble**'s
+incentive to obtain the definition of the variable.  It is like hiring
+a busy contractor to do work on your house; if you give the contractor
+his final payment after he is only halfway done with the job, he might
+leave at the end of the day and forget to come back later to finish
+the work.
+
+You might be tempted to combine the definition of several variables in
+a single `code` block, perhaps because you think it saves space or is
+easier to read:
+
+```
+code: |
+  subtotal = 0
+  for item in asset:
+    if item.countable:
+      subtotal = subtotal + item.value
+  total_assets = subtotal
+  temp_list = []
+  for item in income:
+    if item.included and item.type not in income.items:
+      temp_list.append(item.type)
+  income_items = temp_list
+```
+
+Think about what will happen if the interview needs a value of
+`total_assets`.  It will run the `code` block, and halfway through,
+the value of `total_assets` will be obtained.  But the code will not
+stop executing; it will go on to start building the `income_items`
+list.  This will work fine if the `income` list has been completely
+gathered, but what if it has not been?  Then the `code` block may
+result in the asking of a question about the `income` list, but if the
+user refreshes the screen, that question will go away.  This
+introduces an idempotency problem.
+
+It is a much better practice to separate your code into single-purpose
+`code` blocks:
+
+```
+code: |
+  subtotal = 0
+  for item in asset:
+    if item.countable:
+      subtotal = subtotal + item.value
+  total_assets = subtotal
+---
+code: |
+  temp_list = []
+  for item in income:
+    if item.included and item.type not in income.items:
+      temp_list.append(item.type)
+  income_items = temp_list
+```
+
+This way, no matter whether your interview needs `total_assets` first
+or `income_items` first, and regardless of whether it has already
+gathered `income` or `asset`, these `code` blocks will perform their
+function and deliver a definition without causing any non-idempotent
+questions to be asked.
+
+As a general rule, Let each `code` block serve a single purpose, or a
+set of closely-related purposes, and let it deliver its award (the
+defining of the variable sought) on the last line.  If you get into
+this habit, you will avoid hard-to-debug logic errors.
+
+Although typically your non-`mandatory` `code` blocks should only set
+one variable at a time, it is ok if they set other variables
+incidentally.  However, in that situation you should probably use the
+[`only sets`] modifier.
+
+For example, suppose you have an interview in which you want to ask
+the user, "Do you receive income from public benefits?", and you want
+to set the variable `has_benefits` to the answer, but as a
+double-check on the validity of the answer, you want to set
+`has_benefits` to `True` during the income gathering process if the
+user indicates that they have income from disability or welfare
+income.
+
+{% highlight yaml %}
+question: |
+  Do you receive income from public benefits?
+yesno: has_benefits
+---
+code: |
+  temp_total = []
+  for item in income:
+    if item.included and item.type not in income.items:
+      temp_total.append(item.type)
+    if item.type in ['disability', 'welfare']:
+      has_benefits = True
+  total_income = temp_total
+{% endhighlight %}
+
+The problem here is that the income gathering question will now be
+called upon to set `has_benefits`.  If `has_benefits` is needed before
+`total_income`, the interview will start asking about income items,
+but will mysteriously stop in the middle of the process if the user
+enters a disability or welfare income item.  Then, when `total_income`
+is needed later in the interview, it will resume asking questions
+about the income items.  It would be better if you used `only sets`:
+
+{% highlight yaml %}
+only sets: total_income
+code: |
+  temp_total = []
+  for item in income:
+    if item.included and item.type not in income.items:
+      temp_total.append(item.type)
+    if item.type in ['disability', 'welfare']:
+      has_benefits = True
+  total_income = temp_total
+{% endhighlight %}
+
+That way, the `code` block will only be called upon to define
+`total_income`.  It can still have the side effect of setting
+`has_benefits` to `True`, but it will not be called upon to define
+anything other than `total_income`.
+
+# <a name="order"></a>The logical order of an interview
+
+[`mandatory`] and [`initial`] blocks are evaluated in the order they
+appear in the question file.  Therefore, the location in the interview
+of [`mandatory`] and [`initial`] blocks, relative to each other, is
+important.
+
+The order in which non-[`mandatory`] and non-[`initial`] questions
+appear is usually not important.  If **docassemble** needs a
+definition of a variable, it will go looking for a block that defines
+the variable.
+
+Consider the following example:
+
+{% include side-by-side.html demo="order-of-blocks" %}
+
+The order of the questions is:
+
+1. Hello!
+2. What is your name?
+3. What is your favorite food?
+4. Do you like penguins?
+
+The first two questions are asked because the corresponding
+[`question`] blocks are marked as [`mandatory`].  They are asked in
+the order in which they are asked because of the way the [`question`]
+blocks are ordered in the [YAML] file.
+
+The next two questions are asked implicitly.  The third and final
+[`mandatory`] block makes reference to two variables: `favorite_food`
+and `user_likes_penguins`.  Since the [`question`]s that define these
+variables are not `mandatory`, they can appear anywhere in the [YAML]
+file, in any order you want.  In this case, the `favorite_food`
+[`question`] block is at the end of the [YAML] file, and the
+`user_likes_penguins` [`question`] block is at the start of the [YAML]
+file.
+
+The order in which these two questions are asked is determined by the
+order of the variables in the text of the final [`mandatory`]
+question.  Since `favorite_food` is referenced first, and
+`user_likes_penguins` is referenced afterwards, the user is asked
+about food and then asked about penguins.
+
+Note that there is also an extraneous question in the interview that
+defines `user_likes_elephants`; the presence of this [`question`]
+block in the [YAML] file has no effect on the interview.
+
+Generally, you can order non-[`mandatory`] blocks in your [YAML] file
+any way you want.  You may want to group them by subject matter into
+separate [YAML] files that you [`include`] in your main [YAML] file.
+When your interviews get complicated, there is no natural order to
+questions.  In some situations, a question may be asked early, and in
+other situations, a question may be asked later.
+
+## <a name="overriding"></a>Overriding one question with another
+
+The order in which non-[`mandatory`] blocks appear in the [YAML] file
+is only important if you have multiple blocks that each offer to
+define the same variable.  In that case, the order of these blocks
+relative to each other is important.  When looking for blocks that
+offer to define a variable, **docassemble** will use later-defined
+blocks first.  Later blocks "supersede" the blocks that came before.
+
+This allows you to [`include`] "libraries" of questions in your
+interview while retaining the ability to customize how any particular
+question is asked.
+
+As explained in the [initial blocks] section, the effect of an
+[`include`] block is basically equivalent to copying and pasting the
+contents of the included file into the original file.
+
+For example, suppose that there is a [YAML] file called
+`question-library.yml`, which someone else wrote, which consists of
+the following questions:
+
+{% highlight yaml %}
+question: |
+  Nice evening, isn't it?
+yesno: user_agrees_it_is_a_nice_evening
+---
+question: |
+  Interested in going to the dance tonight?
+yesno: user_wants_to_go_to_dance
+{% endhighlight %}
+
+You can write an interview that uses this question library:
+
+{% include side-by-side.html demo="use-question-library" %}
+
+When **docassemble** needs to know the definition of
+`user_agrees_it_is_a_nice_evening` or `user_wants_to_go_to_dance`, it
+will be able to find a block in `question-library.yml` that offers to
+define the variable.
+
+Suppose, however, that you thought of a better way to ask the
+`user_wants_to_go_to_dance` question, but you don't want to get rid of
+`question-library.yml` entirely.  You could override the
+`user_wants_to_go_to_dance` question in `question-library.yml` by
+doing the following:
+
+{% include side-by-side.html demo="override" %}
+
+This interview file loads the two questions defined in
+`question-library.yml`, but then, later in the list of questions,
+provides a different way to get the value of
+`user_wants_to_go_to_dance`.  When **docassemble** goes looking for a
+question to provide a definition of `user_wants_to_go_to_dance`, it
+starts with the questions that were defined last, and it will
+prioritize your question over the question in `question-library.yml`.
+Your [`question`] block takes priority because it is located _later_ in
+the [YAML] file.
+
+This is similar to the way law works: old laws do not disappear from
+the law books, but they can get superseded by newer laws.  "Current
+law" is simply "old law" that has not yet been superseded.
+
+A big advantage of this feature is that you can include "libraries"
+written by other people without having to edit those other files in
+order to tweak them.  You can use another person's work without taking
+on the responsibility of maintaining that person's work over time; you
+can just incorporate by reference that person's file, which they
+continue to maintain.
+
+For example, if someone else has developed interview questions that
+determine a user's eligibility for food stamps, you can incorporate by
+reference that developer's [YAML] file into an interview that assesses
+whether a user is maximizing his or her public benefits.  When the law
+about food stamps changes, that developer will be responsible for
+updating his or her [YAML] file; your interview will not need to
+change.  This allows for a division of labor.  All you will need to do
+is make sure that the **docassemble** [package] containing the food
+stamp [YAML] file gets updated on the server when the law changes.
+
+## <a name="fallback"></a>Fallback questions
+
+If a [`code`] block does not, for whatever reason, actually define the
+variable, **docassemble** will "fall back" to a block that is located
+earlier in the [YAML] file.  For example:
+
+{% include side-by-side.html demo="fallback2" %}
+
+In this case, when **docassemble** tries to get a definition of
+`user_wants_to_go_to_dance`, it will first try running the [`code`]
+block, and then it will encounter `we_already_agreed_to_go` and seek
+its definition.  If the value of `we_already_agreed_to_go` turns out
+to be false, the [`code`] block will run its course without setting a
+value for `user_wants_to_got_to_dance`.  Not giving up,
+**docassemble** will keep going backwards through the blocks in the
+[YAML] file, looking for one that offers to define
+`user_wants_to_got_to_dance`.  It will find such a question among the
+questions included by reference from `question_library.yml`, namely
+the question "Interested in going to the dance tonight?"
+
+This "fall back" process can also happen with special [`question`]
+blocks that use the [`continue`] option.
+
+{% include side-by-side.html demo="fallback" %}
+
+In this case, the special [`continue`] choice causes **docassemble**
+to skip the [`question`] block and look elsewhere for a definition of
+`user_wants_to_go_to_dance`.  **docassemble** will "fall back" to the
+version of the question that exists within `question-library.yml`.
+When looking for a block that offers to define a variable,
+**docassemble** starts at the bottom and works its way up.
+
+(Note that [`question`]s using [`continue`] are of limited utility
+because they cannot use the [`generic object` modifier] or [index
+variables].  However, [`code`] blocks do not have this limitation.)
+
+So, to recapitulate: when **docassemble** considers what blocks it
+_must_ process, it goes from top to bottom through your interview
+[YAML] file, looking for [`mandatory`] and [`initial`] blocks; if a
+block is later in the file, it is processed later in time.  However,
+when **docassemble** considers what question it should ask to define a
+particular variable, it goes from bottom to top; if a block is later
+in the file, it is considered to "supersede" blocks that are earlier
+in the file.
+
+As explained [below](#precedence), however, instead of relying on
+relative placement of blocks in the [YAML] file, you can explicitly
+indicate which blocks take precedence over other blocks.
+
+# <a name="howitworks"></a>How **docassemble** runs your code
+
+**docassemble** goes through your interview [YAML] file from start to
+finish, incorporating [`include`]d files as it goes.  It always
+executes [`initial`] code when it sees it.  It executes any
+[`mandatory`]<span></span> [`code`] blocks that have not been
+successfully executed yet.  If it encounters a
+[`mandatory`]<span></span> [`question`] that it has not been
+successfully asked yet, it will stop and ask the question.
+
+If at any time it encounters a variable that is undefined, for example
+while trying to formulate a question, it will interrupt itself in
+order to go find the a definition for that variable.
+
+Whenever **docassemble** comes back from one of these excursions to
+find the definition of a variable, it does not pick up where it left
+off; it starts from the beginning again.
+
+Therefore, when writing code for an interview, you need to keep in
+mind that any particular block of code may be re-run from the
+beginning multiple times.
+
+For example, consider the following code:
 
 {% highlight yaml %}
 ---
+mandatory: True
 code: |
-  fruit = peaches + pears
-  apples
+  if user_has_car:
+    user_net_worth = user_net_worth + resale_value_of_user_car
+    if user_car_brand == 'Toyota':
+      user_is_sensible = True
+    elif user_car_is_convertible:
+      user_is_sensible = False
 ---
 {% endhighlight %}
 
-The statement `apples` does not "do" anything -- it is just a
-reference to a variable -- but it is still part of the [Python] code,
-and the [Python] interpreter will evaluate it.  If [Python] finds that
-the variable is undefined, the prerequisite-satisfying process will be
-triggered.
+The intention of this code is to increase the user's net worth by the
+resale value of the user's car, if the user has a car.  If the code
+only ran once, it would work as intended.  However, because of
+**docassemble**'s design, which is to ask questions "as needed," the
+code actually runs like this:
 
-On the other hand, if `apples` is placed in a context that the
-[Python] interpreter will not evaluate, the prerequisite-satisfying
-process will not be triggered.
+1. **docassemble** starts running the code; it encounters
+ `user_has_car`, which is undefined.  It finds a question that defines
+ `user_has_car` and asks it.  (We will assume `user_has_car` is set to True.)
+2. **docassemble** runs the code again, and tries to increment the
+ `user_net_worth` (which we can assume is already defined); it
+ encounters `resale_value_of_user_car`, which is undefined.  It finds
+ a question that defines `resale_value_of_user_car` and asks it.
+3. **docassemble** runs the code again.  The value of `user_net_worth`
+ is increased.  Then the code encounters `user_car_brand`, which is
+ undefined.  It finds a question that defines
+ `user_car_brand` and asks it.
+4. **docassemble** runs the code again.  The value of `user_net_worth`
+ is increased (again).  If `user_car_brand` is equal to "Toyota," then
+ `user_is_sensible` is set.  In that case, the code runs successfully
+ to the end, and the [`mandatory`] code block is marked as completed, so
+ that it will not be run again.
+5. However, if `user_car_brand` is not equal to "Toyota," the code
+ will encounter `user_car_is_convertible`, which is undefined.
+ **docassemble** will find a question that defines
+ `user_car_is_convertible` and ask it.  **docassemble** will then run
+ the code again, the value of `user_net_worth` will increase yet
+ again, and then (finally) the code will run successfully to the end.
+
+The solution here is to make sure that your code is prepared to be
+stopped and restarted.  For example, you could have a separate code
+block to compute `user_net_worth`:
 
 {% highlight yaml %}
 ---
+mandatory: True
 code: |
-  fruit = peaches + pears
-  if fruit > 113121:
-    apples
+  user_net_worth = 0
+  if user_has_car:
+    user_net_worth = user_net_worth + resale_value_of_user_car
+  if user_has_house:
+    user_net_worth = user_net_worth + resale_value_of_user_house
 ---
 {% endhighlight %}
 
-In this case, [Python] will not "need" the value of `apples` unless
-the number of peaches and pears exceeds 113,121, so the mention of
-`apples` does not necessarily trigger the asking of a question.
+Note that [`mandatory`] must be true for this to work sensibly.
+If this were an optional code block, it would not run to completion
+because `user_net_worth` would already be defined when **docassemble**
+came back from asking whether the user has a car.
 
-## <a name="singlecode"></a>Specifying the logic of an interview in one place
+# <a name="variablesearching"></a>How **docassemble** finds questions for variables
 
-A useful technique for managing complex interview logic is to use a
-single [`mandatory`]<span></span> [`code`] block to drive the logic of
-your interview.
+There can be multiple questions or code blocks in an interview that
+can define a given variable.  You can write [`generic object`]
+questions in order to define attributes of objects, and you can use
+[index variables] to refer to any given item in a [`DAList`] or
+[`DADict`] (or a subtype of these objects).  Which one will be used?
 
-{% include demo-side-by-side.html demo="single-code" %}
+In general, if you have multiple questions or code blocks that are
+capable of defining a variable, **docassemble** will try the more
+specific ones first, and then the more general ones.
 
-In this example:
-* When **docassemble** tries to run the [`mandatory`]<span></span>
-  [`code`] block, it encounters an undefined variable `likes_fruit`,
-  so it gets its definition by asking "Do you like fruit?"
-* If the user answers "Yes," `likes_fruit` is set to `True`.  Now,
-  when **docassemble** tries to run the [`mandatory`]<span></span>
-  [`code`] block, it will know that `likes_fruit` is true, so it will
-  evaluate the code underneath the `if` statement.  The first variable
-  it encounters is `favorite_fruit`, which is undefined.  So
-  **docassemble** will stop evaluating the [`code`] block and will ask
-  the question "What is your favorite fruit?" in order to get a
-  definition of `favorite_fruit`.
-* The next time around, **docassemble** will get past `likes_fruit`
-  and `favorite_fruit`, but then it will try to evaluate `if
-  puts_fruit_in_smoothies:` and it will stop because
-  `puts_fruit_in_smoothies` is undefined.  So it will ask the user "Do
-  you like to put fruit in smoothies?"  Suppose the user answers "No."
-  In that case, `puts_fruit_in_smoothies` will be set to `False`.
-* The next time around, **docassemble** will get past `likes_fruit`
-  and `favorite_fruit`, and when it reaches `if
-  puts_fruit_in_smoothies:`, it will know that
-  `puts_fruit_in_smoothies` is false, so it will not try to evaluate
-  the code under the `if` statement.  It will proceed to the end of
-  the `code` block, where there is a reference to the variable
-  `final_screen`.  It will seek a definition of `final_screen` and it
-  will "ask" the `question` that is marked with `event: final_screen`
-  (which results in a screen with no buttons that says "Thanks for
-  that information."  However, this `question` is not actually capable
-  of setting the `final_screen` variable; it is just an endpoint
-  screen.
-* If the user had answered "No" to the original question "Do you like
-  fruit?" then the variable `likes_fruit` would be set to `False`, and
-  **docassemble** would have skipped the whole line of questioning
-  about fruit.  It would have proceeded to evaluate the code under the
-  `else:` line.  It would have encountered the undefined variable
-  `favorite_vegetable`.  Thus it would have asked the question "Well,
-  since you don't like fruit, what is your favorite vegetable?"  Once
-  `favorite_vegetable` gets populated with the user's favorite
-  vegetable, the logic is done except for the reference to
-  `final_screen`, which will never be defined, and the only thing the
-  user can do is look at the screen that says "Thanks for that
-  information."
+For example, if the interview needs a definition of
+`fruit['a'].seed_info.tally['b'].molecules[4].name`, it will look for
+questions that offer to define the following variables, in this order:
 
-Trying to specify the complete logic of your interview in a
-[`mandatory`]<span></span> [`code`] block could become tiresome.  On
-the other hand, relying completely on **docassemble**'s automatic
-prerequisite-satisfying mechanism could be confusing because you would
-need to follow a trail of variable references through your whole
-[YAML] file.  Typically it makes sense to use a technique that is
-somewhere between these two extremes; you don't have to specify in
-your [`code`] block every single variable that your interview might
-gather, but you can specify the important ones, and trust the automatic
-prerequisite-satisfying mechanism to trigger the gathering of the rest
-of the variables.
+{% highlight text %}
+fruit['a'].seed_info.tally['b'].molecules[4].name
+fruit[i].seed_info.tally['b'].molecules[4].name
+fruit['a'].seed_info.tally[i].molecules[4].name
+fruit['a'].seed_info.tally['b'].molecules[i].name
+fruit[i].seed_info.tally[j].molecules[4].name
+fruit[i].seed_info.tally['b'].molecules[j].name
+fruit['a'].seed_info.tally[i].molecules[j].name
+fruit[i].seed_info.tally[j].molecules[k].name
+{% endhighlight %}
+
+Then it will look for [`generic object`] blocks that offer to define
+the following variables, in this order:
+
+{% highlight text %}
+x['a'].seed_info.tally['b'].molecules[4].name
+x[i].seed_info.tally['b'].molecules[4].name
+x['a'].seed_info.tally[i].molecules[4].name
+x['a'].seed_info.tally['b'].molecules[i].name
+x[i].seed_info.tally[j].molecules[4].name
+x[i].seed_info.tally['b'].molecules[j].name
+x['a'].seed_info.tally[i].molecules[j].name
+x[i].seed_info.tally[j].molecules[k].name
+x.seed_info.tally['b'].molecules[4].name
+x.seed_info.tally[i].molecules[4].name
+x.seed_info.tally['b'].molecules[i].name
+x.seed_info.tally[i].molecules[j].name
+x.tally['b'].molecules[4].name
+x.tally[i].molecules[4].name
+x.tally['b'].molecules[i].name
+x.tally[i].molecules[j].name
+x['b'].molecules[4].name
+x[i].molecules[4].name
+x['b'].molecules[i].name
+x[i].molecules[j].name
+x.molecules[4].name
+x.molecules[i].name
+x[4].name
+x[i].name
+x.name
+{% endhighlight %}
+
+Moreover, when **docassemble** searches for a [`generic object`]
+question for a given variable, it first look for [`generic object`]
+questions with the object type of `x` (e.g., [`Individual`]).  Then it
+will look for [`generic object`] questions with the parent type of
+object type of `x` (e.g., [`Person`]).  It will keep going through the
+ancestors, stopping at the most general object type, [`DAObject`].
+
+Note that the order of questions or code blocks in the [YAML] matters
+where the variable name is the same; the blocks that appear later in
+the [YAML] will be tried first.  But when the variable name is
+different, the order of the blocks in the [YAML] does not matter.
+If your interview has a question that offers to define
+`seeds['apple']` and another question that offers to define
+`seeds[i]`, the `seeds['apple']` question will be tried first,
+regardless of where the question is located in the the [YAML].
+
+Here is an example in which a relatively specific question, which sets
+`veggies[i][1]`, will be used instead of a more general question,
+which sets `veggies[i][j]`, when applicable:
+
+{% include side-by-side.html demo="nested-veggies-override" %}
+
+<a name="precedence"></a>These rules about which blocks are tried
+before other blocks can be overriden using the [`order` initial block]
+or the [`id` and `supersedes`] modifiers.  You can use the [`if`
+modifier] to indicate that a given [`question`] should only be asked
+under certain conditions.  You can use the [`scan for variables`
+modifier] to indicate that a [`question`] or [`code`] block should
+only be considered when looking to define a particular variable or set
+of variables, even though it is capable of defining other variables.
 
 # <a name="specifiers"></a>Specifiers that control interview logic
 
@@ -731,364 +1813,6 @@ review screens.  Sometimes a change to one variable will invalidate
 answers to other [`question`]s, or to computations made by [`code`]
 blocks.
 
-# <a name="order"></a>The logical order of an interview
-
-[`mandatory`] and [`initial`] blocks are evaluated in the order they
-appear in the question file.  Therefore, the location in the interview
-of [`mandatory`] and [`initial`] blocks, relative to each other, is
-important.
-
-The order in which non-[`mandatory`] and non-[`initial`] questions
-appear is usually not important.  If **docassemble** needs a
-definition of a variable, it will go looking for a block that defines
-the variable.
-
-Consider the following example:
-
-{% include side-by-side.html demo="order-of-blocks" %}
-
-The order of the questions is:
-
-1. Hello!
-2. What is your name?
-3. What is your favorite food?
-4. Do you like penguins?
-
-The first two questions are asked because the corresponding
-[`question`] blocks are marked as [`mandatory`].  They are asked in
-the order in which they are asked because of the way the [`question`]
-blocks are ordered in the [YAML] file.
-
-The next two questions are asked implicitly.  The third and final
-[`mandatory`] block makes reference to two variables: `favorite_food`
-and `user_likes_penguins`.  Since the [`question`]s that define these
-variables are not `mandatory`, they can appear anywhere in the [YAML]
-file, in any order you want.  In this case, the `favorite_food`
-[`question`] block is at the end of the [YAML] file, and the
-`user_likes_penguins` [`question`] block is at the start of the [YAML]
-file.
-
-The order in which these two questions are asked is determined by the
-order of the variables in the text of the final [`mandatory`]
-question.  Since `favorite_food` is referenced first, and
-`user_likes_penguins` is referenced afterwards, the user is asked
-about food and then asked about penguins.
-
-Note that there is also an extraneous question in the interview that
-defines `user_likes_elephants`; the presence of this [`question`]
-block in the [YAML] file has no effect on the interview.
-
-Generally, you can order non-[`mandatory`] blocks in your [YAML] file
-any way you want.  You may want to group them by subject matter into
-separate [YAML] files that you [`include`] in your main [YAML] file.
-When your interviews get complicated, there is no natural order to
-questions.  In some situations, a question may be asked early, and in
-other situations, a question may be asked later.
-
-## <a name="overriding"></a>Overriding one question with another
-
-The order in which non-[`mandatory`] blocks appear in the [YAML] file
-is only important if you have multiple blocks that each offer to
-define the same variable.  In that case, the order of these blocks
-relative to each other is important.  When looking for blocks that
-offer to define a variable, **docassemble** will use later-defined
-blocks first.  Later blocks "supersede" the blocks that came before.
-
-This allows you to [`include`] "libraries" of questions in your
-interview while retaining the ability to customize how any particular
-question is asked.
-
-As explained in the [initial blocks] section, the effect of an
-[`include`] block is basically equivalent to copying and pasting the
-contents of the included file into the original file.
-
-For example, suppose that there is a [YAML] file called
-`question-library.yml`, which someone else wrote, which consists of
-the following questions:
-
-{% highlight yaml %}
-question: |
-  Nice evening, isn't it?
-yesno: user_agrees_it_is_a_nice_evening
----
-question: |
-  Interested in going to the dance tonight?
-yesno: user_wants_to_go_to_dance
-{% endhighlight %}
-
-You can write an interview that uses this question library:
-
-{% include side-by-side.html demo="use-question-library" %}
-
-When **docassemble** needs to know the definition of
-`user_agrees_it_is_a_nice_evening` or `user_wants_to_go_to_dance`, it
-will be able to find a block in `question-library.yml` that offers to
-define the variable.
-
-Suppose, however, that you thought of a better way to ask the
-`user_wants_to_go_to_dance` question, but you don't want to get rid of
-`question-library.yml` entirely.  You could override the
-`user_wants_to_go_to_dance` question in `question-library.yml` by
-doing the following:
-
-{% include side-by-side.html demo="override" %}
-
-This interview file loads the two questions defined in
-`question-library.yml`, but then, later in the list of questions,
-provides a different way to get the value of
-`user_wants_to_go_to_dance`.  When **docassemble** goes looking for a
-question to provide a definition of `user_wants_to_go_to_dance`, it
-starts with the questions that were defined last, and it will
-prioritize your question over the question in `question-library.yml`.
-Your [`question`] block takes priority because it is located _later_ in
-the [YAML] file.
-
-This is similar to the way law works: old laws do not disappear from
-the law books, but they can get superseded by newer laws.  "Current
-law" is simply "old law" that has not yet been superseded.
-
-A big advantage of this feature is that you can include "libraries"
-written by other people without having to edit those other files in
-order to tweak them.  You can use another person's work without taking
-on the responsibility of maintaining that person's work over time; you
-can just incorporate by reference that person's file, which they
-continue to maintain.
-
-For example, if someone else has developed interview questions that
-determine a user's eligibility for food stamps, you can incorporate by
-reference that developer's [YAML] file into an interview that assesses
-whether a user is maximizing his or her public benefits.  When the law
-about food stamps changes, that developer will be responsible for
-updating his or her [YAML] file; your interview will not need to
-change.  This allows for a division of labor.  All you will need to do
-is make sure that the **docassemble** [package] containing the food
-stamp [YAML] file gets updated on the server when the law changes.
-
-## <a name="fallback"></a>Fallback questions
-
-If a [`code`] block does not, for whatever reason, actually define the
-variable, **docassemble** will "fall back" to a block that is located
-earlier in the [YAML] file.  For example:
-
-{% include side-by-side.html demo="fallback2" %}
-
-In this case, when **docassemble** tries to get a definition of
-`user_wants_to_go_to_dance`, it will first try running the [`code`]
-block, and then it will encounter `we_already_agreed_to_go` and seek
-its definition.  If the value of `we_already_agreed_to_go` turns out
-to be false, the [`code`] block will run its course without setting a
-value for `user_wants_to_got_to_dance`.  Not giving up,
-**docassemble** will keep going backwards through the blocks in the
-[YAML] file, looking for one that offers to define
-`user_wants_to_got_to_dance`.  It will find such a question among the
-questions included by reference from `question_library.yml`, namely
-the question "Interested in going to the dance tonight?"
-
-This "fall back" process can also happen with special [`question`]
-blocks that use the [`continue`] option.
-
-{% include side-by-side.html demo="fallback" %}
-
-In this case, the special [`continue`] choice causes **docassemble**
-to skip the [`question`] block and look elsewhere for a definition of
-`user_wants_to_go_to_dance`.  **docassemble** will "fall back" to the
-version of the question that exists within `question-library.yml`.
-When looking for a block that offers to define a variable,
-**docassemble** starts at the bottom and works its way up.
-
-(Note that [`question`]s using [`continue`] are of limited utility
-because they cannot use the [`generic object` modifier] or [index
-variables].  However, [`code`] blocks do not have this limitation.)
-
-So, to recapitulate: when **docassemble** considers what blocks it
-_must_ process, it goes from top to bottom through your interview
-[YAML] file, looking for [`mandatory`] and [`initial`] blocks; if a
-block is later in the file, it is processed later in time.  However,
-when **docassemble** considers what question it should ask to define a
-particular variable, it goes from bottom to top; if a block is later
-in the file, it is considered to "supersede" blocks that are earlier
-in the file.
-
-As explained [below](#precedence), however, instead of relying on
-relative placement of blocks in the [YAML] file, you can explicitly
-indicate which blocks take precedence over other blocks.
-
-# <a name="howitworks"></a>How **docassemble** runs your code
-
-**docassemble** goes through your interview [YAML] file from start to
-finish, incorporating [`include`]d files as it goes.  It always
-executes [`initial`] code when it sees it.  It executes any
-[`mandatory`]<span></span> [`code`] blocks that have not been
-successfully executed yet.  If it encounters a
-[`mandatory`]<span></span> [`question`] that it has not been
-successfully asked yet, it will stop and ask the question.
-
-If at any time it encounters a variable that is undefined, for example
-while trying to formulate a question, it will interrupt itself in
-order to go find the a definition for that variable.
-
-Whenever **docassemble** comes back from one of these excursions to
-find the definition of a variable, it does not pick up where it left
-off; it starts from the beginning again.
-
-Therefore, when writing code for an interview, you need to keep in
-mind that any particular block of code may be re-run from the
-beginning multiple times.
-
-For example, consider the following code:
-
-{% highlight yaml %}
----
-mandatory: True
-code: |
-  if user_has_car:
-    user_net_worth = user_net_worth + resale_value_of_user_car
-    if user_car_brand == 'Toyota':
-      user_is_sensible = True
-    elif user_car_is_convertible:
-      user_is_sensible = False
----
-{% endhighlight %}
-
-The intention of this code is to increase the user's net worth by the
-resale value of the user's car, if the user has a car.  If the code
-only ran once, it would work as intended.  However, because of
-**docassemble**'s design, which is to ask questions "as needed," the
-code actually runs like this:
-
-1. **docassemble** starts running the code; it encounters
- `user_has_car`, which is undefined.  It finds a question that defines
- `user_has_car` and asks it.  (We will assume `user_has_car` is set to True.)
-2. **docassemble** runs the code again, and tries to increment the
- `user_net_worth` (which we can assume is already defined); it
- encounters `resale_value_of_user_car`, which is undefined.  It finds
- a question that defines `resale_value_of_user_car` and asks it.
-3. **docassemble** runs the code again.  The value of `user_net_worth`
- is increased.  Then the code encounters `user_car_brand`, which is
- undefined.  It finds a question that defines
- `user_car_brand` and asks it.
-4. **docassemble** runs the code again.  The value of `user_net_worth`
- is increased (again).  If `user_car_brand` is equal to "Toyota," then
- `user_is_sensible` is set.  In that case, the code runs successfully
- to the end, and the [`mandatory`] code block is marked as completed, so
- that it will not be run again.
-5. However, if `user_car_brand` is not equal to "Toyota," the code
- will encounter `user_car_is_convertible`, which is undefined.
- **docassemble** will find a question that defines
- `user_car_is_convertible` and ask it.  **docassemble** will then run
- the code again, the value of `user_net_worth` will increase yet
- again, and then (finally) the code will run successfully to the end.
-
-The solution here is to make sure that your code is prepared to be
-stopped and restarted.  For example, you could have a separate code
-block to compute `user_net_worth`:
-
-{% highlight yaml %}
----
-mandatory: True
-code: |
-  user_net_worth = 0
-  if user_has_car:
-    user_net_worth = user_net_worth + resale_value_of_user_car
-  if user_has_house:
-    user_net_worth = user_net_worth + resale_value_of_user_house
----
-{% endhighlight %}
-
-Note that [`mandatory`] must be true for this to work sensibly.
-If this were an optional code block, it would not run to completion
-because `user_net_worth` would already be defined when **docassemble**
-came back from asking whether the user has a car.
-
-# <a name="variablesearching"></a>How **docassemble** finds questions for variables
-
-There can be multiple questions or code blocks in an interview that
-can define a given variable.  You can write [`generic object`]
-questions in order to define attributes of objects, and you can use
-[index variables] to refer to any given item in a [`DAList`] or
-[`DADict`] (or a subtype of these objects).  Which one will be used?
-
-In general, if you have multiple questions or code blocks that are
-capable of defining a variable, **docassemble** will try the more
-specific ones first, and then the more general ones.
-
-For example, if the interview needs a definition of
-`fruit['a'].seed_info.tally['b'].molecules[4].name`, it will look for
-questions that offer to define the following variables, in this order:
-
-{% highlight text %}
-fruit['a'].seed_info.tally['b'].molecules[4].name
-fruit[i].seed_info.tally['b'].molecules[4].name
-fruit['a'].seed_info.tally[i].molecules[4].name
-fruit['a'].seed_info.tally['b'].molecules[i].name
-fruit[i].seed_info.tally[j].molecules[4].name
-fruit[i].seed_info.tally['b'].molecules[j].name
-fruit['a'].seed_info.tally[i].molecules[j].name
-fruit[i].seed_info.tally[j].molecules[k].name
-{% endhighlight %}
-
-Then it will look for [`generic object`] blocks that offer to define
-the following variables, in this order:
-
-{% highlight text %}
-x['a'].seed_info.tally['b'].molecules[4].name
-x[i].seed_info.tally['b'].molecules[4].name
-x['a'].seed_info.tally[i].molecules[4].name
-x['a'].seed_info.tally['b'].molecules[i].name
-x[i].seed_info.tally[j].molecules[4].name
-x[i].seed_info.tally['b'].molecules[j].name
-x['a'].seed_info.tally[i].molecules[j].name
-x[i].seed_info.tally[j].molecules[k].name
-x.seed_info.tally['b'].molecules[4].name
-x.seed_info.tally[i].molecules[4].name
-x.seed_info.tally['b'].molecules[i].name
-x.seed_info.tally[i].molecules[j].name
-x.tally['b'].molecules[4].name
-x.tally[i].molecules[4].name
-x.tally['b'].molecules[i].name
-x.tally[i].molecules[j].name
-x['b'].molecules[4].name
-x[i].molecules[4].name
-x['b'].molecules[i].name
-x[i].molecules[j].name
-x.molecules[4].name
-x.molecules[i].name
-x[4].name
-x[i].name
-x.name
-{% endhighlight %}
-
-Moreover, when **docassemble** searches for a [`generic object`]
-question for a given variable, it first look for [`generic object`]
-questions with the object type of `x` (e.g., [`Individual`]).  Then it
-will look for [`generic object`] questions with the parent type of
-object type of `x` (e.g., [`Person`]).  It will keep going through the
-ancestors, stopping at the most general object type, [`DAObject`].
-
-Note that the order of questions or code blocks in the [YAML] matters
-where the variable name is the same; the blocks that appear later in
-the [YAML] will be tried first.  But when the variable name is
-different, the order of the blocks in the [YAML] does not matter.
-If your interview has a question that offers to define
-`seeds['apple']` and another question that offers to define
-`seeds[i]`, the `seeds['apple']` question will be tried first,
-regardless of where the question is located in the the [YAML].
-
-Here is an example in which a relatively specific question, which sets
-`veggies[i][1]`, will be used instead of a more general question,
-which sets `veggies[i][j]`, when applicable:
-
-{% include side-by-side.html demo="nested-veggies-override" %}
-
-<a name="precedence"></a>These rules about which blocks are tried
-before other blocks can be overriden using the [`order` initial block]
-or the [`id` and `supersedes`] modifiers.  You can use the [`if`
-modifier] to indicate that a given [`question`] should only be asked
-under certain conditions.  You can use the [`scan for variables`
-modifier] to indicate that a [`question`] or [`code`] block should
-only be considered when looking to define a particular variable or set
-of variables, even though it is capable of defining other variables.
-
 # <a name="multiple interviews"></a>Combining multiple interviews into one
 
 ## <a name="multiple interviews umbrella"></a>Using an umbrella YAML file
@@ -1326,3 +2050,6 @@ forget others.
 [Google Analytics feature]: {{ site.baseurl }}/docs/config.html#google analytics
 [`generic object` modifier]: {{ site.baseurl }}/docs/fields.html#generic
 [`on change`]: {{ site.baseurl }}/docs/initial.html#on change
+[gathering groups]: {{ site.baseurl }}/docs/groups.html
+[`task_performed()`]: {{ site.baseurl }}/docs/functions.html#task_performed
+[`only sets`]: {{ site.baseurl}}/docs/modifiers.html#only sets
