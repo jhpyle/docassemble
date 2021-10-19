@@ -1774,8 +1774,9 @@ index=2)`.
 
 ## <a name="send_fax"></a>send_fax()
 
-The `send_fax()` function sends a PDF document as a fax.  It requires
-a [`twilio`] configuration in which `fax` is set to `True`.
+The `send_fax()` function sends a PDF document as a fax.  This
+function requires you to create an account with [ClickSend] and define
+a [`clicksend`] directive in your [Configuration].
 
 `send_fax()` takes two arguments, a destination and a file.
 
@@ -1834,23 +1835,20 @@ of the fax sending.  The object has the following methods:
   `'not-configured'`, and if no result is available, it will be
   `'no-information'`.
 * `.pages()` - this will be one of [Twilio]'s [fax status values].
-* `.info()` - this will be a [dictionary] containing the
-  [status callback values] returned from [Twilio] (excluding the
-  `AccountSid`).  If no result is available, this will be a
-  [dictionary] with the `FaxStatus` set to `'not-configured'` or
-  `'no-information'`.
+* `.info()` - this will be a [dictionary] containing the [status
+  callback values] returned from [ClickSend].
 * `.received()` - this will be `True` or `False` depending on whether
   the fax has been received yet.  It will be `None` if no result is
   available.
 
 Immediately after `send_fax()` is called, the result will likely be
-unavailable, because [Twilio] will not have had time to start
+unavailable, because [ClickSend] will not have had time to start
 processing the request.
 
 In addition, the result will expire 24 hours after the last time
-[Twilio] reported a change in the status of the fax sending.  Thus, if
-you want to ensure that the outcome of a fax sending gets recorded in
-the [interview session dictionary], you should launch a
+[ClickSend] reported a change in the status of the fax sending.  Thus,
+if you want to ensure that the outcome of a fax sending gets recorded
+in the [interview session dictionary], you should launch a
 [`background_action()`] that polls the status, or set up a [scheduled
 task] that checks in hourly.
 
@@ -7888,3 +7886,4 @@ $(document).on('daPageLoad', function(){
 [`auto terms`]: {{ site.baseurl }}/docs/initial.html#auto terms
 [`default language`]: {{ site.baseurl }}/docs/initial.html#default language
 [`language`]: {{ site.baseurl }}/docs/modifiers.html#language
+[ClickSend]: https://clicksend.com

@@ -71,7 +71,7 @@ you can write an interview like this:
 {% include demo-side-by-side.html demo="dependency-demo" %}
 
 In this interview, there is a mandatory question and then two
-questions that do not have a `mandatory` directive on them.  If you
+questions that do not have a [`mandatory`] directive on them.  If you
 run the interview, the first question asked is "What is your favorite
 fruit?"  How did **docassemble** know it needed to ask that question,
 even though it was not marked as [`mandatory`]?  What happened was
@@ -233,10 +233,10 @@ through the triggering of undefined variable exceptions.
 So far, we have discussed three different techniques for specifying
 interview logic in **docassemble**:
 
-#. A series of `question` blocks with `mandatory` directives on them;
+#. A series of [`question`] blocks with [`mandatory`] directives on them;
 #. Allowing `question` blocks to be asked implicitly as a result of
    dependency satisfaction; and
-#. Writing a `code` block marked as `mandatory` containing an explicit
+#. Writing a [`code`] block marked as [`mandatory`] containing an explicit
    outline of the variables that need to be gathered and the
    conditions under which each variable definition should be sought.
 
@@ -397,7 +397,7 @@ code: |
 {% endhighlight %}
 
 The rules for what these variables mean can in turn be specified as
-`question` or `code` blocks:
+[`question`] or [`code`] blocks:
 
 {% highlight yaml %}
 question: |
@@ -568,7 +568,7 @@ questions might be "What is the name of the first plaintiff?", "Are
 there any other plaintiffs?", "What is the name of the second
 plaintiff?", "Are there any other plaintiffs?", etc.  The line `if not
 jurisdiction_is_proper` implicitly triggers the defining of
-`jurisdiction_is_proper`, which is defined by a `code` block.
+`jurisdiction_is_proper`, which is defined by a [`code`] block.
 
 By specifying a checklist, you can ensure the integrity of your
 interview's logic, control the order of questions, and use to trigger
@@ -777,8 +777,8 @@ code: |
 {% endhighlight %}
 
 Writing idempotent logic is also important because of the way that
-**docassemble** runs ['code'] blocks.  Consider the following
-interview, which has a `code` block for calculating the user's total
+**docassemble** runs [`code`] blocks.  Consider the following
+interview, which has a [`code`] block for calculating the user's total
 income:
 
 {% highlight yaml %}
@@ -816,7 +816,7 @@ adds the benefits income and the net business income to
 `total_income`.  However, you will find that the calculation is
 incorrect; `benefits_income` will be counted twice.
 
-The problem is that this `code` block is not idempotent:
+The problem is that this [`code`] block is not idempotent:
 
 {% highlight yaml %}
 mandatory: True
@@ -830,10 +830,10 @@ each time.  If you try to run this interview, this code block will run
 more than once.  The first time it runs, it adds `benefits_income` to
 `total_income`, but then stops because `net_business_income` is
 undefined.  **docassemble** obtains a definition of
-`net_business_income` in microseconds by running the `code` block that
+`net_business_income` in microseconds by running the [`code`] block that
 defines `net_business_income`.  But after it does that, it does not
 resumt where it left off (adding `net_business_income` to
-`total_income`).  It will repeat the `code` block again, from the
+`total_income`).  It will repeat the [`code`] block again, from the
 beginning.  So `benefits_income` will be added to `total_income` a
 second time, and then `net_business_income` will be added, and then
 the "mandatory" block will be marked as having been completed, because
@@ -848,7 +848,7 @@ block.  Either way, the exception halts code execution, and Python is
 unable pick up exactly where it left off when the exception was
 raised.
 
-The solution to this problem is to write the `code` block so that it
+The solution to this problem is to write the [`code`] block so that it
 can be run repeatedly without making a miscalculation:
 
 {% highlight yaml %}
@@ -863,7 +863,7 @@ This way, the code will produce the correct total no matter how many
 undefined variables **docassemble** encounters along the way.
 
 Inexperienced developers also sometimes make the error of assuming
-that all `code` blocks will run to completion.  For example, suppose
+that all [`code`] blocks will run to completion.  For example, suppose
 that the above interview was written like this, with only one
 `mandatory` block:
 
@@ -892,7 +892,7 @@ question: |
 {% endhighlight %}
 
 This interview appears to be reasonable, but actually it contains a
-flaw.  When **docassemble** tries to show the `mandatory` question, it
+flaw.  When **docassemble** tries to show the [`mandatory`] question, it
 encounters an undefined variable `total_income`, so it seeks out a
 definition of `total_income`.  It tries to run this [`code`] block:
 
@@ -907,20 +907,20 @@ code: |
 undefined variable, `benefits_income`, so it asks the `question` that
 defines `benefits_income`.  However, what if the user refreshed the
 screen on the question that asks for the `benefits_income`?
-**docassemble** would attempt to show the `mandatory` question again,
+**docassemble** would attempt to show the [`mandatory`] question again,
 and this time `total_income` is defined, so **docassemble** can
 display the screen, which says that the total income is zero.  "But
-wait," you say, "it didn't finish running the `code` block that
+wait," you say, "it didn't finish running the [`code`] block that
 defines `total_income`!"  True, but the rule of **docassemble**'s
-logic is that it goes through your [YAML], runs `mandatory` blocks
+logic is that it goes through your [YAML], runs [`mandatory`] blocks
 that haven't been run before, and tries to obtain definitions for any
 undefined variables that are encountered along the way.  Nothing in
-this rule says that it will remember if it left a `code` block early
+this rule says that it will remember if it left a [`code`] block early
 and go back to it.
 
 The moral of the story is that if you are going to use dependency
 satisfaction, do not allow your dependencies to be satisfied
-prematurely.  The `code` block should be written instead as:
+prematurely.  The [`code`] block should be written instead as:
 
 {% highlight yaml %}
 code: |
@@ -946,7 +946,7 @@ leave at the end of the day and forget to come back later to finish
 the work.
 
 You might be tempted to combine the definition of several variables in
-a single `code` block, perhaps because you think it saves space or is
+a single [`code`] block, perhaps because you think it saves space or is
 easier to read:
 
 ```
@@ -964,11 +964,11 @@ code: |
 ```
 
 Think about what will happen if the interview needs a value of
-`total_assets`.  It will run the `code` block, and halfway through,
+`total_assets`.  It will run the [`code`] block, and halfway through,
 the value of `total_assets` will be obtained.  But the code will not
 stop executing; it will go on to start building the `income_items`
 list.  This will work fine if the `income` list has been completely
-gathered, but what if it has not been?  Then the `code` block may
+gathered, but what if it has not been?  Then the [`code`] block may
 result in the asking of a question about the `income` list, but if the
 user refreshes the screen, that question will go away.  This
 introduces an idempotency problem.
@@ -994,16 +994,16 @@ code: |
 
 This way, no matter whether your interview needs `total_assets` first
 or `income_items` first, and regardless of whether it has already
-gathered `income` or `asset`, these `code` blocks will perform their
+gathered `income` or `asset`, these [`code`] blocks will perform their
 function and deliver a definition without causing any non-idempotent
 questions to be asked.
 
-As a general rule, Let each `code` block serve a single purpose, or a
+As a general rule, Let each [`code`] block serve a single purpose, or a
 set of closely-related purposes, and let it deliver its award (the
 defining of the variable sought) on the last line.  If you get into
 this habit, you will avoid hard-to-debug logic errors.
 
-Although typically your non-`mandatory` `code` blocks should only set
+Although typically your non-`mandatory` [`code`] blocks should only set
 one variable at a time, it is ok if they set other variables
 incidentally.  However, in that situation you should probably use the
 [`only sets`] modifier.
@@ -1051,7 +1051,7 @@ code: |
   total_income = temp_total
 {% endhighlight %}
 
-That way, the `code` block will only be called upon to define
+That way, the [`code`] block will only be called upon to define
 `total_income`.  It can still have the side effect of setting
 `has_benefits` to `True`, but it will not be called upon to define
 anything other than `total_income`.
@@ -1421,8 +1421,8 @@ of variables, even though it is capable of defining other variables.
 By default, all blocks in an interview are optional; they will be
 called upon only if needed to retrieve the value of a variable.
 However, if all blocks are optional, the interview has nothing to do.
-You can use the `mandatory` modifier to indicate that a block must be
-run.  The first `mandatory` block in your interview will be the
+You can use the [`mandatory`] modifier to indicate that a block must be
+run.  The first [`mandatory`] block in your interview will be the
 starting point of the interview logic when the user first starts the
 interview.
 
@@ -1448,7 +1448,8 @@ The interview will ask "Are you sitting down" and then it will say
 Maine?"
 
 Another way to control the logic of an interview is to have a single,
-simple `mandatory` [`code`] block that sets the interview in motion.
+simple [`mandatory`]<span></span> [`code`] block that sets the
+interview in motion.
 
 For example:
 
@@ -1477,19 +1478,19 @@ sets: user_will_not_sit_down
 ---
 {% endhighlight %}
 
-Here, the single `mandatory` block contains simple [Python] code that
+Here, the single [`mandatory`] block contains simple [Python] code that
 contains the entire logic of the interview.
 
-If a `mandatory` specifier is not present within a block, it is as
-though `mandatory` was set to `False`.
+If a [`mandatory`] specifier is not present within a block, it is as
+though [`mandatory`] was set to `False`.
 
-The value of `mandatory` can be a [Python] expression.  If it is a
+The value of [`mandatory`] can be a [Python] expression.  If it is a
 [Python] expression, the [`question`] or [`code`] block will be
 treated as mandatory if the expression evaluates to a true value.
 
 {% include side-by-side.html demo="mandatory-code" %}
 
-It is a best practice to tag all `mandatory` blocks with an [`id`].
+It is a best practice to tag all [`mandatory`] blocks with an [`id`].
 
 ## <a name="initial"></a>`initial`
 
@@ -1523,17 +1524,17 @@ interview logic was evaluated.  The "passes" through the interview are:
 
 1. The interview logic is evaluated, but the evaluation stops when the
    undefined variable `fruit` is encountered.  The interview then
-   tries to run the `code` block to get `fruit`, but encounters an
+   tries to run the [`code`] block to get `fruit`, but encounters an
    undefined variable `peaches`, so it asks a question to gather
    `peaches`.
 2. The interview logic is evaluated, but the evaluation stops when the
    undefined variable `fruit` is encountered.  The interview then
-   tries to run the `code` block to get `fruit`, but encounters an
+   tries to run the [`code`] block to get `fruit`, but encounters an
    undefined variable `pears`, so it asks a question to gather
    `pears`.
 3. The interview logic is evaluated, but the evaluation stops when the
    undefined variable `fruit` is encountered.  The interview then runs
-   the `code` block, and this time, `fruit` is successfully defined.
+   the [`code`] block, and this time, `fruit` is successfully defined.
 4. The interview logic is evaluated again, and the final question is
    displayed.
 
@@ -1541,10 +1542,10 @@ Like [`mandatory`], `initial` can be set to `True`, `False`, or to
 [Python] code that will be evaluated to see whether it evaluates to a
 true or false value.
 
-If your interview has a single `mandatory` code block and it is
+If your interview has a single [`mandatory`] code block and it is
 incapable of running to completion, then you don't really need an
 `initial` block because you can put the logic that needs to run every
-time the screen loads at the beginning of that `mandatory` block.
+time the screen loads at the beginning of that [`mandatory`] block.
 
 ## <a name="need"></a>`need`
 
@@ -1698,11 +1699,11 @@ computed.
 
 ### Effect when set to `True`
 
-If `reconsider` is set to `True` on a `code` block, then
+If `reconsider` is set to `True` on a [`code`] block, then
 **docassemble** will always "reconsider" the values of any of the
 variables set by the block.  That is, every time the interview is
 assembled (every time the screen loads) **docassemble** will forget
-about the value of any of the variables set by the `code` block.
+about the value of any of the variables set by the [`code`] block.
 
 You will want to set `reconsider` to `True` if your interview flow is
 such that you want **docassemble** to reconsider its definition of a
@@ -2053,3 +2054,6 @@ forget others.
 [gathering groups]: {{ site.baseurl }}/docs/groups.html
 [`task_performed()`]: {{ site.baseurl }}/docs/functions.html#task_performed
 [`only sets`]: {{ site.baseurl}}/docs/modifiers.html#only sets
+[Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[Python exception]: https://docs.python.org/3/tutorial/errors.html
+[`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
