@@ -1835,6 +1835,39 @@ fields.
 
 {% include demo-side-by-side.html demo="preview" %}
 
+# <a name="exceldb"></a>Using a spreadsheet as a database for looking up information
+
+If you have a table of information and you want to be able to look
+things up in that table of information during your interview, one of
+the ways you can accomplish this is by keeping the information in a
+spreadsheet in the Source folder of your package.  Python can be used
+to read the spreadsheet and look up information in it.
+
+The [`fruit_database` module] uses the [`pandas`] module to read an
+XLSX spreadsheet file into memory.  The `get_fruit_names()` function
+returns a list of fruits (from the "Name" column) and the
+`fruit_info()` function returns a dictionary of information about a
+given fruit.`
+
+{% include demo-side-by-side.html demo="fruits-database" %}
+
+Note that the interview does not simply import the
+`fruit_info_by_name` dictionary into the interview answers.  Although
+technically you can import dictionaries, lists, and other Python data
+types into your interview, doing so is generally not a good idea
+because those values will then become part of the interview answers
+that are stored in the database for every step of the interview.  This
+wastes hard drive space and it also wastes time re-loading the data
+out of your module every time the screen loads.  It is a best practice
+to use helper functions like `get_fruit_names()` and `fruit_info()` to
+bring in information on an as-needed basis.
+
+If your database is particularly large, reading it into memory may not
+be a good idea.  You might want to rewrite the functions so that they
+read information out of the file on an as-needed basis.  You also
+might want to adapt the functions to read data from a Google Sheet or
+Airtable rather than from an Excel spreadsheet that is part of your package.
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml
@@ -1922,3 +1955,5 @@ fields.
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
 [`Person`]: {{ site.baseurl }}/docs/objects.html#Person
 [`Address`]: {{ site.baseurl }}/docs/objects.html#Address
+[`fruit_database` module]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/fruit_database.py
+[`pandas`]: https://pandas.pydata.org/

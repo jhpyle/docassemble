@@ -14,28 +14,29 @@ you specify.  You specify these rules using [YAML] blocks.
 
 ## <a name="intro_mandatory"></a>Simple interviews: all blocks mandatory
 
-The simplest rule is to mark a block as [`mandatory`].
+The simplest type of rule you can specify is marking a block as
+[`mandatory`].
 
 {% include demo-side-by-side.html demo="all-mandatory" %}
 
 When **docassemble** runs an interview, it looks at the [YAML] and
 tries to run each block that is marked as "mandatory." It will run
-them in the order in which they appear in the [YAML].  So in this
+them in the order in which they appear in the [YAML].  In this
 example, first the "Welcome to the interview!" [`question`] is asked.
-When the user clicks the Continue button, **docassemble** moves on to
-the second [`mandatory`] block, which asks "What is your favorite
+When the user clicks the "Continue" button, **docassemble** moves on
+to the second [`mandatory`] block, which asks "What is your favorite
 fruit?"  When that question is answered, **docassemble** asks "What is
 your favorite vegetable?" When that question is answered
 **docassemble** moves on to the final [`question`], "Here is your
-document," which lets the user download a document.
+document," which lets the user download a document.  This is a very
+simple interview because there is no branching logic.
 
-This is a very simple interview because there is no branching logic.
 Suppose that instead of asking for the user's favorite vegetable, you
 wanted to ask for the user's favorite apple, but only if the user said
 that their favorite fruit is "apple."  In the previous interview, we
 set [`mandatory`] to `True` every time, but we can actually set
-[`mandatory`] to a [Python expression] that evaluates to either `True`
-or `False`.  For example:
+[`mandatory`] to a [Python expression] that evaluates to a true or
+false value.  For example:
 
 {% include demo-side-by-side.html demo="branch-mandatory" %}
 
@@ -303,7 +304,7 @@ Here, the mandatory [`code`] block ensures that `intro_screen` and
 satisfaction to trigger the asking of `favorite_fruit` and
 `favorite_vegetable`, as well as the display of the `final_screen`.
 
-# <a name="legal_logic"></a>Writing law as code to drive the interview
+## <a name="legal_logic"></a>Writing law as code to drive the interview
 
 **docassemble**'s "rules"-based logic system is particularly
 well-suited for legal applications.  You can write legal logic in
@@ -576,7 +577,7 @@ the asking of questions that it would be too tedious to specify
 individually.  There are things you need to think about, however, to
 ensure that your checklist results in a process that makes sense.
 
-# <a name="idempotency"></a>Beware of non-idempotency
+## <a name="idempotency"></a>Beware of non-idempotency
 
 When designing the checklist that **docassemble** runs every time the
 screen loads, you need to be careful about how you specify the
@@ -1057,6 +1058,42 @@ That way, the [`code`] block will only be called upon to define
 anything other than `total_income`.
 
 # <a name="order"></a>The logical order of an interview
+
+In the previous sections, we have explained that when **docassemble**
+runs your interview, it goes through your [YAML] looking for blocks
+that are [`mandatory`], and it tries to run them in order.  When it
+encounters an undefined variable, it stops what it is doing and tries
+to obtain a definition of that undefined variable.
+
+If a [`mandatory`]<span></span> [`question`] is answered, or a
+[`mandatory`]<span></span> [`code`] block's [Python] code runs all the
+way through to end, then **docassemble** remembers that the
+[`mandatory`] block has been completed, and the next time it evaluates
+the interview logic, it will skip over the block.
+
+(Technical note: how does **docassemble** remember that a block has
+been completed?  It stores a variable in the interview answers, inside
+of a special dictionary called `_internal`.  In order to identify the
+blocks that have been completed, it uses the block's [`id`].  If you
+do not specify an [`id`] on a [`mandatory`] block, **docassemble**
+will generate an identifier like `Question_0` or `Question_1` for the
+first and second blocks in your [YAML] file.  This means that if you
+have an interview that is "in production" and users have active
+sessions in that interview, and then you change the [YAML] to insert
+new blocks or move them around, you could cause these identifiers to
+change, and then users who started sessions before you changed the
+YAML could experience problems where questions they have already
+answered are re-asked.  In order to avoid this problem, make sure to
+attach a unique [`id`] to each [`mandatory`] block in your interview.
+That way, even if you rearrange the [YAML], users with existing
+sessions will not experience problems.)
+
+In addition to [`mandatory`], there is a second type of modifier you
+can use to force a [`code`] block to be processed.  If you mark a
+[`code`] block with `initial: True`, then the block will be run every
+time the screen loads, even if it has run before.  The block is
+"initial" in the sense that it initializes the interview logic that
+will be evaluated during the screen load.
 
 [`mandatory`] and [`initial`] blocks are evaluated in the order they
 appear in the question file.  Therefore, the location in the interview
