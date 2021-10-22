@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.2.106](https://github.com/jhpyle/docassemble/releases/tag/v1.2.106) - 2021-10-22
+
+### Fixed
+- Fix to the filename security adjustment in 1.2.105.
+
 ## [1.2.105](https://github.com/jhpyle/docassemble/releases/tag/v1.2.105) - 2021-10-18
 
 ### Added
