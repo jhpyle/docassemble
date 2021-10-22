@@ -3673,7 +3673,7 @@ class DAFile(DAObject):
             if not os.path.isfile(the_path):
                 server.fg_make_png_for_pdf(self, 'page', page=page)
     def pngs_ready(self):
-        """Creates page images for a PDF file."""
+        """Returns True if the PNGs have been generated."""
         self._make_pngs_for_pdf()
         if server.task_ready(self._taskscreen) and server.task_ready(self._taskpage):
             return True

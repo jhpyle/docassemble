@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.2.106] - 2021-10-22
+### Fixed
+- Fix to the filename security adjustment in 1.2.105.
+
 ## [1.2.105] - 2021-10-18
 ### Added
 - ClickSend fax support.
