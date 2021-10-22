@@ -27248,8 +27248,8 @@ def secure_filename_spaces_ok(filename):
     filename = filename.encode("ascii", "ignore").decode("ascii")
     for sep in os.path.sep, os.path.altsep:
         if sep:
-            filename = filename.replace(sep, " ")
-    filename = str(re.sub(r'[^A-Za-z0-9\_\.\- ]', '', "_".join(filename.split()))).strip("._ ")
+            filename = filename.replace(sep, "_")
+    filename = str(re.sub(r'[^A-Za-z0-9\_\.\- ]', '', " ".join(filename.split()))).strip("._ ")
     return filename
 
 def secure_filename(filename):
