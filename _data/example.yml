@@ -12382,7 +12382,7 @@
 "dependency-demo-code": |-
   mandatory: True
   code: |
-    if favorite_fruit == `grapes`:
+    if favorite_fruit == 'grapes':
       favorite_vineyard
     favorite_vegetable
     final_screen
