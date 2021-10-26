@@ -2091,6 +2091,7 @@ forget others.
 [gathering groups]: {{ site.baseurl }}/docs/groups.html
 [`task_performed()`]: {{ site.baseurl }}/docs/functions.html#task_performed
 [`only sets`]: {{ site.baseurl}}/docs/modifiers.html#only sets
+[Python expressions]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [Python exception]: https://docs.python.org/3/tutorial/errors.html
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email

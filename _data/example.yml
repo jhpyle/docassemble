@@ -12373,7 +12373,7 @@
   question: |
     Which vineyard do you think produces the best grapes?
   fields:
-    - Fruit: favorite_vineyard
+    - Vineyard: favorite_vineyard
   ---
   question: |
     What is your favorite fruit?
@@ -12400,7 +12400,7 @@
   question: |
     Which vineyard do you think produces the best grapes?
   fields:
-    - Fruit: favorite_vineyard
+    - Vineyard: favorite_vineyard
   ---
   question: |
     What is your favorite fruit?
@@ -13949,6 +13949,78 @@
   ---\nmandatory: true\nquestion: |\n  The imported data\nsubquestion: |\n  % for\
   \ item in raw_data:\n  The `inventory` of\n  \"${ item.title }\" is:\n  \n  > `${\
   \ item.inventory }`\n  \n  % endfor"
+"realtimegd": |-
+  modules:
+    - google_drive_downloader
+  ---
+  objects:
+    template_file: DAFile
+  ---
+  code: |
+    template_file.initialize(filename='fruit_info.docx')
+    GoogleDriveDownloader().download_file_from_google_drive(file_id='1MsiAA632Ehyj0jEW_WEBpZOd-qokqyni', dest_path=template_file.path())
+    template_file.commit()
+    template_file.fetched = True
+  ---
+  attachment:
+    name: Information about fruit
+    filename: fruit_info_sheet
+    variable name: assembled_document
+    docx template file:
+      code: template_file
+  need: template_file.fetched
+  ---
+  question: |
+    Which fruits do you like?
+  fields:
+    - Fruit: likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apple: apple
+        - Banana: banana
+        - Peach: peach
+        - Grapes: grapes
+  ---
+  mandatory: True
+  question: |
+    Here is a customized information sheet about the fruits you like.
+  attachment code: assembled_document
+"realtimegd2": |-
+  modules:
+    - .gd_fetch
+  ---
+  objects:
+    template_file: DAFile
+  ---
+  code: |
+    template_file.initialize(filename='fruit_info.docx')
+    fetch_file('1IGvzA-oOB_bVTmDB7TPW9UgQT-6MGtSe', template_file.path())
+    template_file.commit()
+    template_file.fetched = True
+  ---
+  attachment:
+    name: Information about fruit
+    filename: fruit_info_sheet
+    variable name: assembled_document
+    docx template file:
+      code: template_file
+  need: template_file.fetched
+  ---
+  question: |
+    Which fruits do you like?
+  fields:
+    - Fruit: likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apple: apple
+        - Banana: banana
+        - Peach: peach
+        - Grapes: grapes
+  ---
+  mandatory: True
+  question: |
+    Here is a customized information sheet about the fruits you like.
+  attachment code: assembled_document
 "redact-docx": |-
   mandatory: True
   question: |

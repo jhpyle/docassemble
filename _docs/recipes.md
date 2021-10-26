@@ -1465,7 +1465,7 @@ time, are widely used ingredients of digital signatures.
 signature manually, where `the_signer` is a person whose signature is
 referenced in the document, using the `signature_of()` method, and
 `the_signer.signature` is a variable defined by a [`signature`] block
-(a `DAFile` object).  Note that if this method is called more than
+(a [`DAFile`] object).  Note that if this method is called more than
 once, each new time the date of the signature will be updated.  You
 may want to avoid this by doing:
 
@@ -1868,6 +1868,98 @@ read information out of the file on an as-needed basis.  You also
 might want to adapt the functions to read data from a Google Sheet or
 Airtable rather than from an Excel spreadsheet that is part of your package.
 
+# <a name="docxongd"></a>Using a template that lives on Google Drive
+
+When you use the [`docx template file`] or [`pdf template file`]
+features to assemble documents, your document templates are typically
+located in the Templates folder of your package, and you refer to
+templates by their file names.  However, the [`docx template file`] or
+[`pdf template file`] specifiers [can be given] `code` instead of a
+filename.  Your template could be a [`DAFile`] object.
+
+You can use this feature to retrieve templates from Google Drive.
+There is a convenient [Python] package called [`googledrivedownloader`]
+that allows you to download a file from Google Drive based on its ID.
+The following example demonstrates how to use this in a document
+assembly interview:
+
+{% include demo-side-by-side.html demo="realtimegd" %}
+
+It is necessary that the sharing settings on the file in Google Drive
+be set so that "anyone with the link" can view the file.  In this
+example, the Google Drive file is a DOCX file with [this sharing
+link](https://docs.google.com/document/d/1MsiAA632Ehyj0jEW_WEBpZOd-qokqyni/edit?usp=sharing&ouid=118246287503150138684&rtpof=true&sd=true). The
+ID of the file on Google Drive is
+`'1MsiAA632Ehyj0jEW_WEBpZOd-qokqyni'`.  This ID can be seen inside of
+the URL, before the query part (the part beginning with `?`).
+
+If you wish to use a file on Google Drive without creating a link that
+anyone in the world can view, you can use the [`DAGoogleAPI`] object,
+which allows you to use Google's API with [service account]
+credentials that are stored in the [Configuration] under [`service
+account credentials`] within the [`google`] directive.
+
+This example uses a Google Drive file with the id of
+`'1IGvzA-oOB_bVTmDB7TPW9UgQT-6MGtSe'`.  This file is not accessible
+via a link; it is shared only with the special e-mail address of the
+[service account].
+
+{% include demo-side-by-side.html demo="realtimegd2" %}
+
+This interview uses a Python module [`docassemble.demo.gd_fetch`],
+which provides a function called `fetch_file()`, which downloads a
+file from Google Drive.
+
+{% highlight python %}
+from docassemble.base.util import DAGoogleAPI
+import apiclient
+
+__all__ = ['fetch_file']
+
+def fetch_file(file_id, path):
+    service = DAGoogleAPI().drive_service()
+    with open(path, 'wb') as fh:
+        response = service.files().get_media(fileId=file_id)
+        downloader = apiclient.http.MediaIoBaseDownload(fh, response)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+{% endhighlight %}
+
+The `fetch_file()` function retrieves the file with the given
+`file_id` from Google Drive, using Google's API, and then saves the
+contents of the file to `path`, which is a file path.
+
+The Python module `apiclient` provides the interface to Google's API.
+`apiclient` is the name of the module contained in the
+[`google-api-python-client`] package.  The `fetch_file()` function
+uses a [`DAGoogleAPI`] object to get authentication credentials from
+the [Configuration].  All that `.drive_service()` does is:
+
+{% highlight python %}
+apiclient.discovery.build('drive', 'v3', http=self.http('https://www.googleapis.com/auth/drive'))
+{% endhighlight %}
+
+On the server `demo.docassemble.org`, the [Configuration] contains
+credentials for a Google service account, and the Google Drive file
+`'1IGvzA-oOB_bVTmDB7TPW9UgQT-6MGtSe'` has been shared with that
+service account.
+
+Although it is convenient for document templates to be stored in
+Google Drive instead of inside of a package, keep in mind that there
+are risks to storing templates on Google Drive.  If you have a
+production interview that uses your template from Google Drive, and
+you edit the template in such a way that it causes an error (for
+example, a Jinja2 syntax error), your users will start seeing errors
+immediately.  It would be better if you only released a new version of
+a template as part of a process that involves testing and validating
+your changes to a template.  Another issue is that you are opening up
+a back door for code injection.  If someone has edit access to the
+template on Google Drive, they could potentially find a way to use
+Jinja2 to execute arbitrary Python code on your server.  Templates are
+a form of software, so ideally they should live where the other
+software lives, which is inside of a software package.
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml
@@ -1924,6 +2016,7 @@ Airtable rather than from an Excel spreadsheet that is part of your package.
 [pickling]: https://docs.python.org/3/library/pickle.html
 [docx]: https://python-docx.readthedocs.io/
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
+[`pdf template file`]: {{ site.baseurl }}/docs/documents.html#pdf template file
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`signature-diversion.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/signature-diversion.yml
 [collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/
@@ -1946,6 +2039,7 @@ Airtable rather than from an Excel spreadsheet that is part of your package.
 [`docassemble.demo.sign`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/sign.py
 [`DAEmpty`]: {{ site.baseurl }}/docs/objects.html#DAEmpty
 [`sign.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/sign.yml
+[`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
 [`signature`]: {{ site.baseurl }}/docs/fields.html#signature
 [`reconsider()`]: {{ site.baseurl }}/docs/functions.html#reconsider
@@ -1957,3 +2051,11 @@ Airtable rather than from an Excel spreadsheet that is part of your package.
 [`Address`]: {{ site.baseurl }}/docs/objects.html#Address
 [`fruit_database` module]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/fruit_database.py
 [`pandas`]: https://pandas.pydata.org/
+[can be given]: {{ site.baseurl }}/docs/documents.html#template file code
+[`googledrivedownloader`]: https://pypi.org/project/googledrivedownloader/
+[`DAGoogleAPI`]: {{ site.baseurl }}/docs/objects.html#DAGoogleAPI
+[`docassemble.demo.gd_fetch`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/gd_fetch.py
+[`google-api-python-client`]: https://github.com/google/google-api-python-client/
+[`google`]: https://docassemble.org/docs/config.html#google
+[`service account credentials`]: https://docassemble.org/docs/config.html#service%20account%20credentials
+[service account]: https://cloud.google.com/iam/docs/understanding-service-accounts
