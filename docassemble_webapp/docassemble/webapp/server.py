@@ -9287,6 +9287,13 @@ def index(action_argument=None, refer=None):
           daUpdateHeight();
         }
         else if (data.action == 'redirect'){
+          if (daSpinnerTimeout != null){
+            clearTimeout(daSpinnerTimeout);
+            daSpinnerTimeout = null;
+          }
+          if (daShowingSpinner){
+            daHideSpinner();
+          }
           window.location = data.url;
         }
         else if (data.action == 'refresh'){

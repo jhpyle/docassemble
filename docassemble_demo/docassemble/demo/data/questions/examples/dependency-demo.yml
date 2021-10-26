@@ -16,7 +16,7 @@ subquestion: |
 question: |
   Which vineyard do you think produces the best grapes?
 fields:
-  - Fruit: favorite_vineyard
+  - Vineyard: favorite_vineyard
 ---
 question: |
   What is your favorite fruit?

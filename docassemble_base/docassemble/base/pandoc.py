@@ -386,9 +386,21 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             docassemble.base.functions.server.applock('release', 'libreoffice')
         if os.path.isfile(to_file):
             break
+        time.sleep(0.1)
+        if os.path.isfile(to_file):
+            break
+        time.sleep(0.1)
+        if os.path.isfile(to_file):
+            break
+        time.sleep(0.1)
+        if os.path.isfile(to_file):
+            break
+        time.sleep(0.1)
+        if os.path.isfile(to_file):
+            break
         result = 1
         tries += 1
-        time.sleep(0.5 + tries*random.random())
+        time.sleep(tries*random.random())
         if use_libreoffice:
             logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
         elif daconfig.get('convertapi secret', None) is not None:

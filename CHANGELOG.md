@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.2.107] - 2021-10-26
+### Fixed
+- Problem with spinner staying on the screen after certain types of URL
+  redirects.
+- Possible fix to issue where call to LibreOffice retries due to
+  output file not being detected.
+
 ## [1.2.106] - 2021-10-22
 ### Fixed
 - Fix to the filename security adjustment in 1.2.105.
