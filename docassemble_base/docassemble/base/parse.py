@@ -2,7 +2,7 @@ import mimetypes
 import traceback
 import re
 from jinja2 import ChainableUndefined
-from jinja2.runtime import StrictUndefined, UndefinedError, 
+from jinja2.runtime import StrictUndefined, UndefinedError
 from jinja2.exceptions import TemplateError
 from jinja2.environment import Environment
 from jinja2 import FileSystemLoader, select_autoescape, TemplateNotFound
