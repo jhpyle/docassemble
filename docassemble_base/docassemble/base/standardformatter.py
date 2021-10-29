@@ -508,7 +508,8 @@ def help_wrap(content, helptext, status):
     if helptext is None:
         return content
     else:
-        return '<div class="dachoicewithhelp"><div><div>' + content + '</div><div class="dachoicehelp text-primary"><a tabindex="0" data-container="body" data-toggle="popover" data-placement="left" data-content=' + noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)) + '><i class="fas fa-question-circle"></i></a></div></div></div>'
+        help_wrapper = '<div class="dachoicewithhelp"><div><div>%s</div><div class="dachoicehelp text-primary"><a tabindex="0" data-container="body" data-toggle="popover" data-placement="left" data-content=%s><i class="fas fa-question-circle"></i></a></div></div></div>'
+        return help_wrapper % (content, noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)))
 
 def as_html(status, url_for, debug, root, validation_rules, field_error, the_progress_bar, steps):
     decorations = list()
@@ -1823,13 +1824,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     if debug or status.using_screen_reader:
         status.screen_reader_text['question'] = str(output)
     if 'rightText' in status.extras:
+        right_classes = 'd-block d-lg-none daright'
         if status.using_navigation == 'vertical':
-            output += '            <div id="darightbottom" class="d-block d-lg-none daright">\n'
+            output += '            <div id="darightbottom" class="' + right_classes + '">\n'
         else:
             if status.question.interview.flush_left:
-                output += '            <div id="darightbottom" class="d-block d-lg-none daright">\n'
+                output += '            <div id="darightbottom" class="' + right_classes + '">\n'
             else:
-                output += '            <div id="darightbottom" class="d-block d-lg-none daright">\n'
+                output += '            <div id="darightbottom" class="' + right_classes + '">\n'
         output += markdown_to_html(status.extras['rightText'], trim=False, status=status) + "\n"
         output += '            </div>\n'
     master_output += output

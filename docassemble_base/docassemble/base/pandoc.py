@@ -307,7 +307,7 @@ class MyPandoc(object):
             self.output_content = self.output_content.decode()
         return
 
-def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_refs=False, tagged=False, filename=None):
+def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_refs=False, tagged=False, filename=None, retry=True):
     if filename is None:
         filename = 'file'
     filename = docassemble.base.functions.secure_filename(filename)
@@ -322,7 +322,11 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
         method = 'tagged'
     else:
         method = 'default'
-    while tries < 5:
+    if retry:
+        num_tries = 5
+    else:
+        num_tries = 1
+    while tries < num_tries:
         use_libreoffice = True
         if update_refs:
             if daconfig.get('convertapi secret', None) is not None:
@@ -400,14 +404,14 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             break
         result = 1
         tries += 1
-        time.sleep(tries*random.random())
-        if use_libreoffice:
-            logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
-        elif daconfig.get('convertapi secret', None) is not None:
-            logmessage("Retrying convertapi")
-        else:
-            logmessage("Retrying cloudconvert")
-        continue
+        if tries < num_tries:
+            time.sleep(tries*random.random())
+            if use_libreoffice:
+                logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
+            elif daconfig.get('convertapi secret', None) is not None:
+                logmessage("Retrying convertapi")
+            else:
+                logmessage("Retrying cloudconvert")
     if result == 0:
         if password:
             pdf_encrypt(to_file, password)
@@ -587,7 +591,7 @@ def initialize_libreoffice():
         logmessage("No LibreOffice macro path exists")
         temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf")
         word_file = docassemble.base.functions.package_template_filename('docassemble.demo:data/templates/template_test.docx')
-        word_to_pdf(word_file, 'docx', temp_file.name, pdfa=False, password=None)
+        word_to_pdf(word_file, 'docx', temp_file.name, pdfa=False, password=None, retry=False)
         del temp_file
         del word_file
     orig_path = docassemble.base.functions.package_template_filename('docassemble.base:data/macros/Module1.xba')

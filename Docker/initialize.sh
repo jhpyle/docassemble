@@ -1331,6 +1331,15 @@ function deregister {
             fi
         fi
     else
+        if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
+	    echo "initialize: Saving Configuration" >&2
+            rm -f "${DA_ROOT}/backup/config.yml"
+            cp "${DA_CONFIG_FILE}" "${DA_ROOT}/backup/config.yml"
+	    echo "initialize: Saving files" >&2
+            rm -rf "${DA_ROOT}/backup/files"
+            rsync -auq "${DA_ROOT}/files" "${DA_ROOT}/backup/"
+	    echo "initialize: Done saving files" >&2
+        fi
         if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
             if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 		echo "initialize: Saving Apache log files" >&2
@@ -1349,15 +1358,6 @@ function deregister {
 	    echo "initialize: Saving log files" >&2
             rm -rf "${DA_ROOT}/backup/log"
             rsync -auq "${LOGDIRECTORY}/" "${DA_ROOT}/backup/log/"
-        fi
-        if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
-	    echo "initialize: Saving Configuration" >&2
-            rm -f "${DA_ROOT}/backup/config.yml"
-            cp "${DA_CONFIG_FILE}" "${DA_ROOT}/backup/config.yml"
-	    echo "initialize: Saving files" >&2
-            rm -rf "${DA_ROOT}/backup/files"
-            rsync -auq "${DA_ROOT}/files" "${DA_ROOT}/backup/"
-	    echo "initialize: Done saving files" >&2
         fi
     fi
     rm -f /etc/da_running

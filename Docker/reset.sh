@@ -45,6 +45,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start websockets || exit 1
 fi
 
+killall -9 /usr/lib/libreoffice/program/soffice.bin &> /dev/null
 # if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
 #     supervisorctl --serverurl http://localhost:9001 start nginx || exit 1
 # fi

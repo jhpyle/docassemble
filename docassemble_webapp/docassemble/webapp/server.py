@@ -361,6 +361,8 @@ DEFAULT_DIALECT = daconfig.get('dialect', 'us')
 LOGSERVER = daconfig.get('log server', None)
 CHECKIN_INTERVAL = int(daconfig.get('checkin interval', 6000))
 #message_sequence = dbtableprefix + 'message_id_seq'
+NOTIFICATION_CONTAINER = '<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>'
+NOTIFICATION_MESSAGE = '<div class="alert alert-%s"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>%s</div>'
 
 if os.environ.get('SUPERVISOR_SERVER_URL', None):
     USING_SUPERVISOR = True
@@ -2604,7 +2606,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
             the_section = the_sections[0]
     max_section = the_section
     if wrapper:
-        output = '<div role="navigation" class="offset-xl-1 col-xl-2 col-lg-3 col-md-3 d-none d-md-block danavdiv">' + "\n" + '  <div class="nav flex-column nav-pills danav danav-vertical danavlinks">' + "\n"
+        output = '<div role="navigation" class="offset-xl-1 col-xl-2 col-lg-3 col-md-3 d-none d-md-block danavdiv">\n  <div class="nav flex-column nav-pills danav danav-vertical danavlinks">\n'
     else:
         output = ''
     section_reached = False
@@ -3272,9 +3274,7 @@ def name_of_user(user, include_email=False):
 def flash_as_html(message, message_type="info", is_ajax=True):
     if message_type == 'error':
         message_type = 'danger'
-    output = """
-        <div class="alert alert-""" + str(message_type) + """"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>""" + str(message) + """</div>
-"""
+    output = "\n        " + (NOTIFICATION_MESSAGE % (message_type, str(message))) + "\n"
     if not is_ajax:
         flash(message, message_type)
     return output
@@ -6695,7 +6695,12 @@ def index(action_argument=None, refer=None):
                         full_key = safeid(the_key)
                         post_data[full_key] = post_data[orig_key]
         if key.endswith('.gathered'):
+            if STRICT_MODE and key not in authorized_fields:
+                raise DAError("The variable " + repr(key) + " was not in the allowed fields, which were " + repr(authorized_fields))
             objname = re.sub(r'\.gathered$', '', key)
+            if illegal_variable_name(objname):
+                error_messages.append(("error", "Error: Invalid key " + objname))
+                break
             try:
                 eval(objname, user_dict)
             except:
@@ -6757,7 +6762,7 @@ def index(action_argument=None, refer=None):
             real_key = safeid(whole_key)
             if STRICT_MODE and (pre_bracket_key not in authorized_fields or pre_bracket_key + '.gathered' not in authorized_fields) and (key not in authorized_fields):
                 raise DAError("The variables " + repr(pre_bracket_key) + " and " + repr(key) + " were not in the allowed fields, which were " + repr(authorized_fields))
-            if illegal_variable_name(whole_key):
+            if illegal_variable_name(whole_key) or illegal_variable_name(core_key_name) or illegal_variable_name(key):
                 error_messages.append(("error", "Error: Invalid key " + whole_key))
                 break
             if whole_key in user_dict:
@@ -7792,15 +7797,16 @@ def index(action_argument=None, refer=None):
         if response_wrapper:
             response_wrapper(response_to_send)
         return response_to_send
-    flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
     if messages and len(messages):
-        flash_content += '<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash">'
+        notification_interior = ''
         for classname, message in messages:
             if classname == 'error':
                 classname = 'danger'
-            flash_content += '<div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + str(message) + '</div>'
-        flash_content += '</div>'
+            notification_interior += NOTIFICATION_MESSAGE % (classname, str(message))
+        flash_content = NOTIFICATION_CONTAINER % (notification_interior,)
+    else:
+        flash_content = ''
     if 'reload_after' in interview_status.extras:
         reload_after = 1000 * int(interview_status.extras['reload_after'])
     else:
@@ -7994,6 +8000,126 @@ def index(action_argument=None, refer=None):
       else{
         daTargetDiv = "#dabody";
       }
+      var daNotificationContainer = """ + json.dumps(NOTIFICATION_CONTAINER) + """;
+      var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
+      Object.defineProperty(String.prototype, "daSprintf", {
+        value: function () {
+          var args = Array.from(arguments),
+            i = 0;
+          function defaultNumber(iValue) {
+            return iValue != undefined && !isNaN(iValue) ? iValue : "0";
+          }
+          function defaultString(iValue) {
+            return iValue == undefined ? "" : "" + iValue;
+          }
+          return this.replace(
+            /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
+            function (match, sign, filler, scale, precision, type) {
+              var strOut, space, value;
+              var asNumber = false;
+              if (match == "%%") return "%";
+              if (i >= args.length) return match;
+              value = args[i];
+              while (Array.isArray(value)) {
+                args.splice(i, 1);
+                for (var j = i; value.length > 0; j++)
+                  args.splice(j, 0, value.shift());
+                value = args[i];
+              }
+              i++;
+              if (filler == undefined) filler = " "; // default
+              if (scale == undefined && !isNaN(filler)) {
+                scale = filler;
+                filler = " ";
+              }
+              if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
+              if (scale == undefined) scale = 0; // default
+              if (precision == undefined) precision = ".0"; // default
+              scale = parseInt(scale);
+              precision = parseInt(precision.substr(1));
+              switch (type) {
+                case "d":
+                case "i":
+                  // decimal integer
+                  asNumber = true;
+                  strOut = parseInt(defaultNumber(value));
+                  if (precision > 0) strOut += "." + "0".repeat(precision);
+                  break;
+                case "e":
+                case "E":
+                  // float in exponential notation
+                  asNumber = true;
+                  strOut = parseFloat(defaultNumber(value));
+                  if (precision == 0) strOut = strOut.toExponential();
+                  else strOut = strOut.toExponential(precision);
+                  if (type == "E") strOut = strOut.replace("e", "E");
+                  break;
+                case "f":
+                  // decimal float
+                  asNumber = true;
+                  strOut = parseFloat(defaultNumber(value));
+                  if (precision != 0) strOut = strOut.toFixed(precision);
+                  break;
+                case "o":
+                case "h":
+                case "H":
+                  // Octal or Hexagesimal integer notation
+                  strOut =
+                    "\\\\" +
+                    (type == "o" ? "0" : type) +
+                    parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
+                  break;
+                case "q":
+                  // single quoted string
+                  strOut = "'" + defaultString(value) + "'";
+                  break;
+                case "Q":
+                  // double quoted string
+                  strOut = '"' + defaultString(value) + '"';
+                  break;
+                default:
+                  // string
+                  strOut = defaultString(value);
+                  break;
+              }
+              if (typeof strOut != "string") strOut = "" + strOut;
+              if ((space = strOut.length) < scale) {
+                if (asNumber) {
+                  if (sign == "-") {
+                    if (strOut.indexOf("-") < 0)
+                      strOut = filler.repeat(scale - space) + strOut;
+                    else
+                      strOut =
+                        "-" +
+                        filler.repeat(scale - space) +
+                        strOut.replace("-", "");
+                  } else {
+                    if (strOut.indexOf("-") < 0)
+                      strOut = "+" + filler.repeat(scale - space - 1) + strOut;
+                    else
+                      strOut =
+                        "-" +
+                        filler.repeat(scale - space) +
+                        strOut.replace("-", "");
+                  }
+                } else {
+                  if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
+                  else strOut = strOut + filler.repeat(scale - space);
+                }
+              } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
+                strOut = "+" + strOut;
+              return strOut;
+            }
+          );
+        },
+      });
+      Object.defineProperty(window, "daSprintf", {
+        value: function (str, ...rest) {
+          if (typeof str == "string")
+            return String.prototype.daSprintf.apply(str, rest);
+          return "";
+        },
+      });
       function daGoToAnchor(target){
         if (daJsEmbed){
           scrollTarget = $(target).first().position().top - 60;
@@ -8208,13 +8334,13 @@ def index(action_argument=None, refer=None):
           priority = 'info'
         }
         if (!$("#daflash").length){
-          $(daTargetDiv).append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"><\/div>');
+          $(daTargetDiv).append(daSprintf(daNotificationContainer, ""));
         }
         if (clear){
           $("#daflash").empty();
         }
         if (message != null){
-          $("#daflash").append('<div class="alert alert-' + priority + ' daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
+          $("#daflash").append(daSprintf(daNotificationMessage, priority, message));
           if (priority == 'success'){
             setTimeout(function(){
               $("#daflash .alert-success").hide(300, function(){
@@ -9510,9 +9636,9 @@ def index(action_argument=None, refer=None):
               var command = data.commands[i];
               if (command.extra == 'flash'){
                 if (!$("#daflash").length){
-                  $(daTargetDiv).append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"><\/div>');
+                  $(daTargetDiv).append(daSprintf(daNotificationContainer, ""));
                 }
-                $("#daflash").append('<div class="alert alert-info daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + command.value + '<\/div>');
+                $("#daflash").append(daSprintf(daNotificationMessage, "info", command.value));
                 //console.log("command is " + command.value);
               }
               else if (command.extra == 'refresh'){
@@ -12471,6 +12597,126 @@ def observer():
           }
         }
       }
+      var daNotificationContainer = """ + json.dumps(NOTIFICATION_CONTAINER) + """;
+      var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
+      Object.defineProperty(String.prototype, "daSprintf", {
+        value: function () {
+          var args = Array.from(arguments),
+            i = 0;
+          function defaultNumber(iValue) {
+            return iValue != undefined && !isNaN(iValue) ? iValue : "0";
+          }
+          function defaultString(iValue) {
+            return iValue == undefined ? "" : "" + iValue;
+          }
+          return this.replace(
+            /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
+            function (match, sign, filler, scale, precision, type) {
+              var strOut, space, value;
+              var asNumber = false;
+              if (match == "%%") return "%";
+              if (i >= args.length) return match;
+              value = args[i];
+              while (Array.isArray(value)) {
+                args.splice(i, 1);
+                for (var j = i; value.length > 0; j++)
+                  args.splice(j, 0, value.shift());
+                value = args[i];
+              }
+              i++;
+              if (filler == undefined) filler = " "; // default
+              if (scale == undefined && !isNaN(filler)) {
+                scale = filler;
+                filler = " ";
+              }
+              if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
+              if (scale == undefined) scale = 0; // default
+              if (precision == undefined) precision = ".0"; // default
+              scale = parseInt(scale);
+              precision = parseInt(precision.substr(1));
+              switch (type) {
+                case "d":
+                case "i":
+                  // decimal integer
+                  asNumber = true;
+                  strOut = parseInt(defaultNumber(value));
+                  if (precision > 0) strOut += "." + "0".repeat(precision);
+                  break;
+                case "e":
+                case "E":
+                  // float in exponential notation
+                  asNumber = true;
+                  strOut = parseFloat(defaultNumber(value));
+                  if (precision == 0) strOut = strOut.toExponential();
+                  else strOut = strOut.toExponential(precision);
+                  if (type == "E") strOut = strOut.replace("e", "E");
+                  break;
+                case "f":
+                  // decimal float
+                  asNumber = true;
+                  strOut = parseFloat(defaultNumber(value));
+                  if (precision != 0) strOut = strOut.toFixed(precision);
+                  break;
+                case "o":
+                case "h":
+                case "H":
+                  // Octal or Hexagesimal integer notation
+                  strOut =
+                    "\\\\" +
+                    (type == "o" ? "0" : type) +
+                    parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
+                  break;
+                case "q":
+                  // single quoted string
+                  strOut = "'" + defaultString(value) + "'";
+                  break;
+                case "Q":
+                  // double quoted string
+                  strOut = '"' + defaultString(value) + '"';
+                  break;
+                default:
+                  // string
+                  strOut = defaultString(value);
+                  break;
+              }
+              if (typeof strOut != "string") strOut = "" + strOut;
+              if ((space = strOut.length) < scale) {
+                if (asNumber) {
+                  if (sign == "-") {
+                    if (strOut.indexOf("-") < 0)
+                      strOut = filler.repeat(scale - space) + strOut;
+                    else
+                      strOut =
+                        "-" +
+                        filler.repeat(scale - space) +
+                        strOut.replace("-", "");
+                  } else {
+                    if (strOut.indexOf("-") < 0)
+                      strOut = "+" + filler.repeat(scale - space - 1) + strOut;
+                    else
+                      strOut =
+                        "-" +
+                        filler.repeat(scale - space) +
+                        strOut.replace("-", "");
+                  }
+                } else {
+                  if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
+                  else strOut = strOut + filler.repeat(scale - space);
+                }
+              } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
+                strOut = "+" + strOut;
+              return strOut;
+            }
+          );
+        },
+      });
+      Object.defineProperty(window, "daSprintf", {
+        value: function (str, ...rest) {
+          if (typeof str == "string")
+            return String.prototype.daSprintf.apply(str, rest);
+          return "";
+        },
+      });
       function daGoToAnchor(target){
         scrollTarget = $(target).first().offset().top - 60;
         if (scrollTarget != null){
@@ -12800,13 +13046,13 @@ def observer():
           priority = 'info'
         }
         if (!$("#daflash").length){
-          $(daTargetDiv).append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"><\/div>');
+          $(daTargetDiv).append(daSprintf(daNotificationContainer, ""));
         }
         if (clear){
           $("#daflash").empty();
         }
         if (message != null){
-          $("#daflash").append('<div class="alert alert-' + priority + ' daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
+          $("#daflash").append(daSprintf(daNotificationMessage, priority, message));
           if (priority == 'success'){
             setTimeout(function(){
               $("#daflash .alert-success").hide(300, function(){
@@ -17777,7 +18023,7 @@ def playground_files():
           $("#daflash").html(data.flash_message);
         }
         else{
-          $("#damain").prepend('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash">' + data.flash_message + '<\/div>');
+          $("#damain").prepend(daSprintf(daNotificationContainer, data.flash_message));
         }
       }
       function scrollBottom(){
@@ -20031,6 +20277,127 @@ var currentProject = """ + json.dumps(current_project) + """;
 var currentFile = """ + json.dumps(the_file) + """;
 var attrs_showing = Object();
 var daExpireSession = null;
+var daNotificationContainer = """ + json.dumps(NOTIFICATION_CONTAINER) + """;
+var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
+Object.defineProperty(String.prototype, "daSprintf", {
+  value: function () {
+    var args = Array.from(arguments),
+      i = 0;
+    function defaultNumber(iValue) {
+      return iValue != undefined && !isNaN(iValue) ? iValue : "0";
+    }
+    function defaultString(iValue) {
+      return iValue == undefined ? "" : "" + iValue;
+    }
+    return this.replace(
+      /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
+      function (match, sign, filler, scale, precision, type) {
+        var strOut, space, value;
+        var asNumber = false;
+        if (match == "%%") return "%";
+        if (i >= args.length) return match;
+        value = args[i];
+        while (Array.isArray(value)) {
+          args.splice(i, 1);
+          for (var j = i; value.length > 0; j++)
+            args.splice(j, 0, value.shift());
+          value = args[i];
+        }
+        i++;
+        if (filler == undefined) filler = " "; // default
+        if (scale == undefined && !isNaN(filler)) {
+          scale = filler;
+          filler = " ";
+        }
+        if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
+        if (scale == undefined) scale = 0; // default
+        if (precision == undefined) precision = ".0"; // default
+        scale = parseInt(scale);
+        precision = parseInt(precision.substr(1));
+        switch (type) {
+          case "d":
+          case "i":
+            // decimal integer
+            asNumber = true;
+            strOut = parseInt(defaultNumber(value));
+            if (precision > 0) strOut += "." + "0".repeat(precision);
+            break;
+          case "e":
+          case "E":
+            // float in exponential notation
+            asNumber = true;
+            strOut = parseFloat(defaultNumber(value));
+            if (precision == 0) strOut = strOut.toExponential();
+            else strOut = strOut.toExponential(precision);
+            if (type == "E") strOut = strOut.replace("e", "E");
+            break;
+          case "f":
+            // decimal float
+            asNumber = true;
+            strOut = parseFloat(defaultNumber(value));
+            if (precision != 0) strOut = strOut.toFixed(precision);
+            break;
+          case "o":
+          case "h":
+          case "H":
+            // Octal or Hexagesimal integer notation
+            strOut =
+              "\\\\" +
+              (type == "o" ? "0" : type) +
+              parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
+            break;
+          case "q":
+            // single quoted string
+            strOut = "'" + defaultString(value) + "'";
+            break;
+          case "Q":
+            // double quoted string
+            strOut = '"' + defaultString(value) + '"';
+            break;
+          default:
+            // string
+            strOut = defaultString(value);
+            break;
+        }
+        if (typeof strOut != "string") strOut = "" + strOut;
+        if ((space = strOut.length) < scale) {
+          if (asNumber) {
+            if (sign == "-") {
+              if (strOut.indexOf("-") < 0)
+                strOut = filler.repeat(scale - space) + strOut;
+              else
+                strOut =
+                  "-" +
+                  filler.repeat(scale - space) +
+                  strOut.replace("-", "");
+            } else {
+              if (strOut.indexOf("-") < 0)
+                strOut = "+" + filler.repeat(scale - space - 1) + strOut;
+              else
+                strOut =
+                  "-" +
+                  filler.repeat(scale - space) +
+                  strOut.replace("-", "");
+            }
+          } else {
+            if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
+            else strOut = strOut + filler.repeat(scale - space);
+          }
+        } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
+          strOut = "+" + strOut;
+        return strOut;
+      }
+    );
+  },
+});
+Object.defineProperty(window, "daSprintf", {
+  value: function (str, ...rest) {
+    if (typeof str == "string")
+      return String.prototype.daSprintf.apply(str, rest);
+    return "";
+  },
+});
+
 function resetExpireSession(){
   if (daExpireSession != null){
     window.clearTimeout(daExpireSession);
@@ -20170,7 +20537,7 @@ function saveCallback(data){
     $("#daflash").html(data.flash_message);
   }
   else{
-    $("#damain").prepend('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash">' + data.flash_message + '</div>');
+    $("#damain").prepend(daSprintf(daNotificationContainer, data.flash_message));
   }
   if (data.vocab_list != null){
     vocab = data.vocab_list;
