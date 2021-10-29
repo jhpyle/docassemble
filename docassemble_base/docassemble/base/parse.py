@@ -778,7 +778,7 @@ class InterviewStatus:
                 for term, vals in self.extras['autoterms'].items():
                     result['autoterms'][term] = vals['definition']
             if lang in self.question.interview.autoterms and len(self.question.interview.autoterms[lang]):
-                for term, vals in question.interview.autoterms[lang].items():
+                for term, vals in self.question.interview.autoterms[lang].items():
                     result['autoterms'][term] = vals['definition']
             elif self.question.language in self.question.interview.autoterms and len(self.question.interview.autoterms[self.question.language]):
                 for term, vals in self.question.interview.autoterms[self.question.language].items():
@@ -4482,6 +4482,16 @@ class Question:
             target = dict()
             for key, value in orig_target.items():
                 target[key.lower()] = value
+            if 'skip undefined' in target:
+                if isinstance(target['skip undefined'], bool):
+                    options['skip_undefined'] = target['skip undefined']
+                elif isinstance(target['skip undefined'], str):
+                    options['skip_undefined'] = compile(target['skip undefined'], '<skip undefined expression>', 'eval')
+                    self.find_fields_in(target['skip undefined'])
+                else:
+                    raise DAError('Unknown data type in attachment skip undefined.' + self.idebug(target))
+            else:
+                options['skip_undefined'] = False
             if 'language' in target:
                 options['language'] = target['language']
             if 'name' not in target:
@@ -4671,7 +4681,7 @@ class Question:
                     raise DAError('fields supplied to attachment must be a list or dictionary' + self.idebug(target))
                 target['content'] = ''
                 if template_type == 'docx':
-                    options[template_type + '_template_file'] = [FileInPackage(item, 'template', package=self.package) for item in target['docx template file']]
+                    options[template_type + '_template_file'] = [FileInPackage(item, 'template', package=self.package) for item in target['docx template file']]                    
                     for item in target['docx template file']:
                         if not isinstance(item, (str, dict)):
                             raise DAError('docx template file supplied to attachment must be a string or dict' + self.idebug(target))
@@ -4689,7 +4699,7 @@ class Question:
                             the_docx_path = docassemble.base.file_docx.concatenate_files(template_files)
                         try:
                             docx_template = docassemble.base.file_docx.DocxTemplate(the_docx_path)
-                            the_env = custom_jinja_env(options['skip_undefined'])
+                            the_env = custom_jinja_env(skip_undefined = options['skip_undefined'])
                             the_xml = docx_template.get_xml()
                             the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
                             the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
@@ -4832,16 +4842,6 @@ class Question:
                     self.find_fields_in(target['pdf/a'])
                 else:
                     raise DAError('Unknown data type in attachment pdf/a.' + self.idebug(target))
-            if 'skip undefined' in target:
-                if isinstance(target['skip undefined'], bool):
-                    options['skip_undefined'] = target['skip undefined']
-                elif isinstance(target['skip undefined'], str):
-                    options['skip_undefined'] = compile(target['skip undefined'], '<skip undefined expression>', 'eval')
-                    self.find_fields_in(target['skip undefined'])
-                else:
-                    raise DAError('Unknown data type in attachment skip undefined.' + self.idebug(target))
-            else:
-                options['skip_undefined'] = False
             if 'tagged pdf' in target:
                 if isinstance(target['tagged pdf'], bool):
                     options['tagged_pdf'] = target['tagged pdf']
@@ -6148,7 +6148,7 @@ class Question:
                                 template_loop_count = 0
                                 while True: # Rerender if there's a subdoc using include_docx_template
                                     old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
-                                    the_template.render(result['field_data'], jinja_env=custom_jinja_env())
+                                    the_template.render(result['field_data'], jinja_env=custom_jinja_env(skip_undefined = attachment['options']['skip_undefined']))
                                     if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and template_loop_count < 10:
                                         # There's another template included
                                         new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
@@ -9197,20 +9197,38 @@ class DAStrictUndefined(StrictUndefined):
         __float__ = __complex__ = __pow__ = __rpow__ = __sub__ = \
         __rsub__= __iter__ = __str__ = __len__ = __nonzero__ = __eq__ = \
         __ne__ = __bool__ = __hash__ = _fail_with_undefined_error
+
 class DASkipUndefined(ChainableUndefined):
     """Undefined handler for Jinja2 exceptions that allows
     rendering most partial templates.
     """
+    def __str__(self) -> str:    
+        return ''
+
     def __call__(self, *pargs, **kwargs):
         return self
+        
+    def __getattr__(self, _: str) -> "DASkipUndefined":
+        return self        
+        
+    __getitem__ = __getattr__
 
-    __add__ = __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
+    def __eq__(self, _) -> bool:
+        return False
+        
+    def __ne__(self, _ ) -> bool:
+        return False
+        
+    def __add__(self, val):
+        return self.__str__()
+
+    __radd__ = __add__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
         __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
         __mod__ = __rmod__ = __pos__ = __neg__ =  \
         __lt__ = __le__ = __gt__ = __ge__ = __int__ = \
         __float__ = __complex__ = __pow__ = __rpow__ = __sub__ = \
-        __rsub__= __iter__ = __str__ = __len__ = __nonzero__ = __eq__ = \
-        __ne__ = __bool__ = __hash__ = __getattr__
+        __rsub__= __iter__ = __len__ = __nonzero__ = \
+        __ne__ = __bool__ = __hash__ = __add__
 
 def mygetattr(y, attr):
     for attribute in attr.split('.'):
