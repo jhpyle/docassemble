@@ -1,7 +1,8 @@
 import mimetypes
 import traceback
 import re
-from jinja2.runtime import StrictUndefined, UndefinedError
+from jinja2 import ChainableUndefined
+from jinja2.runtime import StrictUndefined, UndefinedError, 
 from jinja2.exceptions import TemplateError
 from jinja2.environment import Environment
 from jinja2 import FileSystemLoader, select_autoescape, TemplateNotFound
@@ -4688,7 +4689,7 @@ class Question:
                             the_docx_path = docassemble.base.file_docx.concatenate_files(template_files)
                         try:
                             docx_template = docassemble.base.file_docx.DocxTemplate(the_docx_path)
-                            the_env = custom_jinja_env()
+                            the_env = custom_jinja_env(options['skip_undefined'])
                             the_xml = docx_template.get_xml()
                             the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
                             the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
@@ -4840,7 +4841,7 @@ class Question:
                 else:
                     raise DAError('Unknown data type in attachment skip undefined.' + self.idebug(target))
             else:
-                options['skip_undefined'] = False;
+                options['skip_undefined'] = False
             if 'tagged pdf' in target:
                 if isinstance(target['tagged pdf'], bool):
                     options['tagged_pdf'] = target['tagged pdf']
@@ -9196,7 +9197,20 @@ class DAStrictUndefined(StrictUndefined):
         __float__ = __complex__ = __pow__ = __rpow__ = __sub__ = \
         __rsub__= __iter__ = __str__ = __len__ = __nonzero__ = __eq__ = \
         __ne__ = __bool__ = __hash__ = _fail_with_undefined_error
+class DASkipUndefined(ChainableUndefined):
+    """Undefined handler for Jinja2 exceptions that allows
+    rendering most partial templates.
+    """
+    def __call__(self, *pargs, **kwargs):
+        return self
 
+    __add__ = __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
+        __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
+        __mod__ = __rmod__ = __pos__ = __neg__ =  \
+        __lt__ = __le__ = __gt__ = __ge__ = __int__ = \
+        __float__ = __complex__ = __pow__ = __rpow__ = __sub__ = \
+        __rsub__= __iter__ = __str__ = __len__ = __nonzero__ = __eq__ = \
+        __ne__ = __bool__ = __hash__ = __getattr__
 
 def mygetattr(y, attr):
     for attribute in attr.split('.'):
@@ -9423,8 +9437,11 @@ builtin_jinja_filters = {
 
 registered_jinja_filters = {}
 
-def custom_jinja_env():
-    env = DAEnvironment(undefined=DAStrictUndefined, extensions=[DAExtension])
+def custom_jinja_env(skip_undefined=False):
+    if skip_undefined:
+        env = DAEnvironment(undefined=DASkipUndefined, extensions=[DAExtension])
+    else:
+        env = DAEnvironment(undefined=DAStrictUndefined, extensions=[DAExtension])
     env.filters.update(registered_jinja_filters)
     env.filters.update(builtin_jinja_filters)
     return env
