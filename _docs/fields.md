@@ -1708,6 +1708,22 @@ To keep the width of the field normal, but have a blank label, use
 
 {% include side-by-side.html demo="blank-label-field" %}
 
+It is generally a good idea to always use a label for every field,
+especially if some of your users may be using screen readers.  If you
+are inclined to use `no label` because you want the field to be wider,
+consider using [`label above field`].
+
+## <a name="label above field"></a>`label above field`
+
+If you set `label above field` to `True`, then the label will be
+positioned above the field and not to the left of it.  (By default, on
+larger screens, the label is positioned to the left of the field.)
+
+{% include side-by-side.html demo="no-label-field" %}
+
+You can use the [`labels above fields`] feature to make this the
+default setting for all fields in your interview.
+
 ## <a name="label"></a>`label` and `field`
 
 Instead of expressing your labels and variable names in the form of `-
@@ -3099,3 +3115,5 @@ why this needs to be done manually as opposed to automatically:
 [`.object_name()`]: {{ site.baseurl }}/docs/objects.html#DAObject.object_name
 [Python special methods]: https://docs.python.org/3.8/reference/datamodel.html#special-method-names
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
+[`labels above fields`]: {{ site.baseurl }}/docs/initial.html#labels above fields
+[`label above field`]: #label above field

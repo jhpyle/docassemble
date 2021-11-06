@@ -161,7 +161,7 @@ obtain the action being requested.
 {% highlight yaml %}
 initial: True
 code: |
-  if action_argument() in ():
+  if action_argument() in ['revisit_income', 'revisit_expenses']:
     process_action()
 {% endhighlight %}
 

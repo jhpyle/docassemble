@@ -2132,13 +2132,19 @@
   fields:
     - Date and time: target_variable
       datatype: datetime
-"daweb": "objects:\n  - web: DAWeb.using(base_url='https://api.spacexdata.com/v3')\n\
-  ---\ncode: |\n  launch_info = web.get('launches/latest')\n---\ncode: |\n  ship_info\
-  \ = web.get('ships',\n                      data={'ship_type': 'Tug'})\n---\nmandatory:\
-  \ True\nquestion: |\n  SpaceX information\nsubquestion: |\n  The latest SpaceX launch\
-  \ involved a\n  ${ launch_info['rocket']['rocket_name'] }.\n\n  [FILE ${ launch_info['links']['flickr_images'][0]\
-  \ }]\n  \n  SpaceX operates the following tug boats:\n  \n  % for item in ship_info:\n\
-  \  * ${ item['ship_name'] }\n  % endfor"
+"daweb": |-
+  objects:
+    - web: DAWeb.using(base_url='https://api.spacexdata.com/latest')
+  ---
+  code: |
+    launch_info = web.get('launches/latest')
+  ---
+  code: |
+    rocket_info = web.get('rockets/' + launch_info['rocket'])
+  ---
+  code: |
+    ship_info = web.get('ships',
+                        data={'ship_type': 'Tug'})
 "dead-end": |-
   mandatory: True
   code: |
@@ -6367,6 +6373,12 @@
       field: favorite_vegetable
     - label: Fruit
       field: favorite_fruit
+"label-above-field": |-
+  question: |
+    Your sign
+  fields:
+    - "What is your Zodiac sign?": target_variable
+      label above field: True
 "language": "question: |\n  What is the meaning of life?\nfields:\n  - Meaning of\
   \ life: meaning_life\n---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado\
   \ de la vida?\nfields:\n  - Significado de la Vida: meaning_life"
@@ -6936,6 +6948,8 @@
       Resume button label
     back button label: |
       Back button label
+    footer: |
+      This is the footer part.
 "min": |-
   question: |
     What percentage of your friends
@@ -10063,10 +10077,10 @@
     * **${ feature }**: ${ 'enabled' if enabled else 'disabled' }
     % endfor
 "session-interview": |-
-  initial: True
-  code: |
-    if not user_logged_in():
-      response(url=url_of('login'))
+  metadata:
+    require login: True
+    temporary session: True
+    hidden: True
   ---
   reconsider: True
   code: |
@@ -10076,7 +10090,7 @@
     while True:
       (items, next_id) = interview_list(next_id=next_id)
       for info in items:
-        if info['filename'] != current_info.filename:
+        if not info['metadata'].get('hidden', False):
           list_of_interviews.append(info)
       if not next_id:
           break
@@ -10089,11 +10103,12 @@
   columns:
     - Title: |
         '<a href="' + interview_url(i=row_item['filename'], session=row_item['session']) + '">' + row_item['title'] + '</a>' if 'title' in row_item else ''
-    - Started: |
+    - Modified: |
         row_item['modtime'] if 'modtime' in row_item else ''
     - Delete: |
         action_button_html(url_action('delete', filename=row_item['filename'], session=row_item['session']), color='warning', label='Delete') if 'title' in row_item else action_button_html(url_action('delete_all'), color='danger', label='Delete All')
   ---
+  table css class: table table-striped
   prevent going back: True
   mandatory: True
   question: |
@@ -11712,7 +11727,7 @@
     Please watch this introductory video
     before proceeding with the interview.
   video: |
-    [VIMEO 96044910]
+    [VIMEO 154323013]
 "with-mandatory": |-
   question: |
     How are you doing?

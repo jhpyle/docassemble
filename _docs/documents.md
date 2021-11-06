@@ -1391,15 +1391,13 @@ variables`.  In other cases, you will need to manually format your
 numbers, for example by writing something like `${ '%.3f' %
 ounces_of_gold }`.
 
-<a name="skip undefined"></a>If you want to assemble a PDF with `pdf
-template file` and produce a file even if some of the variables needed
-for the fields are undefined, set `skip undefined` to `True`.  If
-`skip undefined` is true, then blanks will be substituted for any
-fields for which a value cannot be determined due to a variable being
-undefined.  You can also set `skip undefined` to a Python expression
-that evaluates to a true or false value.  This setting also works with
-`docx template file` when `field code`, `code`, or `field variables`
-is used.
+<a name="skip undefined"></a>If you want to assemble a document with
+`pdf template file` or `docx template file` and produce a file even if
+some of the variables needed for the fields are undefined, set `skip
+undefined` to `True`.  If `skip undefined` is true, then blanks will
+be substituted for any fields for which a value cannot be determined
+due to a variable being undefined.  You can also set `skip undefined`
+to a Python expression that evaluates to a true or false value.
 
 The `skip undefined` setting should only be used if the document does
 not need to be robust.  For example, it could be used to show the user

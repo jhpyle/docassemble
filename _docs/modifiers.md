@@ -119,42 +119,17 @@ system.  Currently, **docassemble** can handle videos uploaded in
 another type of video, **docassemble**'s source code can probably be
 modified to support that video type.
 
-You can also use the `video` specifier to embed [YouTube] and
-[Vimeo] videos.  For example, if you want to embed a [YouTube] video
-and the URL for the video is
-`https://www.youtube.com/watch?v=9bZkp7q19f0` or
+You can also use the `video` specifier to embed [YouTube] videos.  For
+example, if you want to embed a [YouTube] video and the URL for the
+video is `https://www.youtube.com/watch?v=9bZkp7q19f0` or
 `https://youtu.be/9bZkp7q19f0`, you would write something like this:
 
 {% include side-by-side.html demo="video" %}
 
-If you want to embed a [Vimeo] video, the URL of which is
-`https://vimeo.com/96044910`, you would write:
-
-{% include side-by-side.html demo="vimeo" %}
-
-Note that you could not have written the above as this:
-
-{% highlight yaml %}
----
-field: ready_to_proceed
-question: |
-  Welcome to the interview.
-subquestion: |
-  Please watch this introductory video
-  before proceeding with the interview.
-video: [VIMEO 96044910]
----
-{% endhighlight %}
-
-This would generate an error because [YAML] thinks square brackets
-indicate a list of items, not plain text.  If you want to write the
-specifier on one line, write `video: "[VIMEO 96044910]"`.
-
-`[YOUTUBE ...]` and `[VIMEO ...]` assume that the aspect ratio of the
-vide is 16:9.  If the aspect ratio of the video is 4:3, you can use
-`[YOUTUBE4:3 ...]` or `[VIMEO4:3 ...]`.  You can also explicitly state
-that the aspect ratio is 16:9 by using `[YOUTUBE16:9 ...]` or
-`[VIMEO16:9 ...]`
+`[YOUTUBE ...]` assumes that the aspect ratio of the vide is 16:9.  If
+the aspect ratio of the video is 4:3, you can use `[YOUTUBE4:3 ...]`.
+You can also explicitly state that the aspect ratio is 16:9 by using
+`[YOUTUBE16:9 ...]`.
 
 # <a name="help"></a>Providing `help` text to users
 
@@ -1001,7 +976,6 @@ by **docassemble**, so it can contain any valid [YAML].
 [HTML5 audio tag]: http://www.w3schools.com/html/html5_audio.asp
 [HTML5 video tag]: http://www.w3schools.com/html/html5_video.asp
 [YouTube]: https://www.youtube.com/
-[Vimeo]: https://vimeo.com/
 [`prevent_going_back()` function]: {{ site.baseurl }}/docs/functions.html#prevent_going_back
 [special variables]: {{ site.baseurl }}/docs/special.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
