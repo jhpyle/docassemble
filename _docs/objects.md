@@ -3632,6 +3632,81 @@ def make_blob(bucket_name, blob_name, blob_content):
   return blob
 {% endhighlight %}
 
+## <a name="DABreadCrumbs"></a>DABreadCrumbs
+
+The `DABreadCrumbs` object facilitates displaying "breadcrumbs" in the
+user interface to show the user where they are when the current
+[`question`] is the result of an [action] within an [action].
+
+In the following example interview, after reaching the "Thank you for
+your answers!" page, the user can launch an action within an action
+within an action by doing the following:
+
+1. Click the "edit your answers" link
+2. Click "Edit" on one of the table items
+3. Click the "types of fruit" link on the page that asks for a
+   person's favorite fruit.
+
+When the user enters a nested action like this, a "breadcrumbs"
+display may help make clear how the question they are seeing relates
+to the original [action] they launched.
+
+{% include side-by-side.html demo="breadcrumbs" %}
+
+A "breadcrumbs" display may be particularly helpful when you have a
+[`review`] screen that allows the user to spot-edit answers in a
+lengthy interview.  When an interview is long, it is a best practice
+to avoid having a very lengthy [`review`] screen and to instead allow
+the user to navigate through sub-screens to the field they want to
+edit.  For example, clicking an edit button on the main [`review`]
+screen could open a subsidiary review screen, on which clicking an
+edit button launches a process of editing several variables in
+series.  In a scenario like this, the breadcrumbs will help the user
+see the path they took from the original review screen.
+
+A `DABreadCrumbs` object does not store any data; it is simply a
+mechanism for accessing and displaying the [actions] that are
+currently active.  The core method of `DABreadCrumbs` is
+`.get_crumbs()`, which returns a Python `list` of breadcrumb names of
+the "parent" [`question`]s, followed by the current [`question`].  By
+default, the breadcrumb name of a [`question`] is the text indicated
+by the `question` specifier.  However, this can be overridden by
+attaching a [`breadcrumb` modifier] to the [`question`].  If the
+[`question`] the user is seeing is not the result of an [action], then
+`.get_crumbs()` returns an empty list.
+
+The `.show()` method returns raw HTML for displaying the breadcrumbs
+in [Bootstrap format].  If there are no breadcrumbs to display, the
+`.show()` method returns the empty string.
+
+In the above example interview, the breadcrumbs are inserted into the
+`pre` [screen part], but you can place them anywhere you want.
+
+Because `DABreadCrumbs` is a Python class, you can use Python to
+customize how it works.  Here is code you can copy and paste into your
+own module file and then customize as you see fit.
+
+{% highlight python %}
+from docassemble.base.util import DABreadCrumbs
+
+__all__ = ['MyBreadCrumbs']
+
+class MyBreadCrumbs(DABreadCrumbs):
+    def show(self):
+        crumbs = self.get_crumbs()
+        if len(crumbs) < 2:
+            return ''
+        last_indexno = len(crumbs) - 1
+        return self.container(self.inner(item['breadcrumb'], indexno == last_indexno) for indexno, item in enumerate(crumbs))
+    def container(self, items):
+        return '<nav class="da-breadcrumb mt-2" aria-label="' + word('breadcrumb') + '"><ol class="breadcrumb">' + ''.join(items) + '</ol></nav>\n'
+    def inner(self, label, active):
+        if active:
+            return '<li class="da-breadcrumb-item breadcrumb-item">' + label + '</li>'
+        else:
+            return '<li class="da-breadcrumb-item breadcrumb-item active" aria-current="page">' + label + '</li>'
+{% endhighlight %}
+
 # <a name="person classes"></a>Classes for information about people and things
 
 ## <a name="Thing"></a>Thing
@@ -6865,3 +6940,9 @@ the `_uid` of the table rather than the `id`.
 [PyPDF2]: https://pythonhosted.org/PyPDF2/
 [ARM]: https://en.wikipedia.org/wiki/ARM_architecture
 [`button colors`]: {{ site.baseurl }}/docs/config.html#button colors
+[action]: {{ site.baseurl }}/docs/background.html#url_action
+[actions]: {{ site.baseurl }}/docs/background.html#url_action
+[screen part]: {{ site.baseurl }}/docs/questions.html#screen parts
+[`breadcrumb` modifier]: {{ site.baseurl }}/docs/modifiers.html#breadcrumb
+[Bootstrap format]: https://getbootstrap.com/docs/4.0/components/breadcrumb/
+[`review`]: {{ site.baseurl }}/docs/fields.html#review

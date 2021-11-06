@@ -4,7 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [1.3.0](https://github.com/jhpyle/docassemble/releases/tag/v1.3.0) - 2021-11-05
+## [1.3.2](https://github.com/jhpyle/docassemble/releases/tag/v1.3.2) - 2021-11-06
+
+### Added
+- The `DABreadCrumbs` class for displaying a breadcrumbs UI to the
+  user when the current question is the result of a nested action.
+
+## [1.3.1](https://github.com/jhpyle/docassemble/releases/tag/v1.3.1) - 2021-11-05
 
 ### Added
 - The `button colors` Configuration directive for customizing the

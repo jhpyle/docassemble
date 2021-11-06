@@ -1060,6 +1060,22 @@
     on the tree?
   fields:
     - Length: tree.branch.length
+"breadcrumbs": "objects:\n  - bc: DABreadCrumbs\n---\ndefault screen parts:\n  pre:\
+  \ |\n    ${ bc.show() }\n---\nbreadcrumb: Edit person\nquestion: |\n  Who is the\
+  \ ${ ordinal(i) } person?\nfields:\n  - First Name: person[i].name.first\n  - Last\
+  \ Name: person[i].name.last\n---\nbreadcrumb: Edit fruit\nquestion: |\n  What is\
+  \ ${ person[i].possessive('favorite fruit') }?\nsubquestion: |\n  Make sure you\
+  \ indicate\n  ${ person[i].possessive('most favorite fruit') },\n  taking into account\
+  \ all of the\n  [types of fruit](${ url_action('explore_fruit') }) that exist in\
+  \ the\n  universe.\nfields:\n  - Fruit: person[i].favorite_fruit\n---\nbreadcrumb:\
+  \ Edit answers\nquestion: |\n  Edit your answers\nreview:\n  - note: |\n      %\
+  \ if len(person):\n      The people are:\n\n      ${ person.table }\n      \n  \
+  \    ${ person.add_action() }\n      % else:\n      There are no people.\n\n   \
+  \   ${ person.add_action(\"I would like to add one.\") }\n      % endif\nevent:\
+  \ review_interview\n---\nbreadcrumb: Fruit types\nquestion: Types of fruit\nsubquestion:\
+  \ |\n  There are several types of fruit, including:\n\n  * apple\n  * orange\n \
+  \ * grapes\n  * peach\n  * lemon\n  * grapefruit\n  * pear\n  * lime\n  * mango\n\
+  \  * tomato\n  * melon\ncontinue button field: explore_fruit"
 "buttons": |-
   question: |
     What type of belly button do you
