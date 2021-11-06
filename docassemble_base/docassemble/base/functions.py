@@ -136,23 +136,10 @@ def pop_current_variable():
     #logmessage("pop_current_variable: None")
     return None
 
-def wrap_up(the_user_dict):
+def wrap_up():
     while len(this_thread.open_files):
         file_object = this_thread.open_files.pop()
         file_object.commit()
-    # while len(this_thread.template_vars):
-    #     saveas = this_thread.template_vars.pop()
-    #     #logmessage('wrap_up: deleting ' + saveas)
-    #     try:
-    #         exec('del ' + saveas, user_dict)
-    #     except:
-    #         pass
-    # while len(this_thread.temporary_resources):
-    #     the_resource = this_thread.temporary_resources.pop()
-    #     if os.path.isdir(the_resource):
-    #         shutil.rmtree(the_resource)
-    #     elif os.path.isfile(the_resource):
-    #         os.remove(the_resource)
 
 def set_gathering_mode(mode, instanceName):
     #logmessage("set_gathering_mode: " + str(instanceName) + " with mode " + str(mode))
@@ -4862,3 +4849,10 @@ class ServerContext:
 
 server_context = ServerContext()
 server_context.context = 'web'
+
+def get_action_stack():
+    try:
+        stack = copy.deepcopy(this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']])
+    except:
+        stack = []
+    return [item for item in reversed(stack) if 'breadcrumb' in item]

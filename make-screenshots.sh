@@ -89,6 +89,9 @@ do
     elif [ "$file" = "review-edit-list" ]
     then
 	echo -e -n "\n    Then I should see the phrase \"Who is the first person?\"\n    And I set \"First Name\" to \"John\"\n    And I set \"Last Name\" to \"Smith\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"What is John Smith’s favorite fruit?\"\n    And I set \"Fruit\" to \"apples\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Are there any more people you would like to mention?\"\n    And I click the button \"Yes\"\n    Then I should see the phrase \"Who is the second person?\"\n    And I set \"First Name\" to \"Jane\"\n    And I set \"Last Name\" to \"Doe\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"What is Jane Doe’s favorite fruit?\"\n    And I set \"Fruit\" to \"kiwi\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Are there any more people you would like to mention?\"\n    And I click the button \"No\"\n    Then I should see the phrase \"Who is your favorite person?\"\n    And I select \"Jane Doe\" as the \"Favorite\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Thank you for your answers!\"\n    And I should see the phrase \"The people are John Smith and Jane Doe and your favorite is Jane Doe.\"\n    And I click the link \"edit your answers\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
+    elif [ "$file" = "breadcrumbs" ]
+    then
+	echo -e -n "\n    Then I should see the phrase \"Who is the first person?\"\n    And I set \"First Name\" to \"John\"\n    And I set \"Last Name\" to \"Smith\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"What is John Smith’s favorite fruit?\"\n    And I set \"Fruit\" to \"apples\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Are there any more people you would like to mention?\"\n    And I click the button \"Yes\"\n    Then I should see the phrase \"Who is the second person?\"\n    And I set \"First Name\" to \"Jane\"\n    And I set \"Last Name\" to \"Doe\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"What is Jane Doe’s favorite fruit?\"\n    And I set \"Fruit\" to \"peaches\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Are there any more people you would like to mention?\"\n    And I click the button \"No\"\n    Then I should see the phrase \"Thank you for your answers!\"\n    And I click the link \"edit your answers\"\n    Then I should see the phrase \"Edit your answers\"\n    And I click the first link \" Edit\"\n    And I click the button \"Continue\"\n    And I click the link \"types of fruit\"\n    Then I should see the phrase \"Fruit types\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
     else
 	echo -e -n "\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
     fi
@@ -110,6 +113,7 @@ do
     area=${col[1]}
     tempfile=${col[2]}
     if [ "$file" = "signature" -o \
+         "$file" = "breadcrumbs" -o \
 	 "$file" = "metadata" -o \
 	 "$file" = "no-mandatory" -o \
          "$file" = "help" -o \

@@ -303,7 +303,8 @@ __all__ = [
     'stash_data',
     'retrieve_stashed_data',
     'update_terms',
-    'chain'
+    'chain',
+    'DABreadCrumbs'
 ]
 
 #knn_machine_learner = DummyObject
@@ -3406,3 +3407,20 @@ def retrieve_stashed_data(stash_key, secret, delete=False, refresh=False):
     if refresh and not (isinstance(refresh, int) and refresh > 0):
         refresh = 60*60*24*90
     return server.retrieve_stashed_data(stash_key, secret, delete=delete, refresh=refresh)
+
+class DABreadCrumbs(DAObject):
+    def get_crumbs(self):
+        return docassemble.base.functions.get_action_stack()
+    def show(self):
+        crumbs = self.get_crumbs()
+        if len(crumbs) < 2:
+            return ''
+        last_indexno = len(crumbs) - 1
+        return self.container(self.inner(item['breadcrumb'], indexno == last_indexno) for indexno, item in enumerate(crumbs))
+    def container(self, items):
+        return '<nav class="da-breadcrumb mt-2" aria-label="' + word('breadcrumb') + '"><ol class="breadcrumb">' + ''.join(items) + '</ol></nav>\n'
+    def inner(self, label, active):
+        if active:
+            return '<li class="da-breadcrumb-item breadcrumb-item">' + label + '</li>'
+        else:
+            return '<li class="da-breadcrumb-item breadcrumb-item active" aria-current="page">' + label + '</li>'

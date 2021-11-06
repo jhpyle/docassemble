@@ -1,0 +1,109 @@
+metadata:
+  title: Breadcrumbs
+  documentation: "https://docassemble.org/docs/objects.html#DABreadCrumbs"
+  example start: 1
+  example end: 6
+---
+objects:
+  - bc: DABreadCrumbs
+---
+default screen parts:
+  pre: |
+    ${ bc.show() }
+---
+breadcrumb: Edit person
+question: |
+  Who is the ${ ordinal(i) } person?
+fields:
+  - First Name: person[i].name.first
+  - Last Name: person[i].name.last
+---
+breadcrumb: Edit fruit
+question: |
+  What is ${ person[i].possessive('favorite fruit') }?
+subquestion: |
+  Make sure you indicate
+  ${ person[i].possessive('most favorite fruit') },
+  taking into account all of the
+  [types of fruit](${ url_action('explore_fruit') }) that exist in the
+  universe.
+fields:
+  - Fruit: person[i].favorite_fruit
+---
+breadcrumb: Edit answers
+question: |
+  Edit your answers
+review:
+  - note: |
+      % if len(person):
+      The people are:
+
+      ${ person.table }
+
+      ${ person.add_action() }
+      % else:
+      There are no people.
+
+      ${ person.add_action("I would like to add one.") }
+      % endif
+event: review_interview
+---
+breadcrumb: Fruit types
+question: Types of fruit
+subquestion: |
+  There are several types of fruit, including:
+
+  * apple
+  * orange
+  * grapes
+  * peach
+  * lemon
+  * grapefruit
+  * pear
+  * lime
+  * mango
+  * tomato
+  * melon
+continue button field: explore_fruit
+---
+objects:
+  - person: DAList.using(object_type=Individual,
+                         there_are_any=True,
+                         complete_attribute='complete')
+---
+code: |
+  person[i].name.first
+  person[i].favorite_fruit
+  person[i].complete = True
+---
+question: |
+  Are there any more people
+  you would like to mention?
+yesno: person.there_is_another
+---
+table: person.table
+rows: person
+columns:
+  - Name: |
+      row_item.name.full()
+  - Fruit: |
+      row_item.favorite_fruit
+edit:
+  - name.first
+  - favorite_fruit
+---
+event: final_screen
+question: |
+  Thank you for your answers!
+subquestion: |
+  The people are ${ person }.
+
+  You can
+  [edit your answers](${ url_action('review_interview') })
+  if you want.
+---
+mandatory: True
+code: |
+  person.gather()
+  person.table
+  final_screen

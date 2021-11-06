@@ -377,8 +377,6 @@ class InterviewStatus:
         self.can_go_back = True
         self.attachments = None
         self.linkcounter = 0
-        #restore this, maybe
-        #self.next_action = list()
         self.embedded = set()
         self.extras = dict()
         self.followed_mc = False
@@ -685,7 +683,6 @@ class InterviewStatus:
         self.selectcompute = question_result['selectcompute']
         self.defaults = question_result['defaults']
         self.other_defaults = dict()
-        #self.defined = question_result['defined']
         self.hints = question_result['hints']
         self.helptexts = question_result['helptexts']
         self.extras = question_result['extras']
@@ -818,6 +815,9 @@ class InterviewStatus:
                 result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, status=self, verbatim=(not encode))
                 if debug:
                     output['question'] += result[param]
+        if hasattr(self, 'breadcrumb') and self.breadcrumb is not None:
+            output['breadcrumb label'] = self.breadcrumb
+        output['breadcrumbs'] = docassemble.base.functions.get_action_stack()
         if hasattr(self, 'subquestionText') and self.subquestionText is not None:
             if self.question.question_type == "fields":
                 embedder = dummy_embed_input
@@ -1841,6 +1841,7 @@ class Question:
         self.embeds = False
         self.helptext = None
         self.subcontent = None
+        self.breadcrumb = None
         self.reload_after = None
         self.continuelabel = None
         self.backbuttonlabel = None
@@ -1877,7 +1878,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb'):
                     logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -3018,6 +3019,8 @@ class Question:
             self.content = TextObject(definitions + str(data['question']), question=self)
         if 'subquestion' in data:
             self.subcontent = TextObject(definitions + str(data['subquestion']), question=self)
+        if 'breadcrumb' in data:
+            self.breadcrumb = TextObject(definitions + str(data['breadcrumb']), question=self)
         if 'reload' in data and data['reload']:
             self.reload_after = TextObject(definitions + str(data['reload']), question=self)
         if 'help' in data:
@@ -4925,11 +4928,19 @@ class Question:
             docassemble.base.functions.undefine(the_field)
         if len(self.reconsider) > 0:
             docassemble.base.functions.reconsider(*self.reconsider)
-        question_text = self.content.text(user_dict)
+        question_text = self.content.text(user_dict).rstrip()
+        if self.breadcrumb is not None:
+            breadcrumb = self.breadcrumb.text(user_dict).rstrip()
+        else:
+            breadcrumb = None
+        try:
+            user_dict['_internal']['event_stack'][docassemble.base.functions.this_thread.current_info['user']['session_uid']][0]['breadcrumb'] = question_text if breadcrumb is None else breadcrumb
+        except:
+            pass
         #logmessage("Asking " + str(question_text))
         #sys.stderr.write("Asking " + str(question_text) + "\n")
         if self.subcontent is not None:
-            subquestion = self.subcontent.text(user_dict)
+            subquestion = self.subcontent.text(user_dict).rstrip()
         else:
             subquestion = None
         the_default_titles = dict()
@@ -7548,7 +7559,7 @@ class Interview:
             while True:
                 number_loops += 1
                 if number_loops > self.loop_limit:
-                    docassemble.base.functions.wrap_up(user_dict)
+                    docassemble.base.functions.wrap_up()
                     raise DAError("There appears to be a circularity.  Variables involved: " + ", ".join(variables_sought) + ".")
                 docassemble.base.functions.reset_gathering_mode()
                 if 'action' in interview_status.current_info:
@@ -7709,7 +7720,6 @@ class Interview:
                         #logmessage("assemble: got a ForcedNameError for " + str(the_exception.name))
                         follow_mc = False
                         seeking_question = True
-                        #logmessage("next action is " + repr(the_exception.next_action))
                         if the_exception.next_action is not None and not interview_status.checkin:
                             if 'event_stack' not in user_dict['_internal']:
                                 user_dict['_internal']['event_stack'] = dict()
@@ -7726,7 +7736,6 @@ class Interview:
                                     new_items.append(new_item)
                             if len(new_items):
                                 user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
-                            #interview_status.next_action.extend(the_exception.next_action)
                             if the_exception.name.startswith('_da_'):
                                 continue
                             docassemble.base.functions.this_thread.misc['forgive_missing_question'] = [the_exception.name]
@@ -7896,7 +7905,7 @@ class Interview:
                     #logmessage("Regular attributeerror")
                     docassemble.base.functions.reset_context()
                     #logmessage(str(the_error.args))
-                    docassemble.base.functions.wrap_up(user_dict)
+                    docassemble.base.functions.wrap_up()
                     raise DAError('Got error ' + str(the_error) + " " + traceback.format_exc() + "\nHistory was " + pprint.pformat(interview_status.seeking))
                 except MandatoryQuestion:
                     #logmessage("MandatoryQuestion")
@@ -7917,7 +7926,7 @@ class Interview:
                         the_question = question
                     except:
                         pass
-                    docassemble.base.functions.wrap_up(user_dict)
+                    docassemble.base.functions.wrap_up()
                     if the_question is not None:
                         raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
                     raise DAError("no question available: " + str(qError))
@@ -7929,12 +7938,12 @@ class Interview:
                         the_question = question
                     except:
                         pass
-                    docassemble.base.functions.wrap_up(user_dict)
+                    docassemble.base.functions.wrap_up()
                     if the_question is not None:
                         raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
                     raise DAError("no question available: " + str(qError))
                 else:
-                    docassemble.base.functions.wrap_up(user_dict)
+                    docassemble.base.functions.wrap_up()
                     raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
         except Exception as the_error:
             #logmessage("Untrapped exception")
@@ -7951,10 +7960,9 @@ class Interview:
             raise the_error
         if docassemble.base.functions.this_thread.prevent_going_back:
             interview_status.can_go_back = False
-        docassemble.base.functions.wrap_up(user_dict)
+        docassemble.base.functions.wrap_up()
         if self.debug:
             interview_status.seeking.append({'done': True, 'time': time.time()})
-        #return(pickleable_objects(user_dict))
     def load_util(self, the_user_dict):
         if not self.imports_util:
             if not self.consolidated_metadata.get('suppress loading util', False):
@@ -8468,7 +8476,6 @@ class Interview:
                     seeking_question = True
                     #logmessage("Seeking question is True")
                     newMissingVariable = the_exception.name
-                    #logmessage("next action is " + repr(the_exception.next_action))
                     if the_exception.next_action is not None and not interview_status.checkin:
                         if 'event_stack' not in user_dict['_internal']:
                             user_dict['_internal']['event_stack'] = dict()
@@ -8486,7 +8493,6 @@ class Interview:
                                 new_items.append(new_item)
                         if len(new_items):
                             user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
-                        #interview_status.next_action.extend(the_exception.next_action)
                     if the_exception.arguments is not None:
                         docassemble.base.functions.this_thread.current_info.update(dict(action=the_exception.name, arguments=the_exception.arguments))
                     if the_exception.name.startswith('_da_'):
