@@ -1,5 +1,34 @@
 # Change Log
 
+## [1.3.0] - 2021-11-05
+### Added
+- The `button colors` Configuration directive for customizing the
+  Bootstrap colors of buttons.
+- The `label above field` modifer that puts the label above the field
+  for a specific field, which is preferable to using `no label` in
+  combination with a `note`.
+- The `login link style` Configuration directive for enabling
+  separate "Sign up" and "Sign in" buttons in the upper right corner
+  instead of "Sign in or sign up to save answers."
+### Changed
+- Changed the default color of `review` screen edit buttons and the
+  "add another" button from Bootstrap `success` (green) to `secondary`
+  (grey).
+- Added the Font Awesome pencil icon to `review` screen edit buttons.
+- Substituted a different Font Awesome icon for the selected radio
+  button option so that it is not the same as the icon for a selected
+  checkbox option.
+- Changed the left arrow icon in the "back to question" button so that
+  it matches the left arrow icon of "Back."
+- Added a light grey background color behind `review` screen `button`
+  items to help differentiate the sections of a review screen.
+- When `question help button` is used, the question-related help now
+  appears below the buttons, and the navigation bar help only
+  displays the `interview help` (if present).
+### Fixed
+- Inactive sections in the `sections` sidebar are no longer `<a>`
+  elements that screen readers may describe as clickable.
+
 ## [1.2.108] - 2021-10-29
 ### Fixed
 - On reset, kill zombie LibreOffice processes that might prevent

@@ -1848,7 +1848,7 @@ class DAList(DAObject):
         index = the_args.pop(0)
         output = ''
         if kwargs.get('reorder', False):
-            output += '<span class="text-nowrap"><a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + 'info btn-darevisit datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fas fa-arrow-up"></i><span class="sr-only">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + 'info btn-darevisit databledown"><i class="fas fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="sr-only">' + word("Move down") + '</span></a></span> '
+            output += '<span class="text-nowrap"><a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fas fa-arrow-up"></i><span class="sr-only">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit databledown"><i class="fas fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="sr-only">' + word("Move down") + '</span></a></span> '
         if self.minimum_number is not None and len(self.elements) <= self.minimum_number:
             can_delete = False
         else:
@@ -1877,20 +1877,22 @@ class DAList(DAObject):
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             if ensure_complete:
                 items += [dict(action='_da_list_ensure_complete', arguments=dict(group=self.instanceName))]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'secondary btn-darevisit"><span class="text-nowrap"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</span></a> '
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit"><span class="text-nowrap"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</span></a> '
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'danger btn-darevisit' + areyousure +'"><span class="text-nowrap"><i class="fas fa-trash"></i> ' + word('Delete') + '</span></a>'
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure +'"><span class="text-nowrap"><i class="fas fa-trash"></i> ' + word('Delete') + '</span></a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):
             return docassemble.base.functions.url_action('_da_list_remove', dict=self.instanceName, item=repr(index))
         return output
-    def add_action(self, label=None, message=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
+    def add_action(self, label=None, message=None, url_only=False, icon='plus-circle', color=None, size='sm', block=None, classname=None):
         """Returns HTML for adding an item to a list"""
+        if color is None:
+            color = server.daconfig['button colors'].get('add', 'secondary')
         if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
             color = 'success'
         if size not in ('sm', 'md', 'lg'):
@@ -2725,20 +2727,22 @@ class DADict(DAObject):
                 items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
             if ensure_complete:
                 items += [dict(action='_da_dict_ensure_complete', arguments=dict(group=self.instanceName))]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'secondary btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + 'danger btn-darevisit' + areyousure + '"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure + '"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_dict_edit', items=items)
         if kwargs.get('delete_url_only', False):
             return docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
         return output
-    def add_action(self, label=None, message=None, url_only=False, icon='plus-circle', color='success', size='sm', block=None, classname=None):
+    def add_action(self, label=None, message=None, url_only=False, icon='plus-circle', color=None, size='sm', block=None, classname=None):
         """Returns HTML for adding an item to a dict"""
+        if color is None:
+            color = server.daconfig['button colors'].get('add', 'secondary')
         if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
             color = 'success'
         if size not in ('sm', 'md', 'lg'):

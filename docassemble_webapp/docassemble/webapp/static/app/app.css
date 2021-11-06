@@ -1054,7 +1054,7 @@ div.danavnested {
     padding-left: 20px;
 }
 
-div.danav-horiz a.danavlink {
+div.danav-horiz .danavlink {
     align-self: flex-end !important;
     text-align: center;
 }
@@ -1070,11 +1070,11 @@ div.danavnested-horiz {
 	padding: 0.5rem 0.25rem 0.4rem 0.25rem;
     }
 
-    div.danav-horiz > a.danotavailableyet {
+    div.danav-horiz > .danotavailableyet {
 	border-width: 0;
     }
 
-    div.danav-horiz > a.inactive {
+    div.danav-horiz > .inactive {
 	border-width: 0;
     }
 }
@@ -1085,16 +1085,14 @@ div.danavnested-horiz {
     }
 }
 
-.danav > a.danotavailableyet {
-    color: #aaa;
+.danav > .danotavailableyet {
     text-decoration: inherit;
     background-color: inherit;
     outline-offset: inherit;
 }
 
-.danav > a.danotavailableyet:hover,
-.danav > a.danotavailableyet:focus {
-    color: #aaa;
+.danav > .danotavailableyet:hover,
+.danav > .danotavailableyet:focus {
     text-decoration: inherit;
     background-color: inherit;
     outline-offset: inherit;
@@ -1108,7 +1106,12 @@ div.dasections {
     line-height: 45px;
 }
 
-div.dainline a  {
+div.dainline a {
+    position: relative;
+    font-weight: bold;
+}
+
+div.dainline span {
     position: relative;
     font-weight: bold;
 }
@@ -1123,11 +1126,15 @@ div.dainline a {
     vertical-align: middle;
 }
 
+div.dainline span {
+    vertical-align: middle;
+}
+
 div.dainline > div {
     font-weight: normal;
 }
 
-div.dasections a.btn {
+div.dasections .btn {
     font-size: 18px;
     cursor: text !important;
     padding: 5px 5px 5px 5px;
@@ -1145,7 +1152,7 @@ div.dainlineinside {
     display: inline;
 }
 
-div.dasections div.dainlineinside a.btn {
+div.dasections div.dainlineinside .btn {
     font-size: 14px;
     margin-top: 2px;
     margin-bottom: 2px;
@@ -1155,18 +1162,18 @@ div.danavdiv {
     margin-top: 30px;
 }
 
-a.danavlink {
+.danavlink {
     cursor: text;
     position: relative;
 }
 
-a.danavlink .toggler {
+.danavlink .toggler {
     position: absolute;
     left: 0;
     cursor: pointer;
 }
 
-a.danavlink .toggler:hover {
+.danavlink .toggler:hover {
     text-decoration: none;
 }
 
@@ -1749,4 +1756,8 @@ input::-webkit-inner-spin-button {
 
 input[type=number] {
   -moz-appearance: textfield;
+}
+
+.da-review-button {
+  border-radius: 0.25rem;
 }

@@ -848,6 +848,11 @@ def logout():
                 next = get_base_url() + next
             next = ('https://' + daconfig['oauth']['keycloak']['domain'] + '/auth/realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/logout?' + urlencode(dict(post_logout_redirect_uri=next))
             )
+    else:
+        if session.get('language', None) and session['language'] != DEFAULT_LANGUAGE:
+            next = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
+        else:
+            next = _endpoint_url(user_manager.after_logout_endpoint)
     set_cookie = False
     docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
@@ -1276,6 +1281,7 @@ elif daconfig['button style'] == 'outline':
     app.config['BUTTON_STYLE'] = 'btn-outline-'
 else:
     app.config['BUTTON_STYLE'] = 'btn-'
+BUTTON_COLOR_NAV_LOGIN = daconfig['button colors'].get('navigation bar login', 'primary')
 
 page_parts = dict()
 if 'global footer' in daconfig:
@@ -2573,6 +2579,9 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
         inner_div_extra = ''
     if a_class is None:
         a_class = 'nav-link danavlink'
+        muted_class = ' text-muted'
+    else:
+        muted_class = ''
     #logmessage("navigation_bar: starting: " + str(section))
     the_language = docassemble.base.functions.get_language()
     if hasattr(nav, 'progressive') and not nav.progressive:
@@ -2678,18 +2687,18 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             #url = docassemble.base.functions.interview_url_action(the_key)
             if section_reached and not currently_active and not seen_more:
-                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet">' + str(the_title) + '</a>'
+                output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(the_title) + '</span>'
             else:
                 if active_class == '' and not (seen_more and not section_reached):
-                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + str(the_title) + '</a>'
+                    output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive' + muted_class + '">' + str(the_title) + '</span>'
                 else:
                     output += '<a href="#" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="daclickable ' + a_class + active_class + '">' + str(the_title) + '</a>'
         else:
             if section_reached and not currently_active and not seen_more:
-                output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet">' + str(the_title) + '</a>'
+                output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(the_title) + '</span>'
             else:
                 if active_class == '' and not (seen_more and not section_reached):
-                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive">' + str(the_title) + '</a>'
+                    output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive' + muted_class + '">' + str(the_title) + '</span>'
                 else:
                     output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + str(the_title) + '</a>'
         suboutput = ''
@@ -2746,9 +2755,9 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
                     suboutput += '<a href="#" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="daclickable ' + a_class + sub_active_class + '">' + str(sub_title) + '</a>'
                 else:
                     if section_reached and not sub_currently_active and not seen_more:
-                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet">' + str(sub_title) + '</a>'
+                        suboutput += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(sub_title) + '</span>'
                     else:
-                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + str(sub_title) + '</a>'
+                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive' + muted_class + '">' + str(sub_title) + '</a>'
                 #suboutput += "</li>"
             if currently_active or current_is_within or hide_inactive_subs is False or show_nesting:
                 if currently_active or current_is_within or auto_open:
@@ -2862,7 +2871,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if extra_class is not None:
         fixed_top += ' ' + extra_class
     navbar = """\
-    <div class="navbar""" + fixed_top + """ navbar-expand-md """ + inverse + '"' + """>
+    <div class="navbar""" + fixed_top + """ navbar-expand-md """ + inverse + '"' + """ role="banner">
       <div class="container danavcontainer justify-content-start">
 """
     if status.question.can_go_back and steps > 1:
@@ -2888,9 +2897,11 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
 """
     help_message = word("Help is available")
     help_label = None
-    for help_section in status.helpText:
-        if status.question.interview.question_help_button and help_section['from'] == 'question':
-            continue
+    if status.question.interview.question_help_button:
+        the_sections = status.interviewHelpText
+    else:
+        the_sections = status.helpText + status.interviewHelpText
+    for help_section in the_sections:
         if help_section['label']:
             help_label = help_section['label']
             break
@@ -2910,7 +2921,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         source_button = ''
         source_menu_item = ''
     navbar += '        <ul class="nav navbar-nav damynavbar-right">' + source_button + '<li class="nav-item dainvisible"><a class="nav-link" id="daquestionlabel" href="#daquestion" data-target="#daquestion">' + word('Question') + '</a></li>'
-    if len(status.helpText):
+    if len(status.interviewHelpText) or (len(status.helpText) and not status.question.interview.question_help_button):
         if status.question.helptext is None or status.question.interview.question_help_button:
             navbar += '<li class="nav-item"><a class="dapointer da-no-outline nav-link dahelptrigger" href="#dahelp" data-target="#dahelp" id="dahelptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
         else:
@@ -2954,7 +2965,17 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
             if custom_menu:
                 navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
             else:
-                navbar += '            <li class="nav-item"><a class="nav-link" href="' + login_url + '">' + sign_in_text + '</a></li>'
+                if daconfig.get('login link style', 'normal') == 'button':
+                    if ALLOW_REGISTRATION:
+                        if daconfig.get('resume interview after login', False):
+                            register_url = url_for('user.register', next=url_for('index', **index_params))
+                        else:
+                            register_url = url_for('user.register')
+                        navbar += '            <li class="nav-item"><a class="nav-link" href="' + register_url + '">' + word('Sign up') + '</a></li>'
+                        navbar += '            <li class="nav-item"><a class="nav-link d-block d-md-none" href="' + login_url + '">' + word('Sign in') + '</a>'
+
+                else:
+                    navbar += '            <li class="nav-item"><a class="nav-link" href="' + login_url + '">' + sign_in_text + '</a></li>'
         else:
             if (custom_menu is False or custom_menu == '') and status.question.interview.options.get('hide standard menu', False):
                 navbar += '            <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
@@ -3004,7 +3025,10 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         else:
             navbar += '            <li class="nav-item"><a class="nav-link" href="' + exit_href(status) + '">' + status.exit_label + '</a></li>'
     navbar += """
-          </ul>
+          </ul>"""
+    if daconfig.get('login link style', 'normal') == 'button' and show_login and current_user.is_anonymous and not custom_menu:
+        navbar += '\n          <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ml-3 d-none d-md-block" href="' + login_url + '">' + word('Sign in') + '</a>'
+    navbar += """
         </div>
       </div>
     </div>
@@ -10358,11 +10382,11 @@ def index(action_argument=None, refer=None):
         if (daPhoneAvailable){
           $("#daPhoneAvailable").removeClass("dainvisible");
         }
-        $("#daquestionhelpbutton").on('click', function(event){
-          event.preventDefault();
-          $('#dahelptoggle').tab('show');
-          return false;
-        });
+        //$("#daquestionhelpbutton").on('click', function(event){
+        //  event.preventDefault();
+        //  $('#dahelptoggle').tab('show');
+        //  return false;
+        //});
         $(".daquestionbackbutton").on('click', function(event){
           event.preventDefault();
           $("#dabackbutton").submit();
@@ -10964,8 +10988,8 @@ def index(action_argument=None, refer=None):
         if (daTriggerQueries.length > 0){
           daTriggerAllShowHides();
         }
-        $("a.danavlink").last().addClass('thelast');
-        $("a.danavlink").each(function(){
+        $(".danavlink").last().addClass('thelast');
+        $(".danavlink").each(function(){
           if ($(this).hasClass('btn') && !$(this).hasClass('danotavailableyet')){
             var the_a = $(this);
             var the_delay = 1000 + 250 * parseInt($(this).data('index'));
@@ -11583,12 +11607,12 @@ def index(action_argument=None, refer=None):
     output += content
     if 'rightText' in interview_status.extras:
         if interview_status.using_navigation == 'vertical':
-            output += '          <section id="daright" class="d-none d-lg-block col-lg-3 col-xl-2 daright">\n'
+            output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-3 col-xl-2 daright">\n'
         else:
             if interview_status.question.interview.flush_left:
-                output += '          <section id="daright" class="d-none d-lg-block col-lg-6 col-xl-5 daright">\n'
+                output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-6 col-xl-5 daright">\n'
             else:
-                output += '          <section id="daright" class="d-none d-lg-block col-lg-3 col-xl-3 daright">\n'
+                output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-3 col-xl-3 daright">\n'
         output += docassemble.base.util.markdown_to_html(interview_status.extras['rightText'], trim=False, status=interview_status) + "\n"
         output += '          </section>\n'
     output += "      </div>\n"
@@ -13586,8 +13610,8 @@ def observer():
         if (daTriggerQueries.length > 0){
           daTriggerAllShowHides();
         }
-        $("a.danavlink").last().addClass('thelast');
-        $("a.danavlink").each(function(){
+        $(".danavlink").last().addClass('thelast');
+        $(".danavlink").each(function(){
           if ($(this).hasClass('btn') && !$(this).hasClass('danotavailableyet')){
             var the_a = $(this);
             var the_delay = 1000 + 250 * parseInt($(this).data('index'));

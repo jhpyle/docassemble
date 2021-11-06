@@ -369,6 +369,13 @@ def load(**kwargs):
             del daconfig['maximum content length']
     if 'maximum content length' not in daconfig:
         daconfig['maximum content length'] = 16 * 1024 * 1024
+    new_button_colors = dict()
+    if 'button colors' in daconfig and isinstance(daconfig['button colors'], dict):
+        for button_type, color in daconfig['button colors'].items():
+            if isinstance(button_type, str) and isinstance(color, str):
+                new_button_colors[button_type] = color
+    daconfig['button colors'] = new_button_colors
+    del new_button_colors
     if 'social' not in daconfig or not isinstance(daconfig['social'], dict):
         daconfig['social'] = dict()
     if 'twitter' not in daconfig['social'] or not isinstance(daconfig['social']['twitter'], dict):

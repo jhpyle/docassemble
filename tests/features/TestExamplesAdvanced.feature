@@ -220,7 +220,7 @@ Feature: Example interviews
     Then I should see the phrase "You live in Philadelphia County."
     And I click the link "Review your answers"
     Then I should see the phrase "This address is located in Philadelphia County."
-    And I click the link "Edit"
+    And I click the link " Edit"
     Then I should see the phrase "What is your address?"
     And I set "Street address" to "651 College Drive"
     And I set "City" to "Blackwood"

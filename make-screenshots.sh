@@ -151,6 +151,7 @@ do
          "$file" = "centered" -o \
          "$file" = "mainpage-demo-parts" -o \
          "$file" = "setparts-demo" -o \
+	 "$file" = "pre" -o \
          "$file" = "preview" -o \
          "$file" = "default-screen-parts-override" -o \
          "$file" = "metadata-screen-parts" -o \

@@ -679,6 +679,7 @@ class InterviewStatus:
         self.decorations = question_result['decorations']
         self.audiovideo = question_result['audiovideo']
         self.helpText = question_result['help_text']
+        self.interviewHelpText = question_result['interview_help_text']
         self.attachments = question_result['attachments']
         self.selectcompute = question_result['selectcompute']
         self.defaults = question_result['defaults']
@@ -746,6 +747,26 @@ class InterviewStatus:
                     continue
                 output['steps'].append(the_stage)
         return output
+    def convert_help(self, help_text, encode, debug):
+        the_help = dict()
+        if 'audiovideo' in help_text and help_text['audiovideo'] is not None:
+            audio_result = docassemble.base.filter.get_audio_urls(help_text['audiovideo'])
+            video_result = docassemble.base.filter.get_video_urls(help_text['audiovideo'])
+            if len(audio_result) > 0:
+                the_help['audio'] = [dict(url=x[0], mime_type=x[1]) for x in audio_result]
+            if len(video_result) > 0:
+                the_help['video'] = [dict(url=x[0], mime_type=x[1]) for x in video_result]
+        if 'content' in help_text and help_text['content'] is not None:
+            the_help['content'] = docassemble.base.filter.markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=(not encode))
+            if debug:
+                output['help'] += the_help['content']
+        if 'heading' in help_text and help_text['heading'] is not None:
+            the_help['heading'] = help_text['heading'].rstrip()
+            if debug:
+                output['help'] += '<p>' + the_help['heading'] + '</p>'
+        #elif len(self.helpText) > 1:
+        #    the_help['heading'] = word('Help with this question')
+        return the_help
     def as_data(self, the_user_dict, encode=True):
         result = dict(language=self.question.language)
         debug = self.question.interview.debug
@@ -777,7 +798,7 @@ class InterviewStatus:
                 for term, vals in self.extras['autoterms'].items():
                     result['autoterms'][term] = vals['definition']
             if lang in self.question.interview.autoterms and len(self.question.interview.autoterms[lang]):
-                for term, vals in question.interview.autoterms[lang].items():
+                for term, vals in self.question.interview.autoterms[lang].items():
                     result['autoterms'][term] = vals['definition']
             elif self.question.language in self.question.interview.autoterms and len(self.question.interview.autoterms[self.question.language]):
                 for term, vals in self.question.interview.autoterms[self.question.language].items():
@@ -877,25 +898,7 @@ class InterviewStatus:
             result['helpText'] = list()
             result['helpBackLabel'] = word("Back to question")
             for help_text in self.helpText:
-                the_help = dict()
-                if 'audiovideo' in help_text and help_text['audiovideo'] is not None:
-                    audio_result = docassemble.base.filter.get_audio_urls(help_text['audiovideo'])
-                    video_result = docassemble.base.filter.get_video_urls(help_text['audiovideo'])
-                    if len(audio_result) > 0:
-                        the_help['audio'] = [dict(url=x[0], mime_type=x[1]) for x in audio_result]
-                    if len(video_result) > 0:
-                        the_help['video'] = [dict(url=x[0], mime_type=x[1]) for x in video_result]
-                if 'content' in help_text and help_text['content'] is not None:
-                    the_help['content'] = docassemble.base.filter.markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=(not encode))
-                    if debug:
-                        output['help'] += the_help['content']
-                if 'heading' in help_text and help_text['heading'] is not None:
-                    the_help['heading'] = help_text['heading'].rstrip()
-                    if debug:
-                        output['help'] += '<p>' + the_help['heading'] + '</p>'
-                elif len(self.helpText) > 1:
-                    the_help['heading'] = word('Help with this question')
-                result['helpText'].append(the_help)
+                result['helpText'].append(self.convert_help(the_help, encode, debug))
             result['help'] = dict()
             if self.helpText[0]['label']:
                 result['help']['label'] = docassemble.base.filter.markdown_to_html(self.helpText[0]['label'], trim=True, do_terms=False, status=self, verbatim=(not encode))
@@ -903,6 +906,19 @@ class InterviewStatus:
                 result['help']['label'] = self.question.help()
             result['help']['title'] = word("Help is available for this question")
             result['help']['specific'] = False if self.question.helptext is None else True
+        if hasattr(self, 'interviewHelpText') and len(self.interviewHelpText) > 0:
+            result['interviewHelpText'] = list()
+            for help_text in self.interviewHelpText:
+                result['interviewHelpText'].append(self.convert_help(the_help, encode, debug))
+            if 'help' not in result:
+                result['help'] = dict()
+            if self.interviewHelpText[0]['label']:
+                result['help']['interviewLabel'] = docassemble.base.filter.markdown_to_html(self.interviewHelpText[0]['label'], trim=True, do_terms=False, status=self, verbatim=(not encode))
+            else:
+                result['help']['interviewLabel'] = self.question.help()
+            result['help']['interviewTitle'] = word("Help is available")
+            if not (hasattr(self, 'helpText') and len(self.helpText) > 0):
+                result['help']['specific'] = False
         if 'questionText' not in result and self.question.question_type == "signature":
             result['questionText'] = word('Sign Your Name')
             if debug:
@@ -1108,7 +1124,7 @@ class InterviewStatus:
                     if get_config('maximum content length') is not None:
                         the_field['max'] = get_config('maximum content length')
                         the_field['validation_messages']['max'] = field.validation_message('maxuploadsize', self, word("Your file upload is larger than the server can accept. Please reduce the size of your file upload."))
-            for param in ('datatype', 'fieldtype', 'sign', 'inputtype', 'address_autocomplete'):
+            for param in ('datatype', 'fieldtype', 'sign', 'inputtype', 'address_autocomplete', 'label_above_field'):
                 if hasattr(field, param):
                     the_field[param] = getattr(field, param)
             if hasattr(field, 'shuffle') and field.shuffle is not False:
@@ -1467,6 +1483,8 @@ class Field:
             self.validation_messages = data['validation messages']
         if 'address_autocomplete' in data:
             self.address_autocomplete = data['address_autocomplete']
+        if 'label_above_field' in data:
+            self.label_above_field = data['label_above_field']
         if 'max_image_size' in data:
             self.max_image_size = data['max_image_size']
         if 'image_type' in data:
@@ -1827,6 +1845,7 @@ class Question:
         self.backbuttonlabel = None
         self.cornerbackbuttonlabel = None
         self.helplabel = None
+        self.helpheading = None
         self.progress = None
         self.section = None
         self.script = None
@@ -3005,6 +3024,8 @@ class Question:
                 for key, value in data['help'].items():
                     if key == 'label':
                         self.helplabel = TextObject(definitions + str(value), question=self)
+                    if key == 'heading':
+                        self.helpheading = TextObject(definitions + str(value), question=self)
                     if key == 'audio':
                         if not isinstance(value, list):
                             the_list = [value]
@@ -3849,6 +3870,8 @@ class Question:
                                             self.find_fields_in(x)
                             elif key == 'address autocomplete':
                                 field_info['address_autocomplete'] = True
+                            elif key == 'label above field':
+                                field_info['label_above_field'] = True
                             elif key == 'action' and 'input type' in field and field['input type'] == 'ajax':
                                 if not isinstance(field[key], str):
                                     raise DAError("An action must be plain text" + self.idebug(data))
@@ -5134,13 +5157,17 @@ class Question:
                 helplabel = the_default_titles['help label']
             else:
                 helplabel = None
+            if self.helpheading is not None:
+                help_heading = self.helpheading.text(user_dict)
+            else:
+                help_heading = None
             if self.audiovideo is not None and 'help' in self.audiovideo:
                 the_audio_video = process_audio_video_list(self.audiovideo['help'], user_dict)
             else:
                 the_audio_video = None
             help_content = self.helptext.text(user_dict)
             if re.search(r'[^\s]', help_content) or the_audio_video is not None:
-                help_text_list = [{'heading': None, 'content': help_content, 'audiovideo': the_audio_video, 'label': helplabel, 'from': 'question'}]
+                help_text_list = [{'heading': help_heading, 'content': help_content, 'audiovideo': the_audio_video, 'label': helplabel, 'from': 'question'}]
             else:
                 help_text_list = list()
         else:
@@ -5150,8 +5177,8 @@ class Question:
             elif 'help label' in the_default_titles:
                 extras['help label text'] = the_default_titles['help label']
         interview_help_text_list = self.interview.processed_helptext(user_dict, self.language)
-        if len(interview_help_text_list) > 0:
-            help_text_list.extend(interview_help_text_list)
+        #if len(interview_help_text_list) > 0:
+        #    help_text_list.extend(interview_help_text_list)
         if self.audiovideo is not None and 'question' in self.audiovideo:
             audiovideo = process_audio_video_list(self.audiovideo['question'], user_dict)
         else:
@@ -5923,7 +5950,7 @@ class Question:
         if self.need_post is not None:
             for need_code in self.need_post:
                 eval(need_code, user_dict)
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}) #'defined': defined,
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'interview_help_text': interview_help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}) #'defined': defined,
     def processed_attachments(self, the_user_dict, **kwargs):
         use_cache = kwargs.get('use_cache', True)
         if self.compute_attachment is not None:
@@ -8197,7 +8224,7 @@ class Interview:
                             for indexno in range(len(iterators)):
                                 temp_vars[list_of_indices[indexno]] = user_dict[list_of_indices[indexno]]
                         if question.target is not None:
-                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'sought': missing_var, 'orig_sought': origMissingVariable})
+                            return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'interview_help_text': None, 'attachments': None, 'question': question, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict(), 'sought': missing_var, 'orig_sought': origMissingVariable})
                         if question.decorations is None:
                             decoration_list = []
                         else:

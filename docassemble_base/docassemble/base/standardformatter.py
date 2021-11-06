@@ -39,6 +39,53 @@ elif daconfig['button style'] == 'outline':
 else:
     BUTTON_STYLE = 'btn-'
 
+BUTTON_COLOR = daconfig['button colors'].get('continue', 'primary')
+BUTTON_COLOR_YES = daconfig['button colors'].get('answer yes', 'primary')
+BUTTON_COLOR_NO = daconfig['button colors'].get('answer no', 'secondary')
+BUTTON_COLOR_MAYBE = daconfig['button colors'].get('answer maybe', 'warning')
+BUTTON_COLOR_CLEAR = daconfig['button colors'].get('clear', 'warning')
+BUTTON_COLOR_BACK = daconfig['button colors'].get('back', 'link')
+BUTTON_COLOR_REGISTER = daconfig['button colors'].get('register', 'primary')
+BUTTON_COLOR_NEW_SESSION = daconfig['button colors'].get('new session', 'primary')
+BUTTON_COLOR_LEAVE = daconfig['button colors'].get('leave', 'warning')
+BUTTON_COLOR_URL = daconfig['button colors'].get('url', 'link')
+BUTTON_COLOR_RESTART = daconfig['button colors'].get('restart', 'warning')
+BUTTON_COLOR_REFRESH = daconfig['button colors'].get('refresh', 'primary')
+BUTTON_COLOR_SIGNIN = daconfig['button colors'].get('signin', 'info')
+BUTTON_COLOR_EXIT = daconfig['button colors'].get('exit', 'danger')
+BUTTON_COLOR_LOGOUT = daconfig['button colors'].get('logout', 'danger')
+BUTTON_COLOR_SEND = daconfig['button colors'].get('send', 'primary')
+BUTTON_COLOR_DOWNLOAD = daconfig['button colors'].get('download', 'primary')
+BUTTON_COLOR_REVIEW = daconfig['button colors'].get('review', 'secondary')
+BUTTON_COLOR_ADD = daconfig['button colors'].get('add', 'secondary')
+BUTTON_COLOR_DELETE = daconfig['button colors'].get('delete', 'danger')
+BUTTON_COLOR_UNDELETE = daconfig['button colors'].get('undelete', 'info')
+BUTTON_COLOR_HELP = daconfig['button colors'].get('help', 'info')
+BUTTON_COLOR_QUESTION_HELP = daconfig['button colors'].get('question help', 'info')
+BUTTON_COLOR_BACK_TO_QUESTION = daconfig['button colors'].get('back to question', 'info')
+
+def process_help(help_section, status, full_page=True):
+    output = ''
+    logmessage(repr(help_section))
+    if full_page:
+        if help_section['heading'] is not None:
+            output += '            <div class="da-page-header"><h1 class="h3">' + help_section['heading'].strip() + '</h1></div>\n'
+        elif help_section['from'] == 'question':
+            output += '            <div class="da-page-header"><h1 class="h3">' + word('Help with this question') + '</h1></div>\n'
+    else:
+        if help_section['heading'] is not None:
+            output += '            <h2 class="h4">' + help_section['heading'].strip() + '</h2>\n'
+    if help_section['audiovideo'] is not None:
+        uses_audio_video = True
+        audio_urls = get_audio_urls(help_section['audiovideo'])
+        if len(audio_urls):
+            output += '            <div class="daaudiovideo-control">\n' + indent_by(audio_control(audio_urls), 14) + '            </div>\n'
+        video_urls = get_video_urls(help_section['audiovideo'])
+        if len(video_urls):
+            output += '            <div class="daaudiovideo-control">\n' + indent_by(video_control(video_urls), 14) + '            </div>\n'
+    output += markdown_to_html(help_section['content'], status=status, indent=12)
+    return output
+
 def tracker_tag(status):
     output = str()
     output += '                <input type="hidden" name="csrf_token" value=' + json.dumps(server.generate_csrf()) + '/>\n'
@@ -508,7 +555,7 @@ def help_wrap(content, helptext, status):
     if helptext is None:
         return content
     else:
-        help_wrapper = '<div class="dachoicewithhelp"><div><div>%s</div><div class="dachoicehelp text-primary"><a tabindex="0" data-container="body" data-toggle="popover" data-placement="left" data-content=%s><i class="fas fa-question-circle"></i></a></div></div></div>'
+        help_wrapper = '<div class="dachoicewithhelp"><div><div>%s</div><div class="dachoicehelp text-' + BUTTON_COLOR_HELP + '"><a tabindex="0" data-container="body" data-toggle="popover" data-placement="left" data-content=%s><i class="fas fa-question-circle"></i></a></div></div></div>'
         return help_wrapper % (content, noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)))
 
 def as_html(status, url_for, debug, root, validation_rules, field_error, the_progress_bar, steps):
@@ -543,19 +590,30 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         datatypes[safeid(status.question.fields_saveas)] = "boolean"
     back_button_val = status.extras.get('back_button', None)
     if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
-        back_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + 'link ' + BUTTON_CLASS + ' daquestionbackbutton danonsubmit" title=' + json.dumps(word("Go back to the previous question")) + '><span><i class="fas fa-chevron-left"></i> '
+        back_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + BUTTON_COLOR_BACK + ' ' + BUTTON_CLASS + ' daquestionbackbutton danonsubmit" title=' + json.dumps(word("Go back to the previous question")) + '><span><i class="fas fa-chevron-left"></i> '
         back_button += status.back
         back_button += '</span></button>'
     else:
         back_button = ''
-    if status.question.interview.question_help_button and len(status.helpText) and status.question.helptext is not None:
+    if status.question.interview.question_help_button and len(status.helpText):
         if status.helpText[0]['label']:
             help_label = markdown_to_html(status.helpText[0]['label'], trim=True, do_terms=False, status=status)
         else:
             help_label = status.question.help()
-        help_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + 'info ' + BUTTON_CLASS + '  danonsubmit" id="daquestionhelpbutton"><span>' + help_label + '</span></button>'
+        help_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + BUTTON_COLOR_QUESTION_HELP + ' ' + BUTTON_CLASS + '  danonsubmit" data-toggle="collapse" data-target="#daquestionhelp" aria-expanded="false" aria-controls="daquestionhelp"><span>' + help_label + '</span></button>'
+        if status.question.question_type == "signature":
+            help_button_area = '<div class="d-none d-sm-block"><div class="collapse daquestionhelp" id="daquestionhelp">'
+        else:
+            help_button_area = '<div class="collapse daquestionhelp" id="daquestionhelp">'
+        for help_section in status.helpText:
+            help_button_area += process_help(help_section, status, full_page=False)
+        if status.question.question_type == "signature":
+            help_button_area += '</div></div>'
+        else:
+            help_button_area += '</div>'
     else:
         help_button = ''
+        help_button_area = ''
     if 'action_buttons' in status.extras:
         additional_buttons_before = ''
         additional_buttons_after = ''
@@ -633,7 +691,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
     else:
         decoration_text = ''
     master_output = str()
-    master_output += '          <section id="daquestion" class="tab-pane active ' + grid_class + '">\n'
+    master_output += '          <section id="daquestion" role="main" class="tab-pane active ' + grid_class + '">\n'
     output = str()
     if the_progress_bar:
         if status.question.question_type == "signature":
@@ -641,10 +699,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += the_progress_bar
     if status.question.question_type == "signature":
         if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
-            back_clear_button = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'link dasignav-left dasignavbutton daquestionbackbutton danonsubmit"><span>' + status.question.back() + '</span></button>'
+            back_clear_button = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_BACK + ' dasignav-left dasignavbutton daquestionbackbutton danonsubmit"><span>' + status.question.back() + '</span></button>'
         else:
-            back_clear_button = '<a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + 'warning dasignav-left dasignavbutton dasigclear">' + word('Clear') + '</a>'
-        output += '            <div class="dasigpage" id="dasigpage">\n              <div class="dasigshowsmallblock dasigheader d-block d-sm-none" id="dasigheader">\n                <div class="dasiginnerheader">\n                  ' + back_clear_button + '\n                  <a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + 'primary dasignav-right dasignavbutton dasigsave">' + continue_label + '</a>\n                  <div id="dasigtitle" class="dasigtitle">'
+            back_clear_button = '<a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_CLEAR + ' dasignav-left dasignavbutton dasigclear">' + word('Clear') + '</a>'
+        output += '            <div class="dasigpage" id="dasigpage">\n              <div class="dasigshowsmallblock dasigheader d-block d-sm-none" id="dasigheader">\n                <div class="dasiginnerheader">\n                  ' + back_clear_button + '\n                  <a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR + ' dasignav-right dasignavbutton dasigsave">' + continue_label + '</a>\n                  <div id="dasigtitle" class="dasigtitle">'
         if status.questionText:
             output += markdown_to_html(status.questionText, trim=True, status=status)
         else:
@@ -669,11 +727,12 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
               <fieldset class="da-button-set d-none d-sm-block da-signature">
                 <legend class="sr-only">""" + word('Press one of the following buttons:') + """</legend>
                 <div class="form-actions dasigbuttons mt-3">""" + back_button + additional_buttons_before + """
-                  <a href="#" role="button" class="btn """ + BUTTON_STYLE + """primary """ + BUTTON_CLASS + """ dasigsave">""" + continue_label + """</a>
-                  <a href="#" role="button" class="btn """ + BUTTON_STYLE + """warning """ + BUTTON_CLASS + """ dasigclear">""" + word('Clear') + """</a>""" + additional_buttons_after + help_button + """
+                  <a href="#" role="button" class="btn """ + BUTTON_STYLE + BUTTON_COLOR + ' ' + BUTTON_CLASS + """ dasigsave">""" + continue_label + """</a>
+                  <a href="#" role="button" class="btn """ + BUTTON_STYLE + BUTTON_COLOR_CLEAR + ' ' + BUTTON_CLASS + """ dasigclear">""" + word('Clear') + """</a>""" + additional_buttons_after + help_button + """
                 </div>
               </fieldset>
 """
+        output += help_button_area
         if not STRICT_MODE:
             saveas_part = '<input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/>'
         else:
@@ -694,13 +753,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += indent_by(video_text, 12)
         output += status.submit
         output += '                <fieldset class="da-button-set da-field-' + status.question.question_type + '"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
-        output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_STYLE + 'primary ' + BUTTON_CLASS + ' " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True"><span>' + status.question.yes() + '</span></button>\n                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'secondary" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False"><span>' + status.question.no() + '</span></button>'
+        output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_YES + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True"><span>' + status.question.yes() + '</span></button>\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_NO + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False"><span>' + status.question.no() + '</span></button>'
         if status.question.question_type == 'yesnomaybe':
-            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None"><span>' + markdown_to_html(status.question.maybe(), trim=True, do_terms=False, status=status) + '</span></button>'
+            output += '\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_MAYBE + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None"><span>' + markdown_to_html(status.question.maybe(), trim=True, do_terms=False, status=status) + '</span></button>'
         output += additional_buttons_after
         output += help_button
         output += '\n                </div></fieldset>\n'
         #output += question_name_tag(status.question)
+        output += help_button_area
         if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
@@ -721,12 +781,13 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += indent_by(video_text, 12)
         output += status.submit
         output += '                <fieldset class="da-button-set da-field-' + status.question.question_type + '"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
-        output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_STYLE + 'primary ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False"><span>' + status.question.yes() + '</span></button>\n                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'secondary" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True"><span>' + status.question.no() + '</span></button>'
+        output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_YES + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False"><span>' + status.question.yes() + '</span></button>\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_NO + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True"><span>' + status.question.no() + '</span></button>'
         if status.question.question_type == 'noyesmaybe':
-            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None"><span>' + status.question.maybe() + '</span></button>'
+            output += '\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_MAYBE + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None"><span>' + status.question.maybe() + '</span></button>'
         output += additional_buttons_after
         output += help_button
         output += '\n                </div></fieldset>\n'
+        output += help_button_area
         if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
@@ -775,10 +836,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 # elif field.datatype in ['script', 'css']:
                 #     continue
                 elif field.datatype == 'button' and hasattr(field, 'label') and field.number in status.helptexts:
-                    color = status.question.interview.options.get('review button color', 'success')
+                    color = status.question.interview.options.get('review button color', BUTTON_COLOR_REVIEW)
                     if color not in ('link', 'danger', 'warning', 'info', 'primary', 'secondary', 'light', 'dark', 'success'):
-                        color = 'success'
-                    icon = status.question.interview.options.get('review button icon', None)
+                        color = BUTTON_COLOR_REVIEW
+                    icon = status.question.interview.options.get('review button icon', 'fas fa-pencil-alt')
                     if isinstance(icon, str) and icon != '':
                         icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
                         if not re.search(r'^fa[a-z] fa-', icon):
@@ -786,7 +847,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         icon = '<i class="' + icon + '"></i> '
                     else:
                         icon = ''
-                    fieldlist.append('                <div class="row' + side_note_parent + ' da-review da-review-button"><div class="col-md-12"><a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + color + ' da-review-action da-review-action-button" data-action=' + myb64doublequote(status.extras['action'][field.number]) + '>' + icon + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div>' + side_note + '</div>\n')
+                    fieldlist.append('                <div class="row' + side_note_parent + ' da-review da-review-button bg-light pt-2 my-2"><div class="col-md-12"><a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + color + ' da-review-action da-review-action-button" data-action=' + myb64doublequote(status.extras['action'][field.number]) + '>' + icon + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div>' + side_note + '</div>\n')
                     continue
             if hasattr(field, 'label'):
                 fieldlist.append('                <div class="form-group row' + side_note_parent + ' da-review da-review-label"><div class="col-md-12"><a href="#" class="da-review-action" data-action=' + myb64doublequote(status.extras['action'][field.number]) + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div>' + side_note + '</div>\n')
@@ -809,9 +870,10 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += status.submit
         output += '                <fieldset class="da-button-set da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
         if hasattr(status.question, 'review_saveas'):
-            output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
+            output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_STYLE + BUTTON_COLOR + ' ' + BUTTON_CLASS + '" name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
         else:
-            output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" type="submit"><span>' + resume_button_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
+            output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR + ' ' + BUTTON_CLASS + '" type="submit"><span>' + resume_button_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
+        output += help_button_area
         if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
@@ -957,7 +1019,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         else:
                             hide_delete = False
                         if status.extras['list_collect_allow_delete'] and not hide_delete:
-                            da_remove_existing = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'danger float-right dacollectremoveexisting' + class_of_first + '"><i class="fas fa-trash"></i> ' + word("Delete") + '</button>'
+                            da_remove_existing = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_DELETE + ' float-right dacollectremoveexisting' + class_of_first + '"><i class="fas fa-trash"></i> ' + word("Delete") + '</button>'
                         else:
                             da_remove_existing = ''
                         list_message = status.extras['list_message'][field.collect_number]
@@ -970,17 +1032,17 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         else:
                             add_another = word("Add another")
                         if field.collect_type == 'extraheader':
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><hr><span class="dacollectnum dainvisible">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'danger float-right dainvisible dacollectremove"><i class="fas fa-trash"></i> ' + word("Delete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'info float-right dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'success dacollectadd"><i class="fas fa-plus-circle"></i> ' + add_another + '</button></div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><hr><span class="dacollectnum dainvisible">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_DELETE + ' float-right dainvisible dacollectremove"><i class="fas fa-trash"></i> ' + word("Delete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_UNDELETE + ' float-right dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_ADD + ' dacollectadd"><i class="fas fa-plus-circle"></i> ' + add_another + '</button></div></div>\n')
                         elif field.collect_type == 'postheader':
                             fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"></div></div>\n')
                         elif field.collect_type == 'extrapostheader':
                             fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"></div></div>\n')
                         elif field.collect_type == 'extrafinalpostheader':
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><button type="button" id="da-extra-collect" value=' + myb64doublequote(json.dumps({'function': 'add', 'list': status.extras['list_collect'].instanceName})) + ' class="btn btn-sm ' + BUTTON_STYLE + 'success"><i class="fas fa-plus-circle"></i> ' + add_another + '</button></div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><button type="button" id="da-extra-collect" value=' + myb64doublequote(json.dumps({'function': 'add', 'list': status.extras['list_collect'].instanceName})) + ' class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_ADD + '"><i class="fas fa-plus-circle"></i> ' + add_another + '</button></div></div>\n')
                         elif field.collect_type == 'firstheader':
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><span class="dacollectnum">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'info float-right dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button>' + da_remove_existing + '</div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><span class="dacollectnum">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_UNDELETE + ' float-right dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button>' + da_remove_existing + '</div></div>\n')
                         else:
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><hr><span class="dacollectnum">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + 'info float-right dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button>' + da_remove_existing + '</div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '"><div class="col-md-12"><hr><span class="dacollectnum">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_UNDELETE + ' float-right dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button>' + da_remove_existing + '</div></div>\n')
                     else:
                         if field.number in note_fields:
                             if field.number in status.helptexts:
@@ -1286,7 +1348,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row' + class_def + '' + side_note_parent + req_tag + field_class + ' da-field-container-nolabel">\n                  <label' + label_for + ' class="sr-only">' + word("Answer here") + '</label>\n                  <div class="col dawidecol dafieldpart">' + input_for(status, field, wide=True) + '</div>' + side_note + '\n                </div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
                     fieldlist.append('                <div ' + style_def + data_def + 'class="form-group row dayesnospacing ' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <label' + label_for + ' class="sr-only">' + word("Check if applicable") + '</label>\n                  <div class="col dawidecol dafieldpart">' + input_for(status, field) + '</div>' + side_note + '\n                </div>\n')
-                elif labels_above:
+                elif labels_above or (hasattr(field, 'label_above_field') and field.label_above_field):
                     if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
                         fieldlist.append('                <div ' + style_def + data_def + 'class="form-group dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <label' + label_for + ' class="sr-only">' + word("Check if applicable") + '</label>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                     elif status.labels[field.number] == '':
@@ -1335,10 +1397,11 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += status.submit
         output += '                <fieldset class="da-button-set da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
         if hasattr(status.question, 'fields_saveas'):
-            output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" name="' + escape_id(safeid(status.question.fields_saveas)) + '" value="True"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
+            output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + BUTTON_COLOR + '" name="' + escape_id(safeid(status.question.fields_saveas)) + '" value="True"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
         else:
-            output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" type="submit"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
+            output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + BUTTON_COLOR + '" type="submit"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
         #output += question_name_tag(status.question)
+        output += help_button_area
         if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
@@ -1364,8 +1427,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += indent_by(video_text, 12)
         output += status.submit
         output += '                <fieldset class="da-button-set da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
-        output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
+        output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + BUTTON_COLOR + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="True"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
         #output += question_name_tag(status.question)
+        output += help_button_area
         if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
@@ -1507,14 +1571,14 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += status.submit
             output += '                <fieldset class="da-button-set da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
             output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n'
-            output += '                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" type="submit"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '\n'
+            output += '                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + BUTTON_COLOR + '" type="submit"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '\n'
             output += '                </div></fieldset>\n'
         else:
             output += status.submit
             output += '                <fieldset class="da-button-set da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
             output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n'
             if hasattr(status.question.fields[0], 'saveas'):
-                btn_class = ' ' + BUTTON_STYLE + 'primary'
+                btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
                     pairlist = list(status.selectcompute[status.question.fields[0].number])
                     if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
@@ -1549,7 +1613,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 indexno = 0
                 for choice in status.selectcompute[status.question.fields[0].number]:
                 #for choice in status.question.fields[0].choices:
-                    btn_class = ' ' + BUTTON_STYLE + 'primary'
+                    btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR
                     if 'image' in choice:
                         the_icon = '<span>' + icon_html(status, choice['image'], width_value=BUTTON_ICON_SIZE, width_units=BUTTON_ICON_UNITS) + '</span>'
                         btn_class = ' ' + BUTTON_STYLE + 'light btn-da btn-da-custom'
@@ -1563,17 +1627,27 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         is_default = choice['default']
                     else:
                         is_default = False
-                    if isinstance(choice['key'], Question) and choice['key'].question_type in ("exit", "logout", "continue", "restart", "refresh", "signin", "register", "leave", "link"):
-                        if choice['key'].question_type in ("continue", "register"):
-                            btn_class = ' ' + BUTTON_STYLE + 'primary'
-                        elif choice['key'].question_type in ("leave", "link", "restart"):
-                            btn_class = ' ' + BUTTON_STYLE + 'warning'
+                    if isinstance(choice['key'], Question) and choice['key'].question_type in ("exit", "logout", "continue", "restart", "refresh", "signin", "register", "leave", "link", "new_session"):
+                        if choice['key'].question_type == "continue":
+                            btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR
+                        elif choice['key'].question_type == "register":
+                            btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR_REGISTER
+                        elif choice['key'].question_type == "new_session":
+                            btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR_NEW_SESSION
+                        elif choice['key'].question_type == "leave":
+                            btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR_LEAVE
+                        elif choice['key'].question_type == "link":
+                            btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR_URL
+                        elif choice['key'].question_type == "restart":
+                            btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR_RESTART
                         elif choice['key'].question_type == "refresh":
-                            btn_class = ' ' + BUTTON_STYLE + 'success'
+                            btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR_REFRESH
                         elif choice['key'].question_type == "signin":
-                            btn_class = ' ' + BUTTON_STYLE + 'info'
-                        elif choice['key'].question_type in ("exit", "logout"):
-                            btn_class = ' ' + BUTTON_STYLE + 'danger'
+                            btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR_SIGNIN
+                        elif choice['key'].question_type == "exit":
+                            btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR_EXIT
+                        elif choice['key'].question_type == "logout":
+                            btn_class = ' ' + BUTTON_STYLE + BUTTON_COLOR_LOGOUT
                     #output += '                  <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps(list(status.question.fields_used))) + ' />\n'
                     output += '                  <button type="submit" class="btn ' + BUTTON_CLASS + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ" value="' + str(indexno) + '"><span>' + the_icon + markdown_to_html(choice['label'], status=status, trim=True, do_terms=False, strip_newlines=True) + '</span></button>\n'
                     indexno += 1
@@ -1581,6 +1655,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += help_button
             output += '                </div></fieldset>\n'
         #output += question_name_tag(status.question)
+        output += help_button_area
         if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
@@ -1600,6 +1675,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += status.submit
             output += '                <fieldset class="da-button-set da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
             output += '                <div class="form-actions">' + back_button + additional_buttons_before + additional_buttons_after + help_button + '</div></fieldset>\n'
+        output += help_button_area
         if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
     else:
@@ -1612,8 +1688,9 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
             output += indent_by(video_text, 12)
         output += status.submit
         output += '                <fieldset class="da-button-set da-field-buttons"><legend class="sr-only">' + word('Press one of the following buttons:') + '</legend>\n'
-        output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + 'primary" type="submit"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
+        output += '                <div class="form-actions">' + back_button + additional_buttons_before + '\n                <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + BUTTON_COLOR + '" type="submit"><span>' + continue_label + '</span></button>' + additional_buttons_after + help_button + '</div></fieldset>\n'
         #output += question_name_tag(status.question)
+        output += help_button_area
         if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
         output += tracker_tag(status)
@@ -1776,7 +1853,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         output += """
                       <div class="form-group row"><div class="col-md-4 col-form-label da-form-label datext-right"></div><div class="col-md-8"><input alt=""" + fix_double_quote(word("Check box") + ", " + editable_name) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>&nbsp;<label for="da_attachment_include_editable" class="danobold">""" + editable_name + '</label></div></div>\n'
                 output += """
-                      <button class="btn """ + BUTTON_STYLE + """primary" type="submit"><span>""" + word('Send') + '</span></button>\n                      <input type="hidden" name="_email_attachments" value="1"/>'
+                      <button class="btn """ + BUTTON_STYLE + BUTTON_COLOR_SEND + """" type="submit"><span>""" + word('Send') + '</span></button>\n                      <input type="hidden" name="_email_attachments" value="1"/>'
                 output += """
                       <input type="hidden" name="csrf_token" value=""" + json.dumps(server.generate_csrf()) + """/>
                     </form>
@@ -1804,7 +1881,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                         output += """
                       <div class="form-group row"><div class="col-md-12"><input alt=""" + fix_double_quote(word("Check box") + ", " + editable_name) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>&nbsp;<label for="da_attachment_include_editable" class="danobold">""" + editable_name + '</label></div></div>\n'
                 output += """
-                      <button class="btn """ + BUTTON_STYLE + """primary" type="submit"><span>""" + word('Download All') + '</span></button>\n                      <input type="hidden" name="_download_attachments" value="1"/>'
+                      <button class="btn """ + BUTTON_STYLE + BUTTON_COLOR_DOWNLOAD + """" type="submit"><span>""" + word('Download All') + '</span></button>\n                      <input type="hidden" name="_download_attachments" value="1"/>'
                 output += """
                       <input type="hidden" name="csrf_token" value=""" + json.dumps(server.generate_csrf()) + """/>
                     </form>
@@ -1813,6 +1890,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
               </div>
             </div>
 """
+        output += help_button_area
         if 'underText' in status.extras:
             output += markdown_to_html(status.extras['underText'], status=status, indent=18, divclass="daundertext")
     if status.question.question_type == "signature":
@@ -1836,8 +1914,8 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
         output += '            </div>\n'
     master_output += output
     master_output += '          </section>\n'
-    master_output += '          <section id="dahelp" class="tab-pane ' + grid_class + '">\n'
-    output = str() + '            <div class="mt-2 mb-2"><a href="#daquestion" role="button" id="dabackToQuestion" class="btn ' + BUTTON_STYLE + 'info"><i class="fas fa-caret-left"></i> ' + word("Back to question") + '</a></div>'
+    master_output += '          <section id="dahelp" role="main" class="tab-pane ' + grid_class + '">\n'
+    output = str() + '            <div class="mt-2 mb-2"><a href="#daquestion" role="button" id="dabackToQuestion" class="btn ' + BUTTON_STYLE + BUTTON_COLOR_BACK_TO_QUESTION + '"><i class="fas fa-chevron-left"></i> ' + word("Back to question") + '</a></div>'
     output += """
             <div id="daPhoneMessage" class="row dainvisible">
               <div class="col-md-12">
@@ -1884,23 +1962,15 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
               </div>
             </div>
 """
-    if len(status.helpText):
+    if len(status.interviewHelpText) or (len(status.helpText) and not status.question.interview.question_help_button):
         if status.using_screen_reader and 'help' in status.screen_reader_links:
             output += '            <div class="daaudiovideo-control">\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none", title_text=word('Read this screen out loud')), 14) + '            </div>\n'
-        for help_section in status.helpText:
-            if help_section['heading'] is not None:
-                output += '            <div class="da-page-header"><h1 class="h3">' + help_section['heading'].strip() + '</h1></div>\n'
-            elif len(status.helpText) > 1:
-                output += '            <div class="da-page-header"><h1 class="h3">' + word('Help with this question') + '</h1></div>\n'
-            if help_section['audiovideo'] is not None:
-                uses_audio_video = True
-                audio_urls = get_audio_urls(help_section['audiovideo'])
-                if len(audio_urls):
-                    output += '            <div class="daaudiovideo-control">\n' + indent_by(audio_control(audio_urls), 14) + '            </div>\n'
-                video_urls = get_video_urls(help_section['audiovideo'])
-                if len(video_urls):
-                    output += '            <div class="daaudiovideo-control">\n' + indent_by(video_control(video_urls), 14) + '            </div>\n'
-            output += markdown_to_html(help_section['content'], status=status, indent=12)
+        if status.question.interview.question_help_button:
+            help_parts = status.interviewHelpText
+        else:
+            help_parts = status.helpText + status.interviewHelpText
+        for help_section in help_parts:
+            output += process_help(help_section, status)
         # if len(status.attributions):
         #     output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
         # for attribution in sorted(status.attributions):
