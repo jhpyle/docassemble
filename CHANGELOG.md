@@ -25,6 +25,7 @@
 - When `question help button` is used, the question-related help now
   appears below the buttons, and the navigation bar help only
   displays the `interview help` (if present).
+- The `skip undefined` option now works with `docx template file`.
 ### Fixed
 - Inactive sections in the `sections` sidebar are no longer `<a>`
   elements that screen readers may describe as clickable.

@@ -4704,7 +4704,7 @@ class Question:
                     raise DAError('fields supplied to attachment must be a list or dictionary' + self.idebug(target))
                 target['content'] = ''
                 if template_type == 'docx':
-                    options[template_type + '_template_file'] = [FileInPackage(item, 'template', package=self.package) for item in target['docx template file']]                    
+                    options[template_type + '_template_file'] = [FileInPackage(item, 'template', package=self.package) for item in target['docx template file']]
                     for item in target['docx template file']:
                         if not isinstance(item, (str, dict)):
                             raise DAError('docx template file supplied to attachment must be a string or dict' + self.idebug(target))
@@ -9229,23 +9229,23 @@ class DASkipUndefined(ChainableUndefined):
     """Undefined handler for Jinja2 exceptions that allows
     rendering most partial templates.
     """
-    def __str__(self) -> str:    
+    def __str__(self) -> str:
         return ''
 
     def __call__(self, *pargs, **kwargs):
         return self
-        
+
     def __getattr__(self, _: str) -> "DASkipUndefined":
-        return self        
-        
+        return self
+
     __getitem__ = __getattr__
 
     def __eq__(self, _) -> bool:
         return False
-        
+
     def __ne__(self, _ ) -> bool:
         return False
-        
+
     def __add__(self, val):
         return self.__str__()
 

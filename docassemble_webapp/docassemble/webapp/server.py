@@ -10382,11 +10382,6 @@ def index(action_argument=None, refer=None):
         if (daPhoneAvailable){
           $("#daPhoneAvailable").removeClass("dainvisible");
         }
-        //$("#daquestionhelpbutton").on('click', function(event){
-        //  event.preventDefault();
-        //  $('#dahelptoggle').tab('show');
-        //  return false;
-        //});
         $(".daquestionbackbutton").on('click', function(event){
           event.preventDefault();
           $("#dabackbutton").submit();
