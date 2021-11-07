@@ -2094,6 +2094,26 @@ Jinja2 to execute arbitrary Python code on your server.  Templates are
 a form of software, so ideally they should live where the other
 software lives, which is inside of a software package.
 
+# <a name="language selector"></a>Changing the language using the navigation bar
+
+This example interview provides the user with a language selector
+interface in the navigation bar.  It uses [`default screen parts`] to
+set the [`navigation bar html`], which is a [screen part] inside of a
+`<ul class="nav navbar-nav">` element in the navigation bar.
+
+{% include demo-side-by-side.html demo="navbar-language" %}
+
+Note that [`default screen parts`] is used instead of [`metadata`] so
+that [Mako] can be used.  The [`url_of()`] function is used to insert
+the URL of an image into the `src` attribute of an `<img>` element.
+
+The [action] that changes the language uses [`set_save_status()`] to
+prevent language switches from introducing a step in the interview
+process.
+
+For more information about **docassemble**'s support for multi-lingual
+interviews, see the [Language Support] section.
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml
@@ -2193,3 +2213,10 @@ software lives, which is inside of a software package.
 [`google`]: https://docassemble.org/docs/config.html#google
 [`service account credentials`]: https://docassemble.org/docs/config.html#service%20account%20credentials
 [service account]: https://cloud.google.com/iam/docs/understanding-service-accounts
+[`navigation bar html`]: {{ site.baseurl }}/docs/initial.html#navigation bar html
+[`default screen parts`]: {{ site.baseurl }}/docs/initial.html#default screen parts
+[screen part]: {{ site.baseurl }}/docs/questions.html#screen parts
+[`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
+[Mako]: http://www.makotemplates.org/
+[`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
+[Language Support]: {{ site.baseurl }}/docs/language.html

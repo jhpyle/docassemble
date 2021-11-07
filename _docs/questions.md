@@ -432,7 +432,14 @@ results with different screen sizes.
 * The `subtitle` is not visible on the screen, but can be seen in the
   list of [Available Interviews].
 * The `logo`, if set, will replace the `title` and `short title` with
-  custom HTML content, such as an image.
+  custom HTML content, such as an image.  This HTML is placed inside
+  of a `<span>` element, so it is important to only use "inline" HTML
+  elements.  You can [provide CSS] to the interview and reference [CSS]
+  classes in your `logo`.  Ideally the logo should be no taller than
+  20 pixels.  If the `logo` is taller, the navigation bar will
+  expand to fit, and you will need to [adjust the CSS] to specify
+  different values for `.da-pad-for-navbar` and `.da-top-for-navbar`.
+* The `short logo`, if set, will replace the `logo` on a small screen.
 * The `pre` area is above the [`question`].
 * The `submit` area is above the buttons, if the screen has buttons.
 * The `under` area is directly below the buttons.
@@ -474,6 +481,17 @@ results with different screen sizes.
   table.  If you set `table css class` to `table table-bordered,
   thead-dark`, then the `<table>` will have the class `table
   table-bordered` and the `<thead>` will have the class `thead-dark`.
+* The `navigation bar html` lets you add HTML to the navigation
+  bar. The HTML will be inserted into a `<ul class="nav navbar-nav">`
+  element, so for best results, the [HTML] should consist of one or
+  more items in a form like `<li class="nav-item"><a class="nav-link"
+  href="/some_link">Label</a></li>`.  For more information about how
+  these [CSS] classes work, see the documentation for the [Bootstrap
+  Navbar].  On small screens, the HTML is shown when the user clicks
+  the toggler icon.  You may wish to use `d-none d-md-block` classes
+  to hide the HTML when the screen is small.  Make sure your HTML does
+  not contain any errors, or else the [HTML] of the entire screen
+  could be affected.
 
 There are a variety of ways that you can specify what content should
 appear in these areas.  These ways range from question-specific
@@ -601,3 +619,6 @@ For more information about each method, see its documentation.
 [`title url`]: {{ site.baseurl }}/docs/initial.html#title url
 [`title url opens in other window`]: {{ site.baseurl }}/docs/initial.html#title url opens in other window
 [JSON]: https://en.wikipedia.org/wiki/JSON
+[provide CSS]: {{ site.baseurl }}/docs/initial.html#css
+[adjust the CSS]: {{ site.baseurl }}/docs/config.html#bootstrap theme
+[Bootstrap Navbar]: https://getbootstrap.com/docs/4.0/components/navbar/#supported-content

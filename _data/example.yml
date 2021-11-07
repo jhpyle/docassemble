@@ -1060,22 +1060,68 @@
     on the tree?
   fields:
     - Length: tree.branch.length
-"breadcrumbs": "objects:\n  - bc: DABreadCrumbs\n---\ndefault screen parts:\n  pre:\
-  \ |\n    ${ bc.show() }\n---\nbreadcrumb: Edit person\nquestion: |\n  Who is the\
-  \ ${ ordinal(i) } person?\nfields:\n  - First Name: person[i].name.first\n  - Last\
-  \ Name: person[i].name.last\n---\nbreadcrumb: Edit fruit\nquestion: |\n  What is\
-  \ ${ person[i].possessive('favorite fruit') }?\nsubquestion: |\n  Make sure you\
-  \ indicate\n  ${ person[i].possessive('most favorite fruit') },\n  taking into account\
-  \ all of the\n  [types of fruit](${ url_action('explore_fruit') }) that exist in\
-  \ the\n  universe.\nfields:\n  - Fruit: person[i].favorite_fruit\n---\nbreadcrumb:\
-  \ Edit answers\nquestion: |\n  Edit your answers\nreview:\n  - note: |\n      %\
-  \ if len(person):\n      The people are:\n\n      ${ person.table }\n      \n  \
-  \    ${ person.add_action() }\n      % else:\n      There are no people.\n\n   \
-  \   ${ person.add_action(\"I would like to add one.\") }\n      % endif\nevent:\
-  \ review_interview\n---\nbreadcrumb: Fruit types\nquestion: Types of fruit\nsubquestion:\
-  \ |\n  There are several types of fruit, including:\n\n  * apple\n  * orange\n \
-  \ * grapes\n  * peach\n  * lemon\n  * grapefruit\n  * pear\n  * lime\n  * mango\n\
-  \  * tomato\n  * melon\ncontinue button field: explore_fruit"
+"breadcrumbs": |-
+  objects:
+    - bc: DABreadCrumbs
+  ---
+  default screen parts:
+    pre: |
+      ${ bc.show() }
+  ---
+  breadcrumb: Edit person
+  question: |
+    Who is the ${ ordinal(i) } person?
+  fields:
+    - First Name: person[i].name.first
+    - Last Name: person[i].name.last
+  ---
+  breadcrumb: Edit fruit
+  question: |
+    What is ${ person[i].possessive('favorite fruit') }?
+  subquestion: |
+    Make sure you indicate
+    ${ person[i].possessive('most favorite fruit') },
+    taking into account all of the
+    [types of fruit](${ url_action('explore_fruit') }) that exist in the
+    universe.
+  fields:
+    - Fruit: person[i].favorite_fruit
+  ---
+  breadcrumb: Edit answers
+  question: |
+    Edit your answers
+  review:
+    - note: |
+        % if len(person):
+        The people are:
+
+        ${ person.table }
+
+        ${ person.add_action() }
+        % else:
+        There are no people.
+
+        ${ person.add_action("I would like to add one.") }
+        % endif
+  event: review_interview
+  ---
+  breadcrumb: Fruit types
+  question: Types of fruit
+  subquestion: |
+    There are several types of fruit, including:
+
+    * apple
+    * orange
+    * grapes
+    * peach
+    * lemon
+    * grapefruit
+    * pear
+    * lime
+    * mango
+    * tomato
+    * melon
+  continue button field: explore_fruit
 "buttons": |-
   question: |
     What type of belly button do you
@@ -13224,6 +13270,21 @@
   \ Here is the signed contract.\nattachment:\n  name: |\n    An agreement between\n\
   \    ${ firstparty } and\n    ${ secondparty }\n  filename: agreement\n  docx template\
   \ file: Agreement_To_Transfer.docx"
+"navbar-language": "metadata:\n  title:\n    en: Fruit\n    es: Fruta\n---\ndefault\
+  \ screen parts:\n  navigation bar html: |\n    <li class=\"nav-item dropdown\">\n\
+  \      <a class=\"nav-link dropdown-toggle\" href=\"#\" id=\"languageSelector\"\
+  \ data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">\n   \
+  \     <img src=\"${ url_of('docassemble.demo:data/static/united-kingdom.svg') }\"\
+  \ style=\"width:20px;\" /><img src=\"${ url_of('docassemble.demo:data/static/mexico.svg')\
+  \ }\" style=\"margin-left:-5px;width:20px;\" />\n      </a>\n      <div class=\"\
+  dropdown-menu\" aria-labelledby=\"languageSelector\">\n        <a class=\"dropdown-item\"\
+  \ href=\"${ url_action('set_lang', lang='en') }\">[FILE docassemble.demo:data/static/united-kingdom.svg,\
+  \ 20px] English</a>\n        <a class=\"dropdown-item\" href=\"${ url_action('set_lang',\
+  \ lang='es') }\">[FILE docassemble.demo:data/static/mexico.svg, 20px] Espa\xF1ol</a>\n\
+  \      </div>\n    </li>\n---\nobjects:\n  - user: Individual.using(language='en')\n\
+  ---\ninitial: True\ncode: |\n  set_language(user.language)\n---\nevent: set_lang\n\
+  code: |\n  if action_argument('lang') in ('en', 'es'):\n    user.language = action_argument('lang')\n\
+  \    set_save_status('overwrite')"
 "new-or-existing": |-
   objects:
     - boss: Individual

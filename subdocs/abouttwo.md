@@ -1,5 +1,5 @@
-Interviews are developered as [YAML] files.  Within the [YAML] files, the
-text of the interview questions and documents is formatted with
+Interviews are developed as [YAML] files.  Within the [YAML] files,
+the text of the interview questions and documents is formatted with
 [Markdown], and the logic of the interview flow is expressed with
 if/then/else statements in [Python].
 

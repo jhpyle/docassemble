@@ -4,6 +4,21 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.3](https://github.com/jhpyle/docassemble/releases/tag/v1.3.3) - 2021-11-07
+
+### Added
+- The `short logo` screen part for specifying a different `logo` for
+  small screens.
+- The `navigation bar html` screen part for adding HTML to the
+  navigation bar.
+- The `_screen_size` option for `action_menu_item()` for hiding menu
+  items depending on the screen size.
+
+### Fixed
+- Decreased the `max-width` of the interview title in the navigation
+  bar to avoid problems with the navigation bar wrapping onto two
+  lines.
+
 ## [1.3.2](https://github.com/jhpyle/docassemble/releases/tag/v1.3.2) - 2021-11-06
 
 ### Added

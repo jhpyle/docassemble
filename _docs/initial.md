@@ -34,16 +34,50 @@ the name of the author.  It must be a [YAML] dictionary, but each the
 dictionary items can contain any arbitrary [YAML] structure.
 
 <a name="title"></a>If a `title` is defined, it will be displayed in
-the navigation bar in the web app.  If a `short title` is provided, it
-will be displayed in place of the `title` when the size of the screen
-is small.
+the navigation bar in the web app.
+
+<a name="short title"></a>If a `short title` is provided, it will be
+displayed in place of the `title` when the size of the screen is
+small.  It is important to specify a `short title` if your `title` is
+more than a few words long, because otherwise the navigation bar may
+not look good on small screens.
 
 <a name="logo"></a>If a `logo` is defined, it will be displayed in the
 navigation bar in the web app in place of the `title` and `short
-title`.  The content of the `logo` should be raw [HTML].  If you
-include an image, you should size it to be about 20 pixels in height.
-Make sure that your raw [HTML] does not contain any errors, or else
-the formatting of the page will become corrupted.
+title`.  The content of the `logo` should be raw [HTML].  The [HTML]
+will be placed inside of a `<span>` element, so make sure you only use
+"inline" HTML elements that are compatible with being placed inside of
+a `<span>`.  You can [provide CSS] to the interview and reference
+[CSS] classes in your `logo`.  If you include an image, you should
+size it to be about 20 pixels in height.  If the logo is too tall, the
+navigation bar will expand to fit, and you will need to [adjust the
+CSS] to specify different values for `.da-pad-for-navbar` and
+`.da-top-for-navbar`.  If you include a `logo` that is much wider than
+100 pixels, you should also specify a `short logo` that is not as
+wide, so your navigation bar will look good on small screens.  Make
+sure that your raw [HTML] does not contain any errors, or else the
+formatting of the page will become corrupted.
+
+<a name="short logo"></a>If a `short logo` is defined, it will be used
+in place of the `logo` on small screens.  Although you may develop and
+test your interview on a monitor, many of your users will likely use
+your interviews on a smartphone, so it is important that you keep the
+needs of smartphone users in mind.  Smartphone users want to use the
+interview you developed and they don't want your logo taking up half
+of their screen.
+
+<a name="navigation bar html"></a>If `navigation bar html` is
+provided, the contents will be inserted into the navigation bar.  It
+will be inserted into a `<ul class="nav navbar-nav">` element, so for
+best results, the [HTML] should consist of one or more items in a form
+like `<li class="nav-item"><a class="nav-link"
+href="/some_link">Label</a></li>`.  For more information about how
+these [CSS] classes work, see the documentation for the [Bootstrap
+Navbar].  On small screens, the HTML is shown when the user clicks the
+toggler icon.  You may wish to use `d-none d-md-block` classes to hide
+the HTML when the screen is small.  Make sure your HTML does not
+contain any errors, or else the [HTML] of the entire screen could be
+affected.
 
 <a name="tab title"></a>If a `tab title` is provided, it will be
 displayed as the title of the browser tab.  Otherwise, the `title`
@@ -2486,3 +2520,6 @@ features:
 [`update_terms()`]: {{ site.baseurl }}/docs/functions.html#update_terms
 [Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.htmlmarkdown to docx
 [`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
+[provide CSS]: {{ site.baseurl }}/docs/initial.html#css
+[adjust the CSS]: {{ site.baseurl }}/docs/config.html#bootstrap theme
+[Bootstrap Navbar]: https://getbootstrap.com/docs/4.0/components/navbar/#supported-content

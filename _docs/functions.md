@@ -113,7 +113,6 @@ of the variable is given as a string.
 These two code blocks effectively do the exact same thing:
 
 {% highlight yaml %}
----
 code: |
   answer = value('meaning_of_life')
 ---
@@ -123,7 +122,6 @@ code: |
 ---
 code: |
   answer = meaning_of_life
----
 {% endhighlight %}
 
 Note that `value(meaning_of_life)` and `value("meaning_of_life")` are
@@ -265,22 +263,18 @@ requiring that the user first be shown a splash screen and then be
 asked questions necessary to get to the end of the interview.
 
 {% highlight yaml %}
----
 mandatory: True
 code: |
   need(user_shown_splash_screen, user_shown_final_screen)
----
 {% endhighlight %}
 
 This happens to be 100% equivalent to writing:
 
 {% highlight yaml %}
----
 mandatory: True
 code: |
   user_shown_splash_screen
   user_shown_final_screen
----
 {% endhighlight %}
 
 So the `need()` function does not "do" anything.  However, writing
@@ -680,7 +674,6 @@ attachment:
 mandatory: True
 code: |
   response(file=the_file.pdf)
----
 {% endhighlight %}
 
 Here is a link that runs this interview.  Notice how the name "Fred" is
@@ -836,7 +829,6 @@ This is useful if you do not want spaces in the filenames of your
 to remove dangerous characters and command injection.
 
 {% highlight yaml %}
----
 sets: user_done
 question: Thanks!
 subquestion: Here is your letter.
@@ -844,7 +836,6 @@ attachment:
   - name: A letter for ${ user_name }
     filename: Letter_for_${ space_to_underscore(user_name) }
     content file: letter.md
----
 {% endhighlight %}
 
 ## <a name="single_to_double_newlines"></a>single_to_double_newlines()
@@ -863,7 +854,6 @@ convert the text for you.
 `user_supplied_text` with spaces.  This allows you to do things like:
 
 {% highlight yaml %}
----
 question: Summary of your answers
 subquestion: |
   When I asked you the meaning of life, you said:
@@ -871,7 +861,6 @@ subquestion: |
   > ${ single_paragraph(meaning_of_life) }
 
 field: ok_to_proceed
----
 {% endhighlight %}
 
 If you did not remove line breaks from the text, then if the
@@ -1101,7 +1090,6 @@ You can pass as many named parameters as you like to an "action."  For
 example:
 
 {% highlight yaml %}
----
 question: Hello
 subquestion: |
   You can set lots of information by 
@@ -1115,7 +1103,6 @@ code: |
   if info['money'] > 300000:
     user_is_rich = True
   actor_to_hire = info['actor']
----
 {% endhighlight %}
 
 In this example, we use [`action_arguments()`] to retrieve all of the
@@ -1127,12 +1114,10 @@ placing the `process_action()` statement in a particular place in your
 can only be carried out if the user is logged in:
 
 {% highlight yaml %}
----
 initial: True
 code: |
   if user_logged_in():
     process_action()
----
 {% endhighlight %}
 
 Note that these links will only work for the current user, whose
@@ -1149,11 +1134,9 @@ list.  See [special variables] section for more information about
 setting menu items.
 
 {% highlight yaml %}
----
 mandatory: True
 code: |
   menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
----
 {% endhighlight %}
 
 In this example, a menu item labeled "Review Answers" is added, which
@@ -1162,6 +1145,21 @@ when run triggers the action "review_answers."
 The `action_menu_item(a, b)` function returns a [Python dictionary] with
 keys `label` and `url`, where `label` is set to the value of `a` and
 `url` is set to the value of `url_action(b)`.
+
+If you want to pass arguments to the action, you can include the
+arguments as keyword parameters to `action_menu_item()`.
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  menu_items = [ action_menu_item('Get more', 'change_count', increment=1),
+                 action_menu_item('Get less', 'change_count', increment=-1) ]
+{% endhighlight %}
+
+One keyword parameter has special meaning.  If you set `_screen_size`
+to `'small'`, then the menu item will only appear on small screens.
+If you set it to `'large'`, it will only appear on large screens.  A
+"large" screen is [Bootstrap] `md` size or above.
 
 ## <a name="interview_url"></a>interview_url()
 
@@ -1321,24 +1319,20 @@ except that it returns the value of a given argument.
 For example, if you formed a URL with:
 
 {% highlight yaml %}
----
 question: |
   The total amount of your bill is ${ currency(bill + tip) }.
 subquestion: |
   [Tip your waiter $10](${ url_action('tip', amount=10)}).
 
   [Tip your waiter $20](${ url_action('tip', amount=20)}).
----
 {% endhighlight %}
 
 Then you could retrieve the value of `amount` by doing:
 
 {% highlight yaml %}
----
 event: tip
 code: |
   tip = action_argument('amount')
----
 {% endhighlight %}
 
 If you are writing an [`initial`] block that calls `process_action()`
@@ -1363,26 +1357,22 @@ You would keep these in the `data/static` directory of your package,
 and you would refer to them by writing something like:
 
 {% highlight yaml %}
----
 mandatory: True
 question: You are done.
 subquestion: |
   To learn more about this topic, read
   [this brochure](${ url_of('docassemble.mycompany:data/static/brochure.pdf') }).
----
 {% endhighlight %}
 
 You can also refer to files in the current package by leaving off the
 package part of the file name:
 
 {% highlight yaml %}
----
 mandatory: True
 question: You are done.
 subquestion: |
   To learn more about this topic, read
   [this brochure](${ url_of('brochure.pdf') }).
----
 {% endhighlight %}
 
 If you do not specify a package, **docassemble** will look for the
@@ -1887,7 +1877,7 @@ does not work within documents.)  The arguments are expected to be
   (for a [`Person`] object called `person`).  If the [`Person`] object
   is the user, the default icon is a blue circle.
 
-{% include demo-side-by-side.html demo="testgeocode" %}
+{% include demo-side-by-side.html demo="testgeolocate" %}
 
 In order for maps to appear, you will need to configure a
 [Google API key].  From the [`google`] section of the [configuration],

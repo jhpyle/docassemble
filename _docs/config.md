@@ -467,18 +467,23 @@ page` prefix are:
 
 * `main page back button label`
 * `main page continue button label`
+* `main page corner back button label`
 * `main page exit label`
 * `main page exit link`
+* `main page footer`
 * `main page help label`
 * `main page logo`
+* `main page navigation bar html`
 * `main page post`
-* `main page footer`
 * `main page pre`
 * `main page resume button label`
 * `main page right`
+* `main page short logo`
 * `main page short title`
 * `main page submit`
 * `main page subtitle`
+* `main page title url opens in other window`
+* `main page title url`
 * `main page title`
 * `main page under`
 
@@ -503,7 +508,8 @@ main page post:
 {% endhighlight %}
 
 For information about other ways to set defaults for different parts
-of the screens during interviews, see the [screen parts] section.
+of the screens during interviews, and what these screen parts mean,
+see the [screen parts] section.
 
 <a name="start page template"></a><a name="interview page template"></a>
 There are two pages that you can customize even more extensively:
