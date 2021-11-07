@@ -66,7 +66,6 @@ BUTTON_COLOR_BACK_TO_QUESTION = daconfig['button colors'].get('back to question'
 
 def process_help(help_section, status, full_page=True):
     output = ''
-    logmessage(repr(help_section))
     if full_page:
         if help_section['heading'] is not None:
             output += '            <div class="da-page-header"><h1 class="h3">' + help_section['heading'].strip() + '</h1></div>\n'

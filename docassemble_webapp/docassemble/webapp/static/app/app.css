@@ -1608,11 +1608,9 @@ tr:first-child .datableup, tr:last-child .databledown {
   margin-top: 55px;
 }
 
-@media (max-width: 767px) {
-    .danavbar-title {
-	max-width: 70%;
-	overflow: hidden;
-    }
+.danavbar-title {
+    max-width: 55%;
+    overflow: hidden;
 }
 
 .dalistright {

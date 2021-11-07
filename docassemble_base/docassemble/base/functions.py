@@ -3818,10 +3818,16 @@ def action_menu_item(label, action, **kwargs):
     performed when the user clicks on the item in the menu.  This is
     only used when setting the special variable menu_items.  E.g.,
     menu_items = [ action_menu_item('Ask for my favorite food',
-    'favorite_food') ]
-
+    'favorite_food') ]  There is a special optional keyword argument,
+    _screen_size, which can be set to 'small' or 'large' and will result
+    in the menu item being only shown on small screen or large screens,
+    respectively.
     """
-    return dict(label=label, url=url_action(action, **kwargs))
+    args = copy.deepcopy(kwargs)
+    if '_screen_size' in args:
+        del args['_screen_size']
+        return dict(label=label, url=url_action(action, **args), screen_size=kwargs['_screen_size'])
+    return dict(label=label, url=url_action(action, **args))
 
 def from_b64_json(string):
     """Converts the string from base-64, then parses the string as JSON, and returns the object.

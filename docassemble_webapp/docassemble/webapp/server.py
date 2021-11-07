@@ -1305,7 +1305,30 @@ for page_key in ('login page', 'register page', 'interview page', 'start page', 
 
 main_page_parts = dict()
 lang_list = set()
-for key in ('main page title', 'main page short title', 'main page logo', 'main page subtitle', 'main page pre', 'main page submit', 'main page post', 'main page footer', 'main page under', 'main page right', 'main page exit label', 'main page help label', 'main page continue button label', 'main page back button label', 'main page corner back button label', 'main page resume button label'):
+main_page_parts_list = (
+    'main page back button label',
+    'main page continue button label',
+    'main page corner back button label',
+    'main page exit label',
+    'main page exit link',
+    'main page exit url',
+    'main page footer',
+    'main page help label',
+    'main page logo',
+    'main page navigation bar html',
+    'main page post',
+    'main page pre',
+    'main page resume button label',
+    'main page right',
+    'main page short logo',
+    'main page short title',
+    'main page submit',
+    'main page subtitle',
+    'main page title url opens in other window',
+    'main page title url',
+    'main page title',
+    'main page under')
+for key in main_page_parts_list:
     if key in daconfig and type(daconfig[key]) is dict:
         for lang in daconfig[key]:
             lang_list.add(lang)
@@ -1313,7 +1336,7 @@ lang_list.add(DEFAULT_LANGUAGE)
 lang_list.add('*')
 for lang in lang_list:
     main_page_parts[lang] = dict()
-for key in ('main page pre', 'main page submit', 'main page post', 'main page footer', 'main page under', 'main page subtitle', 'main page logo', 'main page title', 'main page short title', 'main page continue button label', 'main page help label', 'main page back button label', 'main page corner back button label', 'main page right', 'main page exit url', 'main page exit label', 'main page exit link', 'main page resume button label', 'main page title url', 'main page title url opens in other window'):
+for key in main_page_parts_list:
     for lang in lang_list:
         if key in daconfig:
             if type(daconfig[key]) is dict:
@@ -2884,16 +2907,16 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
 """
     if status.title_url:
-        url = status.title_url
         if str(status.title_url_opens_in_other_window) == 'False':
             target = ''
         else:
             target = ' target="_blank"'
+        navbar += """\
+        <a id="dapagetitle" class="navbar-brand danavbar-title dapointer" href=""" + '"' + status.title_url + '"' + target + """><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></a>
+"""
     else:
-        url = '#'
-        target = ''
-    navbar += """\
-        <a id="dapagetitle" class="navbar-brand danavbar-title dapointer" href=""" + '"' + url + '"' + target + """><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></a>
+        navbar += """\
+        <span id="dapagetitle" class="navbar-brand danavbar-title"><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></span>
 """
     help_message = word("Help is available")
     help_label = None
@@ -2934,6 +2957,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         <div class="collapse navbar-collapse" id="danavbar-collapse">
           <ul class="navbar-nav ml-auto">
 """
+    navbar += status.nav_item
     if 'menu_items' in status.extras:
         if not isinstance(status.extras['menu_items'], list):
             custom_menu += '<a tabindex="-1" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
@@ -2943,11 +2967,18 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                 if not (isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item):
                     custom_menu += '<a tabindex="-1" class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
                 else:
+                    screen_size = menu_item.get('screen_size', '')
+                    if screen_size == 'small':
+                        menu_item_classes = ' d-block d-md-none'
+                    elif screen_size == 'large':
+                        menu_item_classes = ' d-none d-md-block'
+                    else:
+                        menu_item_classes = ''
                     match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
                     if match_action:
-                        custom_menu += '<a class="dropdown-item" data-embaction="' + match_action.group(1) + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
+                        custom_menu += '<a class="dropdown-item' + menu_item_classes + '" data-embaction="' + match_action.group(1) + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
                     else:
-                        custom_menu += '<a class="dropdown-item" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
+                        custom_menu += '<a class="dropdown-item' + menu_item_classes + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
         else:
             custom_menu = False
     else:
@@ -5937,7 +5968,7 @@ def rootindex():
 def title_converter(content, part, status):
     if part in ('exit link', 'exit url', 'title url', 'title url opens in other window'):
         return content
-    if part in ('title', 'subtitle', 'short title', 'tab title', 'exit label', 'logo', 'back button label', 'corner back button label'):
+    if part in ('title', 'subtitle', 'short title', 'tab title', 'exit label', 'back button label', 'corner back button label', 'logo', 'short logo', 'navigation bar html'):
         return docassemble.base.util.markdown_to_html(content, status=status, trim=True)
     return docassemble.base.util.markdown_to_html(content, status=status)
 
@@ -11378,9 +11409,10 @@ def index(action_argument=None, refer=None):
     interview_status.display_title = title_info.get('logo', interview_status.title)
     interview_status.tabtitle = title_info.get('tab', interview_status.title)
     interview_status.short_title = title_info.get('short', title_info.get('full', default_short_title))
-    interview_status.display_short_title = title_info.get('logo', interview_status.short_title)
+    interview_status.display_short_title = title_info.get('short logo', title_info.get('logo', interview_status.short_title))
     interview_status.title_url = title_info.get('title url', None)
     interview_status.title_url_opens_in_other_window = title_info.get('title url opens in other window', True)
+    interview_status.nav_item = title_info.get('navigation bar html', '')
     the_main_page_parts = main_page_parts.get(interview_language, main_page_parts.get('*'))
     interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
     interview_status.post = title_info.get('post', the_main_page_parts['main page post'])
@@ -25462,9 +25494,10 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     interview_status.display_title = title_info.get('logo', interview_status.title)
     interview_status.tabtitle = title_info.get('tab', interview_status.title)
     interview_status.short_title = title_info.get('short', title_info.get('full', default_short_title))
-    interview_status.display_short_title = title_info.get('logo', interview_status.short_title)
+    interview_status.display_short_title = title_info.get('short logo', title_info.get('logo', interview_status.short_title))
     interview_status.title_url = title_info.get('title url', None)
     interview_status.title_url_opens_in_other_window = title_info.get('title url opens in other window', True)
+    interview_status.nav_item = title_info.get('navigation bar html', '')
     the_main_page_parts = main_page_parts.get(interview_language, main_page_parts.get('*'))
     interview_status.pre = title_info.get('pre', the_main_page_parts['main page pre'])
     interview_status.post = title_info.get('post', the_main_page_parts['main page post'])

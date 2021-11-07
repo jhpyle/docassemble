@@ -5033,6 +5033,8 @@ class Question:
             extras['cssClass'] = user_dict['_internal']['css class']
         elif self.language in self.interview.default_screen_parts and 'css class' in self.interview.default_screen_parts[self.language]:
             extras['cssClass'] = self.interview.default_screen_parts[self.language]['css class'].text(user_dict)
+        elif '*' in self.interview.default_screen_parts and 'css class' in self.interview.default_screen_parts['*']:
+            extras['cssClass'] = self.interview.default_screen_parts['*']['css class'].text(user_dict)
         elif 'css class' in the_default_titles:
             extras['cssClass'] = the_default_titles['css class']
         if hasattr(self, 'table_css_class') and self.table_css_class is not None:
@@ -5041,6 +5043,8 @@ class Question:
             extras['tableCssClass'] = user_dict['_internal']['table css class']
         elif self.language in self.interview.default_screen_parts and 'table css class' in self.interview.default_screen_parts[self.language]:
             extras['tableCssClass'] = self.interview.default_screen_parts[self.language]['table css class'].text(user_dict)
+        elif '*' in self.interview.default_screen_parts and 'table css class' in self.interview.default_screen_parts['*']:
+            extras['tableCssClass'] = self.interview.default_screen_parts['*']['table css class'].text(user_dict)
         elif 'table css class' in the_default_titles:
             extras['tableCssClass'] = the_default_titles['table css class']
         if hasattr(self, 'undertext') and self.undertext is not None:
@@ -5049,6 +5053,8 @@ class Question:
             extras['underText'] = user_dict['_internal']['under']
         elif self.language in self.interview.default_screen_parts and 'under' in self.interview.default_screen_parts[self.language]:
             extras['underText'] = self.interview.default_screen_parts[self.language]['under'].text(user_dict)
+        elif '*' in self.interview.default_screen_parts and 'under' in self.interview.default_screen_parts['*']:
+            extras['underText'] = self.interview.default_screen_parts['*']['under'].text(user_dict)
         elif 'under' in the_default_titles:
             extras['underText'] = the_default_titles['under']
         if hasattr(self, 'pretext') and self.pretext is not None:
@@ -5057,6 +5063,8 @@ class Question:
             extras['pre text'] = user_dict['_internal']['pre']
         elif self.language in self.interview.default_screen_parts and 'pre' in self.interview.default_screen_parts[self.language]:
             extras['pre text'] = self.interview.default_screen_parts[self.language]['pre'].text(user_dict)
+        elif '*' in self.interview.default_screen_parts and 'pre' in self.interview.default_screen_parts['*']:
+            extras['pre text'] = self.interview.default_screen_parts['*']['pre'].text(user_dict)
         elif 'pre' in the_default_titles:
             extras['pre text'] = the_default_titles['pre']
         if hasattr(self, 'posttext') and self.posttext is not None:
@@ -5065,6 +5073,8 @@ class Question:
             extras['post text'] = user_dict['_internal']['post']
         elif self.language in self.interview.default_screen_parts and 'post' in self.interview.default_screen_parts[self.language]:
             extras['post text'] = self.interview.default_screen_parts[self.language]['post'].text(user_dict)
+        elif '*' in self.interview.default_screen_parts and 'post' in self.interview.default_screen_parts['*']:
+            extras['post text'] = self.interview.default_screen_parts['*']['post'].text(user_dict)
         elif 'post' in the_default_titles:
             extras['post text'] = the_default_titles['post']
         if hasattr(self, 'righttext') and self.righttext is not None:
@@ -5073,17 +5083,23 @@ class Question:
             extras['rightText'] = user_dict['_internal']['right']
         elif self.language in self.interview.default_screen_parts and 'right' in self.interview.default_screen_parts[self.language]:
             extras['rightText'] = self.interview.default_screen_parts[self.language]['right'].text(user_dict)
+        elif '*' in self.interview.default_screen_parts and 'right' in self.interview.default_screen_parts['*']:
+            extras['rightText'] = self.interview.default_screen_parts['*']['right'].text(user_dict)
         elif 'right' in the_default_titles:
             extras['rightText'] = the_default_titles['right']
-        for screen_part in ('footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window'):
+        for screen_part in ('footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'short logo', 'title', 'subtitle', 'tab title', 'short title', 'title url', 'title url opens in other window', 'navigation bar html'):
             if screen_part in user_dict['_internal'] and user_dict['_internal'][screen_part] is not None:
                 extras[screen_part + ' text'] = user_dict['_internal'][screen_part]
         if self.language in self.interview.default_screen_parts:
             for screen_part in self.interview.default_screen_parts[self.language]:
-                if screen_part in ('footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window') and (screen_part + ' text') not in extras:
+                if screen_part in ('footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'short logo', 'title', 'subtitle', 'tab title', 'short title', 'title url', 'title url opens in other window', 'navigation bar html') and (screen_part + ' text') not in extras:
                     extras[screen_part + ' text'] = self.interview.default_screen_parts[self.language][screen_part].text(user_dict)
+        if '*' in self.interview.default_screen_parts:
+            for screen_part in self.interview.default_screen_parts['*']:
+                if screen_part in ('footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'short logo', 'title', 'subtitle', 'tab title', 'short title', 'title url', 'title url opens in other window', 'navigation bar html') and (screen_part + ' text') not in extras:
+                    extras[screen_part + ' text'] = self.interview.default_screen_parts['*'][screen_part].text(user_dict)
         for key, val in the_default_titles.items():
-            if key in ('pre', 'post', 'footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'title', 'subtitle', 'tab title', 'short title', 'logo', 'title url', 'title url opens in other window') and (key + ' text') not in extras:
+            if key in ('pre', 'post', 'footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'short logo', 'title', 'subtitle', 'tab title', 'short title', 'title url', 'title url opens in other window', 'navigation bar html') and (key + ' text') not in extras:
                 extras[key + ' text'] = val
         if len(self.terms):
             lang = docassemble.base.functions.get_language()
@@ -5125,6 +5141,8 @@ class Question:
                 continuelabel = user_dict['_internal']['resume button label']
             elif self.language in self.interview.default_screen_parts and 'resume button label' in self.interview.default_screen_parts[self.language]:
                 continuelabel = self.interview.default_screen_parts[self.language]['resume button label'].text(user_dict)
+            elif '*' in self.interview.default_screen_parts and 'resume button label' in self.interview.default_screen_parts['*']:
+                continuelabel = self.interview.default_screen_parts['*']['resume button label'].text(user_dict)
             elif 'resume button label' in the_default_titles:
                 continuelabel = the_default_titles['resume button label']
             else:
@@ -5134,6 +5152,8 @@ class Question:
                 continuelabel = user_dict['_internal']['continue button label']
             elif self.language in self.interview.default_screen_parts and 'continue button label' in self.interview.default_screen_parts[self.language]:
                 continuelabel = self.interview.default_screen_parts[self.language]['continue button label'].text(user_dict)
+            elif '*' in self.interview.default_screen_parts and 'continue button label' in self.interview.default_screen_parts['*']:
+                continuelabel = self.interview.default_screen_parts['*']['continue button label'].text(user_dict)
             elif 'continue button label' in the_default_titles:
                 continuelabel = the_default_titles['continue button label']
             else:
@@ -5144,6 +5164,8 @@ class Question:
             extras['back button label text'] = user_dict['_internal']['back button label']
         elif self.language in self.interview.default_screen_parts and 'back button label' in self.interview.default_screen_parts[self.language]:
             extras['back button label text'] = self.interview.default_screen_parts[self.language]['back button label'].text(user_dict)
+        elif '*' in self.interview.default_screen_parts and 'back button label' in self.interview.default_screen_parts['*']:
+            extras['back button label text'] = self.interview.default_screen_parts['*']['back button label'].text(user_dict)
         elif 'back button label' in the_default_titles:
             extras['back button label text'] = the_default_titles['back button label']
         else:
@@ -5154,6 +5176,8 @@ class Question:
             extras['corner back button label text'] = user_dict['_internal']['corner back button label']
         elif self.language in self.interview.default_screen_parts and 'corner back button label' in self.interview.default_screen_parts[self.language]:
             extras['corner back button label text'] = self.interview.default_screen_parts[self.language]['corner back button label'].text(user_dict)
+        elif '*' in self.interview.default_screen_parts and 'corner back button label' in self.interview.default_screen_parts['*']:
+            extras['corner back button label text'] = self.interview.default_screen_parts['*']['corner back button label'].text(user_dict)
         elif 'corner back button label' in the_default_titles:
             extras['corner back button label text'] = the_default_titles['corner back button label']
         else:
@@ -5165,6 +5189,8 @@ class Question:
                 helplabel = user_dict['_internal']['help label']
             elif self.language in self.interview.default_screen_parts and 'help label' in self.interview.default_screen_parts[self.language]:
                 helplabel = self.interview.default_screen_parts[self.language]['help label'].text(user_dict)
+            elif '*' in self.interview.default_screen_parts and 'help label' in self.interview.default_screen_parts['*']:
+                helplabel = self.interview.default_screen_parts['*']['help label'].text(user_dict)
             elif 'help label' in the_default_titles:
                 helplabel = the_default_titles['help label']
             else:
@@ -5186,6 +5212,8 @@ class Question:
             help_text_list = list()
             if self.language in self.interview.default_screen_parts and 'help label' in self.interview.default_screen_parts[self.language]:
                 extras['help label text'] = self.interview.default_screen_parts[self.language]['help label'].text(user_dict)
+            if '*' in self.interview.default_screen_parts and 'help label' in self.interview.default_screen_parts['*']:
+                extras['help label text'] = self.interview.default_screen_parts['*']['help label'].text(user_dict)
             elif 'help label' in the_default_titles:
                 extras['help label text'] = the_default_titles['help label']
         interview_help_text_list = self.interview.processed_helptext(user_dict, self.language)
@@ -7122,7 +7150,7 @@ class Interview:
     def get_title(self, the_user_dict, status=None, converter=None):
         if converter is None:
             converter = lambda y: y
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('under', 'under'), ('right', 'right'), ('logo', 'logo'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short logo', 'short logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('under', 'under'), ('right', 'right'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'), ('navigation bar html', 'navigation bar html'))
         title = dict()
         for title_name, title_abb in mapping:
             if '_internal' in the_user_dict and title_name in the_user_dict['_internal'] and the_user_dict['_internal'][title_name] is not None:
@@ -7375,7 +7403,7 @@ class Interview:
                     recursive_update(self.consolidated_metadata[key], val)
                 else:
                     self.consolidated_metadata[key] = val
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short logo', 'short logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'), ('navigation bar html', 'navigation bar html'))
         self.default_title = {'*': dict()}
         for metadata in self.metadata:
             for title_name, title_abb in mapping:

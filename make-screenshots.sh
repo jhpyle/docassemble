@@ -37,6 +37,14 @@ do
 	   "$file" = "sections-small-screen-false" ]
     then
 	echo -e -n "\n    And I wait 6 seconds\n    And I set the window size to 385x1136\n    And I wait 2 seconds\n    And I save a screenshot to \"$tempfile\"\n    And I set the window size to 1005x9999\n    And I wait 2 seconds" >> $featurefile
+    elif [ "$file" = "mainpage-demo-parts" -o \
+           "$file" = "setparts-demo" -o \
+           "$file" = "default-screen-parts-override" -o \
+           "$file" = "metadata-screen-parts" -o \
+           "$file" = "default-screen-parts" -o \
+           "$file" = "set-parts" ]
+    then
+	echo -e -n "\n    And I wait 6 seconds\n    And I set the window size to 1005x700\n    And I wait 2 seconds\n    And I save a screenshot to \"$tempfile\"\n    And I set the window size to 1005x9999\n    And I wait 2 seconds" >> $featurefile
     elif [ "$file" = "table" -o "$file" = "table-alt" -o "$file" = "table-mako" -o "$file" = "table-reorder" ]
     then
 	echo -e -n "\n    And I set \"Fruit\" to \"apples\"\n    And I set \"Number of seeds\" to \"10\"\n    And I click the button \"Continue\"\n    And I click the button \"Yes\"\n    And I set \"Fruit\" to \"oranges\"\n    And I set \"Number of seeds\" to \"6\"\n    And I click the button \"Continue\"\n    And I click the button \"Yes\"\n    And I set \"Fruit\" to \"pears\"\n    And I set \"Number of seeds\" to \"0\"\n    And I click the button \"Continue\"\n    And I click the button \"No\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
@@ -153,14 +161,15 @@ do
 	 "$file" = "sections-non-progressive" -o \
          "$file" = "sections-auto-open" -o \
          "$file" = "centered" -o \
+	 "$file" = "pre" -o \
          "$file" = "mainpage-demo-parts" -o \
          "$file" = "setparts-demo" -o \
-	 "$file" = "pre" -o \
-         "$file" = "preview" -o \
          "$file" = "default-screen-parts-override" -o \
          "$file" = "metadata-screen-parts" -o \
          "$file" = "default-screen-parts" -o \
-         "$file" = "set-parts" ]
+         "$file" = "set-parts" -o \
+         "$file" = "navbar-language" -o \
+         "$file" = "preview" ]
     then
 	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 -resize 478x9999 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "radio-list-mobile" -o \
