@@ -4493,7 +4493,9 @@ def get_user_object(user_id):
 
 @lm.request_loader
 def load_request(request):
-    auth = request.cookies.get('auth', None)
+    auth_key = daconfig.get('verify id token key', '__session')
+    logmessage('auth_key', auth_key)
+    auth = request.cookies.get(auth_key, None)
     verifyURI = daconfig.get('verify id token URI')
     logmessage('verifyURI' + str(verifyURI))
     logmessage('auth ' + auth)
