@@ -142,20 +142,17 @@ def click_question_back_button(step):
 
 @step(r'I click the button "([^"]+)"')
 def click_button(step, button_name):
-    world.browser.find_element_by_id('dapagetitle').click()
+    try:
+        world.browser.find_element_by_id('daMainQuestion').click()
+    except:
+        pass
     do_wait()
     success = False
     try:
-        world.browser.find_element_by_xpath('//button/span[text()="' + button_name + '"]').click()
+        world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
         success = True
     except:
        pass
-    if not success:
-        try:
-            world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
-            success = True
-        except:
-            pass
     if not success:
        for elem in world.browser.find_elements_by_xpath('//a[text()="' + button_name + '"]'):
            try:
@@ -165,22 +162,31 @@ def click_button(step, button_name):
                pass
            if success:
                break
+    if not success:
+        try:
+            world.browser.find_element_by_xpath('//button/span[text()="' + button_name + '"]').click()
+            success = True
+        except:
+            pass
     assert success
     world.browser.wait_for_it()
 
 @step(r'I click the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) button "([^"]+)"')
 def click_nth_button(step, ordinal, button_name):
-    world.browser.find_element_by_id('dapagetitle').click()
+    try:
+        world.browser.find_element_by_id('daMainQuestion').click()
+    except:
+        pass
     do_wait()
     success = False
     try:
-        world.browser.find_element_by_xpath('(//button/span[text()="' + button_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+        world.browser.find_element_by_xpath('(//button[text()="' + button_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
         success = True
     except:
        pass
     if not success:
         try:
-            world.browser.find_element_by_xpath('(//button[text()="' + button_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
+            world.browser.find_element_by_xpath('(//button/span[text()="' + button_name + '"])[' + str(number_from_ordinal[ordinal]) + ']').click()
             success = True
         except:
             pass
@@ -192,13 +198,13 @@ def click_button_post(step, choice):
     do_wait()
     success = False
     try:
-        world.browser.find_element_by_xpath('//button/span[text()="' + button_name + '"]').click()
+        world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
         success = True
     except:
         pass
     if not success:
         try:
-            world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+            world.browser.find_element_by_xpath('//button/span[text()="' + button_name + '"]').click()
             success = True
         except:
             pass
@@ -224,6 +230,12 @@ def click_link(step, link_name):
         world.browser.find_element_by_xpath('//a[text()="' + link_name + '"]').click()
     world.browser.wait_for_it()
 
+@step(r'I click the help icon for "([^"]+)"')
+def click_help_icon_link(step, link_name):
+    do_wait()
+    world.browser.find_element_by_xpath('//label[text()="' + link_name + '"]/a').click()
+    world.browser.wait_for_it()
+
 @step(r'I select "([^"]+)" from the menu')
 def menu_select(step, link_name):
     do_wait()
@@ -239,12 +251,14 @@ def menu_select(step, link_name):
 def click_help_tab(step):
     do_wait()
     world.browser.find_element_by_id('dahelptoggle').click()
+    time.sleep(0.5)
     world.browser.wait_for_it()
 
 @step(r'I go back to the question screen')
 def click_back_to_question_button(step):
     do_wait()
     world.browser.find_element_by_id('dabackToQuestion').click()
+    time.sleep(0.5)
     world.browser.wait_for_it()
 
 @step(r'I click the (first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) link "([^"]+)"')
@@ -492,13 +506,13 @@ def exit_button(step, button_name):
     do_wait()
     success = False
     try:
-        world.browser.find_element_by_xpath('//button/span[text()="' + button_name + '"]').click()
+        world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
         success = True
     except:
         pass
     if not success:
         try:
-            world.browser.find_element_by_xpath('//button[text()="' + button_name + '"]').click()
+            world.browser.find_element_by_xpath('//button/span[text()="' + button_name + '"]').click()
             success = True
         except:
             pass
@@ -514,7 +528,7 @@ def change_window_size(step, xdimen, ydimen):
 
 @step(r'I unfocus')
 def unfocus(step):
-    world.browser.find_element_by_id('dapagetitle').click()
+    world.browser.find_element_by_id('daMainQuestion').click()
 
 @step(r'I click the final link "([^"]+)"')
 def finally_click_link(step, link_name):

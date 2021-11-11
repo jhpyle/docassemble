@@ -9,13 +9,11 @@
 
 <form action="" method="POST" role="form" class="form">
   {{ form.hidden_tag() }}
-  <div class="form-actions">
-    {{ render_submit_field(form.reconfigure, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
+  {{ render_submit_field(form.reconfigure, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
 {%- if allow_disable %}
-    {{ render_submit_field(form.disable, class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS']) }}
+  {{ render_submit_field(form.disable, class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS']) }}
 {%- endif %}
-    {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
-  </div>
+  {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
 </form>
 
 {% endblock %}

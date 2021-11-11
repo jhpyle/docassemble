@@ -45,10 +45,10 @@
     left: 1px;
     right: auto;
 }
-.kv-rtl .pull-right, .kv-rtl .float-right {
+.kv-rtl .pull-right, .kv-rtl .float-end {
     float: left !important;
 }
-.kv-rtl .pull-left, .kv-rtl .float-left {
+.kv-rtl .pull-left, .kv-rtl .float-start {
     float: right !important;
 }
 .kv-rtl .kv-zoom-title {

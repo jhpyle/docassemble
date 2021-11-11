@@ -17,7 +17,7 @@ fields:
     input type: area
     hint: |
       E.g., you can describe your
-      hair color, eye color, 
+      hair color, eye color,
       favorite movies, etc.
   - Annual income: user_annual_income
     datatype: currency
@@ -59,14 +59,14 @@ fields:
   - note: |
       #### Politics
 
-      Tell me about your political
-      views.
-  - no label: political_views
+  - label: Tell me about your political views.
+    field: political_views
+    label above field: True
     default: I have no political views
     maxlength: 30
   - Party: political_party
     datatype: radio
-    shuffle: True 
+    shuffle: True
     choices:
       - Republican
       - Democrat

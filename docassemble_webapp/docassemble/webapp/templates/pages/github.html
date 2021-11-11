@@ -18,7 +18,7 @@
     <label class="form-check-label" for="{{ form.orgs.id }}">{{ form.orgs.label.text }}</label>
   </div>
   {% endif %}
-  <div class="form-actions mt-3">
+  <div class="mt-3">
     {% if uses_github %}
     {{ render_submit_field(form.save, class="btn " + config['BUTTON_STYLE'] + "success " + config['BUTTON_CLASS']) }}
     {{ render_submit_field(form.unconfigure, class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS']) }}

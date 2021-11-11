@@ -30,18 +30,18 @@ PAGINATION_LIMIT_PLUS_ONE = PAGINATION_LIMIT + 1
 def privilege_list():
     setup_translation()
     output = """\
-    <table class="table">
+    <table class="table table-striped">
       <thead>
         <tr>
           <th scope="col">""" + word("Privilege") + """</th>
-          <th scope="col">""" + word("Action") + """</th>
+          <th scope="col" class="text-end">""" + word("Action") + """</th>
         </tr>
       </thead>
       <tbody>
 """
     for role in db.session.execute(select(Role).order_by(Role.name)).scalars():
         if role.name not in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
-            output += '        <tr><td>' + str(role.name) + '</td><td><a class="btn ' + app.config['BUTTON_CLASS'] + ' btn-danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
+            output += '        <tr><td>' + str(role.name) + '</td><td class="text-end"><a class="btn ' + app.config['BUTTON_CLASS'] + ' btn-danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
         else:
             output += '        <tr><td>' + str(role.name) + '</td><td>&nbsp;</td></tr>\n'
 

@@ -11,7 +11,7 @@ metadata:
 default screen parts:
   navigation bar html: |
     <li class="nav-item dropdown">
-      <a class="nav-link dropdown-toggle" href="#" id="languageSelector" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <a class="nav-link dropdown-toggle" href="#" id="languageSelector" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <img src="${ url_of('docassemble.demo:data/static/united-kingdom.svg') }" style="width:20px;" /><img src="${ url_of('docassemble.demo:data/static/mexico.svg') }" style="margin-left:-5px;width:20px;" />
       </a>
       <div class="dropdown-menu" aria-labelledby="languageSelector">

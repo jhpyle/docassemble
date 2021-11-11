@@ -648,7 +648,7 @@ def html_filter(text, status=None, question=None, embedder=None, default_image_w
             line = re.sub(r'^> *', '', line)
             text += "> "
         if len(classes) or len(styles):
-            text += '<i class="sr-only'
+            text += '<i class="visually-hidden'
             if len(classes):
                 text += '  ' + " ".join(classes) + '"'
             else:
@@ -1394,7 +1394,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
             result = term_match.sub((lambda x: add_terms(x.group(1), interview_autoterms[question.language], label=x.group(2), status=status, question=question)), result)
     if status is not None and question.interview.scan_for_emojis:
         result = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status, question=question)), result)
-    result = re.sub(r'<p><i class="sr-only *([^>]*)></i>', r'<p class="\1>', result)
+    result = re.sub(r'<p><i class="visually-hidden *([^>]*)></i>', r'<p class="\1>', result)
     if trim:
         if result.startswith('<p>') and result.endswith('</p>'):
             result = re.sub(r'</p>\s*<p>', ' ', result[3:-4])
@@ -1432,7 +1432,7 @@ def noquote(string):
 def add_terms_mako(termname, terms, status=None, question=None):
     lower_termname = re.sub(r'\s+', ' ', termname.lower(), re.DOTALL)
     if lower_termname in terms:
-        return('<a tabindex="0" class="daterm" data-toggle="popover" data-container="body" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'].text(dict()), trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + str(termname) + '</a>')
+        return('<a tabindex="0" class="daterm" data-bs-toggle="popover" data-bs-container="body" data-bs-placement="bottom" data-bs-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'].text(dict()), trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + str(termname) + '</a>')
     #logmessage(lower_termname + " is not in terms dictionary\n")
     return '[[' + termname + ']]'
 
@@ -1443,7 +1443,7 @@ def add_terms(termname, terms, label=None, status=None, question=None):
         label = re.sub(r'^\|', '', label)
     lower_termname = re.sub(r'\s+', ' ', termname.lower(), re.DOTALL)
     if lower_termname in terms:
-        return('<a tabindex="0" class="daterm" data-toggle="popover" data-container="body" data-placement="bottom" data-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + label + '</a>')
+        return('<a tabindex="0" class="daterm" data-bs-toggle="popover" data-bs-container="body" data-bs-placement="bottom" data-bs-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'], trim=True, default_image_width='100%', do_terms=False, status=status, question=question)) + '>' + label + '</a>')
     #logmessage(lower_termname + " is not in terms dictionary\n")
     return '[[' + termname + ']]'
 
@@ -1640,8 +1640,8 @@ def to_text(html_doc, terms, links, status):
         words = re.sub(r'\n\s*', ' ', words, flags=re.DOTALL)
         output += words + "\n"
     for s in soup.find_all('a'):
-        if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-content'):
-            terms[s.string] = s.attrs['data-content']
+        if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-bs-content'):
+            terms[s.string] = s.attrs['data-bs-content']
         elif s.has_attr('href'):# and (s.attrs['href'].startswith(url) or s.attrs['href'].startswith('?')):
             #logmessage("Adding a link: " + s.attrs['href'])
             links.append((s.attrs['href'], s.get_text()))

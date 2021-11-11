@@ -9,7 +9,7 @@
     <a class="nav-link" tabindex="2" title="{{ word('Create an interview with the wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml', project=current_project) }}"><i class="fas fa-magic" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Wizard') }}</a>
   </li>
   <li class="nav-item dropdown">
-    <a tabindex="3" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">
+    <a tabindex="3" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">
       <i class="fas fa-folder-open" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Folders') }}
     </a>
     <div class="dropdown-menu">
@@ -21,7 +21,7 @@
     </div>
   </li>
   <li role="presentation" class="nav-item dropdown">
-    <a tabindex="4" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another interview')}}">
+    <a tabindex="4" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another interview')}}">
       <i class="fas fa-file" aria-hidden="true"></i>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
     </a>
     <div class="dropdown-menu daheightlim">
@@ -78,7 +78,7 @@
       {{ render_addon_field(form.playground_name, tabindex=20) }}
     </div>        
     <div class="col-lg-6">
-      {{ render_addon_field(form.search_term, tabindex=80, autocomplete="off", extra='<div class="input-group-append"><button title="' + word('Previous result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></button></div>', extra_class='pull-right') }}
+      {{ render_addon_field(form.search_term, tabindex=80, autocomplete="off", extra='<button title="' + word('Previous result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></button>') }}
     </div>
   </div>
   <textarea rows="34" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
@@ -97,7 +97,7 @@
     {{ render_submit_field(form.delete, id='daDelete', class="btn " + config['BUTTON_STYLE'] + "danger " + config['BUTTON_CLASS'], tabindex="110") }}
 
     {% if interview_path %}
-    <a tabindex="120" title="Right-click to copy link" id="share-link" class="badge badge-secondary da-example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="fas fa-link"></i>&nbsp;&nbsp;{{ word('Share') }}</a>
+    <a tabindex="120" title="Right-click to copy link" id="share-link" class="dabadge btn btn-secondary da-example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="fas fa-link"></i>&nbsp;&nbsp;{{ word('Share') }}</a>
     {% endif %}
     {% endif %}
   </div>
@@ -105,7 +105,7 @@
 {%- endblock %}
 {% block rightside %}
             <div id="playgroundbox" class="card bg-light playgroundbox mt-1">
-              <div class="card-header">{{ word('Names from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="badge badge-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a>&nbsp;<a title="{{ word('Show report of names and associated questions') }}" class="badge badge-secondary da-larger-badge" data-toggle="modal" href="" id="daVariablesReportLauncher" data-target="#daVariablesReport"><i class="fas fa-list"></i></a></div>
+              <div class="card-header">{{ word('Names from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="dabadge btn btn-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a>&nbsp;<a title="{{ word('Show report of names and associated questions') }}" class="dabadge btn btn-secondary da-larger-badge" data-bs-toggle="modal" href="" id="daVariablesReportLauncher" data-bs-target="#daVariablesReport"><i class="fas fa-list"></i></a></div>
               <div class="card-body" id="daplaygroundcard">
                 <table id="daplaygroundtable" class="daplaygroundtable">{{ variables_html }}
                 </table>
@@ -119,15 +119,13 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">{{ word("Names and questions") }}</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ word("Close") }}"></button>
       </div>
       <div class="modal-body">
         <p>{{ word("Loading . . .") }}</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ word("Close") }}</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ word("Close") }}</button>
       </div>
     </div>
   </div>

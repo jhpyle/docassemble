@@ -17,7 +17,7 @@
                 <a class="nav-link" title="{{ word('Create a new package') }}" href="{{ url_for('playground_packages', project=current_project, new='1') }}"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
               </li>
               <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another package')}}">
+                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another package')}}">
                   <i class="fas fa-briefcase" aria-hidden="true"></i>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
                 </a>
                 <div class="dropdown-menu daheightlim">
@@ -74,8 +74,8 @@
               {{ render_field(form.description) }}
               {{ render_field(form.url) }}
               <h2>{{ form.dependencies.label }}</h2>
-              <div class="form-group">
-                <label for="{{ form.dependencies.id }}">{{ word("Select zero or more packages") }}</label>
+              <div class="da-form-group">
+                <label class="form-label" for="{{ form.dependencies.id }}">{{ word("Select zero or more packages") }}</label>
                 <select multiple size="{% if package_names.__len__() < 10 %}{{ package_names.__len__() }}{% else %}10{% endif %}" class="form-control" name="{{ form.dependencies.id }}" id="{{ form.dependencies.id }}">
                   {%- for package in package_names %}
                   <option value="{{ package }}"{% if form.dependencies.data and package in form.dependencies.data %} selected{% endif %}>{{ package }}</option>
@@ -84,8 +84,8 @@
               </div>
               {%- for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'] %}
               <h2>{{ section_field[sec].label }}</h2>
-              <div class="form-group">
-                <label for="{{ section_field[sec].id }}">{{ word("Select zero or more files") }}</label>
+              <div class="da-form-group">
+                <label class="form-label" for="{{ section_field[sec].id }}">{{ word("Select zero or more files") }}</label>
                 <select multiple size="{% if file_list[sec].__len__() < 10 %}{{ file_list[sec].__len__() }}{% else %}10{% endif %}" class="form-control" name="{{ section_field[sec].id }}" id="{{ section_field[sec].id }}">
                   {%- for file in file_list[sec] %}
                   <option value="{{ file }}"{% if section_field[sec].data and file in section_field[sec].data %} selected{% endif %}>{{ file }}</option>
@@ -98,8 +98,8 @@
           <div class="row">
             <div class="col-sm-8 col-md-8 col-lg-8 col-xl-8">
               <h2>{{ form.readme.label }}</h2>
-              <div class="form-group">
-                <label for="{{ form.readme.id }}">{{ word("The README.md file for the package") }}</label>
+              <div class="da-form-group">
+                <label class="form-label" for="{{ form.readme.id }}">{{ word("The README.md file for the package") }}</label>
                 <textarea rows="24" cols="80" id="{{ form.readme.id }}" name="{{ form.readme.id }}">{{ form.readme.data }}</textarea>
               </div>
               {%- if pypi_message %}
@@ -172,5 +172,5 @@
         {%- endif %}
 {%- endblock %}
 {%- block bottom %}
-      <div class="mt-2"><p><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
+      <div class="mt-2"><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}primary btn-md"><i class="fas fa-chevron-left"></i>&nbsp;{{ word("Back to Playground") }}</a></div>
 {%- endblock %}

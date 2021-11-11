@@ -12,17 +12,15 @@
 {%- endif %}
 <form action="" method="POST" role="form">
   {{ form.hidden_tag() }}
-  <div class="form-group">
-    <label for="{{ form.folder.id }}">{{ word("Linked folder") }}</label>
+  <div class="da-form-group">
+    <label class="form-label" for="{{ form.folder.id }}">{{ word("Linked folder") }}</label>
     <select class="form-control" name="{{ form.folder.id }}" id="{{ form.folder.id }}">
       {%- for item in items %}
       <option value="{{ item['id'] }}"{% if item['id'] == the_folder %} selected{% endif %}>{{ item['name'] }}</option>
       {%- endfor %}
     </select>
   </div>
-  <div>
-    {{ render_submit_field(form.submit) }}
-    {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
-  </div>
+  {{ render_submit_field(form.submit) }}
+  {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
 </form>
 {% endblock %}

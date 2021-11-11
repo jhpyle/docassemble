@@ -4,7 +4,7 @@
 {% from "base_templates/form_macros.html" import render_field, render_submit_field, render_select_field %}
 <h1>{{ title }}</h1>
 
-<div class="card">
+<div class="card mb-2">
   <div class="card-body">
     {{ description }}
   </div>
@@ -12,17 +12,11 @@
 
 <form action="{{ url_for('pull_playground_package', project=current_project) }}" method="POST" role="form" class="form">
   {{ form.hidden_tag() }}
-  <div class="form-actions">
-    {{ render_field(form.github_url, placeholder='https://github.com/username/docassemble-packagename') }}
-
-    {{ render_select_field(form.github_branch) }}
-
-    {{ render_field(form.pypi, prelabel='docassemble.') }}
-
-    {{ render_submit_field(form.pull, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
-    
-    {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS']) }}
-  </div>
+  {{ render_field(form.github_url, placeholder='https://github.com/username/docassemble-packagename') }}
+  {{ render_select_field(form.github_branch) }}
+  {{ render_field(form.pypi, prelabel='docassemble.') }}
+  {{ render_submit_field(form.pull, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
+  {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
 </form>
 
 {% endblock %}

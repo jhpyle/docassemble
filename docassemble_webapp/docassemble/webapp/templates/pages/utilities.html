@@ -27,46 +27,34 @@
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
   {{ render_file_field(form.pdfdocxfile) }}
-  <div class="form-actions">
-    {{ render_submit_field(form.scan) }}
-  </div>
+  {{ render_submit_field(form.scan) }}
 </form>
 
 <h3 class="da-page-header">{{ word('Translate system phrases into another language') }}</h3>
 
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form">
   {{ form.hidden_tag() }}
-  <div class="form-group">
-    {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">' + word("List of ISO-639-1 language codes") + '</a>') }}
-    {{ render_select_field(form.systemfiletype) }}
-  </div>
-  <div class="form-actions">
-    {{ render_submit_field(form.language_submit, data={'disable-button': 0}) }}
-  </div>
+  {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">' + word("List of ISO-639-1 language codes") + '</a>') }}
+  {{ render_select_field(form.systemfiletype) }}
+  {{ render_submit_field(form.language_submit, data={'disable-button': 0}) }}
 </form>
 
 <h3 class="da-page-header">{{ word('Download an interview phrase translation file') }}</h3>
 
 <form action="{{ url_for('translation_file') }}" method="POST" class="form" role="form">
   {{ form.hidden_tag() }}
-  <div class="form-group">
-    {{ render_field(form.interview, placeholder=interview_placeholder) }}
-    {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">List of ISO-639-1 language codes</a>') }}
-    {{ render_select_field(form.filetype) }}
-  </div>
-  <div class="form-actions">
-    {{ render_submit_field(form.interview_submit, data={'disable-button': 0}) }}
-  </div>
+  {{ render_field(form.interview, placeholder=interview_placeholder) }}
+  {{ render_field(form.language, placeholder=language_placeholder, right_message='<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">List of ISO-639-1 language codes</a>') }}
+  {{ render_select_field(form.filetype) }}
+  {{ render_submit_field(form.interview_submit, data={'disable-button': 0}) }}
 </form>
 
 <h3 class="da-page-header">{{ word('Download Office add-in manifest file') }}</h3>
 
 <form action="{{ url_for('utilities') }}" method="POST" role="form">
   {{ form.hidden_tag() }}
-  <div class="form-actions">
-    {{ render_field(form.officeaddin_version) }}
-    {{ render_submit_field(form.officeaddin_submit) }}
-  </div>
+  {{ render_field(form.officeaddin_version) }}
+  {{ render_submit_field(form.officeaddin_submit) }}
 </form>
 
 {% endblock %}

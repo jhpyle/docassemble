@@ -4397,9 +4397,6 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Your favorite food is soup."
 
-  # Scenario: Test the interview "Computed template filename"
-  #   Given I start the interview "docassemble.base:data/questions/examples/template-code.yml"
-
   Scenario: Test the interview "Template from file"
     Given I start the interview "docassemble.base:data/questions/examples/template-file.yml"
     Then I should see the phrase "Welcome to the interview!"
@@ -4521,13 +4518,13 @@ Feature: Example interviews
   Scenario: Test the interview "Help on label"
     Given I start the interview "docassemble.base:data/questions/examples/text-help.yml"
     Then I should see the phrase "What are your favorite things to eat?"
-    And I should see the phrase "If you don’t know what a vegetable or fruit is, click the green text."
-    And I click the link "Vegetable"
+    And I should see the phrase "If you don’t know what a vegetable or fruit is, click the question mark icons."
+    And I click the help icon for "Vegetable"
     And I wait 1 second
     Then I should see the phrase "A plant."
     And I unfocus
     And I wait 1 second
-    And I click the link "Fruit"
+    And I click the help icon for "Fruit"
     And I wait 1 second
     Then I should see the phrase "The pulpy, edible seed vessels of certain plants."
     And I unfocus
@@ -7726,14 +7723,6 @@ Feature: Example interviews
     Then I should see the phrase "Here is your first book."
     And I should see the phrase "The following document has been created for you."
     And I should see the phrase "Story of My Life"
-
-  # Scenario: Test the interview "Two-stage assembly"
-  #   Given I start the interview "docassemble.demo:data/questions/examples/twostage.yml"
-  #   Then I should see the phrase "What is your favorite fruit?"
-  #   And I set "Favorite fruit" to "apple"
-  #   And I click the button "Continue"
-  #   Then I should see the phrase "All done"
-  #   And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Hello World" 2
     Given I start the interview "docassemble.demo:data/questions/hello7.yml"

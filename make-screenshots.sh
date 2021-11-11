@@ -16,15 +16,255 @@ do
     # wget --quiet -O "json_files/"$file".json" "$url"
     # sleep 1
     # continue
+
+    # create anyway:
+    # radio-list-mobile
+    # yaml-markdown-python
+    # turnips-worms
+
+    # do manually:
+    # exit-url-referer-fullscreen
+    # exit-url-referer-fullscreen-mobile
+    # session-interview
+
+    # previously done manually:
+    # help-damages-audio
+    # help-damages
+    # audio
     
-    if [ "$file" = "immediate-file" -o "$file" = "exit-url-referer-fullscreen" -o "$file" = "exit-url-referer-fullscreen-mobile" -o "$file" = "session-interview" -o "$file" = "audio" -o "$file" = "help-damages-audio" ]
+    if [ "$file" = "immediate-file" -o \
+	 "$file" = "exit-url-referer-fullscreen" -o \
+	 "$file" = "exit-url-referer-fullscreen-mobile" -o \
+	 "$file" = "session-interview" -o \
+	 "$file" = "address-autocomplete-nz" -o \
+	 "$file" = "advocate" -o \
+	 "$file" = "alarm-clock" -o \
+	 "$file" = "allow-emailing-false-pdf" -o \
+	 "$file" = "append-list" -o \
+	 "$file" = "attachment" -o \
+	 "$file" = "background_action_test_timing" -o \
+	 "$file" = "buttons-code-color-iterator" -o \
+	 "$file" = "buttons-code-iterator" -o \
+	 "$file" = "chat" -o \
+	 "$file" = "chat-example-2" -o \
+	 "$file" = "checkbox-dict-dict" -o \
+	 "$file" = "checkbox-export-value" -o \
+	 "$file" = "combobox" -o \
+	 "$file" = "command" -o \
+	 "$file" = "companies" -o \
+	 "$file" = "conflict_check" -o \
+	 "$file" = "continue-serial" -o \
+	 "$file" = "continue-special" -o \
+	 "$file" = "custody" -o \
+	 "$file" = "dadatetime" -o \
+	 "$file" = "dalist" -o \
+	 "$file" = "dalist2" -o \
+	 "$file" = "declarative" -o \
+	 "$file" = "declarative-classes" -o \
+	 "$file" = "default-screen-parts-override" -o \
+	 "$file" = "demo-basic-questions" -o \
+	 "$file" = "demo-basic-questions-address" -o \
+	 "$file" = "demo-basic-questions-name" -o \
+	 "$file" = "discovery" -o \
+	 "$file" = "dispatch-count" -o \
+	 "$file" = "document-language-docx" -o \
+	 "$file" = "docx-template-auto" -o \
+	 "$file" = "docx-template-code" -o \
+	 "$file" = "docx-template-code-2" -o \
+	 "$file" = "docx-template-multiple" -o \
+	 "$file" = "dual-dict" -o \
+	 "$file" = "edit-list-complete-complex" -o \
+	 "$file" = "edit-list-manual" -o \
+	 "$file" = "empty-choices" -o \
+	 "$file" = "empty-choices-checkboxes" -o \
+	 "$file" = "empty-choices-checkboxes-solo" -o \
+	 "$file" = "empty-choices-fields" -o \
+	 "$file" = "empty-choices-fields-multiple" -o \
+	 "$file" = "empty-choices-fields-solo" -o \
+	 "$file" = "empty-choices-object-checkboxes" -o \
+	 "$file" = "empty-choices-object-checkboxes-create" -o \
+	 "$file" = "empty-choices-object-checkboxes-solo" -o \
+	 "$file" = "empty-choices-object-checkboxes-solo-create" -o \
+	 "$file" = "exit-url-referer-fullscreen" -o \
+	 "$file" = "exit-url-referer-fullscreen-mobile" -o \
+	 "$file" = "field-note" -o \
+	 "$file" = "fields-ajax-list-collect" -o \
+	 "$file" = "fields-mc-exclude-manual" -o \
+	 "$file" = "fields-mc-with-showif" -o \
+	 "$file" = "file" -o \
+	 "$file" = "flags" -o \
+	 "$file" = "flushleft" -o \
+	 "$file" = "flushright" -o \
+	 "$file" = "forward-chaining" -o \
+	 "$file" = "forward-chaining-assumptions" -o \
+	 "$file" = "gather" -o \
+	 "$file" = "gather-dict-number" -o \
+	 "$file" = "gather-fruit-incomplete" -o \
+	 "$file" = "gather-manual-gathered-object" -o \
+	 "$file" = "gather-manual-gathered-object-simple" -o \
+	 "$file" = "gather-set-number" -o \
+	 "$file" = "get-docx-variables" -o \
+	 "$file" = "get-pdf-fields" -o \
+	 "$file" = "get-pdf-fields-2" -o \
+	 "$file" = "google-drive" -o \
+	 "$file" = "google-sheet-2" -o \
+	 "$file" = "harry-potter-or-heidegger" -o \
+	 "$file" = "hello" -o \
+	 "$file" = "hello2" -o \
+	 "$file" = "hello3" -o \
+	 "$file" = "hello4" -o \
+	 "$file" = "hello5" -o \
+	 "$file" = "hello6" -o \
+	 "$file" = "hello7" -o \
+	 "$file" = "immediate_file" -o \
+	 "$file" = "infinite-loop" -o \
+	 "$file" = "infinite-loop-2" -o \
+	 "$file" = "initial-code" -o \
+	 "$file" = "interview-about-flowers" -o \
+	 "$file" = "interview-about-fruit" -o \
+	 "$file" = "interview-about-vegetables" -o \
+	 "$file" = "interview-flowers" -o \
+	 "$file" = "interview-fruit" -o \
+	 "$file" = "interview-list" -o \
+	 "$file" = "interview-url-session" -o \
+	 "$file" = "interview-url-session-two" -o \
+	 "$file" = "interview-vegetables" -o \
+	 "$file" = "jinjayaml-included" -o \
+	 "$file" = "join" -o \
+	 "$file" = "json-response" -o \
+	 "$file" = "label-above-field" -o \
+	 "$file" = "language-change" -o \
+	 "$file" = "leave" -o \
+	 "$file" = "life_story" -o \
+	 "$file" = "list" -o \
+	 "$file" = "list-collect-disable-others" -o \
+	 "$file" = "list-collect-string" -o \
+	 "$file" = "list-collect-uncheck-others" -o \
+	 "$file" = "list-table-manual-gather" -o \
+	 "$file" = "list-table-manual-gather-simple" -o \
+	 "$file" = "live_chat" -o \
+	 "$file" = "main-page" -o \
+	 "$file" = "mainpage-demo-parts" -o \
+	 "$file" = "markdown-template" -o \
+	 "$file" = "material-icons" -o \
+	 "$file" = "ml-ajax" -o \
+	 "$file" = "ml-ajax-classify" -o \
+	 "$file" = "ml-export-playground" -o \
+	 "$file" = "multi-signature" -o \
+	 "$file" = "nested-gather" -o \
+	 "$file" = "nested-objects-list" -o \
+	 "$file" = "no-mandatory" -o \
+	 "$file" = "non-required-radio" -o \
+	 "$file" = "oauth-test-4" -o \
+	 "$file" = "object-default" -o \
+	 "$file" = "object-demo" -o \
+	 "$file" = "object-radio-address-2" -o \
+	 "$file" = "objects-from-file-template" -o \
+	 "$file" = "ocr-classify" -o \
+	 "$file" = "ocr-save-and-predict" -o \
+	 "$file" = "pdf-fill-export-values" -o \
+	 "$file" = "pdf-fill-signature-alt" -o \
+	 "$file" = "pdf-fill-skip-undefined" -o \
+	 "$file" = "question-library" -o \
+	 "$file" = "question-sequence" -o \
+	 "$file" = "questionless" -o \
+	 "$file" = "questions" -o \
+	 "$file" = "quotes-in-code" -o \
+	 "$file" = "relationships" -o \
+	 "$file" = "report-version" -o \
+	 "$file" = "response-hello" -o \
+	 "$file" = "review-9" -o \
+	 "$file" = "roletest" -o \
+	 "$file" = "roletestmany" -o \
+	 "$file" = "samplequestion" -o \
+	 "$file" = "samplesignature" -o \
+	 "$file" = "send-sms" -o \
+	 "$file" = "session-interview-redirect" -o \
+	 "$file" = "setparts-demo" -o \
+	 "$file" = "sets-exit" -o \
+	 "$file" = "sets-exit-choices" -o \
+	 "$file" = "sets-exit-url" -o \
+	 "$file" = "showif-boolean-yesno-false" -o \
+	 "$file" = "showif-nested-checkbox" -o \
+	 "$file" = "sign" -o \
+	 "$file" = "signature-diversion" -o \
+	 "$file" = "signature-template" -o \
+	 "$file" = "signdoc" -o \
+	 "$file" = "single-code" -o \
+	 "$file" = "sms" -o \
+	 "$file" = "some-questions" -o \
+	 "$file" = "someone-already-mentioned-bad" -o \
+	 "$file" = "someone-already-mentioned2" -o \
+	 "$file" = "suppress-loading-util" -o \
+	 "$file" = "test" -o \
+	 "$file" = "test-docx-template" -o \
+	 "$file" = "test-example-list" -o \
+	 "$file" = "test-sig-form" -o \
+	 "$file" = "test-url" -o \
+	 "$file" = "testaction" -o \
+	 "$file" = "testaction2" -o \
+	 "$file" = "testage" -o \
+	 "$file" = "testattach" -o \
+	 "$file" = "testbuildfl" -o \
+	 "$file" = "testbuildfl2" -o \
+	 "$file" = "testcron" -o \
+	 "$file" = "testcron2" -o \
+	 "$file" = "testcronbg" -o \
+	 "$file" = "testdadict" -o \
+	 "$file" = "testdalist2" -o \
+	 "$file" = "testdaobjectfail" -o \
+	 "$file" = "testdaobjectsucceed" -o \
+	 "$file" = "testdivorce" -o \
+	 "$file" = "testdocx" -o \
+	 "$file" = "testemail" -o \
+	 "$file" = "testfields" -o \
+	 "$file" = "testforloop" -o \
+	 "$file" = "testgeneric" -o \
+	 "$file" = "testimage" -o \
+	 "$file" = "testlist0" -o \
+	 "$file" = "testlist1" -o \
+	 "$file" = "testlist2" -o \
+	 "$file" = "testlist3" -o \
+	 "$file" = "testmcmako" -o \
+	 "$file" = "testobjectfield" -o \
+	 "$file" = "testobjectfieldradio" -o \
+	 "$file" = "testobjectlist" -o \
+	 "$file" = "testobjects" -o \
+	 "$file" = "testperson" -o \
+	 "$file" = "testpg" -o \
+	 "$file" = "testpickle" -o \
+	 "$file" = "testplural" -o \
+	 "$file" = "testproblem" -o \
+	 "$file" = "testpulldown" -o \
+	 "$file" = "testqr" -o \
+	 "$file" = "testqr2" -o \
+	 "$file" = "testresponse" -o \
+	 "$file" = "testreview" -o \
+	 "$file" = "testreview2" -o \
+	 "$file" = "testreview3" -o \
+	 "$file" = "testreview4" -o \
+	 "$file" = "testsandbox" -o \
+	 "$file" = "testssn" -o \
+	 "$file" = "testunicode" -o \
+	 "$file" = "testurlarg" -o \
+	 "$file" = "testurlarg2" -o \
+	 "$file" = "translation" -o \
+	 "$file" = "twocol" -o \
+	 "$file" = "upload_images" -o \
+	 "$file" = "video-static" -o \
+	 "$file" = "vimeo" -o \
+	 "$file" = "wc_common" -o \
+	 "$file" = "wc_side_of_bed" -o \
+	 "$file" = "with-mandatory" -o \
+	 "$file" = "with-mandatory-tweak-a" -o \
+	 "$file" = "with-mandatory-tweak-b" ]
     then
 	continue
     fi
-    if [ -f docassemble_webapp/docassemble/webapp/static/examples/$file.png -a docassemble_webapp/docassemble/webapp/static/examples/$file.png -nt $path ]
-    then
-    	continue
-    fi
+    #if [ -f ~/gh-pages-da/img/examples/$file.png -a ~/gh-pages-da/img/examples/$file.png -nt $path ]
+    #then
+    #	continue
+    #fi
     tempfile=`mktemp /tmp/XXXXXXX.png`
     echo -e -n "\n\n  Scenario: make screenshot for $file\n    Given I launch the interview \"docassemble.${area}:data/questions/examples/${file}.yml\"" >> $featurefile
     if [ "$file" = "signature" -o \
@@ -146,7 +386,6 @@ do
          "$file" = "branch-error" -o \
          "$file" = "error-help" -o \
          "$file" = "error-help-language" -o \
-         "$file" = "set-title" -o \
          "$file" = "set-logo-title" -o \
          "$file" = "question-help-button" -o \
          "$file" = "question-help-button-off" -o \
@@ -171,23 +410,23 @@ do
          "$file" = "navbar-language" -o \
          "$file" = "preview" ]
     then
-	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 -resize 478x9999 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 -resize 488x9999 ~/gh-pages-da/img/examples/$file.png
     elif [ "$file" = "radio-list-mobile" -o \
            "$file" = "sections-small-screen-dropdown" -o \
 	   "$file" = "sections-small-screen-false" ]
     then
-	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$file.png
     elif [ "$file" = "markdown" -o "$file" = "allow-emailing-true" -o "$file" = "allow-emailing-false" -o "$file" = "markdown-demo" -o "$file" = "document-links" -o "$file" = "document-links-limited" -o "$file" = "allow-downloading-true" ]
     then
-	convert $tempfile -crop 478x999+264+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 488x999+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$file.png
     elif [ "$file" = "inverse-navbar" ]
     then
-	convert $tempfile -crop 1005x260+0+0 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 1005x260+0+0 ~/gh-pages-da/img/examples/$file.png
     elif [ "$file" = "fields" -o "$file" = "attachment-code" -o "$file" = "attachment-simple" -o "$file" = "document-markup" -o "$file" = "document-variable-name" -o "$file" = "document-cache-invalidate" -o "$file" = "address-autocomplete-test"  -o "$file" = "address-autocomplete-test" -o "$file" = "table-width" -o "$file" = "document-language" -o "$file" = "allow-downloading-true" -o "$file" = "allow-downloading-true-zip-filename" -o "$file" = "document-docx" -o "$file" = "document-docx-from-rtf" -o "$file" = "document-file" -o "$file" = "google-sheet-3" ]
     then
-	convert $tempfile -crop 478x1999+264+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 488x1999+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$file.png
     else
-	convert $tempfile -crop 478x630+264+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 488x630+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$file.png
     fi
     rm -f $tempfile
 done < $datafile
@@ -197,6 +436,10 @@ if [ -d ~/gh-pages-da ]
 then
     ./get_yaml_from_example.py docassemble_base/docassemble/base/data/questions/examples > ~/gh-pages-da/_data/example.yml
     ./get_yaml_from_example.py docassemble_demo/docassemble/demo/data/questions/examples >> ~/gh-pages-da/_data/example.yml
-    rsync -auv docassemble_webapp/docassemble/webapp/static/examples ~/gh-pages-da/img/
+    #rsync -auv docassemble_webapp/docassemble/webapp/static/examples ~/gh-pages-da/img/
+    list_of_files=`mktemp /tmp/XXXXXXX.txt`
+    grep '^    - ' docassemble_base/docassemble/base/data/questions/example-list.yml | sed 's/^    - \(.*\)/\1.png/' > $list_of_files
+    rsync -auv --files-from=$list_of_files ~/gh-pages-da/img/examples docassemble_webapp/docassemble/webapp/static/examples/
+    rm $list_of_files
     psql -h localhost -T 'class="table table-striped"' -U docassemble -P footer=off -P border=0 -Hc "select table_name, column_name, data_type, character_maximum_length, column_default from information_schema.columns where table_schema='public'" docassemble > ~/gh-pages-da/_includes/db-schema.html
 fi

@@ -67,17 +67,17 @@
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar{% if footer_content %} da-pad-for-footer{% endif %}">
     <nav class="navbar fixed-top navbar-expand-md {% if config['INVERSE_NAVBAR'] %}navbar-dark bg-dark{% else %}navbar-light bg-light{% endif %}">
       <div class="{% if userclass %}{{ config['CONTAINER_CLASS'] }} danavcontainer{% else %}{{ config['CONTAINER_CLASS'] }}{% endif %}">
-        {% if back_button %}{{ back_button }}{% endif %}{% if request.path == "/playground" %}<div class="dropdown"><div class="navbar-brand dropdown-toggle" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ page_title }}</div><div class="dropdown-menu" aria-labelledby="dropdownMenuButton">{% if current_project != 'default' %}<a class="dropdown-item" href="?project=default"><i class="fas fa-archive"></i> {{ word("Default Playground") }}</a>{% endif %}{% for project in projects %}{% if project != current_project %}<a class="dropdown-item" href="?project={{ project }}"><i class="fas fa-archive"></i> {{ project }}</a>{% endif %}{% endfor %}<a class="dropdown-item" href="{{ url_for('playground_project', project=current_project) }}"><i class="fas fa-tasks"></i> {{ word('Manage Projects') }}</a></div></div>{% else %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>{% endif %}
+        {% if back_button %}{{ back_button }}{% endif %}{% if request.path == "/playground" %}<div class="dropdown"><div class="navbar-brand dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ page_title }}</div><div class="dropdown-menu" aria-labelledby="dropdownMenuButton">{% if current_project != 'default' %}<a class="dropdown-item" href="?project=default"><i class="fas fa-archive"></i> {{ word("Default Playground") }}</a>{% endif %}{% for project in projects %}{% if project != current_project %}<a class="dropdown-item" href="?project={{ project }}"><i class="fas fa-archive"></i> {{ project }}</a>{% endif %}{% endfor %}<a class="dropdown-item" href="{{ url_for('playground_project', project=current_project) }}"><i class="fas fa-tasks"></i> {{ word('Manage Projects') }}</a></div></div>{% else %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>{% endif %}
         {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}
-        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#danavbar-collapse">
+        <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#danavbar-collapse">
           <span class="navbar-toggler-icon"></span>
         </button>
         {%- endif %}
         <div class="collapse navbar-collapse" id="danavbar-collapse">
-          <ul class="navbar-nav ml-auto">
+          <ul class="navbar-nav ms-auto">
             {%- if not current_user.is_anonymous %}
             <li class="nav-item dropdown show">
-              <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}</a>
+              <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}</a>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                 {%- if current_user.has_roles(['admin', 'advocate']) and config['ENABLE_MONITOR'] %}
                 <a class="dropdown-item" href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a>
@@ -134,12 +134,15 @@
     {%- block flash_messages %}
       {%- with messages = get_flashed_messages(with_categories=true) -%}
         {%- if messages %}
-      <div class="datopcenter col-sm-7 col-md-6 col-lg-5 dacol-centered" id="daflash">
+      <div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">
           {%- for category, message in messages %}
             {%- if category=='error' %}
               {%- set category='danger' %}
             {%- endif %}
-            <div class="alert alert-{{category}}"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ message|safe }}</div>
+        <div class="da-alert alert alert-{{category}} alert-dismissible fade show">
+            {{ message|safe }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ word('Close') }}"></button>
+        </div>
           {%- endfor %}
       </div>
         {%- endif %}

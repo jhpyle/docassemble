@@ -9,21 +9,15 @@
 <div class="row dainvisible" id="daPhoneInfo">
   <div class="col-lg-6">
     <div class="input-group" title="{{ word('Must be in E.164 format.  U.S. phone numbers begin with +1.') }}">
-      <div class="input-group-prepend">
-        <span class="input-group-text">{{ word("Your phone #") }}</span>
-      </div>
+      <span class="input-group-text">{{ word("Your phone #") }}</span>
       <input class="form-control" id="daPhoneNumber" placeholder="e.g., +12025551212">
-      <div id="daPhoneError" class="input-group-append dainvisible">
-        <span title="{{ word('The phone number is not in E.164 format (e.g. +12025551212)') }}" class="input-group-text bg-warning"><i class="fas fa-exclamation-triangle"></i></span>
-      </div>
-      <div id="daPhoneSaved" class="input-group-append dainvisible">
-        <span class="input-group-text bg-success">{{ word('Saved') }}</span>
-      </div>
+      <span id="daPhoneError" class="input-group-text bg-warning dainvisible" title="{{ word('The phone number is not in E.164 format (e.g. +12025551212)') }}"><i class="fas fa-exclamation-triangle"></i></span>
+      <span id="daPhoneSaved" class="input-group-text bg-success dainvisible">{{ word('Saved') }}</span>
     </div>
   </div>
 </div>
 <h4 class="mt-2">{{ word("You are available for the following roles: ") }}</h4>
-<div class="form-group" id="monitorroles">
+<div class="da-form-group" id="monitorroles">
 </div>
 <h3>{{ word("Sessions") }}</h3>
 <ul class="list-group" id="monitorsessions"></ul>

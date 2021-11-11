@@ -361,8 +361,8 @@ DEFAULT_DIALECT = daconfig.get('dialect', 'us')
 LOGSERVER = daconfig.get('log server', None)
 CHECKIN_INTERVAL = int(daconfig.get('checkin interval', 6000))
 #message_sequence = dbtableprefix + 'message_id_seq'
-NOTIFICATION_CONTAINER = '<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>'
-NOTIFICATION_MESSAGE = '<div class="alert alert-%s"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>%s</div>'
+NOTIFICATION_CONTAINER = '<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>'
+NOTIFICATION_MESSAGE = '<div class="da-alert alert alert-%s alert-dismissible fade show" role="alert">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
 
 if os.environ.get('SUPERVISOR_SERVER_URL', None):
     USING_SUPERVISOR = True
@@ -2900,7 +2900,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if status.question.can_go_back and steps > 1:
         if status.question.interview.navigation_back_button:
             navbar += """\
-        <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><span class="navbar-brand"><button class="dabackicon text-muted dabackbuttoncolor" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span><i class="fas fa-chevron-left"></i><span class="daback">""" + status.cornerback + """</span></span></button></span></form>
+        <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><button class="navbar-brand navbar-nav dabackicon dabackbuttoncolor me-3" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span class="nav-link"><i class="fas fa-chevron-left"></i><span class="daback">""" + status.cornerback + """</span></span></button></form>
 """
         else:
             navbar += """\
@@ -2936,26 +2936,28 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     phone_sr = word("Phone help")
     phone_message = word("Phone help is available")
     chat_sr = word("Live chat")
-    source_message = word("How this question came to be asked")
+    source_message = word("Information for the developer")
     if debug_mode:
-        source_button = '<li class="nav-item d-none d-md-block"><a class="da-no-outline nav-link" title=' + json.dumps(source_message) + ' id="dasourcetoggle" href="#dasource" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a></li>'
-        source_menu_item = '<a class="dropdown-item d-block d-md-none" title=' + json.dumps(source_message) + ' id="dasourcetoggle" href="#dasource" data-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
+        source_button = '<li class="nav-item d-none d-md-block"><button class="btn btn-link nav-link da-no-outline" title=' + json.dumps(source_message) + ' id="dasourcetoggle" data-bs-toggle="collapse" data-bs-target="#dasource"><i class="fas fa-code"></i></button></li>'
+        source_menu_item = '<a class="dropdown-item d-block d-md-none" title=' + json.dumps(source_message) + ' id="dasourcetoggle" href="#dasource" data-bs-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
     else:
         source_button = ''
         source_menu_item = ''
-    navbar += '        <ul class="nav navbar-nav damynavbar-right">' + source_button + '<li class="nav-item dainvisible"><a class="nav-link" id="daquestionlabel" href="#daquestion" data-target="#daquestion">' + word('Question') + '</a></li>'
+    navbar += '        <ul class="nav navbar-nav damynavbar-right" role="tablist">' + source_button + '<li class="nav-item dainvisible" role="presentation"><button class="btn btn-link nav-link active da-no-outline" id="daquestionlabel" data-bs-toggle="tab" data-bs-target="#daquestion">' + word('Question') + '</button></li>'
     if len(status.interviewHelpText) or (len(status.helpText) and not status.question.interview.question_help_button):
         if status.question.helptext is None or status.question.interview.question_help_button:
-            navbar += '<li class="nav-item"><a class="dapointer da-no-outline nav-link dahelptrigger" href="#dahelp" data-target="#dahelp" id="dahelptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</a></li>'
+            navbar += '<li class="nav-item" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" data-bs-target="#dahelp" data-bs-toggle="tab" id="dahelptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</button></li>'
         else:
-            navbar += '<li class="nav-item"><a class="dapointer da-no-outline nav-link dahelptrigger" href="#dahelp" data-target="#dahelp" id="dahelptoggle" title=' + json.dumps(extra_help_message) + '><span class="daactivetext">' + help_label + ' <i class="fas fa-star"></i></span></a></li>'
-    navbar += '<li class="nav-item dainvisible" id="daPhoneAvailable"><a role="button" href="#dahelp" data-target="#dahelp" title=' + json.dumps(phone_message) + ' class="nav-link dapointer dahelptrigger"><i class="fas fa-phone da-chat-active"></i><span class="sr-only">' + phone_sr + '</span></a></li><li class="nav-item dainvisible" id="daChatAvailable"><a href="#dahelp" data-target="#dahelp" class="nav-link dapointer dahelptrigger" ><i class="fas fa-comment-alt"></i><span class="sr-only">' + chat_sr + '</span></a></li></ul>'
+            navbar += '<li class="nav-item" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline daactivetext" data-bs-target="#dahelp" data-bs-toggle="tab" id="dahelptoggle" title=' + json.dumps(extra_help_message) + '>' + help_label + ' <i class="fas fa-star"></i></button></li>'
+    else:
+        navbar += '<li class="nav-item dainvisible" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" id="dahelptoggle" data-bs-target="#dahelp" data-bs-toggle="tab">' + word('Help') + '</button></li>'
+    navbar += '<li class="nav-item dainvisible" id="daPhoneAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" title=' + json.dumps(phone_message) + ' class="nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-phone da-chat-active"></i><span class="visually-hidden">' + phone_sr + '</span></button></li><li class="nav-item dainvisible" id="daChatAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" class="nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-comment-alt"></i><span class="visually-hidden">' + chat_sr + '</span></button></li></ul>'
     navbar += """
-        <button id="damobile-toggler" type="button" class="navbar-toggler ml-auto" data-toggle="collapse" data-target="#danavbar-collapse">
-          <span class="navbar-toggler-icon"></span><span class="sr-only">""" + word("Display the menu") + """</span>
+        <button id="damobile-toggler" type="button" class="navbar-toggler ms-auto" data-bs-toggle="collapse" data-bs-target="#danavbar-collapse">
+          <span class="navbar-toggler-icon"></span><span class="visually-hidden">""" + word("Display the menu") + """</span>
         </button>
         <div class="collapse navbar-collapse" id="danavbar-collapse">
-          <ul class="navbar-nav ml-auto">
+          <ul class="navbar-nav ms-auto">
 """
     navbar += status.nav_item
     if 'menu_items' in status.extras:
@@ -2994,7 +2996,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if show_login:
         if current_user.is_anonymous:
             if custom_menu:
-                navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
+                navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
             else:
                 if daconfig.get('login link style', 'normal') == 'button':
                     if ALLOW_REGISTRATION:
@@ -3011,7 +3013,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
             if (custom_menu is False or custom_menu == '') and status.question.interview.options.get('hide standard menu', False):
                 navbar += '            <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
             else:
-                navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">'
+                navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">'
                 if custom_menu:
                     navbar += custom_menu
                 if not status.question.interview.options.get('hide standard menu', False):
@@ -3049,7 +3051,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                 navbar += '</div></li>'
     else:
         if custom_menu:
-            navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
+            navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
             if not status.question.interview.options.get('hide standard menu', False):
                 navbar += '<a class="dropdown-item" href="' + exit_href(status) + '">' + status.exit_label + '</a>'
             navbar += '</div></li>'
@@ -3058,7 +3060,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     navbar += """
           </ul>"""
     if daconfig.get('login link style', 'normal') == 'button' and show_login and current_user.is_anonymous and not custom_menu:
-        navbar += '\n          <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ml-3 d-none d-md-block" href="' + login_url + '">' + word('Sign in') + '</a>'
+        navbar += '\n          <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ms-3 d-none d-md-block" href="' + login_url + '">' + word('Sign in') + '</a>'
     navbar += """
         </div>
       </div>
@@ -3380,7 +3382,9 @@ def infobutton(title):
         docstring += noquote(title_documentation[title]['doc'])
     if 'url' in title_documentation[title]:
         docstring += "<br><a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
-    return '&nbsp;<a tabindex="0" class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title=' + json.dumps(word("Help")) + ' data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="fas fa-question-circle"></i></a>'
+    return '&nbsp;<a tabindex="0" role="button" class="daquestionsign" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + docstring + '" title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="fas fa-question-circle"></i></a>'
+    #title=' + json.dumps(word("Help"))
+    #data-bs-selector="true"
 
 def search_button(var, field_origins, name_origins, interview_source, all_sources):
     in_this_file = False
@@ -3884,10 +3888,10 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 content +='&nbsp;<span data-ref="DAModel" class="daparenthetical">(DAModel)</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 if 'git' in name_info[var] and name_info[var]['git']:
-                    git_link = noquote("<a class='float-right' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
+                    git_link = noquote("<a class='float-end' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
                 else:
                     git_link = ''
-                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + name_info[var]['doc'] + '"  title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>' #data-bs-selector="true" title=' + json.dumps(word_documentation) + '
             if var in interview.mlfields:
                 if 'ml_group' in interview.mlfields[var] and not interview.mlfields[var]['ml_group'].uses_mako:
                     (ml_package, ml_file, ml_group_id) = get_ml_info(interview.mlfields[var]['ml_group'].original_text, ml_parts[0], ml_parts[1])
@@ -3911,10 +3915,10 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             vocab_dict[var] = name_info[var]['insert']
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 if 'git' in name_info[var] and name_info[var]['git']:
-                    git_link = noquote("<a class='float-right' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
+                    git_link = noquote("<a class='float-end' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
                 else:
                     git_link = ''
-                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + name_info[var]['doc'] + '" title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>' #data-bs-selector="true" title=' + json.dumps(word_documentation) + '
             content += '</td></tr>'
     if len(classes):
         content += '\n                  <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
@@ -3925,22 +3929,22 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
             if name_info[var]['doc']:
                 if 'git' in name_info[var] and name_info[var]['git']:
-                    git_link = noquote("<a class='float-right' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
+                    git_link = noquote("<a class='float-end' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
                 else:
                     git_link = ''
-                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + name_info[var]['doc'] + '" title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>' #data-bs-selector="true" title=' + json.dumps(word_documentation) + '
             if len(name_info[var]['methods']):
                 content += '&nbsp;<a tabindex="0" class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title=' + json.dumps(word('Methods')) + '><i class="fas fa-cog"></i></a>'
                 content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
                 for method_info in name_info[var]['methods']:
                     if 'git' in method_info and method_info['git']:
-                        git_link = noquote("<a class='float-right' target='_blank' href='" + method_info['git'] + "'><i class='fas fa-code'></i></a>")
+                        git_link = noquote("<a class='float-end' target='_blank' href='" + method_info['git'] + "'><i class='fas fa-code'></i></a>")
                     else:
                         git_link = ''
                     content += '<tr><td><a tabindex="0" role="button" data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + method_info['tag'] + '</a>'
                     #vocab_dict[method_info['name']] = method_info['insert']
                     if method_info['doc']:
-                        content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(method_info['name']) + git_link + '"><i class="fas fa-info-circle"></i></a>'
+                        content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + method_info['doc'] + '" data-bs-title="' + noquote(method_info['name']) + git_link + '"><i class="fas fa-info-circle"></i></a>' #data-bs-selector="true" title=' + json.dumps(word_documentation) + '
                     content += '</td></tr>'
                 content += '</tbody></table></div>'
             content += '</td></tr>'
@@ -3951,10 +3955,10 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             vocab_dict[var] = name_info[var]['insert']
             if name_info[var]['doc']:
                 if 'git' in name_info[var] and name_info[var]['git']:
-                    git_link = noquote("<a class='float-right' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
+                    git_link = noquote("<a class='float-end' target='_blank' href='" + name_info[var]['git'] + "'><i class='fas fa-code'></i></a>")
                 else:
                     git_link = ''
-                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title=' + json.dumps(word_documentation) + ' data-selector="true" data-title="' + noquote(var) + git_link + '"><i class="fas fa-info-circle"></i></a>'
+                content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + name_info[var]['doc'] + '" data-bs-title="' + noquote(var) + git_link + '"><i class="fas fa-info-circle"></i></a>' #data-bs-selector="true" title=' + json.dumps(word_documentation) + '
             content += '</td></tr>'
     if len(avail_modules):
         content += '\n                  <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'
@@ -8901,12 +8905,12 @@ def index(action_argument=None, refer=None):
       function daInvalidHandler(form, validator){
         var errors = validator.numberOfInvalids();
         var scrollTarget = null;
-        if (errors && $(validator.errorList[0].element).parents('.form-group').length > 0) {
+        if (errors && $(validator.errorList[0].element).parents('.da-form-group').length > 0) {
           if (daJsEmbed){
-            scrollTarget = $(validator.errorList[0].element).parents('.form-group').first().position().top - 60;
+            scrollTarget = $(validator.errorList[0].element).parents('.da-form-group').first().position().top - 60;
           }
           else{
-            scrollTarget = $(validator.errorList[0].element).parents('.form-group').first().offset().top - 60;
+            scrollTarget = $(validator.errorList[0].element).parents('.da-form-group').first().offset().top - 60;
           }
         }
         if (scrollTarget != null){
@@ -9771,10 +9775,10 @@ def index(action_argument=None, refer=None):
           if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
             daChatPartnersAvailable += data.num_peers;
             if (data.num_peers == 1){
-              $("#dapeerMessage").html('<span class="badge badge-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '<\/span>');
+              $("#dapeerMessage").html('<span class="badge bg-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '<\/span>');
             }
             else{
-              $("#dapeerMessage").html('<span class="badge badge-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '<\/span>');
+              $("#dapeerMessage").html('<span class="badge bg-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '<\/span>');
             }
             $("#dapeerMessage").removeClass("dainvisible");
           }
@@ -9783,10 +9787,10 @@ def index(action_argument=None, refer=None):
           }
           if (daChatMode == 'peerhelp' || daChatMode == 'help'){
             if (data.help_available == 1){
-              $("#dapeerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operator")) + """ + '<\/span>');
+              $("#dapeerHelpMessage").html('<span class="badge bg-primary">' + data.help_available + ' ' + """ + json.dumps(word("operator")) + """ + '<\/span>');
             }
             else{
-              $("#dapeerHelpMessage").html('<span class="badge badge-primary">' + data.help_available + ' ' + """ + json.dumps(word("operators")) + """ + '<\/span>');
+              $("#dapeerHelpMessage").html('<span class="badge bg-primary">' + data.help_available + ' ' + """ + json.dumps(word("operators")) + """ + '<\/span>');
             }
             $("#dapeerHelpMessage").removeClass("dainvisible");
           }
@@ -9877,7 +9881,7 @@ def index(action_argument=None, refer=None):
       }
       function daShowSpinner(){
         if ($("#daquestion").length > 0){
-          $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="dacol-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
+          $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="col text-center"><span class="da-spinner"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
         }
         else{
           var newSpan = document.createElement('span');
@@ -9885,7 +9889,7 @@ def index(action_argument=None, refer=None):
           $(newI).addClass("fas fa-spinner fa-spin");
           $(newI).appendTo(newSpan);
           $(newSpan).attr("id", "daSpinner");
-          $(newSpan).addClass("da-sig-spinner text-muted da-top-for-navbar");
+          $(newSpan).addClass("da-sig-spinner da-top-for-navbar");
           $(newSpan).appendTo("#dasigtoppart");
         }
         daShowingSpinner = true;
@@ -10142,10 +10146,10 @@ def index(action_argument=None, refer=None):
           daHideSpinner();
         }
         daNotYetScrolled = true;
-        $(".dahelptrigger").click(function(e) {
-          e.preventDefault();
-          $(this).tab('show');
-        });
+        // $(".dahelptrigger").click(function(e) {
+        //   e.preventDefault();
+        //   $(this).tab('show');
+        // });
         $(".datableup,.databledown").click(function(e){
           e.preventDefault();
           $(this).blur();
@@ -10255,16 +10259,16 @@ def index(action_argument=None, refer=None):
           rationalizeListCollect();
           return false;
         });
-        $('#daquestionlabel').click(function(e) {
-          e.preventDefault();
-          $(this).tab('show');
-        });
-        $('#dapagetitle').click(function(e) {
-          if ($(this).prop('href') == '#'){
-            e.preventDefault();
-            $('#daquestionlabel').tab('show');
-          }
-        });
+        //$('#daquestionlabel').click(function(e) {
+        //  e.preventDefault();
+        //  $(this).tab('show');
+        //});
+        //$('#dapagetitle').click(function(e) {
+        //  if ($(this).prop('href') == '#'){
+        //    e.preventDefault();
+        //    //$('#daquestionlabel').tab('show');
+        //  }
+        //});
         $('select.damultiselect').each(function(){
           var varname = atob($(this).data('varname'));
           var theSelect = this;
@@ -10312,43 +10316,29 @@ def index(action_argument=None, refer=None):
           daWhichButton = this;
           return true;
         });
-        $('#dasource').on('hide.bs.collapse', function (e) {
-          $("#dareadability").slideUp();
-        });
-        $('#dasource').on('show.bs.collapse', function (e) {
-          if (daShowingHelp){
-            $("#dareadability-question").hide();
-            $("#dareadability-help").show();
-          }
-          else{
-            $("#dareadability-help").hide();
-            $("#dareadability-question").show();
-          }
-          $("#dareadability").slideDown();
+        $('#dasource').on('shown.bs.collapse', function (e) {
           if (daJsEmbed){
-            scrollTarget = $("#dareadability").first().position().top - 60;
+            var scrollTarget = $("#dasource").first().position().top - 60;
             $(daTargetDiv).animate({
               scrollTop: scrollTarget
             }, 1000);
           }
           else{
-            scrollTarget = $("#dareadability").first().offset().top - 60;
+            var scrollTarget = $("#dasource").first().offset().top - 60;
             $("html, body").animate({
               scrollTop: scrollTarget
             }, 1000);
           }
         });
-        $('a[data-target="#dahelp"], a[data-target="#daquestion"]').on('shown.bs.tab', function (e) {
-          if ($(this).data("target") == '#dahelp'){
-            daShowingHelp = 1;
-            if (daNotYetScrolled){
-              daScrollChatFast();
-              daNotYetScrolled = false;
-            }""" + debug_readability_help + """
-          }
-          else if ($(this).data("target") == '#daquestion'){
-            daShowingHelp = 0;""" + debug_readability_question + """
-          }
+        $('button[data-bs-target="#dahelp"]').on('shown.bs.tab', function (e) {
+          daShowingHelp = 1;
+          if (daNotYetScrolled){
+            daScrollChatFast();
+            daNotYetScrolled = false;
+          }""" + debug_readability_help + """
+        });
+        $('button[data-bs-target="#daquestion"]').on('shown.bs.tab', function (e) {
+          daShowingHelp = 0;""" + debug_readability_question + """
         });
         $("input.danota-checkbox").click(function(){
           $(this).parent().find('input.danon-nota-checkbox').each(function(){
@@ -10396,19 +10386,22 @@ def index(action_argument=None, refer=None):
             return false;
           });
         });
-        $("#daemailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + json.dumps(word("An e-mail address is required.")) + """, 'email': """ + json.dumps(word("You need to enter a complete e-mail address.")) + """}}, 'errorClass': 'da-has-error text-danger'});
+        $("#daemailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + json.dumps(word("An e-mail address is required.")) + """, 'email': """ + json.dumps(word("You need to enter a complete e-mail address.")) + """}}, 'errorClass': 'da-has-error invalid-feedback'});
         $("a[data-embaction]").click(daEmbeddedAction);
         $("a[data-js]").click(daEmbeddedJs);
         $("a.da-review-action").click(daReviewAction);
         $("input.dainput-embedded").on('keyup', daAdjustInputWidth);
         $("input.dainput-embedded").each(daAdjustInputWidth);
-        $(function () {
-          $('[data-toggle="popover"]').popover({trigger: '""" + interview_status.question.interview.options.get('popover trigger', 'focus') + """', html: true});
+        var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+        var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
+          return new bootstrap.Popover(daPopoverTriggerEl, {trigger: """ + json.dumps(interview_status.question.interview.options.get('popover trigger', 'focus')) + """, html: true});
         });
-        $('[data-toggle="popover"]').on('click', function(event){
+        $('label a[data-bs-toggle="popover"]').on('click', function(event){
           event.preventDefault();
           event.stopPropagation();
-          $(this).popover("show");
+          var thePopover = bootstrap.Popover.getOrCreateInstance(this);
+          thePopover.show();
+          return false;
         });
         if (daPhoneAvailable){
           $("#daPhoneAvailable").removeClass("dainvisible");
@@ -10601,14 +10594,14 @@ def index(action_argument=None, refer=None):
             navMain.collapse('hide');
           }
         });
-        $("a[data-target='#dahelp']").on("shown.bs.tab", function(){
+        $("button[data-bs-target='#dahelp']").on("shown.bs.tab", function(){
           if (daJsEmbed){
             $(daTargetDiv)[0].scrollTo(0, 1);
           }
           else{
             window.scrollTo(0, 1);
           }
-          $("#dahelptoggle span").removeClass('daactivetext');
+          $("#dahelptoggle").removeClass('daactivetext');
           $("#dahelptoggle").blur();
         });
         $("#dasourcetoggle").on("click", function(){
@@ -10616,7 +10609,6 @@ def index(action_argument=None, refer=None):
           $(this).blur();
         });
         $('#dabackToQuestion').click(function(event){
-          event.preventDefault();
           $('#daquestionlabel').tab('show');
         });
         daVarLookup = Object();
@@ -10751,7 +10743,7 @@ def index(action_argument=None, refer=None):
               var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
               var showHideDiv = function(speed){
                 var elem = daGetField(jsInfo['vars'][i]);
-                if (elem != null && !$(elem).parents('.form-group').first().is($(this).parents('.form-group').first())){
+                if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
                   return;
                 }
                 var resultt = eval(jsExpression);
@@ -10871,7 +10863,7 @@ def index(action_argument=None, refer=None):
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var showHideDiv = function(speed){
               var elem = daGetField(varName, showIfDiv);
-              if (elem != null && !$(elem).parents('.form-group').first().is($(this).parents('.form-group').first())){
+              if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
                 return;
               }
               var theVal;
@@ -11181,17 +11173,17 @@ def index(action_argument=None, refer=None):
       }
       $.validator.setDefaults({
         highlight: function(element) {
-            $(element).closest('.form-group').addClass('da-group-has-error');
+            $(element).closest('.da-form-group').addClass('da-group-has-error');
             $(element).addClass('is-invalid');
         },
         unhighlight: function(element) {
-            $(element).closest('.form-group').removeClass('da-group-has-error');
+            $(element).closest('.da-form-group').removeClass('da-group-has-error');
             $(element).removeClass('is-invalid');
         },
         errorElement: 'span',
-        errorClass: 'da-has-error text-danger',
+        errorClass: 'da-has-error invalid-feedback',
         errorPlacement: function(error, element) {
-            $(error).addClass('text-danger');
+            $(error).addClass('invalid-feedback');
             var elementName = $(element).attr("name");
             var lastInGroup = $.map(daValidationRules['groups'], function(thefields, thename){
               var fieldsArr;
@@ -11401,7 +11393,7 @@ def index(action_argument=None, refer=None):
         interview_language = interview_status.question.language
     else:
         interview_language = current_language
-    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error text-danger', 'debug': False}
+    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error invalid-feedback', 'debug': False}
     interview_status.exit_url = title_info.get('exit url', None)
     interview_status.exit_link = title_info.get('exit link', 'exit')
     interview_status.exit_label = title_info.get('exit label', word('Exit'))
@@ -11519,7 +11511,7 @@ def index(action_argument=None, refer=None):
             current_dict = dict()
             dropdown_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, a_class='dropdown-item', hide_inactive_subs=False, always_open=True, return_dict=current_dict)
             if dropdown_nav_bar != '':
-                dropdown_nav_bar = '        <div class="col d-md-none text-right">\n          <div class="dropdown">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + current_dict.get('title', word("Sections")) + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections">' + dropdown_nav_bar + '\n          </div>\n          </div>\n        </div>\n'
+                dropdown_nav_bar = '        <div class="col d-md-none text-end">\n          <div class="dropdown">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + current_dict.get('title', word("Sections")) + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections">' + dropdown_nav_bar + '\n          </div>\n          </div>\n        </div>\n'
         else:
             dropdown_nav_bar = ''
         if interview_status.question.interview.use_navigation == 'horizontal':
@@ -11572,14 +11564,20 @@ def index(action_argument=None, refer=None):
                                           ('Linsear Write Formula', textstat.linsear_write_formula(phrase)),
                                           ('Dale-Chall Readability Score', textstat.dale_chall_readability_score(phrase)),
                                           ('Readability Consensus', textstat.text_standard(phrase))]
-        readability_report = '          <h3>' + word("Readability") + '</h3>\n'
+        readability_report = ''
         for question_type in ('question', 'help'):
             if question_type in readability:
-                readability_report += '          <table style="display: none;" class="table" id="dareadability-' + question_type +'">' + "\n"
-                readability_report += '            <tr><th>' + word("Formula") + '</th><th>' + word("Score") + '</th></tr>' + "\n"
+                readability_report += '          <div id="dareadability-' + question_type +'"' + (' style="display: none;"' if question_type == 'help' else '') + '>\n'
+                if question_type == 'question':
+                    readability_report += '            <h3>' + word("Readability of question") + '</h3>\n'
+                else:
+                    readability_report += '            <h3>' + word("Readability of help text") + '</h3>\n'
+                readability_report += '            <table class="table">' + "\n"
+                readability_report += '              <tr><th>' + word("Formula") + '</th><th>' + word("Score") + '</th></tr>' + "\n"
                 for read_type, value in readability[question_type]:
-                    readability_report += '            <tr><td>' + read_type +'</td><td>' + str(value) + "</td></tr>\n"
-                readability_report += '          </table>' + "\n"
+                    readability_report += '              <tr><td>' + read_type +'</td><td>' + str(value) + "</td></tr>\n"
+                readability_report += '            </table>' + "\n"
+                readability_report += '          </div>' + "\n"
     if interview_status.using_screen_reader:
         for question_type in ('question', 'help'):
             if question_type not in interview_status.screen_reader_text:
@@ -11670,25 +11668,17 @@ def index(action_argument=None, refer=None):
         output += '        </div>\n'
         output += '      </div>' + "\n"
     if debug_mode:
-        output += '      <h2 class="sr-only">Information for developers</h2>\n'
+        output += '      <div id="dasource" class="collapse mt-3">' + "\n"
+        output += '      <h2 class="visually-hidden">Information for developers</h2>\n'
         output += '      <div class="row">' + "\n"
-        if interview_status.using_navigation == 'vertical':
-            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-xl-6 col-lg-6 col-md-9 col-sm-12" style="display: none" id="dareadability">' + readability_report + '        </div>\n'
-        else:
-            if interview_status.question.interview.flush_left:
-                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12" style="display: none" id="dareadability">' + readability_report + '        </div>'
-            else:
-                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12" style="display: none" id="dareadability">' + readability_report + '        </div>\n'
-        output += '      </div>' + "\n"
-        output += '      <div class="row">' + "\n"
-        output += '        <div id="dasource" class="col-md-12 collapse">' + "\n"
-        output += '          <p><a target="_blank" href="' + url_for('get_variables', i=yaml_filename) + '">' + word('Show variables and values') + '</a></p>' + "\n"
+        output += '        <div class="col-md-12">' + "\n"
         if interview_status.using_screen_reader:
             output += '          <h3>' + word('Plain text of sections') + '</h3>' + "\n"
             for question_type in ('question', 'help'):
                 if question_type in interview_status.screen_reader_text:
                     output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
-        output += '          <h3>' + word('Source code for question') + '</h3>' + "\n"
+        output += '          <hr>\n'
+        output += '          <h3>' + word('Source code for question') + '<a class="float-end btn btn-info" target="_blank" href="' + url_for('get_variables', i=yaml_filename) + '">' + word('Show variables and values') + '</a></h3>' + "\n"
         if interview_status.question.from_source.path != interview.source.path and interview_status.question.from_source.path is not None:
             output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + interview_status.question.from_source.path +")</small></p>\n"
         if (not hasattr(interview_status.question, 'source_code')) or interview_status.question.source_code is None:
@@ -11699,6 +11689,12 @@ def index(action_argument=None, refer=None):
             output += '          <h4>' + word('How question came to be asked') + '</h4>' + "\n"
             output += get_history(interview, interview_status)
         output += '        </div>' + "\n"
+        output += '      </div>' + "\n"
+        output += '      <div class="row mt-4">' + "\n"
+        output += '        <div class="col-md-8 col-lg-6">' + "\n"
+        output += readability_report
+        output += '        </div>' + "\n"
+        output += '      </div>' + "\n"
         output += '      </div>' + "\n"
     output += '    </div>'
     if interview_status.footer:
@@ -12559,7 +12555,7 @@ def observer():
       var daShowHideHappened = false;
       function daShowSpinner(){
         if ($("#daquestion").length > 0){
-          $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="dacol-centered"><span class="da-spinner text-muted"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
+          $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="col text-center"><span class="da-spinner"><i class="fas fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
         }
         else{
           var newSpan = document.createElement('span');
@@ -12567,7 +12563,7 @@ def observer():
           $(newI).addClass("fas fa-spinner fa-spin");
           $(newI).appendTo(newSpan);
           $(newSpan).attr("id", "daSpinner");
-          $(newSpan).addClass("da-sig-spinner text-muted da-top-for-navbar");
+          $(newSpan).addClass("da-sig-spinner da-top-for-navbar");
           $(newSpan).appendTo("#dasigtoppart");
         }
         daShowingSpinner = true;
@@ -12949,12 +12945,12 @@ def observer():
       function daInvalidHandler(form, validator){
         var errors = validator.numberOfInvalids();
         var scrollTarget = null;
-        if (errors && $(validator.errorList[0].element).parents('.form-group').length > 0) {
+        if (errors && $(validator.errorList[0].element).parents('.da-form-group').length > 0) {
           if (daJsEmbed){
-            scrollTarget = $(validator.errorList[0].element).parents('.form-group').first().position().top - 60;
+            scrollTarget = $(validator.errorList[0].element).parents('.da-form-group').first().position().top - 60;
           }
           else{
-            scrollTarget = $(validator.errorList[0].element).parents('.form-group').first().offset().top - 60;
+            scrollTarget = $(validator.errorList[0].element).parents('.da-form-group').first().offset().top - 60;
           }
         }
         if (scrollTarget != null){
@@ -13090,7 +13086,7 @@ def observer():
         }, 0);
       }
       function daShowHelpTab(){
-          $('#dahelptoggle').tab('show');
+          //$('#dahelptoggle').tab('show');
       }
       function flash(message, priority, clear){
         if (priority == null){
@@ -13253,8 +13249,9 @@ def observer():
             navMain.collapse('hide');
           }
         });
-        $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
+        var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+        var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
+          return new bootstrap.Popover(daPopoverTriggerEl, {trigger: "focus", html: true});
         });
         $("input.danota-checkbox").click(function(){
           $(this).parent().find('input.danon-nota-checkbox').each(function(){
@@ -13274,18 +13271,18 @@ def observer():
         });
         $("input.dainput-embedded").on('keyup', daAdjustInputWidth);
         $("input.dainput-embedded").each(daAdjustInputWidth);
-        $(".dahelptrigger").click(function(e) {
-          e.preventDefault();
-          $(this).tab('show');
-        });
-        $("#daquestionlabel").click(function(e) {
-          e.preventDefault();
-          $(this).tab('show');
-        });
+        // $(".dahelptrigger").click(function(e) {
+        //   e.preventDefault();
+        //   $(this).tab('show');
+        // });
+        //$("#daquestionlabel").click(function(e) {
+        //  e.preventDefault();
+        //  $(this).tab('show');
+        //});
         $('#dapagetitle').click(function(e) {
           if ($(this).prop('href') == '#'){
             e.preventDefault();
-            $('#daquestionlabel').tab('show');
+            //$('#daquestionlabel').tab('show');
           }
         });
         $('select.damultiselect').each(function(){
@@ -13325,7 +13322,7 @@ def observer():
         });
         $("#dahelp").on("shown.bs.tab", function(){
           window.scrollTo(0, 1);
-          $("#dahelptoggle span").removeClass('daactivetext')
+          $("#dahelptoggle").removeClass('daactivetext')
           $("#dahelptoggle").blur();
         });
         $("#dasourcetoggle").on("click", function(){
@@ -13333,7 +13330,6 @@ def observer():
           $(this).blur();
         });
         $('#dabackToQuestion').click(function(event){
-          event.preventDefault();
           $('#daquestionlabel').tab('show');
         });
         daShowIfInProcess = true;
@@ -13374,7 +13370,7 @@ def observer():
               var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
               var showHideDiv = function(speed){
                 var elem = daGetField(jsInfo['vars'][i]);
-                if (elem != null && !$(elem).parents('.form-group').first().is($(this).parents('.form-group').first())){
+                if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
                   return;
                 }
                 var resultt = eval(jsExpression);
@@ -13494,7 +13490,7 @@ def observer():
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var showHideDiv = function(speed){
               var elem = daGetField(varName, showIfDiv);
-              if (elem != null && !$(elem).parents('.form-group').first().is($(this).parents('.form-group').first())){
+              if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
                 return;
               }
               var theVal;
@@ -14091,7 +14087,7 @@ def monitor():
       }
       function daCheckPhone(){
           //console.log("daCheckPhone");
-          $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/[^0-9\+]/g, ''));
+          $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/ \-/g, ''));
           var the_number = $("#daPhoneNumber").val();
           if (the_number != '' && the_number[0] != '+'){
               $("#daPhoneNumber").val('+' + the_number);
@@ -14393,7 +14389,7 @@ def monitor():
           $(theText).addClass('da-chat-title-label');
           theText.innerHTML = the_html;
           var statusLabel = document.createElement('span');
-          $(statusLabel).addClass("badge badge-info da-chat-status-label");
+          $(statusLabel).addClass("badge bg-info da-chat-status-label");
           $(statusLabel).html(obj.chatstatus == 'observeonly' ? 'off' : obj.chatstatus);
           $(statusLabel).appendTo($(sessionDiv));
           if (daUsePhone){
@@ -15360,7 +15356,7 @@ def update_package():
       });
     </script>"""
     python_version = daconfig.get('python version', word('Unknown'))
-    version = word("Current") + ': <span class="badge badge-primary">' + str(python_version) + '</span>'
+    version = word("Current") + ': <span class="badge bg-primary">' + str(python_version) + '</span>'
     dw_status = pypi_status('docassemble.webapp')
     if daconfig.get('stable version', False):
         if not dw_status['error'] and 'info' in dw_status and 'releases' in dw_status['info'] and isinstance(dw_status['info']['releases'], dict):
@@ -15373,10 +15369,10 @@ def update_package():
                 if latest_version is None or version_number_loose > LooseVersion(latest_version):
                     latest_version = version_number
             if latest_version != str(python_version):
-                version += ' ' + word("Available") + ': <span class="badge badge-success">' + latest_version + '</span>'
+                version += ' ' + word("Available") + ': <span class="badge bg-success">' + latest_version + '</span>'
     else:
         if not dw_status['error'] and 'info' in dw_status and 'info' in dw_status['info'] and 'version' in dw_status['info']['info'] and dw_status['info']['info']['version'] != str(python_version):
-            version += ' ' + word("Available") + ': <span class="badge badge-success">' + dw_status['info']['info']['version'] + '</span>'
+            version += ' ' + word("Available") + ': <span class="badge bg-success">' + dw_status['info']['info']['version'] + '</span>'
     allowed_to_upgrade = current_user.has_role('admin') or user_can_edit_package(pkgname='docassemble.webapp')
     if daconfig.get('stable version', False):
         limitation = '<1.1'
@@ -18063,7 +18059,7 @@ def playground_files():
         if (!data.success){
           var n = data.errors.length;
           for (var i = 0; i < n; ++i){
-            $('input[name="' + data.errors[i].fieldName + '"]').parents('.input-group').addClass("da-group-has-error").after('<p class="da-has-error text-danger">' + data.errors[i].err + '</p>');
+            $('input[name="' + data.errors[i].fieldName + '"]').parents('.input-group').addClass("da-group-has-error").after('<div class="da-has-error invalid-feedback">' + data.errors[i].err + '</div>');
           }
           return;
         }
@@ -18170,8 +18166,7 @@ def playground_files():
         any_files = True
     else:
         any_files = False
-    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn da-nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page', project=current_project) + '" class="playground-back text-muted dabackbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    back_button = Markup('<span class="navbar-brand navbar-nav dabackicon me-3"><a href="' + url_for('playground_page', project=current_project) + '" class="dabackbuttoncolor nav-link" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     cm_mode = ''
     if mode == 'null':
         modes = []
@@ -19227,8 +19222,7 @@ def playground_packages():
         any_files = True
     else:
         any_files = False
-    #back_button = Markup('<a href="' + url_for('playground_page') + '" class="btn btn-sm navbar-btn da-nav-but"><i class="fas fa-arrow-left"></i> ' + word("Back") + '</a>')
-    back_button = Markup('<span class="navbar-brand"><a href="' + url_for('playground_page', project=current_project) + '" class="playground-back text-muted dabackbuttoncolor" type="submit" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    back_button = Markup('<span class="navbar-brand navbar-nav dabackicon me-3"><a href="' + url_for('playground_page', project=current_project) + '" class="dabackbuttoncolor nav-link" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     if can_publish_to_pypi:
         if pypi_message is not None:
             pypi_message = Markup(pypi_message)
@@ -19592,8 +19586,9 @@ function update_search(event){
 def variables_js(form=None, office_mode=False):
     output = """
 function activatePopovers(){
-  $(function () {
-    $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
+  var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+  var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
+    return new bootstrap.Popover(daPopoverTriggerEl, {trigger: "focus", html: true});
   });
 }
 
@@ -19716,8 +19711,9 @@ function fetchVars(changed){
       }
       if (data.variables_html != null){
         $("#daplaygroundtable").html(data.variables_html);
-        $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'focus', html: true})
+        var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+        var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
+          return new bootstrap.Popover(daPopoverTriggerEl, {trigger: "focus", html: true});
         });
         activateVariables();
       }
@@ -20528,37 +20524,38 @@ function daFetchVariableReportCallback(data){
   for (var i = 0; i < n; ++i){
     var item = data.items[i];
     if (item.questions.length){
-      var card = $('<div>');
-      card.addClass("card");
-      var cardHeader = $('<div>');
-      cardHeader.addClass("card-header");
-      cardHeader.attr("id", "cardheader" + i);
-      cardHeader.html('<h2 class="mb-0"><button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapse' + i + '" aria-expanded="false" aria-controls="collapse' + i + '">' + item.name + '</button></h2>');
-      card.append(cardHeader);
+      var accordionItem = $('<div>');
+      accordionItem.addClass("accordion-item");
+      var accordionItemHeader = $('<h2>');
+      accordionItemHeader.addClass("accordion-header");
+      accordionItemHeader.attr("id", "accordionItemheader" + i);
+      accordionItemHeader.html('<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse' + i + '" aria-expanded="false" aria-controls="collapse' + i + '">' + item.name + '</button>');
+      accordionItem.append(accordionItemHeader);
       var collapse = $("<div>");
       collapse.attr("id", "collapse" + i);
-      collapse.attr("aria-labelledby", "cardheader" + i);
+      collapse.attr("aria-labelledby", "accordionItemheader" + i);
       collapse.data("parent", "#varsreport");
+      collapse.addClass("accordion-collapse");
       collapse.addClass("collapse");
-      var cardBody = $("<div>");
-      cardBody.addClass("card-body");
+      var accordionItemBody = $("<div>");
+      accordionItemBody.addClass("accordion-body");
       var m = item.questions.length;
       for (var j = 0; j < m; j++){
         var h5 = $("<h5>");
         h5.html(item.questions[j].usage.map(x => translations[x]).join(','));
         var pre = $("<pre>");
         pre.html(item.questions[j].source_code);
-        cardBody.append(h5);
-        cardBody.append(pre);
+        accordionItemBody.append(h5);
+        accordionItemBody.append(pre);
         if (item.questions[j].yaml_file != yaml_file){
           var p = $("<p>");
           p.html(""" + json.dumps(word("from")) + """ + ' ' + item.questions[j].yaml_file);
-          cardBody.append(p);
+          accordionItemBody.append(p);
         }
       }
-      collapse.append(cardBody);
-      card.append(collapse);
-      accordion.append(card);
+      collapse.append(accordionItemBody);
+      accordionItem.append(collapse);
+      accordion.append(accordionItem);
     }
   }
   modal.append(accordion);
@@ -20603,8 +20600,9 @@ function saveCallback(data){
     $("#daplaygroundtable").html(data.variables_html);
     activateVariables();
     $("#form").trigger("reinitialize.areYouSure");
-    $(function () {
-      $('[data-toggle="popover"]').popover({trigger: 'focus', html: true});
+    var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
+      return new bootstrap.Popover(daPopoverTriggerEl, {trigger: "focus", html: true});
     });
   }
   daConsoleMessages = data.console_messages;
@@ -20922,9 +20920,9 @@ def server_error(the_error):
           priority = 'info'
         }
         if (!$("#daflash").length){
-          $(daTargetDiv).append('<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"><\/div>');
+          $(daTargetDiv).append('<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash"></div>');
         }
-        $("#daflash").append('<div class="alert alert-' + priority + ' daalert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;<\/span><\/button>' + message + '<\/div>');
+        $("#daflash").append('<div class="da-alert alert alert-' + priority + ' daalert-interlocutory alert-dismissible fade show" role="alert">' + message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"><\/button><\/div>');
         if (priority == 'success'){
           setTimeout(function(){
             $("#daflash .alert-success").hide(300, function(){
@@ -26877,25 +26875,20 @@ def manage_api():
         filled_exist = 1;
       }
       if (!($(this).next().length)){
-        var inner_div = $('<div>');
-        $(inner_div).addClass('input-group-append');
         var new_button = $('<button>');
         var new_i = $('<i>');
         $(new_button).addClass('btn btn-outline-secondary');
         $(new_i).addClass('fas fa-times');
         $(new_button).append(new_i);
         $(new_button).on('click', function(){remove_constraint(this);});
-        $(inner_div).append(new_button);
-        $(this).parent().append(inner_div);
+        $(this).parent().append(new_button);
       }
     });
     if (empty_exist == 0){
       var new_div = $('<div>');
-      var inner_div = $('<div>');
       var new_input = $('<input>');
       $(new_div).append(new_input);
       $(new_div).addClass('input-group');
-      $(inner_div).addClass('input-group-append');
       $(new_input).addClass('form-control');
       $(new_input).attr('type', 'text');
       if ($("#method").val() == 'ip'){
@@ -26913,8 +26906,7 @@ def manage_api():
       $(new_i).addClass('fas fa-times');
       $(new_button).append(new_i);
       $(new_button).on('click', function(){remove_constraint(this);});
-      $(inner_div).append(new_button);
-      $(new_div).append(inner_div);
+      $(new_div).append(new_button);
     }
   }
   $( document ).ready(function(){
@@ -28277,8 +28269,8 @@ def define_examples():
     data_dict = dict()
     make_example_html(get_examples(), pg_ex['pg_first_id'], example_html, data_dict)
     example_html.append('        </div>')
-    example_html.append('        <div class="col-md-4 da-example-source-col"><h5 class="mb-1">' + word('Source') + '<a href="#" tabindex="0" class="badge badge-success da-example-copy">' + word("Insert") + '</a></h5><div id="da-example-source-before" class="dainvisible"></div><div id="da-example-source"></div><div id="da-example-source-after" class="dainvisible"></div><div><a tabindex="0" class="da-example-hider" id="da-show-full-example">' + word("Show context of example") + '</a><a tabindex="0" class="da-example-hider dainvisible" id="da-hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    example_html.append('        <div class="col-md-6"><h5 class="mb-1">' + word("Preview") + '<a href="#" target="_blank" class="badge badge-primary da-example-documentation da-example-hidden" id="da-example-documentation-link">' + word("View documentation") + '</a></h5><a href="#" target="_blank" id="da-example-image-link"><img title=' + json.dumps(word("Click to try this interview")) + ' class="da-example-screenshot" id="da-example-image"></a></div>')
+    example_html.append('        <div class="col-md-4 da-example-source-col"><h5 class="mb-1">' + word('Source') + '<a href="#" tabindex="0" class="dabadge btn btn-success da-example-copy">' + word("Insert") + '</a></h5><div id="da-example-source-before" class="dainvisible"></div><div id="da-example-source"></div><div id="da-example-source-after" class="dainvisible"></div><div><a tabindex="0" class="da-example-hider" id="da-show-full-example">' + word("Show context of example") + '</a><a tabindex="0" class="da-example-hider dainvisible" id="da-hide-full-example">' + word("Hide context of example") + '</a></div></div>')
+    example_html.append('        <div class="col-md-6"><h5 class="mb-1">' + word("Preview") + '<a href="#" target="_blank" class="dabadge btn btn-primary da-example-documentation da-example-hidden" id="da-example-documentation-link">' + word("View documentation") + '</a></h5><a href="#" target="_blank" id="da-example-image-link"><img title=' + json.dumps(word("Click to try this interview")) + ' class="da-example-screenshot" id="da-example-image"></a></div>')
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 

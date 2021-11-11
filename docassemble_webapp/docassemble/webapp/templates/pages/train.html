@@ -10,15 +10,15 @@
   <a href="{{ url_for('train', show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Packages') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3 class="mt-4">{{ word('Packages') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 <div class="list-group">
   {%- for package, count in package_list %}
   {%- if package == '_global' %}
-  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package='_global', file='_global', show_all=show_all) }}">{{ word('Global') }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
+  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package='_global', file='_global', show_all=show_all) }}">{{ word('Global') }} <span class="badge rounded-pill bg-dark float-end">{{ count }}</span></a>
   {%- elif package == playground_package %}
-  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=package, show_all=show_all) }}">{{ word("My Playground") }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
+  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=package, show_all=show_all) }}">{{ word("My Playground") }} <span class="badge rounded-pill bg-dark float-end">{{ count }}</span></a>
   {%- else %}
-  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=package, show_all=show_all) }}">{{ package }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
+  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=package, show_all=show_all) }}">{{ package }} <span class="badge rounded-pill bg-dark float-end">{{ count }}</span></a>
   {%- endif %}
   {%- endfor %}
 </dic>
@@ -31,20 +31,20 @@
   <a href="{{ url_for('train', package=the_package, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Interviews') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3 class="mt-4">{{ word('Interviews') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
       <a href="{{ url_for('train', show_all=show_all) }}"> {{ word('Packages') }}</a>
     </li>
-    <li class="breadcrumb-item active">
+    <li class="breadcrumb-item active" aria-current="page">
       {{ the_package_display }}
     </li>
   </ol>
 </nav>
 <div class="list-group">
   {%- for file, count in file_list %}
-  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=the_package, file=file, show_all=show_all) }}">{{ file }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
+  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=the_package, file=file, show_all=show_all) }}">{{ file }} <span class="badge rounded-pill bg-dark float-end">{{ count }}</span></a>
 {%- endfor %}
 </div>
 {%- endif %}
@@ -56,7 +56,7 @@
   <a href="{{ url_for('train', package=the_package, file=the_file, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Models') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3 class="mt-4">{{ word('Models') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
@@ -78,7 +78,7 @@
     </li>
   </ol>
 </nav>
-<a class="btn {{ config['BUTTON_STYLE'] }}secondary damldownload" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
+<a class="btn {{ config['BUTTON_STYLE'] }}secondary float-end" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
 
 <p>
   <a class="btn {{ config['BUTTON_STYLE'] }}success" href="#" id="showimport">{{ word("Show import controls") }}</a>
@@ -93,15 +93,15 @@
     <div class="card-body">
       {% if package_file_available %}
       <h4>{{ word("What file do you want to import?") }}</h4>
-      <div class="radio">
-        <label>
-          <input type="radio" name="usepackage" id="usepackage" value="yes" checked>
-          <span>{{ word("The JSON file in the package") }}: <code>{{ the_package_location }}</code></span>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="usepackage" id="usepackage1" value="yes" checked>
+        <label class="form-check-label" for="usepackage1">
+          {{ word("The JSON file in the package") }}: <code>{{ the_package_location }}</code>
         </label>
       </div>
-      <div class="radio">
-        <label>
-          <input type="radio" name="usepackage" id="usepackage" value="no">
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="usepackage" id="usepackage2" value="no">
+        <label class="form-check-label" for="usepackage2">
           <span>{{ word("An uploaded JSON file") }}</span>
         </label>
       </div>
@@ -113,16 +113,16 @@
         {{ render_file_field(uploadform.jsonfile) }}
       </div>
       <h6>{{ word("How would you like the data to be imported?") }}</h6>
-      <div class="radio">
-        <label>
-          <input type="radio" name="importtype" id="importtype" value="merge" checked>
-          <span>{{ word("Merge new data into existing data") }}</span>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="importtype" id="importtype1" value="merge" checked>
+        <label class="form-check-label" for="importtype1">
+          {{ word("Merge new data into existing data") }}
         </label>
       </div>
-      <div class="radio">
-        <label>
-          <input type="radio" name="importtype" id="importtype" value="replace">
-          <span>{{ word("Erase existing data for each model before importing") }}</span>
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="importtype" id="importtype2" value="replace">
+        <label class="form-check-label" for="importtype2">
+          {{ word("Erase existing data for each model before importing") }}
         </label>
       </div>
       <div class="mt-2">
@@ -134,7 +134,7 @@
 {%- if group_id_list|length > 0 %}
 <div class="list-group">
   {%- for group_id, count in group_id_list %}
-  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=the_package, file=the_file, group_id=group_id, show_all=show_all) }}">{{ group_id }} <span class="badge badge-pill badge-dark float-right">{{ count }}</span></a>
+  <a class="list-group-item list-group-item-action" href="{{ url_for('train', package=the_package, file=the_file, group_id=group_id, show_all=show_all) }}">{{ group_id }} <span class="badge rounded-pill bg-dark float-end">{{ count }}</span></a>
   {%- endfor %}
 </div>
 {%- else %}
@@ -149,7 +149,7 @@
   <a href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3>{{ word('Items') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3 class="mt-4">{{ word('Items') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
 {%- if the_package == '_global' %}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
@@ -194,17 +194,17 @@
       {{ word("Manually add a training item") }}
     </div>
     <div class="card-body">
-      <div class="form-group">
-        <label for="newindependent">{{ word("Input") }}</label>
+      <div class="da-form-group">
+        <label class="form-label" for="newindependent">{{ word("Input") }}</label>
         <textarea id="newindependent" name="newindependent" class="form-control"></textarea>
-        <label for="newdependent">{{ word("Actual") }}</label>
+        <label class="form-label" for="newdependent">{{ word("Actual") }}</label>
         <div class="row">
           <div class="col-md-8">
-            <input class="form-control actualval" id="newdependent" name="newdependent" type="text" value="">
+            <input class="form-control actualval" id="newdependent" name="newdependent" type="text" value="" aria-label="{{ word('Type actual value') }}">
           </div>
           {%- if choices %}
           <div class="col-md-4">
-            <select data-id-number="newdependent" class="form-control trainer">
+            <select data-id-number="newdependent" class="form-select trainer" aria-label="{{ word('Pick actual value') }}">
               <option value="" selected>{{ word("Select one") }}</option>
               {%- for item, count in choices %}
               <option value="{{ item }}">{{ item }}</option>
@@ -216,7 +216,7 @@
       </div>
     </div>
   </div>
-  <div class="mt-2">
+  <div class="mt-3">
     {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
     {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
   </div>
@@ -225,49 +225,48 @@
   {%- if show_all %}
   <h4>{{ word('Items in the training set') }}</h4>
   {%- else %}
-  <h4>{{ word('Unclassified items in the training set') }}</h4>
+  <h4 class="mt-4">{{ word('Unclassified items in the training set') }}</h4>
   {%- endif %}
   {%- for entry in entry_list %}
   <div class="card mb-2">
     <div class="card-body">
-      <div class="form-group">
-        <div class="checkbox dadelete-observation">
-          <label>
-            <input type="checkbox" name="delete{{ entry.id }}" data-id-number="{{ entry.id }}"> {{ word("Delete") }}
-          </label>
+      <div class="da-form-group">
+        <div class="form-check dadelete-observation">
+          <input class="form-check-input" type="checkbox" id="delete{{ entry.id }}" name="delete{{ entry.id }}" data-id-number="{{ entry.id }}"> 
+          <label class="form-check-label" for="delete{{ entry.id }}">{{ word("Delete") }}</label>
         </div>
-        <label>{{ word("Input") }}</label>
+        <label class="form-label" for="bc{{ entry.id }}">{{ word("Input") }}</label>
         {%- if entry.type == 'text' %}
-        <blockquote class="blockquote dalimheight">{{ entry.independent }}</blockquote>
+        <blockquote id="bc{{ entry.id }}" class="blockquote dalimheight">{{ entry.independent }}</blockquote>
         {%- else %}
         {{ entry.independent_display|safe }}
         {%- endif %}
         {%- if entry.image_files %}
         {%- if entry|length == 1 %}
-        <label>{{ word("File") }}</label>
+        <label class="form-label">{{ word("File") }}</label>
         {%- else %}
-        <label>{{ word("Files") }}</label>
+        <label class="form-label">{{ word("Files") }}</label>
         {%- endif %}
         {%- for linked_file in entry.image_files %}
         <div class="daimagepreview"><a target="_blank" href="{{ linked_file['doc_url'] }}"><img src="{{ linked_file['image_url'] }}"></a></div>
         {%- endfor %}
         {%- endif %}
         {%- if entry.predictions %}
-        <label>{{ word("Prediction") }}</label>
+        <label class="form-label">{{ word("Prediction") }}</label>
         <div>
           {%- for prediction, probability in entry.predictions[0:1] %}
           <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn {{ config['BUTTON_STYLE'] }}success btn-sm prediction" type="button">
-            {{ prediction }} <span class="badge badge-pill badge-dark">{{ probability }}</span>
+            {{ prediction }} <span class="badge rounded-pill bg-dark">{{ probability }}</span>
           </button>
           {%- endfor %}
           {%- for prediction, probability in entry.predictions[1:] %}
           <button data-id-number="{{ entry.id }}" data-prediction="{{ prediction }}" class="btn {{ config['BUTTON_STYLE'] }}primary btn-sm prediction" type="button">
-            {{ prediction }} <span class="badge badge-pill badge-dark">{{ probability }}</span>
+            {{ prediction }} <span class="badge rounded-pill bg-dark">{{ probability }}</span>
           </button>
           {%- endfor %}
         </div>
         {%- endif %}
-        <label for="dependent{{ entry.id }}">{{ word("Actual") }}</label>
+        <label class="form-label" for="dependent{{ entry.id }}">{{ word("Actual") }}</label>
         <div class="row">
           <div class="col-md-8">
             <input id="original{{ entry.id }}" name="original{{ entry.id }}" type="hidden" value="{{ '' if entry.dependent is none else entry.dependent }}">
@@ -288,7 +287,7 @@
     </div>
   </div>
   {%- endfor %}
-  <div class="mt-2">
+  <div class="mt-3">
     {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
     {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
   </div>

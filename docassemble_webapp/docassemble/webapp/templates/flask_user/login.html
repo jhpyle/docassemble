@@ -16,13 +16,13 @@
           <form action="" method="POST" class="form" role="form">
             {{ form.hidden_tag() }}
             {%- set field = form.username if user_manager.enable_username else form.email %}
-            <div class="form-group {% if field.errors %}da-group-has-error{% endif %}">
+            <div class="da-form-group {% if field.errors %}da-group-has-error{% endif %}">
               <div class="row">
                 <div class="col">
-                  <label for="{{ field.id }}" class="control-label">{{ word(field.label.text) }}</label>
+                  <label for="{{ field.id }}" class="form-label">{{ word(field.label.text) }}</label>
                 </div>
                 <div class="col">
-                  <div class="text-right">
+                  <div class="text-end">
                   {%- if user_manager.enable_register and not user_manager.require_invitation %}
                   {%- if 'next' in request.args %}
                   <a href="{{ url_for('user.register', next=request.args['next']) }}">
@@ -35,7 +35,11 @@
                   </div>
                 </div>
               </div>
-              {{ field(class_='form-control', type='email') }}
+              <div class="row">
+                <div class="col">
+                  {{ field(class_='form-control', type='email') }}
+                </div>
+              </div>
               {%- if field.errors %}
                 {%- for e in field.errors %}
               <p class="da-has-error text-danger">{{ e }}</p>
@@ -43,13 +47,13 @@
               {%- endif %}
             </div>
             {%- set field = form.password %}
-            <div class="form-group {% if field.errors %}da-group-has-error{% endif %}">
+            <div class="da-form-group {% if field.errors %}da-group-has-error{% endif %}">
               <div class="row">
                 <div class="col">
-                  <label for="{{ field.id }}" class="control-label">{{ word(field.label.text) }}</label>
+                  <label for="{{ field.id }}" class="form-label">{{ word(field.label.text) }}</label>
                 </div>
                 <div class="col">
-                  <div class="text-right">
+                  <div class="text-end">
                   {%- if user_manager.enable_forgot_password %}
                   <a href="{{ url_for('user.forgot_password') }}">
                     {{ word("Forgot your Password?") }}
@@ -58,7 +62,11 @@
                   </div>
                 </div>
               </div>
-              {{ field(class_='form-control') }}
+              <div class="row">
+                <div class="col">
+                  {{ field(class_='form-control') }}
+                </div>
+              </div>
               {%- if field.errors %}
                 {%- for e in field.errors %}
               <p class="da-has-error text-danger">{{ e }}</p>
