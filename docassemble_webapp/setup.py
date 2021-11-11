@@ -214,7 +214,7 @@ install_requires = [
     "sortedcontainers==2.3.0",
     "soupsieve==2.2.1",
     "SQLAlchemy==1.4.15",
-    "starkbank-ecdsa==1.1.0",
+    "starkbank-ecdsa==2.0.1",
     "tailer==0.4.1",
     "telnyx==1.4.0",
     "threadpoolctl==2.1.0",
