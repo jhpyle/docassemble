@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.5](https://github.com/jhpyle/docassemble/releases/tag/v1.3.5) - TBD
+
+### Fixed
+- Adjusted CSS to fix navigation bar and required field CSS issues on
+  small screens.
+
 ## [1.3.4](https://github.com/jhpyle/docassemble/releases/tag/v1.3.4) - 2021-11-11
 
 ### Changed
@@ -13,6 +19,7 @@ short_title: Change Log
   than Bootstrap 4, but it has better accessibility.
 - The Source tab is now represented by a "code" icon.
 - The administrative UI was adjusted for consistency.
+- Changed the appearance of help on field labels.
 
 ## [1.3.3](https://github.com/jhpyle/docassemble/releases/tag/v1.3.3) - 2021-11-07
 
