@@ -8,7 +8,7 @@
   {%- endif %}
   {%- for p in site.docs %}
     {%- if p.url == item_url %}
-      <li class="nav-item"><a class="nav-link ml-2{{ c }}" href="{{ p.url | prepend: site.baseurl }}">{{ p.short_title }}</a></li>
+      <li class="nav-item"><a class="nav-link ms-2{{ c }}" href="{{ p.url | prepend: site.baseurl }}">{{ p.short_title }}</a></li>
       {%- break %}
     {%- endif %}
   {%- endfor %}

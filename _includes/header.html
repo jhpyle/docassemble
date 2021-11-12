@@ -1,10 +1,11 @@
-      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
         <a class="navbar-brand" href="{{ site.baseurl }}/">{{ site.title }}</a>
-        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarLinks" aria-expanded="false" aria-controls="navbarLinks" aria-label="Menu">
+        <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarLinks" aria-expanded="false" aria-controls="navbarLinks" aria-label="Toggle menu">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarLinks">
-          <ul class="navbar-nav mr-auto">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             {%- assign sorted_pages = site.pages | sort:"order" %}
             {%- for thepage in sorted_pages %}
               {%- if thepage.url contains '/search.html' or thepage.url contains '/index.html' or thepage.url == '/' %}
@@ -17,11 +18,12 @@
               {%- endif %}
             {%- endfor %}
           </ul>
-          <form action="{{ site.baseurl }}/search.html" method="get" accept-charset="UTF-8" class="form-inline my-2 my-lg-0 dasearchform">
-            <input type="text" class="form-control mr-sm-2" placeholder="Search for..." aria-label="Search" name="q"/>
-            <button class="btn btn-outline-secondary my-2 my-sm-0" type="submit" aria-label="Search">
+          <form action="{{ site.baseurl }}/search.html" method="get" accept-charset="UTF-8" class="d-flex">
+            <input type="search" class="form-control me-2" placeholder="Search for..." aria-label="Search" name="q"/>
+            <button class="btn btn-outline-secondary" type="submit">
               <i class="fas fa-search"></i>
             </button>
           </form>
         </div>
-      </nav>
+      </div>
+    </nav>

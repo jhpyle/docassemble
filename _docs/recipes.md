@@ -1200,14 +1200,14 @@ question: |
 Create an [AWS Lambda] function and trigger it with an HTTP REST API
 that is authenticated with an API key.
 
-![AWS Lambda]({{ site.baseurl }}/img/examples/formio03.png){: .maybe-full-width }
+![AWS Lambda]({{ site.baseurl }}/img/formio03.png){: .maybe-full-width }
 
-![AWS Lambda API key]({{ site.baseurl }}/img/examples/formio04.png){: .maybe-full-width }
+![AWS Lambda API key]({{ site.baseurl }}/img/formio04.png){: .maybe-full-width }
 
 Add a layer that provides the `requests` module.  Then write a
 function like the following.
 
-![lambda function code]({{ site.baseurl }}/img/examples/formio06.png){: .maybe-full-width }
+![lambda function code]({{ site.baseurl }}/img/formio06.png){: .maybe-full-width }
 
 {% highlight python %}
 import json
@@ -1242,17 +1242,17 @@ Profile), the URL of your server, and the name of the interview you
 want to run (in this case, `fromformio.yml` is a Playground
 interview).
 
-![AWS Lambda]({{ site.baseurl }}/img/examples/formio07.png){: .maybe-full-width }
+![AWS Lambda]({{ site.baseurl }}/img/formio07.png){: .maybe-full-width }
 
 Go to [form.io] and create a form that looks like this:
 
-![form.io form]({{ site.baseurl }}/img/examples/formio01.png){: .maybe-full-width }
+![form.io form]({{ site.baseurl }}/img/formio01.png){: .maybe-full-width }
 
 Attach a "webhook" action that sends a POST request to your [AWS
 Lambda] endpoint.  Add the API key for the HTTP REST API trigger as
 the `x-api-key` header.
 
-![form.io action]({{ site.baseurl }}/img/examples/formio02.png){: .maybe-full-width }
+![form.io action]({{ site.baseurl }}/img/formio02.png){: .maybe-full-width }
 
 Under Forms, click the "Use" button next to the form that you created
 and try submitting the form.  The e-mail recipient designated in your
@@ -1265,7 +1265,7 @@ e-mail recipient clicks the link, they will resume an interview
 session in which the variable `start_data` contains the information
 from the [form.io] form.
 
-![interview session]({{ site.baseurl }}/img/examples/formio08.png){: .maybe-full-width }
+![interview session]({{ site.baseurl }}/img/formio08.png){: .maybe-full-width }
 
 # <a name="object_conversion"></a>Converting the result of object questions
 
@@ -1400,7 +1400,7 @@ and loads the `SigningProcess` class from the
 Note the way signatures and the dates of signatures are included in
 the DOCX template file, [declaration_of_favorite_fruit.docx]:
 
-![Declaration of Favorite Fruit]({{ site.baseurl }}/img/examples/declaration-favorite-fruit.png){: .maybe-full-width }
+![Declaration of Favorite Fruit]({{ site.baseurl }}/img/declaration-favorite-fruit.png){: .maybe-full-width }
 
 The template uses methods on the `sign` object to include the
 signature images and dates.  To include a signature of an [`Individual`]

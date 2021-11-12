@@ -4,6 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.4](https://github.com/jhpyle/docassemble/releases/tag/v1.3.4) - 2021-11-11
+
+### Changed
+- Upgraded from Bootstrap 4 to Bootstrap 5. This changes the HTML and
+  CSS significantly, so you may need to adjust your customizations and
+  testing scripts.  Bootstrap 5 is not necessarily more "attractive"
+  than Bootstrap 4, but it has better accessibility.
+- The Source tab is now represented by a "code" icon.
+- The administrative UI was adjusted for consistency.
+
 ## [1.3.3](https://github.com/jhpyle/docassemble/releases/tag/v1.3.3) - 2021-11-07
 
 ### Added

@@ -5,36 +5,37 @@
 {%- include header.html %}
     <div class="container">
       <div class="row mt-lg-4">
-	<nav class="col-lg-3">
-	  <div class="sidebar-nav">
-            <div class="navbar navbar-expand-lg navbar-light flex-row flex-lg-column align-items-start">
-              <div class="navbar-header">
-                <a href="{{ site.baseurl }}/docs.html" class="navbar-brand">Documentation</a>
-              </div>
-              <button type="button" class="navbar-toggler" data-toggle="collapse" data-target=".sidebar-navbar-collapse" aria-expanded="false" aria-controls="docsSidebar" aria-label="Documentation Navigation">
-                <span class="navbar-toggler-icon"></span>
-                <span class="sr-only">Documentation Navigation</span>
-              </button>
-              <div class="collapse navbar-collapse sidebar-navbar-collapse" id="docsSidebar">
-                <ul class="flex-column navbar-nav w-100 justify-content-between">
-{%- for section in site.data.docs %}
-                  <li class="nav-item"><strong>{{ section.title }}</strong></li>
-{%- include docs_section.html items=section.docs %}
-{%- endfor %}
-                </ul>
+	<div class="offset-xxl-2 col-xxl-8">
+          <nav class="documentation-nav">
+            <div class="sidebar-nav">
+              <div class="navbar navbar-expand-lg navbar-light">
+                <div class="container flex-row flex-lg-column align-items-start">
+                  <div class="navbar-header mb-3">
+                    <a href="{{ site.baseurl }}/docs.html" class="navbar-brand">Documentation</a>
+                  </div>
+                  <button type="button" class="navbar-toggler" data-toggle="collapse" data-target=".sidebar-navbar-collapse" aria-expanded="false" aria-controls="docsSidebar" aria-label="Toggle Documentation Navigation">
+                    <span class="navbar-toggler-icon"></span>
+                  </button>
+                  <div class="collapse navbar-collapse" id="docsSidebar">
+                    <ul class="flex-column navbar-nav w-100 justify-content-between">
+    {%- for section in site.data.docs %}
+                      <li class="nav-item"><strong>{{ section.title }}</strong></li>
+    {%- include docs_section.html items=section.docs %}
+    {%- endfor %}
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-	</nav>
-	<div class="col-lg-9">
-	  <header>
+          </nav>
+          <div class="d-none d-md-block">
             {%- if page.path == '_docs/changelog.md' %}
-            <a style="float: right" target="_blank" href="{{site.github.repository_url}}/blob/master/CHANGELOG.md">Edit this page on GitHub <i class="fab fa-github-alt"></i></a>
+            <a class="float-end btn btn-sm btn-secondary" title="Edit this page on GitHub" target="_blank" href="{{site.github.repository_url}}/blob/master/CHANGELOG.md"><i class="fab fa-github-alt"></i> Edit</a>
             {%- else %}
-            <a style="float: right" target="_blank" href="{{site.github.repository_url}}/blob/gh-pages/{{page.path}}">Edit this page on GitHub <i class="fab fa-github-alt"></i></a>
+            <a class="float-end btn btn-sm btn-secondary" title="Edit this page on GitHub" target="_blank" href="{{site.github.repository_url}}/blob/gh-pages/{{page.path}}"><i class="fab fa-github-alt"></i> Edit</a>
             {%- endif %}
-	    <h1 class="page-header">{{ page.title }}</h1>
-	  </header>
+          </div>
+          <h1 class="page-header">{{ page.title }}</h1>
 	  <main id="main">
 	  {{ content }}
 	  </main>

@@ -3925,12 +3925,12 @@
   \ obtained: degrees\n    datatype: checkboxes\n    choices:\n      - High school\n\
   \      - College\n      - Graduate school\n  - State you grew up in: home_state\n\
   \    code: |\n      us.states.mapping('abbr', 'name')\n  - note: |\n      #### Politics\n\
-  \n      Tell me about your political\n      views.\n  - no label: political_views\n\
-  \    default: I have no political views\n    maxlength: 30\n  - Party: political_party\n\
-  \    datatype: radio\n    shuffle: True \n    choices:\n      - Republican\n   \
-  \   - Democrat\n      - Independent\ncss: |\n  <style>\n    .mytime {\n       color:\
-  \ green;\n    }\n  </style>\nscript: |\n  <script>\n    $(\"#today_time\").html(Date());\n\
-  \  </script>"
+  \      \n  - label: Tell me about your political views.\n    field: political_views\n\
+  \    label above field: True\n    default: I have no political views\n    maxlength:\
+  \ 30\n  - Party: political_party\n    datatype: radio\n    shuffle: True \n    choices:\n\
+  \      - Republican\n      - Democrat\n      - Independent\ncss: |\n  <style>\n\
+  \    .mytime {\n       color: green;\n    }\n  </style>\nscript: |\n  <script>\n\
+  \    $(\"#today_time\").html(Date());\n  </script>"
 "fields-ajax": |-
   question: |
     What is your favorite word?
@@ -11403,8 +11403,8 @@
   question: |
     What are your favorite things to eat?
   subquestion: |
-    If you don't know what a vegetable
-    or fruit is, click the green text.
+    If you don't know what a vegetable or
+    fruit is, click the question mark icons.
   fields:
     - Vegetable: target_variable
       help: |
@@ -13273,9 +13273,9 @@
 "navbar-language": "metadata:\n  title:\n    en: Fruit\n    es: Fruta\n---\ndefault\
   \ screen parts:\n  navigation bar html: |\n    <li class=\"nav-item dropdown\">\n\
   \      <a class=\"nav-link dropdown-toggle\" href=\"#\" id=\"languageSelector\"\
-  \ data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">\n   \
-  \     <img src=\"${ url_of('docassemble.demo:data/static/united-kingdom.svg') }\"\
-  \ style=\"width:20px;\" /><img src=\"${ url_of('docassemble.demo:data/static/mexico.svg')\
+  \ data-bs-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">\n\
+  \        <img src=\"${ url_of('docassemble.demo:data/static/united-kingdom.svg')\
+  \ }\" style=\"width:20px;\" /><img src=\"${ url_of('docassemble.demo:data/static/mexico.svg')\
   \ }\" style=\"margin-left:-5px;width:20px;\" />\n      </a>\n      <div class=\"\
   dropdown-menu\" aria-labelledby=\"languageSelector\">\n        <a class=\"dropdown-item\"\
   \ href=\"${ url_action('set_lang', lang='en') }\">[FILE docassemble.demo:data/static/united-kingdom.svg,\
