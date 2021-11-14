@@ -2114,6 +2114,27 @@ process.
 For more information about **docassemble**'s support for multi-lingual
 interviews, see the [Language Support] section.
 
+# <a name="stats"></a>Tracking statistics about user activity
+
+Redis has a convenient feature for incrementing a counter.  Since the
+data in [Redis] is not affected by the deletion of interview sessions
+or users pressing the Back button, [Redis] can be used to keep track
+of event counters.  The following interview uses a [`DARedis`] object
+to access [Redis] and increment counters that track how many times
+particular screens in an interview were reached.
+
+{% include demo-side-by-side.html demo="counter" %}
+
+When you retrieve data from Redis, it comes through as non-decoded
+binary data, so you have to decode it with `.decode()`.
+
+Note that `r.incr()` was not called inside the
+`mandatory`<span></span> `code` block.  If it had been, then the
+counters for the early parts of the interview would be repeatedly
+incremented every time the screen loaded.  Using the `milestone`
+dictionary to track whether the milestone has been reached ensures
+that the counters are not incremented duplicatively.
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml

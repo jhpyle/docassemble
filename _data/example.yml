@@ -3898,6 +3898,15 @@
   subquestion: |
     You do not like
     ${ likes_fruit.false_values() }.
+"field-css-class": |-
+  features:
+    css: fruit.css
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+      css class: fruit
 "field-note": |-
   question: |
     Tell me more about you.
@@ -3911,26 +3920,77 @@
         bear with me.  We are almost
         done.
     - Favorite tree: tree
-"fields": "question: Tell me more about yourself\nfields:\n  - Description: user_description\n\
-  \    input type: area\n    hint: |\n      E.g., you can describe your\n      hair\
-  \ color, eye color, \n      favorite movies, etc.\n  - Annual income: user_annual_income\n\
-  \    datatype: currency\n    min: 100\n  - E-mail address: user_email_address\n\
-  \    datatype: email\n  - Been vaccinated: user_vaccinated\n    datatype: yesno\n\
-  \  - Seen Mount Rushmore: mount_rushmore_visited\n    datatype: yesnowide\n  - Opinion\
-  \ of turnips: turnip_rating\n    datatype: range\n    min: 1\n    max: 10\n  - Belly\
-  \ button type: belly_button\n    datatype: radio\n    choices:\n      - Innie\n\
-  \      - Outie\n  - html: |\n      The date and time is\n      <span class=\"mytime\"\
-  \n      id=\"today_time\"></span>.\n  - Number of friends: num_friends\n    datatype:\
-  \ radio\n    choices:\n      - One: 1\n      - Two: 2\n      - Three: 3\n  - Degrees\
-  \ obtained: degrees\n    datatype: checkboxes\n    choices:\n      - High school\n\
-  \      - College\n      - Graduate school\n  - State you grew up in: home_state\n\
-  \    code: |\n      us.states.mapping('abbr', 'name')\n  - note: |\n      #### Politics\n\
-  \      \n  - label: Tell me about your political views.\n    field: political_views\n\
-  \    label above field: True\n    default: I have no political views\n    maxlength:\
-  \ 30\n  - Party: political_party\n    datatype: radio\n    shuffle: True \n    choices:\n\
-  \      - Republican\n      - Democrat\n      - Independent\ncss: |\n  <style>\n\
-  \    .mytime {\n       color: green;\n    }\n  </style>\nscript: |\n  <script>\n\
-  \    $(\"#today_time\").html(Date());\n  </script>"
+"fields": |-
+  question: Tell me more about yourself
+  fields:
+    - Description: user_description
+      input type: area
+      hint: |
+        E.g., you can describe your
+        hair color, eye color,
+        favorite movies, etc.
+    - Annual income: user_annual_income
+      datatype: currency
+      min: 100
+    - E-mail address: user_email_address
+      datatype: email
+    - Been vaccinated: user_vaccinated
+      datatype: yesno
+    - Seen Mount Rushmore: mount_rushmore_visited
+      datatype: yesnowide
+    - Opinion of turnips: turnip_rating
+      datatype: range
+      min: 1
+      max: 10
+    - Belly button type: belly_button
+      datatype: radio
+      choices:
+        - Innie
+        - Outie
+    - html: |
+        The date and time is
+        <span class="mytime"
+        id="today_time"></span>.
+    - Number of friends: num_friends
+      datatype: radio
+      choices:
+        - One: 1
+        - Two: 2
+        - Three: 3
+    - Degrees obtained: degrees
+      datatype: checkboxes
+      choices:
+        - High school
+        - College
+        - Graduate school
+    - State you grew up in: home_state
+      code: |
+        us.states.mapping('abbr', 'name')
+    - note: |
+        #### Politics
+
+    - label: Tell me about your political views.
+      field: political_views
+      label above field: True
+      default: I have no political views
+      maxlength: 30
+    - Party: political_party
+      datatype: radio
+      shuffle: True
+      choices:
+        - Republican
+        - Democrat
+        - Independent
+  css: |
+    <style>
+      .mytime {
+         color: green;
+      }
+    </style>
+  script: |
+    <script>
+      $("#today_time").html(Date());
+    </script>
 "fields-ajax": |-
   question: |
     What is your favorite word?
@@ -12187,6 +12247,15 @@
     - Fruit: favorite_fruit
       datatype: object
       choices: fruits
+"counter": "objects:\n  r: DARedis\n  milestone: DADict.using(gathered=True)\n---\n\
+  code: |\n  r.incr(r.key(i))\n  milestone[i] = True\n---\nmandatory: True\ncode:\
+  \ |\n  milestone['01 started']\n  intro_screen\n  milestone['02 got past intro']\n\
+  \  favorite_fruit\n  favorite_vegetable\n  milestone['03 collected info']\n  user_name\n\
+  \  the_document\n  milestone['04 document assembled']\n  final_screen\n---\nevent:\
+  \ final_screen\nquestion: |\n  Thank you for providing this information.\nsubquestion:\
+  \ |\n  Statistics about this interview:\n    \n  % for step in sorted(milestone.keys()):\n\
+  \  * ${ step[2:] }: ${ r.get(r.key(step)).decode() }\n\n  % endfor\nattachment code:\
+  \ the_document"
 "courtfile": "objects:\n  - user: Individual\n  - court_filing_unit: DAEmailRecipient.using(name='Prothonotary\
   \ of the Court', address='jpyle@docassemble.org')\n---\nquestion: |\n  Please provide\
   \ your name and\n  e-mail address.\nfields:\n  - First Name: user.name.first\n \

@@ -1064,7 +1064,7 @@ include HTML, set the `datatype` to `raw`.
 You can use custom data types by declaring a subclass of
 `CustomDataType` in a Python module with class attributes that
 describe the data type.  For example, here is an example that defines
-a Social Security number (SSN) as a data type:
+a [Social Security number] (SSN) as a data type:
 
 {% highlight python %}
 from docassemble.base.util import CustomDataType, DAValidationError, word
@@ -1130,7 +1130,19 @@ The available class attributes are:
   capabilities of the [jQuery Validation Plugin].  In the example
   above, the `javascript` defines a new validation rule.  For more
   information on how to extend the [jQuery Validation Plugin], see the
-  documentation for [jQuery.validator.addMethod()].
+  documentation for [jQuery.validator.addMethod()].  The `javascript`
+  code can be used to initialize any fields on the screen that have
+  the custom datatype.  For example, if your `container_class` is
+  `da-ssn`, your `javascript` could be:
+
+{% highlight javascript %}
+$(document).on('daPageLoad', function(){
+  $(".da-ssn").each(function(){
+    $(this).after("<div>You better get this right!</div>");
+  });
+});
+{% endhighlight %}
+
 * `jq_rule` - the name of the [jQuery Validation Plugin] rule to
   enable on the field, if any.  This is typically used to refer to a
   rule you define in the `javascript` attribute.  If you want to
@@ -1158,6 +1170,21 @@ The available class attributes are:
 * `is_object` - the default is `False`.  If you have a `transform()`
   class method that returns something that cannot be defined with with
   `repr()`, set this to `True`.
+* `parameters` - the default is `[]`.  If you want to pass parameters
+  from the YAML to `data` attributes of the resulting `<input>`, you
+  can list the parameter names here.  For example, if `parameters` is
+  set to `['kind']`, and you include `kind: basic` as a field modifier
+  in the YAML of the field, then the [HTML] of the `<input>` element
+  will contain `data-kind="basic"`. You can extract these data values
+  using [JavaScript].
+* `code_parameters` - the default is `[]`.  This is just like
+  `parameters`, except the values in the YAML are treated as a [Python
+  expression], and the `data` value is set to the output of this
+  evaluation.  Make sure that the [Python expression] evaluates to
+  something sensible, like a string.
+* `mako_parameters` - the default is `[]`.  This is just like
+  `parameters`, except the values in the YAML are treates as [Mako],
+  and the `data` value is set to the rendered text.
 
 The available class methods are:
 
@@ -1208,6 +1235,26 @@ triggered.  There are ways that users might accidentally or
 deliberately bypass client-side input validation.  So even if you
 have a [jQuery Validation Plugin] rule that works, it is a good idea
 to include a `validate()` class method.
+
+## <a name="custom datatype explanation"></a>How custom data types work
+
+When the server starts, it looks through all of the packages under the
+`docassemble` namespace and loads every `.py` file that contains a
+class definition (unless the line `# do not pre-load` is present).  It
+is during this initial loading time that `CustomDataType` class
+definitions are processed and loaded.  As a result, you do not need to
+load the `.py` file in your interview with [`modules`] or [`imports`]
+when you use a `datatype` from a `CustomDataType` class in your YAML.
+
+When choosing a `name` for your `CustomDataType`, do not use a name
+that someone else might use.  Because `CustomDataType` class
+definitions are processed when the server starts, all `CustomDataType`
+definitions are global to the server; they are not specific to a
+particular interview, session, or user.  If another module is
+installed on the system (including in the Playground of some other
+user) that defines a `CustomDataType` with the same `name` as that
+which you are trying to define, one definition will overwrite the
+other and you may get confusing results.
 
 # <a name="fields options"></a>Options for items in `fields`
 
@@ -1712,6 +1759,32 @@ It is generally a good idea to always use a label for every field,
 especially if some of your users may be using screen readers.  If you
 are inclined to use `no label` because you want the field to be wider,
 consider using [`label above field`].
+
+## <a name="css class"></a>`css class`
+
+If you specify a `css class`, then the HTML input element will have
+the specified class, and the `<div>` containing the field will have the same
+class, except with `-container` appended to it.
+
+{% include side-by-side.html demo="field-css-class" %}
+
+In this example, the contents of `fruit.css` are:
+
+{% highlight css %}
+.fruit-container {
+    background-color: #aa88ff;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    border-radius: 1rem;
+}
+
+.fruit {
+    background-color: #000000;
+    color: #00dd00;
+}
+{% endhighlight %}
+
+[Mako] can be used inside `css class`.
 
 ## <a name="label above field"></a>`label above field`
 
@@ -3081,6 +3154,7 @@ why this needs to be done manually as opposed to automatically:
 [`data from code`]: {{ site.baseurl }}/docs/initial.html#data from code
 [lambda function]: https://docs.python.org/3.8/tutorial/controlflow.html#lambda-expressions
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
+[`imports`]: {{ site.baseurl }}/docs/initial.html#imports
 [accept]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#attr-accept
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`default validation messages`]: {{ site.baseurl }}/docs/initial.html#default validation messages
@@ -3117,3 +3191,4 @@ why this needs to be done manually as opposed to automatically:
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
 [`labels above fields`]: {{ site.baseurl }}/docs/initial.html#labels above fields
 [`label above field`]: #label above field
+[Social Security number]: https://en.wikipedia.org/wiki/Social_Security_number

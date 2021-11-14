@@ -4,11 +4,16 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [1.3.5](https://github.com/jhpyle/docassemble/releases/tag/v1.3.5) - TBD
+## [1.3.5](https://github.com/jhpyle/docassemble/releases/tag/v1.3.5) - 2021-11-13
+
+### Added
+- Data parameters for `CustomDataType`.
+- The `css class` field modifier.
 
 ### Fixed
 - Adjusted CSS to fix navigation bar and required field CSS issues on
   small screens.
+- Prevented the enter key from submitting the form in the Playground.
 
 ## [1.3.4](https://github.com/jhpyle/docassemble/releases/tag/v1.3.4) - 2021-11-11
 
