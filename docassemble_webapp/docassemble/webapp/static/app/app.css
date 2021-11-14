@@ -229,6 +229,12 @@ i.da-chat-inactive:hover {
 }
 
 @media (max-width: 767px) {
+    .da-form-group.darequired .dawidecol:before {
+	left: 0.2rem;
+    }
+    .da-form-group.darequired .danolabel:before {
+	left: 0.2rem;
+    }
     .da-form-group.darequired .da-form-label:after {
 	bottom: 0.7rem;
     }
@@ -1642,8 +1648,14 @@ tr:first-child .datableup, tr:last-child .databledown {
 }
 
 .danavbar-title {
-    max-width: 55%;
+    max-width: 45%;
     overflow: hidden;
+}
+
+@media (min-width: 992px) {
+    .danavbar-title {
+	max-width: 55%;
+    }
 }
 
 .dalistright {

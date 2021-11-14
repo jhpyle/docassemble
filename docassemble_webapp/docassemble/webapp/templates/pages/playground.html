@@ -83,7 +83,7 @@
   </div>
   <textarea rows="34" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
   <div class="form-actions mt-2 ml-1">
-    {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], tabindex="90") }}
+    {{ render_submit_field(form.submit, class="ms-1 btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], tabindex="90") }}
     {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_CLASS'] }}" >{{ word("Save and Run") }}</a>
     {%- if use_gd %}
     <a tabindex="101" id="daRunSyncGD" target="_blank" href="{{ url_for('playground_poll') }}" class="btn {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_CLASS'] }}" ><i class="fab fa-google-drive" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Sync and Run") }}</a>

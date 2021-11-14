@@ -19729,6 +19729,19 @@ function variablesReady(){
   });
 }
 
+$( document ).ready(function() {
+  $(document).on('keydown', function(e){
+    if (e.which == 13){
+      var tag = $( document.activeElement ).prop("tagName");
+      if (tag == "INPUT"){
+        e.preventDefault();
+        e.stopPropagation();
+        $(".CodeMirror textarea").focus();
+        return false;
+      }
+    }
+  });
+});
 """
     return output
 

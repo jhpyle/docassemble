@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.3.5] - 2021-11-13
+### Added
+- Data parameters for `CustomDataType`.
+- The `css class` field modifier.
+### Fixed
+- Adjusted CSS to fix navigation bar and required field CSS issues on
+  small screens.
+- Prevented the enter key from submitting the form in the Playground.
+
 ## [1.3.4] - 2021-11-11
 ### Changed
 - Upgraded from Bootstrap 4 to Bootstrap 5. This changes the HTML and
@@ -8,6 +17,7 @@
   than Bootstrap 4, but it has better accessibility.
 - The Source tab is now represented by a "code" icon.
 - The administrative UI was adjusted for consistency.
+- Changed the appearance of help on field labels.
 
 ## [1.3.3] - 2021-11-07
 ### Added

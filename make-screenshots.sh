@@ -11,7 +11,7 @@ do
     area=${area##*_}
     file=${path##*/}
     file=${file%.*}
-    
+
     # url="http://localhost?i=docassemble.$area:data/questions/examples/$file.yml&json=1"
     # wget --quiet -O "json_files/"$file".json" "$url"
     # sleep 1
@@ -31,7 +31,7 @@ do
     # help-damages-audio
     # help-damages
     # audio
-    
+
     if [ "$file" = "immediate-file" -o \
 	 "$file" = "exit-url-referer-fullscreen" -o \
 	 "$file" = "exit-url-referer-fullscreen-mobile" -o \
@@ -261,10 +261,10 @@ do
     then
 	continue
     fi
-    #if [ -f ~/gh-pages-da/img/examples/$file.png -a ~/gh-pages-da/img/examples/$file.png -nt $path ]
-    #then
-    #	continue
-    #fi
+    if [ -f ~/gh-pages-da/img/examples/$file.png -a ~/gh-pages-da/img/examples/$file.png -nt $path ]
+    then
+        continue
+    fi
     tempfile=`mktemp /tmp/XXXXXXX.png`
     echo -e -n "\n\n  Scenario: make screenshot for $file\n    Given I launch the interview \"docassemble.${area}:data/questions/examples/${file}.yml\"" >> $featurefile
     if [ "$file" = "signature" -o \
@@ -321,7 +321,7 @@ do
 	echo -e -n "\n    And I wait 1 second\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
     elif [ "$file" = "table-read-only" -o "$file" = "table-read-only-2" ]
     then
-	echo -e -n "\n    Then I should see the phrase \"Do you want to add another fruit to the list?\"\n    And I click the button \"Yes\"\n    Then I should see the phrase \"Tell me about the fruit.\"\n    And I set \"Name\" to \"Grape\"\n    And I set \"Seeds\" to \"0\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Do you want to add another fruit to the list?\"\n    And I click the button \"Yes\"\n    Then I should see the phrase \"Tell me about the fruit.\"\n    And I set \"Name\" to \"Watermelon\"\n    And I set \"Seeds\" to \"43\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Do you want to add another fruit to the list?\"\n    And I click the button \"No\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile    
+	echo -e -n "\n    Then I should see the phrase \"Do you want to add another fruit to the list?\"\n    And I click the button \"Yes\"\n    Then I should see the phrase \"Tell me about the fruit.\"\n    And I set \"Name\" to \"Grape\"\n    And I set \"Seeds\" to \"0\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Do you want to add another fruit to the list?\"\n    And I click the button \"Yes\"\n    Then I should see the phrase \"Tell me about the fruit.\"\n    And I set \"Name\" to \"Watermelon\"\n    And I set \"Seeds\" to \"43\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Do you want to add another fruit to the list?\"\n    And I click the button \"No\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile
     elif [ "$file" = "table-dict-edit" -o "$file" = "table-dict-edit-minimum-number" -o "$file" = "table-dict-edit-delete-buttons" -o "$file" = "table-dict-delete-buttons" -o "$file" = "table-dict-confirm" ]
     then
 	echo -e -n "\n    And I click the option \"Yes\" under \"Do you get income from benefits?\"\n    And I wait 1 second\n    And I set \"How much do you get from benefits?\" to \"434\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Income from employment\"\n    And I click the option \"No\" under \"Do you get income from employment?\"\n    And I click the button \"Continue\"\n    Then I should see the phrase \"Income from interest\"\n    And I click the option \"Yes\" under \"Do you get income from interest?\"\n    And I wait 1 second\n    And I set \"How much do you get from interest?\" to \"532\"\n    And I click the button \"Continue\"\n    And I save a screenshot to \"$tempfile\"" >> $featurefile

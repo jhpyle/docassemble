@@ -1,0 +1,18 @@
+metadata:
+  title: CSS Class
+  documentation: "https://docassemble.org/docs/fields.html#fields css class"
+  example start: 1
+  example end: 2
+---
+features:
+  css: fruit.css
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    css class: fruit
+---
+mandatory: True
+question: |
+  Your favorite fruit is ${ favorite_fruit }.

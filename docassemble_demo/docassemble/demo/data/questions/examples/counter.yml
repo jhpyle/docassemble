@@ -1,0 +1,74 @@
+metadata:
+  title: Using redis
+  example start: 1
+  example end: 4
+  documentation: "https://docassemble.org/docs/recipes.html#counters"
+---
+objects:
+  r: DARedis
+  milestone: DADict.using(gathered=True)
+---
+code: |
+  r.incr(r.key(i))
+  milestone[i] = True
+---
+mandatory: True
+code: |
+  milestone['01 started']
+  intro_screen
+  milestone['02 got past intro']
+  favorite_fruit
+  favorite_vegetable
+  milestone['03 collected info']
+  user_name
+  the_document
+  milestone['04 document assembled']
+  final_screen
+---
+event: final_screen
+question: |
+  Thank you for providing this information.
+subquestion: |
+  Statistics about this interview:
+    
+  % for step in sorted(milestone.keys()):
+  * ${ step[2:] }: ${ r.get(r.key(step)).decode() }
+
+  % endfor
+attachment code: the_document
+---
+question: |
+  Thank you for starting the interview!
+subquestion: |
+  Press Continue to proceed.
+continue button field: intro_screen
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+question: |
+  What is your name?
+fields:
+  - Name: user_name
+---
+attachment:
+  name: Summary of Your Personality
+  variable name: the_document
+  filename: summary
+  content: |
+    ${ user_name },
+
+    Your favorite fruit is ${ favorite_fruit }
+    and your favorite vegetable is
+    ${ favorite_vegetable }.
+
+    % if favorite_vegetable != 'turnip':
+    These are wise choices.
+    % endif

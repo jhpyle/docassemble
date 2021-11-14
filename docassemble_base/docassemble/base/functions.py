@@ -4830,6 +4830,9 @@ class CustomDataTypeRegister(type):
                 new_type['javascript'] = clsdict.get('javascript', None)
                 new_type['jq_rule'] = clsdict.get('jq_rule', None)
                 new_type['jq_message'] = clsdict.get('jq_message', None)
+                new_type['parameters'] = clsdict.get('parameters', [])
+                new_type['code_parameters'] = clsdict.get('code_parameters', [])
+                new_type['mako_parameters'] = clsdict.get('mako_parameters', [])
                 new_type['skip_if_empty'] = True if clsdict.get('skip_if_empty', True) else False
                 new_type['is_object'] = True if clsdict.get('is_object', False) else False
                 new_type['class'] = cls

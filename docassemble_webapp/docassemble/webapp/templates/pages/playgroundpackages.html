@@ -172,5 +172,5 @@
         {%- endif %}
 {%- endblock %}
 {%- block bottom %}
-      <div class="mt-2"><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}primary btn-md"><i class="fas fa-chevron-left"></i>&nbsp;{{ word("Back to Playground") }}</a></div>
+      <div class="mt-2"><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}secondary btn-md"><i class="fas fa-chevron-left"></i>&nbsp;{{ word("Back to Playground") }}</a></div>
 {%- endblock %}

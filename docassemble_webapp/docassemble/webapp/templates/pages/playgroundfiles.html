@@ -114,7 +114,7 @@
               </div>
               <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
               <div class="form-actions mt-2 ml-1">
-                {{ render_submit_field(formtwo.submit, tabindex=600, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], data={'disable-button': 0}) }}
+                {{ render_submit_field(formtwo.submit, tabindex=600, class="ms-1 btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], data={'disable-button': 0}) }}
                 {% if is_new == 'False' %}<a tabindex="605" class="btn {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_' + section, userid=userid, filename=current_file, current_project=current_project, attach='1') }}">{{ word("Download") }}</a> <a tabindex="610" class="btn {{ config['BUTTON_STYLE'] }}danger {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_files', section=section, delete=current_file, project=current_project) }}">{{ word('Delete') }}</a>{% endif %}
               </div>
             </form>
@@ -136,5 +136,5 @@
 {%- endif %}
 {%- endblock %}
 {%- block bottom %}
-      <div class="mt-2"><a tabindex="620" href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}primary"><i class="fas fa-chevron-left"></i>&nbsp;{{ word("Back to Playground") }}</a></div>
+      <div class="mt-2"><a tabindex="620" href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}secondary"><i class="fas fa-chevron-left"></i>&nbsp;{{ word("Back to Playground") }}</a></div>
 {%- endblock %}

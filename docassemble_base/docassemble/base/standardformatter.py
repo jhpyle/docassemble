@@ -967,12 +967,15 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                 req_tag = ' darequired'
             else:
                 req_tag = ''
+            extra_container_class = ''
             if hasattr(field, 'extras'):
                 # if 'script' in field.extras and 'script' in status.extras:
                 #     status.extra_scripts.append(status.extras['script'][field.number])
                 # if 'css' in field.extras and 'css' in status.extras:
                 #     status.extra_css.append(status.extras['css'][field.number])
                 #fieldlist.append("<div>datatype is " + str(field.datatype) + "</div>")
+                if 'css class' in status.extras and field.number in status.extras['css class']:
+                    extra_container_class = ' ' + clean_whitespace(status.extras['css class'][field.number]) + '-container'
                 if 'ml_group' in field.extras or 'ml_train' in field.extras:
                     ml_info[field.saveas] = dict()
                     if 'ml_group' in field.extras:
@@ -1090,6 +1093,7 @@ def as_html(status, url_for, debug, root, validation_rules, field_error, the_pro
                     field_class += ' da-field-container-inputtype-radio'
                 else:
                     field_class += ' da-field-container-inputtype-dropdown'
+            field_class += extra_container_class
             if field.number in status.helptexts:
                 helptext_start = '<a tabindex="0" class="text-info mx-1" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content=' + noquote(markdown_to_html(status.helptexts[field.number], trim=True)) + '>'
                 helptext_end = '<i class="fas fa-question-circle"></i></a>'
@@ -2194,7 +2198,7 @@ def input_for(status, field, wide=False, embedded=False):
     else:
         extra_style = ''
         if hasattr(field, 'datatype') and field.datatype == 'object':
-            extra_class = 'daobject'
+            extra_class = ' daobject'
         else:
             extra_class = ''
         extra_checkbox = ''
@@ -2204,6 +2208,8 @@ def input_for(status, field, wide=False, embedded=False):
         autocomplete_off = ' autocomplete="new-password"'
     else:
         autocomplete_off = ''
+    if 'css class' in status.extras and field.number in status.extras['css class']:
+        extra_class += ' ' + clean_whitespace(status.extras['css class'][field.number])
     if hasattr(field, 'choicetype'):
         # logmessage("In a choicetype where field datatype is " + field.datatype)
         # if hasattr(field, 'inputtype'):
@@ -2773,10 +2779,22 @@ def input_for(status, field, wide=False, embedded=False):
                 input_type = 'text'
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
+            data_part = ''
             if field.datatype in custom_types:
                 input_type = custom_types[field.datatype]['input_type']
-                extra_class = ' ' + custom_types[field.datatype]['input_class']
-            output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+                extra_class += ' ' + custom_types[field.datatype]['input_class']
+                custom_parameters = dict()
+                if hasattr(field, 'extras') and 'custom_parameters' in field.extras:
+                    for parameter, parameter_value in field.extras['custom_parameters'].items():
+                        custom_parameters[parameter] = parameter_value
+                for param_type in ('custom_parameters_code', 'custom_parameters_mako'):
+                    if param_type in status.extras and field.number in status.extras[param_type]:
+                        for parameter, parameter_value in status.extras[param_type][field.number].items():
+                            custom_parameters[parameter] = parameter_value
+                if len(custom_parameters):
+                    for param_name, param_val in custom_parameters.items():
+                        data_part += ' data-' + re.sub(r'[^A-Za-z0-9\-]', '-', param_name).strip('-') + '=' + fix_double_quote(str(param_val))
+            output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + data_part + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if not embedded and field.datatype == 'currency':
                 output += ' aria-describedby="' + escape_id(saveas_string) + '-error"' + disable_others_data + autocomplete_off + ' /></div><div class="da-has-error invalid-feedback" style="display: none;" id="' + escape_id(saveas_string) + '-error"></div>'
             else:
@@ -2862,3 +2880,6 @@ def strip_tags(html):
     s = MLStripper()
     s.feed(html)
     return s.get_data()
+
+def clean_whitespace(text):
+    return re.sub(r'\s+', ' ', str(text)).strip()

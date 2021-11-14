@@ -1134,11 +1134,18 @@ class InterviewStatus:
                 the_field['disable_others'] = True
             if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                 the_field['uncheck_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata'):
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata', 'css class'):
                 if key in self.extras and field.number in self.extras[key]:
                     if key in ('minlength', 'maxlength', 'min', 'max', 'step'):
                         validation_rules_used.add(key)
                     the_field[key] = self.extras[key][field.number]
+            if hasattr(field, 'extras') and 'custom_parameters' in field.extras:
+                for parameter, parameter_value in field.extras['custom_parameters'].items():
+                    the_field[parameter] = parameter_value
+            for param_type in ('custom_parameters_code', 'custom_parameters_mako'):
+                if param_type in self.extras and field.number in self.extras[param_type]:
+                    for parameter, parameter_value in self.extras[param_type][field.number].items():
+                        the_field[parameter] = parameter_value
             if hasattr(field, 'saveas') and field.saveas in self.embedded:
                 the_field['embedded'] = True
             if hasattr(self, 'shuffle'):
@@ -3565,512 +3572,537 @@ class Question:
                 data['fields'] = [data['fields']]
             if not isinstance(data['fields'], list):
                 raise DAError("The fields must be written in the form of a list." + self.idebug(data))
-            else:
-                field_number = 0
-                for field in data['fields']:
-                    docassemble.base.functions.this_thread.misc['current_field'] = field_number
-                    if isinstance(field, dict):
-                        manual_keys = set()
-                        field_info = {'type': 'text', 'number': field_number}
-                        if 'datatype' in field:
-                            if field['datatype'] in ('radio', 'combobox', 'pulldown', 'ajax'):
-                                field['input type'] = field['datatype']
-                                field['datatype'] = 'text'
-                            if field['datatype'] == 'mlarea':
-                                field['input type'] = 'area'
-                                field['datatype'] = 'ml'
-                            if field['datatype'] == 'area':
-                                field['input type'] = 'area'
-                                field['datatype'] = 'text'
-                        if 'input type' in field and field['input type'] == 'ajax':
-                            if 'action' not in field:
-                                raise DAError("An ajax field must have an associated action." + self.idebug(data))
-                            if 'choices' in field or 'code' in field:
-                                raise DAError("An ajax field cannot contain a list of choices except through an action." + self.idebug(data))
-                        if len(field) == 1 and 'code' in field:
-                            field_info['type'] = 'fields_code'
-                            self.find_fields_in(field['code'])
-                            field_info['extras'] = dict(fields_code=compile(field['code'], '<fields code>', 'eval'))
-                            self.fields.append(Field(field_info))
-                            field_number += 1
-                            if 'current_field' in docassemble.base.functions.this_thread.misc:
-                                del docassemble.base.functions.this_thread.misc['current_field']
+            field_number = 0
+            for field in data['fields']:
+                docassemble.base.functions.this_thread.misc['current_field'] = field_number
+                if not isinstance(field, dict):
+                    raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
+                manual_keys = set()
+                field_info = {'type': 'text', 'number': field_number}
+                custom_data_type = False
+                if 'datatype' in field:
+                    if field['datatype'] in ('radio', 'combobox', 'pulldown', 'ajax'):
+                        field['input type'] = field['datatype']
+                        field['datatype'] = 'text'
+                    if field['datatype'] == 'mlarea':
+                        field['input type'] = 'area'
+                        field['datatype'] = 'ml'
+                    if field['datatype'] == 'area':
+                        field['input type'] = 'area'
+                        field['datatype'] = 'text'
+                    if field['datatype'] in ('object', 'object_radio', 'multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
+                        raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
+                    if field['datatype'] in docassemble.base.functions.custom_types:
+                        custom_data_type = True
+                if 'input type' in field:
+                    if field['input type'] == 'ajax':
+                        if 'action' not in field:
+                            raise DAError("An ajax field must have an associated action." + self.idebug(data))
+                        if 'choices' in field or 'code' in field:
+                            raise DAError("An ajax field cannot contain a list of choices except through an action." + self.idebug(data))
+                    if field['input type'] in ('radio', 'combobox', 'pulldown') and not ('choices' in field or 'code' in field):
+                        raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
+                if len(field) == 1 and 'code' in field:
+                    field_info['type'] = 'fields_code'
+                    self.find_fields_in(field['code'])
+                    field_info['extras'] = dict(fields_code=compile(field['code'], '<fields code>', 'eval'))
+                    self.fields.append(Field(field_info))
+                    field_number += 1
+                    if 'current_field' in docassemble.base.functions.this_thread.misc:
+                        del docassemble.base.functions.this_thread.misc['current_field']
+                    continue
+                if 'object labeler' in field and ('datatype' not in field or not field['datatype'].startswith('object')):
+                    raise DAError("An object labeler can only be used with an object data type")
+                if 'note' in field and 'html' in field:
+                    raise DAError("You cannot include both note and html in a field." + self.idebug(data))
+                for key in field:
+                    if key == 'default' and 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
+                        continue
+                    if custom_data_type:
+                        if key in docassemble.base.functions.custom_types[field['datatype']]['parameters']:
+                            if 'extras' not in field_info:
+                                field_info['extras'] = dict()
+                            if 'custom_parameters' not in field_info['extras']:
+                                field_info['extras']['custom_parameters'] = dict()
+                            field_info['extras']['custom_parameters'][key] = field[key]
                             continue
-                        if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
-                            raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
-                        if 'input type' in field and field['input type'] in ('radio', 'combobox', 'pulldown') and not ('choices' in field or 'code' in field):
-                            raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
-                        if 'object labeler' in field and ('datatype' not in field or not field['datatype'].startswith('object')):
-                            raise DAError("An object labeler can only be used with an object data type")
-                        if 'note' in field and 'html' in field:
-                            raise DAError("You cannot include both note and html in a field." + self.idebug(data))
-                        for key in field:
-                            if key == 'default' and 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
-                                continue
-                            if key == 'input type':
-                                field_info['inputtype'] = field[key]
-                            elif 'datatype' in field and field['datatype'] in ('ml', 'mlarea') and key in ('using', 'keep for training'):
-                                if key == 'using':
-                                    if 'extras' not in field_info:
-                                        field_info['extras'] = dict()
-                                    field_info['extras']['ml_group'] = TextObject(definitions + str(field[key]), question=self)
-                                if key == 'keep for training':
-                                    if 'extras' not in field_info:
-                                        field_info['extras'] = dict()
-                                    if isinstance(field[key], bool):
-                                        field_info['extras']['ml_train'] = field[key]
-                                    else:
-                                        field_info['extras']['ml_train'] = {'compute': compile(field[key], '<keep for training code>', 'eval'), 'sourcecode': field[key]}
-                                        self.find_fields_in(field[key])
-                            elif key == 'validation messages':
-                                if not isinstance(field[key], dict):
-                                    raise DAError("A validation messages indicator must be a dictionary." + self.idebug(data))
-                                field_info['validation messages'] = dict()
-                                for validation_key, validation_message in field[key].items():
-                                    if not (isinstance(validation_key, str) and isinstance(validation_message, str)):
-                                        raise DAError("A validation messages indicator must be a dictionary of text keys and text values." + self.idebug(data))
-                                    field_info['validation messages'][validation_key] = TextObject(definitions + str(validation_message).strip(), question=self)
-                            elif key == 'validate':
-                                field_info['validate'] = {'compute': compile(field[key], '<validate code>', 'eval'), 'sourcecode': field[key]}
+                        if key in docassemble.base.functions.custom_types[field['datatype']]['code_parameters']:
+                            if 'extras' not in field_info:
+                                field_info['extras'] = dict()
+                            if 'custom_parameters_code' not in field_info['extras']:
+                                field_info['extras']['custom_parameters_code'] = dict()
+                            field_info['extras']['custom_parameters_code'][key] = {'compute': compile(str(field[key]), '<custom data type code>', 'eval'), 'sourcecode': str(field[key])}
+                            self.find_fields_in(field[key])
+                            continue
+                        if key in docassemble.base.functions.custom_types[field['datatype']]['mako_parameters']:
+                            if 'extras' not in field_info:
+                                field_info['extras'] = dict()
+                            if 'custom_parameters_mako' not in field_info['extras']:
+                                field_info['extras']['custom_parameters_mako'] = dict()
+                            field_info['extras']['custom_parameters_mako'][key] = TextObject(definitions + str(field[key]), question=self)
+                            continue
+                    if key == 'input type':
+                        field_info['inputtype'] = field[key]
+                    elif 'datatype' in field and field['datatype'] in ('ml', 'mlarea') and key in ('using', 'keep for training'):
+                        if key == 'using':
+                            if 'extras' not in field_info:
+                                field_info['extras'] = dict()
+                            field_info['extras']['ml_group'] = TextObject(definitions + str(field[key]), question=self)
+                        if key == 'keep for training':
+                            if 'extras' not in field_info:
+                                field_info['extras'] = dict()
+                            if isinstance(field[key], bool):
+                                field_info['extras']['ml_train'] = field[key]
+                            else:
+                                field_info['extras']['ml_train'] = {'compute': compile(field[key], '<keep for training code>', 'eval'), 'sourcecode': field[key]}
                                 self.find_fields_in(field[key])
-                            elif key == 'rows' and (('input type' in field and field['input type'] == 'area') or ('datatype' in field and field['datatype'] in ('multiselect', 'object_multiselect'))):
-                                field_info['rows'] = {'compute': compile(str(field[key]), '<rows code>', 'eval'), 'sourcecode': str(field[key])}
-                                self.find_fields_in(field[key])
-                            elif key == 'maximum image size' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
-                                field_info['max_image_size'] = {'compute': compile(str(field[key]), '<maximum image size code>', 'eval'), 'sourcecode': str(field[key])}
-                                self.find_fields_in(field[key])
-                            elif key == 'image upload type' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
-                                if field[key].lower().strip() in ('jpeg', 'jpg', 'bmp', 'png'):
-                                    field_info['image_type'] = {'compute': compile(repr(field[key]), '<image upload type code>', 'eval'), 'sourcecode': repr(field[key])}
-                                else:
-                                    field_info['image_type'] = {'compute': compile(str(field[key]), '<image upload type code>', 'eval'), 'sourcecode': str(field[key])}
-                            elif key == 'accept' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
-                                field_info['accept'] = {'compute': compile(field[key], '<accept code>', 'eval'), 'sourcecode': field[key]}
-                                self.find_fields_in(field[key])
-                            elif key == 'allow privileges' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
-                                if isinstance(field[key], list):
-                                    for item in field[key]:
-                                        if not isinstance(item, str):
-                                            raise DAError("An allow privileges specifier must be a list of plain text items or code." + self.idebug(data))
-                                    field_info['allow_privileges'] = field[key]
-                                elif isinstance(field[key], str):
-                                    field_info['allow_privileges'] = [field[key]]
-                                elif isinstance(field[key], dict) and len(field[key]) == 1 and 'code' in field[key]:
-                                    field_info['allow_privileges'] = {'compute': compile(field[key]['code'], '<allow privileges code>', 'eval'), 'sourcecode': field[key]['code']}
-                                    self.find_fields_in(field[key]['code'])
-                                else:
+                    elif key == 'validation messages':
+                        if not isinstance(field[key], dict):
+                            raise DAError("A validation messages indicator must be a dictionary." + self.idebug(data))
+                        field_info['validation messages'] = dict()
+                        for validation_key, validation_message in field[key].items():
+                            if not (isinstance(validation_key, str) and isinstance(validation_message, str)):
+                                raise DAError("A validation messages indicator must be a dictionary of text keys and text values." + self.idebug(data))
+                            field_info['validation messages'][validation_key] = TextObject(definitions + str(validation_message).strip(), question=self)
+                    elif key == 'validate':
+                        field_info['validate'] = {'compute': compile(field[key], '<validate code>', 'eval'), 'sourcecode': field[key]}
+                        self.find_fields_in(field[key])
+                    elif key == 'rows' and (('input type' in field and field['input type'] == 'area') or ('datatype' in field and field['datatype'] in ('multiselect', 'object_multiselect'))):
+                        field_info['rows'] = {'compute': compile(str(field[key]), '<rows code>', 'eval'), 'sourcecode': str(field[key])}
+                        self.find_fields_in(field[key])
+                    elif key == 'maximum image size' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                        field_info['max_image_size'] = {'compute': compile(str(field[key]), '<maximum image size code>', 'eval'), 'sourcecode': str(field[key])}
+                        self.find_fields_in(field[key])
+                    elif key == 'image upload type' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                        if field[key].lower().strip() in ('jpeg', 'jpg', 'bmp', 'png'):
+                            field_info['image_type'] = {'compute': compile(repr(field[key]), '<image upload type code>', 'eval'), 'sourcecode': repr(field[key])}
+                        else:
+                            field_info['image_type'] = {'compute': compile(str(field[key]), '<image upload type code>', 'eval'), 'sourcecode': str(field[key])}
+                    elif key == 'accept' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                        field_info['accept'] = {'compute': compile(field[key], '<accept code>', 'eval'), 'sourcecode': field[key]}
+                        self.find_fields_in(field[key])
+                    elif key == 'allow privileges' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                        if isinstance(field[key], list):
+                            for item in field[key]:
+                                if not isinstance(item, str):
                                     raise DAError("An allow privileges specifier must be a list of plain text items or code." + self.idebug(data))
-                            elif key == 'allow users' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
-                                if isinstance(field[key], list):
-                                    for item in field[key]:
-                                        if not isinstance(item, (str, int)):
-                                            raise DAError("An allow users specifier must be a list of integers and plain text items or code." + self.idebug(data))
-                                    field_info['allow_users'] = field[key]
-                                elif isinstance(field[key], str):
-                                    field_info['allow_users'] = [field[key]]
-                                elif isinstance(field[key], dict) and len(field[key]) == 1 and 'code' in field[key]:
-                                    field_info['allow_users'] = {'compute': compile(field[key]['code'], '<allow users code>', 'eval'), 'sourcecode': field[key]['code']}
-                                    self.find_fields_in(field[key]['code'])
-                                else:
+                            field_info['allow_privileges'] = field[key]
+                        elif isinstance(field[key], str):
+                            field_info['allow_privileges'] = [field[key]]
+                        elif isinstance(field[key], dict) and len(field[key]) == 1 and 'code' in field[key]:
+                            field_info['allow_privileges'] = {'compute': compile(field[key]['code'], '<allow privileges code>', 'eval'), 'sourcecode': field[key]['code']}
+                            self.find_fields_in(field[key]['code'])
+                        else:
+                            raise DAError("An allow privileges specifier must be a list of plain text items or code." + self.idebug(data))
+                    elif key == 'allow users' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                        if isinstance(field[key], list):
+                            for item in field[key]:
+                                if not isinstance(item, (str, int)):
                                     raise DAError("An allow users specifier must be a list of integers and plain text items or code." + self.idebug(data))
-                            elif key == 'persistent' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
-                                if isinstance(field[key], bool):
-                                    field_info['persistent'] = field[key]
+                            field_info['allow_users'] = field[key]
+                        elif isinstance(field[key], str):
+                            field_info['allow_users'] = [field[key]]
+                        elif isinstance(field[key], dict) and len(field[key]) == 1 and 'code' in field[key]:
+                            field_info['allow_users'] = {'compute': compile(field[key]['code'], '<allow users code>', 'eval'), 'sourcecode': field[key]['code']}
+                            self.find_fields_in(field[key]['code'])
+                        else:
+                            raise DAError("An allow users specifier must be a list of integers and plain text items or code." + self.idebug(data))
+                    elif key == 'persistent' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                        if isinstance(field[key], bool):
+                            field_info['persistent'] = field[key]
+                        else:
+                            field_info['persistent'] = {'compute': compile(field[key], '<persistent code>', 'eval'), 'sourcecode': field[key]}
+                            self.find_fields_in(field[key])
+                    elif key == 'private' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                        if isinstance(field[key], bool):
+                            field_info['private'] = field[key]
+                        else:
+                            field_info['private'] = {'compute': compile(field[key], '<public code>', 'eval'), 'sourcecode': field[key]}
+                            self.find_fields_in(field[key])
+                    elif key == 'object labeler':
+                        field_info['object_labeler'] = {'compute': compile(str(field[key]), '<object labeler code>', 'eval'), 'sourcecode': str(field[key])}
+                        self.find_fields_in(field[key])
+                    elif key == 'help generator':
+                        field_info['help_generator'] = {'compute': compile(str(field[key]), '<help generator code>', 'eval'), 'sourcecode': str(field[key])}
+                        self.find_fields_in(field[key])
+                    elif key == 'image generator':
+                        field_info['image_generator'] = {'compute': compile(str(field[key]), '<image generator code>', 'eval'), 'sourcecode': str(field[key])}
+                        self.find_fields_in(field[key])
+                    elif key == 'required':
+                        if isinstance(field[key], bool):
+                            field_info['required'] = field[key]
+                        else:
+                            field_info['required'] = {'compute': compile(field[key], '<required code>', 'eval'), 'sourcecode': field[key]}
+                            self.find_fields_in(field[key])
+                    elif key == 'js show if' or key == 'js hide if':
+                        if not isinstance(field[key], str):
+                            raise DAError("A js show if or js hide if expression must be a string" + self.idebug(data))
+                        js_info = dict()
+                        if key == 'js show if':
+                            js_info['sign'] = True
+                        else:
+                            js_info['sign'] = False
+                        js_info['mode'] = 0
+                        js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
+                        js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
+                        if 'extras' not in field_info:
+                            field_info['extras'] = dict()
+                        field_info['extras']['show_if_js'] = js_info
+                    elif key == 'js disable if' or key == 'js enable if':
+                        if not isinstance(field[key], str):
+                            raise DAError("A js disable if or js enable if expression must be a string" + self.idebug(data))
+                        js_info = dict()
+                        if key == 'js enable if':
+                            js_info['sign'] = True
+                        else:
+                            js_info['sign'] = False
+                        js_info['mode'] = 1
+                        js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
+                        js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
+                        if 'extras' not in field_info:
+                            field_info['extras'] = dict()
+                        field_info['extras']['show_if_js'] = js_info
+                    elif key == 'show if' or key == 'hide if':
+                        if 'extras' not in field_info:
+                            field_info['extras'] = dict()
+                        if isinstance(field[key], dict):
+                            showif_valid = False
+                            if 'variable' in field[key] and 'is' in field[key]:
+                                if 'js show if' in field or 'js hide if' in field:
+                                    raise DAError("You cannot mix js show if and non-js show if" + self.idebug(data))
+                                if 'js disable if' in field or 'js enable if' in field:
+                                    raise DAError("You cannot mix js disable if and non-js show if" + self.idebug(data))
+                                field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
+                                if isinstance(field[key]['is'], str):
+                                    field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
                                 else:
-                                    field_info['persistent'] = {'compute': compile(field[key], '<persistent code>', 'eval'), 'sourcecode': field[key]}
-                                    self.find_fields_in(field[key])
-                            elif key == 'private' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
-                                if isinstance(field[key], bool):
-                                    field_info['private'] = field[key]
-                                else:
-                                    field_info['private'] = {'compute': compile(field[key], '<public code>', 'eval'), 'sourcecode': field[key]}
-                                    self.find_fields_in(field[key])
-                            elif key == 'object labeler':
-                                field_info['object_labeler'] = {'compute': compile(str(field[key]), '<object labeler code>', 'eval'), 'sourcecode': str(field[key])}
-                                self.find_fields_in(field[key])
-                            elif key == 'help generator':
-                                field_info['help_generator'] = {'compute': compile(str(field[key]), '<help generator code>', 'eval'), 'sourcecode': str(field[key])}
-                                self.find_fields_in(field[key])
-                            elif key == 'image generator':
-                                field_info['image_generator'] = {'compute': compile(str(field[key]), '<image generator code>', 'eval'), 'sourcecode': str(field[key])}
-                                self.find_fields_in(field[key])
-                            elif key == 'required':
-                                if isinstance(field[key], bool):
-                                    field_info['required'] = field[key]
-                                else:
-                                    field_info['required'] = {'compute': compile(field[key], '<required code>', 'eval'), 'sourcecode': field[key]}
-                                    self.find_fields_in(field[key])
-                            elif key == 'js show if' or key == 'js hide if':
-                                if not isinstance(field[key], str):
-                                    raise DAError("A js show if or js hide if expression must be a string" + self.idebug(data))
-                                js_info = dict()
-                                if key == 'js show if':
-                                    js_info['sign'] = True
-                                else:
-                                    js_info['sign'] = False
-                                js_info['mode'] = 0
-                                js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
-                                js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
-                                if 'extras' not in field_info:
-                                    field_info['extras'] = dict()
-                                field_info['extras']['show_if_js'] = js_info
-                            elif key == 'js disable if' or key == 'js enable if':
-                                if not isinstance(field[key], str):
-                                    raise DAError("A js disable if or js enable if expression must be a string" + self.idebug(data))
-                                js_info = dict()
-                                if key == 'js enable if':
-                                    js_info['sign'] = True
-                                else:
-                                    js_info['sign'] = False
-                                js_info['mode'] = 1
-                                js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
-                                js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
-                                if 'extras' not in field_info:
-                                    field_info['extras'] = dict()
-                                field_info['extras']['show_if_js'] = js_info
-                            elif key == 'show if' or key == 'hide if':
-                                if 'extras' not in field_info:
-                                    field_info['extras'] = dict()
-                                if isinstance(field[key], dict):
-                                    showif_valid = False
-                                    if 'variable' in field[key] and 'is' in field[key]:
-                                        if 'js show if' in field or 'js hide if' in field:
-                                            raise DAError("You cannot mix js show if and non-js show if" + self.idebug(data))
-                                        if 'js disable if' in field or 'js enable if' in field:
-                                            raise DAError("You cannot mix js disable if and non-js show if" + self.idebug(data))
-                                        field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
-                                        if isinstance(field[key]['is'], str):
-                                            field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
-                                        else:
-                                            field_info['extras']['show_if_val'] = TextObject(str(field[key]['is']))
-                                        showif_valid = True
-                                    if 'code' in field[key]:
-                                        field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
-                                        self.find_fields_in(field[key]['code'])
-                                        showif_valid = True
-                                    if not showif_valid:
-                                        raise DAError("The keys of '" + key + "' must be 'variable' and 'is,' or 'code.'" + self.idebug(data))
-                                elif isinstance(field[key], list):
-                                    raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
-                                elif isinstance(field[key], str):
-                                    field_info['extras']['show_if_var'] = safeid(field[key].strip())
-                                    field_info['extras']['show_if_val'] = TextObject('True')
-                                else:
-                                    raise DAError("Invalid variable name in show if/hide if")
-                                exclusive = False
-                                if isinstance(field[key], dict) and 'code' in field[key]:
-                                    if len(field[key]) == 1:
-                                        exclusive = True
-                                    if key == 'show if':
-                                        field_info['extras']['show_if_sign_code'] = 1
-                                    else:
-                                        field_info['extras']['show_if_sign_code'] = 0
-                                if not exclusive:
-                                    if key == 'show if':
-                                        field_info['extras']['show_if_sign'] = 1
-                                    else:
-                                        field_info['extras']['show_if_sign'] = 0
-                                field_info['extras']['show_if_mode'] = 0
-                            elif key == 'disable if' or key == 'enable if':
-                                if 'extras' not in field_info:
-                                    field_info['extras'] = dict()
-                                if isinstance(field[key], dict):
-                                    showif_valid = False
-                                    if 'variable' in field[key] and 'is' in field[key]:
-                                        if 'js show if' in field or 'js hide if' in field:
-                                            raise DAError("You cannot mix js show if and non-js disable if" + self.idebug(data))
-                                        if 'js disable if' in field or 'js enable if' in field:
-                                            raise DAError("You cannot mix js disable if and non-js disable if" + self.idebug(data))
-                                        field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
-                                        if isinstance(field[key]['is'], str):
-                                            field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
-                                        else:
-                                            field_info['extras']['show_if_val'] = TextObject(str(field[key]['is']))
-                                        showif_valid = True
-                                    if 'code' in field[key]:
-                                        field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
-                                        self.find_fields_in(field[key]['code'])
-                                        showif_valid = True
-                                    if not showif_valid:
-                                        raise DAError("The keys of '" + key + "' must be 'variable' and 'is,' or 'code.'" + self.idebug(data))
-                                elif isinstance(field[key], list):
-                                    raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
-                                elif isinstance(field[key], str):
-                                    field_info['extras']['show_if_var'] = safeid(field[key].strip())
-                                    field_info['extras']['show_if_val'] = TextObject('True')
-                                else:
-                                    raise DAError("Invalid variable name in disable if/enable if")
-                                exclusive = False
-                                if isinstance(field[key], dict) and 'code' in field[key]:
-                                    if len(field[key]) == 1:
-                                        exclusive = True
-                                    if key == 'enable if':
-                                        field_info['extras']['show_if_sign_code'] = 1
-                                    else:
-                                        field_info['extras']['show_if_sign_code'] = 0
-                                if not exclusive:
-                                    if key == 'enable if':
-                                        field_info['extras']['show_if_sign'] = 1
-                                    else:
-                                        field_info['extras']['show_if_sign'] = 0
-                                field_info['extras']['show_if_mode'] = 1
-                            elif key == 'default' or key == 'hint' or key == 'help':
-                                if not isinstance(field[key], dict) and not isinstance(field[key], list):
-                                    field_info[key] = TextObject(definitions + str(field[key]), question=self)
-                                if key == 'default':
-                                    if isinstance(field[key], dict) and 'code' in field[key]:
-                                        if 'extras' not in field_info:
-                                            field_info['extras'] = dict()
-                                        field_info['extras']['default'] = {'compute': compile(field[key]['code'], '<default code>', 'eval'), 'sourcecode': field[key]['code']}
-                                        self.find_fields_in(field[key]['code'])
-                                    else:
-                                        if isinstance(field[key], (dict, list)):
-                                            field_info[key] = field[key]
-                                        if 'datatype' not in field and 'code' not in field and 'choices' not in field:
-                                            auto_determine_type(field_info, the_value=field[key])
-                            elif key == 'disable others':
-                                if 'datatype' in field and field['datatype'] in ('file', 'files', 'range', 'multiselect', 'checkboxes', 'camera', 'user', 'environment', 'camcorder', 'microphone', 'object_multiselect', 'object_checkboxes'): #'yesno', 'yesnowide', 'noyes', 'noyeswide',
-                                    raise DAError("A 'disable others' directive cannot be used with this data type." + self.idebug(data))
-                                if not isinstance(field[key], (list, bool)):
-                                    raise DAError("A 'disable others' directive must be True, False, or a list of variable names." + self.idebug(data))
-                                field_info['disable others'] = field[key]
-                                if field[key] is not False:
-                                    field_info['required'] = False
-                            elif key == 'uncheck others' and 'datatype' in field and field['datatype'] in ('yesno', 'yesnowide', 'noyes', 'noyeswide'):
-                                if not isinstance(field[key], (list, bool)):
-                                    raise DAError("An 'uncheck others' directive must be True, False, or a list of variable names." + self.idebug(data))
-                                field_info['uncheck others'] = field[key]
-                            elif key == 'datatype':
-                                field_info['type'] = field[key]
-                                if field[key] in ('yesno', 'yesnowide', 'noyes', 'noyeswide') and 'required' not in field_info:
-                                    field_info['required'] = False
-                                if field[key] == 'range' and 'required' not in field_info:
-                                    field_info['required'] = False
-                                if field[key] == 'range' and not ('min' in field and 'max' in field):
-                                    raise DAError("If the datatype of a field is 'range', you must provide a min and a max." + self.idebug(data))
-                                if field[key] in ('yesno', 'yesnowide', 'yesnoradio'):
-                                    field_info['boolean'] = 1
-                                elif field[key] in ('noyes', 'noyeswide', 'noyesradio'):
-                                    field_info['boolean'] = -1
-                                elif field[key] == 'yesnomaybe':
-                                    field_info['threestate'] = 1
-                                elif field[key] == 'noyesmaybe':
-                                    field_info['threestate'] = -1
-                            elif key == 'code':
-                                self.find_fields_in(field[key])
-                                field_info['choicetype'] = 'compute'
-                                field_info['selections'] = {'compute': compile(field[key], '<choices code>', 'eval'), 'sourcecode': field[key]}
-                                self.find_fields_in(field[key])
-                                if 'exclude' in field:
-                                    if isinstance(field['exclude'], dict):
-                                        raise DAError("An exclude entry cannot be a dictionary." + self.idebug(data))
-                                    if not isinstance(field['exclude'], list):
-                                        field_info['selections']['exclude'] = [compile(field['exclude'], '<expression>', 'eval')]
-                                        self.find_fields_in(field['exclude'])
-                                    else:
-                                        field_info['selections']['exclude'] = list()
-                                        for x in field['exclude']:
-                                            field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
-                                            self.find_fields_in(x)
-                            elif key == 'address autocomplete':
-                                field_info['address_autocomplete'] = True
-                            elif key == 'label above field':
-                                field_info['label_above_field'] = True
-                            elif key == 'action' and 'input type' in field and field['input type'] == 'ajax':
-                                if not isinstance(field[key], str):
-                                    raise DAError("An action must be plain text" + self.idebug(data))
-                                if 'combobox action' not in field_info:
-                                    field_info['combobox action'] = dict(trig=4)
-                                field_info['combobox action']['action'] = field[key]
-                            elif key == 'trigger at' and 'action' in field and 'input type' in field and field['input type'] == 'ajax':
-                                if (not isinstance(field[key], int)) or field[key] < 2:
-                                    raise DAError("A trigger at must an integer greater than one" + self.idebug(data))
-                                if 'combobox action' not in field_info:
-                                    field_info['combobox action'] = dict()
-                                field_info['combobox action']['trig'] = field[key]
-                            elif key == 'exclude':
-                                pass
-                            elif key == 'choices':
-                                if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
-                                    field_info['choicetype'] = 'compute'
-                                    if not isinstance(field[key], (list, str)):
-                                        raise DAError("choices is not in appropriate format" + self.idebug(data))
-                                    field_info['selections'] = dict()
-                                else:
-                                    field_info['choicetype'] = 'manual'
-                                    field_info['selections'] = dict(values=self.process_selections_manual(field[key]))
-                                    if 'datatype' not in field:
-                                        auto_determine_type(field_info)
-                                    for item in field_info['selections']['values']:
-                                        if isinstance(item['key'], TextObject):
-                                            if not item['key'].uses_mako:
-                                                manual_keys.add(item['key'].original_text)
-                                        else:
-                                            manual_keys.add(item['key'])
-                                if 'exclude' in field:
-                                    if isinstance(field['exclude'], dict):
-                                        raise DAError("An exclude entry cannot be a dictionary." + self.idebug(data))
-                                    if not isinstance(field['exclude'], list):
-                                        self.find_fields_in(field['exclude'])
-                                        field_info['selections']['exclude'] = [compile(field['exclude'].strip(), '<expression>', 'eval')]
-                                    else:
-                                        field_info['selections']['exclude'] = list()
-                                        for x in field['exclude']:
-                                            self.find_fields_in(x)
-                                            field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
-                            elif key in ('note', 'html'):
-                                if 'extras' not in field_info:
-                                    field_info['extras'] = dict()
-                                field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
-                            elif key == 'field metadata':
-                                if 'extras' not in field_info:
-                                    field_info['extras'] = dict()
-                                field_info['extras'][key] = recursive_textobject_or_primitive(field[key], self)
-                            elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline', 'inline width', 'currency symbol'):
-                                if 'extras' not in field_info:
-                                    field_info['extras'] = dict()
-                                field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
-                            # elif key in ('css', 'script'):
-                            #     if 'extras' not in field_info:
-                            #         field_info['extras'] = dict()
-                            #     if field_info['type'] == 'text':
-                            #         field_info['type'] = key
-                            #     field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
-                            elif key == 'shuffle':
-                                field_info['shuffle'] = field[key]
-                            elif key == 'none of the above' and 'datatype' in field and field['datatype'] in ('checkboxes', 'object_checkboxes', 'object_radio'):
-                                if isinstance(field[key], bool):
-                                    field_info['nota'] = field[key]
-                                else:
-                                    field_info['nota'] = TextObject(definitions + interpret_label(field[key]), question=self)
-                            elif key == 'field':
-                                if 'label' not in field:
-                                    raise DAError("If you use 'field' to indicate a variable in a 'fields' section, you must also include a 'label.'" + self.idebug(data))
-                                if not isinstance(field[key], str):
-                                    raise DAError("Fields in a 'field' section must be plain text." + self.idebug(data))
-                                field[key] = field[key].strip()
-                                if invalid_variable_name(field[key]):
-                                    raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
-                                field_info['saveas'] = field[key]
-                            elif key == 'label':
-                                if 'field' not in field:
-                                    raise DAError("If you use 'label' to label a field in a 'fields' section, you must also include a 'field.'" + self.idebug(data))
-                                field_info['label'] = TextObject(definitions + interpret_label(field[key]), question=self)
+                                    field_info['extras']['show_if_val'] = TextObject(str(field[key]['is']))
+                                showif_valid = True
+                            if 'code' in field[key]:
+                                field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
+                                self.find_fields_in(field[key]['code'])
+                                showif_valid = True
+                            if not showif_valid:
+                                raise DAError("The keys of '" + key + "' must be 'variable' and 'is,' or 'code.'" + self.idebug(data))
+                        elif isinstance(field[key], list):
+                            raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
+                        elif isinstance(field[key], str):
+                            field_info['extras']['show_if_var'] = safeid(field[key].strip())
+                            field_info['extras']['show_if_val'] = TextObject('True')
+                        else:
+                            raise DAError("Invalid variable name in show if/hide if")
+                        exclusive = False
+                        if isinstance(field[key], dict) and 'code' in field[key]:
+                            if len(field[key]) == 1:
+                                exclusive = True
+                            if key == 'show if':
+                                field_info['extras']['show_if_sign_code'] = 1
                             else:
-                                if 'label' in field_info:
-                                    raise DAError("Syntax error: field label '" + str(key) + "' overwrites previous label, '" + str(field_info['label'].original_text) + "'" + self.idebug(data))
-                                field_info['label'] = TextObject(definitions + interpret_label(key), question=self)
-                                if not isinstance(field[key], str):
-                                    raise DAError("Fields in a 'field' section must be plain text." + self.idebug(data))
-                                field[key] = field[key].strip()
-                                if invalid_variable_name(field[key]):
-                                    raise DAError("Missing or invalid variable name " + repr(field[key]) + " for key " + repr(key) + "." + self.idebug(data))
-                                field_info['saveas'] = field[key]
-                        if 'type' in field_info:
-                            if field_info['type'] in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and 'nota' not in field_info:
-                                field_info['nota'] = True
-                            if field_info['type'] == 'object_radio' and 'nota' not in field_info:
-                                field_info['nota'] = False
-                        if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
-                            if 'choices' not in field:
-                                raise DAError("You need to have a choices element if you want to set a variable to an object." + self.idebug(data))
-                            if not isinstance(field['choices'], list):
-                                select_list = [str(field['choices'])]
+                                field_info['extras']['show_if_sign_code'] = 0
+                        if not exclusive:
+                            if key == 'show if':
+                                field_info['extras']['show_if_sign'] = 1
                             else:
-                                select_list = field['choices']
-                            if 'exclude' in field:
-                                if isinstance(field['exclude'], dict):
-                                    raise DAError("choices exclude list is not in appropriate format" + self.idebug(data))
-                                if not isinstance(field['exclude'], list):
-                                    exclude_list = [str(field['exclude']).strip()]
+                                field_info['extras']['show_if_sign'] = 0
+                        field_info['extras']['show_if_mode'] = 0
+                    elif key == 'disable if' or key == 'enable if':
+                        if 'extras' not in field_info:
+                            field_info['extras'] = dict()
+                        if isinstance(field[key], dict):
+                            showif_valid = False
+                            if 'variable' in field[key] and 'is' in field[key]:
+                                if 'js show if' in field or 'js hide if' in field:
+                                    raise DAError("You cannot mix js show if and non-js disable if" + self.idebug(data))
+                                if 'js disable if' in field or 'js enable if' in field:
+                                    raise DAError("You cannot mix js disable if and non-js disable if" + self.idebug(data))
+                                field_info['extras']['show_if_var'] = safeid(field[key]['variable'].strip())
+                                if isinstance(field[key]['is'], str):
+                                    field_info['extras']['show_if_val'] = TextObject(definitions + str(field[key]['is']).strip(), question=self)
                                 else:
-                                    exclude_list = [x.strip() for x in field['exclude']]
-                                if len(exclude_list):
-                                    select_list.append('exclude=[' + ", ".join(exclude_list) + ']')
-                            if 'default' in field:
-                                if not isinstance(field['default'], (list, str)):
-                                    raise DAError("default list is not in appropriate format" + self.idebug(data))
-                                if not isinstance(field['default'], list):
-                                    default_list = [str(field['default'])]
-                                else:
-                                    default_list = field['default']
+                                    field_info['extras']['show_if_val'] = TextObject(str(field[key]['is']))
+                                showif_valid = True
+                            if 'code' in field[key]:
+                                field_info['showif_code'] = compile(field[key]['code'], '<show if code>', 'eval')
+                                self.find_fields_in(field[key]['code'])
+                                showif_valid = True
+                            if not showif_valid:
+                                raise DAError("The keys of '" + key + "' must be 'variable' and 'is,' or 'code.'" + self.idebug(data))
+                        elif isinstance(field[key], list):
+                            raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
+                        elif isinstance(field[key], str):
+                            field_info['extras']['show_if_var'] = safeid(field[key].strip())
+                            field_info['extras']['show_if_val'] = TextObject('True')
+                        else:
+                            raise DAError("Invalid variable name in disable if/enable if")
+                        exclusive = False
+                        if isinstance(field[key], dict) and 'code' in field[key]:
+                            if len(field[key]) == 1:
+                                exclusive = True
+                            if key == 'enable if':
+                                field_info['extras']['show_if_sign_code'] = 1
                             else:
-                                default_list = list()
-                            if field_info['type'] in ('object_multiselect', 'object_checkboxes'):
-                                default_list.append('_DAOBJECTDEFAULTDA')
-                            if len(default_list):
-                                select_list.append('default=[' + ", ".join(default_list) + ']')
-                            additional_parameters = ''
-                            if 'object_labeler' in field_info:
-                                additional_parameters += ", object_labeler=_DAOBJECTLABELER"
-                            if 'help_generator' in field_info:
-                                additional_parameters += ", help_generator=_DAHELPGENERATOR"
-                            if 'image_generator' in field_info:
-                                additional_parameters += ", image_generator=_DAIMAGEGENERATOR"
-                            source_code = "docassemble_base_core_selections(" + ", ".join(select_list) + additional_parameters + ")"
-                            #logmessage("source_code is " + source_code)
-                            field_info['selections'] = {'compute': compile(source_code, '<expression>', 'eval'), 'sourcecode': source_code}
-                        if 'saveas' in field_info:
-                            if not isinstance(field_info['saveas'], str):
-                                raise DAError("Invalid variable name " + repr(field_info['saveas']) + "." + self.idebug(data))
-                            self.fields.append(Field(field_info))
-                            if 'type' in field_info:
-                                if field_info['type'] in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
-                                    if self.scan_for_variables:
-                                        self.fields_used.add(field_info['saveas'])
-                                        self.fields_used.add(field_info['saveas'] + '.gathered')
-                                        if field_info['type'] in ('multiselect', 'checkboxes'):
-                                            for the_key in manual_keys:
-                                                self.fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
-                                    else:
-                                        self.other_fields_used.add(field_info['saveas'])
-                                        self.other_fields_used.add(field_info['saveas'] + '.gathered')
-                                        if field_info['type'] in ('multiselect', 'checkboxes'):
-                                            for the_key in manual_keys:
-                                                self.other_fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
-                                elif field_info['type'] == 'ml':
-                                    if self.scan_for_variables:
-                                        self.fields_used.add(field_info['saveas'])
-                                    else:
-                                        self.other_fields_used.add(field_info['saveas'])
-                                    self.interview.mlfields[field_info['saveas']] = dict(saveas=field_info['saveas'])
-                                    if 'extras' in field_info and 'ml_group' in field_info['extras']:
-                                        self.interview.mlfields[field_info['saveas']]['ml_group'] = field_info['extras']['ml_group']
-                                    if re.search(r'\.text$', field_info['saveas']):
-                                        field_info['saveas'] = field_info['saveas'].strip()
-                                        if invalid_variable_name(field_info['saveas']):
-                                            raise DAError("Missing or invalid variable name " + repr(field_info['saveas']) + "." + self.idebug(data))
-                                        field_info['saveas'] = re.sub(r'\.text$', '', field_info['saveas'])
-                                        if self.scan_for_variables:
-                                            self.fields_used.add(field_info['saveas'])
-                                        else:
-                                            self.other_fields_used.add(field_info['saveas'])
-                                    else:
-                                        if self.scan_for_variables:
-                                            self.fields_used.add(field_info['saveas'] + '.text')
-                                        else:
-                                            self.other_fields_used.add(field_info['saveas'] + '.text')
-                                else:
-                                    if self.scan_for_variables:
-                                        self.fields_used.add(field_info['saveas'])
-                                    else:
-                                        self.other_fields_used.add(field_info['saveas'])
+                                field_info['extras']['show_if_sign_code'] = 0
+                        if not exclusive:
+                            if key == 'enable if':
+                                field_info['extras']['show_if_sign'] = 1
                             else:
+                                field_info['extras']['show_if_sign'] = 0
+                        field_info['extras']['show_if_mode'] = 1
+                    elif key == 'default' or key == 'hint' or key == 'help':
+                        if not isinstance(field[key], dict) and not isinstance(field[key], list):
+                            field_info[key] = TextObject(definitions + str(field[key]), question=self)
+                        if key == 'default':
+                            if isinstance(field[key], dict) and 'code' in field[key]:
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                field_info['extras']['default'] = {'compute': compile(field[key]['code'], '<default code>', 'eval'), 'sourcecode': field[key]['code']}
+                                self.find_fields_in(field[key]['code'])
+                            else:
+                                if isinstance(field[key], (dict, list)):
+                                    field_info[key] = field[key]
+                                if 'datatype' not in field and 'code' not in field and 'choices' not in field:
+                                    auto_determine_type(field_info, the_value=field[key])
+                    elif key == 'disable others':
+                        if 'datatype' in field and field['datatype'] in ('file', 'files', 'range', 'multiselect', 'checkboxes', 'camera', 'user', 'environment', 'camcorder', 'microphone', 'object_multiselect', 'object_checkboxes'): #'yesno', 'yesnowide', 'noyes', 'noyeswide',
+                            raise DAError("A 'disable others' directive cannot be used with this data type." + self.idebug(data))
+                        if not isinstance(field[key], (list, bool)):
+                            raise DAError("A 'disable others' directive must be True, False, or a list of variable names." + self.idebug(data))
+                        field_info['disable others'] = field[key]
+                        if field[key] is not False:
+                            field_info['required'] = False
+                    elif key == 'uncheck others' and 'datatype' in field and field['datatype'] in ('yesno', 'yesnowide', 'noyes', 'noyeswide'):
+                        if not isinstance(field[key], (list, bool)):
+                            raise DAError("An 'uncheck others' directive must be True, False, or a list of variable names." + self.idebug(data))
+                        field_info['uncheck others'] = field[key]
+                    elif key == 'datatype':
+                        field_info['type'] = field[key]
+                        if field[key] in ('yesno', 'yesnowide', 'noyes', 'noyeswide') and 'required' not in field_info:
+                            field_info['required'] = False
+                        if field[key] == 'range' and 'required' not in field_info:
+                            field_info['required'] = False
+                        if field[key] == 'range' and not ('min' in field and 'max' in field):
+                            raise DAError("If the datatype of a field is 'range', you must provide a min and a max." + self.idebug(data))
+                        if field[key] in ('yesno', 'yesnowide', 'yesnoradio'):
+                            field_info['boolean'] = 1
+                        elif field[key] in ('noyes', 'noyeswide', 'noyesradio'):
+                            field_info['boolean'] = -1
+                        elif field[key] == 'yesnomaybe':
+                            field_info['threestate'] = 1
+                        elif field[key] == 'noyesmaybe':
+                            field_info['threestate'] = -1
+                    elif key == 'code':
+                        self.find_fields_in(field[key])
+                        field_info['choicetype'] = 'compute'
+                        field_info['selections'] = {'compute': compile(field[key], '<choices code>', 'eval'), 'sourcecode': field[key]}
+                        self.find_fields_in(field[key])
+                        if 'exclude' in field:
+                            if isinstance(field['exclude'], dict):
+                                raise DAError("An exclude entry cannot be a dictionary." + self.idebug(data))
+                            if not isinstance(field['exclude'], list):
+                                field_info['selections']['exclude'] = [compile(field['exclude'], '<expression>', 'eval')]
+                                self.find_fields_in(field['exclude'])
+                            else:
+                                field_info['selections']['exclude'] = list()
+                                for x in field['exclude']:
+                                    field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
+                                    self.find_fields_in(x)
+                    elif key == 'address autocomplete':
+                        field_info['address_autocomplete'] = True
+                    elif key == 'label above field':
+                        field_info['label_above_field'] = True
+                    elif key == 'action' and 'input type' in field and field['input type'] == 'ajax':
+                        if not isinstance(field[key], str):
+                            raise DAError("An action must be plain text" + self.idebug(data))
+                        if 'combobox action' not in field_info:
+                            field_info['combobox action'] = dict(trig=4)
+                        field_info['combobox action']['action'] = field[key]
+                    elif key == 'trigger at' and 'action' in field and 'input type' in field and field['input type'] == 'ajax':
+                        if (not isinstance(field[key], int)) or field[key] < 2:
+                            raise DAError("A trigger at must an integer greater than one" + self.idebug(data))
+                        if 'combobox action' not in field_info:
+                            field_info['combobox action'] = dict()
+                        field_info['combobox action']['trig'] = field[key]
+                    elif key == 'exclude':
+                        pass
+                    elif key == 'choices':
+                        if 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
+                            field_info['choicetype'] = 'compute'
+                            if not isinstance(field[key], (list, str)):
+                                raise DAError("choices is not in appropriate format" + self.idebug(data))
+                            field_info['selections'] = dict()
+                        else:
+                            field_info['choicetype'] = 'manual'
+                            field_info['selections'] = dict(values=self.process_selections_manual(field[key]))
+                            if 'datatype' not in field:
+                                auto_determine_type(field_info)
+                            for item in field_info['selections']['values']:
+                                if isinstance(item['key'], TextObject):
+                                    if not item['key'].uses_mako:
+                                        manual_keys.add(item['key'].original_text)
+                                else:
+                                    manual_keys.add(item['key'])
+                        if 'exclude' in field:
+                            if isinstance(field['exclude'], dict):
+                                raise DAError("An exclude entry cannot be a dictionary." + self.idebug(data))
+                            if not isinstance(field['exclude'], list):
+                                self.find_fields_in(field['exclude'])
+                                field_info['selections']['exclude'] = [compile(field['exclude'].strip(), '<expression>', 'eval')]
+                            else:
+                                field_info['selections']['exclude'] = list()
+                                for x in field['exclude']:
+                                    self.find_fields_in(x)
+                                    field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
+                    elif key in ('note', 'html'):
+                        if 'extras' not in field_info:
+                            field_info['extras'] = dict()
+                        field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
+                    elif key == 'field metadata':
+                        if 'extras' not in field_info:
+                            field_info['extras'] = dict()
+                        field_info['extras'][key] = recursive_textobject_or_primitive(field[key], self)
+                    elif key in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline', 'inline width', 'currency symbol', 'css class'):
+                        if 'extras' not in field_info:
+                            field_info['extras'] = dict()
+                        field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
+                    # elif key in ('css', 'script'):
+                    #     if 'extras' not in field_info:
+                    #         field_info['extras'] = dict()
+                    #     if field_info['type'] == 'text':
+                    #         field_info['type'] = key
+                    #     field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
+                    elif key == 'shuffle':
+                        field_info['shuffle'] = field[key]
+                    elif key == 'none of the above' and 'datatype' in field and field['datatype'] in ('checkboxes', 'object_checkboxes', 'object_radio'):
+                        if isinstance(field[key], bool):
+                            field_info['nota'] = field[key]
+                        else:
+                            field_info['nota'] = TextObject(definitions + interpret_label(field[key]), question=self)
+                    elif key == 'field':
+                        if 'label' not in field:
+                            raise DAError("If you use 'field' to indicate a variable in a 'fields' section, you must also include a 'label.'" + self.idebug(data))
+                        if not isinstance(field[key], str):
+                            raise DAError("Fields in a 'field' section must be plain text." + self.idebug(data))
+                        field[key] = field[key].strip()
+                        if invalid_variable_name(field[key]):
+                            raise DAError("Missing or invalid variable name " + repr(field[key]) + "." + self.idebug(data))
+                        field_info['saveas'] = field[key]
+                    elif key == 'label':
+                        if 'field' not in field:
+                            raise DAError("If you use 'label' to label a field in a 'fields' section, you must also include a 'field.'" + self.idebug(data))
+                        field_info['label'] = TextObject(definitions + interpret_label(field[key]), question=self)
+                    else:
+                        if 'label' in field_info:
+                            raise DAError("Syntax error: field label '" + str(key) + "' overwrites previous label, '" + str(field_info['label'].original_text) + "'" + self.idebug(data))
+                        field_info['label'] = TextObject(definitions + interpret_label(key), question=self)
+                        if not isinstance(field[key], str):
+                            raise DAError("Fields in a 'field' section must be plain text." + self.idebug(data))
+                        field[key] = field[key].strip()
+                        if invalid_variable_name(field[key]):
+                            raise DAError("Missing or invalid variable name " + repr(field[key]) + " for key " + repr(key) + "." + self.idebug(data))
+                        field_info['saveas'] = field[key]
+                if 'type' in field_info:
+                    if field_info['type'] in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and 'nota' not in field_info:
+                        field_info['nota'] = True
+                    if field_info['type'] == 'object_radio' and 'nota' not in field_info:
+                        field_info['nota'] = False
+                if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
+                    if 'choices' not in field:
+                        raise DAError("You need to have a choices element if you want to set a variable to an object." + self.idebug(data))
+                    if not isinstance(field['choices'], list):
+                        select_list = [str(field['choices'])]
+                    else:
+                        select_list = field['choices']
+                    if 'exclude' in field:
+                        if isinstance(field['exclude'], dict):
+                            raise DAError("choices exclude list is not in appropriate format" + self.idebug(data))
+                        if not isinstance(field['exclude'], list):
+                            exclude_list = [str(field['exclude']).strip()]
+                        else:
+                            exclude_list = [x.strip() for x in field['exclude']]
+                        if len(exclude_list):
+                            select_list.append('exclude=[' + ", ".join(exclude_list) + ']')
+                    if 'default' in field:
+                        if not isinstance(field['default'], (list, str)):
+                            raise DAError("default list is not in appropriate format" + self.idebug(data))
+                        if not isinstance(field['default'], list):
+                            default_list = [str(field['default'])]
+                        else:
+                            default_list = field['default']
+                    else:
+                        default_list = list()
+                    if field_info['type'] in ('object_multiselect', 'object_checkboxes'):
+                        default_list.append('_DAOBJECTDEFAULTDA')
+                    if len(default_list):
+                        select_list.append('default=[' + ", ".join(default_list) + ']')
+                    additional_parameters = ''
+                    if 'object_labeler' in field_info:
+                        additional_parameters += ", object_labeler=_DAOBJECTLABELER"
+                    if 'help_generator' in field_info:
+                        additional_parameters += ", help_generator=_DAHELPGENERATOR"
+                    if 'image_generator' in field_info:
+                        additional_parameters += ", image_generator=_DAIMAGEGENERATOR"
+                    source_code = "docassemble_base_core_selections(" + ", ".join(select_list) + additional_parameters + ")"
+                    #logmessage("source_code is " + source_code)
+                    field_info['selections'] = {'compute': compile(source_code, '<expression>', 'eval'), 'sourcecode': source_code}
+                if 'saveas' in field_info:
+                    if not isinstance(field_info['saveas'], str):
+                        raise DAError("Invalid variable name " + repr(field_info['saveas']) + "." + self.idebug(data))
+                    self.fields.append(Field(field_info))
+                    if 'type' in field_info:
+                        if field_info['type'] in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
+                            if self.scan_for_variables:
+                                self.fields_used.add(field_info['saveas'])
+                                self.fields_used.add(field_info['saveas'] + '.gathered')
+                                if field_info['type'] in ('multiselect', 'checkboxes'):
+                                    for the_key in manual_keys:
+                                        self.fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
+                            else:
+                                self.other_fields_used.add(field_info['saveas'])
+                                self.other_fields_used.add(field_info['saveas'] + '.gathered')
+                                if field_info['type'] in ('multiselect', 'checkboxes'):
+                                    for the_key in manual_keys:
+                                        self.other_fields_used.add(field_info['saveas'] + '[' + repr(the_key) + ']')
+                        elif field_info['type'] == 'ml':
+                            if self.scan_for_variables:
+                                self.fields_used.add(field_info['saveas'])
+                            else:
+                                self.other_fields_used.add(field_info['saveas'])
+                            self.interview.mlfields[field_info['saveas']] = dict(saveas=field_info['saveas'])
+                            if 'extras' in field_info and 'ml_group' in field_info['extras']:
+                                self.interview.mlfields[field_info['saveas']]['ml_group'] = field_info['extras']['ml_group']
+                            if re.search(r'\.text$', field_info['saveas']):
+                                field_info['saveas'] = field_info['saveas'].strip()
+                                if invalid_variable_name(field_info['saveas']):
+                                    raise DAError("Missing or invalid variable name " + repr(field_info['saveas']) + "." + self.idebug(data))
+                                field_info['saveas'] = re.sub(r'\.text$', '', field_info['saveas'])
                                 if self.scan_for_variables:
                                     self.fields_used.add(field_info['saveas'])
                                 else:
                                     self.other_fields_used.add(field_info['saveas'])
-                        elif 'note' in field or 'html' in field:
-                            if 'note' in field:
-                                field_info['type'] = 'note'
                             else:
-                                field_info['type'] = 'html'
-                            self.fields.append(Field(field_info))
+                                if self.scan_for_variables:
+                                    self.fields_used.add(field_info['saveas'] + '.text')
+                                else:
+                                    self.other_fields_used.add(field_info['saveas'] + '.text')
                         else:
-                            raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(data) + " and field_info was " + repr(field_info))
+                            if self.scan_for_variables:
+                                self.fields_used.add(field_info['saveas'])
+                            else:
+                                self.other_fields_used.add(field_info['saveas'])
                     else:
-                        raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
-                    field_number += 1
+                        if self.scan_for_variables:
+                            self.fields_used.add(field_info['saveas'])
+                        else:
+                            self.other_fields_used.add(field_info['saveas'])
+                elif 'note' in field or 'html' in field:
+                    if 'note' in field:
+                        field_info['type'] = 'note'
+                    else:
+                        field_info['type'] = 'html'
+                    self.fields.append(Field(field_info))
+                else:
+                    raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(data) + " and field_info was " + repr(field_info))
+                field_number += 1
                 if 'current_field' in docassemble.base.functions.this_thread.misc:
                     del docassemble.base.functions.this_thread.misc['current_field']
         if 'review' in data:
@@ -5863,7 +5895,7 @@ class Question:
                             if 'field metadata' not in extras:
                                 extras['field metadata'] = dict()
                             extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
-                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline', 'inline width', 'ml_group', 'currency symbol'): # , 'textresponse', 'content_type' #'script', 'css',
+                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline', 'inline width', 'ml_group', 'currency symbol', 'css class'): # , 'textresponse', 'content_type' #'script', 'css',
                             if key in field.extras:
                                 if key not in extras:
                                     extras[key] = dict()
@@ -5880,6 +5912,20 @@ class Question:
                                     extras[key][field.number] = field.extras[key]
                                 else:
                                     extras[key][field.number] = eval(field.extras[key]['compute'], user_dict)
+                        if 'custom_parameters_mako' in field.extras:
+                            if 'custom_parameters_mako' not in extras:
+                                extras['custom_parameters_mako'] = dict()
+                            if field.number not in extras['custom_parameters_mako']:
+                                extras['custom_parameters_mako'][field.number] = dict()
+                            for param_name, param_val in field.extras['custom_parameters_mako'].items():
+                                extras['custom_parameters_mako'][field.number][param_name] = param_val.text(user_dict)
+                        if 'custom_parameters_code' in field.extras:
+                            if 'custom_parameters_code' not in extras:
+                                extras['custom_parameters_code'] = dict()
+                            if field.number not in extras['custom_parameters_code']:
+                                extras['custom_parameters_code'][field.number] = dict()
+                            for param_name, param_val in field.extras['custom_parameters_code'].items():
+                                extras['custom_parameters_code'][field.number][param_name] = eval(param_val['compute'], user_dict)
                     if hasattr(field, 'saveas'):
                         try:
                             if not test_for_objects:
