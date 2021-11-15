@@ -38,19 +38,20 @@
       function goToAnchor() { 
         hash = document.location.hash;
         if (hash !="") {
-          setTimeout(function() {
-            if (location.hash) {
-              window.scrollTo(0, 0);
-              window.location.href = hash;
-            }
-          }, 1);
+          if (location.hash) {
+            var y = $(window).scrollTop();
+            $(window).scrollTop(y-1);
+            window.location.href = hash;
+          }
         }
         else {
           return false;
         }
       }
+      $(window).load(function() {
+        goToAnchor();
+      });
       $(document).ready(function(){
         $('blockquote').addClass('blockquote');
-        goToAnchor();
       });
     </script>
