@@ -50,7 +50,7 @@ def read_fields(pdffile):
         id_to_page[page.pageid] = pageno
         pageno += 1
     if 'AcroForm' not in doc.catalog:
-        return None
+        return []
     fields = resolve1(doc.catalog['AcroForm'])['Fields']
     recursively_add_fields(fields, id_to_page, outfields)
     return sorted(outfields, key=fieldsorter)
@@ -239,6 +239,8 @@ def fill_template(template, data_strings=[], data_names=[], hidden=[], readonly=
     if not pdf_url.endswith('.pdf'):
         pdf_url += '.pdf'
     the_fields = read_fields(template)
+    if len(the_fields) == 0:
+        raise DAError("PDF template has no fields in it.")
     export_values = dict()
     for field, default, pageno, rect, field_type, export_value in the_fields:
         field_type = re.sub(r'[^/A-Za-z]', '', str(field_type))
