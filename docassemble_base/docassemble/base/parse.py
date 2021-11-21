@@ -9309,6 +9309,10 @@ class DASkipUndefined(ChainableUndefined):
     """Undefined handler for Jinja2 exceptions that allows
     rendering most partial templates.
     """
+    def __init__(self, *pargs, **kwargs):
+        # Handle the way Docassemble DAEnvironment triggers attribute errors
+        pass
+
     def __str__(self) -> str:
         return ''
 
@@ -9326,16 +9330,16 @@ class DASkipUndefined(ChainableUndefined):
     def __ne__(self, _ ) -> bool:
         return False
 
-    def __add__(self, val):
+    def __add__(self, *pargs, **kwargs):
         return self.__str__()
 
-    __radd__ = __add__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
+    __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
         __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
         __mod__ = __rmod__ = __pos__ = __neg__ =  \
         __lt__ = __le__ = __gt__ = __ge__ = __int__ = \
         __float__ = __complex__ = __pow__ = __rpow__ = __sub__ = \
         __rsub__= __iter__ = __len__ = __nonzero__ = \
-        __ne__ = __bool__ = __hash__ = __add__
+        __bool__ = __hash__ = __add__ 
 
 def mygetattr(y, attr):
     for attribute in attr.split('.'):
