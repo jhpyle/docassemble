@@ -4310,6 +4310,16 @@ The `from email` is a field that [ClickSend] uses in its Fax API.  The
 documentation describes it as "An email address where the reply should
 be emailed to."
 
+After setting up your phone number, you need to go to Messaging
+Settings, then go to the Fax tab, then go to the Delivery Reports
+tab.  Then click "Add new rule."  Add a rule called "post fax delivery
+report" with "Match For" set to "All reports."  Set the "Action" to
+"URL," and under "URL," type in the address of your docassemble server
+followed by `/clicksend_fax_callback`.  For example, if your server is
+at `https://docassemble.example.com`, you would write
+`https://docassemble.example.com/clicksend_fax_callback`.  Then make
+sure that the rule is set to "enabled."
+
 ### <a name="multiple clicksend"></a>Multiple ClickSend configurations
 
 You can use multiple [ClickSend] configurations on the same server.
