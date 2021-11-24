@@ -9356,7 +9356,7 @@ class DASkipUndefined(ChainableUndefined):
 
     # type can be anything. we want it to work with `str()` function though
     # and we do not want to silently give wrong math results.
-    # note that this means 1 + (undefined) will work but not 1 + (undefined) + 1
+    # note that this means 1 + (undefined) or (undefined) + 1 will work but not 1 + (undefined) + 1
     __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
         __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
         __mod__ = __rmod__ = __pos__ = __neg__ = __pow__ = __rpow__ = \
