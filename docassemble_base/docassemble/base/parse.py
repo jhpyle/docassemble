@@ -757,11 +757,11 @@ class InterviewStatus:
         if 'content' in help_text and help_text['content'] is not None:
             the_help['content'] = docassemble.base.filter.markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=(not encode))
             if debug:
-                output['help'] += the_help['content']
+                the_help['help'] += the_help['content']
         if 'heading' in help_text and help_text['heading'] is not None:
             the_help['heading'] = help_text['heading'].rstrip()
             if debug:
-                output['help'] += '<p>' + the_help['heading'] + '</p>'
+                the_help['help'] += '<p>' + the_help['heading'] + '</p>'
         #elif len(self.helpText) > 1:
         #    the_help['heading'] = word('Help with this question')
         return the_help
@@ -899,7 +899,7 @@ class InterviewStatus:
             result['helpText'] = list()
             result['helpBackLabel'] = word("Back to question")
             for help_text in self.helpText:
-                result['helpText'].append(self.convert_help(the_help, encode, debug))
+                result['helpText'].append(self.convert_help(help_text, encode, debug))
             result['help'] = dict()
             if self.helpText[0]['label']:
                 result['help']['label'] = docassemble.base.filter.markdown_to_html(self.helpText[0]['label'], trim=True, do_terms=False, status=self, verbatim=(not encode))
@@ -910,7 +910,7 @@ class InterviewStatus:
         if hasattr(self, 'interviewHelpText') and len(self.interviewHelpText) > 0:
             result['interviewHelpText'] = list()
             for help_text in self.interviewHelpText:
-                result['interviewHelpText'].append(self.convert_help(the_help, encode, debug))
+                result['interviewHelpText'].append(self.convert_help(help_text, encode, debug))
             if 'help' not in result:
                 result['help'] = dict()
             if self.interviewHelpText[0]['label']:
