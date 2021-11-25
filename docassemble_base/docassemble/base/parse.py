@@ -9306,8 +9306,11 @@ class DAStrictUndefined(StrictUndefined):
         __ne__ = __bool__ = __hash__ = _fail_with_undefined_error
 
 class DASkipUndefined(ChainableUndefined):
-    """Undefined handler for Jinja2 exceptions that allows
-    rendering most partial templates.
+    """Undefined handler for Jinja2 exceptions that allows rendering most
+    templates that have undefined variables. It will not fix all broken
+    templates. For example, if the missing variable is used in a complex
+    mathematical expression it may still break (but expressions with only two
+    elements should render as ''). 
     """
     def __init__(self, *pargs, **kwargs):
         # Handle the way Docassemble DAEnvironment triggers attribute errors
@@ -9316,30 +9319,48 @@ class DASkipUndefined(ChainableUndefined):
     def __str__(self) -> str:
         return ''
 
-    def __call__(self, *pargs, **kwargs):
+    def __call__(self, *pargs, **kwargs)->"DASkipUndefined":
         return self
 
-    def __getattr__(self, _: str) -> "DASkipUndefined":
+    __getitem__ = __getattr__ = __call__
+
+    def __eq__(self, *pargs) -> bool:
+        return False
+        
+    # need to return a bool type
+    __bool__ = __ne__ = __le__ = __lt__ = __gt__ = __ge__ = __nonzero__ = __eq__
+
+    # let undefined variables work in for loops
+    def __iter__(self, *pargs)->"DASkipUndefined":
         return self
+    
+    def __next__(self, *pargs)->None:
+        raise StopIteration        
 
-    __getitem__ = __getattr__
+    # need to return an int type
+    def __int__(self, *pargs)->int:
+        return 0
 
-    def __eq__(self, _) -> bool:
-        return False
+    __len__ = __int__
+    
+    # need to return a float type
+    def __float__(self, *pargs)->float:
+        return 0.0
+    
+    # need to return complex type
+    def __complex__(self, *pargs)->complex:
+        return 0j
 
-    def __ne__(self, _ ) -> bool:
-        return False
-
-    def __add__(self, *pargs, **kwargs):
+    def __add__(self, *pargs, **kwargs)->str:
         return self.__str__()
 
+    # type can be anything. we want it to work with `str()` function though
+    # and we do not want to silently give wrong math results.
+    # note that this means 1 + (undefined) or (undefined) + 1 will work but not 1 + (undefined) + 1
     __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
         __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
-        __mod__ = __rmod__ = __pos__ = __neg__ =  \
-        __lt__ = __le__ = __gt__ = __ge__ = __int__ = \
-        __float__ = __complex__ = __pow__ = __rpow__ = __sub__ = \
-        __rsub__= __iter__ = __len__ = __nonzero__ = \
-        __bool__ = __hash__ = __add__ 
+        __mod__ = __rmod__ = __pos__ = __neg__ = __pow__ = __rpow__ = \
+        __sub__ = __rsub__= __hash__ = __add__ 
 
 def mygetattr(y, attr):
     for attribute in attr.split('.'):
