@@ -4,6 +4,13 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.6](https://github.com/jhpyle/docassemble/releases/tag/v1.3.6) - 2021-11-26
+
+### Fixed
+- Adjustments to behavior of `skip undefined` with DOCX files.
+- Security update of `reportlab` dependency; incorporated `marisol`
+  into `docassemble.base` because of conflicting dependency.
+
 ## [1.3.5](https://github.com/jhpyle/docassemble/releases/tag/v1.3.5) - 2021-11-13
 
 ### Added
