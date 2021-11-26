@@ -115,7 +115,6 @@ install_requires = [
     "links-from-link-header==0.1.0",
     "lxml==4.6.3",
     "Mako==1.1.4",
-    "Marisol==0.3.0",
     "Markdown==3.3.4",
     "MarkupSafe==2.0.0",
     "mdx-smartypants==1.5.1",

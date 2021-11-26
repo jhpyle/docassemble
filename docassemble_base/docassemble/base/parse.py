@@ -9310,7 +9310,7 @@ class DASkipUndefined(ChainableUndefined):
     templates that have undefined variables. It will not fix all broken
     templates. For example, if the missing variable is used in a complex
     mathematical expression it may still break (but expressions with only two
-    elements should render as ''). 
+    elements should render as '').
     """
     def __init__(self, *pargs, **kwargs):
         # Handle the way Docassemble DAEnvironment triggers attribute errors
@@ -9326,27 +9326,27 @@ class DASkipUndefined(ChainableUndefined):
 
     def __eq__(self, *pargs) -> bool:
         return False
-        
+
     # need to return a bool type
     __bool__ = __ne__ = __le__ = __lt__ = __gt__ = __ge__ = __nonzero__ = __eq__
 
     # let undefined variables work in for loops
     def __iter__(self, *pargs)->"DASkipUndefined":
         return self
-    
+
     def __next__(self, *pargs)->None:
-        raise StopIteration        
+        raise StopIteration
 
     # need to return an int type
     def __int__(self, *pargs)->int:
         return 0
 
     __len__ = __int__
-    
+
     # need to return a float type
     def __float__(self, *pargs)->float:
         return 0.0
-    
+
     # need to return complex type
     def __complex__(self, *pargs)->complex:
         return 0j
@@ -9360,7 +9360,7 @@ class DASkipUndefined(ChainableUndefined):
     __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
         __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
         __mod__ = __rmod__ = __pos__ = __neg__ = __pow__ = __rpow__ = \
-        __sub__ = __rsub__= __hash__ = __add__ 
+        __sub__ = __rsub__= __hash__ = __add__
 
 def mygetattr(y, attr):
     for attribute in attr.split('.'):

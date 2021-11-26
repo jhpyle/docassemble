@@ -1,4 +1,4 @@
-from marisol import Area, Marisol
+from .marisol import Area, Marisol
 import argparse
 
 parser = argparse.ArgumentParser(description='Bates number documents')
