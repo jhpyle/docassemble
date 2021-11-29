@@ -176,7 +176,7 @@ install_requires = [
     "python-editor==1.0.4",
     "python-engineio==4.1.0",
     "python-http-client==3.3.2",
-    "python-ldap==3.3.1",
+    "python-ldap==3.4.0",
     "python-socketio==5.2.1",
     "pytz==2021.1",
     "pyu2f==0.1.5",
