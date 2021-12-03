@@ -156,7 +156,7 @@ class SavedFile:
                 os.remove(the_path)
     def delete_directory(self, directory):
         if cloud is not None:
-            prefix = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(directory)
+            prefix = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(directory) + '/'
             to_delete = list()
             for key in cloud.list_keys(prefix):
                 to_delete.append(key)

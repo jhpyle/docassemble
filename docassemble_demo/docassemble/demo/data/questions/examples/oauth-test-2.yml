@@ -3,7 +3,7 @@ metadata:
   short: OAuth
   documentation: "https://docassemble.org/docs/objects.html#DAOAuth"
   example start: 1
-  example end: 9
+  example end: 10
 ---
 modules:
   .oauthsheets

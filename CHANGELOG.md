@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.3.7] - 2021-12-03
+### Added
+- The `footer css class` Configuration directive.
+### Fixed
+- Bug related to deleting Playground "projects" when S3 or Azure blob
+  storage is enabled.
+- Improved method for detecting variable names in Jinja2 files.
+- Increased threshold for detecting whether a server has become
+  unresponsive during the restart process.
+
 ## [1.3.6] - 2021-11-26
 ### Fixed
 - Adjustments to behavior of `skip undefined` with DOCX files.

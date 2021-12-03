@@ -152,7 +152,7 @@
     {%- block bottom %}{% endblock %}
     </div>
     {%- if footer_content %}
-    <footer class="bg-light dafooter">
+    <footer class="{{ config['FOOTER_CLASS'] }}">
       <div class="container">
         {{ footer_content }}
       </div>

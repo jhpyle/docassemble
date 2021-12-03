@@ -37,5 +37,10 @@ if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
-    rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+	rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+    fi
+    if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
+	rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+    fi
 fi

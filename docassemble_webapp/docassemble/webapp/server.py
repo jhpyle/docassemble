@@ -1282,6 +1282,7 @@ elif daconfig['button style'] == 'outline':
 else:
     app.config['BUTTON_STYLE'] = 'btn-'
 BUTTON_COLOR_NAV_LOGIN = daconfig['button colors'].get('navigation bar login', 'primary')
+app.config['FOOTER_CLASS'] = str(daconfig.get('footer css class', 'bg-light')).strip() + ' dafooter'
 
 page_parts = dict()
 if 'global footer' in daconfig:
@@ -11699,7 +11700,7 @@ def index(action_argument=None, refer=None):
     output += '    </div>'
     if interview_status.footer:
         output += """
-    <footer class="bg-light dafooter">
+    <footer class=""" + '"' + app.config['FOOTER_CLASS'] + '"' + """>
       <div class="container">
         """ + interview_status.footer + """
       </div>
@@ -15055,7 +15056,7 @@ def update_package_wait():
         }
       }
       function daUpdate(){
-        if (pollDelay > 25 || pollFail > 5){
+        if (pollDelay > 25 || pollFail > 8){
           $("#notification").html(""" + json.dumps(word("Server did not respond to request for update.")) + """);
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
@@ -21284,7 +21285,9 @@ def read_fields(filename, orig_file_name, input_format, output_format):
                 with open(filename, 'r', encoding='utf-8') as fp:
                     result = fp.read()
             fields = set()
-            for variable in re.findall(r'{{ *([^\} ]+) *}}', result):
+            for variable in re.findall(r'{{[pr] \s*([^\}\s]+)\s*}}', result):
+                fields.add(docx_variable_fix(variable))
+            for variable in re.findall(r'{{\s*([^\}\s]+)\s*}}', result):
                 fields.add(docx_variable_fix(variable))
             for variable in re.findall(r'{%[a-z]* for [A-Za-z\_][A-Za-z0-9\_]* in *([^\} ]+) *%}', result):
                 fields.add(docx_variable_fix(variable))
