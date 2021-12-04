@@ -9,6 +9,14 @@ short_title: Change Log
 ### Added
 - The `footer css class` Configuration directive.
 
+### Changed
+- Upgraded `pip` from 20.1.1 to 21.1. Previously, `pip` had been
+  deliberately downgraded because the new resolver caused `pip` to
+  hang. Hopefully that issue does not appear again.
+- The `docassemble-os` Docker repository, which is a dependency of
+  this Docker repository, is now based on Ubuntu 21.10 rather than
+  Debian `testing`.
+
 ### Fixed
 - Bug related to deleting Playground "projects" when S3 or Azure blob
   storage is enabled.
