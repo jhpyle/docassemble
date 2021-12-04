@@ -519,7 +519,7 @@ def install_package(package, start_time=None):
             commands.append('--no-cache-dir')
         commands.extend(['--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, package.name + limit])
     else:
-        sys.stderr.write("Wrong package type after " + str(time.time() - start_time) + " seconds\n")
+        sys.stderr.write("install_package: wrong package type after " + str(time.time() - start_time) + " seconds\n")
         return 1, 'Unable to recognize package type: ' + package.name
     sys.stderr.write("install_package: running " + " ".join(commands) + " after " + str(time.time() - start_time) + " seconds\n")
     logfilecontents += "install_package: running " + " ".join(commands) + "\n"
@@ -547,7 +547,7 @@ def install_package(package, start_time=None):
         sys.stdout.flush()
     #time.sleep(4)
     shutil.rmtree(temp_dir)
-    sys.stderr.write('returnval is: ' + str(returnval) + "\n")
+    sys.stderr.write('install_package: returnval is: ' + str(returnval) + "\n")
     sys.stderr.write('install_package: done' + " after " + str(time.time() - start_time) + " seconds\n")
     return returnval, logfilecontents
 
@@ -559,7 +559,7 @@ def uninstall_package(package, sleep=True, start_time=None):
     logfilecontents = 'uninstall_package: ' + package.name + "\n"
     pip_log = tempfile.NamedTemporaryFile()
     commands = ['pip', 'uninstall', '--yes', '--log-file=' + pip_log.name, package.name]
-    sys.stderr.write("Running " + " ".join(commands) + " after " + str(time.time() - start_time) + " seconds\n")
+    sys.stderr.write("uninstall_package: running " + " ".join(commands) + " after " + str(time.time() - start_time) + " seconds\n")
     logfilecontents += "Running " + (" ".join(commands)) + "\n"
     try:
         subprocess.run(commands)
@@ -584,7 +584,7 @@ def uninstall_package(package, sleep=True, start_time=None):
         sys.stdout.flush()
         #if sleep:
         #    time.sleep(4)
-    sys.stderr.write('returnval is: ' + str(returnval) + "\n")
+    sys.stderr.write('uninstall_package: returnval is: ' + str(returnval) + "\n")
     sys.stderr.write("uninstall_package: done after " + str(time.time() - start_time) + " seconds\n")
     logfilecontents += 'returnval is: ' + str(returnval) + "\n"
     logfilecontents += 'uninstall_package: done' + "\n"
@@ -667,7 +667,7 @@ if __name__ == "__main__":
         from sqlalchemy import select
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
         if mode == 'initialize':
-            sys.stderr.write("updating with mode initialize after " + str(time.time() - start_time) + " seconds\n")
+            sys.stderr.write("update: updating with mode initialize after " + str(time.time() - start_time) + " seconds\n")
             update_versions(start_time=start_time)
             any_package = db.session.execute(select(Package).filter_by(active=True)).first()
             if any_package is None:
@@ -676,18 +676,18 @@ if __name__ == "__main__":
             check_for_updates(doing_startup=True, start_time=start_time, invalidate_cache=False)
             remove_inactive_hosts(start_time=start_time)
         else:
-            sys.stderr.write("updating with mode check_for_updates after " + str(time.time() - start_time) + " seconds\n")
+            sys.stderr.write("update: updating with mode check_for_updates after " + str(time.time() - start_time) + " seconds\n")
             check_for_updates(start_time=start_time)
             from docassemble.base.config import daconfig
             if USING_SUPERVISOR:
                 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
                 container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
                 if re.search(r':(web|celery|all):', container_role):
-                    sys.stderr.write("Sending reset signal after " + str(time.time() - start_time) + " seconds\n")
+                    sys.stderr.write("update: sending reset signal after " + str(time.time() - start_time) + " seconds\n")
                     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
                     subprocess.run(args)
                 else:
-                    sys.stderr.write("Not sending reset signal because not web or celery after " + str(time.time() - start_time) + " seconds\n")
+                    sys.stderr.write("update: not sending reset signal because not web or celery after " + str(time.time() - start_time) + " seconds\n")
             else:
                 sys.stderr.write("update: touched wsgi file after " + str(time.time() - start_time) + " seconds\n")
                 wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')

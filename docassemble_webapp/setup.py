@@ -5,6 +5,9 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+setup_requires = [
+    'enum34==1.1.8'
+    ]
 install_requires = [
     'docassemble==1.3.6',
     'docassemble.base==1.3.6',

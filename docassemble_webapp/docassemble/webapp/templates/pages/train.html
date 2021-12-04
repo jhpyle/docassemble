@@ -274,7 +274,7 @@
           </div>
           {%- if choices %}
           <div class="col-md-4">
-            <select data-id-number="{{ entry.id }}" id="selector{{ entry.id }}" class="form-control trainer">
+            <select data-id-number="{{ entry.id }}" id="selector{{ entry.id }}" class="form-select trainer">
               <option value="" selected>{{ word("Select one") }}</option>
               {%- for item, count in choices %}
               <option value="{{ item }}">{{ item }}</option>
