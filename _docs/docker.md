@@ -1121,9 +1121,17 @@ The second method of persistent storage is to use [persistent
 volumes], which is a feature of [Docker].  This will store the data in
 directories on the [Docker] host, so that when you destroy the
 container, these directories will be untouched, and when you start up
-a new container, it will use the saved directories.
+a new container, it will use the saved directories.  This feature is
+only available if you are running **docassemble** in a single-server
+configuration.
 
 These two options are explained in the following subsections.
+
+If you are operating a development server in a single-server
+configuration, and you will be using the [Playground], using
+[persistent volumes] is recommended. When a development server uses
+[S3], every time a [Playground] file is accessed, it must be copied
+from S3 to the server. This negatively impacts performance.
 
 ## <a name="persistent s3"></a>Using S3 or S3-compatible
 
@@ -1213,6 +1221,11 @@ with the following definition:
 Replace `docassemble-example-com` in the above text with the name of
 your [S3] bucket.
 
+When setting up your [S3] bucket, you should consider setting up a
+backup mechanism using the [S3] provider's site. When uploaded files
+are stored in [S3], **docassemble** does not include those files in
+its rotating backups.
+
 ## <a name="persistent azure"></a>Using Microsoft Azure
 
 Using [Microsoft Azure] is very similar to using [S3].  From the
@@ -1245,6 +1258,11 @@ LETSENCRYPTEMAIL=dev@example.com
 
 If you enable both [S3](#persistent s3) and
 [Azure blob storage](#persistent azure), only [S3] will be used.
+
+When setting up Azure blob storage, you should consider setting up a
+backup mechanism in Azure. When uploaded files are stored in Azure
+blob storage, **docassemble** does not include those files in its
+rotating backups.
 
 ## <a name="persistent"></a>Using persistent volumes
 
@@ -1451,6 +1469,12 @@ copy the following out of the daily backup folder:
 
 Copying `log` is optional.  The contents of log files are not critical
 to the functionality of the systems.
+
+Note that when using [S3](#persistent s3) or [Azure blob
+storage](#persistent azure), file storage (uploaded files, assembled
+documents) are already in the cloud, so they are not backed up to the
+`backup` folder. If you want a backup mechanism for these files, you
+can enable it using [S3] or [Azure blob storage] site.
 
 If you are not using [S3](#persistent s3) or [Azure blob
 storage](#persistent azure), the disaster recovery backup files are in

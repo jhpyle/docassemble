@@ -1069,6 +1069,17 @@ button size: small
 
 The default value is `medium`.
 
+## <a name="footer css class"></a>Default CSS class for the footer
+
+By default, if you use a footer, the footer has the CSS class
+`bg-light`, in addition to the class `dafooter`. If you would like to
+use a different class instead of `bg-light`, you can set this class
+using `footer css class`.
+
+{% highlight yaml %}
+footer css class: bg-dark text-white
+{% endhighlight %}
+
 ## <a name="table css class"></a>Default CSS class for Markdown tables
 
 By default, when a [Markdown] table is converted to HTML, `<table>`

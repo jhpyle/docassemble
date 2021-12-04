@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.7](https://github.com/jhpyle/docassemble/releases/tag/v1.3.7) - 2021-12-04
+
+### Added
+- The `footer css class` Configuration directive.
+
+### Fixed
+- Bug related to deleting Playground "projects" when S3 or Azure blob
+  storage is enabled.
+- Improved method for detecting variable names in Jinja2 files.
+- Increased threshold for detecting whether a server has become
+  unresponsive during the restart process.
+
 ## [1.3.6](https://github.com/jhpyle/docassemble/releases/tag/v1.3.6) - 2021-11-26
 
 ### Fixed
