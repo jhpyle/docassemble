@@ -1,9 +1,8 @@
 server {
-    listen 443;
+    listen 443 ssl;
     server_tokens off;
     server_name {{DAHOSTNAME}};
     client_max_body_size {{DAMAXCONTENTLENGTH}};
-    ssl on;
     ssl_certificate {{DASSLCERTIFICATE}}
     ssl_certificate_key {{DASSLCERTIFICATEKEY}}
     ssl_protocols {{DASSLPROTOCOLS}};
