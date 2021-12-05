@@ -10913,10 +10913,13 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).show(speed);
                   }
                   $(showIfDiv).data('isVisible', '1');
-                  $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                  $(showIfDiv).find('input.combobox').each(function(){
-                    daComboBoxes[$(this).attr('id')].enable();
-                  });
+                  var firstChild = $(showIfDiv).children()[0];
+                  if (!$(firstChild).hasClass('dacollectextra') || $(firstChild).is(":visible")){
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].enable();
+                    });
+                  }
                 }
                 else{
                   if ($(showIfDiv).data('isVisible') != '0'){
@@ -10954,10 +10957,13 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).show(speed);
                   }
                   $(showIfDiv).data('isVisible', '1');
-                  $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                  $(showIfDiv).find('input.combobox').each(function(){
-                    daComboBoxes[$(this).attr('id')].enable();
-                  });
+                  var firstChild = $(showIfDiv).children()[0];
+                  if (!$(firstChild).hasClass('dacollectextra') || $(firstChild).is(":visible")){
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].enable();
+                    });
+                  }
                 }
               }
               var daThis = this;

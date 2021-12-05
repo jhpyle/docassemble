@@ -2277,7 +2277,7 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 output += '</select> '
             if field.datatype in ['object_multiselect']:
-                output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered") + '" value="True"' + disable_others_data + '/>'
+                output += '<input type="hidden" name="' + safeid(from_safeid(field.saveas) + ".gathered") + '" value="True"' + disable_others_data + '/>'
         elif field.datatype in ['checkboxes', 'object_checkboxes']:
             #if len(pairlist) == 0:
             #    return '<input type="hidden" name="' + safeid(from_safeid(saveas_string))+ '" value="None"/>'
@@ -2347,7 +2347,7 @@ def input_for(status, field, wide=False, embedded=False):
                 output += ''.join(inner_fieldlist)
             output += '</fieldset>'
             if field.datatype in ['object_checkboxes']:
-                output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered") + '" value="True"' + disable_others_data + '/>'
+                output += '<input type="hidden" name="' + safeid(from_safeid(field.saveas) + ".gathered") + '" value="True"' + disable_others_data + '/>'
         elif field.datatype == 'object_radio' or (hasattr(field, 'inputtype') and field.inputtype == 'radio'):
             if field.datatype in ('object_radio', 'object'):
                 daobject = ' daobject'

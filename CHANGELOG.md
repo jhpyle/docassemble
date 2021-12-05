@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.8] - 2021-12-05
+### Fixed
+- Issues with `show if` and `list collect`.
+
 ## [1.3.7] - 2021-12-04
 ### Added
 - The `footer css class` Configuration directive.
