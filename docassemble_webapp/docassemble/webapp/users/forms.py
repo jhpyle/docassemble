@@ -9,6 +9,8 @@ from docassemble.base.functions import LazyWord as word, LazyArray
 from docassemble.base.config import daconfig
 from flask_login import current_user
 import email.utils
+from sqlalchemy import select
+
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 
 def get_requester_ip(req):
