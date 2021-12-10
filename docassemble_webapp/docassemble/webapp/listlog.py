@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from flask import Flask, make_response, render_template, request
+from flask import Flask, abort, make_response, render_template, request
 app = Flask(__name__)
 
 LOG_DIRECTORY = '/var/www/html/log'

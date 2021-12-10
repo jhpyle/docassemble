@@ -89,7 +89,7 @@ class ForcedNameError(NameError):
                         self.set_action(dict(action='_da_set', arguments=dict(variables=clean_list), context=the_context))
                     if 'follow up' in arg:
                         if isinstance(arg['follow up'], str):
-                            arg[command] = [arg['follow up']]
+                            arg['follow up'] = [arg['follow up']]
                         if not isinstance(arg['follow up'], list):
                             raise DAError("force_ask: the follow up statement must refer to a list.")
                         for var in arg['follow up']:

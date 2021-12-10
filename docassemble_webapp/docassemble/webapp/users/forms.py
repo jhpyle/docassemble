@@ -224,7 +224,7 @@ class MyInviteForm(FlaskForm):
             return False
         return super().validate()
     email = TextAreaField(word('One or more e-mail addresses (separated by newlines)'), validators=[
-        validators.Required(word('At least one e-mail address must be listed'))
+        validators.InputRequired(word('At least one e-mail address must be listed'))
     ])
     role_id = SelectField(word('Role'))
     next = HiddenField()
@@ -232,7 +232,7 @@ class MyInviteForm(FlaskForm):
 
 class UserAddForm(FlaskForm):
     email = StringField(word('E-mail'), validators=[
-        validators.Required(word('E-mail is required')),
+        validators.InputRequired(word('E-mail is required')),
         validators.Email(word('Invalid E-mail'))])
     first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
     last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
