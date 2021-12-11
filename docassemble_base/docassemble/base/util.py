@@ -396,7 +396,7 @@ class DAWeb(DAObject):
             task_persistent = self.task_persistent
         if task_persistent is None:
             return False
-        if not isinstance(task, (bool, str)):
+        if not isinstance(task_persistent, (bool, str)):
             raise Exception("DAWeb.call: task_persistent must be boolean or string")
         return task_persistent
     def _get_auth(self, auth):
@@ -1681,7 +1681,7 @@ class Address(DAObject):
         if self.city_only:
             return ''
         if (not hasattr(self, 'address')) and hasattr(self, 'street_number') and hasattr(self, 'street'):
-            output += str(self.street_number) + " " + str(self.street)
+            output = str(self.street_number) + " " + str(self.street)
         else:
             output = str(self.address)
         the_unit = self.formatted_unit(language=language)
