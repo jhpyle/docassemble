@@ -9333,8 +9333,13 @@ def index(action_argument=None, refer=None):
       function daProcessAjaxError(xhr, status, error){
         if (xhr.responseType == undefined || xhr.responseType == '' || xhr.responseType == 'text'){
           var theHtml = xhr.responseText;
-          theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
-          $(daTargetDiv).html(theHtml);
+          if (theHtml == undefined){
+            $(daTargetDiv).html("error");
+          }
+          else{
+            theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
+            $(daTargetDiv).html(theHtml);
+          }
           if (daJsEmbed){
             $(daTargetDiv)[0].scrollTo(0, 1);
           }
@@ -13002,8 +13007,13 @@ def observer():
       function daProcessAjaxError(xhr, status, error){
         if (xhr.responseType == undefined || xhr.responseType == '' || xhr.responseType == 'text'){
           var theHtml = xhr.responseText;
-          theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
-          $(daTargetDiv).html(theHtml);
+          if (theHtml == undefined){
+            $(daTargetDiv).html("error");
+          }
+          else{
+            theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
+            $(daTargetDiv).html(theHtml);
+          }
           if (daJsEmbed){
             $(daTargetDiv)[0].scrollTo(0, 1);
           }
@@ -18042,6 +18052,8 @@ def playground_files():
         kbLoad = ''
     extra_js = """
     <script>
+      var daNotificationContainer = """ + json.dumps(NOTIFICATION_CONTAINER) + """;
+      var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
       Object.defineProperty(String.prototype, "daSprintf", {
         value: function () {
           var args = Array.from(arguments),
@@ -18564,6 +18576,206 @@ def fix_package_folder():
     if problem_exists:
         area.finalize()
 
+def do_playground_pull(area, current_project, github_url=None, branch=None, pypi_package=None, can_publish_to_github=False, github_user_name=None, github_email=None, pull_only=False):
+    area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
+    readme_text = ''
+    setup_py = ''
+    if branch in ('', 'None'):
+        branch = None
+    if branch:
+        branch = werkzeug.utils.secure_filename(branch)
+        branch_option = '-b "' + branch + '" '
+    else:
+        branch_option = ''
+    need_to_restart = False
+    extracted = dict()
+    data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
+    directory = tempfile.mkdtemp()
+    output = ''
+    pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
+    expected_name = 'unknown'
+    if github_url:
+        github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\#\[\]\@\$\+\,\=]', '', github_url)
+        if github_url.startswith('git@') and can_publish_to_github and github_email:
+            expected_name = re.sub(r'.*/', '', github_url)
+            expected_name = re.sub(r'\.git', '', expected_name)
+            expected_name = re.sub(r'docassemble-', '', expected_name)
+            (private_key_file, public_key_file) = get_ssh_keys(github_email)
+            os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
+            os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
+            ssh_script = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix='.sh', delete=False, encoding='utf-8')
+            ssh_script.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6')
+            ssh_script.close()
+            os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
+            #git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
+            git_prefix = "GIT_SSH=" + ssh_script.name + " "
+            output += "Doing " + git_prefix + "git clone " + branch_option + github_url + "\n"
+            try:
+                output += subprocess.check_output(git_prefix + "git clone " + branch_option + '"' + github_url + '"', cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
+            except subprocess.CalledProcessError as err:
+                output += err.output.decode()
+                return dict(action="error", message="error running git clone.  " + output)
+        else:
+            expected_name = re.sub(r'.*/', '', github_url)
+            expected_name = re.sub(r'\.git', '', expected_name)
+            expected_name = re.sub(r'docassemble-', '', expected_name)
+            try:
+                if branch is not None:
+                    logmessage("Doing git clone -b " + branch + " " + github_url)
+                    output += subprocess.check_output(['git', 'clone', '-b', branch, github_url], cwd=directory, stderr=subprocess.STDOUT).decode()
+                else:
+                    logmessage("Doing git clone " + github_url)
+                    output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT).decode()
+            except subprocess.CalledProcessError as err:
+                output += err.output.decode()
+                return dict(action="error", message="error running git clone.  " + output)
+        logmessage(output)
+        dirs_inside = [f for f in os.listdir(directory) if os.path.isdir(os.path.join(directory, f)) and re.search(r'^[A-Za-z0-9]', f)]
+        if len(dirs_inside) == 1:
+            commit_file = os.path.join(directory_for(area['playgroundpackages'], current_project), '.' + dirs_inside[0])
+            packagedir = os.path.join(directory, dirs_inside[0])
+            try:
+                current_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+            except subprocess.CalledProcessError as err:
+                output = err.output.decode()
+                return dict(action="error", message="error running git rev-parse.  " + output)
+            with open(commit_file, 'w', encoding='utf-8') as fp:
+                fp.write(current_commit.strip())
+            logmessage("Wrote " + current_commit.strip() + " to " + commit_file)
+        else:
+            logmessage("Did not find a single directory inside repo")
+        if pull_only:
+            return dict(action='pull_only')
+    elif pypi_package:
+        pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\:\/\@\+\=]', '', pypi_package)
+        pypi_package = 'docassemble.' + re.sub(r'^docassemble\.', '', pypi_package)
+        package_file = tempfile.NamedTemporaryFile(suffix='.tar.gz')
+        try:
+            http = httplib2.Http()
+            resp, content = http.request("https://pypi.python.org/pypi/" + str(pypi_package) + "/json", "GET")
+            pypi_url = None
+            if int(resp['status']) == 200:
+                pypi_response = json.loads(content.decode())
+                for file_option in pypi_response['releases'][pypi_response['info']['version']]:
+                    if file_option['packagetype'] == 'sdist':
+                        pypi_url = file_option['url']
+                        break
+            else:
+                return dict(action='fail', message=word("The package you specified could not be downloaded from PyPI."))
+            if pypi_url is None:
+                return dict(action='fail', message=word("The package you specified could not be downloaded from PyPI as a tar.gz file."))
+        except Exception as err:
+            return dict(action='error', message="error getting information about PyPI package.  " + str(err))
+        try:
+            urlretrieve(pypi_url, package_file.name)
+        except Exception as err:
+            return dict(action='error', message="error downloading PyPI package.  " + str(err))
+        try:
+            tar = tarfile.open(package_file.name)
+            tar.extractall(path=directory)
+            tar.close()
+        except Exception as err:
+            return dict(action='error', message="error unpacking PyPI package.  " + str(err))
+        package_file.close()
+    initial_directories = len(splitall(directory)) + 1
+    for root, dirs, files in os.walk(directory):
+        if 'setup.py' in files and 'docassemble' in dirs:
+            at_top_level = True
+        else:
+            at_top_level = False
+        for a_file in files:
+            orig_file = os.path.join(root, a_file)
+            #output += "Original file is " + orig_file + "\n"
+            thefilename = os.path.join(*splitall(orig_file)[initial_directories:])
+            (the_directory, filename) = os.path.split(thefilename)
+            if filename.startswith('#') or filename.endswith('~'):
+                continue
+            dirparts = splitall(the_directory)
+            if '.git' in dirparts:
+                continue
+            levels = re.findall(r'/', the_directory)
+            for sec in ('templates', 'static', 'sources', 'questions'):
+                if the_directory.endswith('data/' + sec) and filename != 'README.md':
+                    data_files[sec].append(filename)
+                    target_filename = os.path.join(directory_for(area[area_sec[sec]], current_project), filename)
+                    #output += "Copying " + orig_file + "\n"
+                    copy_if_different(orig_file, target_filename)
+            if filename == 'README.md' and at_top_level:
+                with open(orig_file, 'r', encoding='utf-8') as fp:
+                    readme_text = fp.read()
+            if filename == 'setup.py' and at_top_level:
+                with open(orig_file, 'r', encoding='utf-8') as fp:
+                    setup_py = fp.read()
+            elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
+                data_files['modules'].append(filename)
+                target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
+                #output += "Copying " + orig_file + "\n"
+                if (not os.path.isfile(target_filename)) or filecmp.cmp(orig_file, target_filename) is False:
+                    need_to_restart = True
+                copy_if_different(orig_file, target_filename)
+    #output += "setup.py is " + str(len(setup_py)) + " characters long\n"
+    setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
+    for line in setup_py.splitlines():
+        m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
+        if m:
+            extracted[m.group(1)] = m.group(2)
+        m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
+        if m:
+            extracted[m.group(1)] = m.group(2)
+        m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+        if m:
+            the_list = list()
+            for item in re.split(r', *', m.group(2)):
+                inner_item = re.sub(r"'$", '', item)
+                inner_item = re.sub(r"^'", '', inner_item)
+                inner_item = re.sub(r'"+$', '', inner_item)
+                inner_item = re.sub(r'^"+', '', inner_item)
+                the_list.append(inner_item)
+            extracted[m.group(1)] = the_list
+    info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
+    info_dict['dependencies'] = [x for x in [z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies'])] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
+    #output += "info_dict is set\n"
+    package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
+    # if not user_can_edit_package(pkgname='docassemble.' + package_name):
+    #     index = 1
+    #     orig_package_name = package_name
+    #     while index < 100 and not user_can_edit_package(pkgname='docassemble.' + package_name):
+    #         index += 1
+    #         package_name = orig_package_name + str(index)
+    with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
+        the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
+        fp.write(str(the_yaml))
+    for sec in area:
+        area[sec].finalize()
+    for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
+        r.incr(key.decode())
+    return dict(action='finished', need_to_restart=need_to_restart, package_name=package_name)
+
+def get_github_username_and_email():
+    storage = RedisCredStorage(app='github')
+    credentials = storage.get()
+    if not credentials or credentials.invalid:
+        raise Exception('GitHub integration expired.')
+    http = credentials.authorize(httplib2.Http())
+    resp, content = http.request("https://api.github.com/user", "GET")
+    if int(resp['status']) == 200:
+        info = json.loads(content.decode('utf-8', 'ignore'))
+        github_user_name = info.get('login', None)
+        github_author_name = info.get('name', None)
+        github_email = info.get('email', None)
+    else:
+        raise DAError("playground_packages: could not get information about GitHub User")
+    if github_email is None:
+        resp, content = http.request("https://api.github.com/user/emails", "GET")
+        if int(resp['status']) == 200:
+            info = json.loads(content.decode('utf-8', 'ignore'))
+            for item in info:
+                if item.get('email', None) and item.get('visibility', None) != 'private':
+                    github_email = item['email']
+    if github_user_name is None or github_email is None:
+        raise DAError("playground_packages: login not present in user info from GitHub")
+    return github_user_name, github_email, github_author_name
+
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -18942,200 +19154,35 @@ def playground_packages():
             return redirect(url_for('restart_page', next=url_for('playground_packages', project=current_project, file=the_file)))
         return redirect(url_for('playground_packages', project=current_project, file=the_file))
     if request.method == 'GET' and 'pull' in request.args and int(request.args['pull']) == 1 and ('github_url' in request.args or 'pypi' in request.args):
-        area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
-        readme_text = ''
-        setup_py = ''
+        if can_publish_to_github and (github_user_name is None or github_email is None):
+            (github_user_name, github_email, github_author_name) = get_github_username_and_email()
+        github_url = request.args.get('github_url', None)
+        pypi_package = request.args.get('pypi', None)
         branch = request.args.get('branch', None)
-        if branch in ('', 'None'):
-            branch = None
-        if branch:
-            branch = werkzeug.utils.secure_filename(branch)
-            branch_option = '-b "' + branch + '" '
-        else:
-            branch_option = ''
-        need_to_restart = False
-        extracted = dict()
-        data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
-        directory = tempfile.mkdtemp()
-        output = ''
-        #logmessage("Can publish " + repr(can_publish_to_github))
-        #logmessage("username " + repr(github_user_name))
-        #logmessage("email " + repr(github_email))
-        #logmessage("author name " + repr(github_author_name))
-        github_url = None
-        pypi_package = None
-        if 'github_url' in request.args:
-            github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\#\[\]\@\$\+\,\=]', '', request.args['github_url'])
-            if github_url.startswith('git@') and can_publish_to_github and github_user_name and github_email:
-                expected_name = re.sub(r'.*/', '', github_url)
-                expected_name = re.sub(r'\.git', '', expected_name)
-                expected_name = re.sub(r'docassemble-', '', expected_name)
-                (private_key_file, public_key_file) = get_ssh_keys(github_email)
-                os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
-                os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
-                ssh_script = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix='.sh', delete=False, encoding='utf-8')
-                ssh_script.write('# /bin/bash\n\nssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i "' + str(private_key_file) + '" $1 $2 $3 $4 $5 $6')
-                ssh_script.close()
-                os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR )
-                #git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
-                git_prefix = "GIT_SSH=" + ssh_script.name + " "
-                output += "Doing " + git_prefix + "git clone " + branch_option + github_url + "\n"
-                try:
-                    output += subprocess.check_output(git_prefix + "git clone " + branch_option + '"' + github_url + '"', cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
-                except subprocess.CalledProcessError as err:
-                    output += err.output.decode()
-                    raise DAError("playground_packages: error running git clone.  " + output)
-            else:
-                expected_name = re.sub(r'.*/', '', github_url)
-                expected_name = re.sub(r'\.git', '', expected_name)
-                expected_name = re.sub(r'docassemble-', '', expected_name)
-                try:
-                    if branch is not None:
-                        logmessage("Doing git clone -b " + branch + " " + github_url)
-                        output += subprocess.check_output(['git', 'clone', '-b', branch, github_url], cwd=directory, stderr=subprocess.STDOUT).decode()
-                    else:
-                        logmessage("Doing git clone " + github_url)
-                        output += subprocess.check_output(['git', 'clone', github_url], cwd=directory, stderr=subprocess.STDOUT).decode()
-                except subprocess.CalledProcessError as err:
-                    output += err.output.decode()
-                    raise DAError("playground_packages: error running git clone.  " + output)
-            logmessage(output)
-            dirs_inside = [f for f in os.listdir(directory) if os.path.isdir(os.path.join(directory, f)) and re.search(r'^[A-Za-z0-9]', f)]
-            if len(dirs_inside) == 1:
-                commit_file = os.path.join(directory_for(area['playgroundpackages'], current_project), '.' + dirs_inside[0])
-                packagedir = os.path.join(directory, dirs_inside[0])
-                try:
-                    current_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=packagedir, stderr=subprocess.STDOUT).decode()
-                except subprocess.CalledProcessError as err:
-                    output = err.output.decode()
-                    raise DAError("playground_packages: error running git rev-parse.  " + output)
-                with open(commit_file, 'w', encoding='utf-8') as fp:
-                    fp.write(current_commit.strip())
-                logmessage("Wrote " + current_commit.strip() + " to " + commit_file)
-            else:
-                logmessage("Did not find a single directory inside repo")
-            do_pypi_also = true_or_false(request.args.get('pypi_also', False))
-            do_install_also = true_or_false(request.args.get('install_also', False))
-            if do_pypi_also or do_install_also:
-                the_args = dict(package=the_file, project=current_project)
-                if do_pypi_also:
-                    the_args['pypi'] = '1'
-                if do_install_also:
-                    the_args['install'] = '1'
-                area['playgroundpackages'].finalize()
-                return redirect(url_for('create_playground_package', **the_args))
-        elif 'pypi' in request.args:
-            pypi_package = re.sub(r'[^A-Za-z0-9\-\.\_\:\/\@\+\=]', '', request.args['pypi'])
-            pypi_package = 'docassemble.' + re.sub(r'^docassemble\.', '', pypi_package)
-            package_file = tempfile.NamedTemporaryFile(suffix='.tar.gz')
-            try:
-                http = httplib2.Http()
-                resp, content = http.request("https://pypi.python.org/pypi/" + str(pypi_package) + "/json", "GET")
-                pypi_url = None
-                if int(resp['status']) == 200:
-                    pypi_response = json.loads(content.decode())
-                    for file_option in pypi_response['releases'][pypi_response['info']['version']]:
-                        if file_option['packagetype'] == 'sdist':
-                            pypi_url = file_option['url']
-                            break
-                else:
-                    flash(word("The package you specified could not be downloaded from PyPI."), 'error')
-                    return redirect(url_for('playground_packages', project=current_project))
-                if pypi_url is None:
-                    flash(word("The package you specified could not be downloaded from PyPI as a tar.gz file."), 'error')
-                    return redirect(url_for('playground_packages', project=current_project))
-            except Exception as err:
-                raise DAError("playground_packages: error getting information about PyPI package.  " + str(err))
-            try:
-                urlretrieve(pypi_url, package_file.name)
-            except Exception as err:
-                raise DAError("playground_packages: error downloading PyPI package.  " + str(err))
-            try:
-                tar = tarfile.open(package_file.name)
-                tar.extractall(path=directory)
-                tar.close()
-            except Exception as err:
-                raise DAError("playground_packages: error unpacking PyPI package.  " + str(err))
-            package_file.close()
-        initial_directories = len(splitall(directory)) + 1
-        for root, dirs, files in os.walk(directory):
-            if 'setup.py' in files and 'docassemble' in dirs:
-                at_top_level = True
-            else:
-                at_top_level = False
-            for a_file in files:
-                orig_file = os.path.join(root, a_file)
-                #output += "Original file is " + orig_file + "\n"
-                thefilename = os.path.join(*splitall(orig_file)[initial_directories:])
-                (the_directory, filename) = os.path.split(thefilename)
-                if filename.startswith('#') or filename.endswith('~'):
-                    continue
-                dirparts = splitall(the_directory)
-                if '.git' in dirparts:
-                    continue
-                levels = re.findall(r'/', the_directory)
-                for sec in ('templates', 'static', 'sources', 'questions'):
-                    if the_directory.endswith('data/' + sec) and filename != 'README.md':
-                        data_files[sec].append(filename)
-                        target_filename = os.path.join(directory_for(area[area_sec[sec]], current_project), filename)
-                        #output += "Copying " + orig_file + "\n"
-                        copy_if_different(orig_file, target_filename)
-                if filename == 'README.md' and at_top_level:
-                    with open(orig_file, 'r', encoding='utf-8') as fp:
-                        readme_text = fp.read()
-                if filename == 'setup.py' and at_top_level:
-                    with open(orig_file, 'r', encoding='utf-8') as fp:
-                        setup_py = fp.read()
-                elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
-                    data_files['modules'].append(filename)
-                    target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
-                    #output += "Copying " + orig_file + "\n"
-                    if (not os.path.isfile(target_filename)) or filecmp.cmp(orig_file, target_filename) is False:
-                        need_to_restart = True
-                    copy_if_different(orig_file, target_filename)
-        #output += "setup.py is " + str(len(setup_py)) + " characters long\n"
-        setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
-        for line in setup_py.splitlines():
-            m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
-            if m:
-                extracted[m.group(1)] = m.group(2)
-            m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
-            if m:
-                extracted[m.group(1)] = m.group(2)
-            m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
-            if m:
-                the_list = list()
-                for item in re.split(r', *', m.group(2)):
-                    inner_item = re.sub(r"'$", '', item)
-                    inner_item = re.sub(r"^'", '', inner_item)
-                    inner_item = re.sub(r'"+$', '', inner_item)
-                    inner_item = re.sub(r'^"+', '', inner_item)
-                    the_list.append(inner_item)
-                extracted[m.group(1)] = the_list
-        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
-        info_dict['dependencies'] = [x for x in [z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies'])] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
-        #output += "info_dict is set\n"
-        package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
-        # if not user_can_edit_package(pkgname='docassemble.' + package_name):
-        #     index = 1
-        #     orig_package_name = package_name
-        #     while index < 100 and not user_can_edit_package(pkgname='docassemble.' + package_name):
-        #         index += 1
-        #         package_name = orig_package_name + str(index)
-        with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
-            the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
-            fp.write(str(the_yaml))
-        for sec in area:
-            area[sec].finalize()
-        for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + ':*'):
-            r.incr(key.decode())
-        the_file = package_name
-        if show_message:
-            flash(word("The package was unpacked into the Playground."), 'success')
-        #shutil.rmtree(directory)
-        if need_to_restart:
-            return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file, project=current_project)))
-        return redirect(url_for('playground_packages', project=current_project, file=the_file))
+        do_pypi_also = true_or_false(request.args.get('pypi_also', False))
+        do_install_also = true_or_false(request.args.get('install_also', False))
+        result = do_playground_pull(area, current_project, github_url=github_url, branch=branch, pypi_package=pypi_package, can_publish_to_github=can_publish_to_github, github_email=github_email, pull_only=(do_pypi_also or do_install_also))
+        if result['action'] == 'error':
+            raise DAError("playground_packages: " + result['message'])
+        if result['action'] == 'fail':
+            flash(result['message'], 'error')
+            return redirect(url_for('playground_packages', project=current_project))
+        if result['action'] == 'pull_only':
+            the_args = dict(package=the_file, project=current_project)
+            if do_pypi_also:
+                the_args['pypi'] = '1'
+            if do_install_also:
+                the_args['install'] = '1'
+            area['playgroundpackages'].finalize()
+            return redirect(url_for('create_playground_package', **the_args))
+        if result['action'] == 'finished':
+            the_file = result['package_name']
+            if show_message:
+                flash(word("The package was unpacked into the Playground."), 'success')
+            #shutil.rmtree(directory)
+            if result['need_to_restart']:
+                return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file, project=current_project)))
+            return redirect(url_for('playground_packages', project=current_project, file=the_file))
     if request.method == 'POST' and validated and form.delete.data and the_file != '' and the_file == form.file_name.data and os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file)):
         os.remove(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + the_file))
         dotfile = os.path.join(directory_for(area['playgroundpackages'], current_project), '.docassemble-' + the_file)
@@ -26034,6 +26081,18 @@ def jsonify_task(result):
     pipe.execute()
     return jsonify({'task_id': code})
 
+def jsonify_restart_task():
+    while True:
+        code = random_string(24)
+        the_key = 'da:restart_status:' + code
+        if r.get(the_key) is None:
+            break
+    pipe = r.pipeline()
+    pipe.set(the_key, json.dumps({'server_start_time': START_TIME}))
+    pipe.expire(the_key, 3600)
+    pipe.execute()
+    return jsonify({'task_id': code})
+
 def should_run_create(package_name):
     if package_name in ('docassemble.base', 'docassemble.webapp', 'docassemble.demo', 'docassemble'):
         return True
@@ -26308,9 +26367,9 @@ def api_clear_cache():
         r.incr(key.decode())
     return ('', 204)
 
-@app.route('/api/config', methods=['GET', 'POST'])
+@app.route('/api/config', methods=['GET', 'POST', 'PATCH'])
 @csrf.exempt
-@cross_origin(origins='*', methods=['GET', 'POST', 'HEAD'], automatic_options=True)
+@cross_origin(origins='*', methods=['GET', 'POST', 'PATCH', 'HEAD'], automatic_options=True)
 def api_config():
     if not api_verify(request, roles=['admin']):
         return jsonify_with_status("Access denied.", 403)
@@ -26341,10 +26400,132 @@ def api_config():
             key.set_contents_from_string(yaml_data)
         with open(daconfig['config file'], 'w', encoding='utf-8') as fp:
             fp.write(yaml_data)
+        return_val = jsonify_restart_task()
         restart_all()
-        return ('', 204)
+        return return_val
+    if request.method == 'PATCH':
+        try:
+            with open(daconfig['config file'], 'r', encoding='utf-8') as fp:
+                content = fp.read()
+            data = yaml.load(content, Loader=yaml.FullLoader)
+        except:
+            return jsonify_with_status("Could not parse Configuration.", 400)
+        patch_data = request.get_json(silent=True)
+        if patch_data is None:
+            using_json = False
+            patch_data = request.form.copy()
+        else:
+            using_json = True
+        if 'config_changes' not in patch_data:
+            return jsonify_with_status("Configuration changes not supplied.", 400)
+        if isinstance(patch_data['config_changes'], dict):
+            new_data = patch_data['config_changes']
+        else:
+            try:
+                new_data = json.loads(patch_data['config_changes'])
+            except:
+                return jsonify_with_status("Configuration changes were not valid JSON.", 400)
+        data.update(new_data)
+        yaml_data = ruamel.yaml.safe_dump(data, default_flow_style=False, default_style = '"', allow_unicode=True, width=10000)
+        if cloud is not None:
+            key = cloud.get_key('config.yml')
+            key.set_contents_from_string(yaml_data)
+        with open(daconfig['config file'], 'w', encoding='utf-8') as fp:
+            fp.write(yaml_data)
+        return_val = jsonify_restart_task()
+        restart_all()
+        return return_val
 
-@app.route('/api/playground_install', methods=['GET', 'POST', 'DELETE'])
+@app.route('/api/playground_pull', methods=['GET', 'POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
+def api_playground_pull():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
+    do_restart = true_or_false(post_data.get('restart', True))
+    current_project = post_data.get('project', 'default')
+    try:
+        if current_user.has_role('admin'):
+            user_id = int(post_data.get('user_id', current_user.id))
+        else:
+            if 'user_id' in post_data:
+                assert int(post_data['user_id']) == current_user.id
+            user_id = current_user.id
+    except:
+        return jsonify_with_status("Invalid user_id.", 400)
+    if current_project != 'default' and current_project not in get_list_of_projects(user_id):
+        return jsonify_with_status("Invalid project.", 400)
+    docassemble.base.functions.this_thread.current_info['user'] = dict(is_anonymous=False, theid=user_id)
+    if app.config['USE_GITHUB']:
+        github_auth = r.get('da:using_github:userid:' + str(current_user.id))
+        if github_auth is not None:
+            can_publish_to_github = True
+        else:
+            can_publish_to_github = False
+    else:
+        can_publish_to_github = None
+    github_url = None
+    branch = None
+    pypi_package = None
+    if 'github_url' in post_data:
+        github_url = post_data['github_url'].rstrip('/')
+        branch = post_data.get('branch', None)
+        if branch is None:
+            branch = get_master_branch(github_url)
+        packagename = re.sub(r'/*$', '', github_url)
+        packagename = re.sub(r'^git+', '', packagename)
+        packagename = re.sub(r'#.*', '', packagename)
+        packagename = re.sub(r'\.git$', '', packagename)
+        packagename = re.sub(r'.*/', '', packagename)
+        packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
+    elif 'pip' in post_data:
+        m = re.match(r'([^>=<]+)([>=<]+.+)', post_data['pip'])
+        if m:
+            pypi_package = m.group(1)
+            limitation = m.group(2)
+        else:
+            pypi_package = post_data['pip']
+            limitation = None
+        packagename = re.sub(r'[^A-Za-z0-9\_\-\.]', '', pypi_package)
+    else:
+        return jsonify_with_status("Either github_url or pip is required.", 400)
+    area = dict()
+    area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
+    for sec in ('playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
+        area[sec] = SavedFile(user_id, fix=True, section=sec)
+    result = do_playground_pull(area, current_project, github_url=github_url, branch=branch, pypi_package=pypi_package, can_publish_to_github=can_publish_to_github, github_email=current_user.email)
+    if result['action'] in ('error', 'fail'):
+        return jsonify_with_status("Pull process encountered an error: " + result['message'], 400)
+    if result['action'] == 'finished':
+        if result['need_to_restart'] and do_restart:
+            return_val = jsonify_restart_task()
+            restart_all()
+            return return_val
+    return ('', 204)
+
+@app.route('/api/restart_status', methods=['GET'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
+def api_restart_status():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    code = request.args.get('task_id', None)
+    if code is None:
+        return jsonify_with_status("Missing task_id", 400)
+    the_key = 'da:restart_status:' + str(code)
+    task_data = r.get(the_key)
+    if task_data is None:
+        return jsonify(status= 'unknown')
+    task_info = json.loads(task_data.decode())
+    if START_TIME <= task_info['server_start_time']:
+        return jsonify(status='working')
+    r.delete(the_key)
+    return jsonify(status='completed')
+
+@app.route('/api/playground_install', methods=['POST'])
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_playground_install():
@@ -26482,7 +26663,9 @@ def api_playground_install():
     for key in r.keys('da:interviewsource:docassemble.playground' + str(user_id) + project_name(current_project) + ':*'):
         r.incr(key.decode())
     if do_restart and need_to_restart:
+        return_val = jsonify_restart_task()
         restart_all()
+        return return_val
     return ('', 204)
 
 @app.route('/api/playground/project', methods=['GET', 'POST', 'DELETE'])
@@ -26595,7 +26778,9 @@ def api_playground():
     elif request.method == 'DELETE':
         pg_section.delete_file(secure_filename_spaces_ok(request.args['filename']))
         if section == 'modules':
+            return_val = jsonify_restart_task()
             restart_all()
+            return return_val
         return ('', 204)
     elif request.method == 'POST':
         found = False
@@ -26616,7 +26801,9 @@ def api_playground():
         for key in r.keys('da:interviewsource:docassemble.playground' + str(user_id) + project_name(project) + ':*'):
             r.incr(key.decode())
         if section == 'modules':
+            return_val = jsonify_restart_task()
             restart_all()
+            return return_val
         return ('', 204)
 
 @app.route('/api/convert_file', methods=['POST'])
@@ -28377,12 +28564,14 @@ def null_func(*pargs, **kwargs):
     return None
 
 if in_celery:
+    def illegal_worker_convert(*pargs, **kwargs):
+        raise Exception("You cannot access the status of a background task from inside of a background task.")
     docassemble.base.functions.update_server(bg_action=null_func,
                                              #async_ocr=null_func,
                                              chord=null_func,
                                              ocr_page=null_func,
                                              ocr_finalize=null_func,
-                                             worker_convert=null_func)
+                                             worker_convert=illegal_worker_convert)
 else:
     import docassemble.webapp.worker
     #sys.stderr.write("calling set worker now\n")

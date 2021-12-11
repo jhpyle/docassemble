@@ -16,4 +16,4 @@ export LANG=$1
 
 export HOME=/var/www
 
-exec celery -A docassemble.webapp.worker worker --loglevel=INFO --concurrency=1 -Q single
+exec celery -A docassemble.webapp.worker worker --loglevel=INFO --concurrency=1 -Q single -n worker1@%h
