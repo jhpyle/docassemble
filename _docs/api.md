@@ -87,11 +87,20 @@ if r.status_code != 200:
 interviews = json.loads(r.text)
 {% endhighlight %}
 
-To make a [POST] request using [cURL], use standard form data to send the API key and other parameters:
+When making a [POST] call, the parameters are passed in the body of
+the request, not as URL parameters.  If the `Content-Type` header is
+not set, **docassemble** assumes that the body of the [POST] request
+contains data in the standard [form data]
+(`application/x-www-form-urlencoded` or `multipart/form-data`) format.
+
+For example, to make a [POST] request using [cURL], you can use form
+data to send the API key and other parameters:
 
 {% highlight bash %}
 curl -d key=H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT -d first_name=John -d last_name=Smith http://localhost/api/user
 {% endhighlight %}
+
+To send the same request using Python, you can do:
 
 {% highlight python %}
 import requests
@@ -2009,9 +2018,16 @@ Responses on failure:
    exist.
  - [400] "Missing filename." if a `filename` is not provided.
 
-Response on success: [204]
+Responses on success: [200] or [204]
 
-Body of response: empty.
+Body of response:
+ - If the response status code is [200], the body of the response is a
+   [JSON] object in which the key `task_id` refers to a code that can
+   be passed to [`/api/restart_status`] to check on the status and
+   result of the restart process.  The `task_id` expires after one
+   hour.
+ - If the response status code is [204], the server did not need to
+   restart, in which case the body of the response is empty.
 
 ## <a name="playground_upload"></a>Upload files to the Playground
 
@@ -2055,9 +2071,16 @@ Responses on failure:
    process of saving files.
  - [400] "No file found." if no uploaded files were provided.
 
-Response on success: [204]
+Responses on success: [200] or [204]
 
-Body of response: empty.
+Body of response:
+ - If the response status code is [200], the body of the response is a
+   [JSON] object in which the key `task_id` refers to a code that can
+   be passed to [`/api/restart_status`] to check on the status and
+   result of the restart process.  The `task_id` expires after one
+   hour.
+ - If the response status code is [204], the server did not need to
+   restart, in which case the body of the response is empty.
 
 ## <a name="playground_install"></a>Upload packages to the Playground
 
@@ -2190,7 +2213,7 @@ Data:
    should be used.  Only users with `admin` privileges can delete from
    a different user's [Playground].  The default is the user ID of the
    owner of the API key.
- - `project`: the project in the [Playground] to delete.
+ - `project`: the project in the [Playground] to create.
 
 Required privileges:
 - `admin` or
@@ -2211,6 +2234,64 @@ Responses on failure:
 Response on success: [204]
 
 Body of response: empty.
+
+## <a name="playground_pull"></a>Pull a package into the Playground
+
+Description: Installs or updates a package in the Playground and if
+the server needs to restart, returns a task ID that can be used to
+inspect the status of the package update process.
+
+Path: `/api/playground_pull`
+
+Method: [POST]
+
+Data:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `user_id` (optional): the user ID of the user whose [Playground]
+   should be used.  Only users with `admin` privileges can pull a
+   package into a different user's [Playground].  The default is the
+   user ID of the owner of the API key.
+ - `project` (optional): the project in the [Playground] into which
+   the package should be pulled.  The default is `default`, which is
+   the "Default Playground" project.
+ - `github_url` (optional): the URL of a [GitHub] package to pull into
+   the Playground.
+ - `branch` (optional): if a `github_url` is provided and you want to
+   pull from a non-standard branch, set `branch` to the name of the
+   branch you want to pull.
+ - `pip` (optional): the name of [Python] package to pull from
+   [PyPI].
+ - `restart` (optional): set this to `0` if you want to skip the
+   process of restarting the server after pulling the package into the
+   Playground.  By default, the server is restarted if a module file
+   is changed.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Either github_url or pip is required." if neither
+   `github_url` nor `pip` are not provided.
+ - [400] "Pull process encountered an error" if the process of pulling
+   the package into the Playground did not succeed. Further
+   information about the nature of the problem is provided after this
+   message.
+
+Responses on success: [200] or [204]
+
+Body of response:
+- If the response status code is [200], the body of the response is a
+  [JSON] object in which the key `task_id` refers to a code that can
+  be passed to [`/api/restart_status`] to check on the status and
+  result of the restart process.  The `task_id` expires after one
+  hour.
+- If the response status code is [204], the body of the response is
+  empty. This indicates that the server did not need to restart as a
+  result of the Playground pull.
 
 ## <a name="clear_cache"></a>Clear the interview cache
 
@@ -2264,8 +2345,8 @@ Body of response: a [JSON] representation of the [Configuration].
 ## <a name="config_write"></a>Write the server configuration
 
 Description: Writes a new [Configuration] to the server and then
-restarts the system.  Note that the system may take significant time
-to restart.
+restarts the system, returning a task ID that can be passed to
+[`/api/restart_status`] to check on the status of the restart process.
 
 Path: `/api/config`
 
@@ -2289,9 +2370,50 @@ Responses on failure:
  - [400] "Configuration was not valid JSON." if the `config` parameter
    contained data that could not be parsed as [JSON].
 
-Response on success: [204]
+Response on success: [200]
 
-Body of response: empty.
+Body of response: a [JSON] object in which the key `task_id` refers to
+a code that can be passed to [`/api/restart_status`] to check on the
+status and result of the restart process.  The `task_id` expires after
+one hour.
+
+## <a name="config_patch"></a>Update the server configuration
+
+Description: Updates specific directives in the Configuration and then
+restarts the server, returning a task ID that can be passed to
+[`/api/restart_status`] to check on the status of the restart process.
+
+Path: `/api/config`
+
+Method: [PATCH]
+
+Data:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `config_changes`: a [JSON] object representing the keys and values
+   you wish to update in the [Configuration].  (If your request has
+   the `application/json` content type, you do not need to convert the
+   object to [JSON].) The keys must be top-level directive names; this
+   API endpoint cannot be used to patch specific sub-directives.
+
+Required privileges: `admin`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate or the
+   required privileges are not present.
+ - [400] "Configuration changes not supplied." if the `config_changes`
+   parameter is missing.
+ - [400] "Configuration changes were not valid JSON." if the
+   `config_changes` parameter contained data that could not be parsed
+   as [JSON].
+
+Response on success: [200]
+
+Body of response: a [JSON] object in which the key `task_id` refers to
+a code that can be passed to [`/api/restart_status`] to check on the
+status of the restart process.  The `task_id` expires after
+one hour.
 
 ## <a name="package_list"></a>List the packages installed
 
@@ -2460,12 +2582,12 @@ Response on success: [200]
 Body of response: a [JSON] object describing the status of the
 background task.  The keys are:
 
-- `status`: If this is `'working'`, the package update process is still
-  proceeding.  If it is `'completed'`, then the package update process
-  is done, and other information will be provided.  If it is
-  `'unknown'`, then the `task_id` has expired.  The API endpoint will
-  return a `'completed'` response only once, and then the `task_id` will
-  expire.
+- `status`: If this is `'working'`, the package update process is
+  still proceeding.  If it is `'completed'`, then the package update
+  process is done, and other information will be provided.  If it is
+  `'unknown'`, then the `task_id` has expired.  The `task_id` will
+  expire one hour after being issued, or 30 seconds after the first
+  `'completed'` is returned, whichever is sooner.
 - `ok`: This is provided when the `status` is `'completed'`.  It is set
   to `true` or `false` depending on whether [pip] return an error
   code.
@@ -2474,6 +2596,69 @@ background task.  The keys are:
 - `error_message`: if `status` is `'completed'` and `ok` is `false`,
   the `error_message` will contain a [pip] log or other error message
   that may explain why the package update process did not succeed.
+
+## <a name="restart"></a>Trigger a server restart
+
+Description: Causes the server to restart.
+
+Path: `/api/restart`
+
+Method: [POST]
+
+Data:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+
+Response on success: [200]
+
+Body of response: a [JSON] object in which the key `task_id` refers to
+a code that can be passed to [`/api/package_update_status`] to check
+on the status and result of the package update process.  The `task_id`
+expires after one hour.
+
+## <a name="restart_status"></a>Poll the status of a restart
+
+Description: Indicates whether a restart operation has completed
+
+Path: `/api/restart_status`
+
+Method: [GET]
+
+Parameters:
+
+ - `key`: the API key (optional if the API key is passed in an `X-API-Key`
+   cookie or header).
+ - `task_id`: the task ID that was obtained from a [POST] or [DELETE]
+   call to the [`/api/playground`] endpoint, a [POST] call to the
+   [`/api/playground_pull`] endpoint, or a [POST] call to the
+   [`/api/config`] endpoint.
+
+Required privileges:
+- `admin` or
+- `developer`.
+
+Responses on failure:
+ - [403] "Access Denied" if the API key did not authenticate.
+ - [400] "Missing task_id" if no `task_id` was provided.
+
+Response on success: [200]
+
+Body of response: a [JSON] object describing the status of the
+restart.  The one key in the object is `status`.  If the `status` is
+`'working'`, the restart process is still proceeding.  If it is
+`'completed'`, then the package update process is done, and other
+information will be provided.  If it is `'unknown'`, then the
+`task_id` has expired.  The `task_id` will expire one hour after the
+restart started, or 30 seconds after the first `'completed'` is
+returned, whichever is sooner.
 
 ## <a name="api_user_api_get"></a>Get information about the user's API keys
 
@@ -3044,3 +3229,5 @@ function.
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DELETE` endpoint of `/api/interviews`]: #interviews_delete
+[`/api/restart_status`]: #restart_status
+[form data]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
