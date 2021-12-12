@@ -3259,9 +3259,9 @@ def unpack_pargs(args):
     for parg in args:
         if isinstance(parg, (types.GeneratorType, map, filter)):
             for sub_parg in parg:
-                the_list.append(str(sub_parg))
+                the_list.append(sub_parg)
         else:
-            the_list.append(str(parg))
+            the_list.append(parg)
     return the_list
 
 def force_ask(*pargs, **kwargs):

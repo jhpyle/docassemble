@@ -26280,10 +26280,10 @@ def api_package_update_status():
                 r.delete(the_key)
                 return jsonify(status='completed', ok=False, error_message=summarize_results(the_result.results, the_result.logmessages, html=False))
             else:
-                r.delete(the_key)
+                r.expire(the_key, 30)
                 return jsonify(status='completed', ok=False, error_message=str("No error message.  Result is " + str(the_result)))
         else:
-            r.delete(the_key)
+            r.expire(the_key, 30)
             return jsonify(status='completed', ok=False, error_message=str(the_result))
     else:
         return jsonify(status='working')
@@ -26506,6 +26506,16 @@ def api_playground_pull():
             return return_val
     return ('', 204)
 
+@app.route('/api/restart', methods=['POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
+def api_restart():
+    if not api_verify(request, roles=['admin', 'developer']):
+        return jsonify_with_status("Access denied.", 403)
+    return_val = jsonify_restart_task()
+    restart_all()
+    return return_val
+
 @app.route('/api/restart_status', methods=['GET'])
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
@@ -26522,7 +26532,7 @@ def api_restart_status():
     task_info = json.loads(task_data.decode())
     if START_TIME <= task_info['server_start_time']:
         return jsonify(status='working')
-    r.delete(the_key)
+    r.expire(the_key, 30)
     return jsonify(status='completed')
 
 @app.route('/api/playground_install', methods=['POST'])

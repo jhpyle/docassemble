@@ -1,10 +1,12 @@
 # Change Log
 
-## [1.3.9] - 2021-12-05
+## [1.3.9] - 2021-12-11
 ### Added
-- The `/api/playground_pull` for pulling a package into a Playground.
+- The `/api/playground_pull` endpoint for pulling a package into a
+  Playground.
 - The `/api/config` PATCH endpoint for updating specific Configuration
   directives.
+- The `/api/restart` endpoint for triggering a server restart.
 - The `/api/restart_status` endpoint for monitoring the status of a
   server restart.
 ### Changed
@@ -16,12 +18,14 @@
   response contains a code that can be passed to `/api/restart_status`
   to check on the status of the restart.
 ### Fixed
+- NGINX configuration syntax.
+- Better error message if Celery is used inside of Celery.
 - Gave the single Celery process a unique name.
-- Ensure `force_ask()` arguments are strings.
 - Adjust for situation where Ajax request fails without a response.
 - Fixed JavaScript errors in some Playground pages.
 - Fixed issue where GitHub SSH only worked during a Playground pull if
   there was an active package.
+- Miscellaneous undefined variables in rarely-run code.
 
 ## [1.3.8] - 2021-12-05
 ### Fixed
