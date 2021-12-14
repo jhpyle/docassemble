@@ -202,7 +202,7 @@ def get_current_question():
 
 def user_logged_in():
     """Returns True if the user is logged in, False otherwise."""
-    if this_thread.current_info['user']['is_authenticated']:
+    if this_thread.current_info.get('user',{}).get('is_authenticated'):
         return True
     return False
 
