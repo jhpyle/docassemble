@@ -1,19 +1,17 @@
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
-from flask import make_response, redirect, render_template, render_template_string, request, flash, current_app, Markup, url_for
+from flask import make_response, redirect, render_template, request, flash, current_app, Markup, url_for
 from docassemble_flask_user import current_user, login_required, roles_required, emails
-from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm, UserAddForm
+from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyInviteForm, NewPrivilegeForm, UserAddForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
 #import docassemble.webapp.daredis
-from docassemble.base.functions import word, debug_status, get_default_timezone, myb64quote, myb64unquote
+from docassemble.base.functions import word, debug_status, get_default_timezone
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
 from docassemble.webapp.translations import setup_translation
 from docassemble.base.generate_key import random_alphanumeric
 from sqlalchemy import or_, and_, not_, select
 
-import random
-import string
 import pytz
 import datetime
 import re

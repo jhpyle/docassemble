@@ -2963,7 +2963,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     navbar += status.nav_item
     if 'menu_items' in status.extras:
         if not isinstance(status.extras['menu_items'], list):
-            custom_menu += '<a tabindex="-1" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
+            custom_menu = '<a tabindex="-1" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
         elif len(status.extras['menu_items']):
             custom_menu = ""
             for menu_item in status.extras['menu_items']:
@@ -7699,7 +7699,7 @@ def index(action_argument=None, refer=None):
         else:
             response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
         if return_fake_html:
-            fake_up(response, interview_language)
+            fake_up(response, current_language)
         if response_wrapper:
             response_wrapper(response)
         return response
@@ -7724,14 +7724,14 @@ def index(action_argument=None, refer=None):
         response.set_cookie('secret', '', expires=0)
         response.set_cookie('session', '', expires=0)
         if return_fake_html:
-            fake_up(response, interview_language)
+            fake_up(response, current_language)
         return response
     will_save = True
     if interview_status.question.question_type == "refresh":
         release_lock(user_code, yaml_filename)
         response = do_refresh(is_ajax, yaml_filename)
         if return_fake_html:
-            fake_up(response, interview_language)
+            fake_up(response, current_language)
         if response_wrapper:
             response_wrapper(response)
         return response
@@ -7740,7 +7740,7 @@ def index(action_argument=None, refer=None):
         sys.stderr.write("Redirecting because of a signin.\n")
         response = do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
-            fake_up(response, interview_language)
+            fake_up(response, current_language)
         if response_wrapper:
             response_wrapper(response)
         return response
@@ -7749,7 +7749,7 @@ def index(action_argument=None, refer=None):
         sys.stderr.write("Redirecting because of a register.\n")
         response = do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
-            fake_up(response, interview_language)
+            fake_up(response, current_language)
         if response_wrapper:
             response_wrapper(response)
         return response
@@ -7761,7 +7761,7 @@ def index(action_argument=None, refer=None):
         else:
             response = do_redirect(title_info.get('exit url', None) or exit_page, is_ajax, is_json, js_target)
         if return_fake_html:
-            fake_up(response, interview_language)
+            fake_up(response, current_language)
         if response_wrapper:
             response_wrapper(response)
         return response
@@ -7777,7 +7777,7 @@ def index(action_argument=None, refer=None):
             release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
             if return_fake_html:
-                fake_up(response, interview_language)
+                fake_up(response, current_language)
             if response_wrapper:
                 response_wrapper(response)
             return response
@@ -7802,7 +7802,7 @@ def index(action_argument=None, refer=None):
             release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
             if return_fake_html:
-                fake_up(response, interview_language)
+                fake_up(response, current_language)
             if response_wrapper:
                 response_wrapper(response)
             return response
@@ -7853,7 +7853,7 @@ def index(action_argument=None, refer=None):
     if response_to_send is not None:
         release_lock(user_code, yaml_filename)
         if return_fake_html:
-            fake_up(response_to_send, interview_language)
+            fake_up(response_to_send, current_language)
         if response_wrapper:
             response_wrapper(response_to_send)
         return response_to_send
@@ -18469,7 +18469,6 @@ def get_repo_info(giturl):
     else:
         http = httplib2.Http()
     the_url = "https://api.github.com/repos/" + repo_name
-    branches = list()
     if access_token:
         resp, content = http.request(the_url, "GET", headers=dict(Authorization="token " + access_token))
     else:

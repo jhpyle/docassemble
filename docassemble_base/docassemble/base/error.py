@@ -159,21 +159,21 @@ class MandatoryQuestion(Exception):
 class QuestionError(Exception):
     def __init__(self, *pargs, **kwargs):
         if len(pargs) >= 1:
-            self.question = pargs[0];
+            self.question = pargs[0]
         elif 'question' in kwargs:
-            self.question = kwargs['question'];
+            self.question = kwargs['question']
         else:
             self.question = "Question not specified"
         if len(pargs) >= 2:
-            self.subquestion = pargs[1];
+            self.subquestion = pargs[1]
         elif 'subquestion' in kwargs:
-            self.subquestion = kwargs['subquestion'];
+            self.subquestion = kwargs['subquestion']
         else:
             self.subquestion = None
         if len(pargs) >= 3:
-            self.url = pargs[2];
+            self.url = pargs[2]
         elif 'url' in kwargs:
-            self.url = kwargs['url'];
+            self.url = kwargs['url']
         else:
             self.url = None
         if 'show_leave' in kwargs:

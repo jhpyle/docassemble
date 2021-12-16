@@ -2323,8 +2323,8 @@ def ordinal_number_default(the_number, **kwargs):
     on index numbers that start with zero, see ordinal()."""
     num = str(the_number)
     if kwargs.get('use_word', True):
-        if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_language]:
-            return ordinal_numbers[language_to_use][num]
+        if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_thread.language]:
+            return ordinal_numbers[this_thread.language][num]
         if '*' in ordinal_numbers and num in ordinal_numbers['*']:
             return ordinal_numbers['*'][num]
     if this_thread.language in ordinal_functions:
@@ -3776,14 +3776,14 @@ def process_action():
                 del this_thread.current_info['arguments'][key]
         to_be_gathered = [(dict(var=variable_dict, context=dict()) if isinstance(variable_dict, str) else variable_dict) for variable_dict in this_thread.internal['gather']]
         for variable_dict in to_be_gathered:
-            if defined(variable_name['var']):
+            if defined(variable_dict['var']):
                 if variable_dict in this_thread.internal['gather']:  # change this later
                     this_thread.internal['gather'].remove(variable_dict)
-                elif variable_name['var'] in this_thread.internal['gather']: # change this later
-                    this_thread.internal['gather'].remove(variable_name['var']) # change this later
+                elif variable_dict['var'] in this_thread.internal['gather']: # change this later
+                    this_thread.internal['gather'].remove(variable_dict['var']) # change this later
             else:
                 #logmessage("process_action: doing a gather2: " + variable_name)
-                force_ask_nameerror(variable_name)
+                force_ask_nameerror(variable_dict)
         if 'forgive_missing_question' in this_thread.misc:
             del this_thread.misc['forgive_missing_question']
         return
