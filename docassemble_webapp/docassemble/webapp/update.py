@@ -6,7 +6,6 @@ import subprocess
 import xmlrpc.client
 import re
 #from io import StringIO
-import sys
 import shutil
 import time
 import fcntl

@@ -1,5 +1,5 @@
 from docassemble.webapp.db_object import db, UserMixin
-from docassemble.base.config import daconfig, dbtableprefix
+from docassemble.base.config import dbtableprefix
 
 class UserModel(db.Model, UserMixin):
     __tablename__ = dbtableprefix + 'user'

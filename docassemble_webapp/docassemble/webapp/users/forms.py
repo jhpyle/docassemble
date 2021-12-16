@@ -1,8 +1,7 @@
-import sys
 import re
 from docassemble_flask_user.forms import RegisterForm, LoginForm, password_validator, unique_email_validator
 from flask_wtf import FlaskForm
-from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators, TextAreaField
+from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, validators, TextAreaField
 from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
 from docassemble.base.functions import LazyWord as word, LazyArray
@@ -192,7 +191,6 @@ class EditUserProfileForm(UserProfileForm):
 class PhoneUserProfileForm(UserProfileForm):
     def validate(self):
         if self.email.data:
-            from flask_login import current_user
             if current_user.social_id.startswith('phone$'):
                 from docassemble.webapp.db_object import db
                 from docassemble.webapp.users.models import UserModel
@@ -211,7 +209,6 @@ class RequestDeveloperForm(FlaskForm):
 class MyInviteForm(FlaskForm):
     def validate(self):
         has_error = False
-        from flask import flash
         if self.email.data:
             for email_address in re.split(r'[\n\r]+', self.email.data.strip()):
                 (part_one, part_two) = email.utils.parseaddr(email_address)

@@ -7,7 +7,6 @@ import re
 import os
 import codecs
 #import redis
-import sys
 import shutil
 import inspect
 import yaml
