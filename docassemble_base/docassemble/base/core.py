@@ -195,8 +195,6 @@ class DAEmpty:
         return 0
     def __int__(self):
         return int(0)
-    def __long__(self):
-        return long(0)
     def __float__(self):
         return float(0)
     def __oct__(self):
@@ -849,9 +847,6 @@ class DACatchAll(DAObject):
     def __int__(self):
         self.context = 'int'
         return int(self.value)
-    def __long__(self):
-        self.context = 'long'
-        return long(self.value)
     def __float__(self):
         self.context = 'float'
         return float(self.value)

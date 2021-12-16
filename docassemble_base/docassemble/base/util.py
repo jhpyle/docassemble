@@ -2128,8 +2128,6 @@ class Value(DAObject):
         return float(self.amount())
     def __int__(self):
         return int(self.__float__())
-    def __long__(self):
-        return long(self.__float__())
     def __le__(self, other):
         return self.value <= (other.value if isinstance(other, Value) else other)
     def __ge__(self, other):
