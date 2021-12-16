@@ -11,7 +11,7 @@
     </div>
     {%- if form.email.errors %}
     {%- for e in form.email.errors %}
-    <div class="invalid-feedback">{{ e }}</p>
+    <div class="invalid-feedback dablock">{{ e }}</p>
     {%- endfor %}
     {%- endif %}
     {{ render_select_field(form.role_id) }}

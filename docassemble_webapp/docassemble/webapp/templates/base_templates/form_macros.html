@@ -6,7 +6,7 @@
   {% endif %}
   <input alt="{{ word('You can upload a file here') }}" type="file" class="form-control" name="{{ field.id }}" id="{{ field.id }}"{% if multiple %} multiple{% endif %}/>
   {% for e in field.errors %}
-  <div class="invalid-feedback">{{ e }}</div>
+  <div class="invalid-feedback d-block">{{ e }}</div>
   {% endfor %}
 </div>
 {%- endmacro %}
@@ -28,7 +28,7 @@
   {%- endif %}
   {%- if field.errors %}
   {%- for e in field.errors %}
-  <div class="invalid-feedback">{{ e }}</div>
+  <div class="invalid-feedback d-block">{{ e }}</div>
   {%- endfor %}
   {%- endif %}
   {%- if right_message %}
@@ -55,7 +55,7 @@
 </div>
 {%- if field.errors %}
 {%- for e in field.errors %}
-<div class="invalid-feedback">{{ e }}</div>
+<div class="invalid-feedback d-block">{{ e }}</div>
 {%- endfor %}
 {%- endif %}
 {%- if right_message %}
@@ -94,7 +94,7 @@
   </select>
   {%- if field.errors %}
   {%- for e in field.errors %}
-  <div class="invalid-feedback">{{ e }}</div>
+  <div class="invalid-feedback d-block">{{ e }}</div>
   {%- endfor %}
   {%- endif %}
 </div>
@@ -110,7 +110,7 @@
   </select>
   {%- if field.errors %}
   {%- for e in field.errors %}
-  <div class="invalid-feedback">{{ e }}</div>
+  <div class="invalid-feedback d-block">{{ e }}</div>
   {%- endfor %}
   {%- endif %}
   {%- if undernote %}

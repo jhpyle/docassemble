@@ -7,7 +7,7 @@
         {{ field(class_='form-control', **kwargs) }}
         {% if field.errors %}
             {% for e in field.errors %}
-        <div class="invalid-feedback">{{ e }}</div>
+        <div class="invalid-feedback d-block">{{ e }}</div>
             {% endfor %}
         {% endif %}
     </div>

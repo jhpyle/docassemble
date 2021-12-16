@@ -1814,3 +1814,6 @@ input[type=number] {
   width: 100%;
 }
 
+a.dadisabled {
+  pointer-events: none;
+}

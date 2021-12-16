@@ -20800,6 +20800,16 @@ function daShowConsoleMessages(){
   }
 }
 
+function disableButtonsUntilCallback(){
+  $("button.dasubmitbutton").prop('disabled', true);
+  $("a.dasubmitbutton").addClass('dadisabled');
+}
+
+function enableButtons(){
+  $(".dasubmitbutton").prop('disabled', false);
+  $("a.dasubmitbutton").removeClass('dadisabled');
+}
+
 $( document ).ready(function() {
   variablesReady();
   searchReady();
@@ -20824,6 +20834,7 @@ $( document ).ready(function() {
       return false;
     }
     daCodeMirror.save();
+    disableButtonsUntilCallback();
     $.ajax({
       type: "POST",
       url: """ + '"' + url_for('playground_page', project=current_project) + '"' + """,
@@ -20832,6 +20843,7 @@ $( document ).ready(function() {
         if (data.action && data.action == 'reload'){
           location.reload(true);
         }
+        enableButtons();
         resetExpireSession();
         saveCallback(data);
       },
@@ -20865,6 +20877,7 @@ $( document ).ready(function() {
     if (isNew == "True" || originalFileName != $("#playground_name").val() || $("#playground_name").val().trim() == ""){
       return true;
     }
+    disableButtonsUntilCallback();
     $.ajax({
       type: "POST",
       url: """ + '"' + url_for('playground_page', project=current_project) + '"' + """,
@@ -20873,6 +20886,7 @@ $( document ).ready(function() {
         if (data.action && data.action == 'reload'){
           location.reload(true);
         }
+        enableButtons();
         resetExpireSession();
         saveCallback(data);
         setTimeout(function(){
@@ -26524,7 +26538,8 @@ def api_restart_status():
         return jsonify_with_status("Access denied.", 403)
     code = request.args.get('task_id', None)
     if code is None:
-        return jsonify_with_status("Missing task_id", 400)
+        return jsonify_
+    with_status("Missing task_id", 400)
     the_key = 'da:restart_status:' + str(code)
     task_data = r.get(the_key)
     if task_data is None:
