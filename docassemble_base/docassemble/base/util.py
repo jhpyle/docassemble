@@ -2028,14 +2028,14 @@ class Individual(Person):
         the user has set up a name in the user profile, this returns
         the user's first name.  Otherwise, returns a blank string."""
         if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'firstname' in this_thread.current_info['user'] and this_thread.current_info['user']['firstname']:
-            return this_thread.current_info['user']['firstname'];
+            return this_thread.current_info['user']['firstname']
         return ''
     def last_name_hint(self):
         """If the individual is the user and the user is logged in and
         the user has set up a name in the user profile, this returns
         the user's last name.  Otherwise, returns a blank string."""
         if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'lastname' in this_thread.current_info['user'] and this_thread.current_info['user']['lastname']:
-            return this_thread.current_info['user']['lastname'];
+            return this_thread.current_info['user']['lastname']
         return ''
     def salutation(self, **kwargs):
         """Returns "Mr.", "Ms.", etc."""
