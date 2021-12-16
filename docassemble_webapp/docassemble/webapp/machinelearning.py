@@ -2,7 +2,6 @@ from docassemble.webapp.core.models import MachineLearning
 from docassemble.base.core import DAObject, DAList, DADict
 from docassemble.webapp.db_object import db
 from sqlalchemy import or_, and_, select, delete
-from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 from pandas.api.types import CategoricalDtype
@@ -15,7 +14,6 @@ import datetime
 import os
 import yaml
 import json
-import sys
 from docassemble_pattern.vector import count, KNN, SVM, stem, PORTER, words, Document
 from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import get_info_from_file_reference

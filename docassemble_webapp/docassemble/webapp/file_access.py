@@ -289,7 +289,7 @@ def add_info_about_file(filename, basename, result):
                     result['height'] = float(dimen[3]) - float(dimen[1])
         except:
             raise Exception("problem reading " + str(filename))
-            logmessage('add_info_about_file: could not read ' + str(filename))
+            # logmessage('add_info_about_file: could not read ' + str(filename))
     return
 
 def get_info_from_file_number(file_number, privileged=False, filename=None, uids=None):

@@ -352,11 +352,6 @@ locals:
   doc: |
     This is a built-in Python function.
   insert: "locals()"
-long:
-  exclude: true
-  doc: |
-    This is a built-in Python function.
-  insert: "long()"
 memoryview:
   exclude: true
   doc: |

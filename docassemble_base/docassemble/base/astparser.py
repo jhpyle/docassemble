@@ -47,7 +47,7 @@ class myvisitnode(ast.NodeVisitor):
     def __init__(self):
         self.names = {}
         self.targets = {}
-        self.depth = 0;
+        self.depth = 0
         self.calls = set()
     def generic_visit(self, node):
         #logmessage(' ' * self.depth + type(node).__name__)

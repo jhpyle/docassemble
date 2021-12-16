@@ -7,7 +7,6 @@ import re
 import os
 import codecs
 #import redis
-import sys
 import shutil
 import inspect
 import yaml
@@ -196,8 +195,6 @@ class DAEmpty:
         return 0
     def __int__(self):
         return int(0)
-    def __long__(self):
-        return long(0)
     def __float__(self):
         return float(0)
     def __oct__(self):
@@ -850,9 +847,6 @@ class DACatchAll(DAObject):
     def __int__(self):
         self.context = 'int'
         return int(self.value)
-    def __long__(self):
-        self.context = 'long'
-        return long(self.value)
     def __float__(self):
         self.context = 'float'
         return float(self.value)
@@ -1414,7 +1408,7 @@ class DAList(DAObject):
     def count(self, item):
         """Returns the number of times item appears in the list."""
         self._trigger_gather()
-        return self.elements.count(*pargs)
+        return self.elements.count(item)
     def extend(self, the_list):
         """Adds each of the elements of the given list to the end of the list."""
         self.elements.extend(the_list)
@@ -2888,9 +2882,9 @@ class DASet(DAObject):
             new_instance_name = self.instanceName
         new_set = self.copy_shallow(new_instance_name)
         new_set.elements = new_elements
-        new_list.gathered = True
-        if len(new_list.elements) == 0:
-            new_list.there_are_any = False
+        new_set.gathered = True
+        if len(new_set.elements) == 0:
+            new_set.there_are_any = False
         return new_set
     def _trigger_gather(self):
         """Triggers the gathering process."""
@@ -3980,10 +3974,14 @@ class DAFileCollection(DAObject):
         return the_file.path()
     def get_docx_variables(self):
         """Returns a list of variables used by the Jinja2 templating of a DOCX template file."""
-        return the_file.docx.get_docx_variables()
+        if hasattr(self, 'docx'):
+          return self.docx.get_docx_variables()
+        return None
     def get_pdf_fields(self):
         """Returns a list of fields that exist in the PDF document"""
-        return the_file.pdf.get_pdf_fields()
+        if hasattr(self, 'pdf'):
+          return self.pdf.get_pdf_fields()
+        return None
     def url_for(self, **kwargs):
         """Returns a URL to one of the attachments in the collection."""
         for ext in self._extension_list():
@@ -4229,11 +4227,11 @@ class DAStaticFile(DAObject):
     def uses_acroform(self):
         """Returns True if the file is a PDF file and it uses AcroForm, otherwise returns False."""
         file_info = server.file_finder(self._get_unqualified_reference())
-        return the_file.get('acroform', False)
+        return file_info.get('acroform', False)
     def is_encrypted(self):
         """Returns True if the file is a PDF file and it is encrypted, otherwise returns False."""
         file_info = server.file_finder(self._get_unqualified_reference())
-        return the_file.get('encrypted', False)
+        return file_info.get('encrypted', False)
     def size_in_bytes(self):
         """Returns the number of bytes in the file."""
         the_path = self.path()
