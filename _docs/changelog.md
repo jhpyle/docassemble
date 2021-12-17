@@ -4,6 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.10](https://github.com/jhpyle/docassemble/releases/tag/v1.3.10) - 2021-12-16
+
+### Changed
+- In the Playground, pressing buttons is disabled during Ajax
+  requests.
+- The Playground "Pull" process now uses SSH to clone repositories
+  when GitHub integration is enabled, unless a personal access token
+  is embedded in the URL.
+
+### Fixed
+- CSS error resulting in certain validation errors being invisible on
+  administrative pages.
+
 ## [1.3.9](https://github.com/jhpyle/docassemble/releases/tag/v1.3.9) - 2021-12-11
 
 ### Added

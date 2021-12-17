@@ -17,15 +17,18 @@ setting in the [Configuration].  By default, only users with
 privileges of `admin` or `developer` can obtain API keys.
 
 For security, API keys can be restricted to particular IP addresses or
-particular HTTP referrers.  A user can create more than one API key.
+particular HTTP referrers.  A user can create more than one API key
+and give different security restrictions to each key.
 
 An API key is tied to the user; when the API call authenticates, the
-user effectively logs in.  If the API call uses one of the "session"
-functions, the user in the interview will be the owner of the API key.
-As discussed [below](#secret), the owner of an API key can access the
-encrypted interview answers of any user, if that user's username and
-password are known, but the identity of the user in the interview will
-always be that of the owner of the API key.
+user effectively logs in. The holder of an API key can do anything the
+user can do. If the API call uses one of the "session" functions, the
+user in the interview (for purposes of [`user_info()`], etc.) will be
+the user who owns the API key.  As discussed [below](#secret), it is
+possible to use the API to access the encrypted interview answers of
+another user by supplying that user's username and password. However,
+even when another user's `secret` is used, the identity of the user in
+the interview will always be that of the owner of the API key.
 
 # <a name="calling"></a>How to call the API
 
@@ -38,7 +41,40 @@ Here is an example of calling the [list](#list) API using [cURL].
 curl http://localhost/api/list?key=H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT
 {% endhighlight %}
 
-The output returned is in [JSON] format:
+The `key` is the API key, which provides authentication.
+
+While sending the API key as a URL parameter is easy, it is not
+recommended, because URLs are often logged. The best approach is to
+send the API key in an HTTP header called `X-API-Key`:
+
+{% highlight bash %}
+curl -H "X-API-Key: H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
+{% endhighlight %}
+
+In Python, you can set the `X-API-Key` by passing a `headers`
+dictionary to your [`requests`] method:
+
+{% highlight python %}
+import sys
+import requests
+headers = {'X-API-Key': 'H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT'}
+
+r = requests.get('http://localhost/api/list', headers=headers)
+if r.status_code != 200:
+    sys.exit(r.text)
+info = r.json()
+{% endhighlight %}
+
+If you prefer, you can include the API key in a cookie called
+`X-API-Key`:
+
+{% highlight bash %}
+curl --cookie "X-API-Key=H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
+{% endhighlight %}
+
+For nearly all API endpoints, the output returned is in [JSON]
+format. For example, the output of calling `/api/list` will look
+something like this:
 
 {% highlight json %}
 [
@@ -74,24 +110,13 @@ The output returned is in [JSON] format:
 ]
 {% endhighlight %}
 
-Here is an example of calling the same function using the [`requests`]
-module in [Python].
-
-{% highlight python %}
-import requests
-import json
-api_key = 'H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT'
-r = requests.get("http://localhost/api/list", params={'key': api_key})
-if r.status_code != 200:
-    raise Exception("Unable to get list of available interviews")
-interviews = json.loads(r.text)
-{% endhighlight %}
-
-When making a [POST] call, the parameters are passed in the body of
-the request, not as URL parameters.  If the `Content-Type` header is
-not set, **docassemble** assumes that the body of the [POST] request
-contains data in the standard [form data]
-(`application/x-www-form-urlencoded` or `multipart/form-data`) format.
+When making a [POST] request, the parameters are passed in the body of
+the request, not as URL parameters.  (This includes `key`, the API
+key, if you are not already passing the API key as a header or
+cookie.) If the `Content-Type` header is not set, **docassemble**
+assumes that the body of the [POST] request contains data in the
+standard [form data] (`application/x-www-form-urlencoded` or
+`multipart/form-data`) format.
 
 For example, to make a [POST] request using [cURL], you can use form
 data to send the API key and other parameters:
@@ -110,44 +135,63 @@ if r.status_code != 204:
     raise Exception("Unable to set user information")
 {% endhighlight %}
 
-You can also make [POST] requests where the body is a [JSON] object
-and the content type of the request is `application/json`.  In this
-case, when a [POST] parameter expects a [JSON] array or [JSON] object,
-you can simply provide an array or an object as part of [JSON] data
-structure that you are sending.  The exception to this is if you are
-making a [POST] request that includes file uploads.  In this
-situation, the format of the [POST] body cannot be [JSON], but must be
-traditional `multipart/form-data` format in which text parameters are
-provided along with file contents, with boundary separators.
+The recommended approach, however, is to always use [JSON] when
+sending [POST] requests instead of sending [form data]. Many [POST]
+API endpoints require several parameters, and it is easy to send these
+parameters in the form of a [JSON] object.  To do this, set the
+content type of the request is `application/json`, and set the body of
+the [POST] request to a [JSON]-formatted object, such as:
 
-Instead of passing the API key in the URL parameter or the POST body,
-you can pass it in a cookie called `X-API-Key`:
-
-{% highlight bash %}
-curl --cookie "X-API-Key=H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
+{% highlight javascript %}
+{"key": "H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT", "first_name": "John", "last_name": "Smith"}
 {% endhighlight %}
 
-You can also send the API key in an HTTP header called `X-API-Key`:
-
-{% highlight bash %}
-curl -H "X-API-Key: H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
-{% endhighlight %}
-
-In Python:
+The [`requests`] module has a convenient built-in feature for sending
+[JSON] requests:
 
 {% highlight python %}
-import sys
 import requests
-headers = {'X-API-Key': 'H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT'}
-
-r = requests.get('http://localhost/api/list', headers=headers)
-if r.status_code != 200:
-    sys.exit(r.text)
-info = r.json()
+api_key = 'H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT'
+r = requests.get("http://localhost/api/user", json={'key': api_key, 'first_name': 'John', 'last_name': 'Smith'})
+if r.status_code != 204:
+    raise Exception("Unable to set user information")
 {% endhighlight %}
 
-By default, all API endpoints return headers to facilitate [Cross-Origin Resource
-Sharing] ([CORS]), such as:
+It is much easier to send the data parameters as a single [JSON]
+object than to use [form data], especially when you are using an
+endpoint like `/api/session`, where the parameter `variables` is an
+object and the parameter `delete_variables` is an array. When using
+[form data], you would have to do:
+
+{% highlight python %}
+import json
+requests.post('http://localhost/api/session',
+              data={'secret': secret, 'i': i, 'session': session,
+                    'variables': json.dumps({'favorite_fruit': 'apple'}),
+                    'delete_variables': json.dumps(['favorite_fungi'])},
+              headers=headers)
+{% endhighlight %}
+
+When sending [JSON], however, you simply have to send one nested data
+structure as the body:
+
+{% highlight python %}
+requests.post('http://localhost/api/session',
+              json={'secret': secret, 'i': i, 'session': session,
+                    'variables': {'favorite_fruit': 'apple'},
+                    'delete_variables': ['favorite_fungi']},
+              headers=headers)
+{% endhighlight %}
+
+The only time you cannot use the [JSON] `Content-Type` is when you are
+making a [POST] request that includes a file upload.  In this
+circumstance, the format of the [POST] body cannot be [JSON], but must
+be the traditional `multipart/form-data` format in which text
+parameters are provided along with file contents, with boundary
+separators.
+
+By default, all API endpoints return headers to facilitate
+[Cross-Origin Resource Sharing] ([CORS]), such as:
 
 {% highlight text %}
 Access-Control-Allow-Origin: *
@@ -168,9 +212,9 @@ otherwise the library may not allow you to send a cookie.  Typically,
 server-side libraries do not impose these restrictions, but you will
 encounter them if you try to use them from a web browser.
 
-If you do call the API from a web browser, note that the API key will
-be discoverable by the user.  Make sure that the owner of any API key
-you share in a web browser does not have any special privileges.
+If you call the API from a web browser, note that the API key will be
+discoverable by the user.  Make sure that the owner of any API key you
+share in a web browser does not have any special privileges.
 Possessing the API key of a basic user does not give someone greater
 privileges than they would have if they used the standard web
 interface, but it does give the holder an easier way to automate the
@@ -218,6 +262,61 @@ while True:
 
 If you set `next_id` to the empty string or do not set it at all, the
 API will return the first page of results.
+
+## <a name="polling"></a>How to poll the server
+
+Some of the API endpoints start a long-running background process or
+necessitate restarting the web server. These endpoints will return a
+`task_id` that you can pass to [`/api/package_update_status`] or
+[`/api/restart_status`] in order to see if the process has finished.
+
+Here is an example of a function `wait_for()` that will wait for the
+server to be finished with installing a package.
+
+{% highlight python %}
+import sys
+import time
+import requests
+from requests.exceptions import Timeout
+headers = {'X-API-Key': 'H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT'}
+
+def wait_for(task_id):
+    while True:
+        try:
+            r = requests.get('http://localhost/api/package_update_status',
+                             params={'task_id': task_id},
+                             headers=headers,
+                             timeout=7)
+        except Timeout:
+            continue
+        if r.status_code != 200:
+            sys.exit(r.text)
+        info = r.json()
+        if info['status'] == 'completed':
+            break
+        time.sleep(2)
+{% endhighlight %}
+
+Here is an example of calling `wait_for()` to wait for the server to
+restart after installing the PyPI package `jsmin`.
+
+{% highlight yaml %}
+r = requests.post('http://localhost/api/package', json={'pip': 'jsmin'}, headers=headers)
+if r.status_code != 200:
+    sys.exit(r.text)
+info = r.json()
+wait_for(info['task_id'])
+{% endhighlight %}
+
+Note that the `wait_for()` function makes its [GET] requests with a
+timeout of seven seconds, and abandons the request if there is no
+response in seven seconds. When a busy server is in the process of
+restarting, pending HTTP requests can sometimes get lost and time
+out. This does not mean that anything is broken, it just means that
+the HTTP request arrived at an unlucky time when the server was in the
+process of restarting and could not respond to the request. Canceling
+a request after a few seconds and trying again can be more efficient
+than waiting 60 seconds for the server to cancel the request.
 
 # <a name="functions"></a>Available API functions
 
@@ -3231,3 +3330,4 @@ function.
 [`DELETE` endpoint of `/api/interviews`]: #interviews_delete
 [`/api/restart_status`]: #restart_status
 [form data]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
+[`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
