@@ -153,7 +153,7 @@ setting it to `None` means no communication (more on this setting
 [below](#ui_notification)).
 
 The keyword argument, `additional`, is passed to the [action] (and
-theh value can be retrieved using [`action_argument()`]).  You can
+the value can be retrieved using [`action_argument()`]).  You can
 include as many keyword arguments as you want, called anything you want.
 You can also have no keyword arguments at all.
 
