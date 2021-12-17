@@ -18595,7 +18595,12 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
     expected_name = 'unknown'
     if github_url:
         github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\#\[\]\@\$\+\,\=]', '', github_url)
-        if github_url.startswith('git@') and can_publish_to_github and github_email:
+        repo_name = re.sub(r'/*$', '', github_url)
+        repo_name = re.sub(r'^http.*github.com/', '', repo_name)
+        repo_name = re.sub(r'.*@github.com:', '', repo_name)
+        repo_name = re.sub(r'.git$', '', repo_name)
+        if not 'x-oauth-basic@github.com' in github_url and can_publish_to_github and github_email:
+            github_url = f'git@github.com:{repo_name}.git'
             expected_name = re.sub(r'.*/', '', github_url)
             expected_name = re.sub(r'\.git', '', expected_name)
             expected_name = re.sub(r'docassemble-', '', expected_name)
@@ -18615,6 +18620,8 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
                 output += err.output.decode()
                 return dict(action="error", message="error running git clone.  " + output)
         else:
+            if not github_url.startswith('http'):
+                github_url = f'https://github.com/{repo_name}'
             expected_name = re.sub(r'.*/', '', github_url)
             expected_name = re.sub(r'\.git', '', expected_name)
             expected_name = re.sub(r'docassemble-', '', expected_name)
