@@ -18596,17 +18596,15 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
     expected_name = 'unknown'
     if github_url:
         github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\#\[\]\@\$\+\,\=]', '', github_url)
-        expected_name = re.sub(r'.*/', '', github_url)
-        expected_name = re.sub(r'\.git', '', expected_name)
-        expected_name = re.sub(r'docassemble-', '', expected_name)
-        repo_url_info = re.sub(r'github_url=', '', github_url)
-        repo_url_info = re.sub(r'git@github.com:', '', repo_url_info)
-        repo_url_info = re.sub(r'https://github.com/', '', repo_url_info)
-        repo_url_info = re.sub(r'\.git', '', repo_url_info)
-        url_user_name = repo_url_info.split("/")[0]
-        url_package_name = repo_url_info.split("/")[1]
-        if can_publish_to_github and github_email:
-            github_url = f'git@github.com:{url_user_name}/{url_package_name}.git'
+        repo_name = re.sub(r'/*$', '', github_url)
+        repo_name = re.sub(r'^http.*github.com/', '', repo_name)
+        repo_name = re.sub(r'.*@github.com:', '', repo_name)
+        repo_name = re.sub(r'.git$', '', repo_name)
+        if not 'x-oauth-basic@github.com' in github_url and can_publish_to_github and github_email:
+            github_url = f'git@github.com:{repo_name}.git'
+            expected_name = re.sub(r'.*/', '', github_url)
+            expected_name = re.sub(r'\.git', '', expected_name)
+            expected_name = re.sub(r'docassemble-', '', expected_name)
             (private_key_file, public_key_file) = get_ssh_keys(github_email)
             os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
             os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
@@ -18623,7 +18621,11 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
                 output += err.output.decode()
                 return dict(action="error", message="error running git clone.  " + output)
         else:
-            github_url = f'https://github.com/{url_user_name}/{url_package_name}'
+            if not github_url.startswith('http'):
+                github_url = f'https://github.com/{repo_name}'
+            expected_name = re.sub(r'.*/', '', github_url)
+            expected_name = re.sub(r'\.git', '', expected_name)
+            expected_name = re.sub(r'docassemble-', '', expected_name)
             try:
                 if branch is not None:
                     logmessage("Doing git clone -b " + branch + " " + github_url)
