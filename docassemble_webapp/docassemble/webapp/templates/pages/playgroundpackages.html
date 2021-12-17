@@ -146,7 +146,7 @@
                 </div>
               </div>
               {%- endif %}
-              <div class="form-actions">
+              <div class="form-actions mt-3">
                 {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], title=word('Save your changes to the package information')) }}
                 {%- if current_file != '' %}
                 {{ render_submit_field(form.install, class="btn " + config['BUTTON_STYLE'] + "success " + config['BUTTON_CLASS'], title=word('Install package on this server')) }}

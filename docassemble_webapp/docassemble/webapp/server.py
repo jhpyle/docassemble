@@ -26544,8 +26544,7 @@ def api_restart_status():
         return jsonify_with_status("Access denied.", 403)
     code = request.args.get('task_id', None)
     if code is None:
-        return jsonify_
-    with_status("Missing task_id", 400)
+        return jsonify_with_status("Missing task_id", 400)
     the_key = 'da:restart_status:' + str(code)
     task_data = r.get(the_key)
     if task_data is None:
