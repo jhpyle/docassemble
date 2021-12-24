@@ -247,7 +247,10 @@ def sql_defined(key):
     return True
 
 def sql_set(key, val, encrypted=True, secret=None, the_user_id=None):
-    user_id, temp_user_id = parse_the_user_id(the_user_id)
+    if the_user_id:
+        user_id, temp_user_id = parse_the_user_id(the_user_id)
+    else:
+        user_id = temp_user_id = None
     updated = False
     for record in db.session.execute(select(GlobalObjectStorage).filter_by(key=key).with_for_update()).scalars():
         record.user_id = user_id
