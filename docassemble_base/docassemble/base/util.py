@@ -352,7 +352,14 @@ class DAStore(DAObject):
     def set(self, key, value):
         """Writes an object to the data store under the given key."""
         the_key = self._get_base_key() + ':' + key
-        server.server_sql_set(the_key, value, encrypted=self.is_encrypted(), secret=this_thread.current_info.get('secret', None), the_user_id=this_thread.current_info['user']['the_user_id'])
+        if self.is_encrypted():
+            secret = this_thread.current_info.get('secret', None)
+        else:
+            secret = None
+        if the_key.startswith("da:userid:"):
+            server.server_sql_set(the_key, value, encrypted=self.is_encrypted(), secret=secret, the_user_id=this_thread.current_info['user']['the_user_id'])
+        else:
+            server.server_sql_set(the_key, value, encrypted=self.is_encrypted(), secret=secret, the_user_id=None)
     def delete(self, key):
         """Deletes an object from the data store"""
         the_key = self._get_base_key() + ':' + key
