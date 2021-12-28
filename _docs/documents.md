@@ -706,9 +706,6 @@ be cropped if it is taller than the line spacing.  To prevent the
 image from being cropped, select a flexible line spacing like "single"
 or "double."
 
-Because of a limitation in the [`python-docx-template`] package,
-images cannot be inserted into headers, footers, or footnotes.
-
 When you insert text into a DOCX file using `{% raw %}{{ }}{% endraw
 %}` brackets, any newlines in the text you are inserting will be
 treated as spaces, and any [Markdown] formatting codes will be passed
