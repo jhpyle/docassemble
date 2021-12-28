@@ -8383,7 +8383,7 @@ def index(action_argument=None, refer=None):
         if (callback == null){
           callback = function(){};
         }
-        $.ajax({
+        return $.ajax({
           type: "GET",
           url: """ + '"' + url_for('get_variables', i=yaml_filename) + '"' + """,
           success: callback,
@@ -13071,7 +13071,7 @@ def observer():
         if (callback == null){
           callback = function(){};
         }
-        $.ajax({
+        return $.ajax({
           type: "GET",
           url: """ + '"' + url_for('get_variables', i=i) + '"' + """,
           success: callback,
