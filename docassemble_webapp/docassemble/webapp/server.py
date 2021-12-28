@@ -8303,7 +8303,7 @@ def index(action_argument=None, refer=None):
         else{
           url = daInterviewUrl + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
-        $.ajax({
+        return $.ajax({
           type: "GET",
           url: url,
           success: callback,
@@ -8326,7 +8326,7 @@ def index(action_argument=None, refer=None):
         }
         var data = {action: action, arguments: args};
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-        $.ajax({
+        return $.ajax({
           type: "POST",
           url: daInterviewUrl,
           beforeSend: addCsrfHeader,
@@ -8356,7 +8356,7 @@ def index(action_argument=None, refer=None):
         }
         var data = {action: action, arguments: args};
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-        $.ajax({
+        return $.ajax({
           type: "POST",
           url: daInterviewUrl,
           beforeSend: addCsrfHeader,
@@ -13001,7 +13001,7 @@ def observer():
         else{
           url = daLocationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
         }
-        $.ajax({
+        return $.ajax({
           type: "GET",
           url: url,
           success: callback,
@@ -13021,7 +13021,7 @@ def observer():
         }
         var data = {action: action, arguments: args};
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-        $.ajax({
+        return $.ajax({
           type: "POST",
           url: daLocationBar,
           data: $.param({_action: btoa(JSON_stringify(data)), csrf_token: daCsrf, ajax: 1}),
@@ -13048,7 +13048,7 @@ def observer():
         }
         var data = {action: action, arguments: args};
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-        $.ajax({
+        return $.ajax({
           type: "POST",
           url: daLocationBar,
           data: $.param({_action: btoa(JSON_stringify(data)), _next_action_to_set: btoa(JSON_stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
