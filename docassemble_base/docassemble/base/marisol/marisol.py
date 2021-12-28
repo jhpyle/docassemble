@@ -1,13 +1,12 @@
-from concurrent import futures
-from enum import Enum
-from PyPDF2 import PdfFileReader, PdfFileWriter
-from reportlab.pdfgen import canvas
-from reportlab.lib import pagesizes
-
 import copy
 import io
 import os
 import multiprocessing
+from concurrent import futures
+from enum import Enum
+from PyPDF2 import PdfFileReader, PdfFileWriter
+from reportlab.pdfgen import canvas
+
 
 
 class Area(Enum):
@@ -27,7 +26,7 @@ class RedactionStyle(Enum):
         self.text = text
 
 
-class Marisol(object):
+class Marisol:
 
     def __init__(self, prefix, fill, start, area=Area.BOTTOM_RIGHT):
         """
@@ -114,7 +113,7 @@ class Marisol(object):
         return list(results)
 
 
-class Document(object):
+class Document:
 
     def __init__(self, file, prefix, fill, start, area):
         """
@@ -130,8 +129,8 @@ class Document(object):
         try:
             self.file = io.BytesIO(file.read())
         except AttributeError:
-            with open(file, "rb") as file:
-                self.file = io.BytesIO(file.read())
+            with open(file, "rb") as fp:
+                self.file = io.BytesIO(fp.read())
         self.reader = PdfFileReader(self.file)
         self.prefix = prefix
         self.fill = fill
@@ -230,12 +229,11 @@ class Document(object):
         area = overlay.area
         if isinstance(self.overlays[area], BatesOverlay):
             raise ValueError("Area {} is already reserved for bates stamp.".format(area))
-        else:
-            self.overlays[area] = overlay
+        self.overlays[area] = overlay
         return self
 
 
-class Page(object):
+class Page:
 
     def __init__(self, document, page, prefix, fill, start):
         """
@@ -319,7 +317,7 @@ class Page(object):
         return "{prefix}{num}".format(prefix=self.prefix, num=num)
 
 
-class GenericTextOverlay(object):
+class GenericTextOverlay:
 
     def __init__(self, text, area):
         self.text = text
@@ -368,7 +366,7 @@ class StaticOverlay(GenericTextOverlay):
     pass
 
 
-class Redaction(object):
+class Redaction:
 
     def __init__(self, position, size, text=None, style=RedactionStyle.SOLID):
         """
@@ -396,8 +394,6 @@ class Redaction(object):
         Args:
             c (Canvas): canvas to apply the redaction to.
         """
-        page_width = c._pagesize[0]
-        page_height = c._pagesize[1]
 
         c.setFont("Helvetica", 10)
 
@@ -414,4 +410,3 @@ class Redaction(object):
 
 class OutsideBoundariesError(ValueError):
     """Raised when an item is drawn outside the page boundaries."""
-    pass

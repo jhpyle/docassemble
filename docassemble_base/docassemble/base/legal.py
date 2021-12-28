@@ -1,9 +1,8 @@
+from itertools import chain
 from docassemble.base.core import DAObject, DAList, DADict, DAOrderedDict, DASet, DAFile, DAFileCollection, DAFileList, DAStaticFile, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file, RelationshipTree, DAContext
 from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, action_arguments, action_argument, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, redact, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, verbatim, add_separators, store_variables_snapshot, update_terms
-from docassemble.base.oauth import DAOAuth
-from docassemble.base.util import LatitudeLongitude, RoleChangeTracker, Name, IndividualName, Address, City, Event, Person, Thing, Individual, ChildList, FinancialList, PeriodicFinancialList, Income, Asset, Expense, Value, PeriodicValue, OfficeList, Organization, send_email, send_sms, send_fax, map_of, last_access_time, last_access_delta, last_access_days, last_access_hours, last_access_minutes, returning_user, timezone_list, as_datetime, current_datetime, date_difference, date_interval, today, month_of, day_of, dow_of, year_of, format_date, format_datetime, format_time, DARedis, DACloudStorage, DAGoogleAPI, SimpleTextMachineLearner, ocr_file, ocr_file_in_background, read_qr, get_sms_session, initiate_sms_session, terminate_sms_session, path_and_mimetype, run_python_module, pdf_concatenate, include_docx_template, start_time, zip_file, validation_error, DAValidationError, action_button_html, url_ask, overlay_pdf, DAStore, explain, clear_explanations, explanation, set_status, get_status, DAWeb, DAWebError, json, re, iso_country, assemble_docx, docx_concatenate, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, stash_data, retrieve_stashed_data, DABreadCrumbs
-from docassemble.base.logger import logmessage
-from itertools import chain
+from docassemble.base.util import LatitudeLongitude, RoleChangeTracker, Name, IndividualName, Address, City, Event, Person, Thing, Individual, ChildList, FinancialList, PeriodicFinancialList, Income, Asset, Expense, Value, PeriodicValue, OfficeList, Organization, send_email, send_sms, send_fax, map_of, last_access_time, last_access_delta, last_access_days, last_access_hours, last_access_minutes, returning_user, timezone_list, as_datetime, current_datetime, date_difference, date_interval, today, month_of, day_of, dow_of, year_of, format_date, format_datetime, format_time, DARedis, DACloudStorage, DAGoogleAPI, SimpleTextMachineLearner, ocr_file, ocr_file_in_background, read_qr, get_sms_session, initiate_sms_session, terminate_sms_session, path_and_mimetype, run_python_module, pdf_concatenate, include_docx_template, start_time, zip_file, validation_error, DAValidationError, action_button_html, url_ask, overlay_pdf, DAStore, explain, clear_explanations, explanation, set_status, get_status, DAWeb, DAWebError, json, re, iso_country, assemble_docx, docx_concatenate, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, stash_data, retrieve_stashed_data, DABreadCrumbs, DAOAuth
+#from docassemble.base.logger import logmessage
 
 __all__ = [
     'alpha',
@@ -256,7 +255,7 @@ __all__ = [
     'DABreadCrumbs'
 ]
 
-hooks = dict()
+hooks = {}
 
 class SpecialReturnObject():
     pass
@@ -266,9 +265,9 @@ RUN_PARENTS = SpecialReturnObject()
 def register_hook(object_type, hook_name, hook, target):
     key = "^".join(target)
     if key not in hooks:
-        hooks[key] = dict()
+        hooks[key] = {}
     if object_type not in hooks[key]:
-        hooks[key][object_type] = dict()
+        hooks[key][object_type] = {}
     #logmessage("Setting hook for " + key + " " + object_type + " " + hook_name)
     hooks[key][object_type][hook_name] = hook
 
@@ -289,10 +288,10 @@ class Court(DAObject):
     """Represents a court of law."""
     def init(self, *pargs, **kwargs):
         if 'jurisdiction' not in kwargs:
-            self.jurisdiction = list()
+            self.jurisdiction = []
         return super().init(*pargs, **kwargs)
     def __str__(self):
-        return(str(self.name))
+        return str(self.name)
     def in_the_court(self, **kwargs):
         """Returns the top line of the first page of a pleading filed in the
         court.
@@ -408,8 +407,7 @@ class Case(DAObject):
         if result is None:
             if hasattr(self, 'case_id'):
                 return word('Case No.') + " " + self.case_id
-            else:
-                return word('Case No.')
+            return word('Case No.')
         return result
     def determine_court(self, **kwargs):
         """Runs code, if any exists, to determine what court has jurisdiction
@@ -417,7 +415,7 @@ class Case(DAObject):
 
         """
         #logmessage("determine_court 1: firstParty is " + str(self.firstParty.instanceName))
-        result = run_hook('case', self, 'determine_court', self.court.jurisdiction, **kwargs)
+        run_hook('case', self, 'determine_court', self.court.jurisdiction, **kwargs)
         #logmessage("determine_court 2: firstParty is " + str(self.firstParty.instanceName))
     def role_of(self, party):
         """Given a person object, it looks through the parties to the
@@ -437,17 +435,17 @@ class Case(DAObject):
         """Returns a list of all parties and their children,
         children's children, etc.  Does not force the gathering of the
         parties."""
-        output_list = list()
+        output_list = []
         for partyname in self.__dict__:
             if not isinstance(getattr(self, partyname), self.PartyListClass):
                 continue
             for party in getattr(self, partyname).elements:
                 _add_person_and_children_of(party, output_list)
-        return(output_list)
+        return output_list
     def parties(self):
         """Returns a list of all parties.  Gathers the parties if
         they have not been gathered yet."""
-        output_list = list()
+        output_list = []
         for partyname in self.__dict__:
             if not isinstance(getattr(self, partyname), self.PartyListClass):
                 continue
@@ -455,7 +453,7 @@ class Case(DAObject):
             for indiv in getattr(self, partyname).elements:
                 if indiv not in output_list:
                     output_list.append(indiv)
-        return(output_list)
+        return output_list
 
 # class Jurisdiction(DAObject):
 #     """Represents a jurisdiction, e.g. of a Court.  No functionality
@@ -498,10 +496,9 @@ class LegalFiling(Document):
         output += "[END_CAPTION]\n\n"
         if self.title is not None:
             output += "[BOLDCENTER] " + self.title.upper() + "\n"
-        return(output)
+        return output
 
 def us_districts(bankruptcy=False):
     if bankruptcy:
         return ['Northern District of Alabama', 'Middle District of Alabama', 'Southern District of Alabama', 'District of Alaska', 'District of Arizona', 'Eastern & Western Districts of Arkansas', 'Central District of California', 'Eastern District of California', 'Northern District of California', 'Southern District of California', 'District of Colorado', 'District of Connecticut', 'District of Delaware', 'District of Columbia', 'Northern District of Florida', 'Middle District of Florida', 'Southern District of Florida', 'Northern District of Georgia', 'Middle District of Georgia', 'Southern District of Georgia', 'District of Guam', 'District of Hawaii', 'District of Idaho', 'Northern District of Illinois', 'Central District of Illinois', 'Southern District of Illinois', 'Northern District of Indiana', 'Southern District of Indiana', 'Northern District of Iowa', 'Southern District of Iowa', 'District of Kansas', 'Eastern District of Kentucky', 'Western District of Kentucky', 'Eastern District of Louisiana', 'Middle District of Louisiana', 'Western District of Louisiana', 'District of Maine', 'District of Maryland', 'District of Massachusetts', 'Eastern District of Michigan', 'Western District of Michigan', 'District of Minnesota', 'Northern District of Mississippi', 'Southern District of Mississippi', 'Eastern District of Missouri', 'Western District of Missouri', 'District of Montana', 'District of Nebraska', 'District of Nevada', 'District of New Hampshire', 'District of New Jersey', 'District of New Mexico', 'Eastern District of New York', 'Northern District of New York', 'Southern District of New York', 'Western District of New York', 'Eastern District of North Carolina', 'Middle District of North Carolina', 'Western District of North Carolina', 'District of North Dakota', 'District of the Northern Mariana Islands', 'Northern District of Ohio', 'Southern District of Ohio', 'Eastern District of Oklahoma', 'Northern District of Oklahoma', 'Western District of Oklahoma', 'District of Oregon', 'Eastern District of Pennsylvania', 'Middle District of Pennsylvania', 'Western District of Pennsylvania', 'District of Puerto Rico', 'District of Rhode Island', 'District of South Carolina', 'District of South Dakota', 'Eastern District of Tennessee', 'Middle District of Tennessee', 'Western District of Tennessee', 'Eastern District of Texas', 'Northern District of Texas', 'Southern District of Texas', 'Western District of Texas', 'District of Utah', 'District of Vermont', 'District of the Virgin Islands', 'Eastern District of Virginia', 'Western District of Virginia', 'Eastern District of Washington', 'Western District of Washington', 'Northern District of West Virginia', 'Southern District of West Virginia', 'Eastern District of Wisconsin', 'Western District of Wisconsin', 'District of Wyoming']
-    else:
-        return ['Northern District of Alabama', 'Middle District of Alabama', 'Southern District of Alabama', 'District of Alaska', 'District of Arizona', 'Eastern District of Arkansas', 'Western District of Arkansas', 'Central District of California', 'Eastern District of California', 'Northern District of California', 'Southern District of California', 'District of Colorado', 'District of Connecticut', 'District of Delaware', 'District of Columbia', 'Northern District of Florida', 'Middle District of Florida', 'Southern District of Florida', 'Northern District of Georgia', 'Middle District of Georgia', 'Southern District of Georgia', 'District of Guam', 'District of Hawaii', 'District of Idaho', 'Northern District of Illinois', 'Central District of Illinois', 'Southern District of Illinois', 'Northern District of Indiana', 'Southern District of Indiana', 'Northern District of Iowa', 'Southern District of Iowa', 'District of Kansas', 'Eastern District of Kentucky', 'Western District of Kentucky', 'Eastern District of Louisiana', 'Middle District of Louisiana', 'Western District of Louisiana', 'District of Maine', 'District of Maryland', 'District of Massachusetts', 'Eastern District of Michigan', 'Western District of Michigan', 'District of Minnesota', 'Northern District of Mississippi', 'Southern District of Mississippi', 'Eastern District of Missouri', 'Western District of Missouri', 'District of Montana', 'District of Nebraska', 'District of Nevada', 'District of New Hampshire', 'District of New Jersey', 'District of New Mexico', 'Eastern District of New York', 'Northern District of New York', 'Southern District of New York', 'Western District of New York', 'Eastern District of North Carolina', 'Middle District of North Carolina', 'Western District of North Carolina', 'District of North Dakota', 'District of the Northern Mariana Islands', 'Northern District of Ohio', 'Southern District of Ohio', 'Eastern District of Oklahoma', 'Northern District of Oklahoma', 'Western District of Oklahoma', 'District of Oregon', 'Eastern District of Pennsylvania', 'Middle District of Pennsylvania', 'Western District of Pennsylvania', 'District of Puerto Rico', 'District of Rhode Island', 'District of South Carolina', 'District of South Dakota', 'Eastern District of Tennessee', 'Middle District of Tennessee', 'Western District of Tennessee', 'Eastern District of Texas', 'Northern District of Texas', 'Southern District of Texas', 'Western District of Texas', 'District of Utah', 'District of Vermont', 'District of the Virgin Islands', 'Eastern District of Virginia', 'Western District of Virginia', 'Eastern District of Washington', 'Western District of Washington', 'Northern District of West Virginia', 'Southern District of West Virginia', 'Eastern District of Wisconsin', 'Western District of Wisconsin', 'District of Wyoming']
+    return ['Northern District of Alabama', 'Middle District of Alabama', 'Southern District of Alabama', 'District of Alaska', 'District of Arizona', 'Eastern District of Arkansas', 'Western District of Arkansas', 'Central District of California', 'Eastern District of California', 'Northern District of California', 'Southern District of California', 'District of Colorado', 'District of Connecticut', 'District of Delaware', 'District of Columbia', 'Northern District of Florida', 'Middle District of Florida', 'Southern District of Florida', 'Northern District of Georgia', 'Middle District of Georgia', 'Southern District of Georgia', 'District of Guam', 'District of Hawaii', 'District of Idaho', 'Northern District of Illinois', 'Central District of Illinois', 'Southern District of Illinois', 'Northern District of Indiana', 'Southern District of Indiana', 'Northern District of Iowa', 'Southern District of Iowa', 'District of Kansas', 'Eastern District of Kentucky', 'Western District of Kentucky', 'Eastern District of Louisiana', 'Middle District of Louisiana', 'Western District of Louisiana', 'District of Maine', 'District of Maryland', 'District of Massachusetts', 'Eastern District of Michigan', 'Western District of Michigan', 'District of Minnesota', 'Northern District of Mississippi', 'Southern District of Mississippi', 'Eastern District of Missouri', 'Western District of Missouri', 'District of Montana', 'District of Nebraska', 'District of Nevada', 'District of New Hampshire', 'District of New Jersey', 'District of New Mexico', 'Eastern District of New York', 'Northern District of New York', 'Southern District of New York', 'Western District of New York', 'Eastern District of North Carolina', 'Middle District of North Carolina', 'Western District of North Carolina', 'District of North Dakota', 'District of the Northern Mariana Islands', 'Northern District of Ohio', 'Southern District of Ohio', 'Eastern District of Oklahoma', 'Northern District of Oklahoma', 'Western District of Oklahoma', 'District of Oregon', 'Eastern District of Pennsylvania', 'Middle District of Pennsylvania', 'Western District of Pennsylvania', 'District of Puerto Rico', 'District of Rhode Island', 'District of South Carolina', 'District of South Dakota', 'Eastern District of Tennessee', 'Middle District of Tennessee', 'Western District of Tennessee', 'Eastern District of Texas', 'Northern District of Texas', 'Southern District of Texas', 'Western District of Texas', 'District of Utah', 'District of Vermont', 'District of the Virgin Islands', 'Eastern District of Virginia', 'Western District of Virginia', 'Eastern District of Washington', 'Western District of Washington', 'Northern District of West Virginia', 'Southern District of West Virginia', 'Eastern District of Wisconsin', 'Western District of Wisconsin', 'District of Wyoming']

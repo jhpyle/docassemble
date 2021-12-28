@@ -14,6 +14,6 @@ class Fish(DAObject):
         self.common_name
         self.scales
         self.species
-    
+
     def __str__(self):
         return self.common_name

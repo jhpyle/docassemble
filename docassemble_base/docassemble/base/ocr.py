@@ -1,16 +1,18 @@
 import tempfile
 import subprocess
-from PIL import Image, ImageEnhance
-from docassemble.base.functions import get_config, get_language, ReturnValue, word
-from docassemble.base.core import DAFile, DAFileList, DAFileCollection, DAStaticFile
-import PyPDF2
-from docassemble.base.logger import logmessage
-from docassemble.base.error import DAError
-import pycountry
 import sys
 import os
 import shutil
 import re
+from PIL import Image, ImageEnhance
+import PyPDF2
+from docassemble.base.functions import get_config, get_language, ReturnValue, word
+from docassemble.base.core import DAFile, DAFileList, DAFileCollection, DAStaticFile
+from docassemble.base.logger import logmessage
+from docassemble.base.error import DAError
+from docassemble.base.pandoc import concatenate_files
+import docassemble.base.util
+import pycountry
 
 QPDF_PATH = 'qpdf'
 
@@ -21,7 +23,7 @@ def safe_pypdf_reader(filename):
         new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
         qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
         try:
-            result = subprocess.run(qpdf_subprocess_arguments, timeout=60).returncode
+            result = subprocess.run(qpdf_subprocess_arguments, timeout=60, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
         if result != 0:
@@ -36,22 +38,21 @@ def ocr_finalize(*pargs, **kwargs):
         filename = kwargs['filename']
         file_list = []
         for parg in pargs:
-            if type(parg) is list:
+            if isinstance(parg, list):
                 for item in parg:
-                    if type(item) is ReturnValue:
+                    if isinstance(item, ReturnValue):
                         if isinstance(item.value, dict):
                             if 'page' in item.value:
                                 file_list.append([item.value['indexno'], int(item.value['page']), item.value['doc']._pdf_page_path(int(item.value['page']))])
                             else:
                                 file_list.append([item.value['indexno'], 0, item.value['doc'].path()])
             else:
-                if type(parg) is ReturnValue:
+                if isinstance(parg, ReturnValue):
                     if isinstance(item.value, dict):
                         if 'page' in item.value:
                             file_list.append([parg.value['indexno'], int(parg.value['page']), parg.value['doc']._pdf_page_path(int(parg.value['page']))])
                         else:
                             file_list.append([parg.value['indexno'], 0, parg.value['doc'].path()])
-        from docassemble.base.pandoc import concatenate_files
         pdf_path = concatenate_files([y[2] for y in sorted(file_list, key=lambda x: x[0]*10000 + x[1])])
         target.initialize(filename=filename, extension='pdf', mimetype='application/pdf', reinitialize=True)
         shutil.copyfile(pdf_path, target.file_info['path'])
@@ -60,17 +61,17 @@ def ocr_finalize(*pargs, **kwargs):
         target.commit()
         target.retrieve()
         return (target, dafilelist)
-    output = dict()
+    output = {}
     #index = 0
     for parg in pargs:
         #sys.stderr.write("ocr_finalize: index " + str(index) + " is a " + str(type(parg)) + "\n")
-        if type(parg) is list:
+        if isinstance(parg, list):
             for item in parg:
                 #sys.stderr.write("ocr_finalize: sub item is a " + str(type(item)) + "\n")
-                if type(item) is ReturnValue and isinstance(item.value, dict):
+                if isinstance(item, ReturnValue) and isinstance(item.value, dict):
                     output[int(item.value['page'])] = item.value['text']
         else:
-            if type(parg) is ReturnValue and isinstance(item.value, dict):
+            if isinstance(parg, ReturnValue) and isinstance(parg.value, dict):
                 output[int(parg.value['page'])] = parg.value['text']
         #index += 1
     #sys.stderr.write("ocr_finalize: assembling output\n")
@@ -84,7 +85,7 @@ def get_ocr_language(language):
         language = get_language()
     ocr_langs = get_config("ocr languages")
     if ocr_langs is None:
-        ocr_langs = dict()
+        ocr_langs = {}
     if language in langs:
         lang = language
     else:
@@ -124,7 +125,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
     #sys.stderr.write("ocr_page_tasks running\n")
     if isinstance(image_file, set):
         return []
-    if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList) or isinstance(image_file, list)):
+    if not isinstance(image_file, (DAFile, DAFileList, list)):
         return word("(Not a DAFile, DAFileList, or list object)")
     pdf_to_ppm = get_config("pdftoppm")
     if pdf_to_ppm is None:
@@ -140,7 +141,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
     else:
         ocr_langs = get_config("ocr languages")
         if ocr_langs is None:
-            ocr_langs = dict()
+            ocr_langs = {}
         if language in ocr_langs and ocr_langs[language] in langs:
             lang = ocr_langs[language]
         else:
@@ -163,7 +164,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
                 sys.stderr.write("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang) + "; error was " + str(the_error) + "\n")
     if isinstance(image_file, DAFile):
         image_file = [image_file]
-    todo = list()
+    todo = []
     for doc in image_file:
         if hasattr(doc, 'extension'):
             if doc.extension not in ['pdf', 'png', 'jpg', 'gif', 'docx', 'doc', 'odt', 'rtf']:
@@ -173,7 +174,6 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
                 for i in range(safe_pypdf_reader(doc.path()).getNumPages()):
                     todo.append(dict(doc=doc, page=i+1, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code, user=user, pdf=pdf, preserve_color=preserve_color))
             elif doc.extension in ("docx", "doc", "odt", "rtf"):
-                import docassemble.base.util
                 doc_conv = docassemble.base.util.pdf_concatenate(doc)
                 for i in range(safe_pypdf_reader(doc_conv.path()).getNumPages()):
                     todo.append(dict(doc=doc_conv, page=i+1, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code, user=user, pdf=pdf, preserve_color=preserve_color))
@@ -190,16 +190,16 @@ def make_png_for_pdf(doc, prefix, resolution, pdf_to_ppm, page=None):
 def make_png_for_pdf_path(path, prefix, resolution, pdf_to_ppm, page=None):
     basefile = os.path.splitext(path)[0]
     test_path = basefile + prefix + '-in-progress'
-    with open(test_path, 'a'):
+    with open(test_path, 'a', encoding='utf-8'):
         os.utime(test_path, None)
     if page is None:
         try:
-            result = subprocess.run([str(pdf_to_ppm), '-r', str(resolution), '-png', str(path), str(basefile + prefix)], timeout=3600).returncode
+            result = subprocess.run([str(pdf_to_ppm), '-r', str(resolution), '-png', str(path), str(basefile + prefix)], timeout=3600, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
     else:
         try:
-            result = subprocess.run([str(pdf_to_ppm), '-f', str(page), '-l', str(page), '-r', str(resolution), '-png', str(path), str(basefile + prefix)], timeout=3600).returncode
+            result = subprocess.run([str(pdf_to_ppm), '-f', str(page), '-l', str(page), '-r', str(resolution), '-png', str(path), str(basefile + prefix)], timeout=3600, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
     if os.path.isfile(test_path):
@@ -245,10 +245,8 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
             output.append(doc.path())
             continue
         if doc.extension in ['png', 'jpg', 'gif']:
-            import docassemble.base.util
             doc = docassemble.base.util.pdf_concatenate(doc)
         elif doc.extension in ['docx', 'doc', 'odt', 'rtf']:
-            import docassemble.base.util
             output.append(docassemble.base.util.pdf_concatenate(doc).path())
             continue
         elif not doc._is_pdf():
@@ -261,7 +259,7 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
             tiff_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".tiff", delete=False)
             params = ['gs', '-q', '-dNOPAUSE', '-sDEVICE=' + device, '-r600', '-sOutputFile=' + tiff_file.name, path, '-c', 'quit']
             try:
-                result = subprocess.run(params, timeout=60*60).returncode
+                result = subprocess.run(params, timeout=60*60, check=False).returncode
             except subprocess.TimeoutExpired:
                 result = 1
                 logmessage("ocr_pdf: call to gs took too long")
@@ -269,7 +267,7 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
                 raise Exception("ocr_pdf: failed to run gs with command " + " ".join(params))
             params = ['tesseract', tiff_file.name, pdf_file.name, '-l', str(lang), '--psm', str(psm), '--dpi', '600', 'pdf']
             try:
-                result = subprocess.run(params, timeout=60*60).returncode
+                result = subprocess.run(params, timeout=60*60, check=False).returncode
             except subprocess.TimeoutExpired:
                 result = 1
                 logmessage("ocr_pdf: call to tesseract took too long")
@@ -278,7 +276,7 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
         else:
             params = ['tesseract', path, pdf_file.name, '-l', str(lang), '--psm', str(psm), '--dpi', '300', 'pdf']
             try:
-                result = subprocess.run(params, timeout=60*60).returncode
+                result = subprocess.run(params, timeout=60*60, check=False).returncode
             except subprocess.TimeoutExpired:
                 result = 1
                 logmessage("ocr_pdf: call to tesseract took too long")
@@ -293,7 +291,6 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
         shutil.copyfile(output[0], the_file.name)
         source_file = the_file.name
     else:
-        import docassemble.base.pandoc
         source_file = docassemble.base.pandoc.concatenate_files(output)
     if filename is None:
         filename = 'file.pdf'
@@ -337,7 +334,7 @@ def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resoluti
                 args.extend(['-H', str(H)])
             args.extend(['-singlefile', '-png', str(path), str(output_file.name)])
             try:
-                result = subprocess.run(args, timeout=120).returncode
+                result = subprocess.run(args, timeout=120, check=False).returncode
             except subprocess.TimeoutExpired:
                 result = 1
             if result > 0:

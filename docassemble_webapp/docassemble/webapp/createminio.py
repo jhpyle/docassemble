@@ -1,6 +1,6 @@
-from minio import Minio
 import sys
 import re
+from minio import Minio
 
 hostname = re.sub(r'^https?://', r'', sys.argv[1])
 

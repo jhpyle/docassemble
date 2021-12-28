@@ -1,15 +1,13 @@
 # Adapted from flask_mail
+import base64
+import sys
 import time
-import requests
-from requests.auth import HTTPBasicAuth
+from docassemble.base.functions import word
 from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail as SGMail, Attachment, FileContent, FileName, FileType, Disposition, ContentId, Email, To, ReplyTo
-from docassemble.base.functions import word
-import sys
-import base64
+from sendgrid.helpers.mail import Mail as SGMail, Attachment, FileContent, FileName, FileType, Disposition, Email, To, ReplyTo
 
-class Connection(object):
+class Connection:
     def __init__(self, mail):
         self.mail = mail
     def __enter__(self):
@@ -63,7 +61,7 @@ class Connection(object):
     def send_message(self, *args, **kwargs):
         self.send(Message(*args, **kwargs))
 
-class _MailMixin(object):
+class _MailMixin:
 
     @contextmanager
     def record_messages(self):
@@ -95,7 +93,7 @@ class _MailMixin(object):
             return Connection(app.extensions['mail'])
         except KeyError:
             raise RuntimeError("The curent application was not configured with Flask-Mail")
-        
+
 class _Mail(_MailMixin):
     def __init__(self, api_key,
                  default_sender, debug, suppress,

@@ -1,21 +1,28 @@
-import boto3
-import time
 import os
-from botocore.errorfactory import ClientError
 import mimetypes
-import sys
 import datetime
 import pytz
+from botocore.errorfactory import ClientError
+import boto3
+
 epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
 
-class s3object(object):
+class s3object:
     def __init__(self, s3_config):
         if 'access key id' in s3_config and s3_config['access key id'] is not None:
-            self.conn = boto3.resource('s3', region_name=s3_config.get('region', None), aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'], endpoint_url=s3_config.get('endpoint url', None))
-            self.client = boto3.client('s3', region_name=s3_config.get('region', None), aws_access_key_id=s3_config['access key id'], aws_secret_access_key=s3_config['secret access key'], endpoint_url=s3_config.get('endpoint url', None))
+            self.conn = boto3.resource('s3', region_name=s3_config.get('region', None),
+                                       aws_access_key_id=s3_config['access key id'],
+                                       aws_secret_access_key=s3_config['secret access key'],
+                                       endpoint_url=s3_config.get('endpoint url', None))
+            self.client = boto3.client('s3', region_name=s3_config.get('region', None),
+                                       aws_access_key_id=s3_config['access key id'],
+                                       aws_secret_access_key=s3_config['secret access key'],
+                                       endpoint_url=s3_config.get('endpoint url', None))
         else:
-            self.conn = boto3.resource('s3', region_name=s3_config.get('region', None), endpoint_url=s3_config.get('endpoint url', None))
-            self.client = boto3.client('s3', region_name=s3_config.get('region', None), endpoint_url=s3_config.get('endpoint url', None))
+            self.conn = boto3.resource('s3', region_name=s3_config.get('region', None),
+                                       endpoint_url=s3_config.get('endpoint url', None))
+            self.client = boto3.client('s3', region_name=s3_config.get('region', None),
+                                       endpoint_url=s3_config.get('endpoint url', None))
         self.bucket = self.conn.Bucket(s3_config['bucket'])
         self.bucket_name = s3_config['bucket']
     def get_key(self, key_name):
@@ -26,7 +33,7 @@ class s3object(object):
                 return s3key(self, self.conn.Object(self.bucket_name, key.key))
         return None
     def list_keys(self, prefix):
-        output = list()
+        output = []
         for obj in self.bucket.objects.filter(Prefix=prefix):
             new_key = s3key(self, obj)
             new_key.size = obj.size
@@ -34,7 +41,7 @@ class s3object(object):
             output.append(new_key)
         return output
 
-class s3key(object):
+class s3key:
     def __init__(self, s3_object, key_obj):
         self.s3_object = s3_object
         self.key_obj = key_obj
@@ -55,7 +62,7 @@ class s3key(object):
     def exists(self):
         try:
             self.s3_object.client.head_object(Bucket=self.s3_object.bucket_name, Key=self.name)
-        except ClientError as e:
+        except ClientError:
             return False
         return True
     def delete(self):
@@ -78,7 +85,7 @@ class s3key(object):
         else:
             self.key_obj.upload_file(filename)
         secs = (self.key_obj.last_modified - epoch).total_seconds()
-        os.utime(filename, (secs, secs))        
+        os.utime(filename, (secs, secs))
     def set_contents_from_string(self, text):
         if hasattr(self, 'content_type') and self.content_type is not None:
             self.key_obj.put(Body=bytes(text, encoding='utf-8'), ContentType=self.content_type)

@@ -1,13 +1,12 @@
+import logging
 import json
-import apiclient
 from google.oauth2 import service_account
 import google.cloud.storage
 from docassemble.base.util import get_config
 from oauth2client.service_account import ServiceAccountCredentials
-import logging
+
 logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
-import sys
-credential_json = get_config('google', dict()).get('service account credentials', None)
+credential_json = get_config('google', {}).get('service account credentials', None)
 
 if credential_json is None:
     credential_info = None

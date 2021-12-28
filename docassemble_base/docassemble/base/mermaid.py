@@ -10,7 +10,9 @@ from docassemble.base.util import DAFile
 
 __all__ = ['mmdc']
 
-def mmdc(input_text, file_format='svg', flags=dict()):
+def mmdc(input_text, file_format='svg', flags=None):
+    if flags is None:
+        flags = {}
     if not isinstance(flags, dict):
         raise Exception("mmdc: flags not a dictionary")
     if not isinstance(file_format, str) or re.search(r'[^a-z]', file_format) or len(file_format) == 0:
@@ -41,4 +43,3 @@ def mmdc(input_text, file_format='svg', flags=dict()):
     obj.copy_into(output_file.name)
     obj.commit()
     return obj
-

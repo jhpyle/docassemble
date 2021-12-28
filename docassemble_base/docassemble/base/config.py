@@ -1,29 +1,34 @@
-import yaml
 import os
 import re
 import sys
-import httplib2
 import socket
-import pkg_resources
 import threading
 import base64
 import json
-from docassemble.base.generate_key import random_string
 from distutils.version import LooseVersion
+import yaml
+import httplib2
+import pkg_resources
+import boto3
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+import docassemble.webapp.amazon
+import docassemble.webapp.microsoft
+from docassemble.base.generate_key import random_string
 
 dbtableprefix = None
-daconfig = dict()
-s3_config = dict()
+daconfig = {}
+s3_config = {}
 S3_ENABLED = False
-gc_config = dict()
+gc_config = {}
 GC_ENABLED = False
-azure_config = dict()
+azure_config = {}
 AZURE_ENABLED = False
 hostname = None
 loaded = False
 in_celery = False
-errors = list()
-env_messages = list()
+errors = []
+env_messages = []
 
 def env_true_false(var):
     value = str(os.getenv(var, 'false')).lower().strip()
@@ -59,7 +64,7 @@ def override_config(the_config, messages, key, var, pre_key=None):
         the_config[key] = value
     else:
         if pre_key not in the_config:
-            the_config[pre_key] = dict()
+            the_config[pre_key] = {}
         if key in the_config[pre_key] and str(the_config[pre_key][key]) != str(value):
             messages.append("The value of configuration key %s in %s has been replaced with %s based on the value of environment variable %s" % (key, pre_key, value, var))
         elif key not in the_config[pre_key]:
@@ -85,8 +90,8 @@ def delete_environment():
             del os.environ[var]
 
 this_thread = threading.local()
-this_thread.botoclient = dict()
-this_thread.azureclient = dict()
+this_thread.botoclient = {}
+this_thread.azureclient = {}
 
 def aws_get_region(arn):
     m = re.search(r'arn:aws:secretsmanager:([^:]+):', arn)
@@ -97,7 +102,6 @@ def aws_get_region(arn):
 def aws_get_secret(data):
     region = aws_get_region(data)
     if region not in this_thread.botoclient:
-        import boto3
         if env_exists('AWSACCESSKEY') and env_exists('AWSSECRETACCESSKEY'):
             sys.stderr.write("Using access keys\n")
             session = boto3.session.Session(aws_access_key_id=os.environ['AWSACCESSKEY'], aws_secret_access_key=os.environ['AWSSECRETACCESSKEY'])
@@ -167,8 +171,6 @@ def azure_get_secret(data):
     if vault_name is None or secret_name is None:
         return data
     if vault_name not in this_thread.azureclient:
-        from azure.identity import DefaultAzureCredential
-        from azure.keyvault.secrets import SecretClient
         try:
             credential = DefaultAzureCredential()
             this_thread.azureclient[vault_name] = SecretClient(vault_url="https://" + vault_name + ".vault.azure.net/", credential=credential)
@@ -209,18 +211,17 @@ def recursive_fetch_cloud(data):
         elif data.startswith('@Microsoft.KeyVault('):
             data = azure_get_secret(data.strip())
         return data
-    elif isinstance(data, (int, float, bool)):
+    if isinstance(data, (int, float, bool)):
         return data
-    elif isinstance(data, list):
+    if isinstance(data, list):
         return [recursive_fetch_cloud(y) for y in data]
-    elif isinstance(data, dict):
+    if isinstance(data, dict):
         return {k: recursive_fetch_cloud(v) for k, v in data.items()}
-    elif isinstance(data, set):
+    if isinstance(data, set):
         return {recursive_fetch_cloud(y) for y in data}
-    elif isinstance(data, tuple):
-        return tuple([recursive_fetch_cloud(y) for y in data])
-    else:
-        return data
+    if isinstance(data, tuple):
+        return tuple(recursive_fetch_cloud(y) for y in data)
+    return data
 
 def load(**kwargs):
     global daconfig
@@ -251,7 +252,7 @@ def load(**kwargs):
         if not os.access(os.path.dirname(filename), os.W_OK):
             sys.stderr.write("Configuration file " + str(filename) + " does not exist and cannot be created\n")
             sys.exit(1)
-        with open(filename, 'w') as config_file:
+        with open(filename, 'w', encoding='utf-8') as config_file:
             config_file.write(default_config())
             sys.stderr.write("Wrote configuration file to " + str(filename) + "\n")
     if not os.path.isfile(filename):
@@ -297,7 +298,7 @@ def load(**kwargs):
     else:
         daconfig['has_celery_single_queue'] = False
     if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
-        null_messages = list()
+        null_messages = []
         for env_var, key in (('S3ENABLE', 'enable'), ('S3ACCESSKEY', 'access key id'), ('S3SECRETACCESSKEY', 'secret access key'), ('S3BUCKET', 'bucket'), ('S3REGION', 'region'), ('S3ENDPOINTURL', 'endpoint url')):
             if env_exists(env_var):
                 override_config(daconfig, null_messages, key, env_var, pre_key='s3')
@@ -340,10 +341,8 @@ def load(**kwargs):
     else:
         hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
     if S3_ENABLED:
-        import docassemble.webapp.amazon
         cloud = docassemble.webapp.amazon.s3object(s3_config)
     elif AZURE_ENABLED:
-        import docassemble.webapp.microsoft
         cloud = docassemble.webapp.microsoft.azureobject(azure_config)
         if ('key vault name' in azure_config and azure_config['key vault name'] is not None and 'managed identity' in azure_config and azure_config['managed identity'] is not None):
             daconfig = cloud.load_with_secrets(daconfig)
@@ -369,7 +368,7 @@ def load(**kwargs):
             del daconfig['maximum content length']
     if 'maximum content length' not in daconfig:
         daconfig['maximum content length'] = 16 * 1024 * 1024
-    new_button_colors = dict()
+    new_button_colors = {}
     if 'button colors' in daconfig and isinstance(daconfig['button colors'], dict):
         for button_type, color in daconfig['button colors'].items():
             if isinstance(button_type, str) and isinstance(color, str):
@@ -377,13 +376,13 @@ def load(**kwargs):
     daconfig['button colors'] = new_button_colors
     del new_button_colors
     if 'social' not in daconfig or not isinstance(daconfig['social'], dict):
-        daconfig['social'] = dict()
+        daconfig['social'] = {}
     if 'twitter' not in daconfig['social'] or not isinstance(daconfig['social']['twitter'], dict):
-        daconfig['social']['twitter'] = dict()
+        daconfig['social']['twitter'] = {}
     if 'og' not in daconfig['social'] or not isinstance(daconfig['social']['og'], dict):
-        daconfig['social']['og'] = dict()
+        daconfig['social']['og'] = {}
     if 'fb' not in daconfig['social'] or not isinstance(daconfig['social']['fb'], dict):
-        daconfig['social']['fb'] = dict()
+        daconfig['social']['fb'] = {}
     for key in list(daconfig['social'].keys()):
         if key in ('og', 'twitter', 'fb'):
             continue
@@ -407,7 +406,7 @@ def load(**kwargs):
         del daconfig['social']['og']['url']
     if 'administrative interviews' in daconfig:
         if isinstance(daconfig['administrative interviews'], list):
-            new_admin_interviews = list()
+            new_admin_interviews = []
             for item in daconfig['administrative interviews']:
                 if isinstance(item, str):
                     new_item = cleanup_filename(item)
@@ -537,10 +536,10 @@ def load(**kwargs):
         elif daconfig['db']['prefix'].startswith('oracle'):
             daconfig['db']['port'] = '1521'
     if 'ocr languages' not in daconfig:
-        daconfig['ocr languages'] = dict()
+        daconfig['ocr languages'] = {}
     if not isinstance(daconfig['ocr languages'], dict):
         config_error('ocr languages must be a dict')
-        daconfig['ocr languages'] = dict()
+        daconfig['ocr languages'] = {}
     if 'zh' not in daconfig['ocr languages']:
         daconfig['ocr languages']['zh'] = 'chi-tra'
     if 'attempt limit' not in daconfig:
@@ -586,7 +585,7 @@ def load(**kwargs):
             daconfig['two factor authentication'] = dict(enable=daconfig['two factor authentication'])
         if not isinstance(daconfig['two factor authentication'], dict):
             config_error('two factor authentication must be boolean or a dict')
-            daconfig['two factor authentication'] = dict()
+            daconfig['two factor authentication'] = {}
     else:
         daconfig['two factor authentication'] = dict(enable=False)
     if 'allowed for' in daconfig['two factor authentication']:
@@ -638,7 +637,7 @@ def load(**kwargs):
     try:
         assert isinstance(daconfig['jinja data'], dict)
     except:
-        daconfig['jinja data'] = dict()
+        daconfig['jinja data'] = {}
     if daconfig.get('default icons', None) == 'font awesome':
         daconfig['use font awesome'] = True
     if 'websockets port' in daconfig and daconfig['websockets port']:
@@ -648,14 +647,14 @@ def load(**kwargs):
             config_error("websockets port must be an integer")
             del daconfig['websockets port']
     if 'mail' not in daconfig:
-        daconfig['mail'] = dict()
+        daconfig['mail'] = {}
     if 'dispatch' not in daconfig:
-        daconfig['dispatch'] = dict()
+        daconfig['dispatch'] = {}
     if not isinstance(daconfig['dispatch'], dict):
         config_error("dispatch must be structured as a dictionary")
-        daconfig['dispatch'] = dict()
+        daconfig['dispatch'] = {}
     if len(daconfig['dispatch']):
-        new_dispatch = dict()
+        new_dispatch = {}
         for shortcut, filename in daconfig['dispatch'].items():
             if isinstance(shortcut, str) and isinstance(filename, str):
                 new_filename = cleanup_filename(filename)
@@ -663,7 +662,7 @@ def load(**kwargs):
                     new_dispatch[shortcut] = new_filename
         daconfig['dispatch'] = new_dispatch
     if 'interview delete days by filename' in daconfig and isinstance(daconfig['interview delete days by filename'], dict):
-        new_delete_days = dict()
+        new_delete_days = {}
         for filename, days in daconfig['interview delete days by filename'].items():
             new_filename = cleanup_filename(filename)
             if new_filename:
@@ -678,10 +677,10 @@ def load(**kwargs):
             else:
                 del daconfig[key]
     if 'ldap login' not in daconfig:
-        daconfig['ldap login'] = dict()
+        daconfig['ldap login'] = {}
     if not isinstance(daconfig['ldap login'], dict):
         config_error("ldap login must be structured as a dictionary")
-        daconfig['ldap login'] = dict()
+        daconfig['ldap login'] = {}
     if daconfig.get('auto resume interview', None) is not None:
         daconfig['show interviews link'] = False
     if 'use minio' not in daconfig:
@@ -691,7 +690,7 @@ def load(**kwargs):
     if 'use cloud urls' not in daconfig:
         daconfig['use cloud urls'] = False
     else:
-        daconfig['use cloud urls'] = True if daconfig['use cloud urls'] else False
+        daconfig['use cloud urls'] = bool(daconfig['use cloud urls'])
     if 'use https' not in daconfig or not daconfig['use https']:
         daconfig['use https'] = False
     if 'use lets encrypt' not in daconfig or not daconfig['use lets encrypt']:
@@ -709,7 +708,7 @@ def load(**kwargs):
     if 'table css class' not in daconfig or not isinstance(daconfig['table css class'], str):
         daconfig['table css class'] = 'table table-striped'
     if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
-        messages = list()
+        messages = []
         for env_var, key in (('DBPREFIX', 'prefix'), ('DBNAME', 'name'), ('DBUSER', 'user'), ('DBPASSWORD', 'password'), ('DBHOST', 'host'), ('DBPORT', 'port'), ('DBTABLEPREFIX', 'table prefix'), ('DBBACKUP', 'backup')):
             if env_exists(env_var):
                 override_config(daconfig, messages, key, env_var, pre_key='db')
@@ -783,7 +782,6 @@ def load(**kwargs):
         if env_exists('PORT'):
             override_config(daconfig, messages, 'http port', 'PORT')
         env_messages = messages
-    return
 
 def default_config():
     config = """\

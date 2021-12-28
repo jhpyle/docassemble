@@ -19,5 +19,3 @@ class GoogleAuth(DAOAuth):
                                     range=SAMPLE_RANGE_NAME).execute()
         values = result.get('values', [])
         return values
-
-        

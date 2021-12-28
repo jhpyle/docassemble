@@ -1,7 +1,9 @@
 from docassemble.base.logger import logmessage
+from geopy.geocoders import GoogleV3
+from geopy.geocoders import AzureMaps
 
 class GeoCoder:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *pargs, **kwargs):
         self.server = kwargs['server']
     def geocode(self, *pargs, **kwargs):
         self.data = self.geocoder.geocode(*pargs, **kwargs)
@@ -16,7 +18,6 @@ class GoogleV3GeoCoder(GeoCoder):
             return False
         return True
     def initialize(self):
-        from geopy.geocoders import GoogleV3
         self.geocoder = GoogleV3(api_key=self.server.daconfig['google']['api key'])
     def populate_address(self, address):
         if 'formatted_address' in self.data.raw:
@@ -58,8 +59,8 @@ class GoogleV3GeoCoder(GeoCoder):
                     for geo_type, addr_type in geo_types.items():
                         if geo_type in component['types'] and ((not hasattr(address, addr_type[0])) or getattr(address, addr_type[0]) == '' or getattr(address, addr_type[0]) is None):
                             setattr(address, addr_type[0], component[addr_type[1]])
-                    if (not hasattr(address, geo_type)) or getattr(address, geo_type) == '' or getattr(address, geo_type) is None:
-                        setattr(address, geo_type, component['long_name'])
+                        if (not hasattr(address, geo_type)) or getattr(address, geo_type) == '' or getattr(address, geo_type) is None:
+                            setattr(address, geo_type, component['long_name'])
             geo_types = {
                 'administrative_area_level_1': 'state',
                 'administrative_area_level_2': 'county',
@@ -127,7 +128,6 @@ class AzureMapsGeoCoder(GeoCoder):
             return False
         return True
     def initialize(self):
-        from geopy.geocoders import AzureMaps
         self.geocoder = AzureMaps(self.server.daconfig['azure maps']['primary key'])
     def populate_address(self, address):
         if not 'address' in self.data.raw:

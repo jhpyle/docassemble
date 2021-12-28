@@ -1,27 +1,28 @@
-import docassemble.base.config
-docassemble.base.config.load()
-import docassemble.webapp.db_object
-db = docassemble.webapp.db_object.init_sqlalchemy()
-from docassemble.webapp.files import SavedFile
-from docassemble.webapp.file_number import get_new_file_number
-from docassemble.webapp.core.models import Shortener, Email, EmailAttachment
-from docassemble.webapp.users.models import UserModel
-import docassemble.webapp.worker
-import sys
+import datetime
 import email
 import json
+import mimetypes
 import re
+import sys
 from email.utils import parseaddr, parsedate, getaddresses
 from time import mktime
-import datetime
-import mimetypes
 from sqlalchemy import select
+import docassemble.base.config
+docassemble.base.config.load()
+import docassemble.webapp.worker
+import docassemble.webapp.db_object
+from docassemble.webapp.core.models import Shortener, Email, EmailAttachment
+from docassemble.webapp.file_number import get_new_file_number
+from docassemble.webapp.files import SavedFile
+from docassemble.webapp.users.models import UserModel
+
+db = docassemble.webapp.db_object.init_sqlalchemy()
 
 def main():
-    fp = open("/tmp/mail.log", "a")
+    fp = open("/tmp/mail.log", "a", encoding="utf-8")
     #fp.write("The file is " + sys.argv[1] + "\n")
     try:
-        with open(sys.argv[1], 'r') as email_fp:
+        with open(sys.argv[1], 'r', encoding="utf-8") as email_fp:
             msg = email.message_from_file(email_fp)
     except Exception as errMess:
         fp.write("Failed to read e-mail message: " + str(errMess) + "\n")
@@ -35,16 +36,16 @@ def main():
     fp.write("Message to " + str(addr_to) + "\n")
     #fp.write("From was " + str(addr_from) + "\n")
     #fp.write("Subject was " + str(subject) + "\n")
-    to_recipients = list()
+    to_recipients = []
     for recipient in getaddresses(msg.get_all('to', []) + msg.get_all('resent-to', [])):
         to_recipients.append(dict(name=recipient[0], address=recipient[1]))
-    cc_recipients = list()
+    cc_recipients = []
     for recipient in getaddresses(msg.get_all('cc', []) + msg.get_all('resent-cc', [])):
         cc_recipients.append(dict(name=recipient[0], address=recipient[1]))
-    recipients = list()
+    recipients = []
     for recipient in getaddresses(msg.get_all('to', []) + msg.get_all('cc', []) + msg.get_all('resent-to', []) + msg.get_all('resent-cc', [])):
         recipients.append(dict(name=recipient[0], address=recipient[1]))
-    if addr_to is None and len(recipients):
+    if addr_to is None and len(recipients) > 0:
         addr_to = recipients[0]['address']
     #fp.write("recipients are " + str(recipients) + "\n")
     if addr_to is not None:
@@ -86,17 +87,17 @@ def main():
     else:
         msg_date = msg_current_time
         #fp.write("msg_date set to current time\n")
-    headers = list()
+    headers = []
     for item in msg.items():
         headers.append([item[0], item[1]])
     #fp.write("headers:\n" + json.dumps(headers) + "\n")
-    
+
     email_record = Email(short=short_code, to_addr=json.dumps(to_recipients), cc_addr=json.dumps(cc_recipients), from_addr=json.dumps(addr_from), reply_to_addr=json.dumps(addr_reply_to), return_path_addr=json.dumps(addr_return_path), subject=subject, datetime_message=msg_date, datetime_received=msg_current_time)
     db.session.add(email_record)
     db.session.commit()
 
     save_attachment(record.uid, record.filename, 'headers.json', email_record.id, 0, 'application/json', 'json', json.dumps(headers))
-    
+
     counter = 1
     for part in msg.walk():
         if part.get_content_maintype() == 'multipart':
@@ -118,30 +119,29 @@ def main():
         real_filename = re.sub(r'[0-9][0-9][0-9]-', r'', filename)
         real_ext = re.sub(r'^\.', r'', ext)
         save_attachment(record.uid, record.filename, real_filename, email_record.id, counter, part.get_content_type(), real_ext, part.get_payload(decode=True))
-        
         counter += 1
     fp.close()
     user = None
     if record.user_id is not None:
         user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=record.user_id)).scalar()
     if user is None:
-        user_info = dict(email=None, the_user_id='t' + str(record.temp_user_id), theid=record.temp_user_id, roles=list())
+        user_info = dict(email=None, the_user_id='t' + str(record.temp_user_id), theid=record.temp_user_id, roles=[])
     else:
         role_list = [role.name for role in user.roles]
         if len(role_list) == 0:
             role_list = ['user']
         user_info = dict(email=user.email, roles=role_list, the_user_id=user.id, theid=user.id, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization)
-    result = docassemble.webapp.worker.background_action.delay(record.filename, user_info, record.uid, None, None, None, dict(action='incoming_email', arguments=dict(id=email_record.id)), extra=None)
+    docassemble.webapp.worker.background_action.delay(record.filename, user_info, record.uid, None, None, None, dict(action='incoming_email', arguments=dict(id=email_record.id)), extra=None)
 
 def save_attachment(uid, yaml_filename, filename, email_id, index, content_type, extension, content):
     att_file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_filename)
-    attachment_record = EmailAttachment(email_id=email_id, index=0, content_type=content_type, extension=extension, upload=att_file_number)
+    attachment_record = EmailAttachment(email_id=email_id, index=index, content_type=content_type, extension=extension, upload=att_file_number)
     db.session.add(attachment_record)
     db.session.commit()
     saved_file_attachment = SavedFile(att_file_number, extension=extension)
     saved_file_attachment.write_content(content)
     saved_file_attachment.finalize()
-    
+
 def secure_filename(filename):
     filename = re.sub(r'[^A-Za-z0-9\_\-\. ]+', r'_', filename)
     return filename.strip('_')

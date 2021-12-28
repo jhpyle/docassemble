@@ -7,7 +7,7 @@ __all__ = ['get_folder_names', 'get_files_in_folder', 'write_file_to_folder', 'd
 
 def get_folder_names():
     service = api.drive_service()
-    items = list()
+    items = []
     while True:
         response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and sharedWithMe").execute()
         for the_file in response.get('files', []):
@@ -41,7 +41,7 @@ def get_files_in_folder(folder_name):
     if folder_id is None:
         raise Exception("The folder was not found")
     service = api.drive_service()
-    items = list()
+    items = []
     while True:
         response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType!='application/vnd.google-apps.folder' and trashed=false and '" + str(folder_id) + "' in parents").execute()
         for the_file in response.get('files', []):
@@ -79,5 +79,3 @@ def download_file(filename, folder_name):
             status, done = downloader.next_chunk()
     the_file.commit()
     return the_file
-
-    

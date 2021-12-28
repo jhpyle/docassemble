@@ -1,24 +1,24 @@
 import os
 import os.path
 import subprocess
-import docassemble.base.filter
-import docassemble.base.functions
 import tempfile
 import filecmp
 import shutil
-import sys
+#import sys
 import re
 import time
 import random
+import mimetypes
+import urllib.request
+import docassemble.base.filter
+import docassemble.base.functions
 from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 from docassemble.base.pdfa import pdf_to_pdfa
 from docassemble.base.pdftk import pdf_encrypt, PDFTK_PATH, replicate_js_and_calculations
-import mimetypes
+from docassemble.base.error import DAError
 import convertapi
 import requests
-import urllib.request
-from docassemble.base.error import DAError
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
@@ -117,7 +117,7 @@ def initialize_pandoc():
     else:
         PANDOC_OLD = False
         try:
-            msg = subprocess.check_output(['lualatex', '--help'], stderr=subprocess.STDOUT)
+            subprocess.check_output(['lualatex', '--help'], stderr=subprocess.STDOUT)
             assert os.path.isfile('/usr/share/texlive/texmf-dist/tex/luatex/luatexbase/luatexbase.sty')
             lualatex_supported = True
         except:
@@ -145,7 +145,7 @@ if daconfig.get('libreoffice', 'libreoffice') is not None:
 #  - \newenvironment{allcaps}{\startallcaps}{}
 #  - \def\startallcaps#1\end{\uppercase{#1}\end}
 
-class MyPandoc(object):
+class MyPandoc:
     def __init__(self, **kwargs):
         initialize_pandoc()
         if 'pdfa' in kwargs and kwargs['pdfa']:
@@ -161,17 +161,17 @@ class MyPandoc(object):
         self.output_filename = None
         self.template_file = None
         self.reference_file = None
-        self.metadata = dict()
-        self.initial_yaml = list()
-        self.additional_yaml = list()
+        self.metadata = {}
+        self.initial_yaml = []
+        self.additional_yaml = []
         self.arguments = []
     def convert_to_file(self, question):
-        metadata_as_dict = dict()
-        if type(self.metadata) is dict:
+        metadata_as_dict = {}
+        if isinstance(self.metadata, dict):
             metadata_as_dict = self.metadata
-        elif type(self.metadata) is list:
+        elif isinstance(self.metadata, list):
             for data in self.metadata:
-                if type(data) is dict:
+                if isinstance(data, dict):
                     for key in data:
                         metadata_as_dict[key] = data[key]
         if self.output_format == 'rtf to docx':
@@ -182,16 +182,16 @@ class MyPandoc(object):
             self.template_file = docassemble.base.functions.standard_template_filename('Legal-Template.rtf')
         if self.output_format == 'docx' and self.reference_file is None:
             self.reference_file = docassemble.base.functions.standard_template_filename('Legal-Template.docx')
-        if (self.output_format == 'pdf' or self.output_format == 'tex') and self.template_file is None:
+        if self.output_format in ('pdf', 'tex') and self.template_file is None:
             self.template_file = docassemble.base.functions.standard_template_filename('Legal-Template.tex')
-        yaml_to_use = list()
+        yaml_to_use = []
         if self.output_format in ('rtf', 'rtf to docx'):
             #logmessage("pre input content is " + str(self.input_content))
-            self.input_content = docassemble.base.filter.rtf_prefilter(self.input_content, metadata=metadata_as_dict)
+            self.input_content = docassemble.base.filter.rtf_prefilter(self.input_content)
             #logmessage("post input content is " + str(self.input_content))
         if self.output_format == 'docx':
             self.input_content = docassemble.base.filter.docx_filter(self.input_content, metadata=metadata_as_dict, question=question)
-        if self.output_format == 'pdf' or self.output_format == 'tex':
+        if self.output_format in ('pdf', 'tex'):
             if len(self.initial_yaml) == 0:
                 standard_file = docassemble.base.functions.standard_template_filename('Legal-Template.yml')
                 if standard_file is not None:
@@ -212,7 +212,6 @@ class MyPandoc(object):
         temp_file.close()
         temp_outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix="." + str(self.output_extension), delete=False)
         temp_outfile.close()
-        current_temp_dir = 'epsconv'
         latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'conv')
         if not os.path.isdir(latex_conversion_directory):
             os.makedirs(latex_conversion_directory)
@@ -268,8 +267,7 @@ class MyPandoc(object):
             if self.output_format == 'pdf' and self.password:
                 pdf_encrypt(self.output_filename, self.password)
         else:
-            raise IOError("Failed creating file: %s" % output_filename)
-        return
+            raise IOError("Failed creating file: %s" % temp_outfile.name)
     def convert(self, question):
         latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'conv')
         if not os.path.isdir(latex_conversion_directory):
@@ -305,7 +303,6 @@ class MyPandoc(object):
             #with open('/tmp/moocow2', 'wb') as fp:
             #    fp.write(self.output_content)
             self.output_content = self.output_content.decode()
-        return
 
 def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_refs=False, tagged=False, filename=None, retry=True):
     if filename is None:
@@ -381,7 +378,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             docassemble.base.functions.server.applock('obtain', 'libreoffice')
             logmessage("Obtained libreoffice lock after {:.4f} seconds.".format(time.time() - start_time))
             try:
-                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120).returncode
+                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
             except subprocess.TimeoutExpired:
                 logmessage("word_to_pdf: libreoffice took too long")
                 result = 1
@@ -434,7 +431,7 @@ def rtf_to_docx(in_file, out_file):
     while tries < 5:
         docassemble.base.functions.server.applock('obtain', 'libreoffice')
         try:
-            result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120).returncode
+            result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
         except subprocess.TimeoutExpired:
             logmessage("rtf_to_docx: call to LibreOffice took too long")
             result = 1
@@ -461,17 +458,13 @@ def convert_file(in_file, out_file, input_extension, output_extension):
     from_file = os.path.join(tempdir, "file." + input_extension)
     to_file = os.path.join(tempdir, "file." + output_extension)
     shutil.copyfile(in_file, from_file)
-    if output_extension == 'md':
-        output_format = 'markdown'
-    else:
-        output_format = 'md'
     subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', output_extension, from_file, '--outdir', tempdir]
     #logmessage("convert_to: creating " + to_file + " by doing " + " ".join(subprocess_arguments))
     tries = 0
     while tries < 5:
         docassemble.base.functions.server.applock('obtain', 'libreoffice')
         try:
-            result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120).returncode
+            result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
         except subprocess.TimeoutExpired:
             logmessage("convert_file: libreoffice took too long")
             result = 1
@@ -505,7 +498,7 @@ def word_to_markdown(in_file, in_format):
         while tries < 5:
             docassemble.base.functions.server.applock('obtain', 'libreoffice')
             try:
-                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120).returncode
+                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
             except subprocess.TimeoutExpired:
                 logmessage("word_to_markdown: libreoffice took too long")
                 result = 1
@@ -534,7 +527,7 @@ def word_to_markdown(in_file, in_format):
             in_format_to_use = "markdown+smart"
     subprocess_arguments.extend(['--from=%s' % str(in_format_to_use), '--to=markdown_phpextra', str(in_file_to_use), '-o', str(temp_file.name)])
     try:
-        result = subprocess.run(subprocess_arguments, timeout=60).returncode
+        result = subprocess.run(subprocess_arguments, timeout=60, check=False).returncode
     except subprocess.TimeoutExpired:
         result = 1
     if tempdir is not None:
@@ -547,13 +540,12 @@ def word_to_markdown(in_file, in_format):
         with open(final_file.name, "w", encoding='utf-8') as the_file:
             the_file.write(file_contents)
         return final_file
-    else:
-        return None
+    return None
 
 def get_rtf_styles(filename):
     file_contents = ''
-    styles = dict()
-    with open(filename) as the_file:
+    styles = {}
+    with open(filename, 'r', encoding='utf-8') as the_file:
         file_contents = the_file.read()
         for (style_string, style_number, heading_number) in re.findall(style_find, file_contents):
             style_string = re.sub(r'\s+', ' ', style_string, flags=re.DOTALL)
@@ -568,7 +560,7 @@ def update_references(filename):
     while tries < 5:
         docassemble.base.functions.server.applock('obtain', 'libreoffice')
         try:
-            result = subprocess.run(subprocess_arguments, cwd=tempfile.gettempdir(), timeout=120).returncode
+            result = subprocess.run(subprocess_arguments, cwd=tempfile.gettempdir(), timeout=120, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
             tries = 5
@@ -605,14 +597,14 @@ def initialize_libreoffice():
 def concatenate_files(path_list, pdfa=False, password=None):
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH]
-    new_path_list = list()
+    new_path_list = []
     for path in path_list:
         mimetype, encoding = mimetypes.guess_type(path)
         if mimetype.startswith('image'):
             new_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
             args = [daconfig.get('imagemagick', 'convert'), path, new_pdf_file.name]
             try:
-                result = subprocess.run(args, timeout=60).returncode
+                result = subprocess.run(args, timeout=60, check=False).returncode
             except subprocess.TimeoutExpired:
                 logmessage("concatenate_files: convert took too long")
                 result = 1
@@ -640,7 +632,7 @@ def concatenate_files(path_list, pdfa=False, password=None):
     subprocess_arguments.extend(['cat', 'output', pdf_file.name])
     #logmessage("Arguments are " + str(subprocess_arguments))
     try:
-        result = subprocess.run(subprocess_arguments, timeout=60).returncode
+        result = subprocess.run(subprocess_arguments, timeout=60, check=False).returncode
     except subprocess.TimeoutExpired:
         result = 1
         logmessage("concatenate_files: call to cat took too long")

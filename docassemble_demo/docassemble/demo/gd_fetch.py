@@ -11,4 +11,3 @@ def fetch_file(file_id, path):
         done = False
         while done is False:
             status, done = downloader.next_chunk()
-

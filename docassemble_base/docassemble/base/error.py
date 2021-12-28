@@ -12,6 +12,7 @@ class DAError(Exception):
     def __init__(self, value, code=501):
         self.value = value
         self.error_code = code
+        super().__init__(value)
     def __str__(self):
         return str(self.value)
 
@@ -22,7 +23,7 @@ class DAValidationError(Exception):
     """This is an Exception object that is used when raising an exception inside input validation code."""
     def __init__(self, *pargs, field=None):
         self.field = field
-        return super().__init__(*pargs)
+        super().__init__(*pargs)
 
 class CodeExecute(Exception):
     def __init__(self, compute, question):
@@ -31,6 +32,7 @@ class CodeExecute(Exception):
         else:
             self.compute = compute
         self.question = question
+        super().__init__()
 
 class ForcedReRun(Exception):
     pass
@@ -50,24 +52,21 @@ def invalid_variable_name(varname):
 
 class ForcedNameError(NameError):
     def __init__(self, *pargs, **kwargs):
-        the_args = [x for x in pargs]
+        the_args = list(pargs)
         if len(the_args) == 0:
             raise DAError("ForcedNameError must have at least one argument")
-        the_context = dict()
-        the_user_dict = kwargs.get('user_dict', dict())
+        the_context = {}
+        the_user_dict = kwargs.get('user_dict', {})
         for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
             if var_name in the_user_dict:
                 the_context[var_name] = the_user_dict[var_name]
-        if isinstance(the_args[0], str):
-            first_is_plain = True
-        else:
-            first_is_plain = False
-        self.next_action = list()
-        while len(the_args):
+        first_is_plain = bool(isinstance(the_args[0], str))
+        self.next_action = []
+        while len(the_args) > 0:
             arg = the_args.pop(0)
             if isinstance(arg, dict):
                 if (len(arg.keys()) == 2 and 'action' in arg and 'arguments' in arg) or (len(arg.keys()) == 1 and 'action' in arg):
-                    arg['context'] = dict()
+                    arg['context'] = {}
                     self.set_action(arg)
                 elif len(arg) == 1 and ('undefine' in arg or 'invalidate' in arg or 'recompute' in arg or 'set' in arg or 'follow up' in arg):
                     if 'set' in arg:
@@ -83,9 +82,9 @@ class ForcedNameError(NameError):
                                 if not isinstance(the_var, str):
                                     raise DAError("force_ask: a set command must refer to a list of dicts with keys as variable names.  ")
                                 the_var_stripped = the_var.strip()
-                            if invalid_variable_name(the_var_stripped):
-                                raise DAError("force_ask: missing or invalid variable name " + repr(the_var) + ".")
-                            clean_list.append([the_var_stripped, the_val])
+                                if invalid_variable_name(the_var_stripped):
+                                    raise DAError("force_ask: missing or invalid variable name " + repr(the_var) + ".")
+                                clean_list.append([the_var_stripped, the_val])
                         self.set_action(dict(action='_da_set', arguments=dict(variables=clean_list), context=the_context))
                     if 'follow up' in arg:
                         if isinstance(arg['follow up'], str):
@@ -98,7 +97,7 @@ class ForcedNameError(NameError):
                             var_saveas = var.strip()
                             if invalid_variable_name(var_saveas):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(var_saveas) + ".")
-                            self.set_action(dict(action=var, arguments=dict(), context=the_context))
+                            self.set_action(dict(action=var, arguments={}, context=the_context))
                     for command in ('undefine', 'invalidate', 'recompute'):
                         if command not in arg:
                             continue
@@ -123,17 +122,18 @@ class ForcedNameError(NameError):
                 else:
                     raise DAError("Dictionaries passed to force_ask must have keys of 'action' and 'argument' only.")
             else:
-                self.set_action(dict(action=arg, arguments=dict(), context=the_context))
+                self.set_action(dict(action=arg, arguments={}, context=the_context))
         if kwargs.get('gathering', False):
             self.next_action = None
         if first_is_plain:
             self.arguments = None
+        super().__init__()
     def set_action(self, data):
         if not hasattr(self, 'name'):
             if isinstance(data, dict) and 'action' in data and (len(data) == 1 or 'arguments' in data):
                 self.name = data['action']
-                self.arguments = data.get('arguments', dict())
-                self.context = data.get('context', dict())
+                self.arguments = data.get('arguments', {})
+                self.context = data.get('context', {})
             else:
                 raise DAError("force_ask: invalid parameter " + repr(data))
         self.next_action.append(data)
@@ -146,6 +146,7 @@ class DAErrorMissingVariable(DAError):
         self.value = value
         self.variable = variable
         self.error_code = code
+        super().__init__(value)
 
 class DAErrorCompileError(DAError):
     pass
@@ -153,6 +154,7 @@ class DAErrorCompileError(DAError):
 class MandatoryQuestion(Exception):
     def __init__(self):
         self.value = 'Mandatory Question'
+        super().__init__()
     def __str__(self):
         return str(self.value)
 
@@ -177,19 +179,19 @@ class QuestionError(Exception):
         else:
             self.url = None
         if 'show_leave' in kwargs:
-            self.show_leave = kwargs['show_leave'];
+            self.show_leave = kwargs['show_leave']
         else:
             self.show_leave = None
         if 'show_exit' in kwargs:
-            self.show_exit = kwargs['show_exit'];
+            self.show_exit = kwargs['show_exit']
         else:
             self.show_exit = None
         if 'reload' in kwargs:
-            self.reload = kwargs['reload'];
+            self.reload = kwargs['reload']
         else:
             self.reload = None
         if 'show_restart' in kwargs:
-            self.show_restart = kwargs['show_restart'];
+            self.show_restart = kwargs['show_restart']
         else:
             self.show_restart = None
         if 'buttons' in kwargs:
@@ -200,21 +202,23 @@ class QuestionError(Exception):
             self.dead_end = kwargs['dead_end']
         else:
             self.dead_end = None
+        super().__init__()
     def __str__(self):
         return str(self.question)
 
 class BackgroundResponseError(Exception):
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0 and len(kwargs) > 0:
-            self.backgroundresponse = dict(pargs=[arg for arg in pargs], kwargs=kwargs)
+            self.backgroundresponse = dict(pargs=list(pargs), kwargs=kwargs)
         elif len(pargs) > 1:
-            self.backgroundresponse = [arg for arg in pargs]
+            self.backgroundresponse = list(pargs)
         elif len(pargs) == 1:
             self.backgroundresponse = pargs[0]
         else:
             self.backgroundresponse = kwargs
         if 'sleep' in kwargs:
-            self.sleep = kwargs['sleep'];
+            self.sleep = kwargs['sleep']
+        super().__init__()
     def __str__(self):
         if hasattr(self, 'backgroundresponse'):
             return str(self.backgroundresponse)
@@ -222,13 +226,14 @@ class BackgroundResponseError(Exception):
 
 class BackgroundResponseActionError(Exception):
     def __init__(self, *pargs, **kwargs):
-        self.action = dict(arguments=dict())
+        self.action = dict(arguments={})
         if len(pargs) == 0:
             self.action['action'] = None
         else:
             self.action['action'] = pargs[0]
-        for key in kwargs:
-            self.action['arguments'][key] = kwargs[key]
+        for key, val in kwargs.items():
+            self.action['arguments'][key] = val
+        super().__init__()
     def __str__(self):
         if hasattr(self, 'action'):
             return str(self.action)
@@ -239,27 +244,28 @@ class ResponseError(Exception):
         if len(pargs) == 0 and not ('response' in kwargs or 'binaryresponse' in kwargs or 'all_variables' in kwargs or 'file' in kwargs or 'url' in kwargs or 'null' in kwargs):
             self.response = "Empty Response"
         if len(pargs) > 0:
-            self.response = pargs[0];
+            self.response = pargs[0]
         elif 'response' in kwargs:
-            self.response = kwargs['response'];
+            self.response = kwargs['response']
         elif 'binaryresponse' in kwargs:
-            self.binaryresponse = kwargs['binaryresponse'];
+            self.binaryresponse = kwargs['binaryresponse']
         elif 'file' in kwargs:
-            self.filename = kwargs['file'];
+            self.filename = kwargs['file']
         elif 'url' in kwargs:
-            self.url = kwargs['url'];
+            self.url = kwargs['url']
         elif 'null' in kwargs:
-            self.nullresponse = kwargs['null'];
+            self.nullresponse = kwargs['null']
         if 'response_code' in kwargs and kwargs['response_code'] is not None:
             self.response_code = kwargs['response_code']
         if 'sleep' in kwargs:
-            self.sleep = kwargs['sleep'];
+            self.sleep = kwargs['sleep']
         if 'all_variables' in kwargs:
-            self.all_variables = kwargs['all_variables'];
+            self.all_variables = kwargs['all_variables']
             if 'include_internal' in kwargs:
                 self.include_internal = kwargs['include_internal']
         if 'content_type' in kwargs:
-            self.content_type = kwargs['content_type'];
+            self.content_type = kwargs['content_type']
+        super().__init__()
     def __str__(self):
         if hasattr(self, 'response'):
             return str(self.response)
@@ -268,13 +274,14 @@ class ResponseError(Exception):
 class CommandError(Exception):
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0:
-            self.return_type = pargs[0];
+            self.return_type = pargs[0]
         elif 'type' in kwargs:
-            self.return_type = kwargs['type'];
+            self.return_type = kwargs['type']
         else:
             self.return_type = "exit"
-        self.url = kwargs.get('url', '');
+        self.url = kwargs.get('url', '')
         self.sleep = kwargs.get('sleep', None)
+        super().__init__()
     def __str__(self):
         return str(self.return_type)
 
@@ -282,3 +289,4 @@ class DAWebError(Exception):
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
             setattr(self, key, val)
+        super().__init__()

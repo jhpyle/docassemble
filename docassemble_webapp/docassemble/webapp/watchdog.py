@@ -1,6 +1,6 @@
-import psutil
-import time
 import sys
+import time
+import psutil
 
 busy_pids = set()
 index = 0

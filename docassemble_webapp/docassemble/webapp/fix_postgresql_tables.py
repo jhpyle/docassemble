@@ -1,10 +1,8 @@
 import os
-import stat
 import sys
 import psycopg2
 import pkg_resources
 import docassemble.base.config
-
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
@@ -12,11 +10,11 @@ from docassemble.base.config import daconfig
 def read_in(line, target):
     col = line.split('|')
     if col[0] not in target:
-        target[col[0]] = dict()
+        target[col[0]] = {}
     target[col[0]][col[1]] = {'type': col[2], 'size': col[3], 'default': col[4]}
 
 def main():
-    dbconfig = daconfig.get('db', dict())
+    dbconfig = daconfig.get('db', {})
     db_prefix = dbconfig.get('prefix', 'postgresql+psycopg2://')
     if db_prefix != 'postgresql+psycopg2://':
         sys.stderr.write("fix_postgresql_tables: skipping because configured database is not PostgreSQL.\n")
@@ -74,23 +72,23 @@ def main():
         cur.execute("select table_name, column_name, data_type, character_maximum_length, column_default from information_schema.columns where table_schema='public'")
     except:
         sys.exit("failed to read existing columns from database")
-    
-    existing_columns = dict()
+
+    existing_columns = {}
     rows = cur.fetchall()
     for col in rows:
         if col[0] not in existing_columns:
-            existing_columns[col[0]] = dict()
+            existing_columns[col[0]] = {}
         existing_columns[col[0]][col[1]] = {'type': col[2], 'size': col[3], 'default': col[4]}
 
     if 'alembic_version' in existing_columns and daconfig.get('use alembic', True):
         sys.stderr.write("fix_postgresql_tables: skipping because alembic is in use.\n")
         return
-    desired_columns = dict()
-    with open(schema_file, 'r') as f:
+    desired_columns = {}
+    with open(schema_file, 'r', encoding='utf-8') as f:
         for line in f:
             read_in(line.rstrip(), desired_columns)
 
-    commands = list()
+    commands = []
     if db_table_prefix + 'shortener' in existing_columns and db_table_prefix + 'email' not in existing_columns:
         commands.append("drop table if exists " + db_table_prefix + "shortener;")
     for table_name in desired_columns:

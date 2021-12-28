@@ -3,8 +3,8 @@ from docassemble.base.util import path_and_mimetype
 
 __all__ = ['get_fruit_names', 'fruit_info']
 
-fruit_info_by_name = dict()
-fruit_names = list()
+fruit_info_by_name = {}
+fruit_names = []
 
 def read_data(filename):
     the_xlsx_file, mimetype = path_and_mimetype(filename)
@@ -22,5 +22,5 @@ def fruit_info(fruit):
     if fruit not in fruit_info_by_name:
         raise Exception("Reference to invalid fruit " + fruit)
     return fruit_info_by_name[fruit]
-        
+
 read_data('docassemble.demo:data/sources/fruit_data.xlsx')

@@ -3,14 +3,14 @@ from docassemble.base.legal import Individual, objects_from_file
 organizations = objects_from_file('docassemble.demo:data/objects/organizations.yml')
 
 def organizations_handling(problem=None, county=None):
-    response = list()
+    response = []
     for organization in organizations:
         if organization.will_handle(problem=problem, county=county):
             response.append(organization)
     return response
 
 def problem_types():
-    response = list()
+    response = []
     for organization in organizations:
         if hasattr(organization, 'handles'):
             for problem in organization.handles:

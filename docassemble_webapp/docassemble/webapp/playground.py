@@ -1,20 +1,17 @@
+import copy
+import datetime
 import os
 import re
-import copy
-import sys
+import shutil
+import types
 import yaml
-import tempfile
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.base.core import DAObject, DADict, DAList
 from docassemble.base.error import DAError
-from docassemble.base.logger import logmessage
 import docassemble.base.functions
 import docassemble.base.parse
 import docassemble.base.pdftk
-import shutil
-import datetime
-import types
 TypeType = type(type(None))
 
 __all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'oneline']
@@ -30,27 +27,25 @@ newlines = re.compile(r'\n')
 remove_u = re.compile(r'^u')
 
 class DADecoration(DAObject):
-    def init(self, **kwargs):
-        return super().init(**kwargs)
+    pass
 
 class DADecorationDict(DADict):
-    def init(self, **kwargs):
-        super().init(**kwargs)
+    def init(self, *pargs, **kwargs):
+        super().init(*pargs, **kwargs)
         self.object_type = DADecoration
         self.auto_gather = False
         self.there_are_any = True
 
 class DAAttachment(DAObject):
-    def init(self, **kwargs):
-        return super().init(**kwargs)
+    pass
 
 class DAAttachmentList(DAList):
-    def init(self, **kwargs):
-        super().init(**kwargs)
+    def init(self, *pargs, **kwargs):
+        super().init(*pargs, **kwargs)
         self.object_type = DAAttachment
         self.auto_gather = False
     def url_list(self, project='default'):
-        output_list = list()
+        output_list = []
         for x in self.elements:
             if x.type == 'md':
                 output_list.append('[`' + x.markdown_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.markdown_filename, project=project) + ')')
@@ -61,21 +56,19 @@ class DAAttachmentList(DAList):
         return docassemble.base.functions.comma_and_list(output_list)
 
 class DAUploadMultiple(DAObject):
-    def init(self, **kwargs):
-        return super().init(**kwargs)
+    pass
 
 class DAUpload(DAObject):
-    def init(self, **kwargs):
-        return super().init(**kwargs)
+    pass
 
 class DAInterview(DAObject):
-    def init(self, **kwargs):
-        self.blocks = list()
+    def init(self, *pargs, **kwargs):
+        self.blocks = []
         self.questions = DAQuestionDict()
         self.final_screen = DAQuestion()
         self.decorations = DADecorationDict()
         self.target_variable = None
-        return super().init(**kwargs)
+        return super().init(*pargs, **kwargs)
     def has_decorations(self):
         if self.decorations.gathered and len(self.decorations) > 0:
             return True
@@ -86,10 +79,10 @@ class DAInterview(DAObject):
             out_list.append([key, '[EMOJI ' + str(data.fileref) + ', 1em] ' + str(key)])
         return out_list
     def package_info(self):
-        info = dict()
+        info = {}
         for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
             if field not in info:
-                info[field] = list()
+                info[field] = []
         info['readme'] = ""
         info['description'] = self.title
         info['version'] = "1.0"
@@ -110,7 +103,7 @@ class DAInterview(DAObject):
         return to_yaml_file(self.file_name)
     def all_blocks(self):
         seen = set()
-        out = list()
+        out = []
         for block in self.blocks:
             if block not in seen:
                 out.append(block)
@@ -126,7 +119,7 @@ class DAInterview(DAObject):
     def source(self):
         return "---\n".join(map(lambda x: x.source(), self.all_blocks()))
     def known_source(self, skip=None):
-        output = list()
+        output = []
         for block in self.all_blocks():
             if block is skip:
                 continue
@@ -137,24 +130,23 @@ class DAInterview(DAObject):
         return "---\n".join(output)
 
 class DAField(DAObject):
-    def init(self, **kwargs):
-        return super().init(**kwargs)
+    pass
 
 class DAFieldList(DAList):
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.object_type = DAField
         self.auto_gather = False
         self.gathered = True
-        return super().init(**kwargs)
+        return super().init(*pargs, **kwargs)
     def __str__(self):
         return docassemble.base.functions.comma_and_list(map(lambda x: '`' + x.variable + '`', self.elements))
 
 class DAQuestion(DAObject):
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.field_list = DAFieldList()
         self.templates_used = set()
         self.static_files_used = set()
-        return super().init(**kwargs)
+        return super().init(*pargs, **kwargs)
     def names_reduced(self):
         varsinuse = Playground().variables_from(self.interview.known_source(skip=self))
         var_list = sorted([field.variable for field in self.field_list])
@@ -278,14 +270,14 @@ class DAQuestion(DAObject):
         return content
 
 class DAQuestionDict(DADict):
-    def init(self, **kwargs):
-        super().init(**kwargs)
+    def init(self, *pargs, **kwargs):
+        super().init(*pargs, **kwargs)
         self.object_type = DAQuestion
         self.auto_gather = False
         self.gathered = True
         self.is_mandatory = False
 
-class PlaygroundSection(object):
+class PlaygroundSection:
     def __init__(self, section='', project='default'):
         if docassemble.base.functions.this_thread.current_info['user']['is_anonymous']:
             raise DAError("Users must be logged in to create Playground objects")
@@ -300,16 +292,16 @@ class PlaygroundSection(object):
         the_directory = directory_for(self.get_area(), self.project)
         self.file_list = sorted([f for f in os.listdir(the_directory) if f != '.placeholder' and os.path.isfile(os.path.join(the_directory, f))])
     def image_file_list(self):
-        out_list = list()
+        out_list = []
         for the_file in self.file_list:
             extension, mimetype = get_ext_and_mimetype(the_file)
             if re.search(r'^image', mimetype):
                 out_list.append(the_file)
-        return out_list            
+        return out_list
     def reduced_file_list(self):
         lower_list = [f.lower() for f in self.file_list]
         out_list = [f for f in self.file_list if os.path.splitext(f)[1].lower() in ['.md', '.pdf', '.docx'] or os.path.splitext(f)[0].lower() + '.md' not in lower_list]
-        return out_list            
+        return out_list
     def get_file(self, filename):
         return os.path.join(directory_for(self.get_area(), self.project), filename)
     def get_mimetype(self, filename):
@@ -371,19 +363,13 @@ class PlaygroundSection(object):
             fields.add(docx_variable_fix(variable))
         for variable in re.findall(r'{%[a-z]* for [A-Za-z\_][A-Za-z0-9\_]* in *([^\} ]+) *%}', result):
             fields.add(docx_variable_fix(variable))
-        if len(fields):
-            return True
-        return False
+        return bool(len(fields) > 0)
     def is_markdown(self, filename):
         extension, mimetype = get_ext_and_mimetype(filename)
-        if extension == "md":
-            return True
-        return False
+        return bool(extension == "md")
     def is_pdf(self, filename):
         extension, mimetype = get_ext_and_mimetype(filename)
-        if extension == "pdf":
-            return True
-        return False
+        return bool(extension == "pdf")
     def get_fields(self, filename):
         return docassemble.base.pdftk.read_fields(self.get_file(filename))
     def convert_file_to_md(self, filename, convert_variables=True):
@@ -414,8 +400,6 @@ class PlaygroundSection(object):
         return Playground().variables_from(content)
 
 class Playground(PlaygroundSection):
-    def __init__(self):
-        return super().__init__()
     def interview_url(self, filename):
         return docassemble.base.functions.url_of('interview', i='docassemble.playground' + str(self.user_id) + project_name(self.project) + ":" + filename)
     def write_package(self, pkgname, info):
@@ -428,7 +412,7 @@ class Playground(PlaygroundSection):
         if content is None:
             raise Exception("package " + str(pkgname) + " not found")
         info = yaml.load(content, Loader=yaml.FullLoader)
-        author_info = dict()
+        author_info = {}
         author_info['author name'] = self.current_info['user']['firstname'] + " " + self.current_info['user']['lastname']
         author_info['author email'] = self.current_info['user']['email']
         author_info['author name and email'] = author_info['author name'] + ", " + author_info['author email']
@@ -451,15 +435,11 @@ class Playground(PlaygroundSection):
         interview_status = docassemble.base.parse.InterviewStatus(current_info=temp_current_info)
         user_dict = docassemble.base.parse.get_initial_dict()
         user_dict['_internal']['starttime'] = datetime.datetime.utcnow()
-        user_dict['_internal']['modtime'] = datetime.datetime.utcnow() 
+        user_dict['_internal']['modtime'] = datetime.datetime.utcnow()
         try:
             interview.assemble(user_dict, interview_status)
-            has_error = False
-        except Exception as errmess:
-            has_error = True
-            error_message = str(errmess)
-            error_type = type(errmess)
-            #logmessage("Failed assembly with error type " + str(error_type) + " and message: " + error_message)
+        except:
+            pass
         functions = set()
         modules = set()
         classes = set()
@@ -468,7 +448,7 @@ class Playground(PlaygroundSection):
         names_used.update(interview.names_used)
         area = SavedFile(self.user_id, fix=True, section='playgroundmodules')
         the_directory = directory_for(area, self.project)
-        avail_modules = set([re.sub(r'.py$', '', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f))])
+        avail_modules = set(re.sub(r'.py$', '', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)))
         for question in interview.questions_list:
             names_used.update(question.mako_names)
             names_used.update(question.names_used)
@@ -478,11 +458,11 @@ class Playground(PlaygroundSection):
             names_used.add(val)
             fields_used.add(val)
         for val in user_dict:
-            if type(user_dict[val]) is types.FunctionType:
+            if isinstance(user_dict[val], types.FunctionType):
                 functions.add(val)
-            elif type(user_dict[val]) is TypeType:
+            elif isinstance(user_dict[val], TypeType):
                 classes.add(val)
-            elif type(user_dict[val]) is types.ModuleType:
+            elif isinstance(user_dict[val], types.ModuleType):
                 modules.add(val)
         for val in docassemble.base.functions.pickleable_objects(user_dict):
             names_used.add(val)
@@ -538,7 +518,7 @@ def to_package_name(text):
     text = re.sub(r'\..*', r'', text)
     text = re.sub(r'[^A-Za-z0-9]', r'', text)
     return text
-    
+
 def repr_str(text):
     return remove_u.sub(r'', repr(text))
 
@@ -550,8 +530,7 @@ def docx_variable_fix(variable):
 def directory_for(area, current_project):
     if current_project == 'default':
         return area.directory
-    else:
-        return os.path.join(area.directory, current_project)
+    return os.path.join(area.directory, current_project)
 
 def project_name(name):
     return '' if name == 'default' else name

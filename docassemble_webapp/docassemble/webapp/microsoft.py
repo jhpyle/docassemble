@@ -1,10 +1,9 @@
 import datetime
-import os
 import io
-import time
-import pytz
 import mimetypes
+import os
 import re
+import pytz
 import yaml
 from azure.storage.blob import BlobServiceClient, BlobSasPermissions, ContentSettings, generate_blob_sas
 from azure.identity import ManagedIdentityCredential
@@ -12,7 +11,7 @@ from azure.keyvault.secrets import SecretClient
 
 epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
 
-class azureobject(object):
+class azureobject:
     def __init__(self, azure_config):
         if ('key vault name' in azure_config and azure_config['key vault name'] is not None and 'managed identity' in azure_config and azure_config['managed identity'] is not None):
             self.credential = ManagedIdentityCredential()
@@ -50,7 +49,7 @@ class azureobject(object):
                 return azurekey(self, blob.name)
         return None
     def list_keys(self, prefix):
-        output = list()
+        output = []
         for blob in self.container_client.list_blobs(name_starts_with=prefix):
             output.append(azurekey(self, blob.name))
         return output
@@ -66,7 +65,7 @@ class azureobject(object):
         loaded_config_with_secrets = yaml.load(config_dump_replace_secrets, Loader=yaml.FullLoader)
         return loaded_config_with_secrets
 
-class azurekey(object):
+class azurekey:
     def __init__(self, azure_object, key_name, load=True):
         self.azure_object = azure_object
         self.blob_client = azure_object.container_client.get_blob_client(key_name)
@@ -138,7 +137,7 @@ class azurekey(object):
         )
         return self.blob_client.url + '?' + token
 
-class azuresecret(object):
+class azuresecret:
     def __init__(self, azure_object, key_vault_reference):
         self.azure_object = azure_object
         self.secret_client = azure_object.secret_client

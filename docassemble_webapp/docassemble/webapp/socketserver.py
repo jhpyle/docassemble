@@ -1,4 +1,10 @@
+from contextlib import contextmanager
+import datetime
+import json
+import random
+import re
 import sys
+import time
 sys.stderr.write("1\n")
 import eventlet
 sys.stderr.write("2\n")
@@ -10,44 +16,29 @@ import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
 import docassemble.base.functions
-docassemble.base.functions.server_context.context = 'websockets'
-
-from flask_socketio import join_room, disconnect
-from docassemble.webapp.app_socket import app, db, socketio
-
-from sqlalchemy import create_engine, MetaData, or_, and_, select
-from simplekv.memory.redisstore import RedisStore
 import docassemble.base.util
-import redis
-import json
-import datetime
-import pytz
-import pickle
-import re
-import time
-import random
-from docassemble.webapp.backend import initial_dict, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj, get_session
-from docassemble.webapp.users.models import UserModel, ChatLog
+docassemble.base.functions.server_context.context = 'websockets'
 from docassemble.base.functions import get_default_timezone, word
-from flask import session, request, current_app
-from docassemblekvsession import KVSessionExtension
-
 import docassemble.webapp.daredis
-from docassemble.webapp.daredis import redis_host, redis_port, redis_offset
+from docassemble.webapp.app_socket import app, db, socketio
+from docassemble.webapp.backend import nice_utc_date, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj, get_session
+from docassemble.webapp.daredis import r as rr, redis_host, redis_port, redis_offset
+from docassemble.webapp.users.models import UserModel, ChatLog
+from docassemblekvsession import KVSessionExtension
+from flask import session, request
+from flask_socketio import join_room
+from simplekv.memory.redisstore import RedisStore
+from sqlalchemy import select
+from sqlalchemy.orm import sessionmaker, joinedload
+import netifaces as ni
+import pytz
+import redis
 
 store = RedisStore(docassemble.webapp.daredis.r_store)
 kv_session = KVSessionExtension(store, app)
-
-from docassemble.webapp.daredis import r as rr
-
-threads = dict()
-secrets = dict()
-
-from sqlalchemy.orm import sessionmaker, joinedload
-
+threads = {}
+secrets = {}
 Session = sessionmaker(bind=db)
-
-from contextlib import contextmanager
 
 @contextmanager
 def session_scope():
@@ -109,10 +100,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
         with session_scope() as dbsession:
             person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
         user_is_temp = False
-    if person is not None and person.timezone is not None:
-        the_timezone = pytz.timezone(person.timezone)
-    else:
-        the_timezone = pytz.timezone(get_default_timezone())
+    if not(person is not None and person.timezone is not None):
         r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
 
     partners = set()
@@ -134,45 +122,41 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
                 pubsub.unsubscribe(sid)
                 sys.stderr.write("  interview unsubscribed and finished for " + str(sid) + "\n")
                 break
-            else:
-                sys.stderr.write("  Got something for sid " + str(sid) + " from " + data.get('origin', "Unknown origin") + "\n")
-                if 'messagetype' in data:
-                    if data['messagetype'] == 'chat':
-                        #sys.stderr.write("  Emitting interview chat message: " + str(data['message']['message']) + "\n")
-                        if (user_is_temp is True and str(temp_user_id) == str(data['message'].get('temp_user_id', None))) or (user_is_temp is False and str(user_id) == str(data['message'].get('user_id', None))):
-                            data['message']['is_self'] = True
-                        else:
-                            data['message']['is_self'] = False
-                        socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/wsinterview', room=sid)
-                    elif data['messagetype'] == 'chatready':
-                        pubsub.subscribe(data['sid'])
-                        partners.add(data['sid'])
-                        sys.stderr.write("chatready 2")
-                        socketio.emit('chatready', {}, namespace='/wsinterview', room=sid)
-                    elif data['messagetype'] == 'departure':
-                        if data['sid'] in partners:
-                            partners.remove(data['sid'])
-                        socketio.emit('departure', {'numpartners': len(partners)}, namespace='/wsinterview', room=sid)
-                    elif data['messagetype'] == 'block':
-                        if data['sid'] in partners:
-                            partners.remove(data['sid'])
-                        socketio.emit('departure', {'numpartners': len(partners)}, namespace='/wsinterview', room=sid)
-                    elif data['messagetype'] == 'chatpartner':
-                        partners.add(data['sid'])
-                    elif data['messagetype'] == 'controllerchanges':
-                        socketio.emit('controllerchanges', {'parameters': data['parameters'], 'clicked': data['clicked']}, namespace='/wsinterview', room=sid)
-                    elif data['messagetype'] == 'controllerstart':
-                        socketio.emit('controllerstart', {}, namespace='/wsinterview', room=sid)
-                    elif data['messagetype'] == 'controllerexit':
-                        socketio.emit('controllerexit', {}, namespace='/wsinterview', room=sid)
-                    # elif data['messagetype'] == "newpage":
-                    #     sys.stderr.write("  Got new page for interview\n")
-                    #     try:
-                    #         obj = json.loads(r.get(data['key']))
-                    #     except:
-                    #         sys.stderr.write("  newpage JSON parse error\n")
-                    #         continue
-                    #     socketio.emit('newpage', {'obj': obj}, namespace='/wsinterview', room=sid)
+            sys.stderr.write("  Got something for sid " + str(sid) + " from " + data.get('origin', "Unknown origin") + "\n")
+            if 'messagetype' in data:
+                if data['messagetype'] == 'chat':
+                    #sys.stderr.write("  Emitting interview chat message: " + str(data['message']['message']) + "\n")
+                    data['message']['is_self'] = bool((user_is_temp is True and str(temp_user_id) == str(data['message'].get('temp_user_id', None))) or (user_is_temp is False and str(user_id) == str(data['message'].get('user_id', None))))
+                    socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/wsinterview', room=sid)
+                elif data['messagetype'] == 'chatready':
+                    pubsub.subscribe(data['sid'])
+                    partners.add(data['sid'])
+                    sys.stderr.write("chatready 2")
+                    socketio.emit('chatready', {}, namespace='/wsinterview', room=sid)
+                elif data['messagetype'] == 'departure':
+                    if data['sid'] in partners:
+                        partners.remove(data['sid'])
+                    socketio.emit('departure', {'numpartners': len(partners)}, namespace='/wsinterview', room=sid)
+                elif data['messagetype'] == 'block':
+                    if data['sid'] in partners:
+                        partners.remove(data['sid'])
+                    socketio.emit('departure', {'numpartners': len(partners)}, namespace='/wsinterview', room=sid)
+                elif data['messagetype'] == 'chatpartner':
+                    partners.add(data['sid'])
+                elif data['messagetype'] == 'controllerchanges':
+                    socketio.emit('controllerchanges', {'parameters': data['parameters'], 'clicked': data['clicked']}, namespace='/wsinterview', room=sid)
+                elif data['messagetype'] == 'controllerstart':
+                    socketio.emit('controllerstart', {}, namespace='/wsinterview', room=sid)
+                elif data['messagetype'] == 'controllerexit':
+                    socketio.emit('controllerexit', {}, namespace='/wsinterview', room=sid)
+                # elif data['messagetype'] == "newpage":
+                #     sys.stderr.write("  Got new page for interview\n")
+                #     try:
+                #         obj = json.loads(r.get(data['key']))
+                #     except:
+                #         sys.stderr.write("  newpage JSON parse error\n")
+                #         continue
+                #     socketio.emit('newpage', {'obj': obj}, namespace='/wsinterview', room=sid)
             sys.stderr.write('  exiting interview thread for sid ' + str(sid) + '\n')
 
 @socketio.on('start_being_controlled', namespace='/wsinterview')
@@ -186,13 +170,9 @@ def interview_start_being_controlled(data):
         key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         rr.publish(key, json.dumps(dict(message='start_being_controlled', key=re.sub(r'^da:input:uid:', 'da:session:uid:', key))))
 
-@socketio.on('message', namespace='/wsinterview')
-def handle_message(message):
-    socketio.emit('mymessage', {'data': "Hello"}, namespace='/wsinterview', room=request.sid)
-
 @socketio.on('chat_log', namespace='/wsinterview')
 def chat_log(data):
-    with session_scope() as dbsession:
+    with session_scope():
         yaml_filename = data['i']
         user_dict = get_dict(yaml_filename)
         if user_dict is None:
@@ -263,10 +243,7 @@ def chat_message(data):
     with session_scope() as dbsession:
         user_dict = get_dict(yaml_filename)
         chat_mode = user_dict['_internal']['livehelp']['mode']
-        if chat_mode in ['peer', 'peerhelp']:
-            open_to_peer = True
-        else:
-            open_to_peer = False
+        open_to_peer = bool(chat_mode in ['peer', 'peerhelp'])
         record = ChatLog(filename=yaml_filename, key=session_id, message=message, encrypted=encrypted, modtime=nowtime, temp_user_id=temp_user_id, user_id=user_id, open_to_peer=open_to_peer, temp_owner_id=temp_user_id, owner_id=user_id)
         dbsession.add(record)
         dbsession.commit()
@@ -284,19 +261,18 @@ def chat_message(data):
             rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=role_list, mode=chat_mode))))
     #sys.stderr.write('received chat message from sid ' + str(request.sid) + ': ' + data['data'] + "\n")
 
-def wait_for_channel(rr, channel):
+def wait_for_channel(the_rr, channel):
     times = 0
-    while times < 5 and rr.publish(channel, json.dumps(dict(messagetype='ping'))) == 0:
+    while times < 5 and the_rr.publish(channel, json.dumps(dict(messagetype='ping'))) == 0:
         times += 1
         time.sleep(0.5)
     if times >= 5:
         return False
-    else:
-        return True
+    return True
 
 @socketio.on('connect', namespace='/wsinterview')
 def on_interview_connect():
-    with session_scope() as dbsession:
+    with session_scope():
         sys.stderr.write("Client connected on interview\n")
         join_room(request.sid)
         interview_connect(request.args['i'])
@@ -304,7 +280,7 @@ def on_interview_connect():
 
 @socketio.on('connectagain', namespace='/wsinterview')
 def on_interview_reconnect(data):
-    with session_scope() as dbsession:
+    with session_scope():
         sys.stderr.write("Client reconnected on interview\n")
         interview_connect(data['i'])
         rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
@@ -332,11 +308,7 @@ def interview_connect(yaml_filename):
             socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             return
         #sys.stderr.write('chat info is ' + str(chat_info) + "\n")
-        if user_dict['_internal']['livehelp']['mode'] in ['peer', 'peerhelp']:
-            peer_ok = True
-        else:
-            peer_ok = False
-
+        peer_ok = bool(user_dict['_internal']['livehelp']['mode'] in ['peer', 'peerhelp'])
         the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
 
         if request.sid not in threads:
@@ -349,10 +321,7 @@ def interview_connect(yaml_filename):
             return
         lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         #sys.stderr.write("Searching: " + lkey + "\n")
-        if rr.exists(lkey):
-            lkey_exists = True
-        else:
-            lkey_exists = False
+        lkey_exists = bool(rr.exists(lkey))
         if lkey_exists is False and peer_ok is False:
             sys.stderr.write("Key does not exist: " + lkey + ".\n")
             #socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
@@ -373,10 +342,7 @@ def interview_connect(yaml_filename):
                 partner_sid = rr.get(pkey)
                 if partner_sid is not None:
                     partner_sid = partner_sid.decode()
-                    if re.match(r'^da:monitor:available:.*', pkey):
-                        is_help = True
-                    else:
-                        is_help = False
+                    is_help = bool(re.match(r'^da:monitor:available:.*', pkey))
                     if is_help and found_help:
                         continue
                     #sys.stderr.write("Trying to pub to " + str(partner_sid) + " from " + str(pkey) + "\n")
@@ -469,10 +435,6 @@ def monitor_thread(sid=None, user_id=None):
             person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
         else:
             person = None
-        if person is not None and person.timezone is not None:
-            the_timezone = pytz.timezone(person.timezone)
-        else:
-            the_timezone = pytz.timezone(get_default_timezone())
     r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
     listening_sids = set()
     pubsub = r.pubsub()
@@ -496,57 +458,53 @@ def monitor_thread(sid=None, user_id=None):
                     for interview_sid in listening_sids:
                         r.publish(interview_sid, json.dumps(dict(messagetype='departure', sid=sid)))
                     break
-                elif item['channel'].decode() != 'da:monitor':
+                if item['channel'].decode() != 'da:monitor':
                     pubsub.unsubscribe(item['channel'].decode())
                     if data['sid'] in listening_sids:
                         listening_sids.remove(data['sid'])
                     sys.stderr.write("  monitor unsubscribed from " + item['channel'].decode() + "\n")
                 continue
-            else:
-                sys.stderr.write("  Got something for monitor\n")
-                if 'messagetype' in data:
-                    #if data['messagetype'] == 'abortcontroller':
-                    #    socketio.emit('abortcontroller', {'key': data['key']}, namespace='/monitor', room=sid)
-                    if data['messagetype'] == 'sessionupdate':
-                        #sys.stderr.write("  Got a session update: " + str(data['session']) + "\n")
-                        #sys.stderr.write("  Got a session update\n")
-                        socketio.emit('sessionupdate', {'key': data['key'], 'session': data['session']}, namespace='/monitor', room=sid)
-                    if data['messagetype'] == 'chatready':
-                        pubsub.subscribe(data['sid'])
-                        listening_sids.add(data['sid'])
-                        secrets[data['sid']] = data['secret']
-                        r.hset('da:monitor:chatpartners:' + str(user_id), 'da:interviewsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + str(data['userid']), 1)
-                        if str(data['userid']).startswith('t'):
-                            name = word("anonymous visitor") + ' ' + str(data['userid'])[1:]
+            sys.stderr.write("  Got something for monitor\n")
+            if 'messagetype' in data:
+                #if data['messagetype'] == 'abortcontroller':
+                #    socketio.emit('abortcontroller', {'key': data['key']}, namespace='/monitor', room=sid)
+                if data['messagetype'] == 'sessionupdate':
+                    #sys.stderr.write("  Got a session update: " + str(data['session']) + "\n")
+                    #sys.stderr.write("  Got a session update\n")
+                    socketio.emit('sessionupdate', {'key': data['key'], 'session': data['session']}, namespace='/monitor', room=sid)
+                if data['messagetype'] == 'chatready':
+                    pubsub.subscribe(data['sid'])
+                    listening_sids.add(data['sid'])
+                    secrets[data['sid']] = data['secret']
+                    r.hset('da:monitor:chatpartners:' + str(user_id), 'da:interviewsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + str(data['userid']), 1)
+                    if str(data['userid']).startswith('t'):
+                        name = word("anonymous visitor") + ' ' + str(data['userid'])[1:]
+                    else:
+                        person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=data['userid'])).scalar()
+                        if person.first_name:
+                            name = str(person.first_name) + ' ' + str(person.last_name)
                         else:
-                            person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=data['userid'])).scalar()
-                            if person.first_name:
-                                name = str(person.first_name) + ' ' + str(person.last_name)
-                            else:
-                                name = str(person.email)
-                        sys.stderr.write("chatready 1")
-                        socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid'], 'name': name}, namespace='/monitor', room=sid)
-                    if data['messagetype'] == 'block':
-                        pubsub.unsubscribe(item['channel'].decode())
-                        if item['channel'].decode() in listening_sids:
-                            listening_sids.remove(item['channel'].decode())
-                        sys.stderr.write("  monitor unsubscribed from " + item['channel'].decode() + "\n")
-                    if data['messagetype'] == 'refreshsessions':
-                        socketio.emit('refreshsessions', {}, namespace='/monitor', room=sid)
-                    if data['messagetype'] == 'chat':
-                        #sys.stderr.write("  Emitting monitor chat message: " + str(data['message']['message']) + "\n")
-                        if str(user_id) == str(data['message'].get('user_id', None)):
-                            data['message']['is_self'] = True
-                        else:
-                            data['message']['is_self'] = False
-                        socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/monitor', room=sid)
-                    if data['messagetype'] == 'chatstop':
-                        sys.stderr.write("  Chat termination for sid " + data['sid'] + "\n")
-                        pubsub.unsubscribe(data['sid'])
-                        if data['sid'] in secrets:
-                            del secrets[data['sid']]
-                        r.hdel('da:monitor:chatpartners:' + str(user_id), 'da:interviewsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + data['userid'])
-                        socketio.emit('chatstop', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
+                            name = str(person.email)
+                    sys.stderr.write("chatready 1")
+                    socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid'], 'name': name}, namespace='/monitor', room=sid)
+                if data['messagetype'] == 'block':
+                    pubsub.unsubscribe(item['channel'].decode())
+                    if item['channel'].decode() in listening_sids:
+                        listening_sids.remove(item['channel'].decode())
+                    sys.stderr.write("  monitor unsubscribed from " + item['channel'].decode() + "\n")
+                if data['messagetype'] == 'refreshsessions':
+                    socketio.emit('refreshsessions', {}, namespace='/monitor', room=sid)
+                if data['messagetype'] == 'chat':
+                    #sys.stderr.write("  Emitting monitor chat message: " + str(data['message']['message']) + "\n")
+                    data['message']['is_self'] = bool(str(user_id) == str(data['message'].get('user_id', None)))
+                    socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/monitor', room=sid)
+                if data['messagetype'] == 'chatstop':
+                    sys.stderr.write("  Chat termination for sid " + data['sid'] + "\n")
+                    pubsub.unsubscribe(data['sid'])
+                    if data['sid'] in secrets:
+                        del secrets[data['sid']]
+                    r.hdel('da:monitor:chatpartners:' + str(user_id), 'da:interviewsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + data['userid'])
+                    socketio.emit('chatstop', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
             sys.stderr.write('  exiting monitor thread for sid ' + str(sid) + '\n')
 
 @socketio.on('connect', namespace='/monitor')
@@ -631,7 +589,7 @@ def monitor_unblock(data):
     socketio.emit('unblock', {'key': key}, namespace='/monitor', room=request.sid)
 
 def decode_dict(the_dict):
-    out_dict = dict()
+    out_dict = {}
     for k, v in the_dict.items():
         out_dict[k.decode()] = v.decode()
     return out_dict
@@ -655,7 +613,7 @@ def update_monitor(message):
         pipe.set(phone_number_key, phone_number)
         pipe.expire(phone_number_key, 2592000)
         pipe.execute()
-    phone_partners = dict()
+    phone_partners = {}
     prefix = 'da:phonecode:monitor:' + str(session['user_id']) + ':uid:'
     for key in term_phone_partners:
         key_for_phone_code = re.sub(r'da:session:uid:', prefix, key)
@@ -685,13 +643,11 @@ def update_monitor(message):
             if key in phone_partners:
                 continue
             times = 0
-            ok = False
             while times < 1000:
                 times += 1
                 code = "%04d" % random.randint(1000, 9999)
                 if code in codes_in_use:
                     continue
-                ok = True
                 the_code = code
                 new_key = re.sub(r'^da:session:uid:', prefix, key)
                 code_key = 'da:callforward:' + str(code)
@@ -704,7 +660,7 @@ def update_monitor(message):
                 phone_partners[key] = 1
                 break
             if times >= 1000:
-                logmessage("update_monitor: could not get a random integer")
+                sys.stderr.write("update_monitor: could not get a random integer\n")
     #sys.stderr.write('subscribed roles are type ' + str(type(new_subscribed_roles)) + " which is "  + str(new_subscribed_roles) + "\n")
     monitor_key = 'da:monitor:' + str(request.sid)
     pipe = rr.pipeline()
@@ -713,7 +669,7 @@ def update_monitor(message):
     pipe.execute()
     key = 'da:monitor:available:' + str(session['user_id'])
     key_exists = rr.exists(key)
-    chat_partners = dict()
+    chat_partners = {}
     for cp_key in rr.hgetall('da:monitor:chatpartners:' + str(session['user_id'])):
         cp_key = cp_key.decode()
         if rr.get(cp_key) is None:
@@ -733,51 +689,51 @@ def update_monitor(message):
         for avail_key in rr.keys('da:monitor:role:*:userid:' + str(session['user_id'])):
             pipe.delete(avail_key.decode())
         pipe.execute()
-    avail_roles = list()
+    avail_roles = []
     for key in rr.keys('da:chat:roletype:*'):
         avail_roles.append(re.sub(r'^da:chat:roletype:', r'', key.decode()))
     sub_role_key = 'da:monitor:userrole:' + str(session['user_id'])
     if rr.exists(sub_role_key):
         subscribed_roles = decode_dict(rr.hgetall(sub_role_key))
     else:
-        subscribed_roles = dict()
-    del_mon_role_keys = list()
-    for role_key in [k for k in new_subscribed_roles.keys()]:
+        subscribed_roles = {}
+    del_mon_role_keys = []
+    for role_key in list(new_subscribed_roles.keys()):
         if role_key not in avail_roles:
             #sys.stderr.write("role_key is " + str(role_key) + " which is " + str(type(role_key)) + "\n")
             del new_subscribed_roles[role_key]
-    for role_key in [k for k in subscribed_roles.keys()]:
+    for role_key in list(subscribed_roles.keys()):
         if role_key not in avail_roles:
             rr.hdel(sub_role_key, role_key)
             del_mon_role_keys.append('da:monitor:role:' + role_key + ':userid:' + str(session['user_id']))
 
-    for role_key in [k for k in new_subscribed_roles.keys()]:
+    for role_key in list(new_subscribed_roles.keys()):
         if role_key not in subscribed_roles:
             rr.hset(sub_role_key, role_key, 1)
             subscribed_roles[role_key] = 1
-    for role_key in [k for k in subscribed_roles.keys()]:
+    for role_key in list(subscribed_roles.keys()):
         if role_key not in new_subscribed_roles:
             rr.hdel(sub_role_key, role_key)
             del_mon_role_keys.append('da:monitor:role:' + role_key + ':userid:' + str(session['user_id']))
             del subscribed_roles[role_key]
 
-    if len(del_mon_role_keys):
+    if len(del_mon_role_keys) > 0:
         pipe = rr.pipeline()
         for key in del_mon_role_keys:
             pipe.delete(key)
         pipe.execute()
 
-    if available_for_chat and len(subscribed_roles):
+    if available_for_chat and len(subscribed_roles) > 0:
         pipe = rr.pipeline()
-        for role_key in [k for k in subscribed_roles.keys()]:
+        for role_key in list(subscribed_roles.keys()):
             key = 'da:monitor:role:' + role_key + ':userid:' + str(session['user_id'])
             pipe.set(key, 1)
             pipe.expire(key, 60)
         pipe.execute()
-    keylist = list()
+    keylist = []
     for key in rr.keys('da:session:*'):
         keylist.append(key.decode())
-    sessions = dict()
+    sessions = {}
     for key in keylist:
         try:
             sessobj = fix_pickle_obj(rr.get(key))
@@ -790,10 +746,7 @@ def update_monitor(message):
                 html = html.decode()
                 obj = json.loads(html)
                 sessobj['browser_title'] = obj.get('browser_title', 'not available')
-                if rr.exists(re.sub(r'^da:session:', 'da:block:', key)):
-                    sessobj['blocked'] = True
-                else:
-                    sessobj['blocked'] = False
+                sessobj['blocked'] = bool(rr.exists(re.sub(r'^da:session:', 'da:block:', key)))
                 sessions[key] = sessobj
     socketio.emit('updatemonitor', {'available_for_chat': available_for_chat, 'subscribedRoles': subscribed_roles, 'sessions': sessions, 'availRoles': sorted(avail_roles), 'chatPartners': chat_partners, 'phonePartners': phone_partners}, namespace='/monitor', room=request.sid)
 
@@ -849,10 +802,7 @@ def monitor_chat_message(data):
         else:
             temp_owner_id = None
             owner_id = chat_user_id
-        if chat_mode in ['peer', 'peerhelp']:
-            open_to_peer = True
-        else:
-            open_to_peer = False
+        open_to_peer = bool(chat_mode in ['peer', 'peerhelp'])
         record = ChatLog(filename=yaml_filename, key=session_id, message=message, encrypted=encrypted, modtime=nowtime, user_id=user_id, temp_owner_id=temp_owner_id, owner_id=owner_id, open_to_peer=open_to_peer)
         dbsession.add(record)
         dbsession.commit()
@@ -865,7 +815,7 @@ def monitor_chat_message(data):
 
 @socketio.on('chat_log', namespace='/monitor')
 def monitor_chat_log(data):
-    with session_scope() as dbsession:
+    with session_scope():
         if 'monitor' not in session:
             socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
             return
@@ -941,7 +891,7 @@ def observer_thread(sid=None, key=None):
             pubsub.unsubscribe()
             sys.stderr.write("  observer unsubscribed and finished for " + str(sid) + "\n")
             break
-        elif 'message' in data:
+        if 'message' in data:
             if data['message'] == "newpage":
                 #sys.stderr.write("  Got new page for observer\n")
                 try:
@@ -1019,7 +969,7 @@ def stop_control(message):
         sid = rr.get('da:interviewsession:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid']))
         if sid is not None:
             sid = sid.decode()
-            sys.stderr.write("Calling controllerexit 1");
+            sys.stderr.write("Calling controllerexit 1")
             rr.publish(sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
     else:
         pipe.execute()
@@ -1068,7 +1018,7 @@ def on_observer_disconnect():
     rr.delete(self_key)
     if other_sid is not None:
         other_sid = other_sid.decode()
-        sys.stderr.write("Calling controllerexit 2");
+        sys.stderr.write("Calling controllerexit 2")
         rr.publish(other_sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
     rr.publish(request.sid, json.dumps(dict(message='KILL', sid=request.sid)))
 
@@ -1088,7 +1038,6 @@ if __name__ == '__main__':
             if 'websockets ip' in daconfig and daconfig['websockets ip']:
                 host = daconfig['websockets ip']
             else:
-                import netifaces as ni
                 ifaces = [iface for iface in ni.interfaces() if iface != 'lo']
                 host = ni.ifaddresses(ifaces[0])[ni.AF_INET][0]['addr']
             socketio.run(app, host=host, port=daconfig.get('websockets port', 5000))

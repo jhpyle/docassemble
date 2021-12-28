@@ -1,6 +1,6 @@
+import os
 from docassemble.base.config import daconfig
 from docassemble.base.error import DAError
-import os
 
 def alchemy_url(db_config):
     if db_config not in daconfig or (not isinstance(daconfig[db_config], dict)) or 'name' not in daconfig[db_config]:
@@ -40,7 +40,7 @@ def alchemy_url(db_config):
 def connect_args(db_config):
     if db_config not in daconfig or (not isinstance(daconfig[db_config], dict)) or 'name' not in daconfig[db_config]:
         raise Exception("connect_args: missing or invalid configuration for " + db_config)
-    alchemy_connect_args = dict()
+    alchemy_connect_args = {}
     dbprefix = daconfig[db_config].get('prefix', 'postgresql+psycopg2://')
     if dbprefix.startswith('postgres'):
         ssl_mode = daconfig[db_config].get('ssl mode', None)

@@ -1,6 +1,6 @@
-from docassemble.base.util import DAObject, DAList, DAFileCollection, interview_url_action, DADict, word, message, noun_singular, noun_plural, today, current_datetime, Person, DAEmailRecipient, comma_and_list, interface, value, send_email, background_action, reconsider, force_ask, background_response, device
 import random
 import string
+from docassemble.base.util import DAObject, DAList, DAFileCollection, interview_url_action, DADict, word, today, current_datetime, Person, DAEmailRecipient, comma_and_list, interface, value, send_email, background_action, reconsider, force_ask, background_response, device
 
 __all__ = ['SigningProcess']
 
@@ -17,7 +17,7 @@ class SigningProcess(DAObject):
         self.initializeAttribute('blank_signature_datetime', DADict)
         self.initializeAttribute('blank_signature', DADict)
         self.initializeAttribute('thank_you_screen', DADict)
-        self.info_by_code = dict()
+        self.info_by_code = {}
         self.initial_notification_triggered = False
         self.initial_notification_sent = False
         self.final_notification_triggered = False
@@ -54,7 +54,7 @@ class SigningProcess(DAObject):
         for code, info in self.info_by_code.items():
             if not info['signed']:
                 str(self.initial_notification_email[code])
-        if len(self.additional_people_to_notify):
+        if len(self.additional_people_to_notify) > 0:
             str(self.final_notification_email_to_others)
         for code, info in self.info_by_code.items():
             if not info['signed']:
@@ -65,20 +65,20 @@ class SigningProcess(DAObject):
         if interface() == 'worker':
             background_response()
     def sign_for(self, signer, signature):
-        code = _code_for(self, signer)
+        code = self._code_for(self, signer)
         if self.info_by_code[code]['signed']:
             return
         self.signature[code] = signature
         self.validate_signature(code)
     def refresh_documents(self):
-        reconsider(*[y for y in self.documents])
+        reconsider(self.documents)
     def final_notify(self):
         if self.final_notification_sent:
             return
         self.refresh_documents()
         for code, info in self.info_by_code.items():
             str(self.final_notification_email[code])
-        if len(self.additional_people_to_notify):
+        if len(self.additional_people_to_notify) > 0:
             str(self.final_notification_email_to_others)
         for code, info in self.info_by_code.items():
             send_email(to=info['signer'], template=self.final_notification_email[code], attachments=self.list_of_documents())
@@ -109,32 +109,27 @@ class SigningProcess(DAObject):
         if self.info_by_code[code]['signed']:
             if width:
                 return self.signature[code].show(width=width)
-            else:
-                return self.signature[code]
-        else:
-            return self.blank_signature[code]
+            return self.signature[code]
+        return self.blank_signature[code]
     def signature_date_of(self, signer):
         code = self._code_for(signer)
         if self.info_by_code[code]['signed']:
             return self.info_by_code[code]['date']
-        else:
-            return self.blank_signature_date[code]
+        return self.blank_signature_date[code]
     def signature_datetime_of(self, signer):
         code = self._code_for(signer)
         if self.info_by_code[code]['signed']:
             return self.info_by_code[code]['datetime']
-        else:
-            return self.blank_signature_datetime[code]
+        return self.blank_signature_datetime[code]
     def signature_ip_address_of(self, signer):
         code = self._code_for(signer)
         if self.info_by_code[code]['signed']:
             return self.info_by_code[code]['ip']
-        else:
-            return self.blank_ip_address[code]
+        return self.blank_ip_address[code]
     def collect_signature(self, code):
         if code is None or code not in self.info_by_code:
             force_ask(self.attr_name('unauthorized_screen'))
-        info = self.info_by_code[code]
+        self.info_by_code[code]
         index_part = '[' + repr(code) + ']'
         if self.info_by_code[code]['signed']:
             force_ask(self.attr_name('thank_you_screen') + index_part)

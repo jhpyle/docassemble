@@ -1,11 +1,11 @@
 # Adapted from flask_mail
+import sys
 import time
 import requests
-import sys
 from requests.auth import HTTPBasicAuth
 from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
 
-class Connection(object):
+class Connection:
     def __init__(self, mail):
         self.mail = mail
     def __enter__(self):
@@ -41,7 +41,7 @@ class Connection(object):
     def send_message(self, *args, **kwargs):
         self.send(Message(*args, **kwargs))
 
-class _MailMixin(object):
+class _MailMixin:
 
     @contextmanager
     def record_messages(self):
@@ -73,7 +73,7 @@ class _MailMixin(object):
             return Connection(app.extensions['mail'])
         except KeyError:
             raise RuntimeError("The curent application was not configured with Flask-Mail")
-        
+
 class _Mail(_MailMixin):
     def __init__(self, api_url, api_key,
                  default_sender, debug, suppress,

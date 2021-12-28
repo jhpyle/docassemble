@@ -83,7 +83,7 @@ class myvisitnode(ast.NodeVisitor):
         for key, val in ast.iter_fields(node):
             if key == 'targets':
                 for subnode in val:
-                    if type(subnode) is ast.Tuple:
+                    if isinstance(subnode, ast.Tuple):
                         for subsubnode in subnode.elts:
                             crawler = myextract()
                             crawler.visit(subsubnode)
@@ -125,7 +125,7 @@ class myvisitnode(ast.NodeVisitor):
                 the_name = alias.name
             else:
                 the_name = alias.asname
-            while(re.search(r'\.', the_name)):
+            while re.search(r'\.', the_name):
                 self.targets[the_name] = 1
                 the_name = re.sub(r'\.[^\.]+$', '', the_name)
             self.targets[the_name] = 1
@@ -135,7 +135,7 @@ class myvisitnode(ast.NodeVisitor):
                 the_name = alias.name
             else:
                 the_name = alias.asname
-            while(re.search(r'\.', the_name)):
+            while re.search(r'\.', the_name):
                 self.targets[the_name] = 1
                 the_name = re.sub(r'\.[^\.]+$', '', the_name)
             self.targets[the_name] = 1

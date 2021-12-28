@@ -1,9 +1,9 @@
 #! /usr/bin/env python
-import requests
 import json
 import sys
 import random
 import string
+import requests
 
 root = 'http://localhost'
 key = 'H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT'
@@ -27,13 +27,13 @@ while iterations:
 
     steps = 0
     while steps < 1000 and info['questionType'] not in ('deadend', 'restart', 'exit', 'leave'):
-        variables = dict()
-        file_variables = dict()
-        file_uploads = dict()
-        for field in info.get('fields', list()):
+        variables = {}
+        file_variables = {}
+        file_uploads = {}
+        for field in info.get('fields', []):
             if field.get('datatype', None) in ('html', 'note'):
                 continue
-            elif 'variable_name' not in field:
+            if 'variable_name' not in field:
                 if field.get('fieldtype', None) == 'multiple_choice' and 'choices' in field:
                     indexno = random.choice(range(len(field['choices'])))
                     if info['questionText'] == 'What language do you speak?':
@@ -46,15 +46,14 @@ while iterations:
             elif field.get('datatype', None) == 'object':
                 if not field.get('required', True):
                     continue
-                else:
-                    sys.exit("Field not recognized:\n" + repr(field))
+                sys.exit("Field not recognized:\n" + repr(field))
             elif field.get('fieldtype', None) == 'multiple_choice' or 'choices' in field:
                 indexno = random.choice(range(len(field['choices'])))
                 if 'value' not in field['choices'][indexno]:
                     continue
                 variables[field['variable_name']] = field['choices'][indexno]['value']
             elif field.get('datatype', None) == 'boolean':
-                variables[field['variable_name']] = True if random.random() > 0.5 else False
+                variables[field['variable_name']] = bool(random.random() > 0.5)
             elif field.get('datatype', None) == 'threestate':
                 variables[field['variable_name']] = True if random.random() > 0.66 else (False if random.random() > 0.5 else None)
             elif field.get('datatype', None) in ('text', 'area'):
@@ -82,8 +81,7 @@ while iterations:
         if len(variables) == 0 and len(file_variables) == 0:
             if 'fields' in info:
                 sys.exit("Fields not recognized:\n" + repr(info['fields']))
-            else:
-                sys.exit("Question not recognized:\n" + repr(info))
+            sys.exit("Question not recognized:\n" + repr(info))
         print("Session is " + session)
         if len(variables):
             print("Setting variables:\n" + repr(variables))
@@ -114,5 +112,5 @@ while iterations:
     #    sys.exit(r.text)
 
     iterations -= 1
-    
+
 sys.exit(0)

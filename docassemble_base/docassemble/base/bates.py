@@ -1,5 +1,5 @@
-from .marisol import Area, Marisol
 import argparse
+from docassemble.base.marisol import Area, Marisol
 
 parser = argparse.ArgumentParser(description='Bates number documents')
 parser.add_argument("files", help="files to Bates number", nargs='*')

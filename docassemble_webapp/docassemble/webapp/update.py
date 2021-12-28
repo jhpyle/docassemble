@@ -9,12 +9,13 @@ import re
 import shutil
 import time
 import fcntl
+from distutils.version import LooseVersion
+import docassemble.base.config
+from docassemble.base.config import daconfig
 
 installed_distribution_cache = None
 
-from distutils.version import LooseVersion
 if __name__ == "__main__":
-    import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
     if 'initialize' in sys.argv:
         mode = 'initialize'
@@ -24,21 +25,18 @@ if __name__ == "__main__":
         mode = 'initialize'
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
-if supervisor_url:
-    USING_SUPERVISOR = True
-else:
-    USING_SUPERVISOR = False
+USING_SUPERVISOR = bool(supervisor_url)
 
 def fix_fnctl():
     try:
-        flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL);
-        fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
+        flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL)
+        fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK)
         sys.stderr.write("fix_fnctl: updated stdout\n")
     except:
         pass
     try:
-        flags = fcntl.fcntl(sys.stderr, fcntl.F_GETFL);
-        fcntl.fcntl(sys.stderr, fcntl.F_SETFL, flags&~os.O_NONBLOCK);
+        flags = fcntl.fcntl(sys.stderr, fcntl.F_GETFL)
+        fcntl.fcntl(sys.stderr, fcntl.F_SETFL, flags&~os.O_NONBLOCK)
         sys.stderr.write("fix_fnctl: updated stderr\n")
     except:
         pass
@@ -49,7 +47,7 @@ def remove_inactive_hosts(start_time=None):
     sys.stderr.write("remove_inactive_hosts: starting after " + str(time.time() - start_time) + " seconds\n")
     if USING_SUPERVISOR:
         from docassemble.base.config import hostname
-        from docassemble.webapp.app_object import app
+        #from docassemble.webapp.app_object import app
         from docassemble.webapp.db_object import db
         from docassemble.webapp.core.models import Supervisors
         from sqlalchemy import select, delete
@@ -60,7 +58,7 @@ def remove_inactive_hosts(start_time=None):
             try:
                 socket.gethostbyname(host.hostname)
                 server = xmlrpc.client.Server(host.url + '/RPC2')
-                result = server.supervisor.getState()
+                server.supervisor.getState()
             except:
                 to_delete.add(host.id)
         for id_to_delete in to_delete:
@@ -68,26 +66,26 @@ def remove_inactive_hosts(start_time=None):
             db.session.commit()
     sys.stderr.write("remove_inactive_hosts: ended after " + str(time.time() - start_time) + " seconds\n")
 
-class DummyPackage(object):
+class DummyPackage:
     def __init__(self, name):
         self.name = name
         self.type = 'pip'
         self.limitation = None
 
-def check_for_updates(doing_startup=False, start_time=None, invalidate_cache=True, full=True):
+def check_for_updates(start_time=None, invalidate_cache=True, full=True):
     if start_time is None:
         start_time = time.time()
     sys.stderr.write("check_for_updates: starting after " + str(time.time() - start_time) + " seconds\n")
     if invalidate_cache:
         invalidate_installed_distributions_cache()
     from docassemble.base.config import hostname
-    from docassemble.webapp.app_object import app
+    #from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
     from docassemble.webapp.packages.models import Package, Install, PackageAuth
     from sqlalchemy import select, delete
     ok = True
-    here_already = dict()
-    results = dict()
+    here_already = {}
+    results = {}
     if full:
         sys.stderr.write("check_for_updates: 0.5 after " + str(time.time() - start_time) + " seconds\n")
         for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2', 'azure-storage', 'Flask-User'):
@@ -111,7 +109,7 @@ def check_for_updates(doing_startup=False, start_time=None, invalidate_cache=Tru
         if 'psycopg2-binary' not in here_already:
             sys.stderr.write("check_for_updates: installing psycopg2-binary\n")
             install_package(DummyPackage('psycopg2-binary'), start_time=start_time)
-            change = True
+            changed = True
         if 'kombu' not in here_already or LooseVersion(here_already['kombu']) <= LooseVersion('4.1.0'):
             sys.stderr.write("check_for_updates: installing new kombu version\n")
             install_package(DummyPackage('kombu'), start_time=start_time)
@@ -167,17 +165,17 @@ def check_for_updates(doing_startup=False, start_time=None, invalidate_cache=Tru
             changed = True
         if changed:
             installed_packages = get_installed_distributions(start_time=start_time)
-            here_already = dict()
+            here_already = {}
             for package in installed_packages:
                 here_already[package.key] = package.version
-    packages = dict()
-    installs = dict()
-    to_install = list()
-    to_uninstall = list()
-    uninstall_done = dict()
-    uninstalled_packages = dict()
+    packages = {}
+    installs = {}
+    to_install = []
+    to_uninstall = []
+    uninstall_done = {}
+    uninstalled_packages = {}
     logmessages = ''
-    package_by_name = dict()
+    package_by_name = {}
     sys.stderr.write("check_for_updates: 2 after " + str(time.time() - start_time) + " seconds\n")
     for package in db.session.execute(select(Package.name).filter_by(active=True)):
         package_by_name[package.name] = package
@@ -201,7 +199,7 @@ def check_for_updates(doing_startup=False, start_time=None, invalidate_cache=Tru
             sys.stderr.write("check_for_updates: " + uninstalled_packages[install.package_id].name + " will be uninstalled after " + str(time.time() - start_time) + " seconds\n")
             to_uninstall.append(uninstalled_packages[install.package_id]) # uninstall if it is installed
     changed = False
-    package_owner = dict()
+    package_owner = {}
     sys.stderr.write("check_for_updates: 6 after " + str(time.time() - start_time) + " seconds\n")
     for auth in db.session.execute(select(PackageAuth).filter_by(authtype='owner')).scalars():
         package_owner[auth.package_id] = auth.user_id
@@ -265,7 +263,7 @@ def check_for_updates(doing_startup=False, start_time=None, invalidate_cache=Tru
         else:
             results[package.name] = 'pip uninstall command returned failure code'
             ok = False
-    packages_to_delete = list()
+    packages_to_delete = []
     sys.stderr.write("check_for_updates: 10 after " + str(time.time() - start_time) + " seconds\n")
     did_something = False
     for package in to_install:
@@ -326,15 +324,14 @@ def update_versions(start_time=None):
         start_time = time.time()
     sys.stderr.write("update_versions: starting after " + str(time.time() - start_time) + " seconds\n")
     from docassemble.base.config import hostname
-    from docassemble.webapp.app_object import app
+    #from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
-    from docassemble.webapp.packages.models import Package, Install, PackageAuth
+    from docassemble.webapp.packages.models import Package, Install
     from sqlalchemy import select
-    from docassemble.webapp.daredis import r
-    install_by_id = dict()
+    install_by_id = {}
     for install in db.session.execute(select(Install).filter_by(hostname=hostname)).scalars():
         install_by_id[install.package_id] = install
-    package_by_name = dict()
+    package_by_name = {}
     for package in db.session.execute(select(Package).filter_by(active=True).order_by(Package.name, Package.id.desc())).scalars():
         if package.name in package_by_name:
             continue
@@ -350,13 +347,11 @@ def update_versions(start_time=None):
                     package_row.packageversion = package.version
     db.session.commit()
     sys.stderr.write("update_versions: ended after " + str(time.time() - start_time) + "\n")
-    return
 
 def get_home_page_dict():
-    from docassemble.base.config import daconfig
     PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + str(sys.version_info.major) + '.' + str(sys.version_info.minor))
     FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor), 'site-packages')
-    home_page = dict()
+    home_page = {}
     for d in os.listdir(FULL_PACKAGE_DIRECTORY):
         if not d.startswith('docassemble.'):
             continue
@@ -381,7 +376,7 @@ def add_dependencies(user_id, start_time=None):
     #sys.stderr.write('add_dependencies: user_id is ' + str(user_id) + "\n")
     sys.stderr.write("add_dependencies: starting after " + str(time.time() - start_time) + " seconds\n")
     from docassemble.base.config import hostname
-    from docassemble.webapp.app_object import app
+    #from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
     from docassemble.webapp.packages.models import Package, Install, PackageAuth
     from sqlalchemy import select, delete
@@ -390,7 +385,7 @@ def add_dependencies(user_id, start_time=None):
         packages_known.add(package.name)
     installed_packages = get_installed_distributions(start_time=start_time)
     home_pages = None
-    packages_to_add = list()
+    packages_to_add = []
     for package in installed_packages:
         if package.key in packages_known:
             continue
@@ -399,7 +394,7 @@ def add_dependencies(user_id, start_time=None):
         db.session.execute(delete(Package).filter_by(name=package.key))
         packages_to_add.append(package)
     did_something = False
-    if len(packages_to_add):
+    if len(packages_to_add) > 0:
         did_something = True
         db.session.commit()
         for package in packages_to_add:
@@ -423,9 +418,9 @@ def add_dependencies(user_id, start_time=None):
     return did_something
 
 def fix_names():
-    from docassemble.webapp.app_object import app
+    #from docassemble.webapp.app_object import app
     from docassemble.webapp.db_object import db
-    from docassemble.webapp.packages.models import Package, Install, PackageAuth
+    from docassemble.webapp.packages.models import Package
     from sqlalchemy import select
     installed_packages = [package.key for package in get_installed_distributions()]
     for package in db.session.execute(select(Package).filter_by(active=True).with_for_update()).scalars():
@@ -445,12 +440,11 @@ def splitall(path):
         if parts[0] == path:
             allparts.insert(0, parts[0])
             break
-        elif parts[1] == path:
+        if parts[1] == path:
             allparts.insert(0, parts[1])
             break
-        else:
-            path = parts[0]
-            allparts.insert(0, parts[1])
+        path = parts[0]
+        allparts.insert(0, parts[1])
     return allparts
 
 def install_package(package, start_time=None):
@@ -460,8 +454,6 @@ def install_package(package, start_time=None):
     sys.stderr.write("install_package: " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
     if package.type == 'zip' and package.upload is None:
         return 0, ''
-    from docassemble.base.config import daconfig
-    from docassemble.webapp.daredis import r
     from docassemble.webapp.files import SavedFile
     PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + str(sys.version_info.major) + '.' + str(sys.version_info.minor))
     logfilecontents = ''
@@ -477,7 +469,7 @@ def install_package(package, start_time=None):
     disable_pip_cache = True
     if package.type in ('zip', 'git'):
         sys.stderr.write("install_package: calling uninstall_package on " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
-        returnval, newlog = uninstall_package(package, sleep=False, start_time=start_time)
+        returnval, newlog = uninstall_package(package, start_time=start_time)
         logfilecontents += newlog
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
@@ -524,33 +516,20 @@ def install_package(package, start_time=None):
     logfilecontents += "install_package: running " + " ".join(commands) + "\n"
     returnval = 1
     try:
-        subprocess.run(commands)
+        subprocess.run(commands, check=False)
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
-    if False:
-        fix_fnctl()
-        sys.stderr.flush()
-        sys.stdout.flush()
-    #time.sleep(4)
     pip_log.seek(0)
     with open(pip_log.name, 'r', encoding='utf-8') as x:
         logfilecontents += x.read()
     pip_log.close()
-    if False:
-        try:
-            sys.stderr.write(logfilecontents + "\n")
-        except:
-            pass
-        sys.stderr.flush()
-        sys.stdout.flush()
-    #time.sleep(4)
     shutil.rmtree(temp_dir)
     sys.stderr.write('install_package: returnval is: ' + str(returnval) + "\n")
     sys.stderr.write('install_package: done' + " after " + str(time.time() - start_time) + " seconds\n")
     return returnval, logfilecontents
 
-def uninstall_package(package, sleep=True, start_time=None):
+def uninstall_package(package, start_time=None):
     if start_time is None:
         start_time = time.time()
     invalidate_installed_distributions_cache()
@@ -561,39 +540,24 @@ def uninstall_package(package, sleep=True, start_time=None):
     sys.stderr.write("uninstall_package: running " + " ".join(commands) + " after " + str(time.time() - start_time) + " seconds\n")
     logfilecontents += "Running " + (" ".join(commands)) + "\n"
     try:
-        subprocess.run(commands)
+        subprocess.run(commands, check=False)
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode
-    if False:
-        fix_fnctl()
-        sys.stderr.flush()
-        sys.stdout.flush()
-    #time.sleep(4)
     pip_log.seek(0)
     with open(pip_log.name, 'r', encoding='utf-8') as x:
         logfilecontents += x.read()
     pip_log.close()
-    if False:
-        try:
-            sys.stderr.write(logfilecontents + "\n")
-        except:
-            pass
-        sys.stderr.flush()
-        sys.stdout.flush()
-        #if sleep:
-        #    time.sleep(4)
     sys.stderr.write('uninstall_package: returnval is: ' + str(returnval) + "\n")
     sys.stderr.write("uninstall_package: done after " + str(time.time() - start_time) + " seconds\n")
     logfilecontents += 'returnval is: ' + str(returnval) + "\n"
     logfilecontents += 'uninstall_package: done' + "\n"
     return returnval, logfilecontents
 
-class Object(object):
+class Object:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-    pass
 
 def invalidate_installed_distributions_cache():
     global installed_distribution_cache
@@ -606,7 +570,7 @@ def get_installed_distributions(start_time=None):
     if start_time is None:
         start_time = time.time()
     sys.stderr.write("get_installed_distributions: starting after " + str(time.time() - start_time) + " seconds\n")
-    results = list()
+    results = []
     # try:
     #     output = subprocess.check_output(['pip', '--version']).decode('utf-8', 'ignore')
     # except subprocess.CalledProcessError as err:
@@ -640,7 +604,7 @@ def get_pip_info(package_name, start_time=None):
     # pip.main(['show', package_name])
     # sys.stdout = old_stdout
     # output = saved_stdout.getvalue()
-    results = dict()
+    results = {}
     if not isinstance(output, str):
         output = output.decode('utf-8', 'ignore')
     for line in output.split('\n'):
@@ -655,14 +619,13 @@ def get_pip_info(package_name, start_time=None):
     sys.stderr.write("get_pip_info: returning after " + str(time.time() - start_time) + " seconds")
     return results
 
-if __name__ == "__main__":
+def main():
     #import docassemble.webapp.database
     start_time = time.time()
     from docassemble.webapp.app_object import app
     with app.app_context():
         from docassemble.webapp.db_object import db
-        from docassemble.webapp.packages.models import Package, Install, PackageAuth
-        from docassemble.webapp.daredis import r
+        from docassemble.webapp.packages.models import Package
         from sqlalchemy import select
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
         if mode == 'initialize':
@@ -672,26 +635,28 @@ if __name__ == "__main__":
             if any_package is None:
                 add_dependencies(1, start_time=start_time)
                 update_versions(start_time=start_time)
-            check_for_updates(doing_startup=True, start_time=start_time, invalidate_cache=False)
+            check_for_updates(start_time=start_time, invalidate_cache=False)
             remove_inactive_hosts(start_time=start_time)
         else:
             sys.stderr.write("update: updating with mode check_for_updates after " + str(time.time() - start_time) + " seconds\n")
             check_for_updates(start_time=start_time)
-            from docassemble.base.config import daconfig
             if USING_SUPERVISOR:
                 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
                 container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
                 if re.search(r':(web|celery|all):', container_role):
                     sys.stderr.write("update: sending reset signal after " + str(time.time() - start_time) + " seconds\n")
                     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
-                    subprocess.run(args)
+                    subprocess.run(args, check=False)
                 else:
                     sys.stderr.write("update: not sending reset signal because not web or celery after " + str(time.time() - start_time) + " seconds\n")
             else:
                 sys.stderr.write("update: touched wsgi file after " + str(time.time() - start_time) + " seconds\n")
                 wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
                 if os.path.isfile(wsgi_file):
-                    with open(wsgi_file, 'a'):
+                    with open(wsgi_file, 'a', encoding='utf-8'):
                         os.utime(wsgi_file, None)
         db.engine.dispose()
     sys.exit(0)
+
+if __name__ == "__main__":
+    main()

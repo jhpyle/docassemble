@@ -1,18 +1,5 @@
 import re
 import os
-from copy import deepcopy
-from docxtpl import DocxTemplate, R, InlineImage, RichText, Listing, Document, Subdoc
-from docx.shared import Mm, Inches, Pt, Cm, Twips
-import docx.opc.constants
-from docxcompose.composer import Composer # For fixing up images, etc when including docx files within templates
-from docx.oxml.section import CT_SectPr # For figuring out if an element is a section or not
-from docassemble.base.functions import server, this_thread, package_template_filename, get_config, roman
-import docassemble.base.filter
-from xml.sax.saxutils import escape as html_escape
-from docassemble.base.logger import logmessage
-from bs4 import BeautifulSoup, NavigableString, Tag
-from collections import deque
-import PyPDF2
 import codecs
 import time
 import stat
@@ -20,7 +7,22 @@ import mimetypes
 import tempfile
 import string
 import subprocess
+from collections import deque
+from copy import deepcopy
+from xml.sax.saxutils import escape as html_escape
+from docxtpl import InlineImage, RichText, Document, DocxTemplate
+from docx.shared import Mm, Inches, Pt, Cm, Twips
+import docx.opc.constants
+from docx.oxml.section import CT_SectPr # For figuring out if an element is a section or not
+import docx
+from docxcompose.composer import Composer # For fixing up images, etc when including docx files within templates
+from docassemble.base.functions import server, this_thread, package_template_filename, get_config, roman
 from docassemble.base.error import DAError
+import docassemble.base.filter
+import docassemble.base.pandoc
+from docassemble.base.logger import logmessage
+from bs4 import BeautifulSoup, NavigableString, Tag
+import PyPDF2
 
 zerowidth = '\u200B'
 
@@ -61,43 +63,16 @@ def image_for_docx(fileref, question, tpl, width=None):
         the_width = Inches(2)
     return InlineImage(tpl, file_info['fullpath'], the_width)
 
-def transform_for_docx(text, question, tpl, width=None):
+def transform_for_docx(text):
     if type(text) in (int, float, bool, NoneType):
         return text
     text = str(text)
-    # m = re.search(r'\[FILE ([^,\]]+), *([0-9\.]) *([A-Za-z]+) *\]', text)
-    # if m:
-    #     amount = m.group(2)
-    #     units = m.group(3).lower()
-    #     if units in ['in', 'inches', 'inch']:
-    #         the_width = Inches(amount)
-    #     elif units in ['pt', 'pts', 'point', 'points']:
-    #         the_width = Pt(amount)
-    #     elif units in ['mm', 'millimeter', 'millimeters']:
-    #         the_width = Mm(amount)
-    #     elif units in ['cm', 'centimeter', 'centimeters']:
-    #         the_width = Cm(amount)
-    #     elif units in ['twp', 'twip', 'twips']:
-    #         the_width = Twips(amount)
-    #     else:
-    #         the_width = Pt(amount)
-    #     file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
-    #     if 'fullpath' not in file_info:
-    #         return '[FILE NOT FOUND]'
-    #     return InlineImage(tpl, file_info['fullpath'], the_width)
-    # m = re.search(r'\[FILE ([^,\]]+)\]', text)
-    # if m:
-    #     file_info = server.file_finder(m.group(1), convert={'svg': 'png'}, question=question)
-    #     if 'fullpath' not in file_info:
-    #         return '[FILE NOT FOUND]'
-    #     return InlineImage(tpl, file_info['fullpath'], Inches(2))
-    #return docassemble.base.filter.docx_template_filter(text, question=question)
     return text
 
 def create_hyperlink(url, anchor_text, tpl):
     return InlineHyperlink(tpl, url, sanitize_xml(anchor_text))
 
-class InlineHyperlink(object):
+class InlineHyperlink:
     def __init__(self, tpl, url, anchor_text):
         self.tpl = tpl
         self.url = url
@@ -159,7 +134,7 @@ def include_docx_template(template_file, **kwargs):
     else:
         single_paragraph = False
     if 'change_numbering' in kwargs:
-        change_numbering = True if kwargs['change_numbering'] else False
+        change_numbering = bool(kwargs['change_numbering'])
         del kwargs['change_numbering']
     else:
         change_numbering = True
@@ -193,17 +168,17 @@ def get_children(descendants, parsed):
     descendants_buff = deque()
     if descendants is None:
         return descendants_buff
-    if (isinstance(descendants, NavigableString)):
+    if isinstance(descendants, NavigableString):
         parsed.append(descendants)
     else:
         for child in descendants.children:
-            if (child.name == None):
-                if (subelement == False):
+            if child.name is None:
+                if subelement is False:
                     parsed.append(child)
                 else:
                     descendants_buff.append(child)
             else:
-                if (subelement == False):
+                if subelement is False:
                     subelement = True
                     descendants_buff.append(child)
                 else:
@@ -216,7 +191,7 @@ def html_linear_parse(soup):
     descendants = deque()
     descendants.appendleft(html_tag)
     parsed = deque()
-    while (len(list(descendants)) > 0):
+    while len(list(descendants)) > 0:
         child = descendants.popleft()
         from_children = get_children(child, parsed)
         descendants.extendleft(from_children)
@@ -238,7 +213,7 @@ def Roman_Numeral(number):
 def roman_numeral(number):
     return roman((number - 1) % 4000, case='lower')
 
-class SoupParser(object):
+class SoupParser:
     def __init__(self, tpl):
         self.paragraphs = [dict(params=dict(style='p', indentation=0, list_number=1), runs=[RichText('')])]
         self.current_paragraph = self.paragraphs[-1]
@@ -495,7 +470,7 @@ class SoupParser(object):
             else:
                 logmessage("Encountered a " + part.__class__.__name__)
 
-class InlineSoupParser(object):
+class InlineSoupParser:
     def __init__(self, tpl):
         self.runs = [RichText('')]
         self.run = self.runs[-1]
@@ -671,8 +646,7 @@ def markdown_to_docx(text, question, tpl):
         output = str(parser)
         # logmessage(output)
         return docassemble.base.filter.docx_template_filter(output, question=question)
-    else:
-        return inline_markdown_to_docx(text, question, tpl)
+    return inline_markdown_to_docx(text, question, tpl)
 
 def safe_pypdf_reader(filename):
     try:
@@ -681,7 +655,7 @@ def safe_pypdf_reader(filename):
         new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
         qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
         try:
-            result = subprocess.run(qpdf_subprocess_arguments, timeout=60).returncode
+            result = subprocess.run(qpdf_subprocess_arguments, timeout=60, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
         if result != 0:
@@ -704,7 +678,7 @@ def pdf_pages(file_info, width):
     max_pages = 1 + int(file_info['pages'])
     formatter = '%0' + str(len(str(max_pages))) + 'd'
     for page in range(1, max_pages):
-        page_file = dict()
+        page_file = {}
         test_path = file_info['path'] + 'page-in-progress'
         if os.path.isfile(test_path):
             while (os.path.isfile(test_path) and time.time() - os.stat(test_path)[stat.ST_MTIME]) < 30:
@@ -721,12 +695,10 @@ def pdf_pages(file_info, width):
         else:
             output += "[Error including page image]"
         output += ' '
-    return(output)
+    return output
 
 def concatenate_files(path_list):
-    import docassemble.base.pandoc
-    import docx
-    new_path_list = list()
+    new_path_list = []
     for path in path_list:
         mimetype, encoding = mimetypes.guess_type(path)
         if mimetype in ('application/rtf', 'application/msword', 'application/vnd.oasis.opendocument.text'):

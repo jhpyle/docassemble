@@ -1,7 +1,7 @@
+import re
 from flask_wtf import FlaskForm
 from docassemble.base.functions import LazyWord as word
 from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField, BooleanField
-import re
 
 class NonValidatingSelectField(SelectField):
     def pre_validate(self, form):
@@ -73,7 +73,7 @@ class Utilities(FlaskForm):
     language_submit = SubmitField(word('Translate'))
     officeaddin_version = StringField(word('Version'), default='0.0.0.1')
     officeaddin_submit = SubmitField(word('Download'))
-    
+
 class PlaygroundFilesForm(FlaskForm):
     purpose = StringField('Purpose')
     section = StringField(word('Section'))
@@ -188,8 +188,8 @@ class APIKey(FlaskForm):
     method = SelectField(word('Security Method'))
     submit = SubmitField(word('Create'))
     delete = SubmitField(word('Delete'))
-    def validate(self):
-        rv = FlaskForm.validate(self)
+    def validate(self, extra_validators=None):
+        rv = FlaskForm.validate(self, extra_validators=extra_validators)
         if not rv:
             return False
         if self.action.data not in ('edit', 'new'):

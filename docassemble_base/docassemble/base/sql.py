@@ -1,18 +1,20 @@
 import copy
 import os
 import sys
+import json
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import server, this_thread
 from docassemble.base.core import DAList, DAObjectPlusParameters
-import json
+from alembic.config import Config
+from alembic import command
 
 __all__ = ['SQLObject', 'SQLObjectRelationship', 'SQLObjectList', 'SQLRelationshipList', 'StandardRelationshipList', 'alchemy_url', 'connect_args', 'upgrade_db']
 
-class SQLObject(object):
+class SQLObject:
     _required = []
     _uid = 'uid'
-    _child_mapping = dict()
-    _parent_mapping = dict()
+    _child_mapping = {}
+    _parent_mapping = {}
     def sql_init(self):
         self._zombie = False
         db_entry = None
@@ -27,7 +29,7 @@ class SQLObject(object):
         if db_entry is not None:
             self.id = db_entry.id
             self._nascent = False
-            db_values = dict()
+            db_values = {}
             for column in self._model.__dict__.keys():
                 if column == 'id' or column.startswith('_'):
                     continue
@@ -43,7 +45,7 @@ class SQLObject(object):
             self.db_cache()
             return
         self._nascent = True
-        self._orig = dict()
+        self._orig = {}
     def __getstate__(self):
         try:
             self.db_save()
@@ -62,20 +64,20 @@ class SQLObject(object):
     @classmethod
     def filter(cls, instance_name, **kwargs):
         if 'dbcache' not in this_thread.misc:
-            this_thread.misc['dbcache'] = dict()
+            this_thread.misc['dbcache'] = {}
         listobj = DAList(instance_name, object_type=cls, auto_gather=False)
-        filters = list()
+        filters = []
         for key, val in kwargs.items():
             if not hasattr(cls._model, key):
                 raise Exception("filter: class " + cls.__name__ + " does not have column " + key)
             filters.append(getattr(cls._model, key) == val)
-        for db_entry in [db_entry for db_entry in cls._session.query(cls._model).filter(*filters).order_by(cls._model.id).all()]:
+        for db_entry in list(cls._session.query(cls._model).filter(*filters).order_by(cls._model.id).all()):
             if cls._model.__name__ in this_thread.misc['dbcache'] and db_entry.id in this_thread.misc['dbcache'][cls._model.__name__]:
                 listobj.append(this_thread.misc['dbcache'][cls._model.__name__][db_entry.id])
             else:
                 obj = listobj.appendObject()
                 obj.id = db_entry.id
-                db_values = dict()
+                db_values = {}
                 for column in cls._model.__dict__.keys():
                     if column == 'id' or column.startswith('_'):
                         continue
@@ -95,19 +97,19 @@ class SQLObject(object):
     @classmethod
     def all(cls, instance_name=None):
         if 'dbcache' not in this_thread.misc:
-            this_thread.misc['dbcache'] = dict()
+            this_thread.misc['dbcache'] = {}
         if instance_name:
             listobj = DAList(instance_name, object_type=cls)
         else:
             listobj = DAList(object_type=cls)
             listobj.set_random_instance_name()
-        for db_entry in [db_entry for db_entry in cls._session.query(cls._model).order_by(cls._model.id).all()]:
+        for db_entry in list(cls._session.query(cls._model).order_by(cls._model.id).all()):
             if cls._model.__name__ in this_thread.misc['dbcache'] and db_entry.id in this_thread.misc['dbcache'][cls._model.__name__]:
                 listobj.append(this_thread.misc['dbcache'][cls._model.__name__][db_entry.id])
             else:
                 obj = listobj.appendObject()
                 obj.id = db_entry.id
-                db_values = dict()
+                db_values = {}
                 for column in cls._model.__dict__.keys():
                     if column == 'id' or column.startswith('_'):
                         continue
@@ -119,26 +121,25 @@ class SQLObject(object):
         listobj.gathered = True
         return listobj
     @classmethod
-    def by_id(cls, id, instance_name=None):
+    def by_id(cls, the_id, instance_name=None):
         if 'dbcache' not in this_thread.misc:
-            this_thread.misc['dbcache'] = dict()
-        if cls._model.__name__ in this_thread.misc['dbcache'] and id in this_thread.misc['dbcache'][cls._model.__name__]:
+            this_thread.misc['dbcache'] = {}
+        if cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
             if instance_name is None:
-                return this_thread.misc['dbcache'][cls._model.__name__][id]
-            else:
-                obj = this_thread.misc['dbcache'][cls._model.__name__][id]
-                obj.fix_instance_name(obj.instanceName, instance_name)
+                return this_thread.misc['dbcache'][cls._model.__name__][the_id]
+            obj = this_thread.misc['dbcache'][cls._model.__name__][the_id]
+            obj.fix_instance_name(obj.instanceName, instance_name)
         if instance_name is None:
-            obj = cls(id=id)
+            obj = cls(id=the_id)
             obj.set_random_instance_name()
         else:
-            obj = cls(instance_name, id=id)
+            obj = cls(instance_name, id=the_id)
         return obj
     @classmethod
     def by_uid(cls, uid, instance_name=None):
         if cls._uid not in cls._model.__dict__:
             return None
-        db_entry = cls._session.query(self._model).filter(getattr(cls._model, cls._uid) == uid).first()
+        db_entry = cls._session.query(cls._model).filter(getattr(cls._model, cls._uid) == uid).first()
         if db_entry is not None:
             return cls.by_id(db_entry.id)
         if instance_name is None:
@@ -151,11 +152,11 @@ class SQLObject(object):
         obj.ready()
         return obj
     @classmethod
-    def delete_by_id(cls, id):
-        cls._session.query(cls._model).filter(cls._model.id == id).delete()
+    def delete_by_id(cls, the_id):
+        cls._session.query(cls._model).filter(cls._model.id == the_id).delete()
         cls._session.commit()
-        if 'dbcache' in this_thread.misc and cls._model.__name__ in this_thread.misc['dbcache'] and id in this_thread.misc['dbcache'][cls._model.__name__]:
-            this_thread.misc['dbcache'][cls._model.__name__][id]._zombie = True
+        if 'dbcache' in this_thread.misc and cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
+            this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
     @classmethod
     def delete_by_uid(cls, uid):
         if cls._uid not in cls._model.__dict__:
@@ -168,8 +169,8 @@ class SQLObject(object):
             if 'dbcache' in this_thread.misc and cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
                 this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
     @classmethod
-    def id_exists(cls, id):
-        db_entry = cls._session.query(cls._model).filter(cls._model.id == id).first()
+    def id_exists(cls, the_id):
+        db_entry = cls._session.query(cls._model).filter(cls._model.id == the_id).first()
         if db_entry is None:
             return False
         return True
@@ -181,19 +182,19 @@ class SQLObject(object):
         if db_entry is None:
             return False
         return True
-    def db_from_cache(id):
+    def db_from_cache(self, the_id):
         if 'dbcache' not in this_thread.misc:
-            this_thread.misc['dbcache'] = dict()
+            this_thread.misc['dbcache'] = {}
         if self._model.__name__ not in this_thread.misc['dbcache']:
-            this_thread.misc['dbcache'][self._model.__name__] = dict()
-        if id in this_thread.misc['dbcache'][self._model.__name__]:
-            return this_thread.misc['dbcache'][self._model.__name__][id]
+            this_thread.misc['dbcache'][self._model.__name__] = {}
+        if the_id in this_thread.misc['dbcache'][self._model.__name__]:
+            return this_thread.misc['dbcache'][self._model.__name__][the_id]
         return None
     def db_cache(self):
         if 'dbcache' not in this_thread.misc:
-            this_thread.misc['dbcache'] = dict()
+            this_thread.misc['dbcache'] = {}
         if self._model.__name__ not in this_thread.misc['dbcache']:
-            this_thread.misc['dbcache'][self._model.__name__] = dict()
+            this_thread.misc['dbcache'][self._model.__name__] = {}
         if hasattr(self, 'id'):
             this_thread.misc['dbcache'][self._model.__name__][self.id] = self
     def __del__(self):
@@ -209,7 +210,7 @@ class SQLObject(object):
     def db_save(self):
         if self._zombie:
             return
-        db_values = dict()
+        db_values = {}
         required_ok = True
         for column in self._model.__dict__.keys():
             if column == 'id' or column.startswith('_'):
@@ -229,7 +230,7 @@ class SQLObject(object):
                 assert db_entry is not None
                 for key, val in db_values.items():
                     setattr(db_entry, key, val)
-                new_db_values = dict()
+                new_db_values = {}
                 for column in self._model.__dict__.keys():
                     if column not in db_values:
                         new_db_values[column] = getattr(db_entry, column)
@@ -257,7 +258,7 @@ class SQLObject(object):
                 return
             for key, val in db_values.items():
                 setattr(db_entry, key, val)
-            null_keys = list()
+            null_keys = []
             for key, val in self._orig.items():
                 if key not in db_values:
                     setattr(db_entry, key, None)
@@ -294,7 +295,7 @@ class SQLObject(object):
             return
         if self._nascent is True:
             self._nascent = False
-        db_values = dict()
+        db_values = {}
         for column in self._model.__dict__.keys():
             if column == 'id' or column.startswith('_'):
                 continue
@@ -325,16 +326,16 @@ class SQLObject(object):
     def has_child(self, rel_name, rel):
         if not (self.ready() and rel.ready()):
             raise Exception("has_child: cannot retrieve data")
-        info = _child_mapping[rel_name]
+        info = self._child_mapping[rel_name]
         model = info['relationship_class']._model
         db_entry = self._session.query(model).filter(model.getattr(info['parent_column']) == self.id, model.getattr(info['child_column']) == rel.id).first()
         if db_entry is None:
             return False
         return True
     def add_child(self, rel_name, child):
-        if not self.has_child(child):
-            info = _child_mapping[rel_name]
-            arg_dict = dict()
+        if not self.has_child(rel_name, child):
+            info = self._child_mapping[rel_name]
+            arg_dict = {}
             arg_dict[info['parent_column']] = self.id
             arg_dict[info['child_column']] = child.id
             db_entry = info['relationship_class']._model(**arg_dict)
@@ -343,41 +344,41 @@ class SQLObject(object):
     def get_child(self, rel_name, instance_name=None):
         if not self.ready():
             raise Exception("get_child: cannot retrieve data")
-        info = _child_mapping[rel_name]
+        info = self._child_mapping[rel_name]
         model = info['relationship_class']._model
         if instance_name:
             results = DAList(instance_name, object_type=info['parent_class'])
         else:
-            results = list()
+            results = []
         indexno = 0
         if instance_name is None:
-            for db_entry in [db_entry for db_entry in self._session.query(model).filter(model.getattr(info['parent_column']) == self.id).all()]:
+            for db_entry in list(self._session.query(model).filter(model.getattr(info['parent_column']) == self.id).all()):
                 results.append(info['child_class'].by_id(db_entry.getattr(info['child_column'])))
         else:
-            for db_entry in [db_entry for db_entry in self._session.query(model).filter(model.getattr(info['parent_column']) == self.id).all()]:
+            for db_entry in list(self._session.query(model).filter(model.getattr(info['parent_column']) == self.id).all()):
                 results.append(info['child_class'].by_id(db_entry.getattr(info['child_column'])), instance_name=instance_name + '[' + str(indexno) + ']')
                 indexno += 1
         return results
     def del_child(self, rel_name, child):
         if not (self.ready() and child.ready()):
             raise Exception("del_child: cannot retrieve data")
-        info = _child_mapping[rel_name]
+        info = self._child_mapping[rel_name]
         model = info['relationship_class']._model
         self._session.query(model).filter(model.getattr(info['parent_column']) == self.id, model.getattr(info['child_column']) == child.id).delete()
         self._session.commit()
     def has_parent(self, rel_name, rel):
         if not (self.ready() and rel.ready()):
             raise Exception("has_parent: cannot retrieve data")
-        info = _parent_mapping[rel_name]
+        info = self._parent_mapping[rel_name]
         model = info['relationship_class']._model
         db_entry = self._session.query(model).filter(model.getattr(info['child_column']) == self.id, model.getattr(info['parent_column']) == rel.id).first()
         if db_entry is None:
             return False
         return True
     def add_parent(self, rel_name, parent):
-        if not self.has_parent(parent):
-            info = _parent_mapping[rel_name]
-            arg_dict = dict()
+        if not self.has_parent(rel_name, parent):
+            info = self._parent_mapping[rel_name]
+            arg_dict = {}
             arg_dict[info['child_column']] = self.id
             arg_dict[info['parent_column']] = parent.id
             db_entry = info['relationship_class']._model(**arg_dict)
@@ -386,25 +387,25 @@ class SQLObject(object):
     def get_parent(self, rel_name, instance_name=None):
         if not self.ready():
             raise Exception("get_parent: cannot retrieve data")
-        info = _parent_mapping[rel_name]
+        info = self._parent_mapping[rel_name]
         model = info['relationship_class']._model
         if instance_name:
             results = DAList(instance_name, object_type=info['parent_class'])
         else:
-            results = list()
+            results = []
         indexno = 0
         if instance_name is None:
-            for db_entry in [db_entry for db_entry in self._session.query(model).filter(model.getattr(info['child_column']) == self.id).all()]:
+            for db_entry in list(self._session.query(model).filter(model.getattr(info['child_column']) == self.id).all()):
                 results.append(info['parent_class'].by_id(db_entry.getattr(info['parent_column'])))
         else:
-            for db_entry in [db_entry for db_entry in self._session.query(model).filter(model.getattr(info['child_column']) == self.id).all()]:
+            for db_entry in list(self._session.query(model).filter(model.getattr(info['child_column']) == self.id).all()):
                 results.append(info['parent_class'].by_id(db_entry.getattr(info['parent_column'])), instance_name=instance_name + '[' + str(indexno) + ']')
                 indexno += 1
         return results
     def del_parent(self, rel_name, parent):
         if not (self.ready() and parent.ready()):
             raise Exception("del_parent: cannot retrieve data")
-        info = _parent_mapping[rel_name]
+        info = self._parent_mapping[rel_name]
         model = info['relationship_class']._model
         self._session.query(model).filter(model.getattr(info['child_column']) == self.id, model.getattr(info['parent_column']) == parent.id).delete()
         self._session.commit()
@@ -434,8 +435,6 @@ def upgrade_db(url, py_file, engine, name=None, conn_args=None):
     versions_path = os.path.join(alembic_path, 'versions')
     if not os.path.isdir(versions_path):
         os.makedirs(versions_path)
-    from alembic.config import Config
-    from alembic import command
     alembic_cfg = Config(ini_file)
     alembic_cfg.set_main_option("sqlalchemy.url", url)
     alembic_cfg.set_main_option("connect_args", json.dumps(conn_args))
@@ -449,13 +448,13 @@ class SQLObjectRelationship(SQLObject):
         super().__init_subclass__(**kwargs)
         cls._required = [cls._parent[2], cls._child[2]]
         if cls.__name__ not in cls._parent[0]._child_mapping:
-            cls._parent[0]._child_mapping[cls.__name__] = dict()
+            cls._parent[0]._child_mapping[cls.__name__] = {}
         cls._parent[0]._child_mapping[cls.__name__]['relationship_class'] = cls
         cls._parent[0]._child_mapping[cls.__name__]['child_class'] = cls._child[0]
         cls._parent[0]._child_mapping[cls.__name__]['parent_column'] = cls._parent[2]
         cls._parent[0]._child_mapping[cls.__name__]['child_column'] = cls._child[2]
         if cls.__name__ not in cls._child[0]._parent_mapping:
-            cls._child[0]._parent_mapping[cls.__name__] = dict()
+            cls._child[0]._parent_mapping[cls.__name__] = {}
         cls._child[0]._parent_mapping[cls.__name__]['relationship_class'] = cls
         cls._child[0]._parent_mapping[cls.__name__]['parent_class'] = cls._parent[0]
         cls._child[0]._parent_mapping[cls.__name__]['child_column'] = cls._child[2]
@@ -464,21 +463,21 @@ class SQLObjectRelationship(SQLObject):
     def filter_by_parent(cls, instance_name, parent):
         if not parent.ready():
             raise Exception("filter_by_parent: cannot retrieve data")
-        filters = dict()
+        filters = {}
         filters[cls._parent[2]] = parent.id
         return cls.filter(instance_name, **filters)
     @classmethod
     def filter_by_child(cls, instance_name, child):
         if not child.ready():
             raise Exception("filter_by_child: cannot retrieve data")
-        filters = dict()
+        filters = {}
         filters[cls._child[2]] = child.id
         return cls.filter(instance_name, **filters)
     @classmethod
     def filter_by_parent_child(cls, instance_name, parent, child):
         if not (child.ready() and parent.ready()):
             raise Exception("filter_by_parent_child: cannot retrieve data")
-        filters = dict()
+        filters = {}
         filters[cls._parent[2]] = parent.id
         filters[cls._child[2]] = child.id
         return cls.filter(instance_name, **filters)
@@ -491,8 +490,9 @@ class SQLObjectRelationship(SQLObject):
     def db_get(self, column):
         if column == self._parent[2]:
             return getattr(getattr(self, self._parent[1]), 'id')
-        elif column == self._child[2]:
+        if column == self._child[2]:
             return getattr(getattr(self, self._child[1]), 'id')
+        raise Exception("Invalid column " + column)
     def db_set(self, column, value):
         if column == self._parent[2]:
             self.reInitializeAttribute(self._parent[1], self._parent[0].using(id=value))
@@ -515,11 +515,10 @@ class SQLObjectList(DAList):
 
 class SQLRelationshipList(DAList):
     def init(self, *pargs, **kwargs):
-        elements = list()
         parent_arg = kwargs.get('parent', None)
         child_arg = kwargs.get('child', None)
         if 'object_type' in kwargs:
-            params = dict()
+            params = {}
             if 'parent' in kwargs:
                 params[kwargs['object_type']._parent[1]] = kwargs['parent']
             if 'child' in kwargs:
@@ -541,9 +540,9 @@ class SQLRelationshipList(DAList):
             self.elements = self.object_type.filter_by_child(self.instanceName, child_arg)
         elif child_arg and parent_arg:
             self.elements = self.object_type.filter_by_parent_child(self.instanceName, parent_arg, child_arg)
-    def hook_on_remove(self, elem):
-        elem.db_delete()
-    def reset_gathered(self, recursive=False, only_if_empty=False):
+    def hook_on_remove(self, item):
+        item.db_delete()
+    def reset_gathered(self, recursive=False, only_if_empty=False, mark_incomplete=False):
         return
 
 class StandardRelationshipList(SQLRelationshipList):

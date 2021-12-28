@@ -1,53 +1,53 @@
 import sys
-import re
+import os
+import time
 import datetime
 import docassemble.base.config
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
 from docassemble.base.functions import word
+from docassemble.base.generate_key import random_alphanumeric
 from docassemble.webapp.app_object import app
+from docassemble.webapp.core.models import Uploads, ObjectStorage, SpeakList, Shortener, MachineLearning, GlobalObjectStorage
+from docassemble.webapp.database import alchemy_connection_string, dbtableprefix
 from docassemble.webapp.db_object import db
-from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserDict, UserDictKeys, ChatLog, TempUser, MyUserInvitation, UserRoles
-from docassemble.webapp.core.models import Uploads, ObjectStorage, SpeakList, Shortener, MachineLearning, GlobalObjectStorage, JsonStorage
-
-import docassemble.webapp.core.models
-import docassemble.webapp.packages.models
 from docassemble.webapp.packages.models import Package
 from docassemble.webapp.update import add_dependencies
-from sqlalchemy import create_engine, MetaData, select, delete, inspect
+from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserDict, UserDictKeys, ChatLog, TempUser, MyUserInvitation, UserRoles
+from docassemble.webapp.database import dbprefix
+import docassemble.webapp.core.models
+import docassemble.webapp.packages.models
+from sqlalchemy import select, delete, inspect
 from sqlalchemy.sql import text
 #import random
 #import string
-from docassemble.base.generate_key import random_alphanumeric
 from docassemble_flask_user import UserManager, SQLAlchemyAdapter
 import pkg_resources
-import os
-from docassemble.webapp.database import alchemy_connection_string, connect_args, dbtableprefix
-import time
-import sys
+from alembic.config import Config
+from alembic import command
 
-def get_role(db, name, result=None):
+def get_role(the_db, name, result=None):
     if result is None:
-        result = dict()
-    the_role = db.session.execute(select(Role).filter_by(name=name)).first()
+        result = {}
+    the_role = the_db.session.execute(select(Role).filter_by(name=name)).first()
     if the_role:
         return the_role
     the_role = Role(name=name)
-    db.session.add(the_role)
-    db.session.commit()
+    the_db.session.add(the_role)
+    the_db.session.commit()
     result['changed'] = True
     return the_role
 
-def get_user(db, role, defaults, result=None):
+def get_user(the_db, role, defaults, result=None):
     if result is None:
-        result = dict()
-    the_user = db.session.execute(select(UserModel).filter_by(nickname=defaults['nickname'])).scalar()
+        result = {}
+    the_user = the_db.session.execute(select(UserModel).filter_by(nickname=defaults['nickname'])).scalar()
     if the_user:
         return the_user
     while True:
         new_social = 'local$' + random_alphanumeric(32)
-        existing_user = db.session.execute(select(UserModel).filter_by(social_id=new_social)).scalar()
+        existing_user = the_db.session.execute(select(UserModel).filter_by(social_id=new_social)).scalar()
         if existing_user:
             continue
         break
@@ -68,9 +68,9 @@ def get_user(db, role, defaults, result=None):
         confirmed_at = datetime.datetime.now()
     )
     the_user.roles.append(role)
-    db.session.add(user_auth)
-    db.session.add(the_user)
-    db.session.commit()
+    the_db.session.add(user_auth)
+    the_db.session.add(the_user)
+    the_db.session.commit()
     result['changed'] = True
     return the_user
 
@@ -113,10 +113,10 @@ def populate_tables(start_time=None):
     if start_time is None:
         start_time = time.time()
     sys.stderr.write("create_tables.populate_tables: starting after " + str(time.time() - start_time) + "\n")
-    user_manager = UserManager(SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel), app)
-    sys.stderr.write("create_tables.populate_tables: obtained user_manager after " + str(time.time() - start_time) + "\n")
-    result = dict()
-    admin_defaults = daconfig.get('default admin account', dict())
+    UserManager(SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel), app)
+    sys.stderr.write("create_tables.populate_tables: obtained UserManager after " + str(time.time() - start_time) + "\n")
+    result = {}
+    admin_defaults = daconfig.get('default admin account', {})
     if 'email' not in admin_defaults:
         admin_defaults['email'] = os.getenv('DA_ADMIN_EMAIL', 'admin@admin.com')
     if 'nickname' not in admin_defaults:
@@ -132,17 +132,17 @@ def populate_tables(start_time=None):
     user_role = get_role(db, 'user', result=result)
     admin_role = get_role(db, 'admin', result=result)
     cron_role = get_role(db, 'cron', result=result)
-    customer_role = get_role(db, 'customer', result=result)
-    developer_role = get_role(db, 'developer', result=result)
-    advocate_role = get_role(db, 'advocate', result=result)
-    trainer_role = get_role(db, 'trainer', result=result)
+    get_role(db, 'customer', result=result)
+    get_role(db, 'developer', result=result)
+    get_role(db, 'advocate', result=result)
+    get_role(db, 'trainer', result=result)
     if daconfig.get('fix user roles', False):
         sys.stderr.write("create_tables.populate_tables: fixing user roles after " + str(time.time() - start_time) + "\n")
         to_fix = []
         for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).scalars():
             if len(user.roles) == 0:
                 to_fix.append(user)
-        if len(to_fix):
+        if len(to_fix) > 0:
             sys.stderr.write("create_tables.populate_tables: found user roles to fix after " + str(time.time() - start_time) + "\n")
             for user in to_fix:
                 user.roles.append(user_role)
@@ -179,12 +179,10 @@ def populate_tables(start_time=None):
     if package_info_changed:
         db.session.commit()
     sys.stderr.write("create_tables.populate_tables: ending after " + str(time.time() - start_time) + "\n")
-    return
 
 def main():
     sys.stderr.write("create_tables.main: starting\n")
     start_time = time.time()
-    from docassemble.webapp.database import dbprefix
     if dbprefix.startswith('postgresql') and not daconfig.get('force text to varchar upgrade', False):
         do_varchar_upgrade = False
     else:
@@ -231,8 +229,6 @@ def main():
             packagedir = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), 'docassemble/webapp')
             if not os.path.isdir(packagedir):
                 sys.exit("path for running alembic could not be found")
-            from alembic.config import Config
-            from alembic import command
             alembic_cfg = Config(os.path.join(packagedir, 'alembic.ini'))
             alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
             alembic_cfg.set_main_option("script_location", os.path.join(packagedir, 'alembic'))

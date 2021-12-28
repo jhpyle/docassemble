@@ -1,6 +1,6 @@
+import re
 from docassemble.base.util import log, get_config
 from googleapiclient.discovery import build
-import re
 
 __all__ = ['translate_phrase']
 

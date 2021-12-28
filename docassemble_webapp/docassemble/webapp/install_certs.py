@@ -3,16 +3,20 @@ import os
 import stat
 import re
 import copy
-from pwd import getpwnam
 import shutil
+from pwd import getpwnam
+if __name__ == "__main__":
+    import docassemble.base.config
+    docassemble.base.config.load(arguments=sys.argv)
+from docassemble.base.config import daconfig, S3_ENABLED, s3_config, AZURE_ENABLED, azure_config
+import docassemble.webapp.amazon
+import docassemble.webapp.microsoft
 
 def main():
-    from docassemble.base.config import daconfig, S3_ENABLED, s3_config, AZURE_ENABLED, azure_config
     certs_location = daconfig.get('certs', None)
     cloud = None
     prefix = None
     if S3_ENABLED:
-        import docassemble.webapp.amazon
         my_config = copy.deepcopy(s3_config)
         if certs_location is None:
             cloud = docassemble.webapp.amazon.s3object(my_config)
@@ -24,7 +28,6 @@ def main():
                 my_config['bucket'] = m.group(1)
                 cloud = docassemble.webapp.amazon.s3object(my_config)
     elif AZURE_ENABLED:
-        import docassemble.webapp.microsoft
         my_config = copy.deepcopy(azure_config)
         if certs_location is None:
             prefix = 'certs/'
@@ -64,7 +67,6 @@ def main():
     if not os.path.isdir(certs_location):
         sys.stderr.write("certs directory " + str(certs_location) + " does not exist")
         sys.exit(1)
-    import shutil
     dest = daconfig.get('cert install directory', '/etc/ssl/docassemble')
     if dest:
         if os.path.isdir(dest):
@@ -92,7 +94,4 @@ def main():
     return
 
 if __name__ == "__main__":
-    import docassemble.base.config
-    docassemble.base.config.load(arguments=sys.argv)
     main()
-    sys.exit(0)

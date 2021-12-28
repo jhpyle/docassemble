@@ -1,57 +1,56 @@
 import datetime
+import random
 import copy
-import httplib2
-import apiclient
 import time
-import pytz
-import yaml
+import string
 import zipfile
-import collections.abc as abc
-from PIL import Image, ImageEnhance
-from twilio.rest import Client as TwilioRestClient
-import pycountry
-import docassemble.base.ocr
+from collections import abc
 import pickle
 from itertools import chain
-from docassemble.base.logger import logmessage
-from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError
-from jinja2.runtime import UndefinedError
-from jinja2.exceptions import TemplateError
-
-import docassemble.base.pandoc
-import docassemble.base.pdftk
-import docassemble.base.file_docx
-from docassemble.base.file_docx import include_docx_template
-from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms
-from docassemble.base.core import DAObject, DAList, DADict, DAOrderedDict, DASet, DAFile, DAFileCollection, DAStaticFile, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file, RelationshipTree, DAContext, DACatchAll, DALazyTemplate
 from decimal import Decimal
-import sys
-#sys.stderr.write("importing async mail now from util\n")
-from docassemble.base.filter import markdown_to_html, to_text, ensure_valid_filename
-from docassemble.base.generate_key import random_alphanumeric
-
-#file_finder, url_finder, da_send_mail
-
-import docassemble.base.filter
-import dateutil
-import dateutil.parser
+#import sys
 import json
 import codecs
-import babel.dates
-#import redis
 import re
-import phonenumbers
 import tempfile
 import os
 import shutil
 import subprocess
-from bs4 import BeautifulSoup
-import types
 import requests
 from requests.auth import HTTPDigestAuth, HTTPBasicAuth
 from requests.exceptions import RequestException
-import i18naddress
+import httplib2
+import oauth2client.client
+import apiclient
+import pytz
+from PIL import Image, ImageEnhance
+from twilio.rest import Client as TwilioRestClient
+import pycountry
+from jinja2.runtime import UndefinedError
+from jinja2.exceptions import TemplateError
+import docassemble.base.ocr
+from docassemble.base.generate_key import random_alphanumeric
+from docassemble.base.logger import logmessage
+from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError
+import docassemble.base.pandoc
+import docassemble.base.pdftk
+import docassemble.base.file_docx
+import docassemble.base.parse
+from docassemble.base.file_docx import include_docx_template
+from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms
+from docassemble.base.core import DAObject, DAList, DADict, DAOrderedDict, DASet, DAFile, DAFileCollection, DAStaticFile, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, DAEmpty, DALink, selections, objects_from_file, RelationshipTree, DAContext, DACatchAll, DALazyTemplate
+from docassemble.base.filter import markdown_to_html
+import docassemble.base.filter
 import docassemble.base.geocode
+import dateutil
+import dateutil.parser
+import babel.dates
+#import redis
+import phonenumbers
+from bs4 import BeautifulSoup
+import i18naddress
+from flask_mail import Message
+from pyzbar.pyzbar import decode
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
@@ -349,10 +348,10 @@ class DAStore(DAObject):
         """Reads an object from the data store for the given key."""
         the_key = self._get_base_key() + ':' + key
         return server.server_sql_get(the_key, secret=this_thread.current_info.get('secret', None))
-    def set(self, key, value):
+    def set(self, key, the_value):
         """Writes an object to the data store under the given key."""
         the_key = self._get_base_key() + ':' + key
-        server.server_sql_set(the_key, value, encrypted=self.is_encrypted(), secret=this_thread.current_info.get('secret', None), the_user_id=this_thread.current_info['user']['the_user_id'])
+        server.server_sql_set(the_key, the_value, encrypted=self.is_encrypted(), secret=this_thread.current_info.get('secret', None), the_user_id=this_thread.current_info['user']['the_user_id'])
     def delete(self, key):
         """Deletes an object from the data store"""
         the_key = self._get_base_key() + ':' + key
@@ -405,7 +404,7 @@ class DAWeb(DAObject):
         if isinstance(auth, (dict, DADict)):
             if auth.get('type', 'basic') == 'basic':
                 return HTTPBasicAuth(auth['username'], auth['password'])
-            elif auth['type'] == 'digest':
+            if auth['type'] == 'digest':
                 return HTTPDigestAuth(auth['username'], auth['password'])
         return auth
     def _get_headers(self, new_headers):
@@ -430,9 +429,9 @@ class DAWeb(DAObject):
         return new_cookies
     def _get_json_body(self, json_body):
         if json_body is not None:
-            return True if json_body else False
+            return bool(json_body)
         if hasattr(self, 'json_body'):
-            return True if self.json_body else False
+            return bool(self.json_body)
         return True
     def _call(self, url, method=None, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, task=None, task_persistent=None, files=None, cookies=None, success_code=None):
         task = self._get_task(task)
@@ -444,8 +443,8 @@ class DAWeb(DAObject):
         success_code = self._get_success_code(success_code)
         if isinstance(success_code, str):
             success_code = [int(success_code.strip())]
-        elif isinstance(success_code, (abc.Iterable, DASet, DAList)):
-            new_success_code = list()
+        elif isinstance(success_code, (DASet, DAList)) or (isinstance(success_code, abc.Iterable) and not isinstance(success_code, str)):
+            new_success_code = []
             for code in success_code:
                 if not isinstance(code, int):
                     raise Exception("DAWeb.call: success codes must be integers")
@@ -467,19 +466,19 @@ class DAWeb(DAObject):
         if not re.search(r'^https?://', url):
             url = self._get_base_url() + re.sub(r'^/*', '', url)
         if data is None:
-            data = dict()
+            data = {}
         if isinstance(data, DADict):
             data = data.elements
         if json_body is False and not isinstance(data, dict):
             raise Exception("DAWeb.call: data must be a dictionary")
         if params is None:
-            params = dict()
+            params = {}
         if isinstance(params, DADict):
             params = params.elements
         if not isinstance(params, dict):
             raise Exception("DAWeb.call: params must be a dictionary")
         if headers is None:
-            headers = dict()
+            headers = {}
         if isinstance(headers, DADict):
             headers = headers.elements
         if not isinstance(headers, dict):
@@ -488,7 +487,7 @@ class DAWeb(DAObject):
         if len(headers) == 0:
             headers = None
         if cookies is None:
-            cookies = dict()
+            cookies = {}
         if isinstance(cookies, DADict):
             cookies = cookies.elements
         if not isinstance(cookies, dict):
@@ -501,7 +500,7 @@ class DAWeb(DAObject):
         if files is not None:
             if not isinstance(files, dict):
                 raise Exception("DAWeb.call: files must be a dictionary")
-            new_files = dict()
+            new_files = {}
             for key, val in files.items():
                 if not isinstance(key, str):
                     raise Exception("DAWeb.call: files must be a dictionary of string keys")
@@ -553,50 +552,41 @@ class DAWeb(DAObject):
                 r = requests.head(url, params=params, headers=headers, auth=auth, cookies=cookies)
         except RequestException as err:
             if on_failure == 'raise':
-                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=-1, response_text='', response_json=None, response_headers=dict(), exception_type=err.__class__.__name__, exception_text=str(err), cookies_before=cookies, cookies_after=None)
-            else:
-                return on_failure
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=-1, response_text='', response_json=None, response_headers={}, exception_type=err.__class__.__name__, exception_text=str(err), cookies_before=cookies, cookies_after=None)
+            return on_failure
         if success_code is None:
-            if r.status_code >= 200 and r.status_code < 300:
-                success = True
-            else:
-                success = False
+            success = bool(r.status_code >= 200 and r.status_code < 300)
         else:
-            if r.status_code in success_code:
-                success = True
-            else:
-                success = False
+            success = bool(r.status_code in success_code)
         if hasattr(self, 'cookies'):
             self.cookies = dict(r.cookies)
         try:
-            json_response = r.json()
+            the_json_response = r.json()
         except:
-            json_response = None
+            the_json_response = None
         if success and task is not None:
             mark_task_as_performed(task, persistent=task_persistent)
         if not success:
             if on_failure == 'content':
                 return r.content
-            elif on_failure == 'text':
+            if on_failure == 'text':
                 return r.text
-            elif on_failure == 'status_code':
+            if on_failure == 'status_code':
                 return r.status_code
-            elif on_failure == 'raise':
-                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
-            else:
-                return on_failure
+            if on_failure == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=r.status_code, response_text=r.text, response_json=the_json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
+            return on_failure
         if success and on_success is not None:
             if on_success == 'content':
                 return r.content
-            elif on_success == 'text':
+            if on_success == 'text':
                 return r.text
-            elif on_success == 'status_code':
+            if on_success == 'status_code':
                 return r.status_code
-            elif on_success == 'raise':
-                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=r.status_code, response_text=r.text, response_json=json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
-            else:
-                return on_success
-        return(json_response if json_response is not None else r.text)
+            if on_success == 'raise':
+                raise DAWebError(url=url, method=method, params=params, headers=headers, data=data, task=task, task_persistent=task_persistent, status_code=r.status_code, response_text=r.text, response_json=the_json_response, response_headers=r.headers, exception_type=None, exception_text=None, cookies_before=cookies, cookies_after=dict(r.cookies), success=success)
+            return on_success
+        return the_json_response if the_json_response is not None else r.text
     def get(self, url, data=None, params=None, headers=None, json_body=None, on_failure=None, on_success=None, auth=None, cookies=None, task=None, task_persistent=None):
         """Makes a GET request"""
         return self._call(url, method='GET', data=data, params=params, headers=headers, json_body=json_body, on_failure=on_failure, on_success=on_success, auth=auth, cookies=cookies, task=task, task_persistent=task_persistent)
@@ -662,42 +652,37 @@ class DACloudStorage(DAObject):
             server.cloud_custom(self.provider, self.config)
         else:
             self.custom = False
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     @property
     def conn(self):
         """This property returns a boto3.resource('s3') or BlockBlobService() object."""
         if self.custom:
             return server.cloud_custom(self.provider, self.config).conn
-        else:
-            return server.cloud.conn
+        return server.cloud.conn
     @property
     def client(self):
         """This property returns a boto3.client('s3') object."""
         if self.custom:
             return server.cloud_custom(self.provider, self.config).client
-        else:
-            return server.cloud.client
+        return server.cloud.client
     @property
     def bucket(self):
         """This property returns a boto3 Bucket() object."""
         if self.custom:
             return server.cloud_custom(self.provider, self.config).bucket
-        else:
-            return server.cloud.bucket
+        return server.cloud.bucket
     @property
     def bucket_name(self):
         """This property returns the name of the Amazon S3 bucket."""
         if self.custom:
             return server.cloud_custom(self.provider, self.config).bucket_name
-        else:
-            return server.cloud.bucket_name
+        return server.cloud.bucket_name
     @property
     def container_name(self):
         """This property returns the name of the Azure Blob Storage container."""
         if self.custom:
             return server.cloud_custom(self.provider, self.config).container
-        else:
-            return server.cloud.container
+        return server.cloud.container
 
 
 class DAGoogleAPI(DAObject):
@@ -748,8 +733,7 @@ def today(timezone=None, format=None):
     val = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone))
     if format is not None:
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0)).format_date(format)
-    else:
-        return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
+    return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
 
 def babel_language(language):
     if 'babel dates map' not in server.daconfig:
@@ -763,13 +747,13 @@ def month_of(the_date, as_word=False, language=None):
     if language is None:
         language = get_language()
     try:
-        if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
+        if isinstance(the_date, (datetime.datetime, datetime.date)):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
         if as_word:
-            return(babel.dates.format_date(date, format='MMMM', locale=babel_language(language)))
-        return(int(date.strftime('%m')))
+            return babel.dates.format_date(date, format='MMMM', locale=babel_language(language))
+        return int(date.strftime('%m'))
     except:
         return word("Bad date")
 
@@ -777,11 +761,11 @@ def day_of(the_date, language=None):
     """Interprets the_date as a date and returns the day of month."""
     ensure_definition(the_date, language)
     try:
-        if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
+        if isinstance(the_date, (datetime.datetime, datetime.date)):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return(int(date.strftime('%d')))
+        return int(date.strftime('%d'))
     except:
         return word("Bad date")
 
@@ -791,14 +775,13 @@ def dow_of(the_date, as_word=False, language=None):
     if language is None:
         language = get_language()
     try:
-        if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
+        if isinstance(the_date, (datetime.datetime, datetime.date)):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
         if as_word:
-            return(babel.dates.format_date(date, format='EEEE', locale=babel_language(language)))
-        else:
-            return(int(date.strftime('%u')))
+            return babel.dates.format_date(date, format='EEEE', locale=babel_language(language))
+        return int(date.strftime('%u'))
     except:
         return word("Bad date")
 
@@ -806,18 +789,17 @@ def year_of(the_date, language=None):
     """Interprets the_date as a date and returns the year."""
     ensure_definition(the_date, language)
     try:
-        if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
+        if isinstance(the_date, (datetime.datetime, datetime.date)):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
-        return(int(date.strftime('%Y')))
+        return int(date.strftime('%Y'))
     except:
         return word("Bad date")
 
 def interview_default(the_part, default_value, language):
-    result = None
     if the_part in this_thread.internal and this_thread.internal[the_part] is not None:
-         return this_thread.internal[the_part]
+        return this_thread.internal[the_part]
     for lang in (language, get_language(), '*'):
         if lang is not None:
             if lang in this_thread.interview.default_title:
@@ -835,7 +817,7 @@ def format_date(the_date, format=None, language=None):
     if format is None:
         format = interview_default('date format', 'long', language)
     try:
-        if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
+        if isinstance(the_date, (datetime.datetime, datetime.date)):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
@@ -853,7 +835,7 @@ def format_datetime(the_date, format=None, language=None):
     if format is None:
         format = interview_default('datetime format', 'long', language)
     try:
-        if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
+        if isinstance(the_date, (datetime.datetime, datetime.date)):
             date = the_date
         else:
             date = dateutil.parser.parse(the_date)
@@ -871,11 +853,11 @@ def format_time(the_time, format=None, language=None):
     if format is None:
         format = interview_default('time format', 'short', language)
     try:
-        if isinstance(the_time, datetime.datetime) or isinstance(the_time, datetime.date) or isinstance(the_time, datetime.time):
-            time = the_time
+        if isinstance(the_time, (datetime.datetime, datetime.date, datetime.time)):
+            this_time = the_time
         else:
-            time = dateutil.parser.parse(the_time)
-        return babel.dates.format_time(time, format=format, locale=babel_language(language))
+            this_time = dateutil.parser.parse(the_time)
+        return babel.dates.format_time(this_time, format=format, locale=babel_language(language))
     except Exception as errmess:
         return word("Bad date: " + str(errmess))
 
@@ -884,7 +866,7 @@ class DateTimeDelta:
         return str(self.describe())
     def describe(self, **kwargs):
         specificity = kwargs.get('specificity', None)
-        output = list()
+        output = []
         diff = dateutil.relativedelta.relativedelta(self.end, self.start)
         if diff.years != 0:
             output.append((abs(diff.years), noun_plural(word('year'), abs(diff.years))))
@@ -896,10 +878,8 @@ class DateTimeDelta:
             return_value = comma_and_list(["%s %s" % (nice_number(y[0]), y[1]) for y in output])
             if kwargs.get('capitalize', False):
                 return capitalize(return_value)
-            else:
-                return return_value
-        else:
-            return comma_and_list(["%d %s" % y for y in output])
+            return return_value
+        return comma_and_list(["%d %s" % y for y in output])
 
 class DADateTime(datetime.datetime):
     def format(self, format=None, language=None):
@@ -910,8 +890,8 @@ class DADateTime(datetime.datetime):
         return format_datetime(self, format=format, language=language)
     def format_time(self, format=None, language=None):
         return format_time(self, format=format, language=language)
-    def replace_time(self, time):
-        return self.replace(hour=time.hour, minute=time.minute, second=time.second, microsecond=time.microsecond)
+    def replace_time(self, the_time):
+        return self.replace(hour=the_time.hour, minute=the_time.minute, second=the_time.second, microsecond=the_time.microsecond)
     @property
     def nanosecond(self):
         return 0
@@ -1062,7 +1042,7 @@ def email_string(persons, include_name=None, first=False):
         persons = [persons]
     result = []
     for person in persons:
-        if isinstance(person, Person) or isinstance(person, DAEmailRecipient):
+        if isinstance(person, (Person, DAEmailRecipient)):
             result.append(person.email_address(include_name=include_name))
         else:
             result.append(str(person))
@@ -1079,7 +1059,7 @@ def email_stringer(variable, first=False, include_name=False):
 def valid_datetime(the_datetime):
     """Returns True if the provided text represents a valid date or time."""
     ensure_definition(the_datetime)
-    if isinstance(the_datetime, datetime.date) or isinstance(the_datetime, datetime.time):
+    if isinstance(the_datetime, (datetime.date, datetime.time)):
         return True
     try:
         dateutil.parser.parse(the_datetime)
@@ -1089,7 +1069,7 @@ def valid_datetime(the_datetime):
 
 def timezone_list():
     """Returns a list of timezone choices, expressed as text."""
-    return sorted([tz for tz in pytz.all_timezones])
+    return sorted(list(pytz.all_timezones))
 
 def returning_user(minutes=None, hours=None, days=None):
     """Returns True if the user is returning to the interview after six
@@ -1153,7 +1133,7 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
             else:
                 exclude_privileges = [exclude_privileges]
     else:
-        exclude_privileges = list()
+        exclude_privileges = []
     for user_id, access_time in this_thread.internal['accesstime'].items():
         if user_id == -1:
             if 'anonymous' in exclude_privileges:
@@ -1184,15 +1164,13 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
         return None
     if timezone is not None:
         return dd(pytz.utc.localize(max_time).astimezone(pytz.timezone(timezone)))
-    else:
-        return dd(pytz.utc.localize(max_time).astimezone(pytz.utc))
+    return dd(pytz.utc.localize(max_time).astimezone(pytz.utc))
 
 def start_time(timezone=None):
     """Returns the time the interview was started, as a DADateTime object."""
     if timezone is not None:
         return dd(pytz.utc.localize(this_thread.internal['starttime']).astimezone(pytz.timezone(timezone)))
-    else:
-        return dd(pytz.utc.localize(this_thread.internal['starttime']).astimezone(pytz.utc))
+    return dd(pytz.utc.localize(this_thread.internal['starttime']).astimezone(pytz.utc))
 
 class LatitudeLongitude(DAObject):
     """Represents a GPS location."""
@@ -1200,7 +1178,7 @@ class LatitudeLongitude(DAObject):
         self.gathered = False
         self.known = False
         # self.description = ""
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def status(self):
         """Returns True or False depending on whether an attempt has yet been made
         to gather the latitude and longitude."""
@@ -1208,13 +1186,11 @@ class LatitudeLongitude(DAObject):
         if self.gathered:
             #logmessage("gathered is true")
             return False
-        else:
-            if location_returned():
-                #logmessage("returned is true")
-                self._set_to_current()
-                return False
-            else:
-                return True
+        if location_returned():
+            #logmessage("returned is true")
+            self._set_to_current()
+            return False
+        return True
     def _set_to_current(self):
         #logmessage("set to current")
         if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and isinstance(this_thread.current_info['user']['location'], dict):
@@ -1229,11 +1205,10 @@ class LatitudeLongitude(DAObject):
                 #logmessage("known is false")
             self.gathered = True
             self.description = str(self)
-        return
     def __str__(self):
         if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
             return str(self.latitude) + ', ' + str(self.longitude)
-        elif hasattr(self, 'error'):
+        if hasattr(self, 'error'):
             return str(self.error)
         return 'Unknown'
 
@@ -1243,7 +1218,6 @@ class RoleChangeTracker(DAObject):
     do not receive multiple e-mails needlessly."""
     def init(self, *pargs, **kwargs):
         self.last_role = None
-        return
     # def should_send_email(self):
     #     """Returns True or False depending on whether an e-mail will be sent on
     #     role change"""
@@ -1254,16 +1228,15 @@ class RoleChangeTracker(DAObject):
         the name of the new role.  This prevents the send_email()
         function from sending duplicative notifications."""
         self.last_role = target_role
-        return
     def send_email(self, roles_needed, **kwargs):
         """Sends a notification e-mail if necessary because of a change in the
         active of the interviewee.  Returns True if an e-mail was
         successfully sent.  Otherwise, returns False.  False could
         mean that it was not necessary to send an e-mail."""
         #logmessage("Current role is " + str(this_thread.global_vars.role))
-        for role_option in kwargs:
-            if 'to' in kwargs[role_option]:
-                need(kwargs[role_option]['to'].email)
+        for key, val in kwargs.items():
+            if 'to' in val:
+                need(val['to'].email)
         for role_needed in roles_needed:
             #logmessage("One role needed is " + str(role_needed))
             if role_needed == self.last_role:
@@ -1285,35 +1258,35 @@ class RoleChangeTracker(DAObject):
 
 class Name(DAObject):
     """Base class for an object's name."""
-    def full(self):
+    def full(self, **kwargs):
         """Returns the full name."""
-        return(self.text)
+        return self.text
     def familiar(self):
         """Returns the familiar name."""
-        return(self.text)
+        return self.text
     def firstlast(self):
         """This method is included for compatibility with other types of names."""
-        return(self.text)
+        return self.text
     def lastfirst(self):
         """This method is included for compatibility with other types of names."""
-        return(self.text)
+        return self.text
     def middle_initial(self, with_period=True):
         """This method is included for compatibility with other types of names."""
-        return('')
+        return ''
     def defined(self):
         """Returns True if the name has been defined.  Otherwise, returns False."""
         return hasattr(self, 'text')
     def __str__(self):
-        return(str(self.full()))
+        return str(self.full())
 #    def __repr__(self):
-#        return(repr(self.full()))
+#        return repr(self.full())
 
 class IndividualName(Name):
     """The name of an Individual."""
     def init(self, *pargs, **kwargs):
         if 'uses_parts' not in kwargs:
             self.uses_parts = True
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def defined(self):
         """Returns True if the name has been defined.  Otherwise, returns False."""
         if not self.uses_parts:
@@ -1348,12 +1321,12 @@ class IndividualName(Name):
                 names.append(self.maternal_surname.strip())
         if hasattr(self, 'suffix') and use_suffix and len(self.suffix.strip()):
             names.append(self.suffix.strip())
-        return(" ".join(names))
+        return " ".join(names)
     def firstlast(self):
         """Returns the first name followed by the last name."""
         if not self.uses_parts:
             return super().firstlast()
-        return(self.first + " " + self.last)
+        return self.first + " " + self.last
     def lastfirst(self):
         """Returns the last name followed by a comma, followed by the
         last name, followed by the suffix (if a suffix exists)."""
@@ -1374,8 +1347,7 @@ class IndividualName(Name):
             return ''
         if with_period:
             return self.middle[0].strip() + '.'
-        else:
-            return self.middle[0].strip()
+        return self.middle[0].strip()
 
 class Address(DAObject):
     """A geographic address."""
@@ -1391,9 +1363,9 @@ class Address(DAObject):
             self.geolocated = False
         if not hasattr(self, 'city_only'):
             self.city_only = False
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def __str__(self):
-        return(str(self.block()))
+        return str(self.block())
     def on_one_line(self, include_unit=True, omit_default_country=True, language=None, show_country=None):
         """Returns a one-line address.  Primarily used internally for geocoding."""
         output = ""
@@ -1458,7 +1430,7 @@ class Address(DAObject):
         """Returns the raw data that the geocoding service returned."""
         if hasattr(self, '_geocode_response') :
             return self._geocode_response
-        elif hasattr(self, 'geolocate_response'):
+        if hasattr(self, 'geolocate_response'):
             return self.geolocate_response
         if hasattr(self, 'norm'):
             if hasattr(self.norm, '_geocode_response'):
@@ -1642,7 +1614,7 @@ class Address(DAObject):
             show_country = True
         if show_country:
             output += line_breaker + country_name(self._get_country())
-        return(output)
+        return output
     def _get_country(self):
         if hasattr(self, 'country') and isinstance(self.country, str):
             country = self.country
@@ -1668,11 +1640,10 @@ class Address(DAObject):
         if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
             if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', str(self.unit), flags=re.IGNORECASE):
                 return word("Unit", language=language) + " " + str(self.unit)
-            else:
-                return str(self.unit)
-        elif hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
+            return str(self.unit)
+        if hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
             return word("Floor", language=language) + " " + str(self.floor)
-        elif hasattr(self, 'room') and self.room != '' and self.room is not None:
+        if hasattr(self, 'room') and self.room != '' and self.room is not None:
             return word("Room", language=language) + " " + str(self.room)
         return ''
     def line_one(self, language=None):
@@ -1687,7 +1658,7 @@ class Address(DAObject):
         the_unit = self.formatted_unit(language=language)
         if the_unit != '':
             output += ", " + the_unit
-        return(output)
+        return output
     def line_two(self, language=None):
         """Returns the second line of the address, including the city,
         state and zip code."""
@@ -1703,7 +1674,7 @@ class Address(DAObject):
             output += " " + str(self.zip)
         elif hasattr(self, 'postal_code') and self.postal_code:
             output += " " + str(self.postal_code)
-        return(output)
+        return output
 
 def iso_country(country, part='alpha_2'):
     """Returns a best-guess ISO 3166-1 country information given a country
@@ -1718,22 +1689,21 @@ def iso_country(country, part='alpha_2'):
         raise DAError("Invalid country: " + str(country))
     if part == 'alpha_2':
         return guess[0].alpha_2
-    elif part == 'alpha_3':
+    if part == 'alpha_3':
         return guess[0].alpha_3
-    elif part == 'name':
+    if part == 'name':
         return guess[0].name
-    elif part == 'numeric':
+    if part == 'numeric':
         return guess[0].numeric
-    elif part == 'official_name':
+    if part == 'official_name':
         return guess[0].official_name
-    else:
-        raise DAError('iso_country: unknown part')
+    raise DAError('iso_country: unknown part')
 
 class City(Address):
     """A geographic address specific only to a city."""
     def init(self, *pargs, **kwargs):
         self.city_only = True
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
 
 class Thing(DAObject):
     """Represents something with a name."""
@@ -1746,12 +1716,12 @@ class Thing(DAObject):
                 self.initializeAttribute('name', self.NameClass)
             self.name.text = kwargs['name']
             del kwargs['name']
-        return super().init(*pargs, **kwargs)
-    def __setattr__(self, attrname, value):
-        if attrname == 'name' and isinstance(value, str):
-            self.name.text = value
+        super().init(*pargs, **kwargs)
+    def __setattr__(self, attrname, the_value):
+        if attrname == 'name' and isinstance(the_value, str):
+            self.name.text = the_value
         else:
-            return super().__setattr__(attrname, value)
+            super().__setattr__(attrname, the_value)
     def __str__(self):
         return str(self.name.full())
 
@@ -1767,7 +1737,7 @@ class Event(DAObject):
             self.initializeAttribute('address', self.CityClass)
         if 'location' not in kwargs:
             self.initializeAttribute('location', self.LatitudeLongitudeClass)
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def __str__(self):
         return str(self.address)
 
@@ -1790,7 +1760,7 @@ class Person(DAObject):
             del kwargs['name']
         # if 'roles' not in kwargs:
         #     self.roles = set()
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def _map_info(self):
         if not self.location.known:
             if (self.address.location.gathered and self.address.location.known) or self.address.geocode():
@@ -1814,11 +1784,11 @@ class Person(DAObject):
         if hasattr(self.name, 'text'):
             return True
         return False
-    def __setattr__(self, attrname, value):
-        if attrname == 'name' and isinstance(value, str):
-            self.name.text = value
+    def __setattr__(self, attrname, the_value):
+        if attrname == 'name' and isinstance(the_value, str):
+            self.name.text = the_value
         else:
-            return super().__setattr__(attrname, value)
+            super().__setattr__(attrname, the_value)
     def __str__(self):
         return str(self.name.full())
     def pronoun_objective(self, **kwargs):
@@ -1826,16 +1796,14 @@ class Person(DAObject):
         keyword argument "capitalize." """
         output = word('it', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return(capitalize(output))
-        else:
-            return(output)
+            return capitalize(output)
+        return output
     def possessive(self, target, **kwargs):
         """Given a word like "fish," returns "your fish" or
         "John Smith's fish," depending on whether the person is the user."""
         if self is this_thread.global_vars.user:
             return your(target, **kwargs)
-        else:
-            return possessify(self, target, **kwargs)
+        return possessify(self, target, **kwargs)
     def object_possessive(self, target, **kwargs):
         """Given a word, returns a phrase indicating possession, but
         uses the variable name rather than the object's actual name."""
@@ -1850,18 +1818,16 @@ class Person(DAObject):
         else:
             output = is_word(str(self), **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return(capitalize(output))
-        else:
-            return(output)
+            return capitalize(output)
+        return output
     def is_user(self):
         """Returns True if the person is the user, otherwise False."""
         return self is this_thread.global_vars.user
     def address_block(self, language=None, international=False, show_country=False):
         """Returns the person name address as a block, for use in mailings."""
         if this_thread.evaluation_context == 'docx':
-            return(self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block(language=language, international=international, show_country=show_country))
-        else:
-            return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block(language=language, international=international, show_country=show_country))
+            return self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block(language=language, international=international, show_country=show_country)
+        return "[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block(language=language, international=international, show_country=show_country)
     def sms_number(self, country=None):
         """Returns the person's mobile_number, if defined, otherwise the phone_number."""
         if hasattr(self, 'mobile_number'):
@@ -1893,8 +1859,8 @@ class Person(DAObject):
     def email_address(self, include_name=None):
         """Returns an e-mail address for the person."""
         if include_name is True or (include_name is not False and self.name.defined()):
-            return('"' + nodoublequote(self.name) + '" <' + str(self.email) + '>')
-        return(str(self.email))
+            return '"' + nodoublequote(self.name) + '" <' + str(self.email) + '>'
+        return str(self.email)
     # def age(self):
     #     if (hasattr(self, 'age_in_years')):
     #         return self.age_in_years
@@ -1912,32 +1878,28 @@ class Person(DAObject):
         """Given a verb like "eat," returns "do you eat" or "does John Smith eat,"
         depending on whether the person is the user."""
         if self == this_thread.global_vars.user:
-            return(do_you(the_verb, **kwargs))
-        else:
-            return(does_a_b(self, the_verb, **kwargs))
+            return do_you(the_verb, **kwargs)
+        return does_a_b(self, the_verb, **kwargs)
     def did_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "did you eat" or "did John Smith eat,"
         depending on whether the person is the user."""
         if self == this_thread.global_vars.user:
             return did_you(the_verb, **kwargs)
-        else:
-            return did_a_b(self, the_verb, **kwargs)
+        return did_a_b(self, the_verb, **kwargs)
     def were_question(self, the_target, **kwargs):
         """Given a target like "married", returns "were you married" or "was
         John Smith married," depending on whether the person is the
         user."""
         if self == this_thread.global_vars.user:
             return were_you(the_target, **kwargs)
-        else:
-            return was_a_b(self, the_target, **kwargs)
+        return was_a_b(self, the_target, **kwargs)
     def have_question(self, the_target, **kwargs):
         """Given a target like "", returns "have you married" or "has
         John Smith married," depending on whether the person is the
         user."""
         if self == this_thread.global_vars.user:
             return have_you(the_target, **kwargs)
-        else:
-            return has_a_b(self, the_target, **kwargs)
+        return has_a_b(self, the_target, **kwargs)
     def does_verb(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "eat" or "eats"
         depending on whether the person is the user."""
@@ -1945,10 +1907,9 @@ class Person(DAObject):
             tense = '2sg'
         else:
             tense = '3sg'
-        if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
+        if ('past' in kwargs and kwargs['past'] is True) or ('present' in kwargs and kwargs['present'] is False):
             return verb_past(the_verb, tense, **kwargs)
-        else:
-            return verb_present(the_verb, tense, **kwargs)
+        return verb_present(the_verb, tense, **kwargs)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except uses the past tense of the verb."""
         if self == this_thread.global_vars.user:
@@ -1956,7 +1917,7 @@ class Person(DAObject):
         else:
             tense = "3sgp"
         #logmessage(the_verb + " " + tense)
-        output = verb_past(the_verb, tense, **kwargs)
+        return verb_past(the_verb, tense, **kwargs)
     def subject(self, **kwargs):
         """Returns "you" or the person's name, depending on whether the
         person is the user."""
@@ -1965,9 +1926,8 @@ class Person(DAObject):
         else:
             output = str(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return(capitalize(output))
-        else:
-            return(output)
+            return capitalize(output)
+        return output
 
 class Individual(Person):
     """Represents a natural person."""
@@ -1987,18 +1947,18 @@ class Individual(Person):
             self.initializeAttribute('name', self.NameClass)
             self.name.uses_parts = False
             self.name.text = kwargs['name']
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def familiar(self):
         """Returns the individual's familiar name."""
         return self.name.familiar()
-    def get_parents(self, tree, create=False):
-        return self.get_relation('child', tree, create=create)
-    def get_spouse(self, tree, create=False):
-        return self.get_peer_relation('spouse', tree, create=create)
-    def set_spouse(self, target, tree):
-        return self.set_peer_relationship(self, target, "spouse", tree, replace=True)
-    def is_spouse_of(self, target, tree):
-        return self.is_peer_relation(target, 'spouse', tree)
+    # def get_parents(self, tree, create=False):
+    #     return self.get_relation('child', tree, create=create)
+    # def get_spouse(self, tree, create=False):
+    #     return self.get_peer_relation('spouse', tree, create=create)
+    # def set_spouse(self, target, tree):
+    #     return self.set_peer_relationship(self, target, "spouse", tree, replace=True)
+    # def is_spouse_of(self, target, tree):
+    #     return self.is_peer_relation(target, 'spouse', tree)
     def gather_family(self, tree, up=1, down=1):
         pass
     def identified(self):
@@ -2011,8 +1971,7 @@ class Individual(Person):
         if hasattr(self, 'age'):
             if decimals:
                 return float(self.age)
-            else:
-                return int(self.age)
+            return int(self.age)
         if as_of is None:
             comparator = current_datetime()
         else:
@@ -2021,8 +1980,7 @@ class Individual(Person):
         rd = dateutil.relativedelta.relativedelta(comparator, birth_date)
         if decimals:
             return float(rd.years)
-        else:
-            return int(rd.years)
+        return int(rd.years)
     def first_name_hint(self):
         """If the individual is the user and the user is logged in and
         the user has set up a name in the user profile, this returns
@@ -2051,9 +2009,8 @@ class Individual(Person):
         else:
             output = his(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return(capitalize(output))
-        else:
-            return(output)
+            return capitalize(output)
+        return output
     def pronoun(self, **kwargs):
         """Returns a pronoun like "you," "her," or "him," as appropriate."""
         if self == this_thread.global_vars.user:
@@ -2065,9 +2022,8 @@ class Individual(Person):
         else:
             output = word('him', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return(capitalize(output))
-        else:
-            return(output)
+            return capitalize(output)
+        return output
     def pronoun_objective(self, **kwargs):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
@@ -2082,9 +2038,8 @@ class Individual(Person):
         else:
             output = word('he', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return(capitalize(output))
-        else:
-            return(output)
+            return capitalize(output)
+        return output
     def yourself_or_name(self, **kwargs):
         """Returns a "yourself" if the individual is the user, otherwise
         returns the individual's name."""
@@ -2093,16 +2048,15 @@ class Individual(Person):
         else:
             output = str(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return(capitalize(output))
-        else:
-            return(output)
-    def __setattr__(self, attrname, value):
-        if attrname == 'name' and isinstance(value, str):
+            return capitalize(output)
+        return output
+    def __setattr__(self, attrname, the_value):
+        if attrname == 'name' and isinstance(the_value, str):
             if isinstance(self.name, IndividualName):
                 self.name.uses_parts = False
-            self.name.text = value
+            self.name.text = the_value
         else:
-            return super().__setattr__(attrname, value)
+            super().__setattr__(attrname, the_value)
     def __str__(self):
         if hasattr(self, 'use_familiar') and self.use_familiar and isinstance(self.name, IndividualName) and self.name.uses_parts:
             return str(self.name.first)
@@ -2113,7 +2067,7 @@ class ChildList(DAList):
     ChildClass = Individual
     def init(self, *pargs, **kwargs):
         self.object_type = self.ChildClass
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
 
 class Value(DAObject):
     """Represents a value in a FinancialList."""
@@ -2121,7 +2075,7 @@ class Value(DAObject):
         """Returns the value's amount, or 0 if the value does not exist."""
         if not self.exists:
             return 0
-        return (Decimal(self.value))
+        return Decimal(self.value)
     def __str__(self):
         return str(self.amount())
     def __float__(self):
@@ -2158,7 +2112,7 @@ class FinancialList(DADict):
     ValueClass = Value
     def init(self, *pargs, **kwargs):
         self.object_type = self.ValueClass
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def total(self):
         """Returns the total value in the list, gathering the list items if necessary."""
         self._trigger_gather()
@@ -2166,7 +2120,7 @@ class FinancialList(DADict):
         for item in sorted(self.elements.keys()):
             if self[item].exists:
                 result += Decimal(self[item].value)
-        return(result)
+        return result
     def existing_items(self):
         """Returns a list of types of amounts that exist within the financial list."""
         self._trigger_gather()
@@ -2185,17 +2139,17 @@ class PeriodicFinancialList(FinancialList):
     PeriodicValueClass = PeriodicValue
     def init(self, *pargs, **kwargs):
         self.object_type = self.PeriodicValueClass
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def total(self, period_to_use=1):
         """Returns the total periodic value in the list, gathering the list items if necessary."""
         self._trigger_gather()
         result = 0
         if period_to_use == 0:
-            return(result)
+            return result
         for item in sorted(self.elements.keys()):
             if self.elements[item].exists:
                 result += Decimal(self.elements[item].value) * Decimal(self.elements[item].period)
-        return(result/Decimal(period_to_use))
+        return result/Decimal(period_to_use)
     def _new_item_init_callback(self):
         if hasattr(self, 'new_item_period'):
             self.elements[self.new_item_name].period = self.new_item_period
@@ -2204,22 +2158,19 @@ class PeriodicFinancialList(FinancialList):
 
 class Income(PeriodicFinancialList):
     """A PeriodicFinancialList representing a person's income."""
-    pass
 
 class Asset(FinancialList):
     """A FinancialList representing a person's assets."""
-    pass
 
 class Expense(PeriodicFinancialList):
     """A PeriodicFinancialList representing a person's expenses."""
-    pass
 
 class OfficeList(DAList):
     """Represents a list of offices of a company or organization."""
     AddressClass = Address
     def init(self, *pargs, **kwargs):
         self.object_type = self.AddressClass
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
 
 class Organization(Person):
     """Represents a company or organization."""
@@ -2227,13 +2178,13 @@ class Organization(Person):
     def init(self, *pargs, **kwargs):
         if 'offices' in kwargs:
             self.initializeAttribute('office', self.OfficeListClass)
-            if type(kwargs['offices']) is list:
+            if isinstance(kwargs['offices'], list):
                 for office in kwargs['offices']:
-                    if type(office) is dict:
+                    if isinstance(office, dict):
                         new_office = self.office.appendObject(**office)
                         new_office.geocode()
             del kwargs['offices']
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def will_handle(self, problem=None, county=None):
         """Returns True or False depending on whether the organization
         serves the given county and/or handles the given problem."""
@@ -2246,7 +2197,7 @@ class Organization(Person):
                 return False
         return True
     def _map_info(self):
-        the_response = list()
+        the_response = []
         if hasattr(self.office):
             for office in self.office:
                 if (office.location.gathered and office.location.known) or office.geocode():
@@ -2262,7 +2213,7 @@ class Organization(Person):
                     elif hasattr(self, 'icon'):
                         this_response['icon'] = self.icon
                     the_response.append(this_response)
-        if len(the_response):
+        if len(the_response) > 0:
             return the_response
         return None
 
@@ -2301,9 +2252,9 @@ def send_sms_invite(to=None, body='question', config='default'):
     phone_number = docassemble.base.functions.phone_number_in_e164(to)
     if phone_number is None:
         raise DAError("send_sms_invite: phone number is invalid")
-    message = server.sms_body(phone_number, body=body, config=config)
+    the_message = server.sms_body(phone_number, body=body, config=config)
     #logmessage("Sending message " + str(message) + " to " + str(phone_number))
-    send_sms(to=phone_number, body=message, config=config)
+    send_sms(to=phone_number, body=the_message, config=config)
 
 def send_sms(to=None, body=None, template=None, task=None, task_persistent=False, attachments=None, config='default', dry_run=False):
     """Sends a text message and returns whether sending the text was successful."""
@@ -2321,7 +2272,7 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
         attachments = []
     elif attachments is not list:
         attachments = [attachments]
-    if type(to) is not list:
+    if not isinstance(to, list):
         to = [to]
     if len(to) == 0:
         logmessage("send_sms: no recipients identified")
@@ -2336,9 +2287,9 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
     if body is None:
         body = word("blank message")
     success = True
-    media = list()
+    media = []
     for attachment in attachments:
-        attachment_list = list()
+        attachment_list = []
         if isinstance(attachment, DAFileCollection):
             subattachment = getattr(attachment, 'pdf', None)
             if subattachment is None:
@@ -2365,10 +2316,10 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
             success = False
         if success:
             for the_attachment in attachment_list:
-                if type(the_attachment) is DAFile and the_attachment.ok:
+                if isinstance(the_attachment, DAFile) and the_attachment.ok:
                     #url = url_start + server.url_for('serve_stored_file', uid=this_thread.current_info['session'], number=the_attachment.number, filename=the_attachment.filename, extension=the_attachment.extension)
                     media.append(the_attachment.url_for(_external=True))
-                if type(the_attachment) is DAStaticFile:
+                if isinstance(the_attachment, DAStaticFile):
                     media.append(the_attachment.url_for(_external=True))
                 elif isinstance(the_attachment, str):
                     media.append(the_attachment)
@@ -2387,10 +2338,10 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
                 else:
                     from_number = tconfig['number']
                 try:
-                    if len(media):
-                        message = twilio_client.messages.create(to=phone_number, from_=from_number, body=body, media_url=media)
+                    if len(media) > 0:
+                        twilio_client.messages.create(to=phone_number, from_=from_number, body=body, media_url=media)
                     else:
-                        message = twilio_client.messages.create(to=phone_number, from_=from_number, body=body)
+                        twilio_client.messages.create(to=phone_number, from_=from_number, body=body)
                 except Exception as errstr:
                     logmessage("send_sms: failed to send message from " + from_number + " to " + phone_number + ": " + str(errstr))
                     return False
@@ -2439,8 +2390,7 @@ class FaxStatus:
             return None
         if the_status in ('received', 'delivered', 'Fax successfully sent'):
             return True
-        else:
-            return False
+        return False
 
 def send_fax(fax_number, file_object, config='default', country=None):
     if server.twilio_config is None:
@@ -2461,8 +2411,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
         attachments = []
     if (not isinstance(attachments, (DAList, DASet, abc.Iterable))) or isinstance(attachments, str):
         attachments = [attachments]
-    from flask_mail import Message
-    if type(to) is not list:
+    if not isinstance(to, list):
         to = [to]
     if len(to) == 0:
         return False
@@ -2494,7 +2443,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
     filenames_used = set()
     success = True
     for attachment in attachments:
-        attachment_list = list()
+        attachment_list = []
         if isinstance(attachment, DAFileCollection):
             subattachment = getattr(attachment, 'pdf', None)
             if subattachment is None:
@@ -2562,7 +2511,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
             success = False
     if success and task is not None:
         mark_task_as_performed(task, persistent=task_persistent)
-    return(success)
+    return success
 
 def attachment_name(filename, filenames):
     if filename not in filenames:
@@ -2579,8 +2528,8 @@ def attachment_name(filename, filenames):
 
 def map_of(*pargs, **kwargs):
     """Inserts into markup a Google Map representing the objects passed as arguments."""
-    the_map = {'markers': list()}
-    all_args = list()
+    the_map = {'markers': []}
+    all_args = []
     for arg in pargs:
         if isinstance(arg, list):
             all_args.extend(arg)
@@ -2602,9 +2551,9 @@ def map_of(*pargs, **kwargs):
             markers = the_center._map_info()
             if markers:
                 the_map['center'] = markers[0]
-    if 'center' not in the_map and len(the_map['markers']):
+    if 'center' not in the_map and len(the_map['markers']) > 0:
         the_map['center'] = the_map['markers'][0]
-    if len(the_map['markers']) or 'center' in the_map:
+    if len(the_map['markers']) > 0 or 'center' in the_map:
         return '[MAP ' + re.sub(r'\n', '', codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode()) + ']'
     return word('(Unable to display map)')
 
@@ -2626,15 +2575,15 @@ def ocr_file_in_background(*pargs, **kwargs):
     y = int_or_none(kwargs.get('y', None))
     W = int_or_none(kwargs.get('W', None))
     H = int_or_none(kwargs.get('H', None))
-    message = kwargs.get('message', None)
+    the_message = kwargs.get('message', None)
     image_file = pargs[0]
     if len(pargs) > 1:
         ui_notification = pargs[1]
     else:
         ui_notification = None
-    args = dict(yaml_filename=this_thread.current_info['yaml_filename'], user=this_thread.current_info['user'], user_code=this_thread.current_info['session'], secret=this_thread.current_info['secret'], url=this_thread.current_info['url'], url_root=this_thread.current_info['url_root'], language=language, psm=psm, x=x, y=y, W=W, H=H, extra=ui_notification, message=message, pdf=False, preserve_color=False)
+    args = dict(yaml_filename=this_thread.current_info['yaml_filename'], user=this_thread.current_info['user'], user_code=this_thread.current_info['session'], secret=this_thread.current_info['secret'], url=this_thread.current_info['url'], url_root=this_thread.current_info['url_root'], language=language, psm=psm, x=x, y=y, W=W, H=H, extra=ui_notification, message=the_message, pdf=False, preserve_color=False)
     collector = server.ocr_finalize.s(**args)
-    todo = list()
+    todo = []
     indexno = 0
     for item in docassemble.base.ocr.ocr_page_tasks(image_file, **args):
         todo.append(server.ocr_page.s(indexno, **item))
@@ -2656,7 +2605,7 @@ def ocr_file_in_background(*pargs, **kwargs):
 def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None):
     """Runs optical character recognition on one or more image files or PDF
     files and returns the recognized text."""
-    if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
+    if not isinstance(image_file, (DAFile, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
     x = int_or_none(x)
     y = int_or_none(y)
@@ -2671,8 +2620,8 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
     lang = docassemble.base.ocr.get_ocr_language(language)
     if isinstance(image_file, DAFile):
         image_file = [image_file]
-    temp_directory_list = list()
-    file_list = list()
+    temp_directory_list = []
+    file_list = []
     for doc in image_file:
         if hasattr(doc, 'extension'):
             if doc.extension not in ['pdf', 'png', 'jpg', 'gif']:
@@ -2697,7 +2646,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
                     args.extend(['-H', str(H)])
                 args.extend(['-png', path, prefix])
                 try:
-                    result = subprocess.run(args, timeout=3600).returncode
+                    result = subprocess.run(args, timeout=3600, check=False).returncode
                 except subprocess.TimeoutExpired:
                     result = 1
                     logmessage("ocr_file: call to pdftoppm took too long")
@@ -2706,7 +2655,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
                 file_list.extend(sorted([os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]))
                 continue
             file_list.append(path)
-    page_text = list()
+    page_text = []
     for page in file_list:
         image = Image.open(page)
         color = ImageEnhance.Color(image)
@@ -2729,7 +2678,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
 
 def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
     """Reads QR codes from a file or files and returns a list of codes found."""
-    if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
+    if not isinstance(image_file, (DAFile, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
     x = int_or_none(x)
     y = int_or_none(y)
@@ -2743,8 +2692,8 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
     ocr_resolution = get_config("ocr dpi")
     if ocr_resolution is None:
         ocr_resolution = '300'
-    file_list = list()
-    temp_directory_list = list()
+    file_list = []
+    temp_directory_list = []
     for doc in image_file:
         if hasattr(doc, 'extension'):
             if doc.extension not in ['pdf', 'png', 'jpg', 'gif']:
@@ -2769,7 +2718,7 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
                     args.extend(['-H', str(H)])
                 args.extend(['-png', path, prefix])
                 try:
-                    result = subprocess.run(args, timeout=3600).returncode
+                    result = subprocess.run(args, timeout=3600, check=False).returncode
                 except subprocess.TimeoutExpired:
                     result = 1
                     logmessage("read_qr: call to pdftoppm took too long")
@@ -2778,9 +2727,8 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
                 file_list.extend(sorted([os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]))
                 continue
             file_list.append(path)
-    codes = list()
+    codes = []
     for page in file_list:
-        from pyzbar.pyzbar import decode
         for result in decode(Image.open(page)):
             codes.append(result.data.decode())
     return codes
@@ -2835,6 +2783,7 @@ def set_machine_learning_entry(target):
 class DAModel(DAObject):
     """Applies natural language processing to user input and returns a prediction."""
     def init(self, *pargs, **kwargs):
+        super().init(*pargs, **kwargs)
         if 'store' in kwargs:
             self.store = kwargs['store']
         else:
@@ -2863,14 +2812,13 @@ class DAModel(DAObject):
         if 'text' in kwargs:
             self.text = kwargs['text']
             self.predict()
-        return super().init(*pargs, **kwargs)
     def __str__(self):
         return str(self.prediction)
     def predict(self):
         if self.use_for_training:
             self.entry_id = self.learner.save_for_classification(self.text, key=self.key)
         self.predictions = self.learner.predict(self.text, probabilities=True)
-        if len(self.predictions):
+        if len(self.predictions) > 0:
             self.prediction = self.predictions[0][0]
             self.probability = self.predictions[0][1]
         else:
@@ -2882,8 +2830,8 @@ def docx_concatenate(*pargs, **kwargs):
     the new DOCX file.
 
     """
-    paths = list()
-    get_docx_paths([x for x in pargs], paths)
+    paths = []
+    get_docx_paths(list(pargs), paths)
     if len(paths) == 0:
         raise DAError("docx_concatenate: no valid files to concatenate")
     docx_path = docassemble.base.file_docx.concatenate_files(paths)
@@ -2897,10 +2845,10 @@ def docx_concatenate(*pargs, **kwargs):
 def get_docx_paths(target, paths):
     if isinstance(target, DAFileCollection) and hasattr(target, 'docx'):
         paths.append(target.docx.path())
-    elif isinstance(target, DAFileList) or isinstance(target, DAList) or (isinstance(target, abc.Iterable) and not isinstance(target, str)):
+    elif isinstance(target, (DAFileList, DAList)) or (isinstance(target, abc.Iterable) and not isinstance(target, str)):
         for the_file in target:
             get_docx_paths(the_file, paths)
-    elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):
+    elif isinstance(target, (DAFile, DAStaticFile)):
         paths.append(target.path())
     elif isinstance(target, str) and os.path.isfile(target):
         paths.append(target)
@@ -2910,8 +2858,8 @@ def pdf_concatenate(*pargs, **kwargs):
     the new PDF.
 
     """
-    paths = list()
-    get_pdf_paths([x for x in pargs], paths)
+    paths = []
+    get_pdf_paths(list(pargs), paths)
     if len(paths) == 0:
         raise DAError("pdf_concatenate: no valid files to concatenate")
     pdf_path = docassemble.base.pandoc.concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=kwargs.get('password', None))
@@ -2926,10 +2874,10 @@ def pdf_concatenate(*pargs, **kwargs):
 def get_pdf_paths(target, paths):
     if isinstance(target, DAFileCollection) and hasattr(target, 'pdf'):
         paths.append(target.pdf.path())
-    elif isinstance(target, DAFileList) or isinstance(target, DAList) or (isinstance(target, abc.Iterable) and not isinstance(target, str)):
+    elif isinstance(target, (DAFileList, DAList)) or (isinstance(target, abc.Iterable) and not isinstance(target, str)):
         for the_file in target:
             get_pdf_paths(the_file, paths)
-    elif isinstance(target, DAFile) or isinstance(target, DAStaticFile):
+    elif isinstance(target, (DAFile, DAStaticFile)):
         paths.append(target.path())
     elif isinstance(target, str) and os.path.isfile(target):
         paths.append(target)
@@ -2951,7 +2899,7 @@ def recurse_zip_params(param, root, files):
                 the_file = getattr(param, 'tex', None)
         if the_file is not None:
             recurse_zip_params(the_file, root, files=files)
-    elif isinstance(param, DAStaticFile) or isinstance(param, DAFile):
+    elif isinstance(param, (DAStaticFile, DAFile)):
         files.append((root + param.filename, param.path()))
     else:
         file_info = server.file_finder(param)
@@ -2960,19 +2908,19 @@ def recurse_zip_params(param, root, files):
 
 def zip_file(*pargs, **kwargs):
     """Returns a ZIP file as a DAFile containing the files provided as arguments."""
-    files = list()
+    files = []
     timezone = get_default_timezone()
     recurse_zip_params(pargs, '', files)
-    zip_file = DAFile()._set_instance_name_for_function()
-    zip_file.initialize(filename=kwargs.get('filename', 'file.zip'))
-    zf = zipfile.ZipFile(zip_file.path(), mode='w')
-    seen = dict()
+    the_zip_file = DAFile()._set_instance_name_for_function()
+    the_zip_file.initialize(filename=kwargs.get('filename', 'file.zip'))
+    zf = zipfile.ZipFile(the_zip_file.path(), mode='w')
+    seen = {}
     for zip_path, path in files:
         if zip_path not in seen:
             seen[zip_path] = 0
         seen[zip_path] += 1
-    revised_files = list()
-    count = dict()
+    revised_files = []
+    count = {}
     for zip_path, path in files:
         if seen[zip_path] > 1:
             if zip_path not in count:
@@ -2997,16 +2945,16 @@ def zip_file(*pargs, **kwargs):
         with open(path, 'rb') as fp:
             zf.writestr(info, fp.read())
     zf.close()
-    zip_file.retrieve()
-    zip_file.commit()
-    return zip_file
+    the_zip_file.retrieve()
+    the_zip_file.commit()
+    return the_zip_file
 
-def validation_error(message, field=None):
+def validation_error(the_message, field=None):
     """Raises a validation error with a given message, optionally
     associated with a field.
 
     """
-    raise DAValidationError(message, field=field)
+    raise DAValidationError(the_message, field=field)
 
 def invalid_variable_name(varname):
     if not isinstance(varname, str):
@@ -3038,11 +2986,11 @@ def url_ask(data):
                         if not isinstance(the_var, str):
                             raise DAError("url_ask: a set command must refer to a list of dicts with keys as variable names.  " + repr(data))
                         the_var_stripped = the_var.strip()
-                    if invalid_variable_name(the_var_stripped):
-                        raise DAError("url_ask: missing or invalid variable name " + repr(the_var) + " .  " + repr(data))
-                    if contains_volatile.search(the_var_stripped):
-                        raise DAError("url_ask cannot be used with a generic object or a variable iterator")
-                    clean_list.append([the_var_stripped, the_val])
+                        if invalid_variable_name(the_var_stripped):
+                            raise DAError("url_ask: missing or invalid variable name " + repr(the_var) + " .  " + repr(data))
+                        if contains_volatile.search(the_var_stripped):
+                            raise DAError("url_ask cannot be used with a generic object or a variable iterator")
+                        clean_list.append([the_var_stripped, the_val])
                 variables.append(dict(action='_da_set', arguments=dict(variables=clean_list)))
             if 'follow up' in the_saveas:
                 if not isinstance(the_saveas['follow up'], list):
@@ -3055,27 +3003,27 @@ def url_ask(data):
                         raise DAError("url_ask: missing or invalid variable name " + repr(var_saveas) + " .  " + repr(data))
                     if contains_volatile.search(var):
                         raise DAError("url_ask cannot be used with a generic object or a variable iterator")
-                    variables.append(dict(action=var, arguments=dict()))
-            for command in ('undefine', 'invalidate', 'recompute'):
-                if command not in the_saveas:
+                    variables.append(dict(action=var, arguments={}))
+            for the_command in ('undefine', 'invalidate', 'recompute'):
+                if the_command not in the_saveas:
                     continue
-                if not isinstance(the_saveas[command], list):
-                    raise DAError("url_ask: the " + command + " statement must refer to a list.  " + repr(data))
+                if not isinstance(the_saveas[the_command], list):
+                    raise DAError("url_ask: the " + the_command + " statement must refer to a list.  " + repr(data))
                 clean_list = []
-                for undef_var in the_saveas[command]:
+                for undef_var in the_saveas[the_command]:
                     if not isinstance(undef_var, str):
-                        raise DAError("url_ask: invalid variable name " + repr(undef_var) + " in " + command + ".  " + repr(data))
+                        raise DAError("url_ask: invalid variable name " + repr(undef_var) + " in " + the_command + ".  " + repr(data))
                     undef_saveas = undef_var.strip()
                     if invalid_variable_name(undef_saveas):
                         raise DAError("url_ask: missing or invalid variable name " + repr(undef_saveas) + " .  " + repr(data))
                     if contains_volatile.search(undef_saveas):
                         raise DAError("url_ask cannot be used with a generic object or a variable iterator")
                     clean_list.append(undef_saveas)
-                if command == 'invalidate':
+                if the_command == 'invalidate':
                     variables.append(dict(action='_da_invalidate', arguments=dict(variables=clean_list)))
                 else:
                     variables.append(dict(action='_da_undefine', arguments=dict(variables=clean_list)))
-                if command == 'recompute':
+                if the_command == 'recompute':
                     variables.append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
             continue
         if isinstance(the_saveas, dict) and len(the_saveas) == 2 and 'action' in the_saveas and 'arguments' in the_saveas:
@@ -3140,7 +3088,7 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
     """Overlays a page from a PDF file on top of the pages of another PDF file."""
     if isinstance(main_pdf, DAFileCollection):
         main_file = main_pdf.pdf.path()
-    elif isinstance(main_pdf, DAFile) or isinstance(main_pdf, DAStaticFile) or isinstance(main_pdf, DAFileList):
+    elif isinstance(main_pdf, (DAFile, DAStaticFile, DAFileList)):
         main_file = main_pdf.path()
     elif isinstance(main_pdf, str):
         main_file = main_pdf
@@ -3148,7 +3096,7 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
         raise Exception("overlay_pdf: bad main filename")
     if isinstance(logo_pdf, DAFileCollection):
         logo_file = logo_pdf.pdf.path()
-    elif isinstance(logo_pdf, DAFile) or isinstance(logo_pdf, DAStaticFile) or isinstance(logo_pdf, DAFileList):
+    elif isinstance(logo_pdf, (DAFile, DAStaticFile, DAFileList)):
         logo_file = logo_pdf.path()
     elif isinstance(logo_pdf, str):
         logo_file = logo_pdf
@@ -3162,24 +3110,24 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
     outfile.retrieve()
     return outfile
 
-def explain(explanation, category='default'):
+def explain(the_explanation, category='default'):
     """Add a line to the explanations history."""
     if 'explanations' not in this_thread.internal:
-        this_thread.internal['explanations'] = dict()
+        this_thread.internal['explanations'] = {}
     if category not in this_thread.internal['explanations']:
-        this_thread.internal['explanations'][category] = list()
-    if explanation not in this_thread.internal['explanations'][category]:
-        this_thread.internal['explanations'][category].append(explanation)
+        this_thread.internal['explanations'][category] = []
+    if the_explanation not in this_thread.internal['explanations'][category]:
+        this_thread.internal['explanations'][category].append(the_explanation)
 
 def clear_explanations(category='default'):
     """Erases the history of explanations."""
     if 'explanations' not in this_thread.internal:
         return
     if category == 'all':
-        this_thread.internal['explanations'] = dict()
+        this_thread.internal['explanations'] = {}
     if category not in this_thread.internal['explanations']:
         return
-    this_thread.internal['explanations'][category] = list()
+    this_thread.internal['explanations'][category] = []
 
 def explanation(category='default'):
     """Returns the list of explanations."""
@@ -3190,7 +3138,7 @@ def explanation(category='default'):
 def set_status(**kwargs):
     """Sets various settings in the interview session."""
     if 'misc' not in this_thread.internal:
-        this_thread.internal['misc'] = dict()
+        this_thread.internal['misc'] = {}
     for key, val in kwargs.items():
         this_thread.internal['misc'][key] = val
 
@@ -3204,7 +3152,7 @@ def prevent_dependency_satisfaction(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
+        except (NameError, AttributeError, DAIndexError, UndefinedError):
             raise Exception("Reference to undefined variable in context where dependency satisfaction not allowed")
         # Python 3 version:
         # try:
@@ -3214,7 +3162,6 @@ def prevent_dependency_satisfaction(f):
     return wrapper
 
 def assemble_docx(input_file, fields=None, output_path=None, output_format='docx', return_content=False, pdf_options=None, filename=None):
-    import docassemble.base.parse
     input_file = path_and_mimetype(input_file)[0]
     if not (isinstance(input_file, str) and os.path.isfile(input_file)):
         raise DAError("assemble_docx: input file did not exist")
@@ -3237,7 +3184,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
         the_xml = re.sub(r'({[\%\{].*?[\%\}]})', docassemble.base.parse.fix_quotes, the_xml)
         the_xml = docx_template.patch_xml(the_xml)
-        parsed_content = the_env.parse(the_xml)
+        the_env.parse(the_xml)
         while True:
             old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
             docx_template.render(the_fields, jinja_env=docassemble.base.parse.custom_jinja_env())
@@ -3263,7 +3210,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         temp_file = tempfile.NamedTemporaryFile()
         docx_template.save(temp_file.name)
         if not isinstance(pdf_options, dict):
-            pdf_options = dict()
+            pdf_options = {}
         result = docassemble.base.pandoc.word_to_pdf(temp_file.name, 'docx', output_path, pdfa=pdf_options.get('pdfa', False), password=pdf_options.get('password', None), update_refs=pdf_options.get('update_refs', False), tagged=pdf_options.get('tagged', False), filename=filename)
         if not result:
             raise DAError("Error converting to PDF")
@@ -3290,6 +3237,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         return output
     if using_temporary_file:
         return output_path
+    return None
 
 def register_jinja_filter(filter_name, func):
     """Add a custom Jinja2 filter.
@@ -3307,10 +3255,7 @@ def register_jinja_filter(filter_name, func):
 
     register_jinja_filter('omg', omg_filter)
     """
-    import docassemble.base.parse
     return docassemble.base.parse.register_jinja_filter(filter_name, func)
-
-from docassemble.base.oauth import DAOAuth
 
 def variables_snapshot_connection():
     return server.variables_snapshot_connection()
@@ -3326,7 +3271,7 @@ def get_persistent_task_store(persistent):
     else:
         store = DAStore('store', base=base)
     if not store.defined('tasks'):
-        store.set('tasks', dict())
+        store.set('tasks', {})
     return store
 
 def task_performed(task, persistent=False):
@@ -3420,5 +3365,181 @@ class DABreadCrumbs(DAObject):
     def inner(self, label, active):
         if active:
             return '<li class="da-breadcrumb-item breadcrumb-item">' + label + '</li>'
+        return '<li class="da-breadcrumb-item breadcrumb-item active" aria-current="page">' + label + '</li>'
+
+def safeid(text):
+    return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf-8'), 'base64').decode())
+
+def random_string(length):
+    r = random.SystemRandom()
+    return ''.join(r.choice(string.ascii_letters) for i in range(length))
+
+class DAOAuth(DAObject):
+    """A base class for performing OAuth2 authorization in an interview"""
+    def init(self, *pargs, **kwargs):
+        if 'url_args' not in kwargs:
+            raise Exception("DAOAuth: you must pass the url_args as a keyword parameter")
+        self.url_args = kwargs['url_args']
+        del kwargs['url_args']
+        super().init(*pargs, **kwargs)
+    def _get_flow(self):
+        app_credentials = get_config('oauth', {}).get(self.appname, {})
+        client_id = app_credentials.get('id', None)
+        client_secret = app_credentials.get('secret', None)
+        if client_id is None or client_secret is None:
+            raise Exception('The application ' + self.appname + " is not configured in the Configuration")
+        flow = oauth2client.client.OAuth2WebServerFlow(
+            client_id=client_id,
+            client_secret=client_secret,
+            scope=self.scope,
+            redirect_uri=re.sub(r'\?.*', '', interview_url()),
+            auth_uri=self.auth_uri,
+            token_uri=self.token_uri,
+            access_type='offline',
+            prompt='consent')
+        return flow
+    def _setup(self):
+        if hasattr(self, 'use_random_unique_id') and self.use_random_unique_id and not hasattr(self, 'unique_id'):
+            self.unique_id = self._get_random_unique_id()
+        if not hasattr(self, 'expires'):
+            if hasattr(self, 'unique_id'):
+                self.expires = 86400
+            else:
+                self.expires = 15724800
+        try:
+            if not isinstance(self.expires, int):
+                self.expires = int(self.expires)
+            assert self.expires > 0
+        except:
+            self.expires = None
+    def _get_redis_key(self):
+        if hasattr(self, 'unique_id'):
+            return 'da:' + self.appname + ':status:uniqueid:' + str(self.unique_id)
+        return 'da:' + self.appname + ':status:user:' + user_info().email
+    def _get_redis_cred_storage(self):
+        if hasattr(self, 'unique_id'):
+            key = 'da:' + self.appname + ':uniqueid:' + str(self.unique_id)
+            lock = 'da:' + self.appname + ':lock:uniqueid:' + str(self.unique_id)
         else:
-            return '<li class="da-breadcrumb-item breadcrumb-item active" aria-current="page">' + label + '</li>'
+            key = 'da:' + self.appname + ':user:' + user_info().email
+            lock = 'da:' + self.appname + ':lock:user:' + user_info().email
+        return RedisCredStorage(key, lock, self.expires)
+    def _get_random_unique_id(self):
+        r = DARedis()
+        tries = 10
+        while tries > 0:
+            key = random_alphanumeric(32)
+            if r.setnx('da:' + self.appname + ':status:uniqueid:' + key, 'None'):
+                r.expire('da:' + self.appname + ':status:uniqueid:' + key, 300)
+                return key
+            tries -= 1
+        raise Exception("DAOAuth: unable to set a random unique id")
+    def get_credentials(self):
+        self._setup()
+        r = DARedis()
+        r_key = self._get_redis_key()
+        stored_state = r.get(r_key)
+        if stored_state is not None and stored_state.decode() == 'None':
+            stored_state = None
+        if stored_state is not None:
+            if 'code' in self.url_args and 'state' in self.url_args:
+                r.delete(r_key)
+                if self.url_args['state'] != stored_state.decode():
+                    raise Exception("State did not match.  " + repr(self.url_args['state']) + " vs " + repr(stored_state.decode()) + " where r_key is " + repr(r_key))
+                flow = self._get_flow()
+                credentials = flow.step2_exchange(self.url_args['code'])
+                storage = self._get_redis_cred_storage()
+                storage.put(credentials)
+                del self.url_args['code']
+                del self.url_args['state']
+            else:
+                message("Please wait.", "You are in the process of authenticating.", dead_end=True)
+        storage = self._get_redis_cred_storage()
+        credentials = storage.get()
+        if not credentials or credentials.invalid:
+            state_string = safeid(user_info().filename + '^' + random_string(8))
+            pipe = r.pipeline()
+            pipe.set(r_key, state_string)
+            pipe.expire(r_key, 300)
+            pipe.execute()
+            flow = self._get_flow()
+            uri = flow.step1_get_authorize_url(state=state_string)
+            if 'state' in self.url_args:
+                del self.url_args['state']
+            if 'code' in self.url_args:
+                del self.url_args['code']
+            response(url=uri)
+        return credentials
+    def delete_credentials(self):
+        """Deletes the stored credentials."""
+        self._setup()
+        r = DARedis()
+        r.delete(self._get_redis_key())
+        storage = self._get_redis_cred_storage()
+        storage.locked_delete()
+    def get_http(self):
+        """Returns an http object that can be used to communicate with the OAuth-enabled API."""
+        return self.get_credentials().authorize(httplib2.Http())
+    def authorize(self, web):
+        """Adds the appropriate headers to a DAWeb object"""
+        headers = {}
+        self.get_credentials().apply(headers)
+        if hasattr(web, 'headers'):
+            web.headers.update(headers)
+        else:
+            web.headers = headers
+    def ensure_authorized(self):
+        """If the credentials are not valid, starts the authorization process."""
+        self.get_http()
+    def active(self):
+        """Returns True if user has stored credentials, whether they are valid or not.  Otherwise returns False."""
+        self._setup()
+        storage = self._get_redis_cred_storage()
+        credentials = storage.get()
+        if not credentials:
+            return False
+        return True
+    def is_authorized(self):
+        """Returns True if user has stored credentials and the credentials are valid."""
+        self._setup()
+        storage = self._get_redis_cred_storage()
+        credentials = storage.get()
+        if not credentials or credentials.invalid:
+            return False
+        return True
+
+class RedisCredStorage(oauth2client.client.Storage):
+    def __init__(self, key, lock, expires):
+        self.r = DARedis()
+        self.key = key
+        self.lockkey = lock
+        self.expires = expires
+        super().__init__()
+    def acquire_lock(self):
+        pipe = self.r.pipeline()
+        pipe.set(self.lockkey, 1)
+        pipe.expire(self.lockkey, 5)
+        pipe.execute()
+    def release_lock(self):
+        self.r.delete(self.lockkey)
+    def locked_get(self):
+        json_creds = self.r.get(self.key)
+        creds = None
+        if json_creds is not None:
+            self.r.expire(self.key, self.expires)
+            json_creds = json_creds.decode()
+            try:
+                creds = oauth2client.client.Credentials.new_from_json(json_creds)
+            except:
+                log("RedisCredStorage: could not read credentials from " + str(json_creds))
+        return creds
+    def locked_put(self, credentials):
+        if self.expires:
+            pipe = self.r.pipeline()
+            pipe.set(self.key, credentials.to_json())
+            pipe.expire(self.key, self.expires)
+            pipe.execute()
+        else:
+            self.r.set(self.key, credentials.to_json())
+    def locked_delete(self):
+        self.r.delete(self.key)

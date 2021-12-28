@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.3.11] - 2021-12-27
+### Changed
+- API keys can now only be viewed when initially obtained.
+- Code that runs when a module is loading now runs in a context where
+  the original `admin` user is logged in.
+### Fixed
+- Bootstrap typo affecting alignment of dropdown menu.
+- Issue with machine learning sometimes returning no results when results exist.
+
 ## [1.3.10] - 2021-12-16
 ### Changed
 - In the Playground, pressing buttons is disabled during Ajax

@@ -914,7 +914,6 @@
 "Sorry, only .py files can be uploaded here.  To upload other types of files, use other Folders.": Null
 "Sorry, only YAML files can be uploaded here.  To upload other types of files, use the Folders.": Null
 "Sorry, that package name does not exist in the playground": Null
-"Sorry, that package name is already in use by someone else": Null
 "Sorry, that package name,": Null
 "Source code for question": Null
 "Source files": Null
@@ -1035,6 +1034,7 @@
 "This field is required.": Null
 "This image file does not exist": Null
 "This is my custom interview page.": Null
+"This is the only time you will be able to see your API key, so make sure to make a note of it and keep it in a secure place.": Null
 "This package is not yet published on PyPI.": Null
 "This package is not yet published on your GitHub account.": Null
 "This package is": Null

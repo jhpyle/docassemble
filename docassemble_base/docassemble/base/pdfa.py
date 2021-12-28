@@ -2,7 +2,7 @@ import tempfile
 import subprocess
 import shutil
 from docassemble.base.error import DAError
-from docassemble.base.logger import logmessage
+#from docassemble.base.logger import logmessage
 
 def pdf_to_pdfa(filename):
     outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)

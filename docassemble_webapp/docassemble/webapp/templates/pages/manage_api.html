@@ -29,7 +29,7 @@
   {{ render_field(form.name) }}
   <div class="da-form-group">
     <label class="form-label">{{ word("API key") }}</label>
-    <p><code>{{ api_key }}</code></p>
+    <p><code>{{ display_key }}</code></p>
   </div>
   {{ render_select_field(form.method) }}
   <div class="da-form-group daconstraintlist">
@@ -56,7 +56,7 @@
 {%- if has_any_keys %}
 <ul class="list-group">
   {%- for key_info in avail_keys %}
-  <li class="list-group-item"><a href="?action=edit&key={{ key_info['api_key'] }}">{{ key_info['name'] }}</a></li>
+  <li class="list-group-item"><a href="?action=edit&key={{ key_info['encoded_api_key'] }}">{{ key_info['name'] }}</a></li>
   {%- endfor %}
 </ul>
 {%- else %}

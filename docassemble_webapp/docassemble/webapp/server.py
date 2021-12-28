@@ -1,31 +1,165 @@
-min_system_version = '1.2.0'
-import re
-re._MAXCACHE = 10000
-import os
-import sys
-import tempfile
-import ruamel.yaml
-import tarfile
-import types
+import ast
+import base64
+import cgi
+import codecs
+import collections
+import copy
+import datetime
+from distutils.version import LooseVersion
+import filecmp
+from functools import update_wrapper
+import hashlib
+import importlib
+import inspect
+import io
+from io import BytesIO, TextIOWrapper
+import json
+import logging
 import math
-from io import TextIOWrapper
-from docassemble_textstat.textstat import textstat
-import docassemble.base.config
-if not docassemble.base.config.loaded:
-    docassemble.base.config.load()
-import docassemble.base.functions
-from urllib.parse import quote as urllibquote
+import mimetypes
+import operator
+import os
+import pickle
+import re
+import shutil
+import socket
+import stat
+import subprocess
+from subprocess import Popen, PIPE
+import sys
+import tarfile
+import tempfile
+import threading
+import time
+import traceback
+import types
+import unicodedata
+import urllib
+from urllib.parse import quote as urllibquote, quote_plus as urllibquoteplus
 from urllib.parse import unquote as urllibunquote
 from urllib.parse import urlparse, urlunparse, urlencode, urlsplit, parse_qsl
 from urllib.request import urlretrieve
-import unicodedata
+import uuid
+import weakref
+import xml.etree.ElementTree as ET
+import zipfile
+
+import docassemble.base.config
+if not docassemble.base.config.loaded:
+    docassemble.base.config.load()
+from docassemble.base.config import daconfig, hostname, in_celery
+
+import docassemble.webapp.setup
+from docassemble.webapp.setup import da_version
+
+import docassemble.base.astparser
+from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError
+import docassemble.base.functions
+from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
+from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
+import docassemble.base.interview_cache
+from docassemble.base.logger import logmessage
+import docassemble.base.ocr
+from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
+import docassemble.base.parse
+import docassemble.base.pdftk
+from docassemble.base.standardformatter import as_html, as_sms, get_choices_with_abb
+import docassemble.base.util
+from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject, DAFileCollection, DAStaticFile, DADict, DAList
+
+from docassemble.webapp.app_object import app, csrf, flaskbabel
+import docassemble.webapp.backend
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, file_user_access, file_privilege_access, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for, add_project
+import docassemble.webapp.clicksend
+from docassemble.webapp.core.models import Uploads, UploadsUserAuth, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage
+from docassemble.webapp.daredis import r, r_user, r_store
+from docassemble.webapp.db_object import db
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm, FunctionFileForm, RenameProject, DeleteProject, NewProject
+from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
+from docassemble.webapp.fixpickle import fix_pickle_obj
+from docassemble.webapp.jsonstore import read_answer_json, write_answer_json, delete_answer_json, variables_snapshot_connection
+import docassemble.webapp.machinelearning
+from docassemble.webapp.packages.models import Package, PackageAuth, Install
+from docassemble.webapp.playground import PlaygroundSection
+from docassemble.webapp.screenreader import to_text
+from docassemble.webapp.translations import setup_translation
+from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm, ManageAccountForm, RequestDeveloperForm
+from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog, MyUserInvitation, Role, UserRoles
+from docassemble.webapp.users.views import user_profile_page
+if not in_celery:
+    sys.stderr.write("Importing docassemble.webapp.worker")
+    import docassemble.webapp.worker
+
+import apiclient
+import babel.dates
+from bs4 import BeautifulSoup
+from Crypto.Hash import MD5
+from Crypto.PublicKey import RSA
+import dateutil
+import dateutil.parser
+from dateutil import tz
+import docassemble_flask_user.emails
+import docassemble_flask_user.forms
+import docassemble_flask_user.signals
+import docassemble_flask_user.views
+from docassemble_flask_user import UserManager, SQLAlchemyAdapter
+from docassemble_flask_user import login_required, roles_required, user_logged_in, user_changed_password, user_registered, user_reset_password
+from docassemblekvsession import KVSessionExtension
+from docassemble_textstat.textstat import textstat
+from flask import make_response, abort, render_template, render_template_string, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
+from flask_cors import cross_origin
+from flask_login import LoginManager
+from flask_login import login_user, logout_user, current_user
+from flask_wtf.csrf import CSRFError
+import googleapiclient.discovery
+import httplib2
+import humanize
+from jinja2.exceptions import TemplateError
+import links_from_header
+import oauth2client.client
+import pandas
+from PIL import Image
+import pkg_resources
+import psutil
+import pyotp
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers import YamlLexer, PythonLexer
+import pytz
+import qrcode
+import qrcode.image.svg
+from rauth import OAuth1Service, OAuth2Service
+import requests
+import ruamel.yaml
+from simplekv.memory.redisstore import RedisStore
+from sqlalchemy import or_, and_, select, delete, update
+import tailer
+import twilio.twiml
+import twilio.twiml.messaging_response
+import twilio.twiml.voice_response
+from twilio.rest import Client as TwilioRestClient
+import werkzeug.exceptions
+import werkzeug.utils
+import wtforms
+import xlsxwriter
+from user_agents import parse as ua_parse
+import yaml
+
+docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
+docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearning.MachineLearningEntry)
+docassemble.base.util.set_random_forest_machine_learner(docassemble.webapp.machinelearning.RandomForestMachineLearner)
+docassemble.base.util.set_svm_machine_learner(docassemble.webapp.machinelearning.SVMMachineLearner)
+
+START_TIME = time.time()
+
+min_system_version = '1.2.0'
+re._MAXCACHE = 10000
+
 the_method_type = types.FunctionType
 equals_byte = bytes('=', 'utf-8')
 
 TypeType = type(type(None))
 NoneType = type(None)
-
-from docassemble.base.config import daconfig, hostname, in_celery
 
 STATS = daconfig.get('collect statistics', False)
 DEBUG = daconfig.get('debug', False)
@@ -46,6 +180,10 @@ PACKAGE_PROTECTION = daconfig.get('package protection', True)
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 GITHUB_BRANCH = daconfig.get('github default branch name', 'main')
 request_active = True
+
+global_css = ''
+
+global_js = ''
 
 default_playground_yaml = """metadata:
   title: Default playground interview
@@ -306,31 +444,34 @@ ok_extensions = {
     "z80": "z80"
 }
 
-try:
-    if 'editable mimetypes' in daconfig and isinstance(daconfig['editable mimetypes'], list):
-        for item in daconfig['editable mimetypes']:
-            if isinstance(item, str):
-                ok_mimetypes[item] = 'null'
-except:
-    pass
+def update_editable():
+    try:
+        if 'editable mimetypes' in daconfig and isinstance(daconfig['editable mimetypes'], list):
+            for item in daconfig['editable mimetypes']:
+                if isinstance(item, str):
+                    ok_mimetypes[item] = 'null'
+    except:
+        pass
 
-try:
-    if 'editable extensions' in daconfig and isinstance(daconfig['editable extensions'], list):
-        for item in daconfig['editable extensions']:
-            if isinstance(item, str):
-                ok_extensions[item] = 'null'
-except:
-    pass
+    try:
+        if 'editable extensions' in daconfig and isinstance(daconfig['editable extensions'], list):
+            for item in daconfig['editable extensions']:
+                if isinstance(item, str):
+                    ok_extensions[item] = 'null'
+    except:
+        pass
+
+update_editable()
 
 default_yaml_filename = daconfig.get('default interview', None)
 final_default_yaml_filename = daconfig.get('default interview', 'docassemble.base:data/questions/default-interview.yml')
 keymap = daconfig.get('keymap', None)
-google_config = daconfig.get('google', dict())
+google_config = daconfig.get('google', {})
 
-contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
+contains_volatile = re.compile(r'^(x\.|x\[|.*\[[ijklmn]\])')
 is_integer = re.compile(r'[0-9]+')
-detect_mobile = re.compile('Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune')
-alphanumeric_only = re.compile('[\W_]+')
+detect_mobile = re.compile(r'Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune')
+alphanumeric_only = re.compile(r'[\W_]+')
 phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 fix_tabs = re.compile(r'\t')
@@ -340,12 +481,12 @@ lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
 amp_match = re.compile(r'&')
 extraneous_var = re.compile(r'^x\.|^x\[')
-key_requires_preassembly = re.compile('^(session_local\.|device_local\.|user_local\.|x\.|x\[|_multiple_choice|.*\[[ijklmn]\])')
+key_requires_preassembly = re.compile(r'^(session_local\.|device_local\.|user_local\.|x\.|x\[|_multiple_choice|.*\[[ijklmn]\])')
 #match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
 #match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
-match_brackets = re.compile('\[[BR]?\'[^\]]*\'\]$')
-match_inside_and_outside_brackets = re.compile('(.*)(\[[BR]?\'[^\]]*\'\])$')
-match_inside_brackets = re.compile('\[([BR]?)\'([^\]]*)\'\]')
+match_brackets = re.compile(r'\[[BR]?\'[^\]]*\'\]$')
+match_inside_and_outside_brackets = re.compile(r'(.*)(\[[BR]?\'[^\]]*\'\])$')
+match_inside_brackets = re.compile(r'\[([BR]?)\'([^\]]*)\'\]')
 valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]*')
 valid_python_exp = re.compile(r'[A-Za-z][A-Za-z0-9\_\.]*')
 
@@ -364,12 +505,7 @@ CHECKIN_INTERVAL = int(daconfig.get('checkin interval', 6000))
 NOTIFICATION_CONTAINER = '<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>'
 NOTIFICATION_MESSAGE = '<div class="da-alert alert alert-%s alert-dismissible fade show" role="alert">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
 
-if os.environ.get('SUPERVISOR_SERVER_URL', None):
-    USING_SUPERVISOR = True
-    #sys.stderr.write("Using supervisor and hostname is " + str(hostname) + "\n")
-else:
-    USING_SUPERVISOR = False
-    #sys.stderr.write("Not using supervisor and hostname is " + str(hostname) + "\n")
+USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
 
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
 
@@ -394,10 +530,7 @@ valid_voicerss_dialects = {
     }
 
 voicerss_config = daconfig.get('voicerss', None)
-if not voicerss_config or ('enable' in voicerss_config and not voicerss_config['enable']) or not ('key' in voicerss_config and voicerss_config['key']):
-    VOICERSS_ENABLED = False
-else:
-    VOICERSS_ENABLED = True
+VOICERSS_ENABLED = not bool(not voicerss_config or ('enable' in voicerss_config and not voicerss_config['enable']) or not ('key' in voicerss_config and voicerss_config['key']))
 ROOT = daconfig.get('root', '/')
 #app.logger.warning("default sender is " + current_app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', 'https://docassemble.org')
@@ -441,6 +574,13 @@ else:
 #connect_string = docassemble.webapp.database.connection_string()
 #alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 
+mimetypes.add_type('application/x-yaml', '.yml')
+mimetypes.add_type('application/x-yaml', '.yaml')
+
+store = RedisStore(r_store)
+
+kv_session = KVSessionExtension(store, app)
+
 def _call_or_get(function_or_property):
     return function_or_property() if callable(function_or_property) else function_or_property
 
@@ -477,7 +617,6 @@ def _get_safe_next_param(param_name, default_endpoint):
 
 def custom_resend_confirm_email():
     user_manager = current_app.user_manager
-    db_adapter = user_manager.db_adapter
     form = user_manager.resend_confirm_email_form(request.form)
     if request.method=='GET' and 'email' in request.args:
         form.email.data = request.args['email']
@@ -499,10 +638,7 @@ def as_int(val):
 
 def custom_register():
     """Display registration form and create new User."""
-    if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
-        is_json = True
-    else:
-        is_json = False
+    is_json = bool(('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])))
 
     user_manager =  current_app.user_manager
     db_adapter = user_manager.db_adapter
@@ -621,8 +757,6 @@ def custom_register():
 
         # Add User record using named arguments 'user_fields'
         user = db_adapter.add_object(User, **user_fields)
-        if db_adapter.UserProfileClass:
-            user_profile = user
 
         # Add UserEmail record using named arguments 'user_email_fields'
         if db_adapter.UserEmailClass:
@@ -654,7 +788,7 @@ def custom_register():
             try:
                 # Send 'registered' email
                 docassemble_flask_user.views._send_registered_email(user, user_email, require_email_confirmation)
-            except Exception as e:
+            except Exception:
                 # delete new User object if send fails
                 db_adapter.delete_object(user)
                 db_adapter.commit()
@@ -683,21 +817,19 @@ def custom_register():
                     session['next'] = safe_reg_next
                     if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
                         return redirect(url_for('mfa_setup'))
-                    elif not app.config['MFA_ALLOW_APP']:
+                    if not app.config['MFA_ALLOW_APP']:
                         return redirect(url_for('mfa_sms_setup'))
-                    else:
-                        return redirect(url_for('mfa_choose'))
+                    return redirect(url_for('mfa_choose'))
             return docassemble_flask_user.views._do_login_user(user, safe_reg_next)
-        else:
-            return redirect(url_for('user.login') + '?next=' + urllibquote(safe_reg_next))
+        return redirect(url_for('user.login') + '?next=' + urllibquote(safe_reg_next))
 
     # Process GET or invalid POST
     if is_json:
         return jsonify(action='register', csrf_token=generate_csrf())
     response = make_response(user_manager.render_function(user_manager.register_template,
-                                                         form=register_form,
-                                                         login_form=login_form,
-                                                         register_form=register_form), 200)
+                                                              form=register_form,
+                                                              login_form=login_form,
+                                                              register_form=register_form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -706,10 +838,7 @@ def custom_login():
     #sys.stderr.write("In custom_login\n")
     #logmessage("Doing custom_login")
 
-    if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
-        is_json = True
-    else:
-        is_json = False
+    is_json = bool(('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])))
     user_manager = current_app.user_manager
     db_adapter = user_manager.db_adapter
 
@@ -762,10 +891,9 @@ def custom_login():
                     session['next'] = safe_next
                     if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
                         return redirect(url_for('mfa_setup'))
-                    elif not app.config['MFA_ALLOW_APP']:
+                    if not app.config['MFA_ALLOW_APP']:
                         return redirect(url_for('mfa_sms_setup'))
-                    else:
-                        return redirect(url_for('mfa_choose'))
+                    return redirect(url_for('mfa_choose'))
                 if user.otp_secret is not None:
                     session['validated_user'] = user.id
                     session['next'] = safe_next
@@ -833,40 +961,36 @@ def logout():
     #     set_cookie = False
     user_manager = current_app.user_manager
     if 'next' in request.args:
-        next = request.args['next']
+        next_url = request.args['next']
     elif session.get('language', None) and session['language'] != DEFAULT_LANGUAGE:
-        next = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
+        next_url = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
     else:
-        next = _endpoint_url(user_manager.after_logout_endpoint)
+        next_url = _endpoint_url(user_manager.after_logout_endpoint)
     if current_user.is_authenticated:
         if current_user.social_id.startswith('auth0$') and 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and 'domain' in daconfig['oauth']['auth0']:
-            if next.startswith('/'):
-                next = get_base_url() + next
-            next = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next, client_id=daconfig['oauth']['auth0']['id']))
+            if next_url.startswith('/'):
+                next_url = get_base_url() + next_url
+            next_url = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode(dict(returnTo=next_url, client_id=daconfig['oauth']['auth0']['id']))
         if current_user.social_id.startswith('keycloak$') and 'oauth' in daconfig and 'keycloak' in daconfig['oauth'] and 'domain' in daconfig['oauth']['keycloak']:
-            if next.startswith('/'):
-                next = get_base_url() + next
-            next = ('https://' + daconfig['oauth']['keycloak']['domain'] + '/auth/realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/logout?' + urlencode(dict(post_logout_redirect_uri=next))
+            if next_url.startswith('/'):
+                next_url = get_base_url() + next_url
+            next_url = ('https://' + daconfig['oauth']['keycloak']['domain'] + '/auth/realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/logout?' + urlencode(dict(post_logout_redirect_uri=next_url))
             )
     else:
         if session.get('language', None) and session['language'] != DEFAULT_LANGUAGE:
-            next = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
+            next_url = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
         else:
-            next = _endpoint_url(user_manager.after_logout_endpoint)
-    set_cookie = False
+            next_url = _endpoint_url(user_manager.after_logout_endpoint)
     docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
-    delete_session()
+    delete_session_info()
     session.clear()
     flash(word('You have signed out successfully.'), 'success')
-    response = redirect(next)
-    if set_cookie:
-        response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
-    else:
-        response.set_cookie('remember_token', '', expires=0)
-        response.set_cookie('visitor_secret', '', expires=0)
-        response.set_cookie('secret', '', expires=0)
-        response.set_cookie('session', '', expires=0)
+    response = redirect(next_url)
+    response.set_cookie('remember_token', '', expires=0)
+    response.set_cookie('visitor_secret', '', expires=0)
+    response.set_cookie('secret', '', expires=0)
+    response.set_cookie('session', '', expires=0)
     return response
 
 # def custom_login():
@@ -876,16 +1000,16 @@ def logout():
 #     secret = request.cookies.get('secret', None)
 #     if secret is not None:
 #         secret = str(secret)
-#     next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
+#     next_url = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
 #     reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
 
 #     if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
-#         return redirect(next)
+#         return redirect(next_url)
 
 #     login_form = user_manager.login_form(request.form)
 #     register_form = user_manager.register_form()
 #     if request.method != 'POST':
-#         login_form.next.data     = register_form.next.data = next
+#         login_form.next.data     = register_form.next.data = next_url
 #         login_form.reg_next.data = register_form.reg_next.data = reg_next
 
 #     if request.method == 'POST':
@@ -952,15 +1076,14 @@ def password_validator(form, field):
         if not (ch.islower() or ch.isupper() or ch.isdigit()):
             punct += 1
 
-    rules = daconfig.get('password complexity', dict())
+    rules = daconfig.get('password complexity', {})
     is_valid = password_length >= rules.get('length', 6) and lowers >= rules.get('lowercase', 1) and uppers >= rules.get('uppercase', 1) and digits >= rules.get('digits', 1) and punct >= rules.get('punctuation', 0)
     if not is_valid:
-        import wtforms
         if 'error message' in rules:
             error_message = str(rules['error message'])
         else:
             error_message = 'Password must be at least ' + docassemble.base.functions.quantity_noun(rules.get('length', 6), 'character', language='en') + ' long'
-            standards = list()
+            standards = []
             if rules.get('lowercase', 1) > 0:
                 standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('lowercase', 1), 'lowercase letter', language='en'))
             if rules.get('uppercase', 1) > 0:
@@ -969,139 +1092,24 @@ def password_validator(form, field):
                 standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('digits', 1), 'number', language='en'))
             if rules.get('punctuation', 0) > 0:
                 standards.append('at least ' + docassemble.base.functions.quantity_noun(rules.get('punctuation', 1), 'punctuation character', language='en'))
-            if len(standards):
+            if len(standards) > 0:
                 error_message += ' with ' + docassemble.base.functions.comma_and_list_en(standards)
             error_message += '.'
         raise wtforms.ValidationError(word(error_message))
 
-import docassemble.webapp.setup
-from docassemble.webapp.setup import da_version
-from docassemble.webapp.app_object import app, csrf, flaskbabel
-from docassemble.webapp.db_object import db
-from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm, ManageAccountForm
-from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation, Role, UserRoles
-from docassemble_flask_user import UserManager, SQLAlchemyAdapter
-from flask_cors import cross_origin
-from flask_wtf.csrf import CSRFError
-db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
-from docassemble.webapp.users.views import user_profile_page
-from docassemble.webapp.translations import setup_translation
-user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, register_view_function=custom_register, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm, password_validator=password_validator, make_safe_url_function=make_safe_url)
-from flask_login import LoginManager
+the_db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
+the_user_manager = UserManager()
+the_user_manager.init_app(app, db_adapter=the_db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, register_view_function=custom_register, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm, password_validator=password_validator, make_safe_url_function=make_safe_url)
 lm = LoginManager()
 lm.init_app(app)
 lm.login_view = 'custom_login'
 
-from twilio.rest import Client as TwilioRestClient
-import twilio.twiml
-import twilio.twiml.messaging_response
-import twilio.twiml.voice_response
-from PIL import Image
-import socket
-import copy
-import threading
-import urllib
-import tailer
-import datetime
-from dateutil import tz
-import dateutil
-import dateutil.parser
-import time
-import humanize
-import psutil
-#import pip.utils.logging
-#import pip
-import shutil
-import filecmp
-import codecs
-import weakref
-import stat
-import pkg_resources
-import babel.dates
-import pytz
-import httplib2
-import zipfile
-import operator
-import traceback
-from Crypto.Hash import MD5
-import mimetypes
-import logging
-import pickle
-import cgi
-#import http.cookies
-import json
-import base64
-import requests
-import yaml
-import inspect
-import pyotp
-import qrcode
-import qrcode.image.svg
-from io import BytesIO
-import links_from_header
-import xlsxwriter
-import hashlib
-from distutils.version import LooseVersion
-from subprocess import Popen, PIPE
-import subprocess
-from pygments import highlight
-from pygments.lexers import YamlLexer, PythonLexer
-from pygments.formatters import HtmlFormatter
-from flask import make_response, abort, render_template, render_template_string, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g, make_response
-from flask_login import login_user, logout_user, current_user
-from docassemble_flask_user import login_required, roles_required
-from docassemble_flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
-#from flask_wtf.csrf import generate_csrf
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm, FunctionFileForm, RenameProject, DeleteProject, NewProject
-import docassemble_flask_user.signals
-import docassemble_flask_user.emails
-import docassemble_flask_user.views
-import docassemble_flask_user.forms
-from docassemble.webapp.translations import setup_translation
-
-import wtforms
-import werkzeug.utils
-import werkzeug.exceptions
-from rauth import OAuth1Service, OAuth2Service
-import apiclient
-import oauth2client.client
-import io
-from docassemblekvsession import KVSessionExtension
-from simplekv.memory.redisstore import RedisStore
-from sqlalchemy import or_, and_, select, delete, update
-import docassemble.base.parse
-import docassemble.base.astparser
-import ast
-import docassemble.base.pdftk
-import docassemble.base.interview_cache
-from docassemble.base.standardformatter import as_html, as_sms, get_choices_with_abb
-from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
-from docassemble.webapp.screenreader import to_text
-from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError
-from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
-from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, file_user_access, file_privilege_access, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for, add_project
-from docassemble.webapp.fixpickle import fix_pickle_obj
-from docassemble.webapp.packages.models import Package, PackageAuth, Install
-from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
-from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
-import docassemble.webapp.backend
-import docassemble.base.util
-from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject, DAFileCollection, DAStaticFile, DADict, DAList
-from user_agents import parse as ua_parse
-import docassemble.base.ocr
-from jinja2.exceptions import TemplateError
-import uuid
-from bs4 import BeautifulSoup
-import collections
-import pandas
-import xml.etree.ElementTree as ET
-
-START_TIME = time.time()
-
-import importlib
-def import_necessary():
+def import_necessary(url, url_root):
+    for admin_user in db.session.execute(select(UserModel).filter_by(nickname='admin').order_by(UserModel.id)).scalars():
+        sys.stderr.write("Logging in as admin user\n")
+        login_user(admin_user, remember=False)
+        docassemble.base.functions.this_thread.current_info = dict(user=dict(is_anonymous=False, is_authenticated=True, email=admin_user.email, theid=admin_user.id, the_user_id=admin_user.id, roles=['admin'], firstname=admin_user.first_name, lastname=admin_user.last_name, nickname=admin_user.nickname, country=admin_user.country, subdivisionfirst=admin_user.subdivisionfirst, subdivisionsecond=admin_user.subdivisionsecond, subdivisionthird=admin_user.subdivisionthird, organization=admin_user.organization, location=None, session_uid='admin', device_id='admin'), session=None, secret=None, yaml_filename=final_default_yaml_filename, url=url, url_root=url_root, encrypted=False, action=None, interface='initialization', arguments={})
+        break
     modules_to_import = daconfig.get('preloaded modules', None)
     if isinstance(modules_to_import, list):
         for module_name in daconfig['preloaded modules']:
@@ -1137,73 +1145,69 @@ def import_necessary():
                         modules.append(('.'.join(parts)))
                         break
     for module_name in modules:
+        current_package = re.sub(r'\.[^\.]+$', '', module_name)
+        docassemble.base.functions.this_thread.current_package = current_package
+        docassemble.base.functions.this_thread.current_info.update(dict(yaml_filename=current_package + ':data/questions/test.yml'))
         try:
             importlib.import_module(module_name)
         except Exception as err:
             sys.stderr.write("Import of " + module_name + " failed.  " + err.__class__.__name__ + ": " + str(err) + "\n")
 
-mimetypes.add_type('application/x-yaml', '.yml')
-mimetypes.add_type('application/x-yaml', '.yaml')
-
-#docassemble.base.parse.debug = DEBUG
-#docassemble.base.util.set_redis_server(redis_host)
-
-from functools import update_wrapper
-
-from docassemble.webapp.daredis import r_store
-
-store = RedisStore(r_store)
-
-kv_session = KVSessionExtension(store, app)
-
-if 'clicksend' in daconfig and isinstance(daconfig['clicksend'], (list, dict)):
-    import docassemble.webapp.clicksend
-    clicksend_config = {'name': {}, 'number': {}}
-    if isinstance(daconfig['clicksend'], dict):
-        config_list = [daconfig['clicksend']]
-    else:
-        config_list = daconfig['clicksend']
-    for the_config in config_list:
-        if isinstance(the_config, dict) and 'api username' in the_config and 'api key' in the_config and 'number' in the_config:
-            if 'country' not in the_config:
-                the_config['country'] = docassemble.webapp.backend.DEFAULT_COUNTRY or 'US'
-            if 'from email' not in the_config:
-                the_config['from email'] = app.config['MAIL_DEFAULT_SENDER']
-            clicksend_config['number'][str(the_config['number'])] = the_config
-            if 'default' not in clicksend_config['name']:
-                clicksend_config['name']['default'] = the_config
-            if 'name' in the_config:
-                clicksend_config['name'][the_config['name']] = the_config
+def get_clicksend_config():
+    if 'clicksend' in daconfig and isinstance(daconfig['clicksend'], (list, dict)):
+        the_clicksend_config = {'name': {}, 'number': {}}
+        if isinstance(daconfig['clicksend'], dict):
+            config_list = [daconfig['clicksend']]
         else:
-            sys.stderr.write("improper setup in twilio configuration\n")
-    if 'default' not in clicksend_config['name']:
-        clicksend_config = None
-else:
-    clicksend_config = None
-
-if 'twilio' in daconfig:
-    twilio_config = dict()
-    twilio_config['account sid'] = dict()
-    twilio_config['number'] = dict()
-    twilio_config['name'] = dict()
-    if type(daconfig['twilio']) is not list:
-        config_list = [daconfig['twilio']]
+            config_list = daconfig['clicksend']
+        for the_config in config_list:
+            if isinstance(the_config, dict) and 'api username' in the_config and 'api key' in the_config and 'number' in the_config:
+                if 'country' not in the_config:
+                    the_config['country'] = docassemble.webapp.backend.DEFAULT_COUNTRY or 'US'
+                if 'from email' not in the_config:
+                    the_config['from email'] = app.config['MAIL_DEFAULT_SENDER']
+                the_clicksend_config['number'][str(the_config['number'])] = the_config
+                if 'default' not in the_clicksend_config['name']:
+                    the_clicksend_config['name']['default'] = the_config
+                if 'name' in the_config:
+                    the_clicksend_config['name'][the_config['name']] = the_config
+            else:
+                sys.stderr.write("improper setup in twilio configuration\n")
+        if 'default' not in clicksend_config['name']:
+            the_clicksend_config = None
     else:
-        config_list = daconfig['twilio']
-    for tconfig in config_list:
-        if type(tconfig) is dict and 'account sid' in tconfig and 'number' in tconfig:
-            twilio_config['account sid'][str(tconfig['account sid'])] = 1
-            twilio_config['number'][str(tconfig['number'])] = tconfig
-            if 'default' not in twilio_config['name']:
-                twilio_config['name']['default'] = tconfig
-            if 'name' in tconfig:
-                twilio_config['name'][tconfig['name']] = tconfig
+        the_clicksend_config = None
+    return the_clicksend_config
+
+clicksend_config = get_clicksend_config()
+
+def get_twilio_config():
+    if 'twilio' in daconfig:
+        the_twilio_config = {}
+        the_twilio_config['account sid'] = {}
+        the_twilio_config['number'] = {}
+        the_twilio_config['name'] = {}
+        if not isinstance(daconfig['twilio'], list):
+            config_list = [daconfig['twilio']]
         else:
-            sys.stderr.write("improper setup in twilio configuration\n")
-    if 'default' not in twilio_config['name']:
-        twilio_config = None
-else:
-    twilio_config = None
+            config_list = daconfig['twilio']
+        for tconfig in config_list:
+            if isinstance(tconfig, dict) and 'account sid' in tconfig and 'number' in tconfig:
+                the_twilio_config['account sid'][str(tconfig['account sid'])] = 1
+                the_twilio_config['number'][str(tconfig['number'])] = tconfig
+                if 'default' not in the_twilio_config['name']:
+                    the_twilio_config['name']['default'] = tconfig
+                if 'name' in tconfig:
+                    the_twilio_config['name'][tconfig['name']] = tconfig
+            else:
+                sys.stderr.write("improper setup in twilio configuration\n")
+        if 'default' not in the_twilio_config['name']:
+            the_twilio_config = None
+    else:
+        the_twilio_config = None
+    return the_twilio_config
+
+twilio_config = get_twilio_config()
 
 app.debug = False
 app.handle_url_build_error = my_default_url
@@ -1218,52 +1222,22 @@ app.config['USE_GOOGLE_DRIVE'] = False
 app.config['USE_ONEDRIVE'] = False
 app.config['USE_PHONE_LOGIN'] = False
 app.config['USE_GITHUB'] = False
-if daconfig.get('password login', True) is False:
-    app.config['USE_PASSWORD_LOGIN'] = False
-else:
-    app.config['USE_PASSWORD_LOGIN'] = True
+app.config['USE_PASSWORD_LOGIN'] = not bool(daconfig.get('password login', True) is False)
 if twilio_config is not None and daconfig.get('phone login', False) is True:
     app.config['USE_PHONE_LOGIN'] = True
 if 'oauth' in daconfig:
     app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
-    if 'google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False):
-        app.config['USE_GOOGLE_LOGIN'] = True
-    else:
-        app.config['USE_GOOGLE_LOGIN'] = False
-    if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
-        app.config['USE_FACEBOOK_LOGIN'] = True
-    else:
-        app.config['USE_FACEBOOK_LOGIN'] = False
-    if 'twitter' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['twitter'] and daconfig['oauth']['twitter']['enable'] is False):
-        app.config['USE_TWITTER_LOGIN'] = True
-    else:
-        app.config['USE_TWITTER_LOGIN'] = False
-    if 'auth0' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['auth0'] and daconfig['oauth']['auth0']['enable'] is False):
-        app.config['USE_AUTH0_LOGIN'] = True
-    else:
-        app.config['USE_AUTH0_LOGIN'] = False
-    if 'keycloak' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['keycloak'] and daconfig['oauth']['keycloak']['enable'] is False):
-        app.config['USE_KEYCLOAK_LOGIN'] = True
-    else:
-        app.config['USE_KEYCLOAK_LOGIN'] = False
-    if 'azure' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['azure'] and daconfig['oauth']['azure']['enable'] is False):
-        app.config['USE_AZURE_LOGIN'] = True
-    else:
-        app.config['USE_AZURE_LOGIN'] = False
-    if 'googledrive' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['googledrive'] and daconfig['oauth']['googledrive']['enable'] is False):
-        app.config['USE_GOOGLE_DRIVE'] = True
-    else:
-        app.config['USE_GOOGLE_DRIVE'] = False
-    if 'onedrive' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['onedrive'] and daconfig['oauth']['onedrive']['enable'] is False):
-        app.config['USE_ONEDRIVE'] = True
-    else:
-        app.config['USE_ONEDRIVE'] = False
-    if 'github' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['github'] and daconfig['oauth']['github']['enable'] is False):
-        app.config['USE_GITHUB'] = True
-    else:
-        app.config['USE_GITHUB'] = False
+    app.config['USE_GOOGLE_LOGIN'] = bool('google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False))
+    app.config['USE_FACEBOOK_LOGIN'] = bool('facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False))
+    app.config['USE_TWITTER_LOGIN'] = bool('twitter' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['twitter'] and daconfig['oauth']['twitter']['enable'] is False))
+    app.config['USE_AUTH0_LOGIN'] = bool('auth0' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['auth0'] and daconfig['oauth']['auth0']['enable'] is False))
+    app.config['USE_KEYCLOAK_LOGIN'] = bool('keycloak' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['keycloak'] and daconfig['oauth']['keycloak']['enable'] is False))
+    app.config['USE_AZURE_LOGIN'] = bool('azure' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['azure'] and daconfig['oauth']['azure']['enable'] is False))
+    app.config['USE_GOOGLE_DRIVE'] = bool('googledrive' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['googledrive'] and daconfig['oauth']['googledrive']['enable'] is False))
+    app.config['USE_ONEDRIVE'] = bool('onedrive' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['onedrive'] and daconfig['oauth']['onedrive']['enable'] is False))
+    app.config['USE_GITHUB'] = bool('github' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['github'] and daconfig['oauth']['github']['enable'] is False))
 else:
-    app.config['OAUTH_CREDENTIALS'] = dict()
+    app.config['OAUTH_CREDENTIALS'] = {}
 app.config['USE_PYPI'] = daconfig.get('pypi', False)
 
 if daconfig.get('button size', 'medium') == 'medium':
@@ -1284,76 +1258,76 @@ else:
 BUTTON_COLOR_NAV_LOGIN = daconfig['button colors'].get('navigation bar login', 'primary')
 app.config['FOOTER_CLASS'] = str(daconfig.get('footer css class', 'bg-light')).strip() + ' dafooter'
 
-page_parts = dict()
-if 'global footer' in daconfig:
-    if type(daconfig['global footer']) is dict:
-        page_parts['global footer'] = dict()
-        for lang, val in daconfig['global footer'].items():
-            page_parts['global footer'][lang] = Markup(val)
-    else:
-        page_parts['global footer'] = {'*': Markup(str(daconfig['global footer']))}
-
-for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password page', 'forgot password page', 'change password page', '404 page'):
-    for part_key in ('title', 'tab title', 'extra css', 'extra javascript', 'heading', 'pre', 'submit', 'post', 'footer'):
-        key = page_key + ' ' + part_key
-        if key in daconfig:
-            if type(daconfig[key]) is dict:
-                page_parts[key] = dict()
-                for lang, val in daconfig[key].items():
-                    page_parts[key][lang] = Markup(val)
-            else:
-                page_parts[key] = {'*': Markup(str(daconfig[key]))}
-
-main_page_parts = dict()
-lang_list = set()
-main_page_parts_list = (
-    'main page back button label',
-    'main page continue button label',
-    'main page corner back button label',
-    'main page exit label',
-    'main page exit link',
-    'main page exit url',
-    'main page footer',
-    'main page help label',
-    'main page logo',
-    'main page navigation bar html',
-    'main page post',
-    'main page pre',
-    'main page resume button label',
-    'main page right',
-    'main page short logo',
-    'main page short title',
-    'main page submit',
-    'main page subtitle',
-    'main page title url opens in other window',
-    'main page title url',
-    'main page title',
-    'main page under')
-for key in main_page_parts_list:
-    if key in daconfig and type(daconfig[key]) is dict:
-        for lang in daconfig[key]:
-            lang_list.add(lang)
-lang_list.add(DEFAULT_LANGUAGE)
-lang_list.add('*')
-for lang in lang_list:
-    main_page_parts[lang] = dict()
-for key in main_page_parts_list:
-    for lang in lang_list:
-        if key in daconfig:
-            if type(daconfig[key]) is dict:
-                main_page_parts[lang][key] = daconfig[key].get(lang, daconfig[key].get('*', ''))
-            else:
-                main_page_parts[lang][key] = daconfig[key]
+def get_page_parts():
+    the_page_parts = {}
+    if 'global footer' in daconfig:
+        if isinstance(daconfig['global footer'], dict):
+            the_page_parts['global footer'] = {}
+            for lang, val in daconfig['global footer'].items():
+                the_page_parts['global footer'][lang] = Markup(val)
         else:
-            main_page_parts[lang][key] = ''
-    if main_page_parts[DEFAULT_LANGUAGE][key] == '' and main_page_parts['*'][key] != '':
-        main_page_parts[DEFAULT_LANGUAGE][key] = main_page_parts['*'][key]
-del lang_list
+            the_page_parts['global footer'] = {'*': Markup(str(daconfig['global footer']))}
 
-if google_config.get('analytics id', None) is not None:
-    ga_configured = True
-else:
-    ga_configured = False
+    for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password page', 'forgot password page', 'change password page', '404 page'):
+        for part_key in ('title', 'tab title', 'extra css', 'extra javascript', 'heading', 'pre', 'submit', 'post', 'footer'):
+            key = page_key + ' ' + part_key
+            if key in daconfig:
+                if isinstance(daconfig[key], dict):
+                    the_page_parts[key] = {}
+                    for lang, val in daconfig[key].items():
+                        the_page_parts[key][lang] = Markup(val)
+                else:
+                    the_page_parts[key] = {'*': Markup(str(daconfig[key]))}
+
+    the_main_page_parts = {}
+    lang_list = set()
+    main_page_parts_list = (
+        'main page back button label',
+        'main page continue button label',
+        'main page corner back button label',
+        'main page exit label',
+        'main page exit link',
+        'main page exit url',
+        'main page footer',
+        'main page help label',
+        'main page logo',
+        'main page navigation bar html',
+        'main page post',
+        'main page pre',
+        'main page resume button label',
+        'main page right',
+        'main page short logo',
+        'main page short title',
+        'main page submit',
+        'main page subtitle',
+        'main page title url opens in other window',
+        'main page title url',
+        'main page title',
+        'main page under')
+    for key in main_page_parts_list:
+        if key in daconfig and isinstance(daconfig[key], dict):
+            for lang in daconfig[key]:
+                lang_list.add(lang)
+    lang_list.add(DEFAULT_LANGUAGE)
+    lang_list.add('*')
+    for lang in lang_list:
+        the_main_page_parts[lang] = {}
+    for key in main_page_parts_list:
+        for lang in lang_list:
+            if key in daconfig:
+                if isinstance(daconfig[key], dict):
+                    the_main_page_parts[lang][key] = daconfig[key].get(lang, daconfig[key].get('*', ''))
+                else:
+                    the_main_page_parts[lang][key] = daconfig[key]
+            else:
+                the_main_page_parts[lang][key] = ''
+        if the_main_page_parts[DEFAULT_LANGUAGE][key] == '' and the_main_page_parts['*'][key] != '':
+            the_main_page_parts[DEFAULT_LANGUAGE][key] = the_main_page_parts['*'][key]
+    return (the_page_parts, the_main_page_parts)
+
+(page_parts, main_page_parts) = get_page_parts()
+
+ga_configured = bool(google_config.get('analytics id', None) is not None)
 
 if google_config.get('analytics id', None) is not None or daconfig.get('segment id', None) is not None:
     analytics_configured = True
@@ -1366,7 +1340,6 @@ def get_sms_session(phone_number, config='default'):
     sess_info = None
     if twilio_config is None:
         raise DAError("get_sms_session: Twilio not enabled")
-        return Response(str(resp), mimetype='text/xml')
     if config not in twilio_config['name']:
         raise DAError("get_sms_session: Invalid twilio configuration")
     tconfig = twilio_config['name'][config]
@@ -1393,9 +1366,9 @@ def initiate_sms_session(phone_number, yaml_filename=None, uid=None, secret=None
     if config not in twilio_config['name']:
         raise DAError("get_sms_session: Invalid twilio configuration")
     tconfig = twilio_config['name'][config]
-    current_info = docassemble.base.functions.get_current_info(secret=secret)
+    the_current_info = docassemble.base.functions.get_current_info()
     if yaml_filename is None:
-        yaml_filename = current_info.get('yaml_filename', None)
+        yaml_filename = the_current_info.get('yaml_filename', None)
         if yaml_filename is None:
             yaml_filename = default_yaml_filename
     temp_user_id = None
@@ -1405,12 +1378,12 @@ def initiate_sms_session(phone_number, yaml_filename=None, uid=None, secret=None
             user_id = user.id
     if user_id is None:
         if not new:
-            if 'user' in current_info:
-                if 'theid' in current_info['user']:
-                    if current_info['user'].get('is_authenticated', False):
-                        user_id = current_info['user']['theid']
+            if 'user' in the_current_info:
+                if 'theid' in the_current_info['user']:
+                    if the_current_info['user'].get('is_authenticated', False):
+                        user_id = the_current_info['user']['theid']
                     else:
-                        temp_user_id = current_info['user']['theid']
+                        temp_user_id = the_current_info['user']['theid']
         if user_id is None and temp_user_id is None:
             new_temp_user = TempUser()
             db.session.add(new_temp_user)
@@ -1418,28 +1391,27 @@ def initiate_sms_session(phone_number, yaml_filename=None, uid=None, secret=None
             temp_user_id = new_temp_user.id
     if secret is None:
         if not new:
-            secret = current_info['secret']
+            secret = the_current_info['secret']
         if secret is None:
             secret = random_string(16)
     if uid is None:
         if new:
             uid = get_unique_name(yaml_filename, secret)
         else:
-            uid = current_info.get('session', None)
+            uid = the_current_info.get('session', None)
             if uid is None:
                 uid = get_unique_name(yaml_filename, secret)
     if encrypted is None:
         if new:
             encrypted = True
         else:
-            encrypted = current_info['encrypted']
+            encrypted = the_current_info['encrypted']
     sess_info = dict(yaml_filename=yaml_filename, uid=uid, secret=secret, number=phone_number, encrypted=encrypted, tempuser=temp_user_id, user_id=user_id)
     #logmessage("initiate_sms_session: setting da:sms:client:" + phone_number + ':server:' + tconfig['number'] + " to " + str(sess_info))
     r.set('da:sms:client:' + phone_number + ':server:' + tconfig['number'], pickle.dumps(sess_info))
     return True
 
 def terminate_sms_session(phone_number, config='default'):
-    sess_info = None
     if config not in twilio_config['name']:
         raise DAError("get_sms_session: Invalid twilio configuration")
     tconfig = twilio_config['name'][config]
@@ -1449,8 +1421,7 @@ def terminate_sms_session(phone_number, config='default'):
 def fix_http(url):
     if HTTP_TO_HTTPS:
         return re.sub(r'^http:', 'https:', url)
-    else:
-        return url
+    return url
 
 def safe_quote_func(string, safe='', encoding=None, errors=None):
     return urllibquote(string, safe='', encoding=encoding, errors=errors)
@@ -1464,10 +1435,7 @@ def remove_question_package(args):
 def get_url_from_file_reference(file_reference, **kwargs):
     if 'jsembed' in docassemble.base.functions.this_thread.misc or COOKIELESS_SESSIONS:
         kwargs['_external'] = True
-    if 'privileged' in kwargs:
-        privileged = kwargs['privileged']
-    else:
-        privileged = False
+    privileged = kwargs.get('privileged', False)
     if isinstance(file_reference, DAFileList) and len(file_reference.elements) > 0:
         file_reference = file_reference.elements[0]
     elif isinstance(file_reference, DAFileCollection):
@@ -1477,7 +1445,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
     if isinstance(file_reference, DAFile) and hasattr(file_reference, 'number'):
         file_number = file_reference.number
         if privileged or can_access_file_number(file_number, uids=get_session_uids()):
-            url_properties = dict()
+            url_properties = {}
             if hasattr(file_reference, 'filename') and len(file_reference.filename) and file_reference.has_specific_filename:
                 url_properties['display_filename'] = file_reference.filename
             if hasattr(file_reference, 'extension'):
@@ -1486,13 +1454,12 @@ def get_url_from_file_reference(file_reference, **kwargs):
                 url_properties[key] = val
             the_file = SavedFile(file_number)
             if kwargs.get('temporary', False):
-                return(the_file.temp_url_for(**url_properties))
-            else:
-                return(the_file.url_for(**url_properties))
+                return the_file.temp_url_for(**url_properties)
+            return the_file.url_for(**url_properties)
     file_reference = str(file_reference)
     if re.search(r'^https?://', file_reference) or re.search(r'^mailto:', file_reference) or file_reference.startswith('/') or file_reference.startswith('?'):
         if '?' not in file_reference:
-            args = dict()
+            args = {}
             for key, val in kwargs.items():
                 if key in ('_package', '_question', '_external'):
                     continue
@@ -1500,8 +1467,8 @@ def get_url_from_file_reference(file_reference, **kwargs):
             if len(args) > 0:
                 if file_reference.startswith('mailto:') and 'body' in args:
                     args['body'] = re.sub(r'(?<!\r)\n', '\r\n', args['body'], re.MULTILINE)
-                return(file_reference) + '?' + urlencode(args, quote_via=safe_quote_func)
-        return(file_reference)
+                return file_reference + '?' + urlencode(args, quote_via=safe_quote_func)
+        return file_reference
     kwargs_with_i = copy.copy(kwargs)
     if 'i' not in kwargs_with_i:
         yaml_filename = docassemble.base.functions.this_thread.current_info.get('yaml_filename', None)
@@ -1509,41 +1476,41 @@ def get_url_from_file_reference(file_reference, **kwargs):
             kwargs_with_i['i'] = yaml_filename
     if file_reference in ('login', 'signin'):
         remove_question_package(kwargs)
-        return(url_for('user.login', **kwargs))
-    elif file_reference == 'profile':
+        return url_for('user.login', **kwargs)
+    if file_reference == 'profile':
         remove_question_package(kwargs)
-        return(url_for('user_profile_page', **kwargs))
-    elif file_reference == 'change_password':
+        return url_for('user_profile_page', **kwargs)
+    if file_reference == 'change_password':
         remove_question_package(kwargs)
-        return(url_for('user.change_password', **kwargs))
-    elif file_reference == 'register':
+        return url_for('user.change_password', **kwargs)
+    if file_reference == 'register':
         remove_question_package(kwargs)
-        return(url_for('user.register', **kwargs))
-    elif file_reference == 'config':
+        return url_for('user.register', **kwargs)
+    if file_reference == 'config':
         remove_question_package(kwargs)
-        return(url_for('config_page', **kwargs))
-    elif file_reference == 'leave':
+        return url_for('config_page', **kwargs)
+    if file_reference == 'leave':
         remove_question_package(kwargs)
-        return(url_for('leave', **kwargs))
-    elif file_reference == 'logout':
+        return url_for('leave', **kwargs)
+    if file_reference == 'logout':
         remove_question_package(kwargs)
-        return(url_for('user.logout', **kwargs))
-    elif file_reference == 'restart':
+        return url_for('user.logout', **kwargs)
+    if file_reference == 'restart':
         remove_question_package(kwargs_with_i)
-        return(url_for('restart_session', **kwargs_with_i))
-    elif file_reference == 'new_session':
+        return url_for('restart_session', **kwargs_with_i)
+    if file_reference == 'new_session':
         remove_question_package(kwargs_with_i)
-        return(url_for('new_session', **kwargs_with_i))
-    elif file_reference == 'help':
-        return('javascript:daShowHelpTab()');
-    elif file_reference == 'interview':
+        return url_for('new_session', **kwargs_with_i)
+    if file_reference == 'help':
+        return 'javascript:daShowHelpTab()'
+    if file_reference == 'interview':
         remove_question_package(kwargs)
-        return(url_for('index', **kwargs))
-    elif file_reference == 'flex_interview':
+        return url_for('index', **kwargs)
+    if file_reference == 'flex_interview':
         remove_question_package(kwargs)
         how_called = docassemble.base.functions.this_thread.misc.get('call', None)
         if how_called is None:
-            return(url_for('index', **kwargs))
+            return url_for('index', **kwargs)
         try:
             if int(kwargs.get('new_session')):
                 is_new = True
@@ -1557,94 +1524,89 @@ def get_url_from_file_reference(file_reference, **kwargs):
             kwargs['package'] = how_called[1]
             kwargs['filename'] = how_called[2]
             if is_new:
-                return(url_for('redirect_to_interview_in_package', **kwargs))
-            else:
-                return(url_for('run_interview_in_package', **kwargs))
-            return(url_for('run_interview_in_package', **kwargs))
-        elif how_called[0] in ('start_dispatch', 'run_dispatch'):
+                return url_for('redirect_to_interview_in_package', **kwargs)
+            return url_for('run_interview_in_package', **kwargs)
+        if how_called[0] in ('start_dispatch', 'run_dispatch'):
             del kwargs['i']
             kwargs['dispatch'] = how_called[1]
             if is_new:
-                return(url_for('redirect_to_interview', **kwargs))
-            else:
-                return(url_for('run_interview', **kwargs))
-        elif how_called[0] in ('start_directory', 'run_directory'):
+                return url_for('redirect_to_interview', **kwargs)
+            return url_for('run_interview', **kwargs)
+        if how_called[0] in ('start_directory', 'run_directory'):
             del kwargs['i']
             kwargs['package'] = how_called[1]
             kwargs['directory'] = how_called[2]
             kwargs['filename'] = how_called[3]
             if is_new:
-                return(url_for('redirect_to_interview_in_package_directory', **kwargs))
-            else:
-                return(url_for('run_interview_in_package_directory', **kwargs))
-        else:
-            if is_new:
-                kwargs['new_session'] = 1
-            return(url_for('index', **kwargs))
-    elif file_reference == 'interviews':
+                return url_for('redirect_to_interview_in_package_directory', **kwargs)
+            return url_for('run_interview_in_package_directory', **kwargs)
+        if is_new:
+            kwargs['new_session'] = 1
+        return url_for('index', **kwargs)
+    if file_reference == 'interviews':
         remove_question_package(kwargs)
-        return(url_for('interview_list', **kwargs))
-    elif file_reference == 'exit':
+        return url_for('interview_list', **kwargs)
+    if file_reference == 'exit':
         remove_question_package(kwargs_with_i)
-        return(url_for('exit', **kwargs_with_i))
-    elif file_reference == 'exit_logout':
+        return url_for('exit_endpoint', **kwargs_with_i)
+    if file_reference == 'exit_logout':
         remove_question_package(kwargs_with_i)
-        return(url_for('exit_logout', **kwargs_with_i))
-    elif file_reference == 'dispatch':
+        return url_for('exit_logout', **kwargs_with_i)
+    if file_reference == 'dispatch':
         remove_question_package(kwargs)
-        return(url_for('interview_start', **kwargs))
-    elif file_reference == 'manage':
+        return url_for('interview_start', **kwargs)
+    if file_reference == 'manage':
         remove_question_package(kwargs)
-        return(url_for('manage_account', **kwargs))
-    elif file_reference == 'interview_list':
+        return url_for('manage_account', **kwargs)
+    if file_reference == 'interview_list':
         remove_question_package(kwargs)
-        return(url_for('interview_list', **kwargs))
-    elif file_reference == 'playground':
+        return url_for('interview_list', **kwargs)
+    if file_reference == 'playground':
         remove_question_package(kwargs)
-        return(url_for('playground_page', **kwargs))
-    elif file_reference == 'playgroundtemplate':
+        return url_for('playground_page', **kwargs)
+    if file_reference == 'playgroundtemplate':
         kwargs['section'] = 'template'
         remove_question_package(kwargs)
-        return(url_for('playground_files', **kwargs))
-    elif file_reference == 'playgroundstatic':
+        return url_for('playground_files', **kwargs)
+    if file_reference == 'playgroundstatic':
         kwargs['section'] = 'static'
         remove_question_package(kwargs)
-        return(url_for('playground_files', **kwargs))
-    elif file_reference == 'playgroundsources':
+        return url_for('playground_files', **kwargs)
+    if file_reference == 'playgroundsources':
         kwargs['section'] = 'sources'
         remove_question_package(kwargs)
-        return(url_for('playground_files', **kwargs))
-    elif file_reference == 'playgroundmodules':
+        return url_for('playground_files', **kwargs)
+    if file_reference == 'playgroundmodules':
         kwargs['section'] = 'modules'
         remove_question_package(kwargs)
-        return(url_for('playground_files', **kwargs))
-    elif file_reference == 'playgroundpackages':
+        return url_for('playground_files', **kwargs)
+    if file_reference == 'playgroundpackages':
         remove_question_package(kwargs)
-        return(url_for('playground_packages', **kwargs))
-    elif file_reference == 'playgroundfiles':
+        return url_for('playground_packages', **kwargs)
+    if file_reference == 'playgroundfiles':
         remove_question_package(kwargs)
-        return(url_for('playground_files', **kwargs))
-    elif file_reference == 'create_playground_package':
+        return url_for('playground_files', **kwargs)
+    if file_reference == 'create_playground_package':
         remove_question_package(kwargs)
-        return(url_for('create_playground_package', **kwargs))
-    elif file_reference == 'configuration':
+        return url_for('create_playground_package', **kwargs)
+    if file_reference == 'configuration':
         remove_question_package(kwargs)
-        return(url_for('config_page', **kwargs))
-    elif file_reference == 'root':
+        return url_for('config_page', **kwargs)
+    if file_reference == 'root':
         remove_question_package(kwargs)
-        return(url_for('rootindex', **kwargs))
-    elif file_reference == 'run':
+        return url_for('rootindex', **kwargs)
+    if file_reference == 'run':
         remove_question_package(kwargs)
-        return(url_for('run_interview_in_package', **kwargs))
-    elif file_reference == 'run_dispatch':
+        return url_for('run_interview_in_package', **kwargs)
+    if file_reference == 'run_dispatch':
         remove_question_package(kwargs)
-        return(url_for('run_interview', **kwargs))
-    elif file_reference == 'run_new':
+        return url_for('run_interview', **kwargs)
+    if file_reference == 'run_new':
         remove_question_package(kwargs)
-        return(url_for('redirect_to_interview_in_package', **kwargs))
-    elif file_reference == 'run_new_dispatch':
+        return url_for('redirect_to_interview_in_package', **kwargs)
+    if file_reference == 'run_new_dispatch':
         remove_question_package(kwargs)
-        return(url_for('redirect_to_interview', **kwargs))
+        return url_for('redirect_to_interview', **kwargs)
     if re.search('^[0-9]+$', file_reference):
         remove_question_package(kwargs)
         file_number = file_reference
@@ -1677,10 +1639,10 @@ def get_url_from_file_reference(file_reference, **kwargs):
             parts = [the_package, file_reference]
         parts[1] = re.sub(r'^data/[^/]+/', '', parts[1])
         url = url_if_exists(parts[0] + ':data/static/' + parts[1] + extn, **kwargs)
-    return(url)
+    return url
 
 def user_id_dict():
-    output = dict()
+    output = {}
     for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).unique().scalars():
         output[user.id] = user
     anon = FakeUser()
@@ -1699,8 +1661,8 @@ def get_base_words():
         with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
-            return(ruamel.yaml.safe_load(content))
-    return(None)
+            return ruamel.yaml.safe_load(content)
+    return None
 
 def get_documentation_dict():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/documentation.yml')
@@ -1708,8 +1670,8 @@ def get_documentation_dict():
         with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
-            return(ruamel.yaml.safe_load(content))
-    return(None)
+            return ruamel.yaml.safe_load(content)
+    return None
 
 def get_name_info():
     docstring = get_info_from_file_reference('docassemble.base:data/questions/docstring.yml')
@@ -1717,8 +1679,17 @@ def get_name_info():
         with open(docstring['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
-            return(ruamel.yaml.safe_load(content))
-    return(None)
+            info = ruamel.yaml.safe_load(content)
+        for val in info:
+            info[val]['name'] = val
+            if 'insert' not in info[val]:
+                info[val]['insert'] = val
+            if 'show' not in info[val]:
+                info[val]['show'] = False
+            if 'exclude' not in info[val]:
+                info[val]['exclude'] = False
+        return info
+    return None
 
 def get_title_documentation():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/title_documentation.yml')
@@ -1726,8 +1697,8 @@ def get_title_documentation():
         with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
-            return(ruamel.yaml.safe_load(content))
-    return(None)
+            return ruamel.yaml.safe_load(content)
+    return None
 
 def _call_or_get(function_or_property):
     return function_or_property() if callable(function_or_property) else function_or_property
@@ -1740,7 +1711,7 @@ def pad_to_16(the_string):
 def decrypt_session(secret, user_code=None, filename=None):
     #logmessage("decrypt_session: user_code is " + str(user_code) + " and filename is " + str(filename))
     nowtime = datetime.datetime.utcnow()
-    if user_code == None or filename == None or secret is None:
+    if user_code is None or filename is None or secret is None:
         return
     for record in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename, encrypted=True).with_for_update()).scalars():
         phrase = decrypt_phrase(record.phrase, secret)
@@ -1758,12 +1729,11 @@ def decrypt_session(secret, user_code=None, filename=None):
         record.message = pack_phrase(phrase)
         record.encrypted = False
     db.session.commit()
-    return
 
 def encrypt_session(secret, user_code=None, filename=None):
     #logmessage("encrypt_session: user_code is " + str(user_code) + " and filename is " + str(filename))
     nowtime = datetime.datetime.utcnow()
-    if user_code == None or filename == None or secret is None:
+    if user_code is None or filename is None or secret is None:
         return
     for record in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename, encrypted=False).with_for_update()).scalars():
         phrase = unpack_phrase(record.phrase)
@@ -1781,23 +1751,23 @@ def encrypt_session(secret, user_code=None, filename=None):
         record.message = encrypt_phrase(phrase, secret)
         record.encrypted = True
     db.session.commit()
-    return
 
 def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
     if user is None:
         user = current_user
     temp_user = session.get('tempuser', None)
-    #logmessage("substitute_secret: " + repr(oldsecret) + " and " + repr(newsecret))
-    if oldsecret == 'None' or oldsecret == newsecret:
+    #logmessage("substitute_secret: " + repr(oldsecret) + " and " + repr(newsecret) + " and temp_user is " + repr(temp_user))
+    if oldsecret in ('None', newsecret):
         #logmessage("substitute_secret: returning new secret without doing anything")
         return newsecret
     #logmessage("substitute_secret: continuing")
-    for object_entry in db.session.execute(select(GlobalObjectStorage).filter_by(user_id=user.id, encrypted=True).with_for_update()).scalars():
-        try:
-            object_entry.value = encrypt_object(decrypt_object(object_entry.value, oldsecret), newsecret)
-        except Exception as err:
-            logmessage("Failure to change encryption of object " + object_entry.key + str(err))
-    db.session.commit()
+    if temp_user is not None:
+        for object_entry in db.session.execute(select(GlobalObjectStorage).filter_by(user_id=user.id, encrypted=True).with_for_update()).scalars():
+            try:
+                object_entry.value = encrypt_object(decrypt_object(object_entry.value, oldsecret), newsecret)
+            except Exception as err:
+                logmessage("Failure to change encryption of object " + object_entry.key + ": " + str(err))
+        db.session.commit()
     if to_convert is None:
         to_do = set()
         if 'i' in session and 'uid' in session: #TEMPORARY
@@ -1818,7 +1788,6 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
             try:
                 phrase = decrypt_phrase(record.phrase, oldsecret)
                 record.phrase = encrypt_phrase(phrase, newsecret)
-                changed = True
             except:
                 pass
         db.session.commit()
@@ -1832,10 +1801,10 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
             #logmessage("substitute_secret: record was encrypted")
             try:
                 the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-            except Exception as e:
+            except Exception:
                 logmessage("substitute_secret: error decrypting dictionary for filename " + filename + " and uid " + user_code)
                 continue
-            if type(the_dict) is not dict:
+            if not isinstance(the_dict, dict):
                 logmessage("substitute_secret: dictionary was not a dict for filename " + filename + " and uid " + user_code)
                 continue
             if temp_user:
@@ -1851,10 +1820,10 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
             for record in db.session.execute(select(UserDict).filter_by(key=user_code, filename=filename, encrypted=False).order_by(UserDict.indexno).with_for_update()).scalars():
                 try:
                     the_dict = unpack_dictionary(record.dictionary)
-                except Exception as e:
+                except Exception:
                     logmessage("substitute_secret: error unpacking dictionary for filename " + filename + " and uid " + user_code)
                     continue
-                if type(the_dict) is not dict:
+                if not isinstance(the_dict, dict):
                     logmessage("substitute_secret: dictionary was not a dict for filename " + filename + " and uid " + user_code)
                     continue
                 try:
@@ -1947,14 +1916,14 @@ def copy_playground_modules():
 
 def proc_example_list(example_list, package, directory, examples):
     for example in example_list:
-        if type(example) is dict:
+        if isinstance(example, dict):
             for key, value in example.items():
-                sublist = list()
+                sublist = []
                 proc_example_list(value, package, directory, sublist)
                 examples.append({'title': str(key), 'list': sublist})
                 break
             continue
-        result = dict()
+        result = {}
         result['id'] = example
         result['interview'] = url_for('index', reset=1, i=package + ":data/questions/" + directory + example + ".yml")
         example_file = package + ":data/questions/" + directory + example + '.yml'
@@ -1975,13 +1944,13 @@ def proc_example_list(example_list, package, directory, examples):
             content = fix_tabs.sub('  ', content)
             content = fix_initial.sub('', content)
             blocks = list(map(lambda x: x.strip(), document_match.split(content)))
-            if len(blocks):
+            if len(blocks) > 0:
                 has_context = False
                 for block in blocks:
                     if re.search(r'metadata:', block):
                         try:
                             the_block = ruamel.yaml.safe_load(block)
-                            if type(the_block) is dict and 'metadata' in the_block:
+                            if isinstance(the_block, dict) and 'metadata' in the_block:
                                 the_metadata = the_block['metadata']
                                 result['title'] = the_metadata.get('title', the_metadata.get('short title', word('Untitled')))
                                 if isinstance(result['title'], dict):
@@ -2020,7 +1989,7 @@ def proc_example_list(example_list, package, directory, examples):
         examples.append(result)
 
 def get_examples():
-    examples = list()
+    examples = []
     file_list = daconfig.get('playground examples', ['docassemble.base:data/questions/example-list.yml'])
     if not isinstance(file_list, list):
         file_list = [file_list]
@@ -2046,7 +2015,7 @@ def get_examples():
                 except Exception as the_err:
                     logmessage("There was an error loading the Playground examples:" + str(the_err))
     #logmessage("Examples: " + str(examples))
-    return(examples)
+    return examples
 
 def add_timestamps(the_dict, manual_user_id=None):
     nowtime = datetime.datetime.utcnow()
@@ -2060,7 +2029,6 @@ def add_timestamps(the_dict, manual_user_id=None):
         the_dict['_internal']['accesstime'][the_user_id] = nowtime
     else:
         the_dict['_internal']['accesstime'][-1] = nowtime
-    return
 
 def fresh_dictionary():
     the_dict = copy.deepcopy(initial_dict)
@@ -2107,18 +2075,11 @@ def manual_checkout(manual_session_id=None, manual_filename=None, user_id=None, 
     pipe.execute()
     #r.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
     #logmessage("Done checking out from " + endpart)
-    return
 
 def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partner_roles):
     key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-    if mode in ('peer', 'peerhelp'):
-        peer_ok = True
-    else:
-        peer_ok = False
-    if mode in ('help', 'peerhelp'):
-        help_ok = True
-    else:
-        help_ok = False
+    peer_ok = bool(mode in ('peer', 'peerhelp'))
+    help_ok = bool(mode in ('help', 'peerhelp'))
     potential_partners = set()
     if help_ok and len(partner_roles) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
@@ -2141,7 +2102,6 @@ def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partne
     result = ChatPartners()
     result.peer = num_peer
     result.help = len(potential_partners)
-    #return (dict(peer=num_peer, help=len(potential_partners)))
     return result
 
 def do_redirect(url, is_ajax, is_json, js_target):
@@ -2162,8 +2122,7 @@ def do_redirect(url, is_ajax, is_json, js_target):
 def do_refresh(is_ajax, yaml_filename):
     if is_ajax:
         return jsonify(action='refresh', csrf_token=generate_csrf())
-    else:
-        return redirect(url_for('index', i=yaml_filename))
+    return redirect(url_for('index', i=yaml_filename))
 
 def standard_scripts(interview_language=DEFAULT_LANGUAGE, external=False):
     if interview_language in ('ar', 'cs', 'et', 'he', 'ka', 'nl', 'ro', 'th', 'zh', 'az', 'da', 'fa', 'hu', 'kr', 'no', 'ru', 'tr', 'bg', 'de', 'fi', 'id', 'kz', 'pl', 'sk', 'uk', 'ca', 'el', 'fr', 'it', 'sl', 'uz', 'cr', 'es', 'gl', 'ja', 'lt', 'pt', 'sv', 'vi'):
@@ -2275,7 +2234,7 @@ def additional_css(interview_status, js_only=False):
 """ + segment_js + """\
     </script>"""
         the_js += segment_js
-    if len(interview_status.extra_css):
+    if len(interview_status.extra_css) > 0:
         start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
     if js_only:
         return the_js
@@ -2283,7 +2242,7 @@ def additional_css(interview_status, js_only=False):
 
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None, external=False, page_title=None, social=None, yaml_filename=None):
     if social is None:
-        social = dict()
+        social = {}
     if page_title is None:
         page_title = app.config['BRAND_NAME']
     if bootstrap_theme is None and app.config['BOOTSTRAP_THEME'] is not None:
@@ -2339,7 +2298,7 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
         shutil.move(orig_file, unconverted.name)
         call_array = [daconfig.get('imagemagick', 'convert'), str(unconverted.name), 'png:' + converted.name]
         try:
-            result = subprocess.run(call_array, timeout=60).returncode
+            result = subprocess.run(call_array, timeout=60, check=False).returncode
         except subprocess.TimeoutExpired:
             logmessage("process_file: convert from gif took too long")
             result = 1
@@ -2355,7 +2314,7 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
         shutil.move(orig_file, unrotated.name)
         call_array = [daconfig.get('imagemagick', 'convert'), str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
         try:
-            result = subprocess.run(call_array, timeout=60).returncode
+            result = subprocess.run(call_array, timeout=60, check=False).returncode
         except subprocess.TimeoutExpired:
             logmessage("process_file: convert from jpeg took too long")
             result = 1
@@ -2398,29 +2357,29 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
     if mimetype == 'audio/ogg' and daconfig.get('pacpl', 'pacpl') is not None:
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
         try:
-            result = subprocess.run(call_array, timeout=120).returncode
+            result = subprocess.run(call_array, timeout=120, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
     if mimetype == 'audio/3gpp' and daconfig.get('ffmpeg', 'ffmpeg') is not None:
         call_array = [daconfig.get('ffmpeg', 'ffmpeg'), '-i', saved_file.path + '.' + extension, saved_file.path + '.ogg']
         try:
-            result = subprocess.run(call_array, timeout=120).returncode
+            result = subprocess.run(call_array, timeout=120, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
         call_array = [daconfig.get('ffmpeg', 'ffmpeg'), '-i', saved_file.path + '.' + extension, saved_file.path + '.mp3']
         try:
-            result = subprocess.run(call_array, timeout=120).returncode
+            result = subprocess.run(call_array, timeout=120, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
     if mimetype in ('audio/x-wav', 'audio/wav') and daconfig.get('pacpl', 'pacpl') is not None:
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
         try:
-            result = subprocess.run(call_array, timeout=120).returncode
+            result = subprocess.run(call_array, timeout=120, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
         try:
-            result = subprocess.run(call_array, timeout=120).returncode
+            result = subprocess.run(call_array, timeout=120, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
     #if extension == "pdf":
@@ -2428,7 +2387,7 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
     saved_file.finalize()
 
 def sub_temp_user_dict_key(temp_user_id, user_id):
-    temp_interviews = list()
+    temp_interviews = []
     for record in db.session.execute(select(UserDictKeys).filter_by(temp_user_id=temp_user_id).with_for_update()).scalars():
         record.temp_user_id = None
         record.user_id = user_id
@@ -2446,13 +2405,13 @@ def sub_temp_other(user):
             chat_entry.owner_id = user.id
             chat_entry.temp_owner_id = None
         db.session.commit()
-        keys_in_use = dict()
+        keys_in_use = {}
         for object_entry in db.session.execute(select(GlobalObjectStorage.id, GlobalObjectStorage.key).filter_by(user_id=user.id)).all():
             if object_entry.key.startswith('da:userid:{:d}:'.format(user.id)):
                 if object_entry.key not in keys_in_use:
-                    keys_in_use[object_entry.key] = list()
+                    keys_in_use[object_entry.key] = []
                 keys_in_use[object_entry.key].append(object_entry.id)
-        ids_to_delete = list()
+        ids_to_delete = []
         for object_entry in db.session.execute(select(GlobalObjectStorage).filter_by(temp_user_id=int(session['tempuser'])).with_for_update()).scalars():
             object_entry.user_id = user.id
             object_entry.temp_user_id = None
@@ -2488,26 +2447,25 @@ def save_user_dict_key(session_id, filename, priors=False, user=None):
                 logmessage("save_user_dict_key: no user ID available for saving")
                 return
     #logmessage("save_user_dict_key: called")
-    interview_list = set([filename])
+    the_interview_list = set([filename])
     found = set()
     if priors:
         for the_record in db.session.execute(select(UserDict.filename).filter_by(key=session_id).group_by(UserDict.filename)):
-            interview_list.add(the_record.filename)
-    for filename_to_search in interview_list:
+            the_interview_list.add(the_record.filename)
+    for filename_to_search in the_interview_list:
         if is_auth:
             for the_record in db.session.execute(select(UserDictKeys).filter_by(key=session_id, filename=filename_to_search, user_id=user_id)):
                 found.add(filename_to_search)
         else:
             for the_record in db.session.execute(select(UserDictKeys).filter_by(key=session_id, filename=filename_to_search, temp_user_id=user_id)):
                 found.add(filename_to_search)
-    for filename_to_save in (interview_list - found):
+    for filename_to_save in (the_interview_list - found):
         if is_auth:
             new_record = UserDictKeys(key=session_id, filename=filename_to_save, user_id=user_id)
         else:
             new_record = UserDictKeys(key=session_id, filename=filename_to_save, temp_user_id=user_id)
         db.session.add(new_record)
         db.session.commit()
-    return
 
 def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None, steps=None, max_indexno=None):
     #logmessage("save_user_dict: called with encrypt " + str(encrypt))
@@ -2515,7 +2473,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
         for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
             if var_name in user_dict:
                 del user_dict[var_name]
-        user_dict['_internal']['objselections'] = dict()
+        user_dict['_internal']['objselections'] = {}
     if 'session_local' in user_dict:
         del user_dict['session_local']
     if 'device_local' in user_dict:
@@ -2563,7 +2521,6 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
                     record.modtime = nowtime
                     record.encrypted = False
             db.session.commit()
-    return
 
 def process_bracket_expression(match):
     if match.group(1) in ('B', 'R'):
@@ -2573,16 +2530,16 @@ def process_bracket_expression(match):
             inner = match.group(2)
     else:
         inner = match.group(2)
-    return("[" + repr(inner) + "]")
+    return "[" + repr(inner) + "]"
 
 def myb64unquote(the_string):
-    return(codecs.decode(repad(bytearray(the_string, encoding='utf-8')), 'base64').decode('utf-8'))
+    return codecs.decode(repad(bytearray(the_string, encoding='utf-8')), 'base64').decode('utf-8')
 
 def safeid(text):
     return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf-8'), 'base64').decode())
 
 def from_safeid(text):
-    return(codecs.decode(repad(bytearray(text, encoding='utf-8')), 'base64').decode('utf-8'))
+    return codecs.decode(repad(bytearray(text, encoding='utf-8')), 'base64').decode('utf-8')
 
 def repad(text):
     return text + (equals_byte * ((4 - len(text) % 4) % 4))
@@ -2593,10 +2550,7 @@ def test_for_valid_var(varname):
 
 def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div_extra=None, show_links=None, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False, always_open=False, return_dict=None):
     if show_links is None:
-        if hasattr(nav, 'disabled') and nav.disabled:
-            show_links = False
-        else:
-            show_links = True
+        show_links = not bool(hasattr(nav, 'disabled') and nav.disabled)
     if inner_div_class is None:
         inner_div_class = 'nav flex-column nav-pills danav danavlinks danav-vertical danavnested'
     if inner_div_extra is None:
@@ -2608,14 +2562,8 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
         muted_class = ''
     #logmessage("navigation_bar: starting: " + str(section))
     the_language = docassemble.base.functions.get_language()
-    if hasattr(nav, 'progressive') and not nav.progressive:
-        non_progressive = True
-    else:
-        non_progressive = False
-    if always_open or (hasattr(nav, 'auto_open') and nav.auto_open):
-        auto_open = True
-    else:
-        auto_open = False
+    non_progressive = bool(hasattr(nav, 'progressive') and not nav.progressive)
+    auto_open = bool(always_open or (hasattr(nav, 'auto_open') and nav.auto_open))
     if the_language not in nav.sections:
         the_language = DEFAULT_LANGUAGE
     if the_language not in nav.sections:
@@ -2625,7 +2573,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
         #raise DAError("Could not find a navigation bar to display.  " + str(nav.sections))
     the_sections = nav.sections[the_language]
     if len(the_sections) == 0:
-        return('')
+        return ''
     if docassemble.base.functions.this_thread.current_question.section is not None:
         the_section = docassemble.base.functions.this_thread.current_question.section
     else:
@@ -2637,7 +2585,6 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
             the_section = list(the_sections[0])[0]
         else:
             the_section = the_sections[0]
-    max_section = the_section
     if wrapper:
         output = '<div role="navigation" class="offset-xl-1 col-xl-2 col-lg-3 col-md-3 d-none d-md-block danavdiv">\n  <div class="nav flex-column nav-pills danav danav-vertical danavlinks">\n'
     else:
@@ -2700,10 +2647,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
         #logmessage("seen sections are: " + str(seen))
         #logmessage("nav past sections are: " + repr(nav.past))
         relevant_past = nav.past.intersection(set(nav.section_ids()))
-        if len(relevant_past.difference(seen)) or new_key in nav.past or the_title in nav.past:
-            seen_more = True
-        else:
-            seen_more = False
+        seen_more = bool(len(relevant_past.difference(seen)) > 0 or new_key in nav.past or the_title in nav.past)
         if non_progressive:
             seen_more = True
             section_reached = False
@@ -2729,11 +2673,9 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
         if subitems:
             current_is_within = False
             oldindexno = indexno
-            first_sub = True
             for y in subitems:
                 if include_arrows:
                     suboutput += '<span class="dainlinearrow"><i class="fas fa-chevron-right"></i></span>'
-                first_sub = False
                 indexno += 1
                 sub_currently_active = False
                 if isinstance(y, dict):
@@ -2743,7 +2685,6 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
                         sub_title = y[sub_key]
                     else:
                         raise DAError("navigation_bar: too many keys in dict.  " + str(the_sections))
-                        continue
                 else:
                     sub_key = None
                     sub_title = str(y)
@@ -2763,12 +2704,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
                 seen.add(new_sub_key)
                 #logmessage("sub: seen sections are: " + str(seen))
                 relevant_past = nav.past.intersection(set(nav.section_ids()))
-                if len(relevant_past.difference(seen)) or new_sub_key in nav.past or sub_title in nav.past:
-                    #logmessage("Setting seen_more to True where seen is " + repr(seen) + " and past is " + repr(nav.past))
-                    seen_more = True
-                else:
-                    #logmessage("Setting seen_more to False")
-                    seen_more = False
+                seen_more = bool(len(relevant_past.difference(seen)) > 0 or new_sub_key in nav.past or sub_title in nav.past)
                 if non_progressive:
                     #logmessage("Setting seen_more to True bc non-progressive")
                     seen_more = True
@@ -2801,17 +2737,16 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
 
 def progress_bar(progress, interview):
     if progress is None:
-        return('');
+        return ''
     progress = float(progress)
     if progress <= 0:
-        return('');
-    if progress > 100:
-        progress = 100
+        return ''
+    progress = min(progress, 100)
     if hasattr(interview, 'show_progress_bar_percentage') and interview.show_progress_bar_percentage:
         percentage = str(int(progress)) + '%'
     else:
         percentage = ''
-    return('<div class="progress mt-2"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n')
+    return '<div class="progress mt-2"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n'
 
 def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
@@ -2945,14 +2880,14 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         source_button = ''
         source_menu_item = ''
     navbar += '        <ul class="nav navbar-nav damynavbar-right" role="tablist">' + source_button + '<li class="nav-item dainvisible" role="presentation"><button class="btn btn-link nav-link active da-no-outline" id="daquestionlabel" data-bs-toggle="tab" data-bs-target="#daquestion">' + word('Question') + '</button></li>'
-    if len(status.interviewHelpText) or (len(status.helpText) and not status.question.interview.question_help_button):
+    if len(status.interviewHelpText) > 0 or (len(status.helpText) > 0 and not status.question.interview.question_help_button):
         if status.question.helptext is None or status.question.interview.question_help_button:
             navbar += '<li class="nav-item" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" data-bs-target="#dahelp" data-bs-toggle="tab" id="dahelptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</button></li>'
         else:
             navbar += '<li class="nav-item" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline daactivetext" data-bs-target="#dahelp" data-bs-toggle="tab" id="dahelptoggle" title=' + json.dumps(extra_help_message) + '>' + help_label + ' <i class="fas fa-star"></i></button></li>'
     else:
         navbar += '<li class="nav-item dainvisible" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" id="dahelptoggle" data-bs-target="#dahelp" data-bs-toggle="tab">' + word('Help') + '</button></li>'
-    navbar += '<li class="nav-item dainvisible" id="daPhoneAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" title=' + json.dumps(phone_message) + ' class="nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-phone da-chat-active"></i><span class="visually-hidden">' + phone_sr + '</span></button></li><li class="nav-item dainvisible" id="daChatAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" class="nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-comment-alt"></i><span class="visually-hidden">' + chat_sr + '</span></button></li></ul>'
+    navbar += '<li class="nav-item dainvisible" id="daPhoneAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" title=' + json.dumps(phone_message) + ' class="btn btn-link nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-phone da-chat-active"></i><span class="visually-hidden">' + phone_sr + '</span></button></li><li class="nav-item dainvisible" id="daChatAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" class="btn btn-link nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-comment-alt"></i><span class="visually-hidden">' + chat_sr + '</span></button></li></ul>'
     navbar += """
         <button id="damobile-toggler" type="button" class="navbar-toggler ms-auto" data-bs-toggle="collapse" data-bs-target="#danavbar-collapse">
           <span class="navbar-toggler-icon"></span><span class="visually-hidden">""" + word("Display the menu") + """</span>
@@ -2964,7 +2899,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if 'menu_items' in status.extras:
         if not isinstance(status.extras['menu_items'], list):
             custom_menu = '<a tabindex="-1" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
-        elif len(status.extras['menu_items']):
+        elif len(status.extras['menu_items']) > 0:
             custom_menu = ""
             for menu_item in status.extras['menu_items']:
                 if not (isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item):
@@ -2997,7 +2932,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if show_login:
         if current_user.is_anonymous:
             if custom_menu:
-                navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
+                navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-end" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
             else:
                 if daconfig.get('login link style', 'normal') == 'button':
                     if ALLOW_REGISTRATION:
@@ -3014,7 +2949,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
             if (custom_menu is False or custom_menu == '') and status.question.interview.options.get('hide standard menu', False):
                 navbar += '            <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
             else:
-                navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="damenuLabel">'
+                navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-end" aria-labelledby="damenuLabel">'
                 if custom_menu:
                     navbar += custom_menu
                 if not status.question.interview.options.get('hide standard menu', False):
@@ -3052,7 +2987,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                 navbar += '</div></li>'
     else:
         if custom_menu:
-            navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-right">' + custom_menu
+            navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-end">' + custom_menu
             if not status.question.interview.options.get('hide standard menu', False):
                 navbar += '<a class="dropdown-item" href="' + exit_href(status) + '">' + status.exit_label + '</a>'
             navbar += '</div></li>'
@@ -3067,7 +3002,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
       </div>
     </div>
 """
-    return(navbar)
+    return navbar
 
 def exit_href(status):
     exit_link = status.exit_link
@@ -3086,20 +3021,18 @@ def delete_session_for_interview(i=None):
     for key in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus', 'observer', 'monitor', 'doing_sms'):
         if key in session:
             del session[key]
-    return
 
 def delete_session_sessions():
     if 'sessions' in session:
         del session['sessions']
 
-def delete_session():
+def delete_session_info():
     for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
         if key in session:
             del session[key]
-    return
 
 def backup_session():
-    backup = dict()
+    backup = {}
     for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
         if key in session:
             backup[key] = session[key]
@@ -3128,7 +3061,7 @@ def reset_session(yaml_filename, secret):
     if STATS:
         r.incr('da:stats:sessions')
     update_session(yaml_filename, uid=user_code)
-    return(user_code, user_dict)
+    return (user_code, user_dict)
 
 def _endpoint_url(endpoint, **kwargs):
     url = url_for('index')
@@ -3152,7 +3085,7 @@ def user_can_edit_package(pkgname=None, giturl=None):
         for result in results:
             the_count += 1
         if the_count == 0:
-            return(True)
+            return True
         for d in results:
             if d.user_id == current_user.id:
                 return True
@@ -3165,11 +3098,11 @@ def user_can_edit_package(pkgname=None, giturl=None):
         for result in results:
             the_count += 1
         if the_count == 0:
-            return(True)
+            return True
         for d in results:
             if d.user_id == current_user.id:
                 return True
-    return(False)
+    return False
 
 def uninstall_package(packagename):
     #logmessage("server uninstall_package: " + packagename)
@@ -3179,21 +3112,20 @@ def uninstall_package(packagename):
         return
     db.session.execute(update(Package).where(Package.name == packagename, Package.active == True).values(active=False))
     db.session.commit()
-    return
 
 def summarize_results(results, logmessages, html=True):
     if html:
         output = '<br>'.join([x + ':&nbsp;' + results[x] for x in sorted(results.keys())])
-        if len(logmessages):
-            if len(output):
+        if len(logmessages) > 0:
+            if len(output) > 0:
                 output += '<br><br><strong>'+ word("pip log") + ':</strong><br>'
             else:
                 output = ''
             output += re.sub(r'\n', r'<br>', logmessages)
         return Markup(output)
     output = '\n'.join([x + ': ' + results[x] for x in sorted(results.keys())])
-    if len(logmessages):
-        if len(output):
+    if len(logmessages) > 0:
+        if len(output) > 0:
             output += "\n" + word("pip log") + ':\n'
         else:
             output = ''
@@ -3221,7 +3153,6 @@ def install_zip_package(packagename, file_number):
         existing_package.type = 'zip'
         existing_package.version += 1
     db.session.commit()
-    return
 
 def install_git_package(packagename, giturl, branch):
     #logmessage("install_git_package: " + packagename + " " + str(giturl))
@@ -3254,7 +3185,6 @@ def install_git_package(packagename, giturl, branch):
         else:
             logmessage("install_git_package: package " + str(giturl) + " appeared to exist but could not be found")
     db.session.commit()
-    return
 
 def install_pip_package(packagename, limitation):
     #logmessage("install_pip_package: " + packagename + " " + str(limitation))
@@ -3277,19 +3207,15 @@ def install_pip_package(packagename, limitation):
         existing_package.upload = None
         existing_package.active = True
     db.session.commit()
-    return
 
 def get_package_info(exclude_core=False):
-    if current_user.has_role('admin'):
-        is_admin = True
-    else:
-        is_admin = False
-    package_list = list()
-    package_auth = dict()
-    seen = dict()
+    is_admin = bool(current_user.has_role('admin'))
+    package_list = []
+    package_auth = {}
+    seen = {}
     for auth in db.session.execute(select(PackageAuth)).scalars():
         if auth.package_id not in package_auth:
-            package_auth[auth.package_id] = dict()
+            package_auth[auth.package_id] = {}
         package_auth[auth.package_id][auth.user_id] = auth.authtype
     for package in db.session.execute(select(Package).filter_by(active=True).order_by(Package.name, Package.id.desc())).scalars():
         #if exclude_core and package.name in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
@@ -3298,14 +3224,8 @@ def get_package_info(exclude_core=False):
             continue
         seen[package.name] = 1
         if package.type is not None:
-            if package.type == 'zip':
-                can_update = False
-            else:
-                can_update = True
-            if is_admin or (package.id in package_auth and current_user.id in package_auth[package.id]):
-                can_uninstall = True
-            else:
-                can_uninstall = False
+            can_update = bool(package.type == 'zip')
+            can_uninstall = bool(is_admin or (package.id in package_auth and current_user.id in package_auth[package.id]))
             if package.core:
                 can_uninstall = False
                 can_update = is_admin
@@ -3378,7 +3298,6 @@ def noquote(string):
 
 def infobutton(title):
     docstring = ''
-    parts = list()
     if 'doc' in title_documentation[title]:
         docstring += noquote(title_documentation[title]['doc'])
     if 'url' in title_documentation[title]:
@@ -3389,7 +3308,7 @@ def infobutton(title):
 
 def search_button(var, field_origins, name_origins, interview_source, all_sources):
     in_this_file = False
-    usage = dict()
+    usage = {}
     if var in field_origins:
         for x in sorted(field_origins[var]):
             if x is interview_source:
@@ -3418,14 +3337,14 @@ def search_button(var, field_origins, name_origins, interview_source, all_source
             usage_type[0].add(path)
         else:
             continue
-    messages = list()
-    if len(usage_type[2]):
+    messages = []
+    if len(usage_type[2]) > 0:
         messages.append(word("Defined and used in " + docassemble.base.functions.comma_and_list(sorted(usage_type[2]))))
-    elif len(usage_type[0]):
+    elif len(usage_type[0]) > 0:
         messages.append(word("Defined in") + ' ' + docassemble.base.functions.comma_and_list(sorted(usage_type[0])))
-    elif len(usage_type[2]):
+    elif len(usage_type[2]) > 0:
         messages.append(word("Used in") + ' ' + docassemble.base.functions.comma_and_list(sorted(usage_type[0])))
-    if len(messages):
+    if len(messages) > 0:
         title = 'title="' + '; '.join(messages) + '" '
     else:
         title = ''
@@ -3483,7 +3402,7 @@ def get_ml_info(varname, default_package, default_file):
         the_varname = varname
     return (the_package, the_file, the_varname)
 
-pg_code_cache = dict()
+pg_code_cache = {}
 
 def source_code_url(the_name, datatype=None):
     if datatype == 'module':
@@ -3520,7 +3439,6 @@ def source_code_url(the_name, datatype=None):
 
 def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=False, show_messages=True, show_jinja_help=False, current_project='default', use_playground=True):
     user_dict = fresh_dictionary()
-    has_no_endpoint = False
     #if 'uid' not in session:
     #    session['uid'] = random_alphanumeric(32)
     if debug_mode:
@@ -3544,8 +3462,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             docassemble.base.functions.set_language(old_language)
     fields_used = set()
     names_used = set()
-    field_origins = dict()
-    name_origins = dict()
+    field_origins = {}
+    name_origins = {}
     all_sources = set()
     names_used.update(interview.names_used)
     for question in interview.questions_list:
@@ -3603,38 +3521,38 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         sources = []
         avail_modules = []
     for val in user_dict:
-        if type(user_dict[val]) is types.FunctionType:
+        if isinstance(user_dict[val], types.FunctionType):
             if val not in pg_code_cache:
                 try:
-                    pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val]))), 'git': source_code_url(user_dict[val])}
+                    pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.signature(user_dict[val])), 'git': source_code_url(user_dict[val])}
                 except:
                     pg_code_cache[val] = {'doc': '', 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + '()', 'git': source_code_url(user_dict[val])}
             name_info[val] = copy.copy(pg_code_cache[val])
             if 'tag' in name_info[val]:
                 functions.add(val)
-        elif type(user_dict[val]) is types.ModuleType:
+        elif isinstance(user_dict[val], types.ModuleType):
             if val not in pg_code_cache:
                 try:
                     pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
                 except:
                     pg_code_cache[val] = {'doc': '', 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
-            name_info[val] = copy.copy(pg_code_cache[val])
-            if 'git' in name_info[val]:
-                modules.add(val)
-        elif type(user_dict[val]) is TypeType:
+                name_info[val] = copy.copy(pg_code_cache[val])
+                if 'git' in name_info[val]:
+                    modules.add(val)
+        elif isinstance(user_dict[val], TypeType):
             if val not in pg_code_cache:
-                bases = list()
+                bases = []
                 for x in list(user_dict[val].__bases__):
                     if x.__name__ != 'DAObject':
                         bases.append(x.__name__)
                 try:
                     methods = inspect.getmembers(user_dict[val], predicate=lambda x: public_method(x, user_dict[val]))
                 except:
-                    methods = list()
-                method_list = list()
+                    methods = []
+                method_list = []
                 for name, value in methods:
                     try:
-                        method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquotetrunc(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value))), 'git': source_code_url(value)})
+                        method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquotetrunc(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.signature(value)), 'git': source_code_url(value)})
                     except:
                         method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': '', 'tag': '.' + str(name) + '()', 'git': source_code_url(value)})
                 try:
@@ -3647,24 +3565,21 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
     for val in docassemble.base.functions.pickleable_objects(user_dict):
         names_used.add(val)
         if val not in name_info:
-            name_info[val] = dict()
+            name_info[val] = {}
         name_info[val]['type'] = user_dict[val].__class__.__name__
-        if hasattr(user_dict[val], '__iter__') and not isinstance(user_dict[val], str):
-            name_info[val]['iterable'] = True
-        else:
-            name_info[val]['iterable'] = False
+        name_info[val]['iterable'] = bool(hasattr(user_dict[val], '__iter__') and not isinstance(user_dict[val], str))
     for var in base_name_info:
         if base_name_info[var]['show']:
             names_used.add(var)
-    names_used = set([i for i in names_used if not extraneous_var.search(i)])
+    names_used = set(i for i in names_used if not extraneous_var.search(i))
     for var in ('_internal', '__object_type', '_DAOBJECTDEFAULTDA'):
         names_used.discard(var)
     for var in interview.mlfields:
         names_used.discard(var + '.text')
-    if len(interview.mlfields):
+    if len(interview.mlfields) > 0:
         classes.add('DAModel')
         method_list = [{'insert': '.predict()', 'name': 'predict', 'doc': "Generates a prediction based on the 'text' attribute and sets the attributes 'entry_id,' 'predictions,' 'prediction,' and 'probability.'  Called automatically.", 'tag': '.predict(self)'}]
-        name_info['DAModel'] = {'doc': 'Applies natural language processing to user input and returns a prediction.', 'name': 'DAModel', 'insert': 'DAModel', 'bases': list(), 'methods': method_list}
+        name_info['DAModel'] = {'doc': 'Applies natural language processing to user input and returns a prediction.', 'name': 'DAModel', 'insert': 'DAModel', 'bases': [], 'methods': method_list}
     view_doc_text = word("View documentation")
     word_documentation = word("Documentation")
     attr_documentation = word("Show attributes")
@@ -3675,7 +3590,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         ml_parts = ['_global', '_global']
     for var in documentation_dict:
         if var not in name_info:
-            name_info[var] = dict()
+            name_info[var] = {}
         if 'doc' in name_info[var] and name_info[var]['doc'] is not None:
             name_info[var]['doc'] += '<br>'
         else:
@@ -3704,11 +3619,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         else:
             message_to_use = title_documentation['generic error']['doc']
         content += '\n                  <tr><td class="playground-warning-box"><div class="alert alert-' + error_style + '">' + message_to_use + '</div></td></tr>'
-    vocab_dict = dict()
-    vocab_set = (names_used | functions | classes | modules | fields_used | set([key for key in base_name_info if not re.search(r'\.', key)]) | set([key for key in name_info if not re.search(r'\.', key)]) | set(templates) | set(static) | set(sources) | set(avail_modules) | set(interview.images.keys()))
-    vocab_set = set([i for i in vocab_set if not extraneous_var.search(i)])
+    vocab_dict = {}
+    vocab_set = (names_used | functions | classes | modules | fields_used | set(key for key in base_name_info if not re.search(r'\.', key)) | set(key for key in name_info if not re.search(r'\.', key)) | set(templates) | set(static) | set(sources) | set(avail_modules) | set(interview.images.keys()))
+    vocab_set = set(i for i in vocab_set if not extraneous_var.search(i))
     names_used = names_used.difference( functions | classes | modules | set(avail_modules) )
-    undefined_names = names_used.difference(fields_used | set(base_name_info.keys()) | set([x for x in names_used if '.' in x]))
+    undefined_names = names_used.difference(fields_used | set(base_name_info.keys()) | set(x for x in names_used if '.' in x))
     implicitly_defined = set()
     for var in fields_used:
         the_var = var
@@ -3722,15 +3637,15 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         undefined_names.discard(var)
     names_used = names_used.difference( undefined_names )
     if return_json:
-        if len(names_used):
-            has_parent = dict()
+        if len(names_used) > 0:
+            has_parent = {}
             has_children = set()
             for var in names_used:
                 parent = re.sub(r'[\.\[].*', '', var)
                 if parent != var:
                     has_parent[var] = parent
                     has_children.add(parent)
-            var_list = list()
+            var_list = []
             for var in sorted(names_used):
                 var_trans = re.sub(r'\[[0-9]+\]', '[i]', var)
                 #var_trans = re.sub(r'\[i\](.*)\[i\](.*)\[i\](.*)\[i\](.*)\[i\](.*)\[i\]', r'[i]\1[j]\2[k]\3[l]\4[m]\5[n]', var_trans)
@@ -3741,10 +3656,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 info = dict(var=var, to_insert=var)
                 if var_trans != var:
                     info['var_base'] = var_trans
-                if var in has_parent:
-                    info['hide'] = True
-                else:
-                    info['hide'] = False
+                info['hide'] = bool(var in has_parent)
                 if var in base_name_info:
                     if not base_name_info[var]['show']:
                         continue
@@ -3772,16 +3684,16 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     else:
                         info['train_link'] = url_for('train', package=ml_parts[0], file=ml_parts[1], group_id=var)
                 var_list.append(info)
-        functions_list = list()
-        if len(functions):
+        functions_list = []
+        if len(functions) > 0:
             for var in sorted(functions):
                 info = dict(var=var, to_insert=name_info[var]['insert'], name=name_info[var]['tag'])
                 if 'doc' in name_info[var] and name_info[var]['doc']:
                     info['doc_content'] = name_info[var]['doc']
                     info['doc_title'] = word_documentation
                 functions_list.append(info)
-        classes_list = list()
-        if len(classes):
+        classes_list = []
+        if len(classes) > 0:
             for var in sorted(classes):
                 info = dict(var=var, to_insert=name_info[var]['insert'], name=name_info[var]['name'])
                 if name_info[var]['bases']:
@@ -3790,7 +3702,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     info['doc_content'] = name_info[var]['doc']
                     info['doc_title'] = word_documentation
                 if 'methods' in name_info[var] and len(name_info[var]['methods']):
-                    info['methods'] = list()
+                    info['methods'] = []
                     for method_item in name_info[var]['methods']:
                         method_info = dict(name=method_item['name'], to_insert=method_item['insert'], tag=method_item['tag'])
                         if 'git' in method_item:
@@ -3800,8 +3712,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                             method_info['doc_title'] = word_documentation
                         info['methods'].append(method_info)
                 classes_list.append(info)
-        modules_list = list()
-        if len(modules):
+        modules_list = []
+        if len(modules) > 0:
             for var in sorted(modules):
                 info = dict(var=var, to_insert=name_info[var]['insert'])
                 if name_info[var]['doc']:
@@ -3809,28 +3721,28 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     info['doc_title'] = word_documentation
                 modules_list.append(info)
         if use_playground:
-            modules_available_list = list()
-            if len(avail_modules):
+            modules_available_list = []
+            if len(avail_modules) > 0:
                 for var in sorted(avail_modules):
                     info = dict(var=var, to_insert="." + var)
                     modules_available_list.append(info)
-            templates_list = list()
-            if len(templates):
+            templates_list = []
+            if len(templates) > 0:
                 for var in sorted(templates):
                     info = dict(var=var, to_insert=var)
                     templates_list.append(info)
-            sources_list = list()
-            if len(sources):
+            sources_list = []
+            if len(sources) > 0:
                 for var in sorted(sources):
                     info = dict(var=var, to_insert=var)
                     sources_list.append(info)
-            static_list = list()
-            if len(static):
+            static_list = []
+            if len(static) > 0:
                 for var in sorted(static):
                     info = dict(var=var, to_insert=var)
                     static_list.append(info)
-        images_list = list()
-        if len(interview.images):
+        images_list = []
+        if len(interview.images) > 0:
             for var in sorted(interview.images):
                 info = dict(var=var, to_insert=var)
                 the_ref = get_url_from_file_reference(interview.images[var].get_reference())
@@ -3839,23 +3751,21 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 images_list.append(info)
         if use_playground:
             return dict(undefined_names=list(sorted(undefined_names)), var_list=var_list, functions_list=functions_list, classes_list=classes_list, modules_list=modules_list, modules_available_list=modules_available_list, templates_list=templates_list, sources_list=sources_list, images_list=images_list, static_list=static_list), sorted(vocab_set)
-        else:
-            return dict(undefined_names=list(sorted(undefined_names)), var_list=var_list, functions_list=functions_list, classes_list=classes_list, modules_list=modules_list, images_list=images_list), sorted(vocab_set)
-    if len(undefined_names):
+        return dict(undefined_names=list(sorted(undefined_names)), var_list=var_list, functions_list=functions_list, classes_list=classes_list, modules_list=modules_list, images_list=images_list), sorted(vocab_set)
+    if len(undefined_names) > 0:
         content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
             content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger btn-sm playground-variable">' + var + '</a></td></tr>'
             vocab_dict[var] = var
-    if len(names_used):
+    if len(names_used) > 0:
         content += '\n                  <tr><td><h4>' + word('Variables') + infobutton('variables') + '</h4></td></tr>'
-        has_parent = dict()
+        has_parent = {}
         has_children = set()
         for var in names_used:
             parent = re.sub(r'[\.\[].*', '', var)
             if parent != var:
                 has_parent[var] = parent
                 has_children.add(parent)
-        in_nest = False
         for var in sorted(names_used):
             var_trans = re.sub(r'\[[0-9]\]', '[i]', var)
             var_trans = re.sub(r'\[i\](.*)\[i\](.*)\[i\]', r'[i]\1[j]\2[k]', var_trans)
@@ -3900,7 +3810,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 else:
                     content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('train', package=ml_parts[0], file=ml_parts[1], group_id=var) + '" title=' + json.dumps(word("Train")) + '><i class="fas fa-graduation-cap"></i></a>'
             content += '</td></tr>'
-        if len(all_sources) and show_messages:
+        if len(all_sources) > 0 and show_messages:
             content += search_key
             content += '\n                <tr><td>'
             content += '\n                  <ul>'
@@ -3908,7 +3818,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 content += '\n                    <li><a target="_blank" href="' + url_for('view_source', i=path, project=current_project)+ '">' + path + '<a></li>'
             content += '\n                  </ul>'
             content += '\n                </td></tr>'
-    if len(functions):
+    if len(functions) > 0:
         content += '\n                  <tr><td><h4>' + word('Functions') + infobutton('functions') + '</h4></td></tr>'
         for var in sorted(functions):
             if var in name_info:
@@ -3921,7 +3831,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     git_link = ''
                 content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + name_info[var]['doc'] + '" title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>' #data-bs-selector="true" title=' + json.dumps(word_documentation) + '
             content += '</td></tr>'
-    if len(classes):
+    if len(classes) > 0:
         content += '\n                  <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
         for var in sorted(classes):
             content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-info playground-variable">' + name_info[var]['name'] + '</a>'
@@ -3934,7 +3844,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 else:
                     git_link = ''
                 content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + name_info[var]['doc'] + '" title="' + var + git_link + '"><i class="fas fa-info-circle"></i></a>' #data-bs-selector="true" title=' + json.dumps(word_documentation) + '
-            if len(name_info[var]['methods']):
+            if len(name_info[var]['methods']) > 0:
                 content += '&nbsp;<a tabindex="0" class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title=' + json.dumps(word('Methods')) + '><i class="fas fa-cog"></i></a>'
                 content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
                 for method_info in name_info[var]['methods']:
@@ -3949,7 +3859,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     content += '</td></tr>'
                 content += '</tbody></table></div>'
             content += '</td></tr>'
-    if len(modules):
+    if len(modules) > 0:
         content += '\n                  <tr><td><h4>' + word('Modules defined') + infobutton('modules') + '</h4></td></tr>'
         for var in sorted(modules):
             content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" role="button" class="btn btn-sm btn-success playground-variable">' + name_info[var]['name'] + '</a>'
@@ -3961,36 +3871,33 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     git_link = ''
                 content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + name_info[var]['doc'] + '" data-bs-title="' + noquote(var) + git_link + '"><i class="fas fa-info-circle"></i></a>' #data-bs-selector="true" title=' + json.dumps(word_documentation) + '
             content += '</td></tr>'
-    if len(avail_modules):
+    if len(avail_modules) > 0:
         content += '\n                  <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'
         for var in avail_modules:
             content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="btn btn-sm btn-success playground-variable">.' + noquote(var) + '</a>'
             vocab_dict[var] = var
             content += '</td></tr>'
-    if len(templates):
+    if len(templates) > 0:
         content += '\n                  <tr><td><h4>' + word('Templates') + infobutton('templates') + '</h4></td></tr>'
         for var in templates:
             content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
             vocab_dict[var] = var
             content += '</td></tr>'
-    if len(static):
+    if len(static) > 0:
         content += '\n                  <tr><td><h4>' + word('Static files') + infobutton('static') + '</h4></td></tr>'
         for var in static:
             content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
             vocab_dict[var] = var
             content += '</td></tr>'
-    if len(sources):
+    if len(sources) > 0:
         content += '\n                  <tr><td><h4>' + word('Source files') + infobutton('sources') + '</h4></td></tr>'
         for var in sources:
             content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
             vocab_dict[var] = var
             content += '</td></tr>'
-    if len(interview.images):
+    if len(interview.images) > 0:
         content += '\n                  <tr><td><h4>' + word('Decorations') + infobutton('decorations') + '</h4></td></tr>'
-        if cloud and len(interview.images) > 10:
-            show_images = False
-        else:
-            show_images = True
+        show_images = not bool(cloud and len(interview.images) > 10)
         for var in sorted(interview.images):
             content += '\n                  <tr><td>'
             the_ref = get_url_from_file_reference(interview.images[var].get_reference())
@@ -4005,7 +3912,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
     if show_messages:
         content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
     if show_jinja_help:
-        content += "\n                  <tr><td><h4 class=\"mt-2\">" + word("Using Jinja2") + infobutton('jinja2') + "</h4>\n                  " + re.sub("table-striped", "table-bordered", docassemble.base.util.markdown_to_html(word("Jinja2 help template"), trim=False, do_terms=False, indent=18)) + "</td><tr>"
+        content += "\n                  <tr><td><h4 class=\"mt-2\">" + word("Using Jinja2") + infobutton('jinja2') + "</h4>\n                  " + re.sub("table-striped", "table-bordered", docassemble.base.util.markdown_to_html(word("Jinja2 help template"), trim=False, do_terms=False)) + "</td><tr>"
     for item in base_name_info:
         if item not in vocab_dict and not base_name_info.get('exclude', False):
             vocab_dict[item] = base_name_info.get('insert', item)
@@ -4058,7 +3965,7 @@ def wait_for_task(task_id, timeout=None):
         result.get(timeout=timeout)
         #logmessage("wait_for_task: returning true")
         return True
-    except docassemble.webapp.worker.celery.exceptions.TimeoutError as the_error:
+    except docassemble.webapp.worker.celery.exceptions.TimeoutError:
         logmessage("wait_for_task: timed out")
         return False
     except Exception as the_error:
@@ -4075,7 +3982,6 @@ def wait_for_task(task_id, timeout=None):
 #         result = call(args)
 #         if result > 0:
 #             raise DAError("Call to pdftoppm failed")
-#     return
 
 def trigger_update(except_for=None):
     sys.stderr.write("trigger_update: except_for is " + str(except_for) + " and hostname is " + hostname + "\n")
@@ -4089,7 +3995,7 @@ def trigger_update(except_for=None):
                 else:
                     the_url = host.url
                 args = [SUPERVISORCTL, '-s', the_url, 'start', 'update']
-                result = subprocess.run(args).returncode
+                result = subprocess.run(args, check=False).returncode
                 if result == 0:
                     sys.stderr.write("trigger_update: sent update to " + str(host.hostname) + " using " + the_url + "\n")
                 else:
@@ -4098,7 +4004,6 @@ def trigger_update(except_for=None):
         for id_to_delete in to_delete:
             db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
             db.session.commit()
-    return
 
 def restart_on(host):
     logmessage("restart_on: " + str(host.hostname))
@@ -4107,7 +4012,7 @@ def restart_on(host):
     else:
         the_url = host.url
     args = [SUPERVISORCTL, '-s', the_url, 'start', 'reset']
-    result = subprocess.run(args).returncode
+    result = subprocess.run(args, check=False).returncode
     if result == 0:
         logmessage("restart_on: sent reset to " + str(host.hostname))
     else:
@@ -4120,7 +4025,6 @@ def restart_all():
         r.delete(interview_path)
     restart_others()
     restart_this()
-    return
 
 def restart_this():
     logmessage("restart_this: hostname is " + str(hostname))
@@ -4140,9 +4044,8 @@ def restart_this():
         logmessage("restart_this: touching wsgi file")
         wsgi_file = WEBAPP_PATH
         if os.path.isfile(wsgi_file):
-            with open(wsgi_file, 'a'):
+            with open(wsgi_file, 'a', encoding='utf-8'):
                 os.utime(wsgi_file, None)
-    return
 
 def restart_others():
     logmessage("restart_others: starting")
@@ -4170,7 +4073,6 @@ def restart_others():
         for id_to_delete in to_delete:
             db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
             db.session.commit()
-    return
 
 def get_requester_ip(req):
     if not req:
@@ -4178,7 +4080,7 @@ def get_requester_ip(req):
     if HTTP_TO_HTTPS:
         if 'X-Real-Ip' in req.headers:
             return req.headers['X-Real-Ip']
-        elif 'X-Forwarded-For' in req.headers:
+        if 'X-Forwarded-For' in req.headers:
             return req.headers['X-Forwarded-For']
     return req.remote_addr
 
@@ -4190,8 +4092,8 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
             role_list = ['user']
         ext = dict(email=current_user.email, roles=role_list, the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone, language=current_user.language)
     else:
-        ext = dict(email=None, the_user_id='t' + str(session.get('tempuser', None)), theid=session.get('tempuser', None), roles=list())
-    headers = dict()
+        ext = dict(email=None, the_user_id='t' + str(session.get('tempuser', None)), theid=session.get('tempuser', None), roles=[])
+    headers = {}
     if req is None:
         url_root = daconfig.get('url root', 'http://localhost') + ROOT
         url = url_root + 'interview'
@@ -4238,13 +4140,13 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
     else:
         ext['location'] = None
     return_val['user'].update(ext)
-    return(return_val)
+    return return_val
 
 def html_escape(text):
     text = re.sub('&', '&amp;', text)
     text = re.sub('<', '&lt;', text)
     text = re.sub('>', '&gt;', text)
-    return text;
+    return text
 
 def indent_by(text, num):
     if not text:
@@ -4255,7 +4157,7 @@ def call_sync():
     if not USING_SUPERVISOR:
         return
     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'sync']
-    result = subprocess.run(args).returncode
+    result = subprocess.run(args, check=False).returncode
     if result == 0:
         pass
         #logmessage("call_sync: sent message to " + hostname)
@@ -4272,7 +4174,6 @@ def call_sync():
         else:
             time.sleep(1)
         counter -= 1
-    return
 
 def formatted_current_time():
     if current_user.timezone:
@@ -4288,24 +4189,25 @@ def formatted_current_date():
         the_timezone = pytz.timezone(get_default_timezone())
     return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime("%Y-%m-%d")
 
-class Object(object):
+class Object:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
     pass
 
-class FakeUser(object):
+class FakeUser:
     pass
 
-class FakeRole(object):
+class FakeRole:
     pass
 
-class OAuthSignIn(object):
-    providers = None
+class OAuthSignIn:
+    providers = {}
+    providers_obtained = False
 
     def __init__(self, provider_name):
         self.provider_name = provider_name
-        credentials = current_app.config['OAUTH_CREDENTIALS'].get(provider_name, dict())
+        credentials = current_app.config['OAUTH_CREDENTIALS'].get(provider_name, {})
         self.consumer_id = credentials.get('id', None)
         self.consumer_secret = credentials.get('secret', None)
         self.consumer_domain = credentials.get('domain', None)
@@ -4321,13 +4223,13 @@ class OAuthSignIn(object):
                        _external=True)
 
     @classmethod
-    def get_provider(self, provider_name):
-        if self.providers is None:
-            self.providers = {}
-            for provider_class in self.__subclasses__():
+    def get_provider(cls, provider_name):
+        if not cls.providers_obtained:
+            for provider_class in cls.__subclasses__():
                 provider = provider_class()
-                self.providers[provider.provider_name] = provider
-        return self.providers[provider_name]
+                cls.providers[provider.provider_name] = provider
+            cls.providers_obtained = True
+        return cls.providers[provider_name]
 
 class GoogleSignIn(OAuthSignIn):
     def __init__(self):
@@ -4376,8 +4278,7 @@ class GoogleSignIn(OAuthSignIn):
                 email,
                 {'name': google_name}
             )
-        else:
-            raise Exception("Could not get Google authorization information")
+        raise Exception("Could not get Google authorization information")
 
 class FacebookSignIn(OAuthSignIn):
     def __init__(self):
@@ -4584,8 +4485,8 @@ def get_user_object(user_id):
     return the_user
 
 @lm.user_loader
-def load_user(id):
-    return UserModel.query.options(db.joinedload(UserModel.roles)).get(int(id))
+def load_user(the_id):
+    return UserModel.query.options(db.joinedload(UserModel.roles)).get(int(the_id))
 
 @app.route('/goto', methods=['GET'])
 def run_temp():
@@ -4635,7 +4536,7 @@ def auto_login():
         if 'session' in info:
             update_session(info['i'], uid=info['session'], encrypted=info['encrypted'])
     elif 'next' in info:
-        url_info = info.get('url_args', dict())
+        url_info = info.get('url_args', {})
         next_url = get_url_from_file_reference(info['next'], **url_info)
     else:
         next_url = url_for('interview_list', from_login='1')
@@ -4654,7 +4555,7 @@ def oauth_authorize(provider):
     if not current_user.is_anonymous:
         return redirect(url_for('interview_list', from_login='1'))
     oauth = OAuthSignIn.get_provider(provider)
-    next_url = user_manager.make_safe_url_function(request.args.get('next', ''))
+    next_url = app.user_manager.make_safe_url_function(request.args.get('next', ''))
     if next_url:
         session['next'] = next_url
     return oauth.authorize()
@@ -4691,7 +4592,7 @@ def oauth_callback(provider):
     update_last_login(user)
     if 'i' in session: #TEMPORARY
         get_session(session['i'])
-    to_convert = list()
+    to_convert = []
     if 'tempuser' in session:
         to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
     if 'sessions' in session:
@@ -4705,7 +4606,7 @@ def oauth_callback(provider):
     sub_temp_other(user)
     if 'next' in session:
         the_url = session['next']
-        del session['next']
+        del session['the_next']
         response = redirect(the_url)
     else:
         response = redirect(url_for('interview_list', from_login='1'))
@@ -4767,11 +4668,9 @@ def phone_login():
             if success:
                 session['phone_number'] = phone_number
                 return redirect(url_for('phone_login_verify'))
-            else:
-                flash(word("There was a problem sending you a text message.  Please log in another way."), 'error')
-                return redirect(url_for('user.login'))
-        else:
-            flash(word("Please enter a valid phone number"), 'error')
+            flash(word("There was a problem sending you a text message.  Please log in another way."), 'error')
+            return redirect(url_for('user.login'))
+        flash(word("Please enter a valid phone number"), 'error')
     return render_template('flask_user/phone_login.html', form=form, version_warning=None, title=word("Sign in with your mobile phone"), tab_title=word("Sign In"), page_title=word("Sign in"))
 
 @app.route('/pv', methods=['POST', 'GET'])
@@ -4802,7 +4701,7 @@ def phone_login_verify():
             login_user(user, remember=False)
             update_last_login(user)
             r.delete('da:phonelogin:ip:' + str(get_requester_ip(request)) + ':phone:' + phone_number)
-            to_convert = list()
+            to_convert = []
             if 'i' in session: #TEMPORARY
                 get_session(session['i'])
             if 'tempuser' in session:
@@ -4817,10 +4716,9 @@ def phone_login_verify():
             response = redirect(url_for('interview_list', from_login='1'))
             response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
             return response
-        else:
-            logmessage("IP address " + str(get_requester_ip(request)) + " made a failed login attempt using phone number " + str(phone_number) + ".")
-            flash(word("Your verification code is invalid or expired.  Please try again."), 'error')
-            return redirect(url_for('user.login'))
+        logmessage("IP address " + str(get_requester_ip(request)) + " made a failed login attempt using phone number " + str(phone_number) + ".")
+        flash(word("Your verification code is invalid or expired.  Please try again."), 'error')
+        return redirect(url_for('user.login'))
     return render_template('flask_user/phone_login_verify.html', form=form, version_warning=None, title=word("Verify your phone"), tab_title=word("Enter code"), page_title=word("Enter code"), description=word("We just sent you a text message with a verification code.  Enter the verification code to proceed."))
 
 @app.route('/mfa_setup', methods=['POST', 'GET'])
@@ -4873,7 +4771,7 @@ def mfa_setup():
     output = BytesIO()
     im.save(output)
     the_qrcode = output.getvalue().decode()
-    the_qrcode = re.sub("<\?xml version='1.0' encoding='UTF-8'\?>\n", '', the_qrcode)
+    the_qrcode = re.sub(r"<\?xml version='1.0' encoding='UTF-8'\?>\n", '', the_qrcode)
     the_qrcode = re.sub(r'height="[0-9]+mm" ', '', the_qrcode)
     the_qrcode = re.sub(r'width="[0-9]+mm" ', '', the_qrcode)
     m = re.search(r'(viewBox="[^"]+")', the_qrcode)
@@ -4895,30 +4793,27 @@ def mfa_reconfigure():
     if user.otp_secret is None:
         if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
             return redirect(url_for('mfa_setup'))
-        elif not app.config['MFA_ALLOW_APP']:
+        if not app.config['MFA_ALLOW_APP']:
             return redirect(url_for('mfa_sms_setup'))
-        else:
-            return redirect(url_for('mfa_choose'))
+        return redirect(url_for('mfa_choose'))
     form = MFAReconfigureForm(request.form)
     if request.method == 'POST':
         if form.reconfigure.data:
             if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
                 return redirect(url_for('mfa_setup'))
-            elif not app.config['MFA_ALLOW_APP']:
+            if not app.config['MFA_ALLOW_APP']:
                 return redirect(url_for('mfa_sms_setup'))
-            else:
-                return redirect(url_for('mfa_choose'))
-        elif form.disable.data and not (len(app.config['MFA_REQUIRED_FOR_ROLE']) and current_user.has_role(*app.config['MFA_REQUIRED_FOR_ROLE'])):
+            return redirect(url_for('mfa_choose'))
+        if form.disable.data and not (len(app.config['MFA_REQUIRED_FOR_ROLE']) and current_user.has_role(*app.config['MFA_REQUIRED_FOR_ROLE'])):
             user.otp_secret = None
             db.session.commit()
             flash(word("Your account no longer uses two-factor authentication."), 'success')
             return redirect(url_for('user_profile_page'))
-        elif form.cancel.data:
+        if form.cancel.data:
             return redirect(url_for('user_profile_page'))
-    if len(app.config['MFA_REQUIRED_FOR_ROLE']) and current_user.has_role(*app.config['MFA_REQUIRED_FOR_ROLE']):
+    if len(app.config['MFA_REQUIRED_FOR_ROLE']) > 0 and current_user.has_role(*app.config['MFA_REQUIRED_FOR_ROLE']):
         return render_template('flask_user/mfa_reconfigure.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), allow_disable=False, description=word("Would you like to reconfigure two-factor authentication?"))
-    else:
-        return render_template('flask_user/mfa_reconfigure.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), allow_disable=True, description=word("Your account already has two-factor authentication enabled.  Would you like to reconfigure or disable two-factor authentication?"))
+    return render_template('flask_user/mfa_reconfigure.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), allow_disable=True, description=word("Your account already has two-factor authentication enabled.  Would you like to reconfigure or disable two-factor authentication?"))
 
 @app.route('/mfa_choose', methods=['POST', 'GET'])
 def mfa_choose():
@@ -4934,22 +4829,21 @@ def mfa_choose():
         return ('File not found', 404)
     if app.config['MFA_ALLOW_APP'] and (twilio_config is None or not app.config['MFA_ALLOW_SMS']):
         return redirect(url_for('mfa_setup'))
-    elif not app.config['MFA_ALLOW_APP']:
+    if not app.config['MFA_ALLOW_APP']:
         return redirect(url_for('mfa_sms_setup'))
     user = load_user(user.id)
     form = MFAChooseForm(request.form)
     if request.method == 'POST':
         if form.sms.data:
             return redirect(url_for('mfa_sms_setup'))
-        elif form.auth.data:
+        if form.auth.data:
             return redirect(url_for('mfa_setup'))
-        else:
-            if in_login:
-                del session['validated_user']
-                if 'next' in session:
-                    del session['next']
-                return redirect(url_for('user.login'))
-            return redirect(url_for('user_profile_page'))
+        if in_login:
+            del session['validated_user']
+            if 'next' in session:
+                del session['next']
+            return redirect(url_for('user.login'))
+        return redirect(url_for('user_profile_page'))
     return render_template('flask_user/mfa_choose.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=Markup(word("""Which type of two-factor authentication would you like to use?  The first option is to use an authentication app like <a target="_blank" href="https://en.wikipedia.org/wiki/Google_Authenticator">Google Authenticator</a> or <a target="_blank" href="https://authy.com/">Authy</a>.  The second option is to receive a text (SMS) message containing a verification code.""")))
 
 @app.route('/mfa_sms_setup', methods=['POST', 'GET'])
@@ -4983,16 +4877,14 @@ def mfa_sms_setup():
                 pipe.expire(key, daconfig['verification code timeout'])
                 pipe.execute()
                 return redirect(url_for('mfa_verify_sms_setup'))
-            else:
-                flash(word("There was a problem sending the text message."), 'error')
-                if in_login:
-                    del session['validated_user']
-                    if 'next' in session:
-                        del session['next']
-                    return redirect(url_for('user.login'))
-                return redirect(url_for('user_profile_page'))
-        else:
-            flash(word("Invalid phone number."), 'error')
+            flash(word("There was a problem sending the text message."), 'error')
+            if in_login:
+                del session['validated_user']
+                if 'next' in session:
+                    del session['next']
+                return redirect(url_for('user.login'))
+            return redirect(url_for('user_profile_page'))
+        flash(word("Invalid phone number."), 'error')
     return render_template('flask_user/mfa_sms_setup.html', form=form, version_warning=None, title=word("Two-factor authentication"), tab_title=word("Authentication"), page_title=word("Authentication"), description=word("""Enter your phone number.  A confirmation code will be sent to you."""))
 
 @app.route('/mfa_verify_sms_setup', methods=['POST', 'GET'])
@@ -5073,7 +4965,7 @@ def mfa_login():
                 r.expire(fail_key, 86400)
                 flash(word("Your verification code was invalid or expired."), 'error')
                 return redirect(url_for('user.login'))
-            elif failed_attempts is not None:
+            if failed_attempts is not None:
                 r.delete(fail_key)
         else:
             totp = pyotp.TOTP(user.otp_secret)
@@ -5085,9 +4977,8 @@ def mfa_login():
                     del session['validated_user']
                 if 'next' in session:
                     return redirect(url_for('user.login', next=session['next']))
-                else:
-                    return redirect(url_for('user.login'))
-            elif failed_attempts is not None:
+                return redirect(url_for('user.login'))
+            if failed_attempts is not None:
                 r.delete(fail_key)
         return docassemble_flask_user.views._do_login_user(user, safe_next, False)
     description = word("This account uses two-factor authentication.")
@@ -5128,7 +5019,7 @@ def manage_account():
                 manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename)
                 reset_user_dict(session_id, yaml_filename, temp_user_id=temp_user_id, force=delete_shared)
             delete_temp_user_data(temp_user_id, r)
-        delete_session()
+        delete_session_info()
         session.clear()
         response = redirect(exit_page)
         response.set_cookie('remember_token', '', expires=0)
@@ -5143,7 +5034,7 @@ def manage_account():
     return render_template('pages/manage_account.html', form=form, version_warning=None, title=word("Manage account"), tab_title=word("Manage account"), page_title=word("Manage account"), description=description, logged_in=logged_in)
 
 def get_github_flow():
-    app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('github', dict())
+    app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('github', {})
     client_id = app_credentials.get('id', None)
     client_secret = app_credentials.get('secret', None)
     if client_id is None or client_secret is None:
@@ -5171,7 +5062,6 @@ def get_ssh_keys(email):
     private_key_file = os.path.join(area.directory, '.ssh-private')
     public_key_file = os.path.join(area.directory, '.ssh-public')
     if (not (os.path.isfile(private_key_file) and os.path.isfile(private_key_file))) or (not (os.path.isfile(public_key_file) and os.path.isfile(public_key_file))):
-        from Crypto.PublicKey import RSA
         key = RSA.generate(4096)
         pubkey = key.publickey()
         area.write_content(key.exportKey('PEM').decode(), filename=private_key_file, save=False)
@@ -5200,14 +5090,14 @@ def github_menu():
     if request.method == 'POST':
         if form.configure.data:
             return redirect(url_for('github_configure'))
-        elif form.unconfigure.data:
+        if form.unconfigure.data:
             return redirect(url_for('github_unconfigure'))
-        elif form.cancel.data:
+        if form.cancel.data:
             return redirect(url_for('user_profile_page'))
-        elif form.save.data:
-            info = dict()
-            info['shared'] = True if form.shared.data else False
-            info['orgs'] = True if form.orgs.data else False
+        if form.save.data:
+            info = {}
+            info['shared'] = bool(form.shared.data)
+            info['orgs'] = bool(form.orgs.data)
             r.set('da:using_github:userid:' + str(current_user.id), json.dumps(info))
             flash(word("Your GitHub settings were saved."), 'info')
     uses_github = r.get('da:using_github:userid:' + str(current_user.id))
@@ -5392,7 +5282,7 @@ def leave():
     #     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     #     logout_user()
     #delete_session_for_interview(i=request.args.get('i', None))
-    #delete_session()
+    #delete_session_info()
     #response = redirect(exit_page)
     #response.set_cookie('remember_token', '', expires=0)
     #response.set_cookie('visitor_secret', '', expires=0)
@@ -5436,7 +5326,7 @@ def new_session():
     return redirect(url_for('index', **url_args))
 
 @app.route("/exit", methods=['GET'])
-def exit():
+def exit_endpoint():
     if 'language' in session:
         the_exit_page = request.args.get('next', exit_page)
     else:
@@ -5518,8 +5408,9 @@ def restart_ajax():
         logmessage("restart_ajax: restarting")
         restart_all()
         return jsonify(success=True)
+    return jsonify(success=False)
 
-class ChatPartners(object):
+class ChatPartners:
     pass
 
 def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=None):
@@ -5529,7 +5420,7 @@ def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=N
     output = []
     if yaml_filename is None or session_id is None:
         return output
-    user_cache = dict()
+    user_cache = {}
     for record in db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id)).order_by(ChatLog.id)).scalars():
         if record.encrypted:
             try:
@@ -5612,12 +5503,12 @@ def checkin():
         messages = get_chat_log(user_dict['_internal']['livehelp']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
         return jsonify_with_cache(success=True, messages=messages)
     if request.form.get('action', None) == 'checkin':
-        commands = list()
+        commands = []
         checkin_code = request.form.get('checkinCode', None)
         do_action = request.form.get('do_action', None)
         #logmessage("in checkin")
         if do_action is not None:
-            parameters = dict()
+            parameters = {}
             form_parameters = request.form.get('parameters', None)
             if form_parameters is not None:
                 parameters = json.loads(form_parameters)
@@ -5680,7 +5571,7 @@ def checkin():
                         call_forwarding_message = '<span class="daphone-message"><i class="fas fa-phone"></i> ' + word('To reach an advocate who can assist you, call') + ' <a class="daphone-number" href="tel:' + str(forwarding_phone_number) + '">' + str(forwarding_phone_number) + '</a> ' + word("and enter the code") + ' <span class="daphone-code">' + str(call_forwarding_code) + '</span>.</span>'
                         break
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-        potential_partners = list()
+        potential_partners = []
         if str(chatstatus) != 'off': #in ('waiting', 'standby', 'ringing', 'ready', 'on', 'hangup', 'observeonly'):
             #sys.stderr.write("checkin: fetch_user_dict3\n")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
@@ -5751,12 +5642,10 @@ def checkin():
                 elif chatstatus == 'on':
                     if len(potential_partners) > 0:
                         already_connected_to_help = False
-                        current_helper = None
                         for user_id in potential_partners:
                             for the_key in r.hgetall('da:monitor:chatpartners:' + str(user_id)):
                                 if the_key.decode() == chat_session_key:
                                     already_connected_to_help = True
-                                    current_helper = user_id
                         if not already_connected_to_help:
                             for user_id in potential_partners:
                                 mon_sid = r.get('da:monitor:available:' + str(user_id))
@@ -5812,10 +5701,7 @@ def checkin():
                 html_obj = json.loads(html.decode())
                 if 'browser_title' in html_obj:
                     obj['browser_title'] = html_obj['browser_title']
-                if r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
-                    obj['blocked'] = True
-                else:
-                    obj['blocked'] = False
+                obj['blocked'] = bool(r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)))
                 r.publish('da:monitor', json.dumps(dict(messagetype='sessionupdate', key=key, session=obj)))
             else:
                 logmessage("checkin: the html was not found at " + str(html_key))
@@ -5826,10 +5712,7 @@ def checkin():
         pipe.execute()
         ocontrol_key = 'da:control:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         ocontrol = r.get(ocontrol_key)
-        if ocontrol is None:
-            observer_control = False
-        else:
-            observer_control = True
+        observer_control = not bool(ocontrol is None)
         parameters = request.form.get('raw_parameters', None)
         if parameters is not None:
             key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
@@ -5854,8 +5737,7 @@ def checkin():
                 workers_inspected += 1
         if peer_ok or help_ok:
             return jsonify_with_cache(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
-        else:
-            return jsonify_with_cache(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
+        return jsonify_with_cache(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
     return jsonify_with_cache(success=False)
 
 @app.before_first_request
@@ -5963,7 +5845,7 @@ def rootindex():
         yaml_filename = final_default_yaml_filename
     if COOKIELESS_SESSIONS:
         return html_index()
-    the_args = dict()
+    the_args = {}
     for key, val in request.args.items():
         the_args[key] = val
     the_args['i'] = yaml_filename
@@ -5974,7 +5856,7 @@ def title_converter(content, part, status):
     if part in ('exit link', 'exit url', 'title url', 'title url opens in other window'):
         return content
     if part in ('title', 'subtitle', 'short title', 'tab title', 'exit label', 'back button label', 'corner back button label', 'logo', 'short logo', 'navigation bar html'):
-        return docassemble.base.util.markdown_to_html(content, status=status, trim=True)
+        return docassemble.base.util.markdown_to_html(content, status=status, trim=True, do_terms=False)
     return docassemble.base.util.markdown_to_html(content, status=status)
 
 @app.route("/test_embed", methods=['GET'])
@@ -6012,7 +5894,7 @@ def launch():
     data = json.loads(data.decode())
     if data.get('once', False):
         r.delete(the_key)
-    args = dict()
+    args = {}
     for key, val in request.args.items():
         if key != 'session':
             args[key] = val
@@ -6042,7 +5924,7 @@ def resume():
     return redirect(url_for('index', **post_data))
 
 def tidy_action(action):
-    result = dict()
+    result = {}
     if not isinstance(action, dict):
         return result
     if 'action' in action:
@@ -6096,10 +5978,7 @@ def refresh_or_continue(interview, post_data):
 
 @app.route(index_path, methods=['POST', 'GET'])
 def index(action_argument=None, refer=None):
-    if request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']):
-        is_ajax = True
-    else:
-        is_ajax = False
+    is_ajax = bool(request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']))
     docassemble.base.functions.this_thread.misc['call'] = refer
     return_fake_html = False
     if (request.method == 'POST' and 'json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
@@ -6167,11 +6046,10 @@ def index(action_argument=None, refer=None):
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
             sys.stderr.write("Redirecting to login because no YAML filename provided and no anonymous access is allowed.\n")
             return redirect(url_for('user.login'))
-        if len(daconfig['dispatch']):
+        if len(daconfig['dispatch']) > 0:
             sys.stderr.write("Redirecting to dispatch page because no YAML filename provided.\n")
             return redirect(url_for('interview_start'))
-        else:
-            yaml_filename = final_default_yaml_filename
+        yaml_filename = final_default_yaml_filename
     session_info = get_session(yaml_filename)
     session_parameter = request.args.get('session', None)
     if session_info is None or reset_interview or new_interview:
@@ -6352,7 +6230,7 @@ def index(action_argument=None, refer=None):
     else:
         no_defs = False
     url_args_changed = False
-    if len(request.args):
+    if len(request.args) > 0:
         for argname in request.args:
             if argname in reserved_argnames:
                 continue
@@ -6374,12 +6252,9 @@ def index(action_argument=None, refer=None):
         response_wrapper = make_response_wrapper(set_cookie, secret, set_device_id, device_id, expire_visitor_secret)
     else:
         response_wrapper = None
-    if request.method == 'POST' and not no_defs:
-        disregard_input = False
-    else:
-        disregard_input = True
+    disregard_input = not bool(request.method == 'POST' and not no_defs)
     if disregard_input:
-        post_data = dict()
+        post_data = {}
     else:
         post_data = request.form.copy()
     if current_user.is_anonymous:
@@ -6407,22 +6282,22 @@ def index(action_argument=None, refer=None):
                 update_session(yaml_filename, encrypted=encrypted)
             action = None
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id), tracker=user_dict['_internal']['tracker'])
-            post_data = dict()
+            post_data = {}
             disregard_input = True
-    known_varnames = dict()
+    known_varnames = {}
     if '_varnames' in post_data:
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     if '_visible' in post_data and post_data['_visible'] != "":
         visible_field_names = json.loads(myb64unquote(post_data['_visible']))
     else:
-        visible_field_names = list()
-    known_varnames_visible = dict()
+        visible_field_names = []
+    known_varnames_visible = {}
     for key, val in known_varnames.items():
         if key in visible_field_names:
             known_varnames_visible[key] = val
-    all_field_numbers = dict()
-    field_numbers = dict()
-    numbered_fields = dict()
+    all_field_numbers = {}
+    field_numbers = {}
+    numbered_fields = {}
     visible_fields = set()
     raw_visible_fields = set()
     for field_name in visible_field_names:
@@ -6474,11 +6349,11 @@ def index(action_argument=None, refer=None):
                 if empty_field not in post_data:
                     post_data.add(empty_field, 'None')
         else:
-            empty_fields = dict()
+            empty_fields = {}
         if '_ml_info' in post_data:
             ml_info = json.loads(myb64unquote(post_data['_ml_info']))
         else:
-            ml_info = dict()
+            ml_info = {}
     something_changed = False
     if '_tracker' in post_data and re.search(r'^-?[0-9]+$', post_data['_tracker']) and user_dict['_internal']['tracker'] != int(post_data['_tracker']):
         if user_dict['_internal']['tracker'] > int(post_data['_tracker']):
@@ -6489,7 +6364,7 @@ def index(action_argument=None, refer=None):
         user_dict['_internal']['tracker'] = max(int(post_data['_tracker']), user_dict['_internal']['tracker'])
         interview_status.tracker = user_dict['_internal']['tracker']
     should_assemble = False
-    known_datatypes = dict()
+    known_datatypes = {}
     if not STRICT_MODE:
         if '_datatypes' in post_data:
             known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
@@ -6528,11 +6403,11 @@ def index(action_argument=None, refer=None):
         ensure_training_loaded(interview)
     debug_mode = interview.debug
     vars_set = set()
-    old_values = dict()
-    new_values = dict()
+    old_values = {}
+    new_values = {}
     if ('_email_attachments' in post_data and '_attachment_email_address' in post_data) or '_download_attachments' in post_data:
         should_assemble = True
-    error_messages = list()
+    error_messages = []
     already_assembled = False
     if (STRICT_MODE and not disregard_input) or should_assemble or something_changed:
         interview.assemble(user_dict, interview_status=interview_status)
@@ -6540,13 +6415,13 @@ def index(action_argument=None, refer=None):
         if STRICT_MODE and ('_question_name' not in post_data or post_data['_question_name'] != interview_status.question.name):
             if refresh_or_continue(interview, post_data) is False and action is None and len([key for key in post_data if not (key.startswith('_') or key in ('csrf_token', 'ajax', 'json', 'informed'))]) > 0:
                 error_messages.append(("success", word("Input not processed.  Please try again.")))
-            post_data = dict()
+            post_data = {}
             disregard_input = True
         elif should_assemble and '_question_name' in post_data and post_data['_question_name'] != interview_status.question.name:
             logmessage("index: not the same question name: " + str(post_data['_question_name']) + " versus " + str(interview_status.question.name))
             if REQUIRE_IDEMPOTENT:
                 error_messages.append(("success", word("Input not processed because the question changed.  Please continue.")))
-                post_data = dict()
+                post_data = {}
                 disregard_input = True
     if STRICT_MODE and not disregard_input:
         field_info = interview_status.get_field_info()
@@ -6575,7 +6450,7 @@ def index(action_argument=None, refer=None):
                 authorized_fields.add(interview_status.extras['list_collect'].instanceName + ".there_is_another")
     else:
         if STRICT_MODE:
-            empty_fields = list()
+            empty_fields = []
         authorized_fields = set()
     changed = False
     if '_null_question' in post_data:
@@ -6584,10 +6459,7 @@ def index(action_argument=None, refer=None):
         success = False
         attachment_email_address = post_data['_attachment_email_address'].strip()
         if '_attachment_include_editable' in post_data:
-            if post_data['_attachment_include_editable'] == 'True':
-                include_editable = True
-            else:
-                include_editable = False
+            include_editable = bool(post_data['_attachment_include_editable'] == 'True')
             del post_data['_attachment_include_editable']
         else:
             include_editable = False
@@ -6595,9 +6467,9 @@ def index(action_argument=None, refer=None):
         del post_data['_attachment_email_address']
         if len(interview_status.attachments) > 0:
             attached_file_count = 0
-            attachment_info = list()
+            attachment_info = []
             for the_attachment in interview_status.attachments:
-                file_formats = list()
+                file_formats = []
                 if 'pdf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
                     file_formats.append('pdf')
                 if include_editable or 'pdf' not in file_formats:
@@ -6629,23 +6501,20 @@ def index(action_argument=None, refer=None):
     if '_download_attachments' in post_data:
         success = False
         if '_attachment_include_editable' in post_data:
-            if post_data['_attachment_include_editable'] == 'True':
-                include_editable = True
-            else:
-                include_editable = False
+            include_editable = bool(post_data['_attachment_include_editable'] == 'True')
             del post_data['_attachment_include_editable']
         else:
             include_editable = False
         del post_data['_download_attachments']
         if len(interview_status.attachments) > 0:
             attached_file_count = 0
-            files_to_zip = list()
+            files_to_zip = []
             if 'zip_filename' in interview_status.extras and interview_status.extras['zip_filename']:
                 zip_file_name = interview_status.extras['zip_filename']
             else:
                 zip_file_name = 'file.zip'
             for the_attachment in interview_status.attachments:
-                file_formats = list()
+                file_formats = []
                 if 'pdf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
                     file_formats.append('pdf')
                 if include_editable or 'pdf' not in file_formats:
@@ -6663,12 +6532,12 @@ def index(action_argument=None, refer=None):
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             if response_wrapper:
                 response_wrapper(response)
-            return(response)
+            return response
     if '_the_image' in post_data and (STRICT_MODE is False or interview_status.question.question_type == 'signature'):
         if STRICT_MODE:
             file_field = from_safeid(field_info['signature_saveas'])
         else:
-            file_field = from_safeid(post_data['_save_as']);
+            file_field = from_safeid(post_data['_save_as'])
         if illegal_variable_name(file_field):
             error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
         else:
@@ -6706,11 +6575,7 @@ def index(action_argument=None, refer=None):
         next_action_to_set = json.loads(myb64unquote(post_data['_next_action_to_set']))
     else:
         next_action_to_set = None
-    # restore this, maybe
-    if False and '_next_action' in post_data:
-        next_action = json.loads(myb64unquote(post_data['_next_action']))
-    else:
-        next_action = None
+    next_action = None
     if '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name:
         if already_assembled:
             the_question = interview_status.question
@@ -6732,7 +6597,7 @@ def index(action_argument=None, refer=None):
         the_question = interview_status.question
     else:
         the_question = None
-    key_to_orig_key = dict()
+    key_to_orig_key = {}
     for orig_key in copy.deepcopy(post_data):
         if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_collect_delete', '_list_collect_list', '_null_question') or orig_key.startswith('_ignore'):
             continue
@@ -6767,10 +6632,10 @@ def index(action_argument=None, refer=None):
                 safe_objname = safeid(objname)
                 if safe_objname in known_datatypes:
                     if known_datatypes[safe_objname] in ('object_multiselect', 'object_checkboxes'):
-                        docassemble.base.parse.ensure_object_exists(objname, 'object_checkboxes', user_dict, post_data=post_data)
+                        docassemble.base.parse.ensure_object_exists(objname, 'object_checkboxes', user_dict)
                     elif known_datatypes[safe_objname] in ('multiselect', 'checkboxes'):
-                        docassemble.base.parse.ensure_object_exists(objname, known_datatypes[safe_objname], user_dict, post_data=post_data)
-    field_error = dict()
+                        docassemble.base.parse.ensure_object_exists(objname, known_datatypes[safe_objname], user_dict)
+    field_error = {}
     validated = True
     pre_user_dict = user_dict
     imported_core = False
@@ -6835,7 +6700,7 @@ def index(action_argument=None, refer=None):
                     it_exists = False
             if not it_exists:
                 method = None
-                commands = list()
+                commands = []
                 if parse_result['final_parts'][1] != '':
                     if parse_result['final_parts'][1][0] == '.':
                         try:
@@ -7244,7 +7109,7 @@ def index(action_argument=None, refer=None):
                 logmessage("Received illegal variable name " + str(key))
                 continue
             if empty_fields[orig_key] in ('object_multiselect', 'object_checkboxes'):
-                docassemble.base.parse.ensure_object_exists(key, empty_fields[orig_key], user_dict, post_data=post_data)
+                docassemble.base.parse.ensure_object_exists(key, empty_fields[orig_key], user_dict)
                 exec(key + '.clear()' , user_dict)
                 exec(key + '.gathered = True' , user_dict)
             elif empty_fields[orig_key] in ('object', 'object_radio'):
@@ -7269,7 +7134,7 @@ def index(action_argument=None, refer=None):
                         error_messages.append(("error", "Error: Invalid row number in table reorder: " + str(tableName) + " " + str(item)))
                         break
                 exec(tableName + '._reorder(' + ', '.join([repr(item) for item in changes]) + ')', user_dict)
-        inline_files_processed = list()
+        inline_files_processed = []
         if '_files_inline' in post_data:
             fileDict = json.loads(myb64unquote(post_data['_files_inline']))
             if not isinstance(fileDict, dict):
@@ -7307,10 +7172,7 @@ def index(action_argument=None, refer=None):
                 for orig_file_field_raw in file_fields:
                     if orig_file_field_raw in known_varnames:
                         orig_file_field_raw = known_varnames[orig_file_field_raw]
-                    if orig_file_field_raw not in visible_fields:
-                        set_empty = True
-                    else:
-                        set_empty = False
+                    set_empty = bool(orig_file_field_raw not in visible_fields)
                     if not validated:
                         break
                     orig_file_field = orig_file_field_raw
@@ -7324,7 +7186,7 @@ def index(action_argument=None, refer=None):
                     if orig_file_field in fileDict['values']:
                         the_files = fileDict['values'][orig_file_field]
                         if the_files:
-                            files_to_process = list()
+                            files_to_process = []
                             for the_file in the_files:
                                 temp_file = tempfile.NamedTemporaryFile(prefix="datemp", delete=False)
                                 start_index = 0
@@ -7364,7 +7226,7 @@ def index(action_argument=None, refer=None):
                                 break
                             file_field_tr = sub_indices(file_field, user_dict)
                             if len(files_to_process) > 0:
-                                elements = list()
+                                elements = []
                                 indexno = 0
                                 for (filename, file_number, mimetype, extension) in files_to_process:
                                     elements.append("docassemble.base.core.DAFile(" + repr(file_field_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
@@ -7431,7 +7293,7 @@ def index(action_argument=None, refer=None):
             empty_file_vars = set()
             for orig_file_field in file_fields:
                 if orig_file_field not in raw_visible_fields:
-                   continue
+                    continue
                 if orig_file_field in known_varnames:
                     orig_file_field = known_varnames[orig_file_field]
                 if orig_file_field not in visible_fields:
@@ -7460,7 +7322,7 @@ def index(action_argument=None, refer=None):
                     interview.assemble(user_dict, interview_status)
                 for orig_file_field_raw in file_fields:
                     if orig_file_field_raw not in raw_visible_fields:
-                       continue
+                        continue
                     if orig_file_field_raw in known_varnames:
                         orig_file_field_raw = known_varnames[orig_file_field_raw]
                     if orig_file_field_raw not in visible_fields:
@@ -7478,7 +7340,7 @@ def index(action_argument=None, refer=None):
                     if orig_file_field in request.files and request.files[orig_file_field].filename != "":
                         the_files = request.files.getlist(orig_file_field)
                         if the_files:
-                            files_to_process = list()
+                            files_to_process = []
                             for the_file in the_files:
                                 if is_ajax:
                                     return_fake_html = True
@@ -7502,7 +7364,7 @@ def index(action_argument=None, refer=None):
                                 break
                             file_field_tr = sub_indices(file_field, user_dict)
                             if len(files_to_process) > 0:
-                                elements = list()
+                                elements = []
                                 indexno = 0
                                 for (filename, file_number, mimetype, extension) in files_to_process:
                                     elements.append("docassemble.base.core.DAFile(" + repr(file_field_tr + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
@@ -7558,7 +7420,7 @@ def index(action_argument=None, refer=None):
                             error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
         if validated:
             if 'informed' in request.form:
-                user_dict['_internal']['informed'][the_user_id] = dict()
+                user_dict['_internal']['informed'][the_user_id] = {}
                 for key in request.form['informed'].split(','):
                     user_dict['_internal']['informed'][the_user_id][key] = 1
             if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
@@ -7571,7 +7433,7 @@ def index(action_argument=None, refer=None):
                     events_list = [field_info['orig_sought']]
                 else:
                     events_list = json.loads(myb64unquote(post_data['_event']))
-                if len(events_list):
+                if len(events_list) > 0:
                     session_uid = interview_status.current_info['user']['session_uid']
                     if session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
                         for event_name in events_list:
@@ -7586,7 +7448,7 @@ def index(action_argument=None, refer=None):
                                 break
             for var_name in list(vars_set):
                 vars_set.add(sub_indices(var_name, user_dict))
-            if len(vars_set) and 'event_stack' in user_dict['_internal']:
+            if len(vars_set) > 0 and 'event_stack' in user_dict['_internal']:
                 session_uid = interview_status.current_info['user']['session_uid']
                 popped = True
                 while popped:
@@ -7708,7 +7570,7 @@ def index(action_argument=None, refer=None):
         if interview_status.question.question_type == "exit_logout":
             reset_user_dict(user_code, yaml_filename)
         release_lock(user_code, yaml_filename)
-        delete_session()
+        delete_session_info()
         sys.stderr.write("Redirecting because of a logout.\n")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
@@ -7717,7 +7579,7 @@ def index(action_argument=None, refer=None):
         if current_user.is_authenticated:
             docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
             logout_user()
-        delete_session()
+        delete_session_info()
         session.clear()
         response.set_cookie('remember_token', '', expires=0)
         response.set_cookie('visitor_secret', '', expires=0)
@@ -7781,22 +7643,21 @@ def index(action_argument=None, refer=None):
             if response_wrapper:
                 response_wrapper(response)
             return response
+        if hasattr(interview_status.question, 'response_code'):
+            resp_code = interview_status.question.response_code
         else:
-            if hasattr(interview_status.question, 'response_code'):
-                resp_code = interview_status.question.response_code
+            resp_code = 200
+        if hasattr(interview_status.question, 'all_variables'):
+            if hasattr(interview_status.question, 'include_internal'):
+                include_internal = interview_status.question.include_internal
             else:
-                resp_code = 200
-            if hasattr(interview_status.question, 'all_variables'):
-                if hasattr(interview_status.question, 'include_internal'):
-                    include_internal = interview_status.question.include_internal
-                else:
-                    include_internal = False
-                response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf-8'), resp_code)
-            elif hasattr(interview_status.question, 'binaryresponse'):
-                response_to_send = make_response(interview_status.question.binaryresponse, resp_code)
-            else:
-                response_to_send = make_response(interview_status.questionText.encode('utf-8'), resp_code)
-            response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
+                include_internal = False
+            response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict, include_internal=include_internal).encode('utf-8'), resp_code)
+        elif hasattr(interview_status.question, 'binaryresponse'):
+            response_to_send = make_response(interview_status.question.binaryresponse, resp_code)
+        else:
+            response_to_send = make_response(interview_status.questionText.encode('utf-8'), resp_code)
+        response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
     elif interview_status.question.question_type == "sendfile":
         if is_ajax:
             release_lock(user_code, yaml_filename)
@@ -7806,17 +7667,16 @@ def index(action_argument=None, refer=None):
             if response_wrapper:
                 response_wrapper(response)
             return response
+        if interview_status.question.response_file is not None:
+            the_path = interview_status.question.response_file.path()
         else:
-            if interview_status.question.response_file is not None:
-                the_path = interview_status.question.response_file.path()
-            else:
-                logmessage("index: could not send file because the response was None")
-                return ('File not found', 404)
-            if not os.path.isfile(the_path):
-                logmessage("index: could not send file because file (" + the_path + ") not found")
-                return ('File not found', 404)
-            response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
-            response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+            logmessage("index: could not send file because the response was None")
+            return ('File not found', 404)
+        if not os.path.isfile(the_path):
+            logmessage("index: could not send file because file (" + the_path + ") not found")
+            return ('File not found', 404)
+        response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
+        response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     elif interview_status.question.question_type == "redirect":
         sys.stderr.write("Redirecting because of a redirect.\n")
         response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
@@ -7871,21 +7731,18 @@ def index(action_argument=None, refer=None):
         reload_after = 1000 * int(interview_status.extras['reload_after'])
     else:
         reload_after = 0
-    if interview_status.question.can_go_back and (steps - user_dict['_internal']['steps_offset']) > 1:
-        allow_going_back = True
-    else:
-        allow_going_back = False
+    allow_going_back = bool(interview_status.question.can_go_back and (steps - user_dict['_internal']['steps_offset']) > 1)
     if hasattr(interview_status.question, 'id'):
         question_id = interview_status.question.id
     else:
-        question_id = None;
+        question_id = None
     question_id_dict = dict(id=question_id)
     if interview_status.question.interview.options.get('analytics on', True):
         if 'segment' in interview_status.extras:
             question_id_dict['segment'] = interview_status.extras['segment']
         if 'ga_id' in interview_status.extras:
             question_id_dict['ga'] = interview_status.extras['ga_id']
-    append_script_urls = list()
+    append_script_urls = []
     append_javascript = ''
     if not is_ajax:
         scripts = standard_scripts(interview_language=current_language) + additional_scripts(interview_status, yaml_filename)
@@ -8026,7 +7883,7 @@ def index(action_argument=None, refer=None):
       var daNotYetScrolled = true;
       var daBeingControlled = """ + being_controlled + """;
       var daInformedChanged = false;
-      var daInformed = """ + json.dumps(user_dict['_internal']['informed'].get(user_id_string, dict())) + """;
+      var daInformed = """ + json.dumps(user_dict['_internal']['informed'].get(user_id_string, {})) + """;
       var daShowingSpinner = false;
       var daSpinnerTimeout = null;
       var daSubmitter = null;
@@ -11452,13 +11309,13 @@ def index(action_argument=None, refer=None):
     if interview_status.footer:
         bodyclass += ' da-pad-for-footer'
     if debug_mode:
-        interview_status.screen_reader_text = dict()
+        interview_status.screen_reader_text = {}
     if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
         interview_status.initialize_screen_reader()
         util_language = docassemble.base.functions.get_language()
         util_dialect = docassemble.base.functions.get_dialect()
         question_language = interview_status.question.language
-        if len(interview.translations):
+        if len(interview.translations) > 0:
             the_language = util_language
         elif question_language != '*':
             the_language = question_language
@@ -11503,10 +11360,10 @@ def index(action_argument=None, refer=None):
     #     interview_status.next_action.append(next_action_to_set)
     if next_action_to_set:
         if 'event_stack' not in user_dict['_internal']:
-            user_dict['_internal']['event_stack'] = dict()
+            user_dict['_internal']['event_stack'] = {}
         session_uid = interview_status.current_info['user']['session_uid']
         if session_uid not in user_dict['_internal']['event_stack']:
-            user_dict['_internal']['event_stack'][session_uid] = list()
+            user_dict['_internal']['event_stack'][session_uid] = []
         already_there = False
         for event_item in user_dict['_internal']['event_stack'][session_uid]:
             if event_item['action'] == next_action_to_set['action']:
@@ -11520,7 +11377,7 @@ def index(action_argument=None, refer=None):
         the_progress_bar = None
     if interview_status.question.interview.use_navigation and user_dict['nav'].visible():
         if interview_status.question.interview.use_navigation_on_small_screens == 'dropdown':
-            current_dict = dict()
+            current_dict = {}
             dropdown_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, a_class='dropdown-item', hide_inactive_subs=False, always_open=True, return_dict=current_dict)
             if dropdown_nav_bar != '':
                 dropdown_nav_bar = '        <div class="col d-md-none text-end">\n          <div class="dropdown">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + current_dict.get('title', word("Sections")) + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections">' + dropdown_nav_bar + '\n          </div>\n          </div>\n        </div>\n'
@@ -11557,9 +11414,9 @@ def index(action_argument=None, refer=None):
     else:
         the_nav_bar = ''
         interview_status.using_navigation = False
-    content = as_html(interview_status, url_for, debug_mode, url_for('index', **index_params), validation_rules, the_field_errors, the_progress_bar, steps - user_dict['_internal']['steps_offset'])
+    content = as_html(interview_status, debug_mode, url_for('index', **index_params), validation_rules, the_field_errors, the_progress_bar, steps - user_dict['_internal']['steps_offset'])
     if debug_mode:
-        readability = dict()
+        readability = {}
         for question_type in ('question', 'help'):
             if question_type not in interview_status.screen_reader_text:
                 continue
@@ -11616,7 +11473,7 @@ def index(action_argument=None, refer=None):
                 new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
                 db.session.add(new_entry)
             db.session.commit()
-    append_css_urls = list()
+    append_css_urls = []
     if not is_ajax:
         start_output = standard_header_start
         if 'css' in interview_status.question.interview.external_files:
@@ -11665,7 +11522,7 @@ def index(action_argument=None, refer=None):
         output += interview_status.post
         output += '        </div>\n'
         output += '      </div>' + "\n"
-    if len(interview_status.attributions):
+    if len(interview_status.attributions) > 0:
         output += '      <div class="row">' + "\n"
         if interview_status.using_navigation == 'vertical':
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
@@ -11719,15 +11576,14 @@ def index(action_argument=None, refer=None):
 """
     if not is_ajax:
         end_output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + "\n  </div>\n  </body>\n</html>"
-    if True:
-        key = 'da:html:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-        pipe = r.pipeline()
-        pipe.set(key, json.dumps(dict(body=output, extra_scripts=interview_status.extra_scripts, global_css=global_css, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, bootstrap_theme=bootstrap_theme)))
-        pipe.expire(key, 60)
-        pipe.execute()
-        if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
-            inputkey = 'da:input:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-            r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
+    key = 'da:html:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+    pipe = r.pipeline()
+    pipe.set(key, json.dumps(dict(body=output, extra_scripts=interview_status.extra_scripts, global_css=global_css, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, bootstrap_theme=bootstrap_theme)))
+    pipe.expire(key, 60)
+    pipe.execute()
+    if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
+        inputkey = 'da:input:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_json:
         data = dict(browser_title=interview_status.tabtitle, lang=interview_language, csrf_token=generate_csrf(), steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
         data.update(interview_status.as_data(user_dict))
@@ -11755,11 +11611,11 @@ def index(action_argument=None, refer=None):
         output = the_js + "\n" + append_javascript
         if 'global css' in daconfig:
             for fileref in daconfig['global css']:
-                append_css_urls.append(get_url_from_file_reference(fileref));
+                append_css_urls.append(get_url_from_file_reference(fileref))
         if 'global javascript' in daconfig:
             for fileref in daconfig['global javascript']:
-                append_script_urls.append(get_url_from_file_reference(fileref));
-        if len(append_css_urls):
+                append_script_urls.append(get_url_from_file_reference(fileref))
+        if len(append_css_urls) > 0:
             output += """
       var daLink;"""
         for path in append_css_urls:
@@ -11769,7 +11625,7 @@ def index(action_argument=None, refer=None):
       daLink.rel = "stylesheet";
       document.head.appendChild(daLink);
 """
-        if len(append_script_urls):
+        if len(append_script_urls) > 0:
             output += """
       var daScript;"""
         for path in append_script_urls:
@@ -11805,7 +11661,7 @@ def add_permissions_for_field(the_field, interview_status, files_to_process):
             permissions = interview_status.extras['permissions'][the_field.number]
             if 'private' in permissions or 'persistent' in permissions:
                 for (filename, file_number, mimetype, extension) in files_to_process:
-                    attribute_args = dict()
+                    attribute_args = {}
                     if 'private' in permissions:
                         attribute_args['private'] = permissions['private']
                     if 'persistent' in permissions:
@@ -11813,8 +11669,8 @@ def add_permissions_for_field(the_field, interview_status, files_to_process):
                     file_set_attributes(file_number, **attribute_args)
             if 'allow_users' in permissions:
                 for (filename, file_number, mimetype, extension) in files_to_process:
-                    allow_user_id = list()
-                    allow_email = list()
+                    allow_user_id = []
+                    allow_email = []
                     for item in permissions['allow_users']:
                         if isinstance(item, int):
                             allow_user_id.append(item)
@@ -11832,10 +11688,10 @@ def fake_up(response, interview_language):
 def add_action_to_stack(interview_status, user_dict, action, arguments):
     unique_id = interview_status.current_info['user']['session_uid']
     if 'event_stack' not in user_dict['_internal']:
-        user_dict['_internal']['event_stack'] = dict()
+        user_dict['_internal']['event_stack'] = {}
     if unique_id not in user_dict['_internal']['event_stack']:
-        user_dict['_internal']['event_stack'][unique_id] = list()
-    if len(user_dict['_internal']['event_stack'][unique_id]) and user_dict['_internal']['event_stack'][unique_id][0]['action'] == action and user_dict['_internal']['event_stack'][unique_id][0]['arguments'] == arguments:
+        user_dict['_internal']['event_stack'][unique_id] = []
+    if len(user_dict['_internal']['event_stack'][unique_id]) > 0 and user_dict['_internal']['event_stack'][unique_id][0]['action'] == action and user_dict['_internal']['event_stack'][unique_id][0]['arguments'] == arguments:
         user_dict['_internal']['event_stack'][unique_id].pop(0)
     user_dict['_internal']['event_stack'][unique_id].insert(0, {'action': action, 'arguments': arguments})
 
@@ -11857,10 +11713,7 @@ def fixstr(data):
 
 def get_history(interview, interview_status):
     output = ''
-    if hasattr(interview_status, 'question'):
-        has_question = True
-    else:
-        has_question = False
+    has_question = bool(hasattr(interview_status, 'question'))
     index = 0
     seeking_len = len(interview_status.seeking)
     if seeking_len:
@@ -12022,7 +11875,7 @@ def speak_file():
             if audio_file.size_in_bytes() > 100:
                 call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', audio_file.path + '.mp3']
                 logmessage("speak_file: calling " + " ".join(call_array))
-                result = subprocess.run(call_array).returncode
+                result = subprocess.run(call_array, check=False).returncode
                 if result != 0:
                     logmessage("speak_file: failed to convert downloaded mp3 (" + audio_file.path + '.mp3' + ") to ogg")
                     return ('File not found', 404)
@@ -12042,10 +11895,10 @@ def speak_file():
         logmessage("speak_file: could not serve speak file because file (" + the_path + ") not found")
         return ('File not found', 404)
     response = send_file(the_path, mimetype=audio_mimetype_table[file_format])
-    return(response)
+    return response
 
 def interview_menu(absolute_urls=False, start_new=False, tag=None):
-    interview_info = list()
+    interview_info = []
     for key, yaml_filename in sorted(daconfig['dispatch'].items()):
         try:
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
@@ -12061,8 +11914,8 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
                 package = None
             else:
                 package = interview.source.get_package()
-            titles = interview.get_title(dict(_internal=dict()))
-            tags = interview.get_tags(dict(_internal=dict()))
+            titles = interview.get_title(dict(_internal={}))
+            tags = interview.get_tags(dict(_internal={}))
             metadata = copy.deepcopy(interview.consolidated_metadata)
             if 'tags' in metadata:
                 del metadata['tags']
@@ -12073,7 +11926,7 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
         except:
             interview_title = yaml_filename
             tags = set()
-            metadata = dict()
+            metadata = {}
             package = None
             subtitle = None
             status_class = 'dainterviewhaserror'
@@ -12101,10 +11954,7 @@ def interview_start():
     setup_translation()
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', i=final_default_yaml_filename))
-    if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
-        is_json = True
-    else:
-        is_json = False
+    is_json = bool(('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])))
     tag = request.args.get('tag', None)
     if daconfig.get('dispatch interview', None) is not None:
         if is_json:
@@ -12147,7 +11997,7 @@ def interview_start():
 def redirect_to_interview_in_package_directory(package, directory, filename):
     if COOKIELESS_SESSIONS:
         return html_index()
-    arguments = dict()
+    arguments = {}
     for arg in request.args:
         arguments[arg] = request.args[arg]
     arguments['i'] = 'docassemble.' + package + ':data/questions/' + directory + '/' + filename + '.yml'
@@ -12160,7 +12010,7 @@ def redirect_to_interview_in_package_directory(package, directory, filename):
 def redirect_to_interview_in_package(package, filename):
     if COOKIELESS_SESSIONS:
         return html_index()
-    arguments = dict()
+    arguments = {}
     for arg in request.args:
         arguments[arg] = request.args[arg]
     if re.search(r'playground[0-9]', package):
@@ -12180,7 +12030,7 @@ def redirect_to_interview(dispatch):
     yaml_filename = daconfig['dispatch'].get(dispatch, None)
     if yaml_filename is None:
         return ('File not found', 404)
-    arguments = dict()
+    arguments = {}
     for arg in request.args:
         arguments[arg] = request.args[arg]
     arguments['i'] = yaml_filename
@@ -12193,7 +12043,7 @@ def redirect_to_interview(dispatch):
 def run_interview_in_package_directory(package, directory, filename):
     if COOKIELESS_SESSIONS:
         return html_index()
-    arguments = dict()
+    arguments = {}
     for arg in request.args:
         arguments[arg] = request.args[arg]
     arguments['i'] = 'docassemble.' + package + ':data/questions/' + directory + '/' + filename + '.yml'
@@ -12204,7 +12054,7 @@ def run_interview_in_package_directory(package, directory, filename):
 def run_interview_in_package(package, filename):
     if COOKIELESS_SESSIONS:
         return html_index()
-    arguments = dict()
+    arguments = {}
     for arg in request.args:
         arguments[arg] = request.args[arg]
     if re.search(r'playground[0-9]', package):
@@ -12221,7 +12071,7 @@ def run_interview(dispatch):
     yaml_filename = daconfig['dispatch'].get(dispatch, None)
     if yaml_filename is None:
         return ('File not found', 404)
-    arguments = dict()
+    arguments = {}
     for arg in request.args:
         arguments[arg] = request.args[arg]
     arguments['i'] = yaml_filename
@@ -12253,7 +12103,7 @@ def do_serve_stored_file(uid, number, filename, extension, download=False):
         if download:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        return(response)
+        return response
 
 @app.route('/tempfile/<code>/<filename>.<extension>', methods=['GET'])
 def serve_temporary_file(code, filename, extension):
@@ -12302,7 +12152,7 @@ def download_zip_package():
     filename = re.sub(r'\.', '-', package_name) + '.zip'
     response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-    return(response)
+    return response
 
 @app.route('/uploadedfile/<number>/<filename>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_filename_and_extension(number, filename, extension):
@@ -12315,10 +12165,7 @@ def serve_uploaded_file_with_filename_and_extension_download(number, filename, e
 def do_serve_uploaded_file_with_filename_and_extension(number, filename, extension, download=False):
     filename = secure_filename_spaces_ok(filename)
     extension = werkzeug.utils.secure_filename(extension)
-    if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
-        privileged = True
-    else:
-        privileged = False
+    privileged = bool(current_user.is_authenticated and current_user.has_role('admin', 'advocate'))
     number = re.sub(r'[^0-9]', '', str(number))
     if cloud is not None and daconfig.get('use cloud urls', False):
         if not (privileged or can_access_file_number(number, uids=get_session_uids())):
@@ -12344,17 +12191,16 @@ def do_serve_uploaded_file_with_filename_and_extension(number, filename, extensi
                 if download:
                     response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-                return(response)
-            elif os.path.isfile(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension)):
+                return response
+            if os.path.isfile(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension)):
                 #logmessage("Using " + os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension))
                 extension, mimetype = get_ext_and_mimetype(filename + '.' + extension)
                 response = send_file(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension), mimetype=mimetype)
                 if download:
                     response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-                return(response)
-            else:
-                return ('File not found', 404)
+                return response
+            return ('File not found', 404)
 
 @app.route('/uploadedfile/<number>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_extension(number, extension):
@@ -12366,10 +12212,7 @@ def serve_uploaded_file_with_extension_download(number, extension):
 
 def do_serve_uploaded_file_with_extension(number, extension, download=False):
     extension = werkzeug.utils.secure_filename(extension)
-    if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
-        privileged = True
-    else:
-        privileged = False
+    privileged = bool(current_user.is_authenticated and current_user.has_role('admin', 'advocate'))
     number = re.sub(r'[^0-9]', '', str(number))
     if cloud is not None and daconfig.get('use cloud urls', False):
         if not can_access_file_number(number, uids=get_session_uids()):
@@ -12393,7 +12236,7 @@ def do_serve_uploaded_file_with_extension(number, extension, download=False):
                 if download:
                     response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(str(number) + '.' + extension)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-                return(response)
+                return response
             else:
                 return ('File not found', 404)
     return ('File not found', 404)
@@ -12404,10 +12247,7 @@ def serve_uploaded_file(number):
 
 def do_serve_uploaded_file(number, download=False):
     number = re.sub(r'[^0-9]', '', str(number))
-    if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
-        privileged = True
-    else:
-        privileged = False
+    privileged = bool(current_user.is_authenticated and current_user.has_role('admin', 'advocate'))
     try:
         file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
     except:
@@ -12421,7 +12261,7 @@ def do_serve_uploaded_file(number, download=False):
         if download:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(os.path.basename(file_info['path']))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        return(response)
+        return response
     return ('File not found', 404)
 
 @app.route('/uploadedpage/<number>/<page>', methods=['GET'])
@@ -12435,10 +12275,7 @@ def serve_uploaded_page_download(number, page):
 def do_serve_uploaded_page(number, page, download=False):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
-    if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
-        privileged = True
-    else:
-        privileged = False
+    privileged = bool(current_user.is_authenticated and current_user.has_role('admin', 'advocate'))
     try:
         file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
     except:
@@ -12455,7 +12292,7 @@ def do_serve_uploaded_page(number, page, download=False):
             if download:
                 response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(basename)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-            return(response)
+            return response
         else:
             return ('File not found', 404)
 
@@ -12470,10 +12307,7 @@ def serve_uploaded_pagescreen_download(number, page):
 def do_serve_uploaded_pagescreen(number, page, download=False):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
-    if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
-        privileged = True
-    else:
-        privileged = False
+    privileged = bool(current_user.is_authenticated and current_user.has_role('admin', 'advocate'))
     try:
         file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
     except:
@@ -12492,13 +12326,13 @@ def do_serve_uploaded_pagescreen(number, page, download=False):
             the_file = docassemble.base.functions.package_data_filename('docassemble.base:data/static/blank_page.png')
             response = send_file(the_file, mimetype='image/png')
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-            return(response)
+            return response
         if os.path.isfile(filename):
             response = send_file(filename, mimetype='image/png')
             if download:
                 response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(os.path.basename(filename))
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-            return(response)
+            return response
         else:
             logmessage('serve_uploaded_pagescreen: path ' + filename + ' is not a file')
             return ('File not found', 404)
@@ -13832,19 +13666,19 @@ def observer():
         obj = json.loads(html.decode())
     else:
         logmessage("observer: failed to load JSON from key " + the_key)
-        obj = dict()
+        obj = {}
     page_title = word('Observation')
     output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG, bootstrap_theme=obj.get('bootstrap_theme', None))
-    output += obj.get('global_css', '') + "\n" + indent_by("".join(obj.get('extra_css', list())), 4)
+    output += obj.get('global_css', '') + "\n" + indent_by("".join(obj.get('extra_css', [])), 4)
     output += '\n    <title>' + page_title + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody da-pad-for-navbar da-pad-for-footer') + '">\n  <div id="dabody">\n  '
     output += obj.get('body', '')
-    output += "    </div>\n    </div>" + standard_scripts(interview_language=obj.get('lang', 'en')) + observation_script + "\n    " + "".join(obj.get('extra_scripts', list())) + "\n  </body>\n</html>"
+    output += "    </div>\n    </div>" + standard_scripts(interview_language=obj.get('lang', 'en')) + observation_script + "\n    " + "".join(obj.get('extra_scripts', [])) + "\n  </body>\n</html>"
     response = make_response(output.encode('utf-8'), '200 OK')
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
 
 def decode_dict(the_dict):
-    out_dict = dict()
+    out_dict = {}
     for k, v in the_dict.items():
         out_dict[k.decode()] = v.decode()
     return out_dict
@@ -13872,7 +13706,7 @@ def monitor():
         subscribed_roles = decode_dict(r.hgetall(sub_role_key))
         r.expire(sub_role_key, 2592000)
     else:
-        subscribed_roles = dict()
+        subscribed_roles = {}
     key = 'da:monitor:available:' + str(current_user.id)
     if r.exists(key):
         daAvailableForChat = 'true'
@@ -14993,7 +14827,7 @@ def monitor():
 @roles_required(['admin', 'developer'])
 def update_package_wait():
     setup_translation()
-    next_url = user_manager.make_safe_url_function(request.args.get('next', url_for('update_package')))
+    next_url = app.user_manager.make_safe_url_function(request.args.get('next', url_for('update_package')))
     my_csrf = generate_csrf()
     script = """
     <script>
@@ -15130,19 +14964,17 @@ def update_package_ajax():
                     return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
                 else:
                     return jsonify(success=True, status='waiting')
-            elif hasattr(the_result, 'error_message'):
+            if hasattr(the_result, 'error_message'):
                 logmessage("update_package_ajax: failed return value is " + str(the_result.error_message))
                 return jsonify(success=True, status='failed', error_message=str(the_result.error_message))
-            elif hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
+            if hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
                 return jsonify(success=True, status='failed', summary=summarize_results(the_result.results, the_result.logmessages))
-            else:
-                return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)))
+            return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)))
         else:
             logmessage("update_package_ajax: failed return value is a " + str(type(the_result)))
             logmessage("update_package_ajax: failed return value is " + str(the_result))
             return jsonify(success=True, status='failed', error_message=str(the_result))
-    else:
-        return jsonify(success=True, status='waiting')
+    return jsonify(success=True, status='waiting')
 
 def get_package_name_from_zip(zippath):
     with zipfile.ZipFile(zippath, mode='r') as zf:
@@ -15159,7 +14991,7 @@ def get_package_name_from_zip(zippath):
         with zf.open(setup_py) as f:
             the_file = TextIOWrapper(f, encoding='utf8')
             contents = the_file.read()
-    extracted = dict()
+    extracted = {}
     for line in contents.splitlines():
         m = re.search(r"^NAME *= *\(?'(.*)'", line)
         if m:
@@ -15173,7 +15005,7 @@ def get_package_name_from_zip(zippath):
     if 'name' in extracted:
         return extracted['name']
     contents = re.sub(r'.*setup\(', '', contents, flags=re.DOTALL)
-    extracted = dict()
+    extracted = {}
     for line in contents.splitlines():
         m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
         if m:
@@ -15475,16 +15307,16 @@ def create_playground_package():
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
         github_auth = None
-    area = dict()
+    area = {}
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     if os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)):
         filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)
-        info = dict()
+        info = {}
         with open(filename, 'r', encoding='utf-8') as fp:
             content = fp.read()
             info = yaml.load(content, Loader=yaml.FullLoader)
     else:
-        info = dict()
+        info = {}
     if do_github:
         if not app.config['USE_GITHUB']:
             return ('File not found', 404)
@@ -15562,10 +15394,10 @@ def create_playground_package():
                         break
                     commit_repository = repo_info
                     break
-    file_list = dict()
+    file_list = {}
     the_directory = directory_for(area['playgroundpackages'], current_project)
     file_list['playgroundpackages'] = sorted([re.sub(r'^docassemble.', r'', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-    the_choices = list()
+    the_choices = []
     for file_option in file_list['playgroundpackages']:
         the_choices.append((file_option, file_option))
     form.name.choices = the_choices
@@ -15594,16 +15426,16 @@ def create_playground_package():
             file_list[sec] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         if os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)):
             filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)
-            info = dict()
+            info = {}
             with open(filename, 'r', encoding='utf-8') as fp:
                 content = fp.read()
                 info = yaml.load(content, Loader=yaml.FullLoader)
             for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
                 if field not in info:
-                    info[field] = list()
+                    info[field] = []
             info['dependencies'] = [x for x in [z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info['dependencies'])] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
             info['modtime'] = os.path.getmtime(filename)
-            author_info = dict()
+            author_info = {}
             author_info['author name and email'] = name_of_user(current_user, include_email=True)
             author_info['author name'] = name_of_user(current_user)
             author_info['author email'] = current_user.email
@@ -15619,7 +15451,7 @@ def create_playground_package():
                 else:
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
-                had_error, logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info, the_timezone, current_project=current_project)
+                had_error, logmessages = docassemble.webapp.files.publish_package(pkgname, info, author_info, current_project=current_project)
                 flash(logmessages, 'danger' if had_error else 'info')
                 if not do_install:
                     time.sleep(3.0)
@@ -15769,7 +15601,7 @@ def create_playground_package():
                 else:
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
-                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, the_timezone, directory=directory, current_project=current_project)
+                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, directory=directory, current_project=current_project)
                 if branch:
                     the_branch = branch
                 else:
@@ -15845,33 +15677,20 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git commit -am " + str(commit_message) + ".  " + output)
-                if False:
+                if branch:
+                    output += "Doing " + git_prefix + "git push --set-upstream origin " + str(branch) + "\n"
                     try:
-                        output += subprocess.check_output(["git", "remote", "add", "origin", ssh_url], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                        output += subprocess.check_output(git_prefix + "git push --set-upstream origin " + '"' + str(branch) + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
-                        raise DAError("create_playground_package: error running git remote add origin.  " + output)
-                    output += "Doing " + git_prefix + "git push -u origin " + the_branch + "\n"
-                    try:
-                        output += subprocess.check_output(git_prefix + "git push -u origin " + '"' + the_branch + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
-                    except subprocess.CalledProcessError as err:
-                        output += err.output.decode()
-                        raise DAError("create_playground_package: error running first git push.  " + output)
+                        raise DAError("create_playground_package: error running git push.  " + output)
                 else:
-                    if branch:
-                        output += "Doing " + git_prefix + "git push --set-upstream origin " + str(branch) + "\n"
-                        try:
-                            output += subprocess.check_output(git_prefix + "git push --set-upstream origin " + '"' + str(branch) + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
-                        except subprocess.CalledProcessError as err:
-                            output += err.output.decode()
-                            raise DAError("create_playground_package: error running git push.  " + output)
-                    else:
-                        output += "Doing " + git_prefix + "git push\n"
-                        try:
-                            output += subprocess.check_output(git_prefix + "git push", cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
-                        except subprocess.CalledProcessError as err:
-                            output += err.output.decode()
-                            raise DAError("create_playground_package: error running git push.  " + output)
+                    output += "Doing " + git_prefix + "git push\n"
+                    try:
+                        output += subprocess.check_output(git_prefix + "git push", cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    except subprocess.CalledProcessError as err:
+                        output += err.output.decode()
+                        raise DAError("create_playground_package: error running git push.  " + output)
                 logmessage(output)
                 flash(word("Pushed commit to GitHub.") + "<br>" + re.sub(r'[\n\r]+', '<br>', output), 'info')
                 time.sleep(3.0)
@@ -15910,7 +15729,7 @@ def create_playground_package():
             else:
                 response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-                return(response)
+                return response
     response = make_response(render_template('pages/create_playground_package.html', current_project=current_project, version_warning=version_warning, bodyclass='daadminbody', form=form, current_package=current_package, package_names=file_list['playgroundpackages'], tab_title=word('Playground Packages'), page_title=word('Playground Packages')), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -15925,21 +15744,18 @@ def create_package():
     form = CreatePackageForm(request.form)
     if request.method == 'POST' and form.validate():
         pkgname = re.sub(r'^docassemble-', r'', form.name.data)
-        if False and not user_can_edit_package(pkgname='docassemble.' + pkgname):
-            flash(word('Sorry, that package name is already in use by someone else'), 'error')
-        else:
-            initpy = """\
+        initpy = """\
 try:
     __import__('pkg_resources').declare_namespace(__name__)
 except ImportError:
     __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
 """
-            licensetext = """\
+        licensetext = """\
 The MIT License (MIT)
 
 """
-            licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(name_of_user(current_user)) + """
+        licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(name_of_user(current_user)) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -15959,15 +15775,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-            readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
-            manifestin = """\
+        readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
+        manifestin = """\
 include README.md
 """
-            setupcfg = """\
+        setupcfg = """\
 [metadata]
 description-file = README
 """
-            setuppy = """\
+        setuppy = """\
 import os
 import sys
 from setuptools import setup, find_packages
@@ -16013,7 +15829,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 """
-            setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
+        setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version='0.0.1',
       description=('A docassemble extension.'),
       long_description=""" + repr(readme) + """,
@@ -16029,7 +15845,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
      )
 
 """
-            questionfiletext = """\
+        questionfiletext = """\
 ---
 metadata:
   title: I am the title of the application
@@ -16060,24 +15876,24 @@ question: Are you doing well today?
 yesno: user_doing_well
 ...
 """
-            templatereadme = """\
+        templatereadme = """\
 # Template directory
 
 If you want to use templates for document assembly, put them in this directory.
 """
-            staticreadme = """\
+        staticreadme = """\
 # Static file directory
 
 If you want to make files available in the web app, put them in
 this directory.
 """
-            sourcesreadme = """\
+        sourcesreadme = """\
 # Sources directory
 
 This directory is used to store word translation files,
 machine learning training files, and other source files.
 """
-            objectfile = """\
+        objectfile = """\
 # This is a Python module in which you can write your own Python code,
 # if you want to.
 #
@@ -16107,68 +15923,68 @@ class Fruit(DAObject):
     def eat(self):
         return "Yum, that " + self.name + " was good!"
 """
-            directory = tempfile.mkdtemp()
-            packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
-            questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
-            templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
-            staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
-            sourcesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'sources')
-            os.makedirs(questionsdir, exist_ok=True)
-            os.makedirs(templatesdir, exist_ok=True)
-            os.makedirs(staticdir, exist_ok=True)
-            os.makedirs(sourcesdir, exist_ok=True)
-            with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
-                the_file.write(readme)
-            with open(os.path.join(packagedir, 'LICENSE'), 'w', encoding='utf-8') as the_file:
-                the_file.write(licensetext)
-            with open(os.path.join(packagedir, 'setup.py'), 'w', encoding='utf-8') as the_file:
-                the_file.write(setuppy)
-            with open(os.path.join(packagedir, 'setup.cfg'), 'w', encoding='utf-8') as the_file:
-                the_file.write(setupcfg)
-            with open(os.path.join(packagedir, 'MANIFEST.in'), 'w', encoding='utf-8') as the_file:
-                the_file.write(manifestin)
-            with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w', encoding='utf-8') as the_file:
-                the_file.write(initpy)
-            with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
-                the_file.write('__version__ = "0.0.1"')
-            with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'w', encoding='utf-8') as the_file:
-                the_file.write(objectfile)
-            with open(os.path.join(templatesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
-                the_file.write(templatereadme)
-            with open(os.path.join(staticdir, 'README.md'), 'w', encoding='utf-8') as the_file:
-                the_file.write(staticreadme)
-            with open(os.path.join(sourcesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
-                the_file.write(sourcesreadme)
-            with open(os.path.join(questionsdir, 'questions.yml'), 'w', encoding='utf-8') as the_file:
-                the_file.write(questionfiletext)
-            nice_name = 'docassemble-' + str(pkgname) + '.zip'
-            file_number = get_new_file_number(None, nice_name)
-            file_set_attributes(file_number, private=False, persistent=True)
-            saved_file = SavedFile(file_number, extension='zip', fix=True)
-            zf = zipfile.ZipFile(saved_file.path, mode='w')
-            trimlength = len(directory) + 1
-            if current_user.timezone:
-                the_timezone = pytz.timezone(current_user.timezone)
-            else:
-                the_timezone = pytz.timezone(get_default_timezone())
-            for root, dirs, files in os.walk(packagedir):
-                for the_file in files:
-                    thefilename = os.path.join(root, the_file)
-                    info = zipfile.ZipInfo(thefilename[trimlength:])
-                    info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=pytz.utc).astimezone(the_timezone).timetuple()
-                    info.compress_type = zipfile.ZIP_DEFLATED
-                    info.external_attr = 0o644 << 16
-                    with open(thefilename, 'rb') as fp:
-                        zf.writestr(info, fp.read())
-                    #zf.write(thefilename, thefilename[trimlength:])
-            zf.close()
-            saved_file.save()
-            saved_file.finalize()
-            shutil.rmtree(directory)
-            response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
-            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-            flash(word("Package created"), 'success')
-            return response
+        directory = tempfile.mkdtemp()
+        packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
+        questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
+        templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
+        staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
+        sourcesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'sources')
+        os.makedirs(questionsdir, exist_ok=True)
+        os.makedirs(templatesdir, exist_ok=True)
+        os.makedirs(staticdir, exist_ok=True)
+        os.makedirs(sourcesdir, exist_ok=True)
+        with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
+            the_file.write(readme)
+        with open(os.path.join(packagedir, 'LICENSE'), 'w', encoding='utf-8') as the_file:
+            the_file.write(licensetext)
+        with open(os.path.join(packagedir, 'setup.py'), 'w', encoding='utf-8') as the_file:
+            the_file.write(setuppy)
+        with open(os.path.join(packagedir, 'setup.cfg'), 'w', encoding='utf-8') as the_file:
+            the_file.write(setupcfg)
+        with open(os.path.join(packagedir, 'MANIFEST.in'), 'w', encoding='utf-8') as the_file:
+            the_file.write(manifestin)
+        with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w', encoding='utf-8') as the_file:
+            the_file.write(initpy)
+        with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
+            the_file.write('__version__ = "0.0.1"')
+        with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'w', encoding='utf-8') as the_file:
+            the_file.write(objectfile)
+        with open(os.path.join(templatesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
+            the_file.write(templatereadme)
+        with open(os.path.join(staticdir, 'README.md'), 'w', encoding='utf-8') as the_file:
+            the_file.write(staticreadme)
+        with open(os.path.join(sourcesdir, 'README.md'), 'w', encoding='utf-8') as the_file:
+            the_file.write(sourcesreadme)
+        with open(os.path.join(questionsdir, 'questions.yml'), 'w', encoding='utf-8') as the_file:
+            the_file.write(questionfiletext)
+        nice_name = 'docassemble-' + str(pkgname) + '.zip'
+        file_number = get_new_file_number(None, nice_name)
+        file_set_attributes(file_number, private=False, persistent=True)
+        saved_file = SavedFile(file_number, extension='zip', fix=True)
+        zf = zipfile.ZipFile(saved_file.path, mode='w')
+        trimlength = len(directory) + 1
+        if current_user.timezone:
+            the_timezone = pytz.timezone(current_user.timezone)
+        else:
+            the_timezone = pytz.timezone(get_default_timezone())
+        for root, dirs, files in os.walk(packagedir):
+            for the_file in files:
+                thefilename = os.path.join(root, the_file)
+                info = zipfile.ZipInfo(thefilename[trimlength:])
+                info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=pytz.utc).astimezone(the_timezone).timetuple()
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.external_attr = 0o644 << 16
+                with open(thefilename, 'rb') as fp:
+                    zf.writestr(info, fp.read())
+                #zf.write(thefilename, thefilename[trimlength:])
+        zf.close()
+        saved_file.save()
+        saved_file.finalize()
+        shutil.rmtree(directory)
+        response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        flash(word("Package created"), 'success')
+        return response
     response = make_response(render_template('pages/create_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, tab_title=word('Create Package'), page_title=word('Create Package')), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -16198,7 +16014,7 @@ def restart_page():
         setTimeout(daRestart, 100);
       });
     </script>"""
-    next_url = user_manager.make_safe_url_function(request.args.get('next', url_for('interview_list', post_restart=1)))
+    next_url = app.user_manager.make_safe_url_function(request.args.get('next', url_for('interview_list', post_restart=1)))
     extra_meta = """\n    <meta http-equiv="refresh" content="8;URL='""" + next_url + """'">"""
     response = make_response(render_template('pages/restart.html', version_warning=None, bodyclass='daadminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting')), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -16237,7 +16053,7 @@ def playground_poll():
     return response
 
 def get_gd_flow():
-    app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('googledrive', dict())
+    app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('googledrive', {})
     client_id = app_credentials.get('id', None)
     client_secret = app_credentials.get('secret', None)
     if client_id is None or client_secret is None:
@@ -16267,7 +16083,7 @@ def set_gd_folder(folder):
         r.set(key, folder)
 
 def get_od_flow():
-    app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('onedrive', dict())
+    app_credentials = current_app.config['OAUTH_CREDENTIALS'].get('onedrive', {})
     client_id = app_credentials.get('id', None)
     client_secret = app_credentials.get('secret', None)
     if client_id is None or client_secret is None:
@@ -16513,7 +16329,7 @@ def sync_with_google_drive():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
-    next = user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
+    next = app.user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
     auto_next = request.args.get('auto_next', None)
     if app.config['USE_GOOGLE_DRIVE'] is False:
         flash(word("Google Drive is not configured"), "error")
@@ -16539,7 +16355,7 @@ def gd_sync_wait():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
-    next_url = user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
+    next_url = app.user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
     auto_next_url = request.args.get('auto_next', None)
     my_csrf = generate_csrf()
     script = """
@@ -16683,15 +16499,12 @@ def rename_od_project(old_project, new_project):
     else:
         info = json.loads(content.decode())
         #logmessage("Found " + repr(info))
-        if info.get('deleted', None):
-            trashed = True
-        else:
-            trashed = False
+        trashed = bool(info.get('deleted', None))
     if trashed is True or 'folder' not in info:
         logmessage('rename_od_project: folder did not exist')
         return False
     r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
-    subdir = dict()
+    subdir = {}
     for section in ['static', 'templates', 'questions', 'modules', 'sources']:
         subdir[section] = None
     while True:
@@ -16755,14 +16568,11 @@ def trash_od_project(old_project):
     else:
         info = json.loads(content.decode())
         #logmessage("Found " + repr(info))
-        if info.get('deleted', None):
-            trashed = True
-        else:
-            trashed = False
+        trashed = bool(info.get('deleted', None))
     if trashed is True or 'folder' not in info:
         logmessage('trash_od_project: folder did not exist')
         return False
-    subdir = dict()
+    subdir = {}
     for section in ['static', 'templates', 'questions', 'modules', 'sources']:
         subdir[section] = None
     r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
@@ -16803,7 +16613,7 @@ def trash_od_project(old_project):
             logmessage("Could not find subdirectory " + old_project + " in section " + str(section))
         else:
             r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(subsubdir) + "/children?$select=id", "GET")
-            to_delete = list()
+            to_delete = []
             while True:
                 if int(r['status']) != 200:
                     logmessage('trash_od_project: could not obtain contents of project folder')
@@ -16846,10 +16656,7 @@ def trash_od_file(section, filename, current_project):
     else:
         info = json.loads(content.decode())
         #logmessage("Found " + repr(info))
-        if info.get('deleted', None):
-            trashed = True
-        else:
-            trashed = False
+        trashed = bool(info.get('deleted', None))
     if trashed is True or 'folder' not in info:
         logmessage('trash_od_file: folder did not exist')
         return False
@@ -16927,7 +16734,7 @@ def sync_with_onedrive():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
-    next = user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=get_current_project())))
+    next = app.user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=get_current_project())))
     auto_next = request.args.get('auto_next', None)
     if app.config['USE_ONEDRIVE'] is False:
         flash(word("OneDrive is not configured"), "error")
@@ -16953,10 +16760,10 @@ def od_sync_wait():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     current_project = get_current_project()
-    next_url = user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
+    next_url = app.user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
     auto_next_url = request.args.get('auto_next', None)
     if auto_next_url is not None:
-        auto_next_url = user_manager.make_safe_url_function(auto_next_url)
+        auto_next_url = app.user_manager.make_safe_url_function(auto_next_url)
     my_csrf = generate_csrf()
     script = """
     <script>
@@ -17090,13 +16897,12 @@ def checkin_sync_with_google_drive():
             if the_result.ok:
                 logmessage("checkin_sync_with_google_drive: success")
                 return jsonify(success=True, status='finished', ok=the_result.ok, summary=add_br(the_result.summary), restart=the_result.restart)
-            elif hasattr(the_result, 'error'):
+            if hasattr(the_result, 'error'):
                 logmessage("checkin_sync_with_google_drive: failed return value is " + str(the_result.error))
                 return jsonify(success=True, status='failed', error_message=str(the_result.error), restart=False)
-            elif hasattr(the_result, 'summary'):
+            if hasattr(the_result, 'summary'):
                 return jsonify(success=True, status='failed', summary=add_br(the_result.summary), restart=False)
-            else:
-                return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)), restart=False)
+            return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)), restart=False)
         else:
             logmessage("checkin_sync_with_google_drive: failed return value is a " + str(type(the_result)))
             logmessage("checkin_sync_with_google_drive: failed return value is " + str(the_result))
@@ -17122,19 +16928,16 @@ def checkin_sync_with_onedrive():
             if the_result.ok:
                 logmessage("checkin_sync_with_onedrive: success")
                 return jsonify(success=True, status='finished', ok=the_result.ok, summary=add_br(the_result.summary), restart=the_result.restart)
-            elif hasattr(the_result, 'error'):
+            if hasattr(the_result, 'error'):
                 logmessage("checkin_sync_with_onedrive: failed return value is " + str(the_result.error))
                 return jsonify(success=True, status='failed', error_message=str(the_result.error), restart=False)
-            elif hasattr(the_result, 'summary'):
+            if hasattr(the_result, 'summary'):
                 return jsonify(success=True, status='failed', summary=add_br(the_result.summary), restart=False)
-            else:
-                return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)), restart=False)
-        else:
-            logmessage("checkin_sync_with_onedrive: failed return value is a " + str(type(the_result)))
-            logmessage("checkin_sync_with_onedrive: failed return value is " + str(the_result))
-            return jsonify(success=True, status='failed', error_message=str(the_result), restart=False)
-    else:
-        return jsonify(success=True, status='waiting', restart=False)
+            return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)), restart=False)
+        logmessage("checkin_sync_with_onedrive: failed return value is a " + str(type(the_result)))
+        logmessage("checkin_sync_with_onedrive: failed return value is " + str(the_result))
+        return jsonify(success=True, status='failed', error_message=str(the_result), restart=False)
+    return jsonify(success=True, status='waiting', restart=False)
 
 @app.route('/google_drive', methods=['GET', 'POST'])
 @login_required
@@ -17235,7 +17038,7 @@ def google_drive_page():
             flash(word("The mapping was reset because the folder does not appear to exist anymore."), 'error')
     if the_folder is None:
         for item in items:
-            if (item['name'].lower() == 'docassemble'):
+            if item['name'].lower() == 'docassemble':
                 active_folder = item
                 break
     if active_folder is None:
@@ -17255,7 +17058,7 @@ def google_drive_page():
     return response
 
 def gd_fix_subdirs(service, the_folder):
-    subdirs = list()
+    subdirs = []
     page_token = None
     while True:
         response = service.files().list(spaces="drive", pageToken=page_token, fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and '" + str(the_folder) + "' in parents").execute()
@@ -17265,7 +17068,7 @@ def gd_fix_subdirs(service, the_folder):
         if page_token is None:
             break
     todo = set(['questions', 'static', 'sources', 'templates', 'modules'])
-    done = set([x['name'] for x in subdirs if x['name'] in todo])
+    done = set(x['name'] for x in subdirs if x['name'] in todo)
     for key in todo - done:
         file_metadata = {
             'name' : key,
@@ -17327,9 +17130,9 @@ def onedrive_page():
             flash(word("OneDrive is not linked."), 'success')
         elif form.folder.data == -1 or form.folder.data == '-1':
             headers = {'Content-Type': 'application/json'}
-            info = dict()
+            info = {}
             info['name'] = 'docassemble'
-            info['folder'] = dict()
+            info['folder'] = {}
             info["@microsoft.graph.conflictBehavior"] = "fail"
             r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/root/children", "POST", headers=headers, body=json.dumps(info))
             if int(r['status']) == 201:
@@ -17367,7 +17170,7 @@ def onedrive_page():
             item_ids.append(the_folder)
     if the_folder is None:
         for item in items:
-            if (item['name'].lower() == 'docassemble'):
+            if item['name'].lower() == 'docassemble':
                 active_folder = item
                 break
     if active_folder is None:
@@ -17402,9 +17205,9 @@ def od_fix_subdirs(http, the_folder):
     todo = set(['questions', 'static', 'sources', 'templates', 'modules'])
     for folder_name in (todo - subdirs):
         headers = {'Content-Type': 'application/json'}
-        data = dict()
+        data = {}
         data['name'] = folder_name
-        data['folder'] = dict()
+        data['folder'] = {}
         data["@microsoft.graph.conflictBehavior"] = "rename"
         r, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + str(the_folder) + "/children", "POST", headers=headers, body=json.dumps(data))
         if int(r['status']) != 201:
@@ -17512,7 +17315,7 @@ def playground_static(current_project, userid, filename):
         response = send_file(path, mimetype=str(mimetype))
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
-        return(response)
+        return response
     return ('File not found', 404)
 
 @app.route('/playgroundmodules/<current_project>/<userid>/<path:filename>', methods=['GET'])
@@ -17540,7 +17343,7 @@ def playground_modules(current_project, userid, filename):
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        return(response)
+        return response
     return ('File not found', 404)
 
 @app.route('/playgroundsources/<current_project>/<userid>/<path:filename>', methods=['GET'])
@@ -17569,7 +17372,7 @@ def playground_sources(current_project, userid, filename):
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        return(response)
+        return response
     return ('File not found', 404)
 
 @app.route('/playgroundtemplate/<current_project>/<userid>/<path:filename>', methods=['GET'])
@@ -17597,7 +17400,7 @@ def playground_template(current_project, userid, filename):
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        return(response)
+        return response
     return ('File not found', 404)
 
 @app.route('/playgrounddownload/<current_project>/<userid>/<path:filename>', methods=['GET'])
@@ -17621,7 +17424,7 @@ def playground_download(current_project, userid, filename):
         response.headers['Content-type'] = 'text/plain; charset=utf-8'
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        return(response)
+        return response
     return ('File not found', 404)
 
 @app.route('/officefunctionfile', methods=['GET', 'POST'])
@@ -17740,21 +17543,11 @@ def playground_files():
         return ('File not found', 404)
     setup_translation()
     current_project = get_current_project()
-    if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
-        use_od = False
-    else:
-        use_od = True
-    if app.config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
-        use_gd = False
-    else:
-        use_gd = True
-        use_od = False
+    use_gd = bool(app.config['USE_GOOGLE_DRIVE'] is True and get_gd_folder() is not None)
+    use_od = bool(use_gd is False and app.config['USE_ONEDRIVE'] is True and get_od_folder() is not None)
     form = PlaygroundFilesForm(request.form)
     formtwo = PlaygroundFilesEditForm(request.form)
-    if 'ajax' in request.form and int(request.form['ajax']):
-        is_ajax = True
-    else:
-        is_ajax = False
+    is_ajax = bool('ajax' in request.form and int(request.form['ajax']))
     section = werkzeug.utils.secure_filename(request.args.get('section', 'template'))
     the_file = secure_filename_spaces_ok(request.args.get('file', ''))
     scroll = False
@@ -17768,14 +17561,11 @@ def playground_files():
         scroll = True
         the_file = ''
     if request.method == 'POST':
-        if (form.purpose.data == 'upload' and form.validate()) or (formtwo.purpose.data == 'edit' and formtwo.validate()):
-            form_validated = True
-        else:
-            form_validated = False
+        form_validated = bool((form.purpose.data == 'upload' and form.validate()) or (formtwo.purpose.data == 'edit' and formtwo.validate()))
         if form_validated:
-            if (form.section.data):
+            if form.section.data:
                 section = form.section.data
-            if (formtwo.file_name.data):
+            if formtwo.file_name.data:
                 the_file = formtwo.file_name.data
                 the_file = re.sub(r'[^A-Za-z0-9\-\_\. ]+', '_', the_file)
     else:
@@ -17801,7 +17591,7 @@ def playground_files():
         current_file = get_current_file(current_project, 'questions')
         if current_file in pulldown_files:
             active_file = current_file
-        elif len(pulldown_files):
+        elif len(pulldown_files) > 0:
             delete_current_file(current_project, 'questions')
             active_file = pulldown_files[0]
         else:
@@ -17837,7 +17627,7 @@ def playground_files():
                 to_path = os.path.join(the_directory, to_file)
                 if not os.path.exists(to_path):
                     extension, mimetype = get_ext_and_mimetype(argument)
-                    if (mimetype and mimetype in convertible_mimetypes):
+                    if mimetype and mimetype in convertible_mimetypes:
                         the_format = convertible_mimetypes[mimetype]
                     elif extension and extension in convertible_extensions:
                         the_format = convertible_extensions[extension]
@@ -17928,16 +17718,16 @@ def playground_files():
             else:
                 flash(word('You need to type in a name for the file'), 'error')
     if is_ajax and not form_validated:
-        errors = list()
+        errors = []
         for fieldName, errorMessages in formtwo.errors.items():
             for err in errorMessages:
                 errors.append(dict(fieldName=fieldName, err=err))
         return jsonify(success=False, errors=errors)
     files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
 
-    editable_files = list()
-    convertible_files = list()
-    trainable_files = dict()
+    editable_files = []
+    convertible_files = []
+    trainable_files = {}
     mode = "yaml"
     for a_file in files:
         extension, mimetype = get_ext_and_mimetype(a_file)
@@ -17961,7 +17751,7 @@ def playground_files():
             the_file = current_file
         else:
             delete_current_file(current_project, section)
-            if len(editable_files):
+            if len(editable_files) > 0:
                 the_file = sorted(editable_files, key=lambda x: x['modtime'])[-1]['name']
             else:
                 if section == 'modules':
@@ -17974,11 +17764,11 @@ def playground_files():
         set_current_file(current_project, section, the_file)
     if the_file != '':
         extension, mimetype = get_ext_and_mimetype(the_file)
-        if (mimetype and mimetype in ok_mimetypes):
+        if mimetype and mimetype in ok_mimetypes:
             mode = ok_mimetypes[mimetype]
-        elif (extension and extension in ok_extensions):
+        elif extension and extension in ok_extensions:
             mode = ok_extensions[extension]
-        elif (mimetype and mimetype.startswith('text')):
+        elif mimetype and mimetype.startswith('text'):
             mode = 'null'
     if mode != 'markdown':
         active_file = None
@@ -18004,28 +17794,28 @@ def playground_files():
         content = ''
     lowerdescription = None
     description = None
-    if (section == "template"):
+    if section == "template":
         header = word("Templates")
         description = 'Add files here that you want want to include in your interviews using <a target="_blank" href="https://docassemble.org/docs/documents.html#docx template file"><code>docx template file</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#pdf template file"><code>pdf template file</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#content file"><code>content file</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#initial yaml"><code>initial yaml</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#additional yaml"><code>additional yaml</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#template file"><code>template file</code></a>, <a target="_blank" href="https://docassemble.org/docs/documents.html#rtf template file"><code>rtf template file</code></a>, or <a target="_blank" href="https://docassemble.org/docs/documents.html#docx reference file"><code>docx reference file</code></a>.'
         upload_header = word("Upload a template file")
         list_header = word("Existing template files")
         edit_header = word('Edit text files')
         after_text = None
-    elif (section == "static"):
+    elif section == "static":
         header = word("Static Files")
         description = 'Add files here that you want to include in your interviews with <a target="_blank" href="https://docassemble.org/docs/initial.html#images"><code>images</code></a>, <a target="_blank" href="https://docassemble.org/docs/initial.html#image sets"><code>image sets</code></a>, <a target="_blank" href="https://docassemble.org/docs/markup.html#inserting%20images"><code>[FILE]</code></a> or <a target="_blank" href="https://docassemble.org/docs/functions.html#url_of"><code>url_of()</code></a>.'
         upload_header = word("Upload a static file")
         list_header = word("Existing static files")
         edit_header = word('Edit text files')
         after_text = None
-    elif (section == "sources"):
+    elif section == "sources":
         header = word("Source Files")
         description = 'Add files here that you want to use as a data source in your interview code, such as word translation files and training data for machine learning.  For Python source code, see the Modules folder.'
         upload_header = word("Upload a source file")
         list_header = word("Existing source files")
         edit_header = word('Edit source files')
         after_text = None
-    elif (section == "modules"):
+    elif section == "modules":
         header = word("Modules")
         upload_header = word("Upload a Python module")
         list_header = word("Existing module files")
@@ -18299,10 +18089,7 @@ def playground_files():
     else:
         kbOpt = ''
         kbLoad = ''
-    if len(editable_files):
-        any_files = True
-    else:
-        any_files = False
+    any_files = bool(len(editable_files) > 0)
     back_button = Markup('<span class="navbar-brand navbar-nav dabackicon me-3"><a href="' + url_for('playground_page', project=current_project) + '" class="dabackbuttoncolor nav-link" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     cm_mode = ''
     if mode == 'null':
@@ -18342,7 +18129,7 @@ def pull_playground_package():
         form.github_url.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['github'])
     elif 'pypi' in request.args:
         form.pypi.data = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\`]', '', request.args['pypi'])
-    form.github_branch.choices = list()
+    form.github_branch.choices = []
     description = word("Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.  Or, put in the name of a PyPI package and it will do the same with the package on PyPI.")
     branch = request.args.get('branch')
     extra_js = """
@@ -18394,7 +18181,16 @@ def pull_playground_package():
       });
     </script>
 """
-    response = make_response(render_template('pages/pull_playground_package.html', current_project=current_project, form=form, description=description, version_warning=version_warning, bodyclass='daadminbody', title=word("Pull GitHub or PyPI Package"), tab_title=word("Pull"), page_title=word("Pull"), extra_js=Markup(extra_js)), 200)
+    response = make_response(render_template('pages/pull_playground_package.html',
+                                             current_project=current_project,
+                                             form=form,
+                                             description=description,
+                                             version_warning=version_warning,
+                                             bodyclass='daadminbody',
+                                             title=word("Pull GitHub or PyPI Package"),
+                                             tab_title=word("Pull"),
+                                             page_title=word("Pull"),
+                                             extra_js=Markup(extra_js)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -18422,7 +18218,7 @@ def get_branches_of_repo(giturl):
     else:
         http = httplib2.Http()
     the_url = "https://api.github.com/repos/" + repo_name + '/branches'
-    branches = list()
+    branches = []
     if access_token:
         resp, content = http.request(the_url, "GET", headers=dict(Authorization="token " + access_token))
     else:
@@ -18474,7 +18270,7 @@ def get_repo_info(giturl):
     else:
         resp, content = http.request(the_url, "GET")
     if int(resp['status']) == 200:
-        return(json.loads(content.decode()))
+        return json.loads(content.decode())
     raise Exception(the_url + " fetch failed on first try; got " + str(resp['status']))
 
 @app.route('/get_git_branches', methods=['GET'])
@@ -18492,7 +18288,7 @@ def get_git_branches():
         return jsonify(dict(success=False, reason=str(err)))
 
 def get_user_repositories(http):
-    repositories = list()
+    repositories = []
     resp, content = http.request("https://api.github.com/user/repos", "GET")
     if int(resp['status']) == 200:
         repositories.extend(json.loads(content.decode()))
@@ -18511,7 +18307,7 @@ def get_user_repositories(http):
     return repositories
 
 def get_orgs_info(http):
-    orgs_info = list()
+    orgs_info = []
     resp, content = http.request("https://api.github.com/user/orgs", "GET")
     if int(resp['status']) == 200:
         orgs_info.extend(json.loads(content.decode()))
@@ -18530,7 +18326,7 @@ def get_orgs_info(http):
     return orgs_info
 
 def get_branch_info(http, full_name):
-    branch_info = list()
+    branch_info = []
     resp, content = http.request("https://api.github.com/repos/" + str(full_name) + '/branches', "GET")
     if int(resp['status']) == 200:
         branch_info.extend(json.loads(content.decode()))
@@ -18549,15 +18345,8 @@ def get_branch_info(http, full_name):
     return branch_info
 
 def fix_package_folder():
-    if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
-        use_od = False
-    else:
-        use_od = True
-    if app.config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
-        use_gd = False
-    else:
-        use_gd = True
-        use_od = False
+    use_gd = bool(app.config['USE_GOOGLE_DRIVE'] is True and get_gd_folder() is not None)
+    use_od = bool(use_gd is False and app.config['USE_ONEDRIVE'] is True and get_od_folder() is not None)
     problem_exists = False
     area = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     for f in os.listdir(area.directory):
@@ -18587,8 +18376,8 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
     else:
         branch_option = ''
     need_to_restart = False
-    extracted = dict()
-    data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
+    extracted = {}
+    data_files = dict(templates=[], static=[], sources=[], interviews=[], modules=[], questions=[])
     directory = tempfile.mkdtemp()
     output = ''
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
@@ -18685,10 +18474,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
         package_file.close()
     initial_directories = len(splitall(directory)) + 1
     for root, dirs, files in os.walk(directory):
-        if 'setup.py' in files and 'docassemble' in dirs:
-            at_top_level = True
-        else:
-            at_top_level = False
+        at_top_level = bool('setup.py' in files and 'docassemble' in dirs)
         for a_file in files:
             orig_file = os.path.join(root, a_file)
             #output += "Original file is " + orig_file + "\n"
@@ -18730,7 +18516,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
             extracted[m.group(1)] = m.group(2)
         m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
         if m:
-            the_list = list()
+            the_list = []
             for item in re.split(r', *', m.group(2)):
                 inner_item = re.sub(r"'$", '', item)
                 inner_item = re.sub(r"^'", '', inner_item)
@@ -18738,7 +18524,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
                 inner_item = re.sub(r'^"+', '', inner_item)
                 the_list.append(inner_item)
             extracted[m.group(1)] = the_list
-    info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
+    info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', []), description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''), github_url=github_url, github_branch=branch, pypi_package_name=pypi_package)
     info_dict['dependencies'] = [x for x in [z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies'])] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
     #output += "info_dict is set\n"
     package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
@@ -18794,19 +18580,13 @@ def playground_packages():
     form = PlaygroundPackagesForm(request.form)
     fileform = PlaygroundUploadForm(request.form)
     the_file = secure_filename_spaces_ok(request.args.get('file', ''))
-    if the_file == '':
-        no_file_specified = True
-    else:
-        no_file_specified = False
+    no_file_specified = bool(the_file == '')
     scroll = False
     allow_pypi = daconfig.get('pypi', False)
     pypi_username = current_user.pypi_username
     pypi_password = current_user.pypi_password
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
-    if allow_pypi is True and pypi_username is not None and pypi_password is not None and pypi_username != '' and pypi_password != '':
-        can_publish_to_pypi = True
-    else:
-        can_publish_to_pypi = False
+    can_publish_to_pypi = bool(allow_pypi is True and pypi_username is not None and pypi_password is not None and pypi_username != '' and pypi_password != '')
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
         if github_auth is not None:
@@ -18847,8 +18627,8 @@ def playground_packages():
     if is_new:
         # scroll = True
         the_file = ''
-    area = dict()
-    file_list = dict()
+    area = {}
+    file_list = {}
     section_name = {'playground': 'Interview files', 'playgroundpackages': 'Packages', 'playgroundtemplate': 'Template files', 'playgroundstatic': 'Static files', 'playgroundsources': 'Source files', 'playgroundmodules': 'Modules'}
     section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundsources': 'sources', 'playgroundmodules': 'modules'}
     section_field = {'playground': form.interview_files, 'playgroundtemplate': form.template_files, 'playgroundstatic': form.static_files, 'playgroundsources': form.sources_files, 'playgroundmodules': form.module_files}
@@ -18869,7 +18649,7 @@ def playground_packages():
         the_list.append((item, item))
     form.dependencies.choices = the_list
     validated = False
-    form.github_branch.choices = list()
+    form.github_branch.choices = []
     if form.github_branch.data:
         form.github_branch.choices.append((form.github_branch.data, form.github_branch.data))
     else:
@@ -18888,7 +18668,7 @@ def playground_packages():
     the_file = re.sub(r'^docassemble-', r'', the_file)
     the_directory = directory_for(area['playgroundpackages'], current_project)
     files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-    editable_files = list()
+    editable_files = []
     mode = "yaml"
     for a_file in files:
         editable_files.append(dict(name=re.sub(r'^docassemble.', r'', a_file), modtime=os.path.getmtime(os.path.join(the_directory, a_file))))
@@ -18903,7 +18683,7 @@ def playground_packages():
             the_file = re.sub(r'^docassemble.', r'', current_file)
         else:
             delete_current_file(current_project, 'packages')
-            if len(editable_files):
+            if len(editable_files) > 0:
                 the_file = sorted(editable_files, key=lambda x: x['modtime'])[-1]['name']
             else:
                 the_file = ''
@@ -18915,9 +18695,9 @@ def playground_packages():
     if the_file == '' and len(file_list['playgroundpackages']) and not is_new:
         the_file = file_list['playgroundpackages'][0]
         the_file = re.sub(r'^docassemble.', r'', the_file)
-    old_info = dict()
+    old_info = {}
     on_github = False
-    branch_info = list()
+    branch_info = []
     github_http = None
     github_ssh = None
     github_use_ssh = False
@@ -19055,105 +18835,102 @@ def playground_packages():
         epoch_date = datetime.datetime(1970, 1, 1).replace(tzinfo=pytz.utc)
         if the_files:
             for up_file in the_files:
-                #try:
-                    zip_filename = werkzeug.utils.secure_filename(up_file.filename)
-                    zippath = tempfile.NamedTemporaryFile(mode="wb", suffix=".zip", prefix="datemp", delete=False)
-                    up_file.save(zippath.name)
-                    area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
-                    zippath.close()
-                    with zipfile.ZipFile(zippath.name, mode='r') as zf:
-                        readme_text = ''
-                        setup_py = ''
-                        extracted = dict()
-                        data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
-                        has_docassemble_dir = set()
-                        has_setup_file = set()
-                        for zinfo in zf.infolist():
-                            if zinfo.is_dir():
-                                if zinfo.filename.endswith('/docassemble/'):
-                                    has_docassemble_dir.add(re.sub(r'/docassemble/$', '', zinfo.filename))
-                                if zinfo.filename == 'docassemble/':
-                                    has_docassemble_dir.add('')
-                            elif zinfo.filename.endswith('/setup.py'):
-                                (directory, filename) = os.path.split(zinfo.filename)
-                                has_setup_file.add(directory)
-                            elif zinfo.filename == 'setup.py':
-                                has_setup_file.add('')
-                        root_dir = None
-                        for directory in has_docassemble_dir.union(has_setup_file):
-                            if root_dir is None or len(directory) < len(root_dir):
-                                root_dir = directory
-                        if root_dir is None:
-                            flash(word("The zip file did not contain a docassemble add-on package."), 'error')
-                            return redirect(url_for('playground_packages', project=current_project, file=the_file))
-                        for zinfo in zf.infolist():
-                            #logmessage("Found a " + zinfo.filename)
-                            if zinfo.filename.endswith('/'):
-                                continue
+                zip_filename = werkzeug.utils.secure_filename(up_file.filename)
+                zippath = tempfile.NamedTemporaryFile(mode="wb", suffix=".zip", prefix="datemp", delete=False)
+                up_file.save(zippath.name)
+                area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
+                zippath.close()
+                with zipfile.ZipFile(zippath.name, mode='r') as zf:
+                    readme_text = ''
+                    setup_py = ''
+                    extracted = {}
+                    data_files = dict(templates=[], static=[], sources=[], interviews=[], modules=[], questions=[])
+                    has_docassemble_dir = set()
+                    has_setup_file = set()
+                    for zinfo in zf.infolist():
+                        if zinfo.is_dir():
+                            if zinfo.filename.endswith('/docassemble/'):
+                                has_docassemble_dir.add(re.sub(r'/docassemble/$', '', zinfo.filename))
+                            if zinfo.filename == 'docassemble/':
+                                has_docassemble_dir.add('')
+                        elif zinfo.filename.endswith('/setup.py'):
                             (directory, filename) = os.path.split(zinfo.filename)
-                            if filename.startswith('#') or filename.endswith('~'):
-                                continue
-                            dirparts = splitall(directory)
-                            if '.git' in dirparts:
-                                continue
-                            levels = re.findall(r'/', directory)
-                            time_tuple = zinfo.date_time
-                            the_time = time.mktime(datetime.datetime(*time_tuple).timetuple())
-                            for sec in ('templates', 'static', 'sources', 'questions'):
-                                if directory.endswith('data/' + sec) and filename != 'README.md':
-                                    data_files[sec].append(filename)
-                                    target_filename = os.path.join(directory_for(area[area_sec[sec]], current_project), filename)
-                                    with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
-                                        shutil.copyfileobj(source_fp, target_fp)
-                                    os.utime(target_filename, (the_time, the_time))
-                            if filename == 'README.md' and directory == root_dir:
-                                with zf.open(zinfo) as f:
-                                    the_file_obj = TextIOWrapper(f, encoding='utf8')
-                                    readme_text = the_file_obj.read()
-                            if filename == 'setup.py' and directory == root_dir:
-                                with zf.open(zinfo) as f:
-                                    the_file_obj = TextIOWrapper(f, encoding='utf8')
-                                    setup_py = the_file_obj.read()
-                            elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
-                                need_to_restart = True
-                                data_files['modules'].append(filename)
-                                target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
+                            has_setup_file.add(directory)
+                        elif zinfo.filename == 'setup.py':
+                            has_setup_file.add('')
+                    root_dir = None
+                    for directory in has_docassemble_dir.union(has_setup_file):
+                        if root_dir is None or len(directory) < len(root_dir):
+                            root_dir = directory
+                    if root_dir is None:
+                        flash(word("The zip file did not contain a docassemble add-on package."), 'error')
+                        return redirect(url_for('playground_packages', project=current_project, file=the_file))
+                    for zinfo in zf.infolist():
+                        #logmessage("Found a " + zinfo.filename)
+                        if zinfo.filename.endswith('/'):
+                            continue
+                        (directory, filename) = os.path.split(zinfo.filename)
+                        if filename.startswith('#') or filename.endswith('~'):
+                            continue
+                        dirparts = splitall(directory)
+                        if '.git' in dirparts:
+                            continue
+                        levels = re.findall(r'/', directory)
+                        time_tuple = zinfo.date_time
+                        the_time = time.mktime(datetime.datetime(*time_tuple).timetuple())
+                        for sec in ('templates', 'static', 'sources', 'questions'):
+                            if directory.endswith('data/' + sec) and filename != 'README.md':
+                                data_files[sec].append(filename)
+                                target_filename = os.path.join(directory_for(area[area_sec[sec]], current_project), filename)
                                 with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
                                     shutil.copyfileobj(source_fp, target_fp)
-                                    os.utime(target_filename, (the_time, the_time))
-                        setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
-                        for line in setup_py.splitlines():
-                            m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
-                            if m:
-                                extracted[m.group(1)] = m.group(2)
-                            m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
-                            if m:
-                                extracted[m.group(1)] = m.group(2)
-                            m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
-                            if m:
-                                the_list = list()
-                                for item in re.split(r', *', m.group(2)):
-                                    inner_item = re.sub(r"'$", '', item)
-                                    inner_item = re.sub(r"^'", '', inner_item)
-                                    inner_item = re.sub(r'"+$', '', inner_item)
-                                    inner_item = re.sub(r'^"+', '', inner_item)
-                                    the_list.append(inner_item)
-                                extracted[m.group(1)] = the_list
-                        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=[z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', list()))], description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+                                os.utime(target_filename, (the_time, the_time))
+                        if filename == 'README.md' and directory == root_dir:
+                            with zf.open(zinfo) as f:
+                                the_file_obj = TextIOWrapper(f, encoding='utf8')
+                                readme_text = the_file_obj.read()
+                        if filename == 'setup.py' and directory == root_dir:
+                            with zf.open(zinfo) as f:
+                                the_file_obj = TextIOWrapper(f, encoding='utf8')
+                                setup_py = the_file_obj.read()
+                        elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
+                            need_to_restart = True
+                            data_files['modules'].append(filename)
+                            target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
+                            with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
+                                shutil.copyfileobj(source_fp, target_fp)
+                                os.utime(target_filename, (the_time, the_time))
+                    setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
+                    for line in setup_py.splitlines():
+                        m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
+                        if m:
+                            extracted[m.group(1)] = m.group(2)
+                        m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
+                        if m:
+                            extracted[m.group(1)] = m.group(2)
+                        m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+                        if m:
+                            the_list = []
+                            for item in re.split(r', *', m.group(2)):
+                                inner_item = re.sub(r"'$", '', item)
+                                inner_item = re.sub(r"^'", '', inner_item)
+                                inner_item = re.sub(r'"+$', '', inner_item)
+                                inner_item = re.sub(r'^"+', '', inner_item)
+                                the_list.append(inner_item)
+                            extracted[m.group(1)] = the_list
+                    info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=[z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', []))], description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
 
-                        info_dict['dependencies'] = [x for x in [z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies'])] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
-                        package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
-                        with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
-                            the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
-                            fp.write(str(the_yaml))
-                        for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
-                            r.incr(key.decode())
-                        for sec in area:
-                            area[sec].finalize()
-                        the_file = package_name
-                    zippath.close()
-                #except Exception as errMess:
-                    #flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
+                    info_dict['dependencies'] = [x for x in [z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies'])] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
+                    package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
+                    with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
+                        the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
+                        fp.write(str(the_yaml))
+                    for key in r.keys('da:interviewsource:docassemble.playground' + str(current_user.id) + project_name(current_project) + ':*'):
+                        r.incr(key.decode())
+                    for sec in area:
+                        area[sec].finalize()
+                    the_file = package_name
+                zippath.close()
         if show_message:
             flash(word("The package was unpacked into the Playground."), 'success')
         if need_to_restart:
@@ -19215,7 +18992,7 @@ def playground_packages():
                 else:
                     pypi_message = word('This package is not yet published on PyPI.')
     if request.method == 'POST' and validated:
-        new_info = dict()
+        new_info = {}
         for field in ('license', 'description', 'author_name', 'author_email', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
             new_info[field] = form[field].data
         #logmessage("found " + str(new_info))
@@ -19396,10 +19173,7 @@ def playground_packages():
     else:
         kbOpt = ''
         kbLoad = ''
-    if len(editable_files):
-        any_files = True
-    else:
-        any_files = False
+    any_files = len(editable_files) > 0
     back_button = Markup('<span class="navbar-brand navbar-nav dabackicon me-3"><a href="' + url_for('playground_page', project=current_project) + '" class="dabackbuttoncolor nav-link" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     if can_publish_to_pypi:
         if pypi_message is not None:
@@ -19494,7 +19268,7 @@ def playground_packages():
     branch = old_info.get('github_branch', None)
     if branch is not None:
         branch = branch.strip()
-    branch_choices = list()
+    branch_choices = []
     if len(branch_info) > 0:
         branch_choices.append(("<new>", word("(New branch)")))
     branch_names = set()
@@ -19948,16 +19722,16 @@ def variables_report():
     yaml_file = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
     variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)
-    results = list()
-    result_dict = dict()
+    results = []
+    result_dict = {}
     for name in vocab_list:
         if name in ('x', 'row_item', 'i', 'j', 'k', 'l', 'm', 'n') or name.startswith('x.') or name.startswith('x[') or name.startswith('row_item.'):
             continue
-        result = dict(name=name, questions=list())
+        result = dict(name=name, questions=[])
         results.append(result)
         result_dict[name] = result
     for question in interview.questions_list:
-        names_seen = dict()
+        names_seen = {}
         for the_type, the_set in (('in mako', question.mako_names), ('mentioned in', question.names_used), ('defined by', question.fields_used)):
             for name in the_set:
                 the_name = name
@@ -19978,7 +19752,7 @@ def variables_report():
                     if subname not in result_dict:
                         continue
                     if subname not in names_seen:
-                        names_seen[subname] = dict(yaml_file=question.from_source.path, source_code=question.source_code.strip(), usage=list())
+                        names_seen[subname] = dict(yaml_file=question.from_source.path, source_code=question.source_code.strip(), usage=[])
                         result_dict[subname]['questions'].append(names_seen[subname])
                     if the_type not in names_seen[subname]['usage']:
                         names_seen[subname]['usage'].append(the_type)
@@ -20020,7 +19794,7 @@ def playground_variables():
     return jsonify(success=False, reason=2)
 
 def ensure_ml_file_exists(interview, yaml_file, current_project):
-    if len(interview.mlfields):
+    if len(interview.mlfields) > 0:
         if hasattr(interview, 'ml_store'):
             parts = interview.ml_store.split(':')
             if parts[0] != 'docassemble.playground' + str(current_user.id) + current_project:
@@ -20037,7 +19811,7 @@ def ensure_ml_file_exists(interview, yaml_file, current_project):
             #logmessage("Source filename does not exist yet")
             source_dir.fix()
             source_path = os.path.join(source_directory, source_filename)
-            with open(source_path, 'a'):
+            with open(source_path, 'a', encoding='utf-8'):
                 os.utime(source_path, None)
             source_dir.finalize()
 
@@ -20092,7 +19866,7 @@ def create_project(user_id, new_name):
         if not os.path.isdir(new_dir):
             os.makedirs(new_dir)
         path = os.path.join(new_dir, '.placeholder')
-        with open(path, 'a'):
+        with open(path, 'a', encoding='utf-8'):
             os.utime(path, None)
         area.finalize()
 
@@ -20108,15 +19882,8 @@ def delete_project(user_id, project_name):
 @roles_required(['developer', 'admin'])
 def playground_project():
     setup_translation()
-    if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
-        use_od = False
-    else:
-        use_od = True
-    if app.config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
-        use_gd = False
-    else:
-        use_gd = True
-        use_od = False
+    use_gd = bool(app.config['USE_GOOGLE_DRIVE'] is True and get_gd_folder() is not None)
+    use_od = bool(use_gd is False and app.config['USE_ONEDRIVE'] is True and get_od_folder() is not None)
     current_project = get_current_project()
     if request.args.get('rename'):
         form = RenameProject(request.form)
@@ -20269,15 +20036,8 @@ def playground_page():
         use_od = False
     else:
         is_ajax = False
-        if app.config['USE_ONEDRIVE'] is False or get_od_folder() is None:
-            use_od = False
-        else:
-            use_od = True
-        if app.config['USE_GOOGLE_DRIVE'] is False or get_gd_folder() is None:
-            use_gd = False
-        else:
-            use_gd = True
-            use_od = False
+        use_gd = bool(app.config['USE_GOOGLE_DRIVE'] is True and get_gd_folder() is not None)
+        use_od = bool(use_gd is False and app.config['USE_ONEDRIVE'] is True and get_od_folder() is not None)
         if request.method == 'GET' and needs_to_change_password():
             return redirect(url_for('user.change_password', next=url_for('playground_page', project=current_project)))
     fileform = PlaygroundUploadForm(request.form)
@@ -20292,10 +20052,7 @@ def playground_page():
         debug_mode = true_or_false(request.args.get('debug', False))
     else:
         debug_mode = False
-        if not valid_form and form.status.data == 'new':
-            is_new = True
-        else:
-            is_new = False
+        is_new = bool(not valid_form and form.status.data == 'new')
     if is_new:
         the_file = ''
     playground = SavedFile(current_user.id, fix=True, section='playground')
@@ -20339,7 +20096,7 @@ def playground_page():
                     the_file = re.sub(r'\..*', '', the_file) + '.yml'
                 filename = os.path.join(the_directory, the_file)
                 if not os.path.isfile(filename):
-                    with open(filename, 'a'):
+                    with open(filename, 'a', encoding='utf-8'):
                         os.utime(filename, None)
             else:
                 #flash(word('You need to type in a name for the interview'), 'error')
@@ -20364,7 +20121,7 @@ def playground_page():
             the_file = current_file
         else:
             delete_current_file(current_project, 'questions')
-            if len(files):
+            if len(files) > 0:
                 the_file = sorted(files, key=lambda x: x['modtime'])[-1]['name']
             else:
                 the_file = 'test.yml'
@@ -20385,7 +20142,7 @@ def playground_page():
             with open(filename, 'w', encoding='utf-8') as fp:
                 fp.write(content)
             playground.finalize()
-    console_messages = list()
+    console_messages = []
     if request.method == 'POST' and the_file != '' and form.validate():
         if form.delete.data:
             filename_to_del = os.path.join(the_directory, form.playground_name.data)
@@ -20992,10 +20749,7 @@ $( document ).ready(function() {
   }
 });
 """
-    if len(files):
-        any_files = True
-    else:
-        any_files = False
+    any_files = len(files) > 0
     cm_setup = """
     <script>
       var word_re = /[\w$]+/
@@ -21105,7 +20859,7 @@ def server_error(the_error):
         special_error_html = None
     flask_logtext = []
     if os.path.exists(LOGFILE):
-        with open(LOGFILE) as the_file:
+        with open(LOGFILE, encoding='utf-8') as the_file:
             for line in the_file:
                 if re.match('Exception', line):
                     flask_logtext = []
@@ -21169,10 +20923,7 @@ def server_error(the_error):
         session['in error'] = True
         #session['action'] = docassemble.base.functions.myb64quote(json.dumps({'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}))
         return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}, refer=['error'])
-    if (not DEBUG) and isinstance(the_error, DAError):
-        show_debug = False
-    else:
-        show_debug = True
+    show_debug = not bool((not DEBUG) and isinstance(the_error, DAError))
     if int(int(error_code)/100) == 4:
         show_debug = False
     if error_code == 404:
@@ -21283,7 +21034,7 @@ def package_static(package, filename):
     if attach:
         filename = os.path.basename(filename)
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
-    return(response)
+    return response
 
 @app.route('/logfile/<filename>', methods=['GET'])
 @login_required
@@ -21302,7 +21053,7 @@ def logfile(filename):
             return ('File not found', 404)
     response = send_file(the_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-    return(response)
+    return response
 
 @app.route('/logs', methods=['GET', 'POST'])
 @login_required
@@ -21329,7 +21080,7 @@ def logs():
         zip_file_name = re.sub(r'[^A-Za-z0-9_]+', '', app.config['APP_NAME']) + '_logs.zip'
         response = send_file(zip_archive.name, mimetype='application/zip', as_attachment=True, attachment_filename=zip_file_name)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        return(response)
+        return response
     the_file = request.args.get('file', None)
     if the_file is not None:
         the_file = secure_filename_spaces_ok(the_file)
@@ -21340,10 +21091,10 @@ def logs():
         the_file = None
     if the_file is not None:
         the_file = secure_filename_spaces_ok(the_file)
-    total_bytes = 0;
+    total_bytes = 0
     if LOGSERVER is None:
         call_sync()
-        files = list()
+        files = []
         for f in os.listdir(LOG_DIRECTORY):
             path = os.path.join(LOG_DIRECTORY, f)
             if not os.path.isfile(path):
@@ -21366,16 +21117,16 @@ def logs():
             files = [f for f in content.decode().split("\n") if f != '' and f is not None]
         else:
             return ('File not found', 404)
-        if len(files):
+        if len(files) > 0:
             if the_file is None:
                 the_file = files[0]
             filename, headers = urlretrieve("http://" + LOGSERVER + ':8082/' + urllibquote(the_file))
-    if len(files) and not os.path.isfile(filename):
+    if len(files) > 0 and not os.path.isfile(filename):
         flash(word("The file you requested does not exist."), 'error')
-        if len(files):
+        if len(files) > 0:
             the_file = files[0]
             filename = os.path.join(LOG_DIRECTORY, files[0])
-    if len(files):
+    if len(files) > 0:
         if request.method == 'POST' and form.submit.data and form.filter_string.data:
             default_filter_string = form.filter_string.data
         try:
@@ -21403,10 +21154,7 @@ def logs():
         content = "\n".join(map(lambda x: x, lines))
     else:
         content = "No log files available"
-    if LOGSERVER is None:
-        show_download_all = True
-    else:
-        show_download_all = False
+    show_download_all = bool(LOGSERVER is None)
     response = make_response(render_template('pages/logs.html', version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string, show_download_all=show_download_all, total_bytes=total_bytes), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -21417,9 +21165,8 @@ def request_developer():
     setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
-    from docassemble.webapp.users.forms import RequestDeveloperForm
     form = RequestDeveloperForm(request.form)
-    recipients = list()
+    recipients = []
     if request.method == 'POST':
         for user in db.session.execute(select(UserModel.id, UserModel.email).join(UserRoles, UserModel.id == UserRoles.user_id).join(Role, UserRoles.role_id == Role.id).where(and_(UserModel.active == True, Role.name == 'admin'))):
             if user.email not in recipients:
@@ -21492,7 +21239,7 @@ def read_fields(filename, orig_file_name, input_format, output_format):
     if output_format == 'json':
         if input_format == 'pdf':
             default_text = word("something")
-            output = dict(fields=list(), default_values=dict(), types=dict(), locations=dict(), export_values=dict())
+            output = dict(fields=[], default_values={}, types={}, locations={}, export_values={})
             fields = docassemble.base.pdftk.read_fields(filename)
             if fields is not None:
                 fields_seen = set()
@@ -21511,7 +21258,7 @@ def read_fields(filename, orig_file_name, input_format, output_format):
             if input_format == 'docx':
                 result_file = word_to_markdown(filename, 'docx')
                 if result_file is None:
-                    return json.dumps(dict(fields=list()), indent=2)
+                    return json.dumps(dict(fields=[]), indent=2)
                 with open(result_file.name, 'r', encoding='utf-8') as fp:
                     result = fp.read()
             elif input_format == 'markdown':
@@ -21539,13 +21286,12 @@ def utilities():
     if request.method == 'POST':
         if 'language' in request.form:
             language = request.form['language']
-            result = dict()
-            result[language] = dict()
-            existing = docassemble.base.functions.word_collection.get(language, dict())
+            result = {}
+            result[language] = {}
+            existing = docassemble.base.functions.word_collection.get(language, {})
             if 'google' in daconfig and 'api key' in daconfig['google'] and daconfig['google']['api key']:
-                from googleapiclient.discovery import build
                 try:
-                    service = build('translate', 'v2',
+                    service = googleapiclient.discovery.build('translate', 'v2',
                                     developerKey=daconfig['google']['api key'])
                     use_google_translate = True
                 except:
@@ -21553,22 +21299,22 @@ def utilities():
                     use_google_translate = False
             else:
                 use_google_translate = False
-            words_to_translate = list()
+            words_to_translate = []
             for the_word in base_words:
                 if the_word in existing and existing[the_word] is not None:
                     result[language][the_word] = existing[the_word]
                     continue
                 words_to_translate.append(the_word)
             chunk_limit = daconfig.get('google translate words at a time', 20)
-            chunks = list()
-            interim_list = list()
+            chunks = []
+            interim_list = []
             while len(words_to_translate):
                 the_word = words_to_translate.pop(0)
                 interim_list.append(the_word)
                 if len(interim_list) >= chunk_limit:
                     chunks.append(interim_list)
-                    interim_list = list()
-            if len(interim_list):
+                    interim_list = []
+            if len(interim_list) > 0:
                 chunks.append(interim_list)
             for chunk in chunks:
                 if use_google_translate:
@@ -21631,7 +21377,7 @@ def utilities():
                 workbook.close()
                 response = send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, attachment_filename=xlsx_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-                return(response)
+                return response
             elif form.systemfiletype.data == 'XLIFF 1.2':
                 temp_file = tempfile.NamedTemporaryFile(suffix='.xlf', delete=False)
                 xliff_filename = language + "-words.xlf"
@@ -21662,7 +21408,7 @@ def utilities():
                 temp_file.close()
                 response = send_file(temp_file.name, mimetype='application/xml', as_attachment=True, attachment_filename=xliff_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-                return(response)
+                return response
             elif form.systemfiletype.data == 'XLIFF 2.0':
                 temp_file = tempfile.NamedTemporaryFile(suffix='.xlf', delete=False)
                 xliff_filename = language + "-words.xlf"
@@ -21694,7 +21440,7 @@ def utilities():
                 temp_file.close()
                 response = send_file(temp_file.name, mimetype='application/xml', as_attachment=True, attachment_filename=xliff_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-                return(response)
+                return response
         if 'pdfdocxfile' in request.files and request.files['pdfdocxfile'].filename:
             filename = secure_filename(request.files['pdfdocxfile'].filename)
             extension, mimetype = get_ext_and_mimetype(filename)
@@ -21807,7 +21553,7 @@ def ensure_training_loaded(interview):
                 if os.path.isfile(the_file):
                     with open(the_file, 'r', encoding='utf-8') as fp:
                         content = fp.read()
-                    if len(content):
+                    if len(content) > 0:
                         try:
                             href = json.loads(content)
                             if isinstance(href, dict):
@@ -21962,11 +21708,11 @@ def train():
         show_cond = MachineLearning.id != None
     else:
         show_all = 0
-        show_cond = MachineLearning.dependent == None
-    package_list = dict()
-    file_list = dict()
-    group_id_list = dict()
-    entry_list = list()
+        show_cond = MachineLearning.dependent is None
+    package_list = {}
+    file_list = {}
+    group_id_list = {}
+    entry_list = []
     if current_user.has_role('admin', 'developer'):
         playground_package = 'docassemble.playground' + str(current_user.id)
     else:
@@ -22002,7 +21748,7 @@ def train():
     else:
         the_package_display = the_package
     if the_file is None:
-        file_list = dict()
+        file_list = {}
         for record in db.session.execute(select(MachineLearning.group_id, db.func.count(MachineLearning.id).label('cnt')).where(and_(MachineLearning.group_id.like(the_package + ':%'), show_cond)).group_by(MachineLearning.group_id)):
             parts = record.group_id.split(':')
             #logmessage("Group id is " + str(parts))
@@ -22038,19 +21784,16 @@ def train():
     if the_group_id is None:
         the_prefix = ml_prefix(the_package, the_file)
         the_package_file = docassemble.base.functions.package_data_filename(the_prefix)
-        if the_package_file is not None and os.path.isfile(the_package_file):
-            package_file_available = True
-        else:
-            package_file_available = False
+        package_file_available = bool(the_package_file is not None and os.path.isfile(the_package_file))
         if 'download' in request.args and request.args['download']:
-            output = dict()
+            output = {}
             if the_package == '_global':
                 json_filename = 'ml-global.json'
                 for record in db.session.execute(select(MachineLearning.id, MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key)):
                     if is_package_ml(record.group_id.split(':')):
                         continue
                     if record.group_id not in output:
-                        output[record.group_id] = list()
+                        output[record.group_id] = []
                     if record.dependent is None:
                         the_dependent = None
                     else:
@@ -22074,7 +21817,7 @@ def train():
                     if not is_package_ml(parts):
                         continue
                     if parts[2] not in output:
-                        output[parts[2]] = list()
+                        output[parts[2]] = []
                     if record.dependent is None:
                         the_dependent = None
                     else:
@@ -22083,12 +21826,12 @@ def train():
                     if record.key is not None:
                         the_entry['key'] = record.key
                     output[parts[2]].append(the_entry)
-            if len(output):
+            if len(output) > 0:
                 the_json_file = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix=".json", delete=False, encoding='utf-8')
                 json.dump(output, the_json_file, sort_keys=True, indent=2)
                 response = send_file(the_json_file, mimetype='application/json', as_attachment=True, attachment_filename=json_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-                return(response)
+                return response
             else:
                 flash(word("No data existed in training set.  JSON file not created."), "error")
                 return redirect(url_for('train', package=the_package, file=the_file, show_all=show_all))
@@ -22194,7 +21937,7 @@ def train():
                 else:
                     logmessage("train: info is not a DAFile or DAFileList")
                     continue
-                new_entry['image_files'] = list()
+                new_entry['image_files'] = []
                 for image_file in image_file_list:
                     if not isinstance(image_file, DAFile):
                         logmessage("train: file is not a DAFile")
@@ -22220,18 +21963,15 @@ def train():
                 sample_indep = None
         else:
             sample_indep = entry_list[0]['independent']
-        if isinstance(sample_indep, DADict) or isinstance(sample_indep, dict):
-            is_data = True
-        else:
-            is_data = False
-        choices = dict()
+        is_data = bool(isinstance(sample_indep, DADict) or isinstance(sample_indep, dict))
+        choices = {}
         for record in db.session.execute(select(MachineLearning.dependent, db.func.count(MachineLearning.id).label('cnt')).where(and_(MachineLearning.group_id == group_id_to_use)).group_by(MachineLearning.dependent)):
             #logmessage("There is a choice")
             if record.dependent is None:
                 continue
             key = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
             choices[key] = record.cnt
-        if len(choices):
+        if len(choices) > 0:
             #logmessage("There are choices")
             choices = [(x, choices[x]) for x in sorted(choices, key=operator.itemgetter(0), reverse=False)]
         else:
@@ -22280,7 +22020,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
     if action is not None and admin is False and not current_user.has_role('admin', 'advocate'):
         if user_id is None:
             raise Exception("user_interviews: no user_id provided")
-        the_user = get_person(int(user_id), dict())
+        the_user = get_person(int(user_id), {})
         if the_user is None:
             raise Exception("user_interviews: user_id " + str(user_id) + " not valid")
     if action == 'delete_all':
@@ -22323,7 +22063,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 for interview_info in interview_query:
                     sessions_to_delete.add((interview_info.key, interview_info.filename, user_id, None))
         logmessage("Deleting " + str(len(sessions_to_delete)) + " interviews")
-        if len(sessions_to_delete):
+        if len(sessions_to_delete) > 0:
             for session_id, yaml_filename, the_user_id, the_temp_user_id in sessions_to_delete:
                 manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename, user_id=the_user_id, delete_session=True, temp_user_id=the_temp_user_id)
                 #obtain_lock(session_id, yaml_filename)
@@ -22347,7 +22087,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         the_timezone = pytz.timezone(get_default_timezone())
 
     interviews_length = 0
-    interviews = list()
+    interviews = []
 
     while True:
         there_are_more = False
@@ -22365,7 +22105,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             if start_id is not None:
                 subq_filter_elements.append(UserDict.indexno > start_id)
             subq = select(UserDictKeys.filename, UserDictKeys.key, db.func.max(UserDict.indexno).label('indexno')).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key))
-            if len(subq_filter_elements):
+            if len(subq_filter_elements) > 0:
                 subq = subq.where(and_(*subq_filter_elements))
             subq = subq.group_by(UserDictKeys.filename, UserDictKeys.key).subquery()
             interview_query = select(*query_elements).select_from(subq.join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, 0 == 1)).order_by(UserDict.indexno)
@@ -22383,7 +22123,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             if start_id is not None:
                 subq_filter_elements.append(UserDict.indexno > start_id)
             subq = select(UserDictKeys.filename, UserDictKeys.key, db.func.max(UserDict.indexno).label('indexno')).join(UserDict, and_(UserDictKeys.filename == UserDict.filename, UserDictKeys.key == UserDict.key))
-            if len(subq_filter_elements):
+            if len(subq_filter_elements) > 0:
                 subq = subq.where(and_(*subq_filter_elements))
             subq = subq.group_by(UserDictKeys.filename, UserDictKeys.key).subquery()
             interview_query = select(*query_elements).select_from(subq.join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).join(UserModel, UserDictKeys.user_id == UserModel.id)).order_by(UserDict.indexno)
@@ -22401,12 +22141,12 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             if start_id is not None:
                 subq_filter_elements.append(UserDict.indexno > start_id)
             subq = select(UserDict.filename, UserDict.key, db.func.max(UserDict.indexno).label('indexno'))
-            if len(subq_filter_elements):
+            if len(subq_filter_elements) > 0:
                 subq = subq.where(and_(*subq_filter_elements))
             subq = subq.group_by(UserDict.filename, UserDict.key).subquery()
             interview_query = select(*query_elements).select_from(subq.join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, and_(UserDictKeys.user_id == UserModel.id, UserModel.active == True))).order_by(UserDict.indexno)
         interview_query = interview_query.limit(PAGINATION_LIMIT_PLUS_ONE)
-        stored_info = list()
+        stored_info = []
         results_in_query = 0
         for interview_info in db.session.execute(interview_query):
             results_in_query += 1
@@ -22440,7 +22180,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 there_are_more = True
                 break
             start_id = interview_info['indexno']
-            interview_title = dict()
+            interview_title = {}
             is_valid = True
             interview_valid = True
             try:
@@ -22490,11 +22230,11 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                     interview_title = interview.get_title(dictionary)
                     tags = interview.get_tags(dictionary)
                 else:
-                    interview_title = interview.get_title(dict(_internal=dict()))
-                    tags = interview.get_tags(dict(_internal=dict()))
+                    interview_title = interview.get_title(dict(_internal={}))
+                    tags = interview.get_tags(dict(_internal={}))
                 metadata = copy.deepcopy(interview.consolidated_metadata)
             elif interview_valid:
-                interview_title = interview.get_title(dict(_internal=dict()))
+                interview_title = interview.get_title(dict(_internal={}))
                 metadata = copy.deepcopy(interview.consolidated_metadata)
                 if include_dict:
                     tags = interview.get_tags(dictionary)
@@ -22503,12 +22243,12 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                     else:
                         interview_title['full'] += ' - ' + word('interview answers cannot be decrypted')
                 else:
-                    tags = interview.get_tags(dict(_internal=dict()))
+                    tags = interview.get_tags(dict(_internal={}))
                     if 'full' not in interview_title:
                         interview_title['full'] = word('Unknown')
             else:
                 interview_title['full'] = word('Error: interview not found and answers could not be decrypted')
-                metadata = dict()
+                metadata = {}
                 tags = set()
             if include_dict:
                 if dictionary['_internal']['starttime']:
@@ -22547,10 +22287,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
 @login_required
 def interview_list():
     setup_translation()
-    if ('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])):
-        is_json = True
-    else:
-        is_json = False
+    is_json = bool(('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])))
     if 'lang' in request.form:
         session['language'] = request.form['lang']
         docassemble.base.functions.set_language(session['language'])
@@ -22559,7 +22296,7 @@ def interview_list():
         tag = werkzeug.utils.secure_filename(tag)
     if 'newsecret' in session:
         #logmessage("interview_list: fixing cookie")
-        the_args = dict()
+        the_args = {}
         if is_json:
             the_args['json'] = '1'
         if tag:
@@ -22586,8 +22323,7 @@ def interview_list():
             flash(word("Deleted interviews"), 'success')
         if is_json:
             return redirect(url_for('interview_list', json='1'))
-        else:
-            return redirect(url_for('interview_list'))
+        return redirect(url_for('interview_list'))
     elif 'action' in request.args and request.args.get('action') == 'delete':
         yaml_file = request.args.get('filename', None)
         session_id = request.args.get('session', None)
@@ -22596,15 +22332,14 @@ def interview_list():
             flash(word("Deleted interview"), 'success')
         if is_json:
             return redirect(url_for('interview_list', json='1'))
-        else:
-            return redirect(url_for('interview_list'))
+        return redirect(url_for('interview_list'))
     #if daconfig.get('resume interview after login', False) and 'i' in session and 'uid' in session and (request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer))):
     #    if is_json:
     #        return redirect(url_for('index', i=session['i'], json='1'))
     #    else:
     #        return redirect(url_for('index', i=session['i']))
     if request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer)):
-        next_page = user_manager.make_safe_url_function(request.args.get('next', page_after_login()))
+        next_page = app.user_manager.make_safe_url_function(request.args.get('next', page_after_login()))
         if next_page is None:
             logmessage("Invalid page " + str(next_page))
             next_page = 'interview_list'
@@ -22615,16 +22350,13 @@ def interview_list():
             return redirect(url_for('index', i=daconfig.get('session list interview'), from_list='1', json='1'))
         else:
             return redirect(url_for('index', i=daconfig.get('session list interview'), from_list='1'))
-    if current_user.has_role('admin', 'developer'):
-        exclude_invalid = False
-    else:
-        exclude_invalid = True
+    exclude_invalid = not bool(current_user.has_role('admin', 'developer'))
     resume_interview = request.args.get('resume', None)
     if resume_interview is None and daconfig.get('auto resume interview', None) is not None and (request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer))):
         resume_interview = daconfig['auto resume interview']
     if resume_interview is not None:
         (interviews, start_id) = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=True, filename=resume_interview, include_dict=True)
-        if len(interviews):
+        if len(interviews) > 0:
             return redirect(url_for('index', i=interviews[0]['filename'], session=interviews[0]['session'], from_list='1'))
         return redirect(url_for('index', i=resume_interview, from_list='1'))
     next_id_code = request.args.get('next_id', None)
@@ -22674,7 +22406,7 @@ def interview_list():
                 tags_used.add(the_tag)
     #interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
     #title = word(daconfig.get('interview page heading', 'Resume an interview'))
-    argu = dict(version_warning=version_warning, tags_used=sorted(tags_used) if len(tags_used) else None, numinterviews=len([y for y in interviews if not y['metadata'].get('hidden', False)]), interviews=sorted(interviews, key=valid_date_key), tag=tag, next_id=next_id, show_back=show_back) # extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title
+    argu = dict(version_warning=version_warning, tags_used=sorted(tags_used) if len(tags_used) > 0 else None, numinterviews=len([y for y in interviews if not y['metadata'].get('hidden', False)]), interviews=sorted(interviews, key=valid_date_key), tag=tag, next_id=next_id, show_back=show_back) # extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title
     if 'interview page template' in daconfig and daconfig['interview page template']:
         the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
         if the_page is None:
@@ -22715,7 +22447,7 @@ def login_or_register(sender, user, source, **extra):
     #logmessage("login or register!")
     if 'i' in session: #TEMPORARY
         get_session(session['i'])
-    to_convert = list()
+    to_convert = []
     if 'tempuser' in session:
         to_convert.extend(sub_temp_user_dict_key(session['tempuser'], user.id))
     if 'sessions' in session:
@@ -22763,7 +22495,7 @@ def on_register_hook(sender, user, **extra):
         this_user_role = db.session.execute(select(Role).filter_by(id=user_invite.role_id)).scalar()
     if this_user_role is None:
         this_user_role = db.session.execute(select(Role).filter_by(name='user')).scalar()
-    roles_to_remove = list()
+    roles_to_remove = []
     for role in user.roles:
         roles_to_remove.append(role)
     for role in roles_to_remove:
@@ -22792,7 +22524,7 @@ def fax_callback():
     if 'fax' not in tconfig or tconfig['fax'] in (False, None):
         logmessage("fax_callback: fax feature not enabled")
         return ('', 204)
-    params = dict()
+    params = {}
     for param in ('FaxSid', 'From', 'To', 'RemoteStationId', 'FaxStatus', 'ApiVersion', 'OriginalMediaUrl', 'NumPages', 'MediaUrl', 'ErrorCode', 'ErrorMessage'):
         params[param] = post_data.get(param, None)
     the_key = 'da:faxcallback:sid:' + post_data['FaxSid']
@@ -22843,7 +22575,7 @@ def voice():
         return Response(str(resp), mimetype='text/xml')
     for item in request.form:
         logmessage("voice: item " + str(item) + " is " + str(request.form[item]))
-    with resp.gather(action=url_for("digits"), finishOnKey='#', method="POST", timeout=10, numDigits=5) as gg:
+    with resp.gather(action=url_for("digits_endpoint"), finishOnKey='#', method="POST", timeout=10, numDigits=5) as gg:
         gg.say(word("Please enter the four digit code, followed by the pound sign."))
 
     # twilio_config = daconfig.get('twilio', None)
@@ -22864,7 +22596,7 @@ def voice():
 
 @app.route("/digits", methods=['POST', 'GET'])
 @csrf.exempt
-def digits():
+def digits_endpoint():
     docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     resp = twilio.twiml.voice_response.VoiceResponse()
     if twilio_config is None:
@@ -22921,44 +22653,44 @@ def favicon_file(filename):
     the_dir = docassemble.base.functions.package_data_filename(daconfig.get('favicon', 'docassemble.webapp:data/static/favicon'))
     if the_dir is None or not os.path.isdir(the_dir):
         logmessage("favicon_file: could not find favicon directory")
-        return('File not found', 404)
+        return ('File not found', 404)
     the_file = os.path.join(the_dir, filename)
     if not os.path.isfile(the_file):
-        return('File not found', 404)
+        return ('File not found', 404)
     extension, mimetype = get_ext_and_mimetype(the_file)
     response = send_file(the_file, mimetype=mimetype)
-    return(response)
+    return response
 
 @app.route("/favicon.ico", methods=['GET'])
 def favicon():
-    return(favicon_file('favicon.ico'))
+    return favicon_file('favicon.ico')
 @app.route("/apple-touch-icon.png", methods=['GET'])
 def apple_touch_icon():
-    return(favicon_file('apple-touch-icon.png'))
+    return favicon_file('apple-touch-icon.png')
 @app.route("/favicon-32x32.png", methods=['GET'])
 def favicon_md():
-    return(favicon_file('favicon-32x32.png'))
+    return favicon_file('favicon-32x32.png')
 @app.route("/favicon-16x16.png", methods=['GET'])
 def favicon_sm():
-    return(favicon_file('favicon-16x16.png'))
+    return favicon_file('favicon-16x16.png')
 @app.route("/manifest.json", methods=['GET'])
 def favicon_manifest_json():
-    return(favicon_file('manifest.json'))
+    return favicon_file('manifest.json')
 @app.route("/safari-pinned-tab.svg", methods=['GET'])
 def favicon_safari_pinned_tab():
-    return(favicon_file('safari-pinned-tab.svg'))
+    return favicon_file('safari-pinned-tab.svg')
 @app.route("/android-chrome-192x192.png", methods=['GET'])
 def favicon_android_md():
-    return(favicon_file('android-chrome-192x192.png'))
+    return favicon_file('android-chrome-192x192.png')
 @app.route("/android-chrome-512x512.png", methods=['GET'])
 def favicon_android_lg():
-    return(favicon_file('android-chrome-512x512.png'))
+    return favicon_file('android-chrome-512x512.png')
 @app.route("/mstile-150x150.png", methods=['GET'])
 def favicon_mstile():
-    return(favicon_file('mstile-150x150.png'))
+    return favicon_file('mstile-150x150.png')
 @app.route("/browserconfig.xml", methods=['GET'])
 def favicon_browserconfig():
-    return(favicon_file('browserconfig.xml'))
+    return favicon_file('browserconfig.xml')
 
 @app.route("/robots.txt", methods=['GET'])
 def robots():
@@ -22968,11 +22700,11 @@ def robots():
         return response
     the_file = docassemble.base.functions.package_data_filename(daconfig.get('robots', 'docassemble.webapp:data/static/robots.txt'))
     if the_file is None:
-        return('File not found', 404)
+        return ('File not found', 404)
     if not os.path.isfile(the_file):
         return ('File not found', 404)
     response = send_file(the_file, mimetype='text/plain')
-    return(response)
+    return response
 
 @app.route("/sms", methods=['POST'])
 @csrf.exempt
@@ -22987,7 +22719,7 @@ def sms():
 def do_sms(form, base_url, url_root, config='default', save=True):
     docassemble.base.functions.set_language(DEFAULT_LANGUAGE)
     resp = twilio.twiml.messaging_response.MessagingResponse()
-    special_messages = list()
+    special_messages = []
     if twilio_config is None:
         logmessage("do_sms: ignoring message to sms because Twilio not enabled")
         return resp
@@ -23015,7 +22747,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if sess_contents is None:
             #logmessage("do_sms: received input '" + str(inp) + "' from new user")
             yaml_filename = tconfig.get('default interview', default_yaml_filename)
-            if 'dispatch' in tconfig and type(tconfig['dispatch']) is dict:
+            if 'dispatch' in tconfig and isinstance(tconfig['dispatch'], dict):
                 if inp.lower() in tconfig['dispatch']:
                     yaml_filename = tconfig['dispatch'][inp.lower()]
                     #logmessage("do_sms: using interview from dispatch: " + str(yaml_filename))
@@ -23073,7 +22805,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 encrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         interview = docassemble.base.interview_cache.get_interview(sess_info['yaml_filename'])
         if 'skip' not in user_dict['_internal']:
-            user_dict['_internal']['skip'] = dict()
+            user_dict['_internal']['skip'] = {}
         # if 'smsgather' in user_dict['_internal']:
         #     #logmessage("do_sms: need to gather smsgather " + user_dict['_internal']['smsgather'])
         #     sms_variable = user_dict['_internal']['smsgather']
@@ -23087,9 +22819,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if sess_info['user_id'] is not None:
             user = load_user(sess_info['user_id'])
         if user is None:
-            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None, session_uid=sess_info['session_uid'], device_id=form["From"]), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
+            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None, session_uid=sess_info['session_uid'], device_id=form["From"]), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers={}, clientip=None, method=None, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
         else:
-            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None, session_uid=sess_info['session_uid'], device_id=form["From"]), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), clientip=None, method=None, skip=user_dict['_internal']['skip'])
+            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None, session_uid=sess_info['session_uid'], device_id=form["From"]), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers={}, clientip=None, method=None, skip=user_dict['_internal']['skip'])
         if action is not None:
             logmessage("do_sms: setting action to " + str(action))
             ci.update(action)
@@ -23112,11 +22844,11 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         m = re.search(r'^(' + word('menu') + '|' + word('link') + ')([0-9]+)', inp.lower())
         if m:
             #logmessage("Got " + inp)
-            arguments = dict()
+            arguments = {}
             selection_type = m.group(1)
             selection_number = int(m.group(2)) - 1
-            links = list()
-            menu_items = list()
+            links = []
+            menu_items = []
             sms_info = as_sms(interview_status, user_dict, links=links, menu_items=menu_items)
             target_url = None
             if selection_type == word('menu') and selection_number < len(menu_items):
@@ -23151,7 +22883,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 accepting_input = False
                 inp = ''
                 continue
-            elif steps > 1 and interview_status.can_go_back:
+            if steps > 1 and interview_status.can_go_back:
                 old_user_dict = user_dict
                 steps, user_dict, is_encrypted = fetch_previous_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
                 if 'question' in sess_info:
@@ -23160,10 +22892,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 accepting_input = False
                 inp = ''
                 continue
-            else:
-                break
-        else:
             break
+        break
     false_list = [word('no'), word('n'), word('false'), word('f')]
     true_list = [word('yes'), word('y'), word('true'), word('t')]
     inp_lower = inp.lower()
@@ -23184,15 +22914,12 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             return resp
         if inp_lower == word('question'):
             accepting_input = False
-    if inp_lower == word('skip'):
-        user_entered_skip = True
-    else:
-        user_entered_skip = False
+    user_entered_skip = bool(inp_lower == word('skip'))
     if accepting_input:
         saveas = None
         uses_util = False
         uncheck_others = False
-        if len(interview_status.question.fields):
+        if len(interview_status.question.fields) > 0:
             question = interview_status.question
             if question.question_type == "fields":
                 field = None
@@ -23278,7 +23005,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     skip_it = True
                     data = repr('')
                 else:
-                    files_to_process = list()
+                    files_to_process = []
                     num_media = int(form.get('NumMedia', '0'))
                     fileindex = 0
                     while True:
@@ -23305,7 +23032,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         files_to_process.append((filename, file_number, mimetype, extension))
                         fileindex += 1
                     if len(files_to_process) > 0:
-                        elements = list()
+                        elements = []
                         indexno = 0
                         saveas_tr = sub_indices(saveas, user_dict)
                         for (filename, file_number, mimetype, extension) in files_to_process:
@@ -23371,10 +23098,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 data = None
                 if hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and saveas is not None:
                     if 'command_cache' not in user_dict['_internal']:
-                        user_dict['_internal']['command_cache'] = dict()
+                        user_dict['_internal']['command_cache'] = {}
                     if field.number not in user_dict['_internal']['command_cache']:
-                        user_dict['_internal']['command_cache'][field.number] = list()
-                    docassemble.base.parse.ensure_object_exists(saveas, field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][field.number], post_data={safeid(saveas + '.gathered'): 'True'})
+                        user_dict['_internal']['command_cache'][field.number] = []
+                    docassemble.base.parse.ensure_object_exists(saveas, field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][field.number])
                     saveas = saveas + '.gathered'
                     data = 'True'
                 if (user_entered_skip or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'))) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes')) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
@@ -23564,9 +23291,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         next_field = None
                     if next_field is not None:
                         if 'command_cache' not in user_dict['_internal']:
-                            user_dict['_internal']['command_cache'] = dict()
+                            user_dict['_internal']['command_cache'] = {}
                         if field.number not in user_dict['_internal']['command_cache']:
-                            user_dict['_internal']['command_cache'][field.number] = list()
+                            user_dict['_internal']['command_cache'][field.number] = []
                         user_dict['_internal']['command_cache'][field.number].append(the_string)
                         logmessage("do_sms: storing in command cache: " + str(the_string))
                     else:
@@ -23575,12 +23302,12 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 logmessage("do_sms: a field is empty")
                                 the_saveas = myb64unquote(the_field.saveas)
                                 if 'command_cache' not in user_dict['_internal']:
-                                    user_dict['_internal']['command_cache'] = dict()
+                                    user_dict['_internal']['command_cache'] = {}
                                 if the_field.number not in user_dict['_internal']['command_cache']:
-                                    user_dict['_internal']['command_cache'][the_field.number] = list()
+                                    user_dict['_internal']['command_cache'][the_field.number] = []
                                 if hasattr(the_field, 'datatype'):
                                     if the_field.datatype in ('object_multiselect', 'object_checkboxes'):
-                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number], post_data={safeid(the_saveas): data})
+                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.clear()')
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
                                     elif the_field.datatype in ('object', 'object_radio'):
@@ -23589,7 +23316,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                         except:
                                             user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')
                                     elif the_field.datatype in ('multiselect', 'checkboxes'):
-                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number], post_data={safeid(the_saveas): data})
+                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
                                     else:
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')
@@ -23665,7 +23392,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if not interview_status.can_go_back:
             user_dict['_internal']['steps_offset'] = steps
         #I had commented this out in do_sms(), but not in index()
-        #user_dict['_internal']['answers'] = dict()
+        #user_dict['_internal']['answers'] = {}
         #Why do this?
         if (not interview_status.followed_mc) and len(user_dict['_internal']['answers']):
             user_dict['_internal']['answers'].clear()
@@ -23743,7 +23470,8 @@ def api_verify(req, roles=None):
     if api_key is None:
         logmessage("api_verify: no API key provided")
         return False
-    rkeys = r.keys('da:api:userid:*:key:' + api_key + ':info')
+    api_key = encrypt_api_key(api_key)
+    rkeys = r.keys('da:apikey:userid:*:key:' + api_key + ':info')
     if len(rkeys) == 0:
         logmessage("api_verify: API key not found")
         return False
@@ -23752,15 +23480,15 @@ def api_verify(req, roles=None):
     except:
         logmessage("api_verify: API information could not be unpacked")
         return False
-    m = re.match('da:api:userid:([0-9]+):key:' + api_key + ':info', rkeys[0].decode())
+    m = re.match('da:apikey:userid:([0-9]+):key:' + api_key + ':info', rkeys[0].decode())
     if not m:
         logmessage("api_verify: user id could not be extracted")
         return False
     user_id = m.group(1)
-    if type(info) is not dict:
+    if not isinstance(info, dict):
         logmessage("api_verify: API information was in the wrong format")
         return False
-    if len(info['constraints']):
+    if len(info['constraints']) > 0:
         clientip = get_requester_ip(request)
         if info['method'] == 'ip' and clientip not in info['constraints']:
             logmessage("api_verify: IP address " + str(clientip) + " did not match")
@@ -23772,7 +23500,7 @@ def api_verify(req, roles=None):
                     logmessage("api_verify: could not authorize based on referer because no referer provided")
                     return False
             else:
-                 the_referer = request.referrer
+                the_referer = request.referrer
             matched = False
             for constraint in info['constraints']:
                 constraint = re.sub(r'^[\*]+|[\*]+$', '', constraint)
@@ -23821,7 +23549,7 @@ def get_user_list(include_inactive=False, start_id=None):
     if not (current_user.is_authenticated and current_user.has_role('admin', 'advocate')):
         raise Exception("You cannot call get_user_list() unless you are an administrator or advocate")
     user_length = 0
-    user_list = list()
+    user_list = []
     while True:
         there_are_more = False
         filter_list = []
@@ -23830,7 +23558,7 @@ def get_user_list(include_inactive=False, start_id=None):
         if not include_inactive:
             filter_list.append(UserModel.active == True)
         the_users = select(UserModel).options(db.joinedload(UserModel.roles))
-        if len(filter_list):
+        if len(filter_list) > 0:
             the_users = the_users.where(*filter_list)
         the_users = the_users.order_by(UserModel.id).limit(PAGINATION_LIMIT_PLUS_ONE)
         results_in_query = 0
@@ -23845,8 +23573,8 @@ def get_user_list(include_inactive=False, start_id=None):
             if user_length == PAGINATION_LIMIT:
                 there_are_more = True
                 break
-            user_info = dict()
-            user_info['privileges'] = list()
+            user_info = {}
+            user_info['privileges'] = []
             for role in user.roles:
                 user_info['privileges'].append(role.name)
             for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
@@ -23883,8 +23611,8 @@ def translation_file():
     interview_source.update()
     interview_source.translating = True
     interview = interview_source.get_interview()
-    tr_cache = dict()
-    if len(interview.translations):
+    tr_cache = {}
+    if len(interview.translations) > 0:
         for item in interview.translations:
             if item.lower().endswith(".xlsx"):
                 the_xlsx_file = docassemble.base.functions.package_data_filename(item)
@@ -23916,9 +23644,9 @@ def translation_file():
                         continue
                     the_dict = {'interview': str(df['interview'][indexno]), 'question_id': str(df['question_id'][indexno]), 'index_num': df['index_num'][indexno], 'hash': str(df['hash'][indexno]), 'orig_lang': str(df['orig_lang'][indexno]), 'tr_lang': str(df['tr_lang'][indexno]), 'orig_text': str(df['orig_text'][indexno]), 'tr_text': str(df['tr_text'][indexno])}
                     if df['orig_text'][indexno] not in tr_cache:
-                        tr_cache[df['orig_text'][indexno]] = dict()
+                        tr_cache[df['orig_text'][indexno]] = {}
                     if df['orig_lang'][indexno] not in tr_cache[df['orig_text'][indexno]]:
-                        tr_cache[df['orig_text'][indexno]][df['orig_lang'][indexno]] = dict()
+                        tr_cache[df['orig_text'][indexno]][df['orig_lang'][indexno]] = {}
                     tr_cache[df['orig_text'][indexno]][df['orig_lang'][indexno]][df['tr_lang'][indexno]] = the_dict
             elif item.lower().endswith(".xlf") or item.lower().endswith(".xliff"):
                 the_xlf_file = docassemble.base.functions.package_data_filename(item)
@@ -23953,9 +23681,9 @@ def translation_file():
                                 continue
                             the_dict = {'interview': source_filename, 'question_id': 'Unknown' + str(indexno), 'index_num': transunit.attrib.get('id', str(indexno)), 'hash': hashlib.md5(orig_text.encode('utf-8')).hexdigest(), 'orig_lang': source_lang, 'tr_lang': target_lang, 'orig_text': orig_text, 'tr_text': tr_text}
                             if orig_text not in tr_cache:
-                                tr_cache[orig_text] = dict()
+                                tr_cache[orig_text] = {}
                             if source_lang not in tr_cache[orig_text]:
-                                tr_cache[orig_text][source_lang] = dict()
+                                tr_cache[orig_text][source_lang] = {}
                             tr_cache[orig_text][source_lang][target_lang] = the_dict
                             indexno += 1
                 elif root.attrib['version'] == "2.0":
@@ -23986,9 +23714,9 @@ def translation_file():
                                     continue
                                 the_dict = {'interview': source_filename, 'question_id': question_id, 'index_num': segment.attrib.get('id', str(indexno)), 'hash': hashlib.md5(orig_text.encode('utf-8')).hexdigest(), 'orig_lang': source_lang, 'tr_lang': target_lang, 'orig_text': orig_text, 'tr_text': tr_text}
                                 if orig_text not in tr_cache:
-                                    tr_cache[orig_text] = dict()
+                                    tr_cache[orig_text] = {}
                                 if source_lang not in tr_cache[orig_text]:
-                                    tr_cache[orig_text][source_lang] = dict()
+                                    tr_cache[orig_text][source_lang] = {}
                                 tr_cache[orig_text][source_lang][target_lang] = the_dict
                                 indexno += 1
     if form.filetype.data == 'XLSX':
@@ -24083,7 +23811,7 @@ def translation_file():
         worksheet.set_column(6, 6, 75)
         worksheet.set_column(6, 7, 75)
         row = 1
-        seen = list()
+        seen = []
         for question in interview.all_questions:
             if not hasattr(question, 'translations'):
                 continue
@@ -24216,11 +23944,11 @@ def translation_file():
         workbook.close()
         response = send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, attachment_filename=xlsx_filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        return(response)
-    elif form.filetype.data.startswith('XLIFF'):
+        return response
+    if form.filetype.data.startswith('XLIFF'):
         seen = set()
-        translations = dict()
-        xliff_files = list()
+        translations = {}
+        xliff_files = []
         if form.filetype.data == 'XLIFF 1.2':
             for question in interview.all_questions:
                 if not hasattr(question, 'translations'):
@@ -24235,7 +23963,7 @@ def translation_file():
                 question_id = question.name
                 lang_combo = (language, tr_lang)
                 if lang_combo not in translations:
-                    translations[lang_combo] = list()
+                    translations[lang_combo] = []
                 for item in question.translations:
                     if item in seen:
                         continue
@@ -24313,12 +24041,12 @@ def translation_file():
                 question_id = question.name
                 lang_combo = (language, tr_lang)
                 if lang_combo not in translations:
-                    translations[lang_combo] = dict()
+                    translations[lang_combo] = {}
                 filename = question.from_source.get_name()
                 if filename not in translations[lang_combo]:
-                    translations[lang_combo][filename] = dict()
+                    translations[lang_combo][filename] = {}
                 if question_id not in translations[lang_combo][filename]:
-                    translations[lang_combo][filename][question_id] = list()
+                    translations[lang_combo][filename][question_id] = []
                 for item in question.translations:
                     if item in seen:
                         continue
@@ -24403,10 +24131,9 @@ def translation_file():
                 zf.close()
             response = send_file(zip_file.name, mimetype='application/xml', as_attachment=True, attachment_filename=zip_file_name)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-        return(response)
-    else:
-        flash(word("Bad file format"), 'error')
-        return redirect(url_for('utilities'))
+        return response
+    flash(word("Bad file format"), 'error')
+    return redirect(url_for('utilities'))
 
 @app.route('/api/user_list', methods=['GET'])
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
@@ -24493,11 +24220,11 @@ def api_user():
         return jsonify_with_status('User not found', 404)
     if request.method == 'GET':
         return jsonify(user_info)
-    elif request.method == 'POST':
+    if request.method == 'POST':
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
-        info = dict()
+        info = {}
         for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password'):
             if key in post_data:
                 info[key] = post_data[key]
@@ -24505,6 +24232,7 @@ def api_user():
             return jsonify_with_status("You must have admin privileges to change a password.", 403)
         set_user_info(user_id=current_user.id, **info)
         return ('', 204)
+    return ('', 204)
 
 @app.route('/api/user/privileges', methods=['GET'])
 @csrf.exempt
@@ -24535,7 +24263,7 @@ def api_create_user():
         del post_data['email']
     if 'username' not in post_data:
         return jsonify_with_status("An e-mail address must be supplied.", 400)
-    info = dict()
+    info = {}
     for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
         if key in post_data:
             info[key] = post_data[key].strip()
@@ -24601,7 +24329,7 @@ def api_user_by_id(user_id):
         return jsonify_with_status("User not found.", 404)
     if request.method == 'GET':
         return jsonify(user_info)
-    elif request.method == 'DELETE':
+    if request.method == 'DELETE':
         if user_id == 1:
             return jsonify_with_status("This user account cannot be deleted or deactivated.", 403)
         if request.args.get('remove', None) == 'account':
@@ -24619,13 +24347,13 @@ def api_user_by_id(user_id):
                 return jsonify_with_status("You must have admin privileges to inactivate user accounts.", 403)
             make_user_inactive(user_id=user_id)
         return ('', 204)
-    elif request.method == 'POST':
+    if request.method == 'POST':
         if not (current_user.has_role('admin', 'advocate') or current_user.id != user_id):
             return jsonify_with_status("You must have admin or advocate privileges to edit user information.", 403)
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
-        info = dict()
+        info = {}
         for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password'):
             if key in post_data:
                 info[key] = post_data[key]
@@ -24636,6 +24364,7 @@ def api_user_by_id(user_id):
         except Exception as err:
             return jsonify_with_status(str(err), 400)
         return ('', 204)
+    return ('', 204)
 
 @app.route('/api/fields', methods=['POST'])
 @csrf.exempt
@@ -24673,7 +24402,7 @@ def api_fields():
             if output_format == 'yaml':
                 return jsonify_with_status("No fields could be found.", 400)
             else:
-                return jsonify(dict(fields=list()))
+                return jsonify(dict(fields=[]))
         break
     if output_format == 'yaml':
         response = make_response(output.encode('utf-8'), '200 OK')
@@ -24831,9 +24560,9 @@ def create_user(email, password, privileges=None, info=None):
     password = str(password).strip()
     if len(password) < 4 or len(password) > 254:
         raise Exception("Password too short or too long")
-    role_dict = dict()
+    role_dict = {}
     if privileges is None:
-        privileges = list()
+        privileges = []
     if isinstance(privileges, DAList):
         info = info.elements
     if not isinstance(privileges, list):
@@ -24841,7 +24570,7 @@ def create_user(email, password, privileges=None, info=None):
             raise Exception("The privileges parameter to create_user() must be a list or a string.")
         privileges = [privileges]
     if info is None:
-        info = dict()
+        info = {}
     if isinstance(info, DADict):
         info = info.elements
     if not isinstance(info, dict):
@@ -24910,13 +24639,13 @@ def set_user_info(**kwargs):
             raise Exception("You cannot call set_user_info() with a password unless you are an administrator.")
         user.user_auth.password = app.user_manager.hash_password(kwargs['password'])
     if 'active' in kwargs:
-        if type(kwargs['active']) is not bool:
+        if not isinstance(kwargs['active'], bool):
             raise Exception("The active parameter must be True or False")
         if user.id == current_user.id:
             raise Exception("Cannot change active status of the current user.")
         user.active = kwargs['active']
     db.session.commit()
-    if 'privileges' in kwargs and type(kwargs['privileges']) in (list, tuple, set):
+    if 'privileges' in kwargs and isinstance(kwargs['privileges'], (list, tuple, set)):
         if len(kwargs['privileges']) == 0:
             raise Exception("Cannot remove all of a user's privileges.")
         roles_to_add = []
@@ -24997,7 +24726,7 @@ def api_users_interviews():
         else:
             next_id = safeid(str(start_id))
         return jsonify(dict(next_id=next_id, items=docassemble.base.functions.safe_json(the_list)))
-    elif request.method == 'DELETE':
+    if request.method == 'DELETE':
         start_id = None
         while True:
             try:
@@ -25009,6 +24738,7 @@ def api_users_interviews():
             if start_id is None:
                 break
         return ('', 204)
+    return ('', 204)
 
 @app.route('/api/user/<int:user_id>/interviews', methods=['GET', 'DELETE'])
 @csrf.exempt
@@ -25043,7 +24773,7 @@ def api_user_user_id_interviews(user_id):
         else:
             next_id = safeid(str(start_id))
         return jsonify(dict(next_id=next_id, items=docassemble.base.functions.safe_json(the_list)))
-    elif request.method == 'DELETE':
+    if request.method == 'DELETE':
         start_id = None
         while True:
             try:
@@ -25055,6 +24785,7 @@ def api_user_user_id_interviews(user_id):
             if start_id is None:
                 break
         return ('', 204)
+    return ('', 204)
 
 @app.route('/api/session/back', methods=['POST'])
 @csrf.exempt
@@ -25120,14 +24851,14 @@ def transform_json_variables(obj):
                 logmessage("transform_json_variables: " + err.__class__.__name__ + ": " + str(err))
                 return None
         else:
-            new_dict = dict()
+            new_dict = {}
             for key, val in obj.items():
                 new_dict[transform_json_variables(key)] = transform_json_variables(val)
             return new_dict
     if isinstance(obj, list):
         return [transform_json_variables(val) for val in obj]
     if isinstance(obj, set):
-        return set([transform_json_variables(val) for val in obj])
+        return set(transform_json_variables(val) for val in obj)
     return obj
 
 @app.route('/api/session', methods=['GET', 'POST', 'DELETE'])
@@ -25149,7 +24880,7 @@ def api_session():
         except Exception as the_err:
             return jsonify_with_status(str(the_err), 400)
         return jsonify(variables)
-    elif request.method == 'POST':
+    if request.method == 'POST':
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
@@ -25194,16 +24925,16 @@ def api_session():
                 assert isinstance(event_list, list)
             except:
                 return jsonify_with_status("Malformed event list.", 400)
-        if type(variables) is not dict:
+        if not isinstance(variables, dict):
             return jsonify_with_status("Variables data is not a dict.", 400)
-        if type(file_variables) is not dict:
+        if not isinstance(file_variables, dict):
             return jsonify_with_status("File variables data is not a dict.", 400)
-        if type(del_variables) is not list:
+        if not isinstance(del_variables, list):
             return jsonify_with_status("Delete variables data is not a list.", 400)
-        if type(event_list) is not list:
+        if not isinstance(event_list, list):
             return jsonify_with_status("Event list data is not a list.", 400)
         files = []
-        literal_variables = dict()
+        literal_variables = {}
         for filekey in request.files:
             if filekey not in file_variables:
                 file_variables[filekey] = filekey
@@ -25223,7 +24954,7 @@ def api_session():
             if illegal_variable_name(file_field):
                 return jsonify_with_status("Malformed file variable.", 400)
             if len(files_to_process) > 0:
-                elements = list()
+                elements = []
                 indexno = 0
                 for (filename, file_number, mimetype, extension) in files_to_process:
                     elements.append("docassemble.base.core.DAFile(" + repr(file_field + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
@@ -25240,13 +24971,14 @@ def api_session():
         if data.get('questionType', None) is 'response':
             return data['response']
         return jsonify(**data)
-    elif request.method == 'DELETE':
+    if request.method == 'DELETE':
         yaml_filename = request.args.get('i', None)
         session_id = request.args.get('session', None)
         if yaml_filename is None or session_id is None:
             return jsonify_with_status("Parameters i and session are required.", 400)
         user_interviews(action='delete', filename=yaml_filename, session=session_id)
         return ('', 204)
+    return ('', 204)
 
 @app.route('/api/file/<int:file_number>', methods=['GET'])
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
@@ -25257,10 +24989,7 @@ def api_file(file_number):
         yaml_filename = request.args.get('i', None)
         session_id = request.args.get('session', None)
         number = re.sub(r'[^0-9]', '', str(file_number))
-        if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
-            privileged = True
-        else:
-            privileged = False
+        privileged = bool(current_user.is_authenticated and current_user.has_role('admin', 'advocate'))
         try:
             file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
         except:
@@ -25289,7 +25018,7 @@ def api_file(file_number):
                 return ('File not found', 404)
             response = send_file(the_path, mimetype=mimetype)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-            return(response)
+            return response
         return ('File not found', 404)
 
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True, use_lock=False):
@@ -25364,7 +25093,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             release_lock(session_id, yaml_filename)
         raise Exception("Unable to decrypt interview dictionary.")
     vars_set = set()
-    old_values = dict()
+    old_values = {}
     if user_dict is None:
         if use_lock:
             release_lock(session_id, yaml_filename)
@@ -25450,7 +25179,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 #logmessage("Popped " + str(event_name))
             if len(user_dict['_internal']['event_stack'][session_uid]) == 0:
                 break
-    if len(vars_set) and 'event_stack' in user_dict['_internal'] and session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
+    if len(vars_set) > 0 and 'event_stack' in user_dict['_internal'] and session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
         for var_name in vars_set:
             if user_dict['_internal']['event_stack'][session_uid][0]['action'] == var_name:
                 user_dict['_internal']['event_stack'][session_uid].pop(0)
@@ -25506,7 +25235,7 @@ def api_session_new():
     else:
         new_secret = False
     secret = str(secret)
-    url_args = dict()
+    url_args = {}
     for argname in request.args:
         if argname in ('i', 'secret', 'key'):
             continue
@@ -25569,10 +25298,7 @@ def create_new_interview(yaml_filename, secret, url_args=None, referer=None, req
         raise Exception("create_new_interview: failure to assemble interview: " + e.__class__.__name__ + ": " + str(e) + "\n" + str(the_trace))
     restore_session(sbackup)
     docassemble.base.functions.restore_thread_variables(tbackup)
-    if user_dict.get('multi_user', False) is True:
-        encrypted = False
-    else:
-        encrypted = True
+    encrypted = not bool(user_dict.get('multi_user', False) is True)
     save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=encrypted, changed=False, steps=1)
     save_user_dict_key(session_id, yaml_filename)
     release_lock(session_id, yaml_filename)
@@ -25644,7 +25370,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     except:
         the_section = None
         the_section_display = None
-        the_sections = list()
+        the_sections = []
     if advance_progress_meter:
         if interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
             advance_progress(user_dict, interview)
@@ -25677,7 +25403,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             response_to_send = make_response(interview_status.questionText.encode('utf-8'), resp_code)
         response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
         return dict(questionType='response', response=response_to_send)
-    elif interview_status.question.question_type == "sendfile":
+    if interview_status.question.question_type == "sendfile":
         if interview_status.question.response_file is not None:
             the_path = interview_status.question.response_file.path()
         else:
@@ -25717,10 +25443,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
     if steps is None:
         steps = user_dict['_internal']['steps']
-    if interview_status.question.can_go_back and (steps is None or (steps - user_dict['_internal']['steps_offset']) > 1):
-        allow_going_back = True
-    else:
-        allow_going_back = False
+    allow_going_back = bool(interview_status.question.can_go_back and (steps is None or (steps - user_dict['_internal']['steps_offset']) > 1))
     data = dict(browser_title=interview_status.tabtitle, exit_link=interview_status.exit_link, exit_url=interview_status.exit_url, exit_label=interview_status.exit_label, title=interview_status.title, display_title=interview_status.display_title, short_title=interview_status.short_title, lang=interview_language, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), section=the_section, display_section=the_section_display, sections=the_sections)
     if allow_going_back:
         data['cornerBackButton'] = interview_status.cornerback
@@ -25729,7 +25452,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         data['source']['varsLink'] = url_for('get_variables', i=yaml_filename)
         data['source']['varsLabel'] = word('Show variables and values')
     #if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
-    #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments=dict())
+    #    next_action_review = dict(action=list(interview_status.question.fields_used)[0], arguments={})
     #else:
     #    next_action_review = None
     if 'reload_after' in interview_status.extras:
@@ -25752,7 +25475,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     if 'menu_items' in interview_status.extras:
         if not isinstance(interview_status.extras['menu_items'], list):
             menu_items.append({'anchor': word("Error: menu_items is not a Python list")})
-        elif len(interview_status.extras['menu_items']):
+        elif len(interview_status.extras['menu_items']) > 0:
             for menu_item in interview_status.extras['menu_items']:
                 if not (isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item):
                     menu_items.append({'anchor': word("Error: menu item is not a Python dict with keys of url and label")})
@@ -25772,13 +25495,13 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         login_url = url_for('user.login')
     if interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN):
         if current_user.is_anonymous:
-            if len(menu_items):
+            if len(menu_items) > 0:
                 data['menu']['top'] = {'anchor': word("Menu")}
                 menu_items.append({'href': login_url, 'anchor': sign_in_text})
             else:
                 data['menu']['top'] = {'href': login_url, 'anchor': sign_in_text}
         else:
-            if (len(menu_items) == 0 and interview_status.question.interview.options.get('hide standard menu', False)):
+            if len(menu_items) == 0 and interview_status.question.interview.options.get('hide standard menu', False):
                 data['menu']['top'] = {'anchor': (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id))}
             else:
                 data['menu']['top'] = {'anchor': current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)}
@@ -25815,7 +25538,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
                             menu_items.append({'href': url_for('user.change_password'), 'anchor': word('Change Password')})
                     menu_items.append({'href': url_for('user.logout'), 'anchor': word('Sign Out')})
     else:
-        if len(menu_items):
+        if len(menu_items) > 0:
             data['menu']['top'] = {'anchor': word("Menu")}
             if not interview_status.question.interview.options.get('hide standard menu', False):
                 menu_items.append({'href': exit_href(interview_status), 'anchor': interview_status.exit_label})
@@ -25852,7 +25575,7 @@ def api_session_action():
             if not isinstance(arguments, dict):
                 return jsonify_with_status("Arguments data is not a dict.", 400)
     else:
-        arguments = dict()
+        arguments = {}
     obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
@@ -25899,7 +25622,7 @@ def api_session_action():
             response_to_send = make_response(interview_status.questionText.encode('utf-8'), '200 OK')
         response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
         return response_to_send
-    elif interview_status.question.question_type == "sendfile":
+    if interview_status.question.question_type == "sendfile":
         if interview_status.question.response_file is not None:
             the_path = interview_status.question.response_file.path()
         else:
@@ -25909,8 +25632,7 @@ def api_session_action():
         response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response_to_send
-    else:
-        return ('', 204)
+    return ('', 204)
 
 @app.route('/api/login_url', methods=['POST'])
 @csrf.exempt
@@ -25944,7 +25666,7 @@ def api_login_url():
             except:
                 return jsonify_with_status("Malformed URL arguments", 400)
     else:
-        url_args = dict()
+        url_args = {}
     username = re.sub(r'\%', '', username)
     user = db.session.execute(select(UserModel).where(UserModel.email.ilike(username))).scalar()
     if user is None:
@@ -25961,7 +25683,7 @@ def api_login_url():
     for key in ['i', 'next', 'session']:
         if key in post_data:
             info[key] = post_data[key]
-    if len(url_args):
+    if len(url_args) > 0:
         info['url_args'] = url_args
     if 'i' in info:
         if 'session' in info:
@@ -26028,7 +25750,7 @@ def api_user_interviews():
         else:
             next_id = safeid(str(start_id))
         return jsonify(dict(next_id=next_id, items=docassemble.base.functions.safe_json(the_list)))
-    elif request.method == 'DELETE':
+    if request.method == 'DELETE':
         start_id = None
         while True:
             try:
@@ -26040,6 +25762,7 @@ def api_user_interviews():
             if start_id is None:
                 break
         return ('', 204)
+    return ('', 204)
 
 @app.route('/api/interviews', methods=['GET', 'DELETE'])
 @csrf.exempt
@@ -26073,7 +25796,7 @@ def api_interviews():
         else:
             next_id = safeid(str(start_id))
         return jsonify(dict(next_id=next_id, items=docassemble.base.functions.safe_json(the_list)))
-    elif request.method == 'DELETE':
+    if request.method == 'DELETE':
         start_id = None
         while True:
             try:
@@ -26088,6 +25811,7 @@ def api_interviews():
             if start_id is None:
                 break
         return ('', 204)
+    return ('', 204)
 
 def jsonify_task(result):
     while True:
@@ -26126,7 +25850,7 @@ def api_package():
         return jsonify_with_status("Access denied.", 403)
     if request.method == 'GET':
         package_list, package_auth = get_package_info(exclude_core=True)
-        packages = list()
+        packages = []
         for package in package_list:
             if not package.package.active:
                 continue
@@ -26293,20 +26017,17 @@ def api_package_update_status():
                     return jsonify(status='working')
                 r.delete(the_key)
                 return jsonify(status='completed', ok=True, log=summarize_results(the_result.results, the_result.logmessages, html=False))
-            elif hasattr(the_result, 'error_message'):
+            if hasattr(the_result, 'error_message'):
                 r.delete(the_key)
                 return jsonify(status='completed', ok=False, error_message=str(the_result.error_message))
-            elif hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
+            if hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
                 r.delete(the_key)
                 return jsonify(status='completed', ok=False, error_message=summarize_results(the_result.results, the_result.logmessages, html=False))
-            else:
-                r.expire(the_key, 30)
-                return jsonify(status='completed', ok=False, error_message=str("No error message.  Result is " + str(the_result)))
-        else:
             r.expire(the_key, 30)
-            return jsonify(status='completed', ok=False, error_message=str(the_result))
-    else:
-        return jsonify(status='working')
+            return jsonify(status='completed', ok=False, error_message=str("No error message.  Result is " + str(the_result)))
+        r.expire(the_key, 30)
+        return jsonify(status='completed', ok=False, error_message=str(the_result))
+    return jsonify(status='working')
 
 @app.route('/api/temp_url', methods=['GET'])
 @csrf.exempt
@@ -26318,7 +26039,7 @@ def api_temporary_redirect():
     if url is None:
         return jsonify_with_status("No url supplied.", 400)
     try:
-        one_time = True if int(request.args.get('one_time', 0)) else False
+        one_time = bool(int(request.args.get('one_time', 0)))
     except:
         one_time = False
     try:
@@ -26351,9 +26072,9 @@ def api_resume_url():
             except:
                 return jsonify_with_status("Malformed URL arguments", 400)
     else:
-        url_args = dict()
+        url_args = {}
     try:
-        one_time = True if int(post_data.get('one_time', 0)) else False
+        one_time = bool(int(post_data.get('one_time', 0)))
     except:
         one_time = False
     try:
@@ -26481,10 +26202,7 @@ def api_playground_pull():
     docassemble.base.functions.this_thread.current_info['user'] = dict(is_anonymous=False, theid=user_id)
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
-        if github_auth is not None:
-            can_publish_to_github = True
-        else:
-            can_publish_to_github = False
+        can_publish_to_github = bool(github_auth is not None)
     else:
         can_publish_to_github = None
     github_url = None
@@ -26512,7 +26230,7 @@ def api_playground_pull():
         packagename = re.sub(r'[^A-Za-z0-9\_\-\.]', '', pypi_package)
     else:
         return jsonify_with_status("Either github_url or pip is required.", 400)
-    area = dict()
+    area = {}
     area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
     for sec in ('playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
         area[sec] = SavedFile(user_id, fix=True, section=sec)
@@ -26581,7 +26299,7 @@ def api_playground_install():
     found = False
     expected_name = 'unknown'
     need_to_restart = False
-    area = dict()
+    area = {}
     area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
     for sec in ('playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
         area[sec] = SavedFile(user_id, fix=True, section=sec)
@@ -26599,8 +26317,8 @@ def api_playground_install():
                 with zipfile.ZipFile(zippath.name, mode='r') as zf:
                     readme_text = ''
                     setup_py = ''
-                    extracted = dict()
-                    data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
+                    extracted = {}
+                    data_files = dict(templates=[], static=[], sources=[], interviews=[], modules=[], questions=[])
                     has_docassemble_dir = set()
                     has_setup_file = set()
                     for zinfo in zf.infolist():
@@ -26664,7 +26382,7 @@ def api_playground_install():
                             extracted[m.group(1)] = m.group(2)
                         m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
                         if m:
-                            the_list = list()
+                            the_list = []
                             for item in re.split(r', *', m.group(2)):
                                 inner_item = re.sub(r"'$", '', item)
                                 inner_item = re.sub(r"^'", '', inner_item)
@@ -26672,7 +26390,7 @@ def api_playground_install():
                                 inner_item = re.sub(r'^"+', '', inner_item)
                                 the_list.append(inner_item)
                             extracted[m.group(1)] = the_list
-                    info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=[z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', list()))], description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+                    info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=[z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', []))], description=extracted.get('description', ''), author_name=extracted.get('author', ''), author_email=extracted.get('author_email', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
 
                     info_dict['dependencies'] = [x for x in [z for z in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies'])] if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                     package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
@@ -26794,7 +26512,6 @@ def api_playground():
     else:
         section = folder
     docassemble.base.functions.this_thread.current_info['user'] = dict(is_anonymous=False, theid=user_id)
-    from docassemble.webapp.playground import PlaygroundSection
     pg_section = PlaygroundSection(section=section, project=project)
     if request.method == 'GET':
         if 'filename' not in request.args:
@@ -26805,14 +26522,14 @@ def api_playground():
         response_to_send = send_file(pg_section.get_file(the_filename), mimetype=pg_section.get_mimetype(the_filename))
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response_to_send
-    elif request.method == 'DELETE':
+    if request.method == 'DELETE':
         pg_section.delete_file(secure_filename_spaces_ok(request.args['filename']))
         if section == 'modules':
             return_val = jsonify_restart_task()
             restart_all()
             return return_val
         return ('', 204)
-    elif request.method == 'POST':
+    if request.method == 'POST':
         found = False
         try:
             for filekey in request.files:
@@ -26835,6 +26552,7 @@ def api_playground():
             restart_all()
             return return_val
         return ('', 204)
+    return ('', 204)
 
 @app.route('/api/convert_file', methods=['POST'])
 @csrf.exempt
@@ -26852,7 +26570,7 @@ def api_convert_file():
             for the_file in the_files:
                 filename = werkzeug.utils.secure_filename(the_file.filename)
                 extension, mimetype = get_ext_and_mimetype(filename)
-                if (mimetype and mimetype in convertible_mimetypes):
+                if mimetype and mimetype in convertible_mimetypes:
                     the_format = convertible_mimetypes[mimetype]
                 elif extension and extension in convertible_extensions:
                     the_format = convertible_extensions[extension]
@@ -26874,8 +26592,10 @@ def add_api_key(user_id, name, method, allowed):
     success = False
     for attempt in range(10):
         api_key = random_alphanumeric(32)
-        if not len(r.keys('da:api:userid:*:key:' + api_key + ':info')):
-            r.set('da:api:userid:' + str(user_id) + ':key:' + api_key + ':info', json.dumps(info))
+        info['last_four'] = api_key[-4:]
+        new_api_key = encrypt_api_key(api_key)
+        if not len(r.keys('da:apikey:userid:*:key:' + new_api_key + ':info')):
+            r.set('da:apikey:userid:' + str(user_id) + ':key:' + new_api_key + ':info', json.dumps(info))
             success = True
             break
     if not success:
@@ -26883,19 +26603,19 @@ def add_api_key(user_id, name, method, allowed):
     return api_key
 
 def api_key_exists(user_id, api_key):
-    rkeys = r.keys('da:api:userid:' + str(user_id) + ':key:' + str(api_key) + ':info')
-    if len(rkeys):
+    rkeys = r.keys('da:apikey:userid:' + str(user_id) + ':key:' + encrypt_api_key(str(api_key)) + ':info')
+    if len(rkeys) > 0:
         return True
     return False
 
 def existing_api_names(user_id, except_for=None):
-    result = list()
-    rkeys = r.keys('da:api:userid:' + str(user_id) + ':key:*:info')
+    result = []
+    rkeys = r.keys('da:apikey:userid:' + str(user_id) + ':key:*:info')
     for key in rkeys:
         key = key.decode()
         if except_for is not None:
             api_key = re.sub(r'.*:key:([^:]+):.*', r'\1', key)
-            if api_key == except_for:
+            if api_key == encrypt_api_key(except_for):
                 continue
         try:
             info = json.loads(r.get(key).decode())
@@ -26905,8 +26625,10 @@ def existing_api_names(user_id, except_for=None):
     return result
 
 def get_api_info(user_id, name=None, api_key=None):
-    result = list()
-    rkeys = r.keys('da:api:userid:' + str(user_id) + ':key:*:info')
+    result = []
+    rkeys = r.keys('da:apikey:userid:' + str(user_id) + ':key:*:info')
+    if api_key is not None:
+        api_key = encrypt_api_key(api_key)
     for key in rkeys:
         key = key.decode()
         try:
@@ -26914,13 +26636,13 @@ def get_api_info(user_id, name=None, api_key=None):
         except:
             logmessage("API information could not be unpacked.")
             continue
-        info['key'] = re.sub(r'.*:key:([^:]+):.*', r'\1', key)
         if name is not None:
             if info['name'] == name:
                 return info
-        if api_key is not None:
-            if info['key'] == api_key:
-                return info
+        info['key'] = ('*' * 28) + info['last_four']
+        this_key = re.sub(r'.*:key:([^:]+):.*', r'\1', key)
+        if api_key is not None and this_key == api_key:
+            return info
         if name is not None or api_key is not None:
             continue
         result.append(info)
@@ -26929,11 +26651,11 @@ def get_api_info(user_id, name=None, api_key=None):
     return result
 
 def delete_api_key(user_id, api_key):
-    key = 'da:api:userid:' + str(user_id) + ':key:' + api_key + ':info'
+    key = 'da:apikey:userid:' + str(user_id) + ':key:' + encrypt_api_key(api_key) + ':info'
     r.delete(key)
 
 def update_api_key(user_id, api_key, name, method, allowed, add_to_allowed, remove_from_allowed):
-    key = 'da:api:userid:' + str(user_id) + ':key:' + api_key + ':info'
+    key = 'da:apikey:userid:' + str(user_id) + ':key:' + encrypt_api_key(api_key) + ':info'
     try:
         info = json.loads(r.get(key).decode())
     except:
@@ -26942,7 +26664,7 @@ def update_api_key(user_id, api_key, name, method, allowed, add_to_allowed, remo
         info['name'] = name
     if method is not None:
         if info['method'] != method:
-            info['constraints'] = list()
+            info['constraints'] = []
         info['method'] = method
     if allowed is not None:
         info['constraints'] = allowed
@@ -26957,7 +26679,7 @@ def update_api_key(user_id, api_key, name, method, allowed, add_to_allowed, remo
         elif isinstance(remove_from_allowed, str):
             to_remove = [remove_from_allowed]
         else:
-            to_remove = list()
+            to_remove = []
         for item in to_remove:
             if item in info['constraints']:
                 info['constraints'].remove(item)
@@ -26992,7 +26714,7 @@ def do_api_user_api(user_id):
         method = post_data.get('method', 'none')
         if method not in ('ip', 'referer', 'none'):
             return jsonify_with_status("Invalid security method", 400)
-        allowed = post_data.get('allowed', list())
+        allowed = post_data.get('allowed', [])
         if isinstance(allowed, str):
             try:
                 allowed = json.loads(allowed)
@@ -27124,10 +26846,7 @@ def api_interview_data():
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=filename, req=request, action=None, device_id=device_id))
     m = re.search('docassemble.playground([0-9]+)([^:]*):', filename)
     if m:
-        if current_user.id == int(m.group(1)):
-            use_playground = True
-        else:
-            use_playground = False
+        use_playground = bool(current_user.id == int(m.group(1)))
         if m.group(2) != '':
             current_project = m.group(2)
         else:
@@ -27202,7 +26921,7 @@ def manage_api():
     form = APIKey(request.form)
     action = request.args.get('action', None)
     api_key = request.args.get('key', None)
-    argu = dict()
+    argu = {}
     argu['mode'] = 'list'
     if action is None:
         action = 'list'
@@ -27291,7 +27010,7 @@ def manage_api():
         action = form.action.data
         try:
             constraints = json.loads(form.security.data)
-            if type(constraints) is not list:
+            if not isinstance(constraints, list):
                 constraints = []
         except:
             constraints = []
@@ -27299,25 +27018,27 @@ def manage_api():
             argu['title'] = word("New API Key")
             argu['tab_title'] = argu['title']
             argu['page_title'] = argu['title']
-            info = json.dumps(dict(name=form.name.data, method=form.method.data, constraints=constraints))
+            info = dict(name=form.name.data, method=form.method.data, constraints=constraints)
             success = False
             for attempt in range(10):
                 api_key = random_alphanumeric(32)
-                if not len(r.keys('da:api:userid:*:key:' + api_key + ':info')):
-                    r.set('da:api:userid:' + str(current_user.id) + ':key:' + api_key + ':info', info)
+                info['last_four'] = api_key[-4:]
+                new_api_key = encrypt_api_key(api_key)
+                if not len(r.keys('da:apikey:userid:*:key:' + new_api_key + ':info')):
+                    r.set('da:apikey:userid:' + str(current_user.id) + ':key:' + new_api_key + ':info', json.dumps(info))
                     success = True
                     break
             if not success:
                 flash(word("Could not create new key"), 'error')
                 return render_template('pages/manage_api.html', **argu)
-            argu['description'] = Markup(word("Your new API key, known internally as %s, is %s") % (form.name.data, "<code>" + api_key + "</code>"))
+            argu['description'] = Markup(word("Your new API key, known internally as %s, is %s") % (form.name.data, "<code>" + api_key + "</code>") + '.  ' + word("This is the only time you will be able to see your API key, so make sure to make a note of it and keep it in a secure place."))
         elif action == 'edit':
             argu['title'] = word("Edit API Key")
             argu['tab_title'] = argu['title']
             argu['page_title'] = argu['title']
             api_key = form.key.data
             argu['api_key'] = api_key
-            rkey = 'da:api:userid:' + str(current_user.id) + ':key:' + str(form.key.data) + ':info'
+            rkey = 'da:apikey:userid:' + str(current_user.id) + ':key:' + str(form.key.data) + ':info'
             existing_key = r.get(rkey)
             if existing_key is None:
                 flash(word("The key no longer exists"), 'error')
@@ -27349,17 +27070,18 @@ def manage_api():
         argu['page_title'] = argu['title']
         argu['api_key'] = api_key
         argu['mode'] = 'edit'
-        rkey = 'da:api:userid:' + str(current_user.id) + ':key:' + api_key + ':info'
+        rkey = 'da:apikey:userid:' + str(current_user.id) + ':key:' + api_key + ':info'
         info = r.get(rkey)
         if info is not None:
             info = json.loads(info.decode())
-            if type(info) is dict and info.get('name', None) and info.get('method', None):
+            if isinstance(info, dict) and info.get('name', None) and info.get('method', None):
                 argu['method'] = info.get('method')
                 form.method.data = info.get('method')
                 form.action.data = 'edit'
                 form.key.data = api_key
                 form.name.data = info.get('name')
                 argu['constraints'] = info.get('constraints')
+                argu['display_key'] = ('*' * 28) + info.get('last_four')
         if ip_address != '127.0.0.1':
             argu['description'] = Markup(word("Your IP address is") + " <code>" + str(ip_address) + "</code>.")
     if action == 'list':
@@ -27367,26 +27089,26 @@ def manage_api():
         argu['tab_title'] = argu['title']
         argu['page_title'] = argu['title']
         argu['mode'] = 'list'
-        avail_keys = list()
-        for rkey in r.keys('da:api:userid:' + str(current_user.id) + ':key:*:info'):
+        avail_keys = []
+        for rkey in r.keys('da:apikey:userid:' + str(current_user.id) + ':key:*:info'):
             rkey = rkey.decode()
             try:
                 info = json.loads(r.get(rkey).decode())
-                if type(info) is not dict:
+                if not isinstance(info, dict):
                     logmessage("manage_api: response from redis was not a dict")
                     continue
             except:
                 logmessage("manage_api: response from redis had invalid json")
                 continue
-            m = re.match(r'da:api:userid:[0-9]+:key:([^:]+):info', rkey)
+            m = re.match(r'da:apikey:userid:[0-9]+:key:([^:]+):info', rkey)
             if not m:
                 logmessage("manage_api: error with redis key")
                 continue
             api_key = m.group(1)
-            info['api_key'] = api_key
+            info['encoded_api_key'] = urllibquoteplus(api_key)
             avail_keys.append(info)
         argu['avail_keys'] = avail_keys
-        argu['has_any_keys'] = True if len(avail_keys) > 0 else False
+        argu['has_any_keys'] = bool(len(avail_keys) > 0)
     return render_template('pages/manage_api.html', **argu)
 
 @app.route(html_index_path, methods=['GET'])
@@ -27414,7 +27136,7 @@ def api_interview():
         yaml_filename = request.args.get('i', None)
         secret = request.args.get('secret', None)
         session_id = request.args.get('session', None)
-        url_args = dict()
+        url_args = {}
         user_code = request.args.get('user_code', None)
         command = request.args.get('command', None)
         referer = request.args.get('referer', None)
@@ -27423,7 +27145,7 @@ def api_interview():
                 url_args[key] = val
         if len(url_args) == 0:
             url_args = None
-    output = dict()
+    output = {}
     action = None
     reset_fully = False
     is_new = False
@@ -27472,7 +27194,7 @@ def api_interview():
                 action = tidy_action(json.loads(myb64unquote(params['action'])))
             except:
                 return jsonify_with_status(word("Invalid action."), 400)
-        url_args = dict()
+        url_args = {}
         for key, val in dict(params).items():
             params[key] = val[0]
             if key not in reserved_argnames:
@@ -27488,7 +27210,7 @@ def api_interview():
             data = json.loads(data.decode())
             if data.get('once', False):
                 r.delete(the_key)
-            args = dict()
+            args = {}
             for key, val in params.items():
                 if key != 'session':
                     args[key] = val
@@ -27513,7 +27235,7 @@ def api_interview():
                 if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
                     output['redirect'] = url_for('user.login')
                     return jsonify(output)
-                if len(daconfig['dispatch']):
+                if len(daconfig['dispatch']) > 0:
                     output['redirect'] = url_for('interview_start')
                     return jsonify(output)
                 else:
@@ -27582,7 +27304,7 @@ def api_interview():
     docassemble.base.functions.this_thread.current_info = current_info(req=request, interface='api', secret=secret)
     if yaml_filename not in user_info['sessions'] or need_to_reset or new_session:
         was_new = True
-        if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
+        if PREVENT_DEMO and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
             return jsonify_with_status(word("Not authorized"), 403)
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
             output['redirect'] = url_for('user.login', next=url_for('index', i=yaml_filename, **url_args))
@@ -27675,7 +27397,7 @@ def api_interview():
     if not is_new:
         if url_args is not None and isinstance(url_args, dict) and len(url_args) > 0:
             logmessage("url_args is " + repr(url_args))
-            variables = dict()
+            variables = {}
             for key, val in url_args.items():
                 variables["url_args[%s]" % (repr(key),)] = val
             try:
@@ -27715,7 +27437,7 @@ def api_interview():
                 return jsonify_with_status("variables must be a dictionary", 400)
             if variables is not None:
                 variables = transform_json_variables(variables)
-            valid_variables = dict()
+            valid_variables = {}
             if 'fields' in data:
                 for field in data['fields']:
                     if 'variable_name' in field and field.get('active', False):
@@ -27797,7 +27519,7 @@ def retrieve_email(email_id):
         raise DAError("Short code did not exist")
     return get_email_obj(email, short_record, user)
 
-class AddressEmail(object):
+class AddressEmail:
     def __str__(self):
         return str(self.address)
 
@@ -27826,8 +27548,8 @@ def retrieve_emails(**pargs):
     else:
         user_id = current_user.id
         temp_user_id = None
-    user_cache = dict()
-    results = list()
+    user_cache = {}
+    results = []
     if key is None:
         the_query = db.session.execute(select(Shortener).filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id).order_by(Shortener.modtime)).scalars()
     else:
@@ -27840,7 +27562,7 @@ def retrieve_emails(**pargs):
         result_for_short.address = record.short
         result_for_short.key = record.key
         result_for_short.index = record.index
-        result_for_short.emails = list()
+        result_for_short.emails = []
         if record.user_id is not None:
             if record.user_id in user_cache:
                 user = user_cache[record.user_id]
@@ -27963,7 +27685,7 @@ def url_sanitize(url):
     return re.sub(r'\s', ' ', url)
 
 def pypi_status(packagename, limitation=None):
-    result = dict()
+    result = {}
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
     try:
         response = requests.get(url_sanitize(pypi_url + '/' + str(packagename) + '/json'))
@@ -28109,7 +27831,7 @@ def mako_parts(expression):
     in_html = 0
     in_pre_bracket = False
     in_post_bracket = False
-    output = list()
+    output = []
     current = ''
     i = 0
     expression = emoji_match.sub(r'^^\1^^', expression)
@@ -28187,7 +27909,7 @@ def mako_parts(expression):
                 in_square = False
                 i += 1
                 continue
-            elif i + 1 < n and expression[i:i+2] == '^^':
+            if i + 1 < n and expression[i:i+2] == '^^':
                 if in_colon:
                     in_colon = False
                     current += ':'
@@ -28202,7 +27924,7 @@ def mako_parts(expression):
                     current = ':'
                 i += 2
                 continue
-            elif i + 1 < n and expression[i:i+2] == '!@':
+            if i + 1 < n and expression[i:i+2] == '!@':
                 in_html = True
                 if current != '':
                     if current.startswith('[${'):
@@ -28230,35 +27952,35 @@ def mako_parts(expression):
                 current = expression[i:i+2]
                 i += 2
                 continue
-            elif expression[i:i+2] == '^^':
+            if expression[i:i+2] == '^^':
                 in_colon = True
                 if current != '':
                     output.append([current, 0])
                 current = ':'
                 i += 2
                 continue
-            elif expression[i:i+2] == '!@':
+            if expression[i:i+2] == '!@':
                 in_html = True
                 if current != '':
                     output.append([current, 0])
                 current = ''
                 i += 2
                 continue
-            elif expression[i:i+2] == '<%':
+            if expression[i:i+2] == '<%':
                 in_pre_bracket = True
                 if current != '':
                     output.append([current, 0])
                 current = expression[i:i+2]
                 i += 2
                 continue
-            elif expression[i:i+2] == '% ' and start_of_line(expression, i):
+            if expression[i:i+2] == '% ' and start_of_line(expression, i):
                 in_percent = True
                 if current != '':
                     output.append([current, 0])
                 current = expression[i:i+2]
                 i += 2
                 continue
-            elif expression[i] == '[' and (i == 0 or expression[i-1] != "\\"):
+            if expression[i] == '[' and (i == 0 or expression[i-1] != "\\"):
                 in_square = True
                 if current != '':
                     output.append([current, 0])
@@ -28336,7 +28058,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
         return
     if err.__class__.__name__ in ['CSRFError', 'ClientDisconnected', 'MethodNotAllowed', 'DANotFoundError'] + ERROR_TYPES_NO_EMAIL:
         return
-    email_recipients = list()
+    email_recipients = []
     if isinstance(recipient_email, list):
         email_recipients.extend(recipient_email)
     else:
@@ -28458,20 +28180,19 @@ def retrieve_stashed_data(key, secret, delete=False, refresh=False):
         r.expire('da:stash:' + key, refresh)
     return data
 
-for path in (FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY): #PACKAGE_CACHE
-    if not os.path.isdir(path):
-        try:
-            os.makedirs(path, exist_ok=True)
-        except:
-            sys.exit("Could not create path: " + path)
-    if not os.access(path, os.W_OK):
-        sys.exit("Unable to create files in directory: " + path)
-if not os.access(WEBAPP_PATH, os.W_OK):
-    sys.exit("Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH)
+def make_necessary_dirs():
+    for path in (FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY): #PACKAGE_CACHE
+        if not os.path.isdir(path):
+            try:
+                os.makedirs(path, exist_ok=True)
+            except:
+                sys.exit("Could not create path: " + path)
+        if not os.access(path, os.W_OK):
+            sys.exit("Unable to create files in directory: " + path)
+    if not os.access(WEBAPP_PATH, os.W_OK):
+        sys.exit("Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH)
 
-from docassemble.webapp.daredis import r, r_user
-
-from docassemble.webapp.jsonstore import read_answer_json, write_answer_json, delete_answer_json, variables_snapshot_connection
+make_necessary_dirs()
 
 docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          navigation_bar=navigation_bar,
@@ -28540,15 +28261,6 @@ base_words = get_base_words()
 title_documentation = get_title_documentation()
 documentation_dict = get_documentation_dict()
 base_name_info = get_name_info()
-if base_name_info is not None:
-    for val in base_name_info:
-        base_name_info[val]['name'] = val
-        if 'insert' not in base_name_info[val]:
-            base_name_info[val]['insert'] = val
-        if 'show' not in base_name_info[val]:
-            base_name_info[val]['show'] = False
-        if 'exclude' not in base_name_info[val]:
-            base_name_info[val]['exclude'] = False
 
 #docassemble.base.functions.set_chat_partners_available(chat_partners_available)
 
@@ -28559,26 +28271,18 @@ sys_logger.setLevel(logging.DEBUG)
 
 LOGFORMAT = daconfig.get('log format', 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s')
 
-#if LOGSERVER is None:
-tries = 0
-while tries < 5:
-    try:
-        docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
-    except PermissionError:
-        time.sleep(1)
-        next
-    sys_logger.addHandler(docassemble_log_handler)
-    break
-# else:
-#     try:
-#         import logging.handlers
-#         handler = logging.handlers.SysLogHandler(address=(LOGSERVER, 514), socktype=socket.SOCK_STREAM)
-#         sys_logger.addHandler(handler)
-#     except:
-#         sys.stderr.write("Error connecting to syslog server\n")
-#         docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
-#         sys_logger.addHandler(docassemble_log_handler)
-#         LOGSERVER = None
+def add_log_handler():
+    tries = 0
+    while tries < 5:
+        try:
+            docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
+        except PermissionError:
+            time.sleep(1)
+            next
+        sys_logger.addHandler(docassemble_log_handler)
+        break
+
+add_log_handler()
 
 if not in_celery:
     if LOGSERVER is None:
@@ -28603,8 +28307,7 @@ if in_celery:
                                              ocr_finalize=null_func,
                                              worker_convert=illegal_worker_convert)
 else:
-    import docassemble.webapp.worker
-    #sys.stderr.write("calling set worker now\n")
+    sys.stderr.write("calling set worker now\n")
     docassemble.base.functions.update_server(bg_action=docassemble.webapp.worker.background_action,
                                              #async_ocr=docassemble.webapp.worker.async_ocr,
                                              chord=docassemble.webapp.worker.chord,
@@ -28613,19 +28316,15 @@ else:
                                              ocr_finalize=docassemble.webapp.worker.ocr_finalize,
                                              worker_convert=docassemble.webapp.worker.convert)
 
-pg_ex = dict()
-
-global_css = ''
-
-global_js = ''
+pg_ex = {}
 
 def define_examples():
     if 'encoded_example_html' in pg_ex:
         return
-    example_html = list()
+    example_html = []
     example_html.append('        <div class="col-md-2">\n          <h5 class="mb-1">Example blocks</h5>')
-    pg_ex['pg_first_id'] = list()
-    data_dict = dict()
+    pg_ex['pg_first_id'] = []
+    data_dict = {}
     make_example_html(get_examples(), pg_ex['pg_first_id'], example_html, data_dict)
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-4 da-example-source-col"><h5 class="mb-1">' + word('Source') + '<a href="#" tabindex="0" class="dabadge btn btn-success da-example-copy">' + word("Insert") + '</a></h5><div id="da-example-source-before" class="dainvisible"></div><div id="da-example-source"></div><div id="da-example-source-after" class="dainvisible"></div><div><a tabindex="0" class="da-example-hider" id="da-show-full-example">' + word("Show context of example") + '</a><a tabindex="0" class="da-example-hider dainvisible" id="da-hide-full-example">' + word("Hide context of example") + '</a></div></div>')
@@ -28638,7 +28337,7 @@ if LooseVersion(min_system_version) > LooseVersion(daconfig['system version']):
 else:
     version_warning = None
 
-class AdminInterview(object):
+class AdminInterview:
     def can_use(self):
         if self.require_login and current_user.is_anonymous:
             return False
@@ -28657,7 +28356,7 @@ class AdminInterview(object):
         return self.title.get(language, word(self.title, language=language))
 
 def set_admin_interviews():
-    admin_interviews = list()
+    admin_interviews = []
     if 'administrative interviews' in daconfig:
         if isinstance(daconfig['administrative interviews'], list):
             for item in daconfig['administrative interviews']:
@@ -28712,7 +28411,7 @@ def set_admin_interviews():
                                                 roles.add(priv)
                                     elif isinstance(privs, str):
                                         roles.add(privs)
-                            if len(roles):
+                            if len(roles) > 0:
                                 item['required privileges'] = list(roles)
                         if 'required privileges' in item:
                             fault = False
@@ -28733,7 +28432,7 @@ def set_admin_interviews():
                         admin_interview.require_login = False
                         for metadata in interview.metadata:
                             if 'require login' in metadata:
-                                admin_interview.require_login = True if metadata['require login'] else False
+                                admin_interview.require_login = bool(metadata['require login'])
                         admin_interviews.append(admin_interview)
                     else:
                         sys.stderr.write("item in administrative interviews must contain a valid interview name" + "\n")
@@ -28743,14 +28442,31 @@ def set_admin_interviews():
             sys.stderr.write("administrative interviews is not a list" + "\n")
     return admin_interviews
 
-import docassemble.webapp.machinelearning
-docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
-docassemble.base.util.set_svm_machine_learner(docassemble.webapp.machinelearning.SVMMachineLearner)
-docassemble.base.util.set_random_forest_machine_learner(docassemble.webapp.machinelearning.RandomForestMachineLearner)
-docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearning.MachineLearningEntry)
+def encrypt_api_key(key):
+    return codecs.encode(hashlib.pbkdf2_hmac('sha256', bytearray(key, 'utf-8'), bytearray(app.secret_key, encoding='utf-8'), 100000), 'base64').decode().strip()
 
-from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
-from docassemble.webapp.core.models import Uploads, UploadsUserAuth, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage
+def fix_api_key(match):
+    return 'da:apikey:userid:' + match.group(1) + ':key:' + encrypt_api_key(match.group(2)) + ':info'
+
+def fix_api_keys():
+    to_delete = []
+    for rkey in r.keys('da:api:userid:*:key:*:info'):
+        try:
+            rkey = rkey.decode()
+        except:
+            continue
+        try:
+            info = json.loads(r.get(rkey).decode())
+            assert isinstance(info, dict)
+        except:
+            to_delete.append(rkey)
+            continue
+        info['last_four'] = re.sub(r'da:api:userid:.*:key:.*(....):info', r'\1', rkey)
+        new_rkey = re.sub(r'da:api:userid:(.*):key:(.*):info', fix_api_key, rkey)
+        r.set(new_rkey, json.dumps(info))
+        to_delete.append(rkey)
+    for rkey in to_delete:
+        r.delete(rkey)
 
 def random_social():
     while True:
@@ -28761,83 +28477,89 @@ def random_social():
         break
     return new_social
 
-with app.app_context():
-    app.user_manager.random_social = random_social
-    url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
-    url = url_root + 'interview'
-    with app.test_request_context(base_url=url_root, path=url):
-        if 'bootstrap theme' in daconfig and daconfig['bootstrap theme']:
-            try:
-                app.config['BOOTSTRAP_THEME'] = get_url_from_file_reference(daconfig['bootstrap theme'])
-                assert isinstance(app.config['BOOTSTRAP_THEME'], str)
-            except:
+def initialize():
+    global global_css
+    global global_js
+    with app.app_context():
+        app.user_manager.random_social = random_social
+        url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+        url = url_root + 'interview'
+        with app.test_request_context(base_url=url_root, path=url):
+            if 'bootstrap theme' in daconfig and daconfig['bootstrap theme']:
+                try:
+                    app.config['BOOTSTRAP_THEME'] = get_url_from_file_reference(daconfig['bootstrap theme'])
+                    assert isinstance(app.config['BOOTSTRAP_THEME'], str)
+                except:
+                    app.config['BOOTSTRAP_THEME'] = None
+                    sys.stderr.write("error loading bootstrap theme\n")
+            else:
                 app.config['BOOTSTRAP_THEME'] = None
-                sys.stderr.write("error loading bootstrap theme\n")
-        else:
-            app.config['BOOTSTRAP_THEME'] = None
-        if 'global css' in daconfig:
-            for fileref in daconfig['global css']:
-                try:
-                    global_css_url = get_url_from_file_reference(fileref)
-                    assert isinstance(global_css_url, str)
-                    global_css += "\n" + '    <link href="' + global_css_url + '" rel="stylesheet">'
-                except:
-                    sys.stderr.write("error loading global css: " + repr(fileref) + "\n")
-        if 'global javascript' in daconfig:
-            for fileref in daconfig['global javascript']:
-                try:
-                    global_js_url = get_url_from_file_reference(fileref)
-                    assert isinstance(global_js_url, str)
-                    global_js += "\n" + '    <script src="' + global_js_url + '"></script>'
-                except:
-                    sys.stderr.write("error loading global js: " + repr(fileref) + "\n")
-        if 'raw global css' in daconfig and daconfig['raw global css']:
-            global_css += "\n" + str(daconfig['raw global css'])
-        if 'raw global javascript' in daconfig and daconfig['raw global javascript']:
-            global_js += "\n" + str(daconfig['raw global javascript'])
-        app.config['GLOBAL_CSS'] = global_css
-        app.config['GLOBAL_JS'] = global_js
-        app.config['PARTS'] = page_parts
-        app.config['ADMIN_INTERVIEWS'] = set_admin_interviews()
-        app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)
-        app.config['ALLOW_UPDATES'] = daconfig.get('allow updates', True)
-        try:
-            if 'image' in daconfig['social'] and isinstance(daconfig['social']['image'], str):
-                daconfig['social']['image'] = get_url_from_file_reference(daconfig['social']['image'], _external=True)
-                if daconfig['social']['image'] is None:
-                    del daconfig['social']['image']
-            for key, subkey in (('og', 'image'), ('twitter', 'image')):
-                if key in daconfig['social'] and isinstance(daconfig['social'][key], dict) and subkey in daconfig['social'][key] and isinstance(daconfig['social'][key][subkey], str):
-                    daconfig['social'][key][subkey] = get_url_from_file_reference(daconfig['social'][key][subkey], _external=True)
-                    if daconfig['social'][key][subkey] is None:
-                        del daconfig['social'][key][subkey]
-        except:
-            sys.stderr.write("Error converting social image references")
-        interviews_to_load = daconfig.get('preloaded interviews', None)
-        if isinstance(interviews_to_load, list):
-            for yaml_filename in daconfig['preloaded interviews']:
-                try:
-                    docassemble.base.interview_cache.get_interview(yaml_filename)
-                except:
-                    pass
-        if app.config['ENABLE_PLAYGROUND']:
-            obtain_lock('init', 'init')
+            if 'global css' in daconfig:
+                for fileref in daconfig['global css']:
+                    try:
+                        global_css_url = get_url_from_file_reference(fileref)
+                        assert isinstance(global_css_url, str)
+                        global_css += "\n" + '    <link href="' + global_css_url + '" rel="stylesheet">'
+                    except:
+                        sys.stderr.write("error loading global css: " + repr(fileref) + "\n")
+            if 'global javascript' in daconfig:
+                for fileref in daconfig['global javascript']:
+                    try:
+                        global_js_url = get_url_from_file_reference(fileref)
+                        assert isinstance(global_js_url, str)
+                        global_js += "\n" + '    <script src="' + global_js_url + '"></script>'
+                    except:
+                        sys.stderr.write("error loading global js: " + repr(fileref) + "\n")
+            if 'raw global css' in daconfig and daconfig['raw global css']:
+                global_css += "\n" + str(daconfig['raw global css'])
+            if 'raw global javascript' in daconfig and daconfig['raw global javascript']:
+                global_js += "\n" + str(daconfig['raw global javascript'])
+            app.config['GLOBAL_CSS'] = global_css
+            app.config['GLOBAL_JS'] = global_js
+            app.config['PARTS'] = page_parts
+            app.config['ADMIN_INTERVIEWS'] = set_admin_interviews()
+            app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)
+            app.config['ALLOW_UPDATES'] = daconfig.get('allow updates', True)
             try:
-                copy_playground_modules()
+                if 'image' in daconfig['social'] and isinstance(daconfig['social']['image'], str):
+                    daconfig['social']['image'] = get_url_from_file_reference(daconfig['social']['image'], _external=True)
+                    if daconfig['social']['image'] is None:
+                        del daconfig['social']['image']
+                for key, subkey in (('og', 'image'), ('twitter', 'image')):
+                    if key in daconfig['social'] and isinstance(daconfig['social'][key], dict) and subkey in daconfig['social'][key] and isinstance(daconfig['social'][key][subkey], str):
+                        daconfig['social'][key][subkey] = get_url_from_file_reference(daconfig['social'][key][subkey], _external=True)
+                        if daconfig['social'][key][subkey] is None:
+                            del daconfig['social'][key][subkey]
+            except:
+                sys.stderr.write("Error converting social image references")
+            interviews_to_load = daconfig.get('preloaded interviews', None)
+            if isinstance(interviews_to_load, list):
+                for yaml_filename in daconfig['preloaded interviews']:
+                    try:
+                        docassemble.base.interview_cache.get_interview(yaml_filename)
+                    except:
+                        pass
+            if app.config['ENABLE_PLAYGROUND']:
+                obtain_lock('init', 'init')
+                try:
+                    copy_playground_modules()
+                except Exception as err:
+                    sys.stderr.write("There was an error copying the playground modules: " + err.__class__.__name__ + "\n")
+                write_pypirc()
+                release_lock('init', 'init')
+            try:
+                macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
+                if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7786:
+                    sys.stderr.write("Removing " + macro_path + " because it is out of date\n")
+                    os.remove(macro_path)
+                # else:
+                #     sys.stderr.write("File " + macro_path + " is missing or has the correct size\n")
             except Exception as err:
-                sys.stderr.write("There was an error copying the playground modules: " + err.__class__.__name__ + "\n")
-            write_pypirc()
-            release_lock('init', 'init')
-        try:
-            macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
-            if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7786:
-                sys.stderr.write("Removing " + macro_path + " because it is out of date\n")
-                os.remove(macro_path)
-            # else:
-            #     sys.stderr.write("File " + macro_path + " is missing or has the correct size\n")
-        except Exception as err:
-            sys.stderr.write("Error was " + err.__class__.__name__ + ' ' + str(err) + "\n")
-        import_necessary()
+                sys.stderr.write("Error was " + err.__class__.__name__ + ' ' + str(err) + "\n")
+            fix_api_keys()
+            import_necessary(url, url_root)
+
+initialize()
 
 if __name__ == "__main__":
     app.run()

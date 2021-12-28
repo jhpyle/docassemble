@@ -1,9 +1,8 @@
 import datetime
+import pickle
+from docassemble.base.logger import logmessage
 TypeType = type(type(None))
 NoneType = type(None)
-from docassemble.base.logger import logmessage
-import pickle
-from io import IOBase as FileType
 
 def fix_pickle_obj(data):
     try:
@@ -55,7 +54,7 @@ def recursive_fix_pickle(the_object, seen):
         #seen.add(object_id)
         return new_set
     if isinstance(the_object, tuple):
-        new_list = list()
+        new_list = []
         for item in the_object:
             new_list.append(recursive_fix_pickle(item, seen=seen))
         #seen.add(object_id)

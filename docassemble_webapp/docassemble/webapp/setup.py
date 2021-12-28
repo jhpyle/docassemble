@@ -1,15 +1,15 @@
+from datetime import timedelta
+import re
 from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
-from datetime import timedelta
 import docassemble.webapp.database
-import re
 da_version = '1.3.10'
 app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
-app.config['SHOW_PROFILE'] = True if daconfig.get('show profile link', True) else False
-app.config['SHOW_MY_INTERVIEWS'] = True if daconfig.get('show interviews link', True) else False
-app.config['SHOW_DISPATCH'] = True if len(daconfig['dispatch']) and daconfig.get('show dispatch link', False) else False
+app.config['SHOW_PROFILE'] = bool(daconfig.get('show profile link', True))
+app.config['SHOW_MY_INTERVIEWS'] = bool(daconfig.get('show interviews link', True))
+app.config['SHOW_DISPATCH'] = bool(len(daconfig['dispatch']) and daconfig.get('show dispatch link', False) > 0)
 app.config['MAIL_USERNAME'] = daconfig['mail'].get('username', None)
 app.config['MAIL_PASSWORD'] = daconfig['mail'].get('password', None)
 app.config['MAIL_DEFAULT_SENDER'] = daconfig['mail'].get('default sender', None)
@@ -21,18 +21,9 @@ app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use tls', True)
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
 app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
 app.config['CSRF_ENABLED'] = False
-if daconfig['two factor authentication'].get('enable', True):
-    app.config['USE_MFA'] = True
-else:
-    app.config['USE_MFA'] = False
-if daconfig['two factor authentication'].get('allow sms', True):
-    app.config['MFA_ALLOW_SMS'] = True
-else:
-    app.config['MFA_ALLOW_SMS'] = False
-if daconfig['two factor authentication'].get('allow app', True):
-    app.config['MFA_ALLOW_APP'] = True
-else:
-    app.config['MFA_ALLOW_APP'] = False
+app.config['USE_MFA'] = bool(daconfig['two factor authentication'].get('enable', True))
+app.config['MFA_ALLOW_SMS'] = bool(daconfig['two factor authentication'].get('allow sms', True))
+app.config['MFA_ALLOW_APP'] = bool(daconfig['two factor authentication'].get('allow app', True))
 if 'required for' in daconfig['two factor authentication'] and isinstance(daconfig['two factor authentication']['required for'], list):
     app.config['MFA_REQUIRED_FOR_ROLE'] = daconfig['two factor authentication']['required for']
 else:
@@ -42,21 +33,21 @@ if not (app.config['MFA_ALLOW_SMS'] or app.config['MFA_ALLOW_APP']):
     app.config['USE_MFA'] = False
 app.config['API_ROLES'] = daconfig.get('api privileges', ['admin', 'developer'])
 app.config['WTF_CSRF_TIME_LIMIT'] = 604800
-app.config['WTF_CSRF_SSL_STRICT'] = daconfig.get('require referer', (True if daconfig.get('cross site domains', None) is None else False))
+app.config['WTF_CSRF_SSL_STRICT'] = daconfig.get('require referer', bool(daconfig.get('cross site domains', None) is None))
 app.config['USER_APP_NAME'] = app.config['APP_NAME']
 app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
-app.config['USER_SEND_REGISTERED_EMAIL'] = True if daconfig.get('confirm registration', False) else False
+app.config['USER_SEND_REGISTERED_EMAIL'] = bool(daconfig.get('confirm registration', False))
 app.config['USER_SEND_USERNAME_CHANGED_EMAIL'] = False
-app.config['USER_ENABLE_RETYPE_PASSWORD'] = True if daconfig.get('retype password', True) else False
+app.config['USER_ENABLE_RETYPE_PASSWORD'] = bool(daconfig.get('retype password', True))
 app.config['USER_ENABLE_REMEMBER_ME'] = False
 app.config['USER_ENABLE_EMAIL'] = True
 app.config['USER_ENABLE_USERNAME'] = False
 app.config['USER_ENABLE_REGISTRATION'] = True
 app.config['USER_ENABLE_CHANGE_USERNAME'] = False
-app.config['USER_ENABLE_CONFIRM_EMAIL'] = True if daconfig.get('confirm registration', False) else False
-app.config['USER_ENABLE_LOGIN_WITHOUT_CONFIRM_EMAIL'] = False if daconfig.get('confirm registration', False) else True
-app.config['USER_AUTO_LOGIN_AFTER_REGISTER'] = False if daconfig.get('confirm registration', False) else True
-app.config['USER_SHOW_USERNAME_EMAIL_DOES_NOT_EXIST'] = False if daconfig.get('confirm registration', False) else True
+app.config['USER_ENABLE_CONFIRM_EMAIL'] = bool(daconfig.get('confirm registration', False))
+app.config['USER_ENABLE_LOGIN_WITHOUT_CONFIRM_EMAIL'] = not bool(daconfig.get('confirm registration', False))
+app.config['USER_AUTO_LOGIN_AFTER_REGISTER'] = not bool(daconfig.get('confirm registration', False))
+app.config['USER_SHOW_USERNAME_EMAIL_DOES_NOT_EXIST'] = not bool(daconfig.get('confirm registration', False))
 app.config['USER_AUTO_LOGIN_AFTER_RESET_PASSWORD'] = False
 app.config['USER_AFTER_FORGOT_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_CHANGE_PASSWORD_ENDPOINT'] = 'after_reset'
@@ -109,4 +100,4 @@ if 'session lifetime seconds' in daconfig:
 app.config['SOCIAL'] = daconfig['social']
 app.config['OG_LOCALE'] = re.sub(r'\..*', '', daconfig.get('locale', 'en_US.utf8'))
 app.config['ENABLE_MONITOR'] = daconfig.get('enable monitor', True)
-app.config['INVERSE_NAVBAR'] = True if daconfig.get('inverse navbar', True) else False
+app.config['INVERSE_NAVBAR'] = bool(daconfig.get('inverse navbar', True))

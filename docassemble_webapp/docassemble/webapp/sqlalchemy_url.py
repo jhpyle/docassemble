@@ -1,9 +1,9 @@
-import docassemble.base.config
-import docassemble.webapp.user_database
 import sys
+import docassemble.base.config
 
 if __name__ == "__main__":
     docassemble.base.config.load()
+    import docassemble.webapp.user_database
     if len(sys.argv) > 1:
         db_config = sys.argv[1]
     else:

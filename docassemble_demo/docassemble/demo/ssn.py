@@ -1,5 +1,5 @@
-from docassemble.base.util import CustomDataType, DAValidationError, word
 import re
+from docassemble.base.util import CustomDataType, DAValidationError
 
 class SSN(CustomDataType):
     name = 'ssn'
@@ -25,5 +25,4 @@ $.validator.addMethod('ssn', function(value, element, params){
         m = re.search(r'^([0-9]{3})-?([0-9]{2})-?([0-9]{4})$', item)
         if m:
             return m.group(1) + '-' + m.group(2) + '-' + m.group(3)
-        else:
-            return item
+        return item
