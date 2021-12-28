@@ -77,7 +77,7 @@ identify any, create a [GitHub issue].
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [ARIA attributes]: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA
-[screen reader]: {{ site.baseurl }}/docs/initial.html#speak_text
+[screen reader]: {{ site.baseurl }}/docs/special.html#speak_text
 [alt text]: https://moz.com/learn/seo/alt-text
 [Markdown]: {{ site.baseurl }}/docs/markup.html
 [WAVE Toolbar]: https://wave.webaim.org/extension/
