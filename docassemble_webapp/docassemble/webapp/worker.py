@@ -951,7 +951,6 @@ def update_packages(restart=True):
     try:
         with worker_controller.flaskapp.app_context():
             worker_controller.set_request_active(False)
-            sys.stderr.write("update_packages in worker: importing update after " + str(time.time() - start_time) + " seconds\n")
             sys.stderr.write("update_packages in worker: starting update after " + str(time.time() - start_time) + " seconds\n")
             ok, logmessages, results = worker_controller.update.check_for_updates(start_time=start_time, full=restart)
             sys.stderr.write("update_packages in worker: update completed after " + str(time.time() - start_time) + " seconds\n")

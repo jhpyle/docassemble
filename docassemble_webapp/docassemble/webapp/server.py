@@ -1106,7 +1106,6 @@ lm.login_view = 'custom_login'
 
 def import_necessary(url, url_root):
     for admin_user in db.session.execute(select(UserModel).filter_by(nickname='admin').order_by(UserModel.id)).scalars():
-        sys.stderr.write("Logging in as admin user\n")
         login_user(admin_user, remember=False)
         docassemble.base.functions.this_thread.current_info = dict(user=dict(is_anonymous=False, is_authenticated=True, email=admin_user.email, theid=admin_user.id, the_user_id=admin_user.id, roles=['admin'], firstname=admin_user.first_name, lastname=admin_user.last_name, nickname=admin_user.nickname, country=admin_user.country, subdivisionfirst=admin_user.subdivisionfirst, subdivisionsecond=admin_user.subdivisionsecond, subdivisionthird=admin_user.subdivisionthird, organization=admin_user.organization, location=None, session_uid='admin', device_id='admin'), session=None, secret=None, yaml_filename=final_default_yaml_filename, url=url, url_root=url_root, encrypted=False, action=None, interface='initialization', arguments={})
         break
@@ -4606,7 +4605,7 @@ def oauth_callback(provider):
     sub_temp_other(user)
     if 'next' in session:
         the_url = session['next']
-        del session['the_next']
+        del session['next']
         response = redirect(the_url)
     else:
         response = redirect(url_for('interview_list', from_login='1'))
