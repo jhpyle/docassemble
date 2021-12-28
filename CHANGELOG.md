@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.12] - 2021-12-27
+### Fixed
+- Error in 1.3.11 related to ClickSend.
+
 ## [1.3.11] - 2021-12-27
 ### Changed
 - API keys can now only be viewed when initially obtained.

@@ -1173,7 +1173,7 @@ def get_clicksend_config():
                     the_clicksend_config['name'][the_config['name']] = the_config
             else:
                 sys.stderr.write("improper setup in twilio configuration\n")
-        if 'default' not in clicksend_config['name']:
+        if 'default' not in the_clicksend_config['name']:
             the_clicksend_config = None
     else:
         the_clicksend_config = None
