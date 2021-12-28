@@ -3,7 +3,7 @@ import re
 from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 import docassemble.webapp.database
-da_version = '1.3.11'
+da_version = '1.3.12'
 app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
