@@ -3223,9 +3223,9 @@ def get_package_info(exclude_core=False):
             continue
         seen[package.name] = 1
         if package.type is not None:
-            can_update = bool(package.type == 'zip')
+            can_update = not bool(package.type == 'zip')
             can_uninstall = bool(is_admin or (package.id in package_auth and current_user.id in package_auth[package.id]))
-            if package.core:
+            if package.core or package.name in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
                 can_uninstall = False
                 can_update = is_admin
             if exclude_core and package.name in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
