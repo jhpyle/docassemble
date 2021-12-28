@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.12](https://github.com/jhpyle/docassemble/releases/tag/v1.3.12) - 2021-12-27
+
+### Fixed
+- Error in 1.3.11 related to ClickSend.
+
 ## [1.3.11](https://github.com/jhpyle/docassemble/releases/tag/v1.3.11) - 2021-12-27
 
 ### Changed
