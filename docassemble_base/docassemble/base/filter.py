@@ -19,6 +19,7 @@ import docassemble.base.functions
 from docassemble.base import pandoc
 from bs4 import BeautifulSoup
 from pylatex.utils import escape_latex
+import xml.etree.ElementTree as ET
 
 QPDF_PATH = 'qpdf'
 NoneType = type(None)
@@ -980,7 +981,17 @@ def image_url(file_reference, alt_text, width, emoji=False, question=None, exter
         else:
             extra_class = ''
         if file_info.get('extension', '') in ('png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg'):
-            return '<img ' + alt_text + 'class="daicon daimageref' + extra_class + '" style="' + width_string + '" src="' + the_url + '"/>'
+            try:
+                if file_info.get('extension', '') == 'svg':
+                    attributes = ET.parse(file_info['fullpath']).getroot().attrib
+                    layout_width = attributes['width']
+                    layout_height = attributes['height']
+                else:
+                    im = PIL.Image.open(file_info['fullpath'])
+                    layout_width, layout_height = im.size
+                return '<img ' + alt_text + 'class="daicon daimageref' + extra_class + '" width=' + str(layout_width) + ' height=' + str(layout_height) + ' style="' + width_string + '; height: auto;" src="' + the_url + '"/>'
+            except:
+                return '<img ' + alt_text + 'class="daicon daimageref' + extra_class + '" style="' + width_string + '; height: auto;" src="' + the_url + '"/>'
         if file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
@@ -1005,7 +1016,13 @@ def image_url(file_reference, alt_text, width, emoji=False, question=None, exter
                 the_alt_text = 'alt=' + json.dumps(word("Thumbnail image of document")) + ' '
             else:
                 the_alt_text = alt_text
-            output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" style="' + width_string + '" src="' + the_image_url + '"/></a>'
+            try:
+                safe_pdf_reader = safe_pypdf_reader(file_info['path'] + '.pdf')
+                layout_width = str(safe_pdf_reader.getPage(0).mediaBox.getWidth())
+                layout_height = str(safe_pdf_reader.getPage(0).mediaBox.getHeight())
+                output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" width=' + layout_width + ' height=' + layout_height + ' style="' + width_string + '; height: auto;" src="' + the_image_url + '"/></a>'
+            except:
+                output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" style="' + width_string + '; height: auto;" src="' + the_image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + str(file_info['pages']) + " " + word('pages') + ")"
             return output
