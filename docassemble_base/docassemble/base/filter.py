@@ -1593,10 +1593,11 @@ def get_video_urls(the_video, question=None):
             parts = attempt['filename'].split(':')
             if len(parts) < 2:
                 parts = [attempt['package'], attempt['filename']]
-            if parts[0] is None:
-                parts[0] = 'None'
             parts[1] = re.sub(r'^data/static/', '', parts[1])
-            full_file = parts[0] + ':data/static/' + parts[1]
+            if parts[0] is None:
+                full_file = 'data/static/' + parts[1]
+            else:
+                full_file = parts[0] + ':data/static/' + parts[1]
             file_info = server.file_finder(full_file, question=question)
             if 'fullpath' in file_info:
                 url = server.url_finder(full_file, _question=question)

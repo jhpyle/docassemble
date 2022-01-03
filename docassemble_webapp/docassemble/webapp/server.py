@@ -2716,7 +2716,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
                     if section_reached and not sub_currently_active and not seen_more:
                         suboutput += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(sub_title) + '</span>'
                     else:
-                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive' + muted_class + '">' + str(sub_title) + '</a>'
+                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + str(sub_title) + '</a>'
                 #suboutput += "</li>"
             if currently_active or current_is_within or hide_inactive_subs is False or show_nesting:
                 if currently_active or current_is_within or auto_open:
@@ -3964,7 +3964,7 @@ def wait_for_task(task_id, timeout=None):
         result.get(timeout=timeout)
         #logmessage("wait_for_task: returning true")
         return True
-    except docassemble.webapp.worker.celery.exceptions.TimeoutError:
+    except docassemble.webapp.worker.TimeoutError:
         logmessage("wait_for_task: timed out")
         return False
     except Exception as the_error:
@@ -12314,27 +12314,26 @@ def do_serve_uploaded_pagescreen(number, page, download=False):
     if 'path' not in file_info:
         logmessage('serve_uploaded_pagescreen: no access to file number ' + str(number))
         return ('File not found', 404)
+    try:
+        the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
+        filename = the_file.page_path(page, 'screen')
+    except Exception as err:
+        logmessage("Could not make thumbnail: " + err.__class__.__name__ + ": " + str(err))
+        filename = None
+    if filename is None:
+        the_file = docassemble.base.functions.package_data_filename('docassemble.base:data/static/blank_page.png')
+        response = send_file(the_file, mimetype='image/png')
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        return response
+    if os.path.isfile(filename):
+        response = send_file(filename, mimetype='image/png')
+        if download:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(os.path.basename(filename))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        return response
     else:
-        try:
-            the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
-            filename = the_file.page_path(page, 'screen')
-        except Exception as err:
-            logmessage("Could not make thumbnail: " + err.__class__.__name__ + ": " + str(err))
-            filename = None
-        if filename is None:
-            the_file = docassemble.base.functions.package_data_filename('docassemble.base:data/static/blank_page.png')
-            response = send_file(the_file, mimetype='image/png')
-            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-            return response
-        if os.path.isfile(filename):
-            response = send_file(filename, mimetype='image/png')
-            if download:
-                response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(os.path.basename(filename))
-            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-            return response
-        else:
-            logmessage('serve_uploaded_pagescreen: path ' + filename + ' is not a file')
-            return ('File not found', 404)
+        logmessage('serve_uploaded_pagescreen: path ' + filename + ' is not a file')
+        return ('File not found', 404)
 
 @app.route('/visit_interview', methods=['GET', 'POST'])
 @login_required

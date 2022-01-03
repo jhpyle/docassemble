@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.3.15] - 2022-01-03
+### Fixed
+- CSS error in active subsection headings.
+- Error with getting status of background tasks.
+- Error with videos inside `[FILE]`.
+
 ## [1.3.14] - 2021-12-28
 ### Fixed
 - Error in 1.3.11 related to Upgrade button.
