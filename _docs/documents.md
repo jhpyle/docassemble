@@ -692,12 +692,14 @@ created with the [`signature` block]).  You can insert [`DAFile`],
 similar way.  (See [`include_docx_template()`] below for instructions
 on inserting other DOCX files inside a DOCX file.)  If you insert a
 PDF file, it will be converted into a series of page images.  If you
-insert a text file, the raw text will be included.  You can also use
-the `[FILE ...]` markup syntax to [insert an image].  Do not mix image
-references with other text inside of a single field (e.g., by writing
-`{% raw %}{{ "Here is my dog: " + a_file }}{% endraw %}`.  Image
-references need to be by themselves inside of `{% raw %}{{ }}{% endraw
-%}` brackets.
+insert a text file, the raw text will be included.  When using the
+[`markdown` filter], you can also use the `[FILE ...]` markup syntax to
+[insert an image].  Do not mix image references with other text inside
+of a single field (e.g., by writing `{% raw %}{{ "Here is my dog: " +
+a_file }}{% endraw %}`.  Image references need to be by themselves
+inside of `{% raw %}{{ }}{% endraw %}` brackets.  To change the width
+of an image, use the `.show()` method with a `width` parameter.  E.g.,
+`{% raw %}{{ my_image.show(width="2in") }}{% endraw %}`
 
 Note that the paragraph spacing of the paragraph into which you insert
 an image may affect the appearance of the image.  For example, if the
@@ -2107,3 +2109,4 @@ interview, see the [`cache documents` feature].
 [tests]: https://jinja.palletsprojects.com/en/2.11.x/templates/#list-of-builtin-tests
 [`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
 [`update_language_function()`]: {{ site.baseurl }}/docs/functions.html#linguistic
+[`markdown` filter]: #markdown to docx
