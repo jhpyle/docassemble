@@ -6707,7 +6707,7 @@ included document only contains list items, and you want the list
 items to merge into a list in the main document.
 
 <a name="include_docx_template_inline"></a>As discussed above,
-`include_docx_template()` needs to be used with {% raw %}{%p ... %}{%
+`include_docx_template()` needs to be used with {% raw %}{{p ... }}{%
 endraw %} because it returns the paragraphs from the included
 document.  If you would like to include "inline" text from a secondary
 DOCX file, you can do so by setting the `_inline` keyword parameter.
