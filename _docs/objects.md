@@ -1474,6 +1474,51 @@ when accessing the link, you can set `attachment` to `True`.  Then the
 `Content-Disposition` header in the response will be set so that the
 file can be downloaded.
 
+`page` and `size` - if the `DAFile` is a PDF, you can obtain a URL for
+a PNG image of a specific page of the file by passing the `page`
+parameter.  The `page` indicates the page number (starting with 1).
+The `size` can be either `'screen'` for a 72 DPI image or `'page'` for
+a 300 DPI image.  The `size` is optional and it defaults to `'page'`.
+The [Configuration] directives [`png screen resolution`] and [`png
+resolution`] can be used to change these default DPI values.  If the
+PNG image has not yet been created by the time the user visits the
+URL, **docassemble** will generate the PNG image.  Converting PDF to
+PNG can be time-consuming, so the server may not respond immediately.
+If the URL is accessed while there is a pending background task that
+is converting the PDF page images to PNG, the server will wait for
+that background task to create the image, which may take even longer.
+
+<a name="DAFile.page_path"></a>The `.page_path()` method returns a
+file system path to a PNG page image for a given page of a PDF file.
+If your `DAFile` is `myfile`, calling `myfile.page_path(1, 'page')`
+will return the path of a PNG image with a resolution of 300 DPI for
+the first page of the document.  Calling `myfile.page_path(5,
+'screen')` will return the path of a PNG image with a resolution of 72
+DPI for the fifth page of the document.  If the PNG file does not
+already exist on the server, `.page_path()` will create it, or if
+there is an ongoing background task for creating PNG page images,
+`.page_path()` will wait for that background task to create the PNG
+image.  Thus, `.page_path()` could take several seconds to return a
+value, depending on the circumstances.  `.page_path()` accepts an
+optional keyword parameter, `wait`.  If the PNG image has not been
+generated yet, and `.page_path()` is called with `wait=False`, then
+`.page_path()` will not trigger the PNG creation process or wait for
+any ongoing process to complete, and instead will immediately return
+`None`.  A background task is launched to create page images from a
+PDF file when a user uploads a file through a `datatype: file` or
+`datatype: files` field, when a file is uploaded to `/api/session`,
+and when the `.pngs_ready()` method is called on a `DAFile`.  If the
+PDF to PNG creation process fails, `.page_path()` will return `None`.
+
+<a name="DAFile.pngs_ready"></a>The `.pngs_ready()` method triggers a
+background process for creating PNG images from a PDF file, if the
+process has not already started, and returns `True` or `False`
+depending on whether the PNG creation process has completed. The
+resulting PNG files can be accessed using `.page_path()` and
+`.url_for()`.  The PNG images are also used in various other contexts,
+such as when inserting a PDF file into a DOCX file or inserting a
+`DAFile` into the screen of the web application.
+
 <a name="DAFile.retrieve"></a>The `.retrieve()` command ensures that a
 stored file is ready for use on the system.  Calling `.retrieve` is
 necessary because if **docassemble** is configured to use [Amazon S3]
@@ -1774,15 +1819,6 @@ written, just in case there is an error.
 {% highlight python %}
 the_file.commit()
 {% endhighlight %}
-
-<a name="DAFile.make_pngs"></a>The `.make_pngs()` method can be used
-on PDF files.  It creates PNG versions of the pages of the document.
-In most circumstances, you will not need to use this function, because
-when a user uploads a file, a process is started whereby each page of
-the PDF file is converted to PNG.  However, if that process is not
-started for whatever reason, for example if you are constructing files
-manually, you can start the process by running `.make_pngs()`.  This
-will launch background processes and wait until they are completed.
 
 <a name="DAFile.fix_up"></a>The `.fix_up()` method edits files in
 place in order to correct any errors that are correctable.  Currently,
@@ -6919,6 +6955,7 @@ the `_uid` of the table rather than the `id`.
 [Digest Auth]: https://en.wikipedia.org/wiki/Digest_access_authentication
 [`datatype: file`]: {{ site.baseurl }}/docs/fields.html#file
 [`.user_access()`]: #DAFile.user_access
+[`.privilege_access()`]: #DAFile.privilege_access
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`set_parts()`]: {{ site.baseurl }}/docs/functions.html#set_parts
 [API]: {{ site.baseurl }}/docs/api.html
@@ -6958,3 +6995,7 @@ the `_uid` of the table rather than the `id`.
 [`breadcrumb` modifier]: {{ site.baseurl }}/docs/modifiers.html#breadcrumb
 [Bootstrap format]: https://getbootstrap.com/docs/4.0/components/breadcrumb/
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
+[`png resolution`]: {{ site.baseurl }}/docs/config.html#png resolution
+[`png screen resolution`]: {{ site.baseurl }}/docs/config.html#png screen resolution
+[Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
+[Font Awesome]: https://fontawesome.com

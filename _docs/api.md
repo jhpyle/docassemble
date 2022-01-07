@@ -1673,7 +1673,7 @@ look like this in [JSON] format:
 
 {% highlight javascript %}
 {
-  "_class": "docassemble.base.core.DAList",
+  "_class": "docassemble.base.util.DAList",
   "instanceName": "user.favorite_fruit",
   "elements": [
     {
@@ -1729,7 +1729,7 @@ interview:
 {% highlight python %}
 r = requests.post(base_url + '/api/session', json={'i': i, 'session':
 session, 'secret': secret, 'variables': {'user.favorite_fruit':
-{'_class': 'docassemble.base.core.DAList', 'instanceName':
+{'_class': 'docassemble.base.util.DAList', 'instanceName':
 'user.favorite_fruit', 'elements': [{'_class':
 'docassemble.base.util.Thing', 'instanceName':
 'user.favorite_fruit[0]', 'name': {'_class':

@@ -1272,6 +1272,35 @@ dependency, such as a software library written by someone else.  Code
 may also stop working because changes you made elsewhere in your
 package have unanticipated long-distance effects.
 
+When using `unittest`, note that many of the functions and classes in
+`docassemble.base.util` depend on external functionality. As a result,
+your tests may raise exceptions. In the **docassemble** web
+application, the package `docassemble.webapp` provides the external
+functionality that the `docassemble.base.util` functions and objects
+require.
+
+To enable this external functionality for your unit tests, you can use
+a `TestContext` object from the `docassemble.webapp.server` module:
+
+{% highlight yaml %}
+if __name__ == '__main__':
+    from docassemble.webapp.server import TestContext
+    with TestContext('docassemble.demo'):
+        unittest.main()
+{% endhighlight %}
+
+You must provide the name of your package as a positional parameter to
+`TestContext`. If your code contains any relative file references such
+as `mypicture.png`, this package name is used to locate those files.
+The context provided by `TestContext()` is one in which a user with
+`admin` privileges is logged in, so `user_logged_in()` will return
+`True`, and `user_has_privilege('admin')` will return `True`.
+
+If importing `TestContext` is not necessary for your tests to run, it
+is best not to import it, because `docassemble.webapp.server` is a
+large module that takes a long time to load (twice as long as
+`docassemble.base.util`).
+
 Legal logic algorithms can also be "unit tested" using brief test
 interviews that are separate from the main interview and exist only
 for testing purposes.  These test interviews could be operated by

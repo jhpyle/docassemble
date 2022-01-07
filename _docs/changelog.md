@@ -4,6 +4,24 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.15](https://github.com/jhpyle/docassemble/releases/tag/v1.3.15) - 2022-01-06
+
+### Added
+- The `TestContext` object for testing **docassemble** code from the
+  command line.
+- The `.pngs_ready()` and `.page_path()` methods of `DAFile`, for use
+  when the `DAFile` is a PDF.
+- The `page` and `size` parameters for the `.url_for()` method of
+  `DAfile`, for use when the `DAFile` is a PDF.
+- The `authorized registration domains` Configuration directive.
+
+### Fixed
+- CSS error in active subsection headings.
+- Error with getting status of background tasks.
+- Error with videos included using `[FILE]`.
+- Some API keys would not authenticate.
+- Error with DAGoogleAPI.
+
 ## [1.3.14](https://github.com/jhpyle/docassemble/releases/tag/v1.3.14) - 2021-12-28
 
 ### Fixed

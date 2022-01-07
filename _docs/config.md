@@ -2434,6 +2434,19 @@ allow registration: False
 
 The default behavior is to allow any user to register.
 
+## <a name="authorized registration domains"></a>Restricting e-mail/password registration to particular domains
+
+The `authorized registration domains` directive can be used to
+restrict registraion to one or more e-mail domains.
+
+{% highlight yaml %}
+authorized registration domains:
+  - abclegal.org
+  - missourilegalhelp.org
+{% endhighlight %}
+
+This directive only applies to username/password registration.
+
 ## <a name="confirm registration"></a>E-mail confirmation after registration
 
 By default, users who register can start using the site right away.
