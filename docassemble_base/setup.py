@@ -69,7 +69,7 @@ install_requires = [
     "certifi==2020.12.5",
     "cffi==1.14.5",
     "chardet==4.0.0",
-    "click==7.1.2",
+    "click==8.0.3",
     "colorama==0.4.4",
     "convertapi==1.4.0",
     "cryptography==3.4.7",
