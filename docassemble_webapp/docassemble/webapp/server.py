@@ -52,6 +52,19 @@ from docassemble.base.config import daconfig, hostname, in_celery
 import docassemble.webapp.setup
 from docassemble.webapp.setup import da_version
 
+import nltk
+try:
+    if not os.path.isdir(os.path.join(nltk.data.path[0], 'corpora', 'omw-1.4')):
+        nltk.download('omw-1.4')
+    if not os.path.isdir(os.path.join(nltk.data.path[0], 'corpora', 'wordnet')):
+        nltk.download('wordnet')
+    if not os.path.isdir(os.path.join(nltk.data.path[0], 'corpora', 'wordnet_ic')):
+        nltk.download('wordnet_ic')
+    if not os.path.isdir(os.path.join(nltk.data.path[0], 'corpora', 'sentiwordnet')):
+        nltk.download('sentiwordnet')
+except:
+    pass
+
 import docassemble.base.astparser
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError
 import docassemble.base.functions
