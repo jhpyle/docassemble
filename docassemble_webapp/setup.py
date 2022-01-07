@@ -131,7 +131,7 @@ install_requires = [
     "nltk==3.6.5",
     "nose==1.3.7",
     "num2words==0.5.10",
-    "numpy==1.19.4",
+    "numpy==1.21.0",
     "oauth2client==4.1.3",
     "oauthlib==3.1.0",
     "openpyxl==3.0.7",
