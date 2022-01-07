@@ -55,7 +55,7 @@ install_requires = [
     "da-pkg-resources==0.0.1",
     "dnspython==1.16.0",
     "Docassemble-Flask-User==0.6.24",
-    "Docassemble-Pattern==3.6.3",
+    "Docassemble-Pattern==3.6.4",
     "docassemble-textstat==0.7.1",
     "docassemblekvsession==0.6",
     "docopt==0.6.2",

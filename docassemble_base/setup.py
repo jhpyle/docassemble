@@ -74,7 +74,7 @@ install_requires = [
     "convertapi==1.4.0",
     "cryptography==3.4.7",
     "da-pkg-resources==0.0.1",
-    "Docassemble-Pattern==3.6.3",
+    "Docassemble-Pattern==3.6.4",
     "docassemble-textstat==0.7.1",
     "docopt==0.6.2",
     "docutils==0.17.1",
