@@ -112,7 +112,7 @@ install_requires = [
     "MarkupSafe==2.0.0",
     "mdx-smartypants==1.5.1",
     "namedentities==1.5.2",
-    "nltk==3.6.5",
+    "nltk==3.6.6",
     "num2words==0.5.10",
     "numpy==1.21.0",
     "oauth2client==4.1.3",
