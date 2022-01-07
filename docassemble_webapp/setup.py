@@ -128,7 +128,7 @@ install_requires = [
     "mypy-extensions==0.4.3",
     "namedentities==1.5.2",
     "netifaces==0.10.9",
-    "nltk==3.6.5",
+    "nltk==3.6.6",
     "nose==1.3.7",
     "num2words==0.5.10",
     "numpy==1.21.0",
