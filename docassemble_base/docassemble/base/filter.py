@@ -828,8 +828,8 @@ def image_as_rtf(match, question=None):
             if not os.path.isfile(page_file['fullpath']):
                 server.fg_make_png_for_pdf_path(file_info['path'] + '.pdf', 'page')
             if os.path.isfile(page_file['fullpath']):
-                im = PIL.Image.open(page_file['fullpath'])
-                page_file['width'], page_file['height'] = im.size
+                with PIL.Image.open(page_file['fullpath']) as im:
+                    page_file['width'], page_file['height'] = im.size
                 output += rtf_image(page_file, width, False)
             else:
                 output += "[Error including page image]"
@@ -987,8 +987,8 @@ def image_url(file_reference, alt_text, width, emoji=False, question=None, exter
                     layout_width = attributes['width']
                     layout_height = attributes['height']
                 else:
-                    im = PIL.Image.open(file_info['fullpath'])
-                    layout_width, layout_height = im.size
+                    with PIL.Image.open(file_info['fullpath']) as im:
+                        layout_width, layout_height = im.size
                 return '<img ' + alt_text + 'class="daicon daimageref' + extra_class + '" width=' + str(layout_width) + ' height=' + str(layout_height) + ' style="' + width_string + '; height: auto;" src="' + the_url + '"/>'
             except:
                 return '<img ' + alt_text + 'class="daicon daimageref' + extra_class + '" style="' + width_string + '; height: auto;" src="' + the_url + '"/>'
