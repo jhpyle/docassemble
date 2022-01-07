@@ -9,8 +9,8 @@ if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig, S3_ENABLED, s3_config, AZURE_ENABLED, azure_config
-import docassemble.webapp.amazon
-import docassemble.webapp.microsoft
+import docassemble.base.amazon
+import docassemble.base.microsoft
 
 def main():
     certs_location = daconfig.get('certs', None)
@@ -19,26 +19,26 @@ def main():
     if S3_ENABLED:
         my_config = copy.deepcopy(s3_config)
         if certs_location is None:
-            cloud = docassemble.webapp.amazon.s3object(my_config)
+            cloud = docassemble.base.amazon.s3object(my_config)
             prefix = 'certs/'
         else:
             m = re.search(r'^s3://([^/]+)/(.*)', certs_location)
             if m:
                 prefix = m.group(2)
                 my_config['bucket'] = m.group(1)
-                cloud = docassemble.webapp.amazon.s3object(my_config)
+                cloud = docassemble.base.amazon.s3object(my_config)
     elif AZURE_ENABLED:
         my_config = copy.deepcopy(azure_config)
         if certs_location is None:
             prefix = 'certs/'
-            cloud = docassemble.webapp.microsoft.azureobject(my_config)
+            cloud = docassemble.base.microsoft.azureobject(my_config)
         else:
             m = re.search(r'^blob://([^/]+)/([^/]+)/(.*)', certs_location)
             if m:
                 my_config['account name'] = m.group(1)
                 my_config['container'] = m.group(2)
                 prefix = m.group(3)
-                cloud = docassemble.webapp.microsoft.azureobject(my_config)
+                cloud = docassemble.base.microsoft.azureobject(my_config)
     if cloud is not None and prefix is not None:
         success = False
         if not re.search(r'/$', prefix):

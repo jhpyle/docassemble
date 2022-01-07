@@ -13,7 +13,7 @@ from pandas.api.types import CategoricalDtype
 import numpy as np
 import yaml
 from docassemble_pattern.vector import KNN, SVM, PORTER, Document
-from docassemble.base.core import DAObject, DAList, DADict
+from docassemble.base.util import DAObject, DAList, DADict
 #from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import get_info_from_file_reference
 from docassemble.webapp.core.models import MachineLearning

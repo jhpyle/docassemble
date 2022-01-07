@@ -19,7 +19,7 @@ class UserModel(db.Model, UserMixin):
     timezone = db.Column(db.String(64))
     language = db.Column(db.String(64))
     user_auth = db.relationship('UserAuthModel', uselist=False, primaryjoin="UserAuthModel.user_id==UserModel.id", back_populates="user")
-    roles = db.relationship('Role', secondary=dbtableprefix + 'user_roles', backref=db.backref(dbtableprefix + 'user', lazy='dynamic')) 
+    roles = db.relationship('Role', secondary=dbtableprefix + 'user_roles', backref=db.backref(dbtableprefix + 'user', lazy='dynamic'))
     password = db.Column(db.String(255), nullable=False, server_default='') # work around a bug
     otp_secret = db.Column(db.String(255), nullable=True)
     pypi_username = db.Column(db.String(255), nullable=True)
@@ -60,7 +60,7 @@ class UserDict(db.Model):
     modtime = db.Column(db.DateTime())
 
 db.Index(dbtableprefix + 'ix_userdict_key_filename', UserDict.key, UserDict.filename)
-    
+
 class UserDictKeys(db.Model):
     __tablename__ = dbtableprefix + "userdictkeys"
     indexno = db.Column(db.Integer(), primary_key=True)
@@ -74,7 +74,7 @@ db.Index(dbtableprefix + 'ix_userdictkeys_key_filename', UserDictKeys.key, UserD
 class TempUser(db.Model):
     __tablename__ = dbtableprefix + 'tempuser'
     id = db.Column(db.Integer, primary_key=True)
-    
+
 class ChatLog(db.Model):
     __tablename__ = dbtableprefix + "chatlog"
     id = db.Column(db.Integer(), primary_key=True)

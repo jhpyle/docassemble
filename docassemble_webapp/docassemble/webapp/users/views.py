@@ -1,22 +1,22 @@
-from docassemble.webapp.app_object import app
-from docassemble.webapp.db_object import db
-from flask import make_response, redirect, render_template, request, flash, current_app, Markup, url_for
-from docassemble_flask_user import current_user, login_required, roles_required, emails
-from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyInviteForm, NewPrivilegeForm, UserAddForm
-from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
-#import docassemble.webapp.daredis
-from docassemble.base.functions import word, debug_status, get_default_timezone
-from docassemble.base.logger import logmessage
-from docassemble.base.config import daconfig
-from docassemble.webapp.translations import setup_translation
-from docassemble.base.generate_key import random_alphanumeric
-from sqlalchemy import or_, and_, not_, select
-
-import pytz
 import datetime
-import re
 import email.utils
 import json
+import re
+import pytz
+#import docassemble.webapp.daredis
+from docassemble.webapp.app_object import app
+from docassemble.webapp.backend import delete_user_data
+from docassemble.webapp.db_object import db
+from docassemble.webapp.translations import setup_translation
+from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, PhoneUserProfileForm, MyInviteForm, NewPrivilegeForm, UserAddForm
+from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
+from docassemble.base.functions import word, debug_status, get_default_timezone, server
+from docassemble.base.logger import logmessage
+from docassemble.base.config import daconfig
+from docassemble.base.generate_key import random_alphanumeric
+from docassemble_flask_user import current_user, login_required, roles_required, emails
+from sqlalchemy import and_, not_, select
+from flask import make_response, redirect, render_template, request, flash, current_app, Markup, url_for
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 PAGINATION_LIMIT = daconfig.get('pagination limit', 100)
@@ -65,7 +65,7 @@ def user_list():
             page = 0
     else:
         page = 0
-    users = list()
+    users = []
     user_query = select(UserModel).options(db.joinedload(UserModel.roles)).where(and_(UserModel.nickname != 'cron', not_(UserModel.social_id.like('disabled$%')))).order_by(UserModel.id)
     if page > 0:
         user_query = user_query.offset(PAGINATION_LIMIT*page)
@@ -95,15 +95,11 @@ def user_list():
             name_string += str(user.last_name)
         if name_string:
             name_string = str(name_string)
-        active_string = ''
         if user.email is None:
             user_indicator = user.nickname
         else:
             user_indicator = user.email
-        if user.active:
-            is_active = True
-        else:
-            is_active = False
+        is_active = bool(user.active)
         users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id, high_priv=high_priv))
     if there_are_more:
         next_page = page + 2
@@ -128,7 +124,7 @@ def delete_privilege(id):
         flash(word('The role could not be deleted.'), 'error')
     else:
         for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).unique().scalars():
-            roles_to_remove = list()
+            roles_to_remove = []
             for the_role in user.roles:
                 if the_role.name == role.name:
                     roles_to_remove.append(the_role)
@@ -171,22 +167,18 @@ def edit_user_profile_page(id):
         return redirect(url_for('edit_user_profile_page', id=id))
     if daconfig.get('admin can delete account', True) and user.id != current_user.id:
         if 'delete_account' in request.args and int(request.args['delete_account']) == 1:
-            from docassemble.webapp.server import user_interviews, r, r_user
-            from docassemble.webapp.backend import delete_user_data
-            user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
-            delete_user_data(id, r, r_user)
+            server.user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
+            delete_user_data(id, server.server_redis, server.server_redis_user)
             db.session.commit()
             flash(word('The user account was deleted.'), 'success')
             return redirect(url_for('user_list'))
         if 'delete_account_complete' in request.args and int(request.args['delete_account_complete']) == 1:
-            from docassemble.webapp.server import user_interviews, r, r_user
-            from docassemble.webapp.backend import delete_user_data
-            user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
-            delete_user_data(id, r, r_user)
+            server.user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
+            delete_user_data(id, server.server_redis, server.server_redis_user)
             db.session.commit()
             flash(word('The user account was deleted.'), 'success')
             return redirect(url_for('user_list'))
-    the_role_id = list()
+    the_role_id = []
     for role in user.roles:
         the_role_id.append(role.id)
     if len(the_role_id) == 0:
@@ -201,19 +193,16 @@ def edit_user_profile_page(id):
     else:
         form.role_id.choices = [(r.id, r.name) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name'))]
         privileges_note = word("Note: only users with e-mail/password accounts can be given admin privileges.")
-    form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
+    form.timezone.choices = [(x, x) for x in sorted(list(pytz.all_timezones))]
     form.timezone.default = the_tz
     if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
         form.timezone.data = the_tz
-    if user.otp_secret is None:
-        form.uses_mfa.data = False
-    else:
-        form.uses_mfa.data = True
+    form.uses_mfa.data = bool(user.otp_secret is not None)
     admin_id = db.session.execute(select(Role.id).filter_by(name='admin')).scalar_one()
     if request.method == 'POST' and form.validate(user.id, admin_id):
         form.populate_obj(user)
-        roles_to_remove = list()
-        the_role_id = list()
+        roles_to_remove = []
+        the_role_id = []
         for role in user.roles:
             roles_to_remove.append(role)
         for role in roles_to_remove:
@@ -226,7 +215,7 @@ def edit_user_profile_page(id):
         #docassemble.webapp.daredis.clear_user_cache()
         flash(word('The information was saved.'), 'success')
         return redirect(url_for('user_list'))
-    confirmation_feature = True if user.id > 2 else False
+    confirmation_feature = bool(user.id > 2)
     script = """
     <script>
       $(".dadeleteaccount").click(function(event){
@@ -274,7 +263,7 @@ def user_profile_page():
         form = PhoneUserProfileForm(request.form, obj=current_user)
     else:
         form = UserProfileForm(request.form, obj=current_user)
-    form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
+    form.timezone.choices = [(x, x) for x in sorted(list(pytz.all_timezones))]
     form.timezone.default = the_tz
     if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
         form.timezone.data = the_tz
@@ -308,14 +297,14 @@ def invite():
     setup_translation()
     user_manager = current_app.user_manager
 
-    next = request.args.get('next',
-                            _endpoint_url(user_manager.after_invite_endpoint))
+    the_next = request.args.get('next',
+                                _endpoint_url(user_manager.after_invite_endpoint))
 
     user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
     invite_form = MyInviteForm(request.form)
     invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name'))]
     if request.method=='POST' and invite_form.validate():
-        email_addresses = list()
+        email_addresses = []
         for email_address in re.split(r'[\n\r]+', invite_form.email.data.strip()):
             (part_one, part_two) = email.utils.parseaddr(email_address)
             email_addresses.append(part_two)
@@ -336,10 +325,9 @@ def invite():
                 flash(word("A user with that e-mail has already registered") + " (" + email_address + ")", "error")
                 has_error = True
                 continue
-            else:
-                user_invite = MyUserInvitation(email=email_address, role_id=the_role_id, invited_by_user_id=current_user.id)
-                db.session.add(user_invite)
-                db.session.commit()
+            user_invite = MyUserInvitation(email=email_address, role_id=the_role_id, invited_by_user_id=current_user.id)
+            db.session.add(user_invite)
+            db.session.commit()
             token = user_manager.generate_token(user_invite.id)
             accept_invite_link = url_for('user.register',
                                          token=token,
@@ -368,7 +356,7 @@ def invite():
             flash(word('Invitations have been sent.'), 'success')
         else:
             flash(word('Invitation has been sent.'), 'success')
-        return redirect(next)
+        return redirect(the_next)
     if invite_form.role_id.data is None:
         invite_form.role_id.process_data(str(user_role.id))
     response = make_response(render_template('flask_user/invite.html', version_warning=None, bodyclass='daadminbody', page_title=word('Invite User'), tab_title=word('Invite User'), form=invite_form), 200)

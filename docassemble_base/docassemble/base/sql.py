@@ -4,7 +4,7 @@ import sys
 import json
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import server, this_thread
-from docassemble.base.core import DAList, DAObjectPlusParameters
+from docassemble.base.util import DAList, DAObjectPlusParameters
 from alembic.config import Config
 from alembic import command
 

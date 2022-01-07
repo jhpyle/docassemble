@@ -60,7 +60,7 @@ NoneType = type(None)
 da_arch = platform.machine()
 
 DEBUG = True
-import_core = compile("from docassemble.base.core import objects_from_file, objects_from_structure", '<code block>', 'exec')
+import_core = compile("from docassemble.base.util import objects_from_file, objects_from_structure", '<code block>', 'exec')
 import_util = compile('from docassemble.base.util import *', '<code block>', 'exec')
 import_process_action = compile('from docassemble.base.util import process_action', '<code block>', 'exec')
 run_process_action = compile('process_action()', '<code block>', 'exec')
@@ -4021,7 +4021,7 @@ class Question:
                         additional_parameters += ", help_generator=_DAHELPGENERATOR"
                     if 'image_generator' in field_info:
                         additional_parameters += ", image_generator=_DAIMAGEGENERATOR"
-                    source_code = "docassemble_base_core_selections(" + ", ".join(select_list) + additional_parameters + ")"
+                    source_code = "docassemble_base_util_selections(" + ", ".join(select_list) + additional_parameters + ")"
                     #logmessage("source_code is " + source_code)
                     field_info['selections'] = {'compute': compile(source_code, '<expression>', 'eval'), 'sourcecode': source_code}
                 if 'saveas' in field_info:
@@ -5574,7 +5574,7 @@ class Question:
                     elif hasattr(field, 'choicetype') and field.choicetype == 'compute':
                         # multiple choice field in choices
                         if hasattr(field, 'datatype') and field.datatype in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes', 'multiselect', 'checkboxes'):
-                            exec("from docassemble.base.core import selections as docassemble_base_core_selections", user_dict)
+                            exec("from docassemble.base.util import selections as docassemble_base_util_selections", user_dict)
                         if hasattr(field, 'object_labeler'):
                             labeler_func = eval(field.object_labeler['compute'], user_dict)
                             if not isinstance(labeler_func, FunctionType):
@@ -6317,7 +6317,7 @@ class Question:
                 elif doc_format in ['html']:
                     result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
             if attachment['variable_name']:
-                string = "from docassemble.base.core import DAFile, DAFileCollection"
+                string = "from docassemble.base.util import DAFile, DAFileCollection"
                 exec(string, the_user_dict)
                 variable_name = attachment['variable_name']
                 m = re.search(r'^(.*)\.([A-Za-z0-9\_]+)$', attachment['variable_name'])
@@ -7590,7 +7590,7 @@ class Interview:
             user_dict['_internal']['device_local'] = {}
             user_dict['_internal']['user_local'] = {}
         if session_uid not in user_dict['_internal']['session_local'] or device_id not in user_dict['_internal']['device_local'] or user_id not in user_dict['_internal']['user_local']:
-            exec('from docassemble.base.core import DASessionLocal, DADeviceLocal, DAUserLocal')
+            exec('from docassemble.base.util import DASessionLocal, DADeviceLocal, DAUserLocal')
             if session_uid not in user_dict['_internal']['session_local']:
                 user_dict['_internal']['session_local'][session_uid] = eval("DASessionLocal()")
             if device_id not in user_dict['_internal']['device_local']:
@@ -8286,7 +8286,7 @@ class Interview:
                         except:
                             pass
                         if not found_object:
-                            string = "from docassemble.base.core import DALazyTemplate"
+                            string = "from docassemble.base.util import DALazyTemplate"
                             exec(string, user_dict)
                             string = from_safeid(question.fields[0].saveas) + ' = DALazyTemplate(' + repr(actual_saveas) + ')'
                             exec(string, user_dict)
@@ -8350,7 +8350,7 @@ class Interview:
                         except:
                             pass
                         if not found_object:
-                            string = "from docassemble.base.core import DALazyTemplate"
+                            string = "from docassemble.base.util import DALazyTemplate"
                             exec(string, user_dict)
                             string = from_safeid(question.fields[0].saveas) + ' = DALazyTemplate(' + repr(actual_saveas) + ')'
                             exec(string, user_dict)
@@ -8388,7 +8388,7 @@ class Interview:
                         table_info.saveas = from_safeid(question.fields[0].saveas)
                         actual_saveas = substitute_vars(table_info.saveas, is_generic, the_x, iterators)
                         #docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
-                        string = "from docassemble.base.core import DALazyTableTemplate"
+                        string = "from docassemble.base.util import DALazyTableTemplate"
                         exec(string, user_dict)
                         found_object = False
                         try:
@@ -8488,7 +8488,7 @@ class Interview:
                         del docassemble.base.functions.this_thread.current_info['action']
                     return {'type': 'continue', 'sought': origMissingVariable, 'orig_sought': origMissingVariable}
                 if self.options.get('use catchall', False) and not origMissingVariable.endswith('.value'):
-                    string = "from docassemble.base.core import DACatchAll"
+                    string = "from docassemble.base.util import DACatchAll"
                     exec(string, user_dict)
                     string = origMissingVariable + ' = DACatchAll(' + repr(origMissingVariable) + ')'
                     exec(string, user_dict)
@@ -9013,8 +9013,8 @@ def ensure_object_exists(saveas, datatype, the_user_dict, commands=None):
                     method = 'index'
             except:
                 pass
-    if "from docassemble.base.core import DADict, DAList" not in commands:
-        commands.append("from docassemble.base.core import DADict, DAList")
+    if "from docassemble.base.util import DADict, DAList" not in commands:
+        commands.append("from docassemble.base.util import DADict, DAList")
     if method == 'attribute':
         attribute_name = parse_result['final_parts'][1][1:]
         if datatype in ('multiselect', 'checkboxes'):

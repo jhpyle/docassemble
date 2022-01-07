@@ -5266,7 +5266,7 @@ Feature: Example interviews
     Then I should see the phrase "The interview is complete."
 
   # Scenario: Test the interview "Save training set to playground"
-  #   Given I start the interview "docassemble.base:data/questions/examples/ml-export-playground.yml"
+  #   Given I start the interview "docassemble.demo:data/questions/examples/ml-export-playground.yml"
 
   Scenario: Test the interview "Nested groups"
     Given I start the interview "docassemble.base:data/questions/examples/nested-objects.yml"

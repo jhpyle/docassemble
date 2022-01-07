@@ -59,13 +59,13 @@ from docassemble.base.functions import pickleable_objects, word, comma_and_list,
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
 import docassemble.base.interview_cache
 from docassemble.base.logger import logmessage
-import docassemble.base.ocr
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 import docassemble.base.parse
 import docassemble.base.pdftk
 from docassemble.base.standardformatter import as_html, as_sms, get_choices_with_abb
 import docassemble.base.util
 from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject, DAFileCollection, DAStaticFile, DADict, DAList
+import docassemble.base.core # for backward-compatibility with data pickled in earlier versions
 
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 import docassemble.webapp.backend
@@ -87,7 +87,6 @@ from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignI
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog, MyUserInvitation, Role, UserRoles
 from docassemble.webapp.users.views import user_profile_page
 if not in_celery:
-    sys.stderr.write("Importing docassemble.webapp.worker")
     import docassemble.webapp.worker
 
 import apiclient
@@ -1104,11 +1103,16 @@ lm = LoginManager()
 lm.init_app(app)
 lm.login_view = 'custom_login'
 
-def import_necessary(url, url_root):
+def login_as_admin(url, url_root):
+    found = False
     for admin_user in db.session.execute(select(UserModel).filter_by(nickname='admin').order_by(UserModel.id)).scalars():
-        login_user(admin_user, remember=False)
-        docassemble.base.functions.this_thread.current_info = dict(user=dict(is_anonymous=False, is_authenticated=True, email=admin_user.email, theid=admin_user.id, the_user_id=admin_user.id, roles=['admin'], firstname=admin_user.first_name, lastname=admin_user.last_name, nickname=admin_user.nickname, country=admin_user.country, subdivisionfirst=admin_user.subdivisionfirst, subdivisionsecond=admin_user.subdivisionsecond, subdivisionthird=admin_user.subdivisionthird, organization=admin_user.organization, location=None, session_uid='admin', device_id='admin'), session=None, secret=None, yaml_filename=final_default_yaml_filename, url=url, url_root=url_root, encrypted=False, action=None, interface='initialization', arguments={})
-        break
+        if not found:
+            found = True
+            current_app.login_manager._update_request_context_with_user(admin_user)
+            docassemble.base.functions.this_thread.current_info = dict(user=dict(is_anonymous=False, is_authenticated=True, email=admin_user.email, theid=admin_user.id, the_user_id=admin_user.id, roles=['admin'], firstname=admin_user.first_name, lastname=admin_user.last_name, nickname=admin_user.nickname, country=admin_user.country, subdivisionfirst=admin_user.subdivisionfirst, subdivisionsecond=admin_user.subdivisionsecond, subdivisionthird=admin_user.subdivisionthird, organization=admin_user.organization, location=None, session_uid='admin', device_id='admin'), session=None, secret=None, yaml_filename=final_default_yaml_filename, url=url, url_root=url_root, encrypted=False, action=None, interface='initialization', arguments={})
+
+def import_necessary(url, url_root):
+    login_as_admin(url, url_root)
     modules_to_import = daconfig.get('preloaded modules', None)
     if isinstance(modules_to_import, list):
         for module_name in daconfig['preloaded modules']:
@@ -1151,6 +1155,7 @@ def import_necessary(url, url_root):
             importlib.import_module(module_name)
         except Exception as err:
             sys.stderr.write("Import of " + module_name + " failed.  " + err.__class__.__name__ + ": " + str(err) + "\n")
+    current_app.login_manager._update_request_context_with_user()
 
 def get_clicksend_config():
     if 'clicksend' in daconfig and isinstance(daconfig['clicksend'], (list, dict)):
@@ -3931,14 +3936,14 @@ def fg_make_png_for_pdf(doc, prefix, page=None):
         resolution = PNG_RESOLUTION
     else:
         resolution = PNG_SCREEN_RESOLUTION
-    docassemble.base.ocr.make_png_for_pdf(doc, prefix, resolution, PDFTOPPM_COMMAND, page=page)
+    docassemble.base.util.make_png_for_pdf(doc, prefix, resolution, PDFTOPPM_COMMAND, page=page)
 
 def fg_make_png_for_pdf_path(path, prefix, page=None):
     if prefix == 'page':
         resolution = PNG_RESOLUTION
     else:
         resolution = PNG_SCREEN_RESOLUTION
-    docassemble.base.ocr.make_png_for_pdf_path(path, prefix, resolution, PDFTOPPM_COMMAND, page=page)
+    docassemble.base.util.make_png_for_pdf_path(path, prefix, resolution, PDFTOPPM_COMMAND, page=page)
 
 def fg_make_pdf_for_word_path(path, extension):
     success = docassemble.base.pandoc.word_to_pdf(path, extension, path + ".pdf")
@@ -6543,7 +6548,7 @@ def index(action_argument=None, refer=None):
             if not already_assembled:
                 interview.assemble(user_dict, interview_status)
                 already_assembled = True
-            initial_string = 'import docassemble.base.core'
+            initial_string = 'import docassemble.base.util'
             try:
                 exec(initial_string, user_dict)
             except Exception as errMess:
@@ -6554,12 +6559,12 @@ def index(action_argument=None, refer=None):
                 filename = secure_filename('canvas.png')
                 file_number = get_new_file_number(user_code, filename, yaml_file_name=yaml_filename)
                 extension, mimetype = get_ext_and_mimetype(filename)
-                new_file = SavedFile(file_number, extension=extension, fix=True)
+                new_file = SavedFile(file_number, extension=extension, fix=True, should_not_exist=True)
                 new_file.write_content(theImage, binary=True)
                 new_file.finalize()
-                the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field_tr) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', make_pngs=True, extension='" + str(extension) + "')"
+                the_string = file_field + " = docassemble.base.util.DAFile(" + repr(file_field_tr) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', make_pngs=True, extension='" + str(extension) + "')"
             else:
-                the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field_tr) + ")"
+                the_string = file_field + " = docassemble.base.util.DAFile(" + repr(file_field_tr) + ")"
             process_set_variable(file_field, user_dict, vars_set, old_values)
             try:
                 exec(the_string, user_dict)
@@ -6717,14 +6722,14 @@ def index(action_argument=None, refer=None):
                             pass
                 datatype = known_datatypes.get(real_key, None)
                 if not imported_core:
-                    commands.append("import docassemble.base.core")
+                    commands.append("import docassemble.base.util")
                     imported_core = True
                 if method == 'attribute':
                     attribute_name = parse_result['final_parts'][1][1:]
                     if datatype in ('multiselect', 'checkboxes'):
-                        commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
+                        commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.util.DADict, auto_gather=False, gathered=True)")
                     elif datatype in ('object_multiselect', 'object_checkboxes'):
-                        commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
+                        commands.append(core_key_name + ".initializeAttribute(" + repr(attribute_name) + ", docassemble.base.util.DAList, auto_gather=False, gathered=True)")
                     process_set_variable(core_key_name + '.' + attribute_name, user_dict, vars_set, old_values)
                 elif method == 'index':
                     index_name = parse_result['final_parts'][1][1:-1]
@@ -6732,16 +6737,16 @@ def index(action_argument=None, refer=None):
                     if index_name in ('i', 'j', 'k', 'l', 'm', 'n'):
                         index_name = repr(user_dict.get(index_name, index_name))
                     if datatype in ('multiselect', 'checkboxes'):
-                        commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.core.DADict, auto_gather=False, gathered=True)")
+                        commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.util.DADict, auto_gather=False, gathered=True)")
                     elif datatype in ('object_multiselect', 'object_checkboxes'):
-                        commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.core.DAList, auto_gather=False, gathered=True)")
+                        commands.append(core_key_name + ".initializeObject(" + index_name + ", docassemble.base.util.DAList, auto_gather=False, gathered=True)")
                     process_set_variable(core_key_name + '[' + orig_index_name + ']', user_dict, vars_set, old_values)
                 else:
                     whole_key_tr = sub_indices(whole_key, user_dict)
                     if datatype in ('multiselect', 'checkboxes'):
-                        commands.append(whole_key + ' = docassemble.base.core.DADict(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
+                        commands.append(whole_key + ' = docassemble.base.util.DADict(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
                     elif datatype in ('object_multiselect', 'object_checkboxes'):
-                        commands.append(whole_key + ' = docassemble.base.core.DAList(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
+                        commands.append(whole_key + ' = docassemble.base.util.DAList(' + repr(whole_key_tr) + ', auto_gather=False, gathered=True)')
                     process_set_variable(whole_key, user_dict, vars_set, old_values)
                 for command in commands:
                     exec(command, user_dict)
@@ -7042,10 +7047,10 @@ def index(action_argument=None, refer=None):
         if set_to_empty:
             if set_to_empty in ('multiselect', 'checkboxes'):
                 try:
-                    exec("import docassemble.base.core", user_dict)
+                    exec("import docassemble.base.util", user_dict)
                 except Exception as errMess:
                     error_messages.append(("error", "Error: " + str(errMess)))
-                data = 'docassemble.base.core.DADict(' + repr(key_tr) + ', auto_gather=False, gathered=True)'
+                data = 'docassemble.base.util.DADict(' + repr(key_tr) + ', auto_gather=False, gathered=True)'
             else:
                 data = 'None'
         if do_append and not set_to_empty:
@@ -7161,7 +7166,7 @@ def index(action_argument=None, refer=None):
                 if key_requires_preassembly.search(file_field):
                     should_assemble_now = True
             if not has_invalid_fields:
-                initial_string = 'import docassemble.base.core'
+                initial_string = 'import docassemble.base.util'
                 try:
                     exec(initial_string, user_dict)
                 except Exception as errMess:
@@ -7210,7 +7215,7 @@ def index(action_argument=None, refer=None):
                                     filename = re.sub(r'\.[^\.]+$', '', filename) + '.' + the_format
                                     extension, mimetype = get_ext_and_mimetype(filename)
                                 file_number = get_new_file_number(user_code, filename, yaml_file_name=yaml_filename)
-                                saved_file = SavedFile(file_number, extension=extension, fix=True)
+                                saved_file = SavedFile(file_number, extension=extension, fix=True, should_not_exist=True)
                                 process_file(saved_file, temp_file.name, mimetype, extension)
                                 files_to_process.append((filename, file_number, mimetype, extension))
                             try:
@@ -7228,9 +7233,9 @@ def index(action_argument=None, refer=None):
                                 elements = []
                                 indexno = 0
                                 for (filename, file_number, mimetype, extension) in files_to_process:
-                                    elements.append("docassemble.base.core.DAFile(" + repr(file_field_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
+                                    elements.append("docassemble.base.util.DAFile(" + repr(file_field_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
-                                the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
+                                the_file_list = "docassemble.base.util.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
                                 if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field]:
                                     the_field = the_question.fields[field_numbers[orig_file_field]]
                                     add_permissions_for_field(the_field, interview_status, files_to_process)
@@ -7312,7 +7317,7 @@ def index(action_argument=None, refer=None):
                     should_assemble_now = True
                 key_to_orig_key[file_field] = orig_file_field
             if not has_invalid_fields:
-                initial_string = 'import docassemble.base.core'
+                initial_string = 'import docassemble.base.util'
                 try:
                     exec(initial_string, user_dict)
                 except Exception as errMess:
@@ -7346,7 +7351,7 @@ def index(action_argument=None, refer=None):
                                 filename = secure_filename(the_file.filename)
                                 file_number = get_new_file_number(user_code, filename, yaml_file_name=yaml_filename)
                                 extension, mimetype = get_ext_and_mimetype(filename)
-                                saved_file = SavedFile(file_number, extension=extension, fix=True)
+                                saved_file = SavedFile(file_number, extension=extension, fix=True, should_not_exist=True)
                                 temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + extension, delete=False)
                                 the_file.save(temp_file.name)
                                 process_file(saved_file, temp_file.name, mimetype, extension)
@@ -7366,9 +7371,9 @@ def index(action_argument=None, refer=None):
                                 elements = []
                                 indexno = 0
                                 for (filename, file_number, mimetype, extension) in files_to_process:
-                                    elements.append("docassemble.base.core.DAFile(" + repr(file_field_tr + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
+                                    elements.append("docassemble.base.util.DAFile(" + repr(file_field_tr + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
-                                the_file_list = "docassemble.base.core.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
+                                the_file_list = "docassemble.base.util.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
                                 if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field]:
                                     the_field = the_question.fields[field_numbers[orig_file_field]]
                                     add_permissions_for_field(the_field, interview_status, files_to_process)
@@ -11869,7 +11874,7 @@ def speak_file():
                 phrase = unpack_phrase(entry.phrase)
             url = voicerss_config.get('url', "https://api.voicerss.org/")
             #logmessage("Retrieving " + url)
-            audio_file = SavedFile(new_file_number, extension='mp3', fix=True)
+            audio_file = SavedFile(new_file_number, extension='mp3', fix=True, should_not_exist=True)
             audio_file.fetch_url_post(url, dict(f=voicerss_config.get('format', '16khz_16bit_stereo'), key=voicerss_config['key'], src=phrase, hl=str(entry.language) + '-' + str(entry.dialect)))
             if audio_file.size_in_bytes() > 100:
                 call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', audio_file.path + '.mp3']
@@ -12265,62 +12270,40 @@ def do_serve_uploaded_file(number, download=False):
 
 @app.route('/uploadedpage/<number>/<page>', methods=['GET'])
 def serve_uploaded_page(number, page):
-    return do_serve_uploaded_page(number, page)
+    return do_serve_uploaded_page(number, page, size='page')
 
 @app.route('/uploadedpagedownload/<number>/<page>', methods=['GET'])
 def serve_uploaded_page_download(number, page):
-    return do_serve_uploaded_page(number, page, download=True)
-
-def do_serve_uploaded_page(number, page, download=False):
-    number = re.sub(r'[^0-9]', '', str(number))
-    page = re.sub(r'[^0-9]', '', str(page))
-    privileged = bool(current_user.is_authenticated and current_user.has_role('admin', 'advocate'))
-    try:
-        file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
-    except:
-        return ('File not found', 404)
-    if 'path' not in file_info:
-        return ('File not found', 404)
-    else:
-        max_pages = 1 + int(file_info['pages'])
-        formatter = '%0' + str(len(str(max_pages))) + 'd'
-        basename = 'page-' + (formatter % int(page)) + '.png'
-        filename = file_info['path'] + basename
-        if os.path.isfile(filename):
-            response = send_file(filename, mimetype='image/png')
-            if download:
-                response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(basename)
-            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-            return response
-        else:
-            return ('File not found', 404)
+    return do_serve_uploaded_page(number, page, download=True, size='page')
 
 @app.route('/uploadedpagescreen/<number>/<page>', methods=['GET'])
 def serve_uploaded_pagescreen(number, page):
-    return do_serve_uploaded_pagescreen(number, page)
+    return do_serve_uploaded_page(number, page, size='screen')
 
 @app.route('/uploadedpagescreendownload/<number>/<page>', methods=['GET'])
 def serve_uploaded_pagescreen_download(number, page):
-    return do_serve_uploaded_pagescreen(number, page, download=True)
+    return do_serve_uploaded_page(number, page, download=True, size='screen')
 
-def do_serve_uploaded_pagescreen(number, page, download=False):
+def do_serve_uploaded_page(number, page, download=False, size='page'):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
     privileged = bool(current_user.is_authenticated and current_user.has_role('admin', 'advocate'))
     try:
         file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
-    except:
+    except Exception as err:
+        logmessage("do_serve_uploaded_page: " + err.__class__.__name__ + str(err))
         return ('File not found', 404)
     if 'path' not in file_info:
-        logmessage('serve_uploaded_pagescreen: no access to file number ' + str(number))
+        logmessage('serve_uploaded_page: no access to file number ' + str(number))
         return ('File not found', 404)
     try:
         the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
-        filename = the_file.page_path(page, 'screen')
+        filename = the_file.page_path(page, size)
     except Exception as err:
         logmessage("Could not make thumbnail: " + err.__class__.__name__ + ": " + str(err))
         filename = None
     if filename is None:
+        logmessage("do_serve_uploaded_page: sending blank image")
         the_file = docassemble.base.functions.package_data_filename('docassemble.base:data/static/blank_page.png')
         response = send_file(the_file, mimetype='image/png')
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -12332,7 +12315,7 @@ def do_serve_uploaded_pagescreen(number, page, download=False):
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
     else:
-        logmessage('serve_uploaded_pagescreen: path ' + filename + ' is not a file')
+        logmessage('do_serve_uploaded_page: path ' + filename + ' is not a file')
         return ('File not found', 404)
 
 @app.route('/visit_interview', methods=['GET', 'POST'])
@@ -15089,7 +15072,7 @@ def update_package():
                 the_file = request.files['zipfile']
                 filename = secure_filename(the_file.filename)
                 file_number = get_new_file_number(None, filename)
-                saved_file = SavedFile(file_number, extension='zip', fix=True)
+                saved_file = SavedFile(file_number, extension='zip', fix=True, should_not_exist=True)
                 file_set_attributes(file_number, private=False, persistent=True)
                 zippath = saved_file.path
                 the_file.save(zippath)
@@ -15708,7 +15691,7 @@ def create_playground_package():
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(None, nice_name)
             file_set_attributes(file_number, private=False, persistent=True)
-            saved_file = SavedFile(file_number, extension='zip', fix=True)
+            saved_file = SavedFile(file_number, extension='zip', fix=True, should_not_exist=True)
             if current_user.timezone:
                 the_timezone = current_user.timezone
             else:
@@ -15915,7 +15898,7 @@ machine learning training files, and other source files.
 # fields:
 #   - Fruit Name: favorite_fruit.name
 # ---
-from docassemble.base.core import DAObject
+from docassemble.base.util import DAObject
 
 class Fruit(DAObject):
     def eat(self):
@@ -15958,7 +15941,7 @@ class Fruit(DAObject):
         nice_name = 'docassemble-' + str(pkgname) + '.zip'
         file_number = get_new_file_number(None, nice_name)
         file_set_attributes(file_number, private=False, persistent=True)
-        saved_file = SavedFile(file_number, extension='zip', fix=True)
+        saved_file = SavedFile(file_number, extension='zip', fix=True, should_not_exist=True)
         zf = zipfile.ZipFile(saved_file.path, mode='w')
         trimlength = len(directory) + 1
         if current_user.timezone:
@@ -22965,11 +22948,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 (file_number, extension, mimetype) = save_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
                 saveas_tr = sub_indices(saveas, user_dict)
                 if inp_lower == word('x'):
-                    the_string = saveas + " = docassemble.base.core.DAFile('" + saveas_tr + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
-                    logmessage("do_sms: doing import docassemble.base.core")
-                    logmessage("do_sms: doing signature: " + the_string)
+                    the_string = saveas + " = docassemble.base.util.DAFile('" + saveas_tr + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
                     try:
-                        exec('import docassemble.base.core', user_dict)
+                        exec('import docassemble.base.util', user_dict)
                         exec(the_string, user_dict)
                         if not changed:
                             steps += 1
@@ -23022,7 +23003,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         #     mimetype = 'image/png'
                         filename = 'file' + '.' + extension
                         file_number = get_new_file_number(sess_info['uid'], filename, yaml_file_name=sess_info['yaml_filename'])
-                        saved_file = SavedFile(file_number, extension=extension, fix=True)
+                        saved_file = SavedFile(file_number, extension=extension, fix=True, should_not_exist=True)
                         the_url = form['MediaUrl' + str(fileindex)]
                         #logmessage("Fetching from >" + the_url + "<")
                         saved_file.fetch_url(the_url)
@@ -23034,13 +23015,11 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         indexno = 0
                         saveas_tr = sub_indices(saveas, user_dict)
                         for (filename, file_number, mimetype, extension) in files_to_process:
-                            elements.append("docassemble.base.core.DAFile(" + repr(saveas_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
+                            elements.append("docassemble.base.util.DAFile(" + repr(saveas_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                             indexno += 1
-                        the_string = saveas + " = docassemble.base.core.DAFileList(" + repr(saveas_tr) + ", elements=[" + ", ".join(elements) + "])"
-                        logmessage("do_sms: doing import docassemble.base.core")
-                        logmessage("do_sms: doing file: " + the_string)
+                        the_string = saveas + " = docassemble.base.util.DAFileList(" + repr(saveas_tr) + ", elements=[" + ", ".join(elements) + "])"
                         try:
-                            exec('import docassemble.base.core', user_dict)
+                            exec('import docassemble.base.util', user_dict)
                             exec(the_string, user_dict)
                             if not changed:
                                 steps += 1
@@ -23478,7 +23457,7 @@ def api_verify(req, roles=None):
     except:
         logmessage("api_verify: API information could not be unpacked")
         return False
-    m = re.match('da:apikey:userid:([0-9]+):key:' + api_key + ':info', rkeys[0].decode())
+    m = re.match(r'da:apikey:userid:([0-9]+):key:' + re.escape(api_key) + ':info', rkeys[0].decode())
     if not m:
         logmessage("api_verify: user id could not be extracted")
         return False
@@ -24943,7 +24922,7 @@ def api_session():
                     filename = secure_filename(the_file.filename)
                     file_number = get_new_file_number(session_id, filename, yaml_file_name=yaml_filename)
                     extension, mimetype = get_ext_and_mimetype(filename)
-                    saved_file = SavedFile(file_number, extension=extension, fix=True)
+                    saved_file = SavedFile(file_number, extension=extension, fix=True, should_not_exist=True)
                     temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + extension, delete=False)
                     the_file.save(temp_file.name)
                     process_file(saved_file, temp_file.name, mimetype, extension)
@@ -24955,9 +24934,9 @@ def api_session():
                 elements = []
                 indexno = 0
                 for (filename, file_number, mimetype, extension) in files_to_process:
-                    elements.append("docassemble.base.core.DAFile(" + repr(file_field + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
+                    elements.append("docassemble.base.util.DAFile(" + repr(file_field + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                     indexno += 1
-                literal_variables[file_field] = "docassemble.base.core.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
+                literal_variables[file_field] = "docassemble.base.util.DAFileList(" + repr(file_field) + ", elements=[" + ", ".join(elements) + "])"
             else:
                 literal_variables[file_field] = "None"
         try:
@@ -25139,7 +25118,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             release_lock(session_id, yaml_filename)
         raise Exception("Problem setting variables:" + str(the_err))
     if literal_variables is not None:
-        exec('import docassemble.base.core', user_dict)
+        exec('import docassemble.base.util', user_dict)
         for key, val in literal_variables.items():
             if illegal_variable_name(key):
                 if use_lock:
@@ -25974,7 +25953,7 @@ def api_package():
                 the_file = request.files['zip']
                 filename = secure_filename(the_file.filename)
                 file_number = get_new_file_number(docassemble.base.functions.get_uid(), filename)
-                saved_file = SavedFile(file_number, extension='zip', fix=True)
+                saved_file = SavedFile(file_number, extension='zip', fix=True, should_not_exist=True)
                 file_set_attributes(file_number, private=False, persistent=True)
                 zippath = saved_file.path
                 the_file.save(zippath)
@@ -28305,7 +28284,6 @@ if in_celery:
                                              ocr_finalize=null_func,
                                              worker_convert=illegal_worker_convert)
 else:
-    sys.stderr.write("calling set worker now\n")
     docassemble.base.functions.update_server(bg_action=docassemble.webapp.worker.background_action,
                                              #async_ocr=docassemble.webapp.worker.async_ocr,
                                              chord=docassemble.webapp.worker.chord,
@@ -28474,6 +28452,27 @@ def random_social():
             continue
         break
     return new_social
+
+class TestContext:
+    def __init__(self, package):
+        self.package = package
+
+    def __enter__(self):
+        url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+        url = url_root + 'interview'
+        self.app_context = app.app_context()
+        self.app_context.push()
+        self.test_context = app.test_request_context(base_url=url_root, path=url)
+        self.test_context.push()
+        login_as_admin(url, url_root)
+        docassemble.base.functions.this_thread.current_package = self.package
+        docassemble.base.functions.this_thread.current_info.update(dict(yaml_filename=self.package + ':data/questions/test.yml'))
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        current_app.login_manager._update_request_context_with_user()
+        self.test_context.pop()
+        self.app_context.pop()
 
 def initialize():
     global global_css

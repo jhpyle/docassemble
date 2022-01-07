@@ -7,7 +7,7 @@ import types
 import yaml
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
-from docassemble.base.core import DAObject, DADict, DAList
+from docassemble.base.util import DAObject, DADict, DAList
 from docassemble.base.error import DAError
 import docassemble.base.functions
 import docassemble.base.parse

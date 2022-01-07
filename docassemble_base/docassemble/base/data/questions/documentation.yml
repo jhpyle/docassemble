@@ -182,7 +182,7 @@ DAFile.set_mimetype: "https://docassemble.org/docs/objects.html#DAFile.set_mimet
 DAFile.set_attributes: "https://docassemble.org/docs/objects.html#DAFile.set_attributes"
 DAFile.user_access: "https://docassemble.org/docs/objects.html#DAFile.user_access"
 DAFile.privilege_access: "https://docassemble.org/docs/objects.html#DAFile.privilege_access"
-DAFile.make_pngs: "https://docassemble.org/docs/objects.html#DAFile.make_pngs"
+DAFile.pngs_ready: "https://docassemble.org/docs/objects.html#DAFile.pngs_ready"
 DAFile.fix_up: "https://docassemble.org/docs/objects.html#DAFile.fix_up"
 DAFile.set_alt_text: "https://docassemble.org/docs/objects.html#DAFile.set_alt_text"
 DAFile.get_alt_text: "https://docassemble.org/docs/objects.html#DAFile.get_alt_text"

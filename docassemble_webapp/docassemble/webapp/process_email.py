@@ -138,7 +138,7 @@ def save_attachment(uid, yaml_filename, filename, email_id, index, content_type,
     attachment_record = EmailAttachment(email_id=email_id, index=index, content_type=content_type, extension=extension, upload=att_file_number)
     db.session.add(attachment_record)
     db.session.commit()
-    saved_file_attachment = SavedFile(att_file_number, extension=extension)
+    saved_file_attachment = SavedFile(att_file_number, extension=extension, fix=True, should_not_exist=True)
     saved_file_attachment.write_content(content)
     saved_file_attachment.finalize()
 

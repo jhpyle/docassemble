@@ -12,8 +12,8 @@ import pkg_resources
 import boto3
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
-import docassemble.webapp.amazon
-import docassemble.webapp.microsoft
+import docassemble.base.amazon
+import docassemble.base.microsoft
 from docassemble.base.generate_key import random_string
 
 dbtableprefix = None
@@ -223,6 +223,9 @@ def recursive_fetch_cloud(data):
         return tuple(recursive_fetch_cloud(y) for y in data)
     return data
 
+def fix_authorized_domain(domain):
+    return '@' + re.sub(r'^@+', '', domain.lower().strip())
+
 def load(**kwargs):
     global daconfig
     global s3_config
@@ -341,9 +344,9 @@ def load(**kwargs):
     else:
         hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
     if S3_ENABLED:
-        cloud = docassemble.webapp.amazon.s3object(s3_config)
+        cloud = docassemble.base.amazon.s3object(s3_config)
     elif AZURE_ENABLED:
-        cloud = docassemble.webapp.microsoft.azureobject(azure_config)
+        cloud = docassemble.base.microsoft.azureobject(azure_config)
         if ('key vault name' in azure_config and azure_config['key vault name'] is not None and 'managed identity' in azure_config and azure_config['managed identity'] is not None):
             daconfig = cloud.load_with_secrets(daconfig)
     else:
@@ -580,6 +583,15 @@ def load(**kwargs):
             daconfig['api privileges'] = ['admin', 'developer']
     else:
         daconfig['api privileges'] = ['admin', 'developer']
+    authorized_domains = []
+    if 'authorized registration domains' in daconfig:
+        if isinstance(daconfig['authorized registration domains'], str):
+            authorized_domains.append(fix_authorized_domain(daconfig['authorized registration domains']))
+        elif isinstance(daconfig['authorized registration domains'], list):
+            for domain in daconfig['authorized registration domains']:
+                if isinstance(domain, str):
+                    authorized_domains.append(fix_authorized_domain(domain))
+    daconfig['authorized registration domains'] = authorized_domains
     if 'two factor authentication' in daconfig:
         if isinstance(daconfig['two factor authentication'], bool):
             daconfig['two factor authentication'] = dict(enable=daconfig['two factor authentication'])

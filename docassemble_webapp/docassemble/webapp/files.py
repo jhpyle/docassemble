@@ -51,7 +51,7 @@ def url_sanitize(url):
     return re.sub(r'\s', ' ', url)
 
 class SavedFile:
-    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file', subdir=None):
+    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file', subdir=None, should_not_exist=False):
         file_number = int(file_number)
         section = str(section)
         if section not in docassemble.base.functions.this_thread.saved_files:
@@ -88,6 +88,25 @@ class SavedFile:
             self.path = os.path.join(self.directory, self.filename)
         if fix:
             self.fix()
+            if should_not_exist and os.path.isdir(self.directory):
+                found_error = False
+                for root, dirs, files in os.walk(self.directory):
+                    if len(files) > 0 or len(dirs) > 0:
+                        found_error = True
+                        break
+                if found_error:
+                    logmessage("WARNING! Possible database corruption due to an unsafe shutdown. Your database indicated that the next file number is " + str(file_number) + ", but there is already a file in the file storage for that number. It is recommended that you restart your system. If that does not make this error go away, you should investigate why there are existing files in the file system.")
+                    if cloud is not None:
+                        prefix = str(self.section) + '/' + str(self.file_number) + '/'
+                        for key in list(cloud.list_keys(prefix)):
+                            try:
+                                key.delete()
+                            except:
+                                pass
+                    if hasattr(self, 'directory') and os.path.isdir(self.directory):
+                        shutil.rmtree(self.directory)
+                    if not os.path.isdir(self.directory):
+                        os.makedirs(self.directory)
     def fix(self):
         if self.fixed:
             return

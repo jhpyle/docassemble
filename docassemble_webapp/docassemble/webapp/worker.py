@@ -9,11 +9,11 @@ import subprocess
 import sys
 import time
 import traceback
+from urllib.parse import quote
 import httplib2
 import iso8601
 import oauth2client.client
 import pytz
-from urllib.parse import quote
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load(in_celery=True)
@@ -65,7 +65,6 @@ def initialize_db():
     import docassemble.base.interview_cache
     import docassemble.base.util
     import docassemble.base.parse
-    import docassemble.base.ocr
     worker_controller.flaskapp = flaskapp
     worker_controller.set_request_active = set_request_active
     worker_controller.fetch_user_dict = fetch_user_dict
@@ -82,18 +81,17 @@ def initialize_db():
     worker_controller.retrieve_email = retrieve_email
     worker_controller.get_info_from_file_number = get_info_from_file_number
     worker_controller.trigger_update = trigger_update
-    worker_controller.ocr = docassemble.base.ocr
+    worker_controller.util = docassemble.base.util
     worker_controller.r = r
     worker_controller.apiclient = apiclient
     worker_controller.get_ext_and_mimetype = get_ext_and_mimetype
-    worker_controller.loaded = True
     worker_controller.get_user_object = get_user_object
     worker_controller.login_user = login_user
     worker_controller.update_last_login = update_last_login
     worker_controller.error_notification = error_notification
-    worker_controller.pdf_concatenate = docassemble.base.util.pdf_concatenate
     worker_controller.noquote = noquote
     worker_controller.update = docassemble.webapp.update
+    worker_controller.loaded = True
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
@@ -792,7 +790,7 @@ def ocr_dummy(doc, indexno, **kwargs):
             worker_controller.set_request_active(False)
             if doc._is_pdf():
                 return worker_controller.functions.ReturnValue(ok=True, value=dict(indexno=indexno, doc=doc))
-            return worker_controller.functions.ReturnValue(ok=True, value=dict(indexno=indexno, doc=worker_controller.pdf_concatenate(doc)))
+            return worker_controller.functions.ReturnValue(ok=True, value=dict(indexno=indexno, doc=worker_controller.util.pdf_concatenate(doc)))
 
 @workerapp.task
 def ocr_page(indexno, **kwargs):
@@ -810,7 +808,7 @@ def ocr_page(indexno, **kwargs):
                 user_object = worker_controller.get_user_object(user_info['theid'])
                 worker_controller.login_user(user_object, remember=False)
             worker_controller.set_request_active(False)
-            return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.ocr.ocr_page(indexno, **kwargs))
+            return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.util.ocr_page(indexno, **kwargs))
 
 def error_object(err):
     sys.stderr.write("Error: " + str(err.__class__.__name__) + ": " + str(err))
@@ -842,7 +840,7 @@ def ocr_finalize(*pargs, **kwargs):
             try:
                 if kwargs.get('pdf', False):
                     try:
-                        (target, dafilelist) = worker_controller.ocr.ocr_finalize(*pargs, **kwargs)
+                        (target, dafilelist) = worker_controller.util.ocr_finalize(*pargs, **kwargs)
                     except Exception as e:
                         return error_object(e)
                     user_info = kwargs['user']
@@ -890,7 +888,7 @@ def ocr_finalize(*pargs, **kwargs):
                         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
                     worker_controller.release_lock(session_code, yaml_filename)
                     return worker_controller.functions.ReturnValue(ok=True, value=True)
-                return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.ocr.ocr_finalize(*pargs, **kwargs), extra=kwargs.get('extra', None))
+                return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.util.ocr_finalize(*pargs, **kwargs), extra=kwargs.get('extra', None))
             except Exception as the_error:
                 sys.stderr.write("Error in ocr_finalize: " + the_error.__class__.__name__ + ': ' + str(the_error) + "\n")
                 return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
@@ -906,7 +904,7 @@ def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
         with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
             worker_controller.functions.reset_local_variables()
             worker_controller.functions.set_uid(user_code)
-            worker_controller.ocr.make_png_for_pdf(doc, prefix, resolution, pdf_to_png, page=page)
+            worker_controller.util.make_png_for_pdf(doc, prefix, resolution, pdf_to_png, page=page)
 
 @workerapp.task
 def reset_server(result, run_create=None):
@@ -1290,6 +1288,3 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
             return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, value=interview_status.question.backgroundresponse, extra=extra)
     sys.stderr.write("Time in error callback was " + str(time.time() - start_time) + "\n")
     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
-
-if in_celery:
-    initialize_db()
