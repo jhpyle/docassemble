@@ -20,6 +20,7 @@ from docassemble.base import pandoc
 from bs4 import BeautifulSoup
 from pylatex.utils import escape_latex
 import xml.etree.ElementTree as ET
+from cairosvg import svg2png, svg2eps
 
 QPDF_PATH = 'qpdf'
 NoneType = type(None)
@@ -780,17 +781,40 @@ def image_as_rtf(match, question=None):
     file_reference = match.group(1)
     if question and file_reference in question.interview.images:
         file_reference = question.interview.images[file_reference].get_reference()
-    file_info = server.file_finder(file_reference, convert={'svg': 'png', 'gif': 'png'}, question=question)
+    file_info = server.file_finder(file_reference, question=question)
     if 'path' not in file_info:
-        return ''
+        return '[invalid graphics reference]'
     #logmessage('image_as_rtf: path is ' + file_info['path'])
     if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
+    if file_info['extension'] == 'svg':
+        try:
+            with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".png", delete=False) as png_file:
+                with open(file_info['fullpath'], 'rb') as fp:
+                    svg2png(file_obj=fp, write_to=png_file, dpi=300)
+                with PIL.Image.open(png_file.name) as im:
+                    orig_width, orig_height = im.size
+                png_file.close()
+                return rtf_image({"width": orig_width, "height": orig_height, "fullpath": png_file.name}, width, False)
+        except Exception as err:
+            logmessage("Could not insert SVG into RTF file: " + err.__class__.__name__ + ": " + str(err))
+            return '[graphic could not be inserted]'
     if 'width' in file_info:
+        if file_info['extension'] in ('gif', 'jpg', 'jpeg'):
+            try:
+                with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".png", delete=False) as png_file:
+                    with PIL.Image.open(file_info['fullpath']) as im:
+                        im.save(png_file.name)
+                    png_file.close()
+                    return rtf_image({"width": file_info["width"], "height": file_info["height"], "fullpath": png_file.name}, width, False)
+            except Exception as err:
+                logmessage("Could not insert image into RTF file: " + err.__class__.__name__ + ": " + str(err))
+                return '[graphic could not be inserted]'
         try:
             return rtf_image(file_info, width, False)
-        except:
+        except Exception as err:
+            logmessage("Could not insert graphic into RTF file: " + err.__class__.__name__ + ": " + str(err))
             return '[graphic could not be inserted]'
     elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
         output = ''
@@ -811,14 +835,10 @@ def image_as_rtf(match, question=None):
         max_pages = 1 + int(file_info['pages'])
         formatter = '%0' + str(len(str(max_pages))) + 'd'
         for page in range(1, max_pages):
-            #logmessage("image_as_rtf: doing page " + str(page) + "\n")
             page_file = {}
             test_path = file_info['path'] + 'page-in-progress'
-            #logmessage("Test path is " + test_path)
             if os.path.isfile(test_path):
-                #logmessage("image_as_rtf: test path " + test_path + " exists")
                 while (os.path.isfile(test_path) and time.time() - os.stat(test_path)[stat.ST_MTIME]) < 30:
-                    #logmessage("Waiting for test path to go away")
                     if not os.path.isfile(test_path):
                         break
                     time.sleep(1)
@@ -828,20 +848,18 @@ def image_as_rtf(match, question=None):
             if not os.path.isfile(page_file['fullpath']):
                 server.fg_make_png_for_pdf_path(file_info['path'] + '.pdf', 'page')
             if os.path.isfile(page_file['fullpath']):
-                with PIL.Image.open(page_file['fullpath']) as im:
-                    page_file['width'], page_file['height'] = im.size
-                output += rtf_image(page_file, width, False)
+                try:
+                    with PIL.Image.open(page_file['fullpath']) as im:
+                        page_file['width'], page_file['height'] = im.size
+                    output += rtf_image(page_file, width, False)
+                except Exception as err:
+                    logmessage("Could not insert graphic into RTF file: " + err.__class__.__name__ + ": " + str(err))
+                    return '[page image could not be inserted]'
             else:
                 output += "[Error including page image]"
-            # if not width_supplied:
-            #     #logmessage("Adding page break\n")
-            #     output += '\\page '
-            # else:
             output += ' '
-        #logmessage("Returning output\n")
         return output
-    else:
-        return ''
+    return '[graphic could not be inserted]'
 
 def qr_as_rtf(match):
     width_supplied = False
@@ -859,14 +877,18 @@ def qr_as_rtf(match):
         #logmessage("Adding page break\n")
         width = DEFAULT_PAGE_WIDTH
         output += '\\page '
-    im = qrcode.make(string)
-    with tempfile.NamedTemporaryFile(suffix=".png") as the_image:
-        im.save(the_image.name)
-        page_file = {}
-        page_file['extension'] = 'png'
-        page_file['fullpath'] = the_image.name
-        page_file['width'], page_file['height'] = im.size
-        output += rtf_image(page_file, width, False)
+    try:
+        im = qrcode.make(string)
+        with tempfile.NamedTemporaryFile(suffix=".png") as the_image:
+            im.save(the_image.name)
+            page_file = {}
+            page_file['extension'] = 'png'
+            page_file['fullpath'] = the_image.name
+            page_file['width'], page_file['height'] = im.size
+            output += rtf_image(page_file, width, False)
+    except Exception as err:
+        logmessage("Could not insert QR code into RTF file: " + err.__class__.__name__ + ": " + str(err))
+        return '[QR code could not be inserted]'
     if not width_supplied:
         #logmessage("Adding page break\n")
         output += '\\page '
@@ -1081,7 +1103,21 @@ def image_include_string(match, emoji=False, question=None):
             width = '\\textwidth'
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_info = server.file_finder(file_reference, convert={'svg': 'eps', 'gif': 'png'}, question=question)
+    file_info = server.file_finder(file_reference, question=question)
+    if 'path' in file_info and 'extension' in file_info:
+        convert_svg_to_eps(file_info)
+        if file_info['extension'] == 'gif':
+            with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".png", delete=False) as png_file:
+                try:
+                    with PIL.Image.open(file_info['fullpath']) as im:
+                        im.save(png_file.name)
+                    png_file.close()
+                    file_info['path'] = png_file.name
+                    file_info['fullpath'] = png_file.name
+                    file_info['extension'] = 'png'
+                    file_info['mimetype'] = 'image/png'
+                except Exception as err:
+                    logmessage("Could not convert GIF to PNG: " + err.__class__.__name__ + ": " + str(err))
     if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
@@ -1116,12 +1152,13 @@ def image_include_docx(match, question=None):
             width = '100%'
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_info = server.file_finder(file_reference, convert={'svg': 'eps'}, question=question)
+    file_info = server.file_finder(file_reference, question=question)
     if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
         if 'extension' in file_info:
+            convert_svg_to_eps(file_info)
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt'):
                 if not os.path.isfile(file_info['path'] + '.pdf'):
                     server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
@@ -1737,11 +1774,12 @@ def image_include_docx_template(match, question=None):
             width = '100%'
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_info = server.file_finder(file_reference, convert={'svg': 'eps'}, question=question)
+    file_info = server.file_finder(file_reference, question=question)
     if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
+        convert_svg_to_eps(file_info)
         if 'mimetype' in file_info and file_info['mimetype']:
             if file_info['mimetype'] in ('text/markdown', 'text/plain'):
                 with open(file_info['fullpath'], 'r', encoding='utf-8') as f:
@@ -1777,3 +1815,33 @@ def ensure_valid_filename(filename):
         if ord(char) < 32 or ord(char) >= 127:
             raise Exception("Filename contained invalid character " + repr(char))
     return True
+
+def convert_svg_to_eps(file_info):
+    try:
+        if file_info['extension'] == 'svg':
+            with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".eps", delete=False) as eps_file:
+                with open(file_info['fullpath'], 'rb') as fp:
+                    svg2eps(file_obj=fp, write_to=eps_file)
+                file_info['path'] = eps_file.name
+                file_info['fullpath'] = eps_file.name
+                file_info['extension'] = 'eps'
+                file_info['mimetype'] = 'application/postscript'
+                eps_file.close()
+    except Exception as err:
+        logmessage("Failure to convert SVG to EPS: " + err.__class__.__name__ + ": " + str(err))
+
+def convert_svg_to_png(file_info):
+    try:
+        if file_info['extension'] == 'svg':
+            with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".png", delete=False) as png_file:
+                with open(file_info['fullpath'], 'rb') as fp:
+                    svg2png(file_obj=fp, write_to=png_file, dpi=300)
+                with PIL.Image.open(png_file.name) as im:
+                    file_info['width'], file_info['height'] = im.size
+                file_info['path'] = png_file.name
+                file_info['fullpath'] = png_file.name
+                file_info['extension'] = 'png'
+                file_info['mimetype'] = 'image/png'
+                png_file.close()
+    except Exception as err:
+        logmessage("Failure to convert SVG to PNG: " + err.__class__.__name__ + ": " + str(err))

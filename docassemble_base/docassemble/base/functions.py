@@ -24,22 +24,22 @@ import markdown
 from mdx_smartypants import SmartypantsExt
 import nltk
 try:
-    if not os.path.isdir(os.path.join(nltk.data.path[0], 'corpora', 'omw-1.4')):
+    if not os.path.isfile(os.path.join(nltk.data.path[0], 'corpora', 'omw-1.4.zip')):
         nltk.download('omw-1.4')
 except:
     pass
 try:
-    if not os.path.isdir(os.path.join(nltk.data.path[0], 'corpora', 'wordnet')):
+    if not os.path.isfile(os.path.join(nltk.data.path[0], 'corpora', 'wordnet.zip')):
         nltk.download('wordnet')
 except:
     pass
 try:
-    if not os.path.isdir(os.path.join(nltk.data.path[0], 'corpora', 'wordnet_ic')):
+    if not os.path.isfile(os.path.join(nltk.data.path[0], 'corpora', 'wordnet_ic.zip')):
         nltk.download('wordnet_ic')
 except:
     pass
 try:
-    if not os.path.isdir(os.path.join(nltk.data.path[0], 'corpora', 'sentiwordnet')):
+    if not os.path.isfile(os.path.join(nltk.data.path[0], 'corpora', 'sentiwordnet.zip')):
         nltk.download('sentiwordnet')
 except:
     pass

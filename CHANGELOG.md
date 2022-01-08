@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.3.16] - 2022-01-08
+### Changed
+- Security updates to dependencies.
+### Fixed
+- Better support for including a variety of image types in documents
+  by converting the image type to PNG or EPS as appropriate.
+- Problem with order of table model module loading.
+
 ## [1.3.15] - 2022-01-06
 ### Added
 - The `TestContext` object for testing **docassemble** code from the

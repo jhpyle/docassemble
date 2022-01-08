@@ -6664,7 +6664,9 @@ class Question:
                                 m = re.search(r'\[FILE ([^\]]+)\]', answer)
                                 if m:
                                     file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                    file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                    file_info = docassemble.base.functions.server.file_finder(file_reference, question=self)
+                                    if 'path' in file_info and 'extension' in file_info:
+                                        docassemble.base.filter.convert_svg_to_png(file_info)
                                     result['images'].append((key, file_info))
                                 else:
                                     m = re.search(r'\[QR ([^\]]+)\]', answer)
@@ -6704,10 +6706,19 @@ class Question:
                                     m = re.search(r'\[FILE ([^\]]+)\]', val)
                                     if m:
                                         file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                        file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                        file_info = docassemble.base.functions.server.file_finder(file_reference, question=self)
+                                        if 'path' in file_info and 'extension' in file_info:
+                                            docassemble.base.filter.convert_svg_to_png(file_info)
                                         result['images'].append((key, file_info))
                                     else:
-                                        result['data_strings'].append((key, val))
+                                        m = re.search(r'\[QR ([^\]]+)\]', val)
+                                        if m:
+                                            im = qrcode.make(re.sub(r' *,.*', '', m.group(1)))
+                                            with tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False) as the_image:
+                                                im.save(the_image.name)
+                                                result['images'].append((key, {'fullpath': the_image.name}))
+                                        else:
+                                            result['data_strings'].append((key, val))
                         if 'code dict' in attachment['options']:
                             additional_fields = attachment['options']['code dict']
                             if not isinstance(additional_fields, list):
@@ -6738,10 +6749,19 @@ class Question:
                                     m = re.search(r'\[FILE ([^\]]+)\]', val)
                                     if m:
                                         file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                        file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                        file_info = docassemble.base.functions.server.file_finder(file_reference, question=self)
+                                        if 'path' in file_info and 'extension' in file_info:
+                                            docassemble.base.filter.convert_svg_to_png(file_info)
                                         result['images'].append((key, file_info))
                                     else:
-                                        result['data_strings'].append((key, val))
+                                        m = re.search(r'\[QR ([^\]]+)\]', val)
+                                        if m:
+                                            im = qrcode.make(re.sub(r' *,.*', '', m.group(1)))
+                                            with tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False) as the_image:
+                                                im.save(the_image.name)
+                                                result['images'].append((key, {'fullpath': the_image.name}))
+                                        else:
+                                            result['data_strings'].append((key, val))
                         if 'raw code dict' in attachment['options']:
                             additional_fields = attachment['options']['raw code dict']
                             if not isinstance(additional_fields, list):
@@ -6770,10 +6790,19 @@ class Question:
                                     m = re.search(r'\[FILE ([^\]]+)\]', val)
                                     if m:
                                         file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                        file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
+                                        file_info = docassemble.base.functions.server.file_finder(file_reference, question=self)
+                                        if 'path' in file_info and 'extension' in file_info:
+                                            docassemble.base.filter.convert_svg_to_png(file_info)
                                         result['images'].append((key, file_info))
                                     else:
-                                        result['data_strings'].append((key, val))
+                                        m = re.search(r'\[QR ([^\]]+)\]', val)
+                                        if m:
+                                            im = qrcode.make(re.sub(r' *,.*', '', m.group(1)))
+                                            with tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False) as the_image:
+                                                im.save(the_image.name)
+                                                result['images'].append((key, {'fullpath': the_image.name}))
+                                        else:
+                                            result['data_strings'].append((key, val))
                         docassemble.base.functions.reset_context()
                     elif doc_format == 'raw':
                         docassemble.base.functions.set_context('raw')

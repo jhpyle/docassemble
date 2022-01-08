@@ -37,7 +37,9 @@ def image_for_docx(fileref, question, tpl, width=None):
     if fileref.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile', 'DAStaticFile'):
         file_info = dict(fullpath=fileref.path())
     else:
-        file_info = server.file_finder(fileref, convert={'svg': 'png'}, question=question)
+        file_info = server.file_finder(fileref, question=question)
+    if 'path' in file_info and 'extension' in file_info:
+        docassemble.base.filter.convert_svg_to_png(file_info)
     if 'fullpath' not in file_info:
         return '[FILE NOT FOUND]'
     if width is not None:
