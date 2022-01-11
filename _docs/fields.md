@@ -1504,29 +1504,41 @@ user selects the "other" option.
 
 {% include side-by-side.html demo="other" %}
 
-The second method is like the first, but is for the special case where
-the other field in [`fields`] is a yes/no variable.  Under this method,
-`show if` refers to the other field's variable name.  If that variable
-is true, the field will be shown, and if it is not true, the field
-will be hidden.
+Note that you can only use this syntax to refer to other fields on the
+screen; you cannot refer to arbitrary Python variables in your
+interview answers.  This method of `show if` is JavaScript-based, and
+takes place in the browser.  The interview answers are in Python, on
+the server.  The web browser does not have access to all of the
+Python variables in the interview answers; it only has access to the
+values of fields that are displayed in the user interface.
+
+The second method is like the first, but is a shorthand syntax for the
+special case where the other field in [`fields`] is a yes/no variable.
+Under this method, `show if` refers to the other field's variable
+name.  If that yes/no input is set to a "yes" value, the field will be
+shown, and otherwise the field will be hidden.
 
 {% include side-by-side.html demo="showif-boolean" %}
 
-If `show if` refers to a variable that is itself hidden by a `show
-if`, then the condition is considered to be false.
+As with the first method, the variable name referred to by `show if:`
+must be a variable name associated with a field on the screen (listed
+under `fields`); it cannot refer to any arbitrary Python variable.
+
+Note that if `show if` refers to a field that is itself hidden by a
+`show if`, then the condition is considered to be false.
 
 {% include side-by-side.html demo="showif-nested" %}
 
-Under the third method, the field is either shown or not shown on the
-screen when it loads, and it stays that way.  You can use [Python]
-code to control whether the field is shown or not.  Unlike
-the first method, you are not limited to using variables that are part
-of the [`fields`] list; you can use any [Python] code; however, you
-cannot refer to any of the variables that are defined by the current
-question.  Under this method, `show if` must refer to a [YAML]
-dictionary with one key, `code`, where `code` contains [Python] code.
-The code will be evaluated and if it evaluates to a positive value,
-the field will be shown.
+Under the third `show if` method, the field is either shown or not
+shown on the screen when it loads, and it stays that way.  You can use
+[Python] code to control whether the field is shown or not.  Unlike
+the first method, you are not limited to using variables associated
+with fields in the [`fields`] list; you can use any [Python] code;
+however, you cannot refer to any of the variables that are defined by
+the current question.  Under this method, `show if` must refer to a
+[YAML] dictionary with one key, `code`, where `code` contains [Python]
+code.  The code will be evaluated and if it evaluates to a positive
+value, the field will be shown.
 
 {% include side-by-side.html demo="showif" %}
 
