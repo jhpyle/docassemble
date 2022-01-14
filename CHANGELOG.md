@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.17] - 2022-01-13
+### Changed
+- Environment variable for S3 region for use in shell scripts.
+
 ## [1.3.16] - 2022-01-08
 ### Changed
 - Security updates to dependencies.

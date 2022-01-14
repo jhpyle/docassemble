@@ -165,6 +165,7 @@ if __name__ == "__main__":
             print('export S3BUCKET="' + str(daconfig['s3']['bucket']) + '"')
         if 'region' in daconfig['s3'] and daconfig['s3']['region'] is not None:
             print('export S3REGION="' + str(daconfig['s3']['region']) + '"')
+            print('export AWS_DEFAULT_REGION="' + str(daconfig['s3']['region']) + '"')
         if 'endpoint url' in daconfig['s3'] and daconfig['s3']['endpoint url'] is not None:
             print('export S3ENDPOINTURL="' + str(daconfig['s3']['endpoint url']) + '"')
             print('export S4CMD_OPTS="--endpoint-url=\\"' + str(daconfig['s3']['endpoint url']) + '\\""')

@@ -56,12 +56,13 @@ bash -c \
 "cd /tmp \
 && /usr/bin/python3.8 -m venv --copies /usr/share/docassemble/local3.8 \
 && source /usr/share/docassemble/local3.8/bin/activate \
-&& pip3 install --upgrade pip==20.1.1 \
+&& pip3 install --upgrade pip==21.1 \
 && pip3 install --upgrade mod_wsgi==4.7.1 \
 && pip3 install --upgrade \
    certbot==1.15.0 \
    certbot-nginx==1.15.0 \
    certbot-apache==1.15.0 \
+   unoconv==0.9.0
 && pip3 install \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
