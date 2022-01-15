@@ -7212,6 +7212,8 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
                 subattachment = getattr(attachment, 'rtf', None)
             if subattachment is None:
                 subattachment = getattr(attachment, 'tex', None)
+            if subattachment is None:
+                subattachment = getattr(attachment, 'raw', None)
             if subattachment is not None:
                 attachment_list.append(subattachment)
             else:
@@ -7366,6 +7368,8 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
                 subattachment = getattr(attachment, 'rtf', None)
             if subattachment is None:
                 subattachment = getattr(attachment, 'tex', None)
+            if subattachment is None:
+                subattachment = getattr(attachment, 'raw', None)
             if subattachment is not None:
                 attachment_list.append(subattachment)
             else:

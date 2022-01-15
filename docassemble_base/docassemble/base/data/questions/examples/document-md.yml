@@ -1,14 +1,13 @@
 metadata:
-  title: DOCX format
-  documentation: "https://docassemble.org/docs/documents.html#docx"
+  title: Markdown format
+  documentation: "https://docassemble.org/docs/documents.html#md"
 ---
 question: Here is your document.
 attachments:
   - name: Summary of Benefits
     filename: benefits_summary
     valid formats:
-      - docx
-      - pdf
+      - md
     content: |
       [BOLDCENTER] Summary of Benefits
 

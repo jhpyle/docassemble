@@ -734,7 +734,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST">\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformyesno">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
@@ -762,7 +762,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST">\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformnoyes">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
@@ -843,7 +843,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 if field.number in status.helptexts:
                     fieldlist.append('                <div class="row da-review da-review-help"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST">\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST" class="daformreview">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
@@ -1352,7 +1352,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             if hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras):
                 fieldlist.append('                </div>\n')
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + ' class="daformfields">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div class="da-subquestion">\n' + sub_question_text
@@ -1406,7 +1406,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = "boolean"
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST">\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformcontinue">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
@@ -1435,7 +1435,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         if hasattr(status.question.fields[0], 'datatype'):
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST">\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformmultiplechoice">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
@@ -1655,7 +1655,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
     else:
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST">\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST" class="daformcontinueother">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
@@ -1687,9 +1687,12 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         editable_options = set()
         total_editable = 0
         for attachment in status.attachments:
-            if 'rtf' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
+            if 'rtf' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or 'md' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                 if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                     editable_included = True
+                if 'md' in attachment['valid_formats']:
+                    total_editable += 1
+                    editable_options.add('MD')
                 if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                     total_editable += 1
                     editable_options.add('RTF')
@@ -1709,7 +1712,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             else:
                 show_markdown = False
             #logmessage("markdown is " + str(attachment['markdown']))
-            show_download = bool('pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats'])
+            show_download = bool('pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or 'md' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats'])
             show_preview = bool('html' in attachment['valid_formats'] or '*' in attachment['valid_formats'])
             multiple_formats = bool(len(attachment['valid_formats']) > 1 or '*' in attachment['valid_formats'])
             if attachment.get('raw', False):
@@ -1754,6 +1757,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
                     if 'tex' in attachment['valid_formats']:
                         output += '                  <p class="da-attachment-tab-download-tex"><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> LaTeX</a> (' + word('for debugging PDF output') + ')</p>\n'
+                    if 'md' in attachment['valid_formats']:
+                        output += '                  <p class="da-attachment-tab-download-md"><a href="' + server.url_finder(attachment['file']['md'], display_filename=attachment['filename'] + '.md') + '" target="_blank"><i class="fab fa-markdown fa-fw"></i> Markdown</a></p>\n'
                 output += '                </div>\n'
             if show_preview:
                 output += '                <div class="tab-pane da-attachment-tab-preview" id="dapreview' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dapreview-tab' + str(attachment_index) + '">\n'
@@ -1768,6 +1773,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         if editable_included:
             if 'RTF' in editable_options and 'DOCX' in editable_options:
                 editable_name = word('Include RTF and DOCX files for editing')
+            elif 'RTF' in editable_options and 'MD' in editable_options:
+                editable_name = word('Include RTF and Markdown files for editing')
+            elif 'DOCX' in editable_options and 'MD' in editable_options:
+                editable_name = word('Include DOCX and Markdown files for editing')
             elif 'RTF' in editable_options:
                 if total_editable > 1:
                     editable_name = word('Include RTF files for editing')
@@ -1778,6 +1787,11 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     editable_name = word('Include DOCX files for editing')
                 else:
                     editable_name = word('Include DOCX file for editing')
+            elif 'MD' in editable_options:
+                if total_editable > 1:
+                    editable_name = word('Include Markdown files for editing')
+                else:
+                    editable_name = word('Include Markdown file for editing')
             else:
                 editable_name = ''
         if status.extras.get('allow_emailing', True) or status.extras.get('allow_downloading', False):

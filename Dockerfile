@@ -33,6 +33,8 @@ bash -c \
 && cp /tmp/docassemble/Docker/config/exim4-acl /etc/exim4/conf.d/acl/29_docassemble \
 && cp /tmp/docassemble/Docker/config/exim4-update /etc/exim4/update-exim4.conf.conf \
 && cp /tmp/docassemble/Docker/nascent.html /var/www/nascent/index.html \
+&& cp /tmp/docassemble/Docker/daunoconv /usr/bin/daunoconv \
+&& chmod ogu+rx /usr/bin/daunoconv \
 && update-exim4.conf \
 && chown www-data.www-data /usr/share/docassemble/config \
 && chown www-data.www-data \
@@ -61,8 +63,7 @@ bash -c \
 && pip3 install --upgrade \
    certbot==1.15.0 \
    certbot-nginx==1.15.0 \
-   certbot-apache==1.15.0 \
-   unoconv==0.9.0
+   certbot-apache==1.15.0
 && pip3 install \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \

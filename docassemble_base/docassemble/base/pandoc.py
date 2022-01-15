@@ -128,6 +128,9 @@ def initialize_pandoc():
             PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'pdflatex')
     PANDOC_INITIALIZED = True
 
+UNOCONV_PATH = daconfig.get('unoconv path', '/usr/bin/daunoconv')
+UNOCONV_AVAILABLE = bool('enable unoconv' in daconfig and daconfig['enable unoconv'] is True and os.path.isfile(UNOCONV_PATH) and os.access(UNOCONV_PATH, os.X_OK))
+UNOCONV_FILTERS = {'pdfa': ['-e', 'SelectPdfVersion=1', '-e', 'UseTaggedPDF=true'], 'tagged': ['-e', 'UseTaggedPDF=true'], 'default': []}
 LIBREOFFICE_PATH = daconfig.get('libreoffice', 'libreoffice')
 LIBREOFFICE_MACRO_PATH = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
 LIBREOFFICE_INITIALIZED = False
@@ -233,6 +236,8 @@ class MyPandoc:
                 subprocess_arguments.extend(['--reference-docx=%s' % self.reference_file])
             else:
                 subprocess_arguments.extend(['--reference-doc=%s' % self.reference_file])
+        if self.output_format in ('pdf', 'tex'):
+            subprocess_arguments.extend(['--from=markdown+raw_tex-latex_macros'])
         subprocess_arguments.extend(['-s', '-o', temp_outfile.name])
         subprocess_arguments.extend([temp_file.name])
         subprocess_arguments.extend(self.arguments)
@@ -284,6 +289,8 @@ class MyPandoc:
             else:
                 if self.input_format == 'markdown':
                     input_format = "markdown+smart"
+                if self.output_format in ('pdf', 'tex'):
+                    input_format += '+raw_tex-latex_macros'
             subprocess_arguments.extend(['-M', 'latextmpdir=' + os.path.join('.', 'conv'), '--from=%s' % input_format, '--to=%s' % self.output_format])
             if self.output_format == 'html':
                 subprocess_arguments.append('--ascii')
@@ -346,7 +353,10 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                 use_libreoffice = False
                 password = False
             else:
-                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',True,' + method + ')']
+                if UNOCONV_AVAILABLE:
+                    subprocess_arguments = [UNOCONV_PATH, '-f', 'pdf'] + UNOCONV_FILTERS[method] + ['-e', 'PDFViewSelection=2', '-o', to_file, from_file]
+                else:
+                    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',True,' + method + ')']
         elif daconfig.get('convertapi secret', None) is not None:
             try:
                 convertapi_to_pdf(from_file, to_file)
@@ -367,24 +377,38 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             password = False
         else:
             if method == 'default':
-                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',False,' + method + ')']
-#                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'pdf', from_file, '--outdir', tempdir]
+                if UNOCONV_AVAILABLE:
+                    subprocess_arguments = [UNOCONV_PATH, '-f', 'pdf'] + UNOCONV_FILTERS[method] + ['-e', 'PDFViewSelection=2', '-o', to_file, from_file]
+                else:
+                    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',False,' + method + ')']
             else:
-                subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',False,' + method + ')']
+                if UNOCONV_AVAILABLE:
+                    subprocess_arguments = [UNOCONV_PATH, '-f', 'pdf'] + UNOCONV_FILTERS[method] + ['-e', 'PDFViewSelection=2', '-o', to_file, from_file]
+                else:
+                    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',False,' + method + ')']
         if use_libreoffice:
-            initialize_libreoffice()
             start_time = time.time()
-            #logmessage("Trying libreoffice with " + repr(subprocess_arguments))
-            docassemble.base.functions.server.applock('obtain', 'libreoffice')
-            logmessage("Obtained libreoffice lock after {:.4f} seconds.".format(time.time() - start_time))
-            try:
-                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
-            except subprocess.TimeoutExpired:
-                logmessage("word_to_pdf: libreoffice took too long")
-                result = 1
-                tries = 5
-            logmessage("Finished libreoffice after {:.4f} seconds.".format(time.time() - start_time))
-            docassemble.base.functions.server.applock('release', 'libreoffice')
+            if UNOCONV_AVAILABLE:
+                try:
+                    result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+                except subprocess.TimeoutExpired:
+                    logmessage("word_to_pdf: unoconv took too long")
+                    result = 1
+                    tries = 5
+                logmessage("Finished unoconv after {:.4f} seconds.".format(time.time() - start_time))
+            else:
+                initialize_libreoffice()
+                #logmessage("Trying libreoffice with " + repr(subprocess_arguments))
+                docassemble.base.functions.server.applock('obtain', 'libreoffice')
+                logmessage("Obtained libreoffice lock after {:.4f} seconds.".format(time.time() - start_time))
+                try:
+                    result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+                except subprocess.TimeoutExpired:
+                    logmessage("word_to_pdf: libreoffice took too long")
+                    result = 1
+                    tries = 5
+                logmessage("Finished libreoffice after {:.4f} seconds.".format(time.time() - start_time))
+                docassemble.base.functions.server.applock('release', 'libreoffice')
         if os.path.isfile(to_file):
             break
         time.sleep(0.1)
@@ -402,13 +426,16 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
         result = 1
         tries += 1
         if tries < num_tries:
-            time.sleep(tries*random.random())
             if use_libreoffice:
-                logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
+                if UNOCONV_AVAILABLE:
+                    logmessage("Retrying unoconv with " + repr(subprocess_arguments))
+                else:
+                    logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
             elif daconfig.get('convertapi secret', None) is not None:
                 logmessage("Retrying convertapi")
             else:
                 logmessage("Retrying cloudconvert")
+            time.sleep(tries*random.random())
     if result == 0:
         if password:
             pdf_encrypt(to_file, password)
@@ -420,30 +447,48 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
     return True
 
 def rtf_to_docx(in_file, out_file):
-    initialize_libreoffice()
     tempdir = tempfile.mkdtemp()
     from_file = os.path.join(tempdir, "file.rtf")
     to_file = os.path.join(tempdir, "file.docx")
     shutil.copyfile(in_file, from_file)
-    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'docx', from_file, '--outdir', tempdir]
+    if UNOCONV_AVAILABLE:
+        subprocess_arguments = [UNOCONV_PATH, '-f', 'docx', '-o', to_file, from_file]
+    else:
+        initialize_libreoffice()
+        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'docx', from_file, '--outdir', tempdir]
     #logmessage("rtf_to_docx: creating " + to_file + " by doing " + " ".join(subprocess_arguments))
     tries = 0
     while tries < 5:
-        docassemble.base.functions.server.applock('obtain', 'libreoffice')
-        try:
-            result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
-        except subprocess.TimeoutExpired:
-            logmessage("rtf_to_docx: call to LibreOffice took too long")
-            result = 1
-            tries = 5
-        docassemble.base.functions.server.applock('release', 'libreoffice')
-        if result != 0:
-            logmessage("rtf_to_docx: call to LibreOffice returned non-zero response")
+        if UNOCONV_AVAILABLE:
+            try:
+                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+            except subprocess.TimeoutExpired:
+                logmessage("rtf_to_docx: call to unoconv took too long")
+                result = 1
+                tries = 5
+            if result != 0:
+                logmessage("rtf_to_docx: call to unoconv returned non-zero response")
+        else:
+            docassemble.base.functions.server.applock('obtain', 'libreoffice')
+            try:
+                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+            except subprocess.TimeoutExpired:
+                logmessage("rtf_to_docx: call to LibreOffice took too long")
+                result = 1
+                tries = 5
+            docassemble.base.functions.server.applock('release', 'libreoffice')
+            if result != 0:
+                logmessage("rtf_to_docx: call to LibreOffice returned non-zero response")
         if result == 0 and os.path.isfile(to_file):
             break
         result = 1
         tries += 1
-        time.sleep(0.5 + tries*random.random())
+        if tries < 5:
+            if UNOCONV_AVAILABLE:
+                logmessage("rtf_to_docx: retrying unoconv")
+            else:
+                logmessage("rtf_to_docx: retrying LibreOffice")
+            time.sleep(0.5 + tries*random.random())
     if result == 0:
         shutil.copyfile(to_file, out_file)
     if tempdir is not None:
@@ -453,30 +498,49 @@ def rtf_to_docx(in_file, out_file):
     return True
 
 def convert_file(in_file, out_file, input_extension, output_extension):
-    initialize_libreoffice()
+    if not UNOCONV_AVAILABLE:
+        initialize_libreoffice()
     tempdir = tempfile.mkdtemp()
-    from_file = os.path.join(tempdir, "file." + input_extension)
-    to_file = os.path.join(tempdir, "file." + output_extension)
+    from_file = os.path.join(tempdir, "file1." + input_extension)
+    to_file = os.path.join(tempdir, "file2." + output_extension)
     shutil.copyfile(in_file, from_file)
-    subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', output_extension, from_file, '--outdir', tempdir]
+    if UNOCONV_AVAILABLE:
+        subprocess_arguments = [UNOCONV_PATH, '-f', output_extension, '-o', to_file, from_file]
+    else:
+        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', output_extension, from_file, '--outdir', tempdir]
     #logmessage("convert_to: creating " + to_file + " by doing " + " ".join(subprocess_arguments))
     tries = 0
     while tries < 5:
-        docassemble.base.functions.server.applock('obtain', 'libreoffice')
-        try:
-            result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
-        except subprocess.TimeoutExpired:
-            logmessage("convert_file: libreoffice took too long")
-            result = 1
-            tries = 5
-        docassemble.base.functions.server.applock('release', 'libreoffice')
-        if result != 0:
-            logmessage("convert_file: call to LibreOffice returned non-zero response")
+        if UNOCONV_AVAILABLE:
+            try:
+                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+            except subprocess.TimeoutExpired:
+                logmessage("convert_file: unoconv took too long")
+                result = 1
+                tries = 5
+            if result != 0:
+                logmessage("convert_file: call to unoconv returned non-zero response")
+        else:
+            docassemble.base.functions.server.applock('obtain', 'libreoffice')
+            try:
+                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+            except subprocess.TimeoutExpired:
+                logmessage("convert_file: libreoffice took too long")
+                result = 1
+                tries = 5
+            docassemble.base.functions.server.applock('release', 'libreoffice')
+            if result != 0:
+                logmessage("convert_file: call to LibreOffice returned non-zero response")
         if result == 0 and os.path.isfile(to_file):
             break
         result = 1
         tries += 1
-        time.sleep(0.5 + tries*random.random())
+        if tries < 5:
+            if UNOCONV_AVAILABLE:
+                logmessage("convert_file: retrying unoconv")
+            else:
+                logmessage("convert_file: retrying libreoffice")
+            time.sleep(0.5 + tries*random.random())
     if result == 0:
         shutil.copyfile(to_file, out_file)
     if tempdir is not None:
@@ -486,31 +550,52 @@ def convert_file(in_file, out_file, input_extension, output_extension):
     return True
 
 def word_to_markdown(in_file, in_format):
-    initialize_libreoffice()
+    if not UNOCONV_AVAILABLE:
+        initialize_libreoffice()
     temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
     if in_format not in ['docx', 'odt']:
         tempdir = tempfile.mkdtemp()
         from_file = os.path.join(tempdir, "file." + in_format)
         to_file = os.path.join(tempdir, "file.docx")
         shutil.copyfile(in_file, from_file)
-        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'docx', from_file, '--outdir', tempdir]
+        if UNOCONV_AVAILABLE:
+            subprocess_arguments = [UNOCONV_PATH, '-f', 'docx', '-o', to_file, from_file]
+        else:
+            subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', 'docx', from_file, '--outdir', tempdir]
         tries = 0
         while tries < 5:
-            docassemble.base.functions.server.applock('obtain', 'libreoffice')
-            try:
-                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
-            except subprocess.TimeoutExpired:
-                logmessage("word_to_markdown: libreoffice took too long")
-                result = 1
-                tries = 5
-            docassemble.base.functions.server.applock('release', 'libreoffice')
-            if result != 0:
-                logmessage("word_to_markdown: call to LibreOffice returned non-zero response")
+            if UNOCONV_AVAILABLE:
+                if tries > 0:
+                    logmessage("word_to_markdown: retrying unoconv")
+                try:
+                    result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+                except subprocess.TimeoutExpired:
+                    logmessage("word_to_markdown: unoconv took too long")
+                    result = 1
+                    tries = 5
+                if result != 0:
+                    logmessage("word_to_markdown: call to unoconv returned non-zero response")
+            else:
+                docassemble.base.functions.server.applock('obtain', 'libreoffice')
+                try:
+                    result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+                except subprocess.TimeoutExpired:
+                    logmessage("word_to_markdown: libreoffice took too long")
+                    result = 1
+                    tries = 5
+                docassemble.base.functions.server.applock('release', 'libreoffice')
+                if result != 0:
+                    logmessage("word_to_markdown: call to LibreOffice returned non-zero response")
             if result == 0 and os.path.isfile(to_file):
                 break
             result = 1
             tries += 1
-            time.sleep(0.5 + tries*random.random())
+            if tries < 5:
+                if UNOCONV_AVAILABLE:
+                    logmessage("word_to_markdown: retrying unoconv")
+                else:
+                    logmessage("word_to_markdown: retrying LibreOffice")
+                time.sleep(0.5 + tries*random.random())
         if result != 0:
             return None
         in_file_to_use = to_file
@@ -554,6 +639,13 @@ def get_rtf_styles(filename):
     return styles
 
 def update_references(filename):
+    if UNOCONV_AVAILABLE:
+        with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False) as temp_file:
+            logmessage("update_references: converting docx to docx")
+            result = convert_file(filename, temp_file.name, 'docx', 'docx')
+            if result:
+                shutil.copyfile(temp_file.name, filename)
+        return result
     initialize_libreoffice()
     subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.PysIndexer(' + filename + ')']
     tries = 0
@@ -569,7 +661,9 @@ def update_references(filename):
             break
         logmessage("update_references: call to LibreOffice returned non-zero response")
         tries += 1
-        time.sleep(0.5 + tries*random.random())
+        if tries < 5:
+            logmessage("update_references: retrying LibreOffice")
+            time.sleep(0.5 + tries*random.random())
     if result != 0:
         return False
     return True

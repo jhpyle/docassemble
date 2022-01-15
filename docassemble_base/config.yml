@@ -81,3 +81,4 @@ words:
   - docassemble.base:data/sources/us-words.yml
 allow non-idempotent questions: False
 new markdown to docx: True
+enable unoconv: True

@@ -19,6 +19,26 @@
 -->
 <script:module xmlns:script="http://openoffice.org/2000/script" script:name="Module1" script:language="StarBasic">REM  *****  BASIC  *****
 
+sub PysIndexer(sDocUrl as string)
+
+dim oDocument as object
+dim dispatcher as object
+
+if FileExists(sDocUrl) then
+
+    oDocument = starDesktop.loadComponentFromUrl(convertToUrl(sDocUrl), "_blank", 0, Array())
+    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+    dispatcher.executeDispatch(oDocument.CurrentController.Frame, ".uno:UpdateAllIndexes", "", 0, Array())
+
+    oDocument.store()
+
+end if
+
+ThisComponent.close(True)
+
+end sub
+
+
 sub ConvertToPdf(sDocUrl as string, sPdfURL as string, updateIndex as boolean, method as string)
 
 dim oDocument as object

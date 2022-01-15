@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.3.18] - 2022-01-15
+### Added
+- Support for using `md` as one of the `valid formats` in an
+  `attachment` when using `content` or `content file`.
+- The `enable unoconv` Configuration directive (requires system
+  upgrade). This provides a faster method for converting DOCX files to
+  PDF.
+### Fixed
+- When `raw: True` was enabled for an `attachment`, the file was not
+  included in e-mails sent from the user interface of the `attachment`
+  block.
+- When `raw: True` was enabled for an `attachment`, and the
+  `DAFileCollection` was passed to `send_email()` or `send_sms()`, the
+  assembled file was not included.
+- Fixed error from 1.3.17 relating to updating references.
+
 ## [1.3.17] - 2022-01-13
 ### Changed
 - Environment variable for S3 region for use in shell scripts.

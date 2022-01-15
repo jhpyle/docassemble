@@ -148,6 +148,10 @@ if __name__ == "__main__":
         print('export BACKUPFILESTORAGE=false')
     else:
         print('export BACKUPFILESTORAGE=true')
+    if 'enable unoconv' in daconfig and daconfig['enable unoconv'] is True:
+        print('export ENABLEUNOCONV=true')
+    else:
+        print('export ENABLEUNOCONV=false')
     if 's3' in daconfig:
         if 'enable' in daconfig['s3'] and daconfig['s3']['enable']:
             print('export S3ENABLE=true')

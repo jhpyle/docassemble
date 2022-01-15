@@ -6482,8 +6482,15 @@ def index(action_argument=None, refer=None):
                         file_formats.append('docx')
                     if 'rtf to docx' in the_attachment['valid_formats']:
                         file_formats.append('rtf to docx')
+                    if 'md' in the_attachment['valid_formats']:
+                        file_formats.append('md')
+                if 'raw' in the_attachment['valid_formats']:
+                    file_formats.append('raw')
                 for the_format in file_formats:
-                    attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(docassemble.base.parse.extension_of_doc_format[the_format]), 'number': the_attachment['file'][the_format], 'mimetype': the_attachment['mimetype'][the_format], 'attachment': the_attachment})
+                    if the_format == 'raw':
+                        attachment_info.append({'filename': str(the_attachment['filename']) + '.' + the_attachment['raw'], 'number': the_attachment['file'][the_format], 'mimetype': the_attachment['mimetype'][the_format], 'attachment': the_attachment})
+                    else:
+                        attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(docassemble.base.parse.extension_of_doc_format[the_format]), 'number': the_attachment['file'][the_format], 'mimetype': the_attachment['mimetype'][the_format], 'attachment': the_attachment})
                     attached_file_count += 1
             worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             for email_address in re.split(r' *[,;] *', attachment_email_address):
@@ -28545,7 +28552,7 @@ def initialize():
                 release_lock('init', 'init')
             try:
                 macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
-                if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 6712:
+                if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7167:
                     sys.stderr.write("Removing " + macro_path + " because it is out of date\n")
                     os.remove(macro_path)
                 # else:

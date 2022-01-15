@@ -79,7 +79,7 @@ match_brackets = re.compile(r'(\[.+?\])')
 match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
 complications = re.compile(r'[\.\[]')
 list_of_indices = ['i', 'j', 'k', 'l', 'm', 'n']
-extension_of_doc_format = {'pdf':'pdf', 'docx': 'docx', 'rtf': 'rtf', 'rtf to docx': 'docx', 'tex': 'tex', 'html': 'html'}
+extension_of_doc_format = {'pdf':'pdf', 'docx': 'docx', 'rtf': 'rtf', 'rtf to docx': 'docx', 'tex': 'tex', 'html': 'html', 'md': 'md', 'raw': 'raw'}
 DO_NOT_TRANSLATE = """<%doc>
   do not translate
 </%doc>
@@ -6038,7 +6038,7 @@ class Question:
             for the_att in computed_attachment_list:
                 if the_att.__class__.__name__ == 'DAFileCollection':
                     file_dict = {}
-                    for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html', 'raw'):
+                    for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html', 'raw', 'md'):
                         if hasattr(the_att, doc_format):
                             the_dafile = getattr(the_att, doc_format)
                             if hasattr(the_dafile, 'number'):
@@ -6211,6 +6211,12 @@ class Question:
                             the_file.write(result['markdown'][doc_format].lstrip("\n"))
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + result['raw'], the_temp.name, yaml_file_name=self.interview.source.path)
                         result['content'][doc_format] = result['markdown'][doc_format].lstrip("\n")
+                elif doc_format == 'md':
+                    with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix='md', delete=False) as the_temp:
+                        with open(the_temp.name, 'w', encoding='utf-8') as the_file:
+                            the_file.write(result['markdown'][doc_format].lstrip("\n"))
+                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.md', the_temp.name, yaml_file_name=self.interview.source.path)
+                        result['content'][doc_format] = result['markdown'][doc_format].lstrip("\n")
                 elif doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
                     if 'fields' in attachment['options']:
                         if doc_format == 'pdf' and 'pdf_template_file' in attachment['options']:
@@ -6314,8 +6320,10 @@ class Question:
                         converter.convert(self)
                         result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], converter.output_filename, yaml_file_name=self.interview.source.path)
                         result['content'][doc_format] = result['markdown'][doc_format]
-                elif doc_format in ['html']:
+                elif doc_format == 'html':
                     result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
+                elif doc_format == 'md':
+                    result['content'][doc_format] = result['markdown'][doc_format]
             if attachment['variable_name']:
                 string = "from docassemble.base.util import DAFile, DAFileCollection"
                 exec(string, the_user_dict)
@@ -6338,10 +6346,7 @@ class Question:
                 exec(variable_name + '.info = _attachment_info', the_user_dict)
                 del the_user_dict['_attachment_info']
                 for doc_format in result['file']:
-                    if doc_format == 'raw':
-                        variable_string = variable_name + '.raw'
-                    else:
-                        variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
+                    variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
                     # filename = result['filename'] + '.' + doc_format
                     # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
                     if result['file'][doc_format] is None:
@@ -6538,7 +6543,7 @@ class Question:
             else:
                 result['template_password'] = None
             for doc_format in result['formats_to_use']:
-                if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx', 'raw']:
+                if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx', 'raw', 'md']:
                     if 'decimal_places' in attachment['options']:
                         try:
                             float_formatter = '%.' + str(int(attachment['options']['decimal_places'].text(the_user_dict).strip())) + 'f'
@@ -6804,8 +6809,8 @@ class Question:
                                         else:
                                             result['data_strings'].append((key, val))
                         docassemble.base.functions.reset_context()
-                    elif doc_format == 'raw':
-                        docassemble.base.functions.set_context('raw')
+                    elif doc_format in ('raw', 'md'):
+                        docassemble.base.functions.set_context(doc_format)
                         the_markdown = the_content.text(the_user_dict)
                         result['markdown'][doc_format] = the_markdown
                         docassemble.base.functions.reset_context()

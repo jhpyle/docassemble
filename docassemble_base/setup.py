@@ -183,7 +183,6 @@ install_requires = [
     "twine==3.4.1",
     "tzlocal==2.1",
     "ua-parser==0.10.0",
-    "unoconv==0.9.0",
     "uritemplate==3.0.1",
     "urllib3==1.26.5",
     "us==2.0.2",

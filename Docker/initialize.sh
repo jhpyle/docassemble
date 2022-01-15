@@ -434,6 +434,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DAWEBSERVER}}/'"${DAWEBSERVER:-nginx}"'/' \
         -e 's/{{DASTABLEVERSION}}/'"${DASTABLEVERSION:-false}"'/' \
         -e 's/{{DASQLPING}}/'"${DASQLPING:-false}"'/' \
+        -e 's/{{ENABLEUNOCONV}}/'"${ENABLEUNOCONV:-true}"'/' \
         "$DA_CONFIG_FILE_DIST" > "$DA_CONFIG_FILE" || exit 1
 fi
 chown www-data.www-data "$DA_CONFIG_FILE"
@@ -1191,6 +1192,13 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
             supervisorctl --serverurl http://localhost:9001 start apache2
         fi
     fi
+fi
+
+echo "initialize: Checking to see if unoconv should be started" >&2
+
+if [ "$ENABLEUNOCONV" == "true" ] && [[ -x /usr/bin/unoconv ]]; then
+    echo "initialize: Starting unoconv" >&2
+    supervisorctl --serverurl http://localhost:9001 start unoconv
 fi
 
 echo "initialize: Registering this server" >&2
