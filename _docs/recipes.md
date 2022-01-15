@@ -1302,6 +1302,10 @@ variables that are referenced in a document.
 
 {% include demo-side-by-side.html demo="universal-document" %}
 
+For security purposes, this example interview requires `admin` or
+`developer` privileges.  You can find the source on GitHub and try it
+out on your own server.
+
 # <a name="adust_language_for_second_or_third_person"></a>Adjust Language for Second or Third Person
 
 You may want to have a single interview that can be used either by a

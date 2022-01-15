@@ -2812,10 +2812,20 @@
   \ |\n  Here is your document.\nattachment code: benefits_summary\nfield: document_initially_shown\n\
   ---\ncode: |\n  del benefits_summary\n  first_draft_deleted = True\n---\nquestion:\
   \ Here is your document again.\nattachment code: benefits_summary\nevent: document_shown_again"
-"document-docx": "question: Here is your document.\nattachments:\n  - name: Summary\
-  \ of Benefits\n    filename: benefits_summary\n    valid formats:\n      - docx\n\
-  \      - pdf    \n    content: |\n      [BOLDCENTER] Summary of Benefits\n\n   \
-  \   ${ client } is entitled to\n      benefits plan ${ benefits }.\nmandatory: True"
+"document-docx": |-
+  question: Here is your document.
+  attachments:
+    - name: Summary of Benefits
+      filename: benefits_summary
+      valid formats:
+        - docx
+        - pdf
+      content: |
+        [BOLDCENTER] Summary of Benefits
+
+        ${ client } is entitled to
+        benefits plan ${ benefits }.
+  mandatory: True
 "document-docx-from-rtf": "question: Here is your document.\nattachments:\n  - name:\
   \ Summary of Benefits\n    filename: benefits_summary\n    valid formats:\n    \
   \  - rtf to docx\n      - pdf    \n    content: |\n      [BOLDCENTER] Summary of\
@@ -2986,6 +2996,19 @@
   \ appareat cu mea, \n    in saepe deterruisset pri. Mei et vero \n    admodum. At\
   \ quas pertinax sed, et mel \n    modo probo iriure. Per te sententiae \n    elaboraret.\
   \ Cum tritani delectus \n    definitionem ne."
+"document-md": |-
+  question: Here is your document.
+  attachments:
+    - name: Summary of Benefits
+      filename: benefits_summary
+      valid formats:
+        - md
+      content: |
+        [BOLDCENTER] Summary of Benefits
+
+        ${ client } is entitled to
+        benefits plan ${ benefits }.
+  mandatory: True
 "document-variable-name": |-
   mandatory: True
   question: Ok, all done.
@@ -7222,16 +7245,6 @@
     ml = SimpleTextMachineLearner('demo')
     the_data = ml.export_training_set(output_format='json')
     response(response=the_data, content_type='application/json')
-"ml-export-playground": |-
-  modules:
-    - docassemble.webapp.playground
-  ---
-  initial: True
-  code: |
-    ml = SimpleTextMachineLearner(group_id='demo')
-    the_data = ml.export_training_set(output_format='json')
-    sources = PlaygroundSection('sources')
-    sources.write_file('my_training_data.json', the_data)
 "ml-export-yaml": |-
   initial: True
   code: |
@@ -13002,6 +13015,16 @@
   \n  Here is a picture:\n\n  [FILE house.png]\n---\nmandatory: True\nquestion: |\n\
   \  Here is your document.\nattachment:\n  - name: Your attachment\n    filename:\
   \ the_file\n    docx template file: markdown_template_demo.docx"
+"ml-export-playground": |-
+  modules:
+    - docassemble.webapp.playground
+  ---
+  initial: True
+  code: |
+    ml = SimpleTextMachineLearner(group_id='demo')
+    the_data = ml.export_training_set(output_format='json')
+    sources = PlaygroundSection('sources')
+    sources.write_file('my_training_data.json', the_data)
 "multi-signature": |-
   objects:
     - user: Person
@@ -13548,6 +13571,11 @@
     Otherwise, you can go back to the interview.
   continue button label: Resume
   field: manage_credentials
+  ---
+  event: delete_credentials
+  code: |
+    google.delete_credentials()
+    undefine('intro_screen')
 "oauth-test-3": |-
   objects:
     - google: GoogleAuth.using(url_args=url_args, use_random_unique_id=True)

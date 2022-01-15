@@ -180,6 +180,13 @@ Note that you can also assemble .docx files from templates that you
 compose in Mirosoft Word.  See the [`docx template file`] feature,
 which is described [below](#docx template file).
 
+## <a name="md"></a>Creating Markdown files from Markdown
+
+If you want to download the assembled Markdown source, include `md` as
+one of the [`valid formats`]:
+
+{% include side-by-side.html demo="document-md" %}
+
 ## <a name="content file"></a>Reading Markdown content from separate files
 
 If the content of your document is lengthy and you would rather not

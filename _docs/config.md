@@ -3953,6 +3953,25 @@ tagged pdf: True
 This setting can also be made on a per-interview basis by setting the
 [`tagged pdf` features setting].
 
+## <a name="enable unoconv"></a>Using unoconv instead of LibreOffice for processing DOCX files
+
+Starting with system version 1.3.18, a [unoconv] listener is
+available, which keeps LibreOffice in memory and uses it to convert
+files with a client/server model. **docassemble** uses LibreOffice to
+convert DOCX to PDF and other formats, as well as to update references
+within a DOCX after `docx template file` is used to assemble a
+document.
+
+The [unoconv] listener will run only if `enable unoconv` is set to
+`True` in your Configuration.  If `enable unoconv` is missing or is not
+set to `True`, `unoconv` will not be used. If you started using
+**docassemble** before 1.3.18 and you want to use [unoconv], set the
+following in your Configuration, and then do a [system upgrade].
+
+{% highlight yaml %}
+enable unoconv: True
+{% endhighlight %}
+
 ## <a name="maximum image size"></a>Limiting size of uploaded images
 
 If your users upload digital photos into your interviews, the uploads
@@ -5339,3 +5358,5 @@ and Facebook API keys.
 [ClickSend]: https://www.clicksend.com/us/
 [`cross site domains`]: #cross site domains
 [YAML preprocessor]: {{ site.baseurl }}/docs/interviews.html#jinja2
+[unoconv]: https://github.com/unoconv/unoconv
+[system upgrade]: {{ site.baseurl }}/docs/docker.html#upgrading
