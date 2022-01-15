@@ -63,7 +63,7 @@ bash -c \
 && pip3 install --upgrade \
    certbot==1.15.0 \
    certbot-nginx==1.15.0 \
-   certbot-apache==1.15.0
+   certbot-apache==1.15.0 \
 && pip3 install \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
