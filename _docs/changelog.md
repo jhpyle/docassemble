@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.19](https://github.com/jhpyle/docassemble/releases/tag/v1.3.19) - 2022-01-17
+
+### Fixed
+- Issue with the sizing of images inside of `terms` descriptions.
+
 ## [1.3.18](https://github.com/jhpyle/docassemble/releases/tag/v1.3.18) - 2022-01-15
 
 ### Added
