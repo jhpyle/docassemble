@@ -1762,6 +1762,7 @@ tr:first-child .datableup, tr:last-child .databledown {
 
 .dawideimage {
     width: 100%;
+    height: auto;
 }
 
 .navbar .dropdown .dropdown-toggle {

@@ -11020,6 +11020,10 @@ def index(action_argument=None, refer=None):
             daSocket.emit('terminate');
           }
         });
+        var daDefaultAllowList = bootstrap.Tooltip.Default.allowList;
+        daDefaultAllowList['*'].push('style');
+        daDefaultAllowList['a'].push('style');
+        daDefaultAllowList['img'].push('style');
         if (daJsEmbed){
           $.ajax({
             type: "POST",
@@ -13506,6 +13510,10 @@ def observer():
       }
       $( document ).ready(function(){
         daInitialize(1);
+        var daDefaultAllowList = bootstrap.Tooltip.Default.allowList;
+        daDefaultAllowList['*'].push('style');
+        daDefaultAllowList['a'].push('style');
+        daDefaultAllowList['img'].push('style');
         $( window ).bind('unload', function() {
           if (daSocket != null && daSocket.connected){
             daSocket.emit('terminate');

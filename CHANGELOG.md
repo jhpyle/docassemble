@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.19] - 2022-01-17
+### Fixed
+- Issue with the sizing of images inside of `terms` descriptions.
+
 ## [1.3.18] - 2022-01-15
 ### Added
 - Support for using `md` as one of the `valid formats` in an
