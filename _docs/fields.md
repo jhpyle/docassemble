@@ -1183,7 +1183,7 @@ $(document).on('daPageLoad', function(){
   evaluation.  Make sure that the [Python expression] evaluates to
   something sensible, like a string.
 * `mako_parameters` - the default is `[]`.  This is just like
-  `parameters`, except the values in the YAML are treates as [Mako],
+  `parameters`, except the values in the YAML are treated as [Mako],
   and the `data` value is set to the rendered text.
 
 The available class methods are:

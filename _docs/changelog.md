@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.20](https://github.com/jhpyle/docassemble/releases/tag/v1.3.20) - 2022-01-25
+
+### Fixed
+- Error with the `.convert_to()` method of `DAFile`.
+- Issue with display of modules in the Playground variables.
+
 ## [1.3.19](https://github.com/jhpyle/docassemble/releases/tag/v1.3.19) - 2022-01-17
 
 ### Fixed
