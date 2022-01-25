@@ -500,20 +500,21 @@ def rtf_to_docx(in_file, out_file):
 def convert_file(in_file, out_file, input_extension, output_extension):
     if not UNOCONV_AVAILABLE:
         initialize_libreoffice()
-    tempdir = tempfile.mkdtemp()
-    from_file = os.path.join(tempdir, "file1." + input_extension)
-    to_file = os.path.join(tempdir, "file2." + output_extension)
+    tempdir1 = tempfile.mkdtemp()
+    tempdir2 = tempfile.mkdtemp()
+    from_file = os.path.join(tempdir1, "file." + input_extension)
+    to_file = os.path.join(tempdir2, "file." + output_extension)
     shutil.copyfile(in_file, from_file)
     if UNOCONV_AVAILABLE:
         subprocess_arguments = [UNOCONV_PATH, '-f', output_extension, '-o', to_file, from_file]
     else:
-        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', output_extension, from_file, '--outdir', tempdir]
+        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', '--convert-to', output_extension, from_file, '--outdir', tempdir2]
     #logmessage("convert_to: creating " + to_file + " by doing " + " ".join(subprocess_arguments))
     tries = 0
     while tries < 5:
         if UNOCONV_AVAILABLE:
             try:
-                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+                result = subprocess.run(subprocess_arguments, cwd=tempdir1, timeout=120, check=False).returncode
             except subprocess.TimeoutExpired:
                 logmessage("convert_file: unoconv took too long")
                 result = 1
@@ -523,7 +524,7 @@ def convert_file(in_file, out_file, input_extension, output_extension):
         else:
             docassemble.base.functions.server.applock('obtain', 'libreoffice')
             try:
-                result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+                result = subprocess.run(subprocess_arguments, cwd=tempdir1, timeout=120, check=False).returncode
             except subprocess.TimeoutExpired:
                 logmessage("convert_file: libreoffice took too long")
                 result = 1
@@ -543,8 +544,10 @@ def convert_file(in_file, out_file, input_extension, output_extension):
             time.sleep(0.5 + tries*random.random())
     if result == 0:
         shutil.copyfile(to_file, out_file)
-    if tempdir is not None:
-        shutil.rmtree(tempdir)
+    if tempdir1 is not None:
+        shutil.rmtree(tempdir1)
+    if tempdir2 is not None:
+        shutil.rmtree(tempdir2)
     if result != 0:
         return False
     return True

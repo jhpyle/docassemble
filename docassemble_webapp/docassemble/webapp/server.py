@@ -1080,6 +1080,7 @@ def password_validator(form, field):
         if 'error message' in rules:
             error_message = str(rules['error message'])
         else:
+            #word("Password must be at least six characters long with at least one lowercase letter, at least one uppercase letter, and at least one number.")
             error_message = 'Password must be at least ' + docassemble.base.functions.quantity_noun(rules.get('length', 6), 'character', language='en') + ' long'
             standards = []
             if rules.get('lowercase', 1) > 0:
@@ -3481,11 +3482,6 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             if key not in field_origins:
                 field_origins[key] = set()
             field_origins[key].add(question.from_source)
-            # if key == 'advocate':
-            #     try:
-            #         logmessage("Found advocate in " + question.content.original_text)
-            #     except:
-            #         logmessage("Found advocate")
     for val in interview.questions:
         names_used.add(val)
         if val not in name_origins:
@@ -3539,9 +3535,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     pg_code_cache[val] = {'doc': noquotetrunc(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
                 except:
                     pg_code_cache[val] = {'doc': '', 'name': str(val), 'insert': str(val), 'git': source_code_url(user_dict[val], datatype='module')}
-                name_info[val] = copy.copy(pg_code_cache[val])
-                if 'git' in name_info[val]:
-                    modules.add(val)
+            name_info[val] = copy.copy(pg_code_cache[val])
+            modules.add(val)
         elif isinstance(user_dict[val], TypeType):
             if val not in pg_code_cache:
                 bases = []
@@ -3637,6 +3632,10 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         undefined_names.discard(var)
         vocab_set.discard(var)
     for var in [x for x in undefined_names if x.endswith(']')]:
+        undefined_names.discard(var)
+    for var in (functions | classes | modules):
+        undefined_names.discard(var)
+    for var in user_dict:
         undefined_names.discard(var)
     names_used = names_used.difference( undefined_names )
     if return_json:

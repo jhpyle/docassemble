@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.3.20] - 2022-01-25
+### Fixed
+- Error with the `.convert_to()` method of `DAFile`.
+- Issue with display of modules in the Playground variables.
+
 ## [1.3.19] - 2022-01-17
 ### Fixed
 - Issue with the sizing of images inside of `terms` descriptions.
