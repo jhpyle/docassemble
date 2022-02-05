@@ -7302,6 +7302,8 @@ class FaxStatus:
             return info['NumPages']
         if 'message_pages' in info:
             return info['message_pages'] or 0
+        if 'page_count' in info:
+            return info['page_count'] or 0
         return 0
     def info(self):
         if self.sid is None:

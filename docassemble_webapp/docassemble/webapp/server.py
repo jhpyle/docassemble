@@ -22608,16 +22608,21 @@ def telnyx_fax_callback():
         logmessage("telnyx_fax_callback: existing fax record could not be found")
         return ('', 204)
     try:
-        if post_data['data']['event_type'] == 'fax.queued':
-            params['status'] = 'queued'
-        elif post_data['data']['event_type'] == 'fax.failed':
-            params['status'] = 'failed: ' + str(post_data['data']['payload'].get('failure_reason', 'no failure reason provided'))
+        params['status'] = data['data']['payload']['status']
+        if params['status'] == 'failed' and 'failure_reason' in data['data']['payload']:
+            params['status'] += ': ' + data['data']['payload']['failure_reason']
+            logmessage("telnyx_fax_callback: failure because " + data['data']['payload']['failure_reason'])
     except:
-        logmessage("telnyx_fax_callback: could not find event_type")
+        logmessage("telnyx_fax_callback: could not find status")
     try:
-        params['latest_update_time'] = post_data['data']['occurred_at']
+        params['latest_update_time'] = data['data']['occurred_at']
     except:
         logmessage("telnyx_fax_callback: could not update latest_update_time")
+    if 'status' in params and params['status'] == 'delivered':
+        try:
+            params['page_count'] = data['data']['payload']['page_count']
+        except:
+            logmessage("telnyx_fax_callback: could not update page_count")
     pipe = r.pipeline()
     pipe.set(the_key, json.dumps(params))
     pipe.expire(the_key, 86400)

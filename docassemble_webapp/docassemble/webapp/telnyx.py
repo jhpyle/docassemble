@@ -1,5 +1,4 @@
 import requests
-from docassemble.base.logger import logmessage
 import docassemble.base.util
 
 def send_fax(fax_number, the_file, config, country=None):
@@ -15,7 +14,6 @@ def send_fax(fax_number, the_file, config, country=None):
         response = r.json()
     except:
         raise Exception("Exception when calling Telnyx: response not JSON: " + r.text)
-    logmessage("docassemble.webapp.telnyx: send_fax returned " + repr(response))
     try:
         response['data']['id']
     except:
