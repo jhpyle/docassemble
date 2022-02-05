@@ -70,6 +70,7 @@ from docassemble.webapp.app_object import app, csrf, flaskbabel
 import docassemble.webapp.backend
 from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists, write_ml_source, fix_ml_files, is_package_ml, user_dict_exists, file_set_attributes, file_user_access, file_privilege_access, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, get_uid_for_filename, update_session, get_session_uids, project_name, directory_for, add_project
 import docassemble.webapp.clicksend
+import docassemble.webapp.telnyx
 from docassemble.webapp.core.models import Uploads, UploadsUserAuth, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage
 from docassemble.webapp.daredis import r, r_user, r_store
 from docassemble.webapp.db_object import db
@@ -1157,6 +1158,8 @@ def import_necessary(url, url_root):
             sys.stderr.write("Import of " + module_name + " failed.  " + err.__class__.__name__ + ": " + str(err) + "\n")
     current_app.login_manager._update_request_context_with_user()
 
+fax_provider = daconfig.get('fax provider', None) or 'clicksend'
+
 def get_clicksend_config():
     if 'clicksend' in daconfig and isinstance(daconfig['clicksend'], (list, dict)):
         the_clicksend_config = {'name': {}, 'number': {}}
@@ -1176,14 +1179,46 @@ def get_clicksend_config():
                 if 'name' in the_config:
                     the_clicksend_config['name'][the_config['name']] = the_config
             else:
-                sys.stderr.write("improper setup in twilio configuration\n")
+                sys.stderr.write("improper setup in clicksend configuration\n")
         if 'default' not in the_clicksend_config['name']:
             the_clicksend_config = None
     else:
         the_clicksend_config = None
+    if fax_provider == 'clicksend' and the_clicksend_config is None:
+        sys.stderr.write("improper clicksend configuration; faxing will not be functional\n")
     return the_clicksend_config
 
 clicksend_config = get_clicksend_config()
+
+def get_telnyx_config():
+    if 'telnyx' in daconfig and isinstance(daconfig['telnyx'], (list, dict)):
+        the_telnyx_config = {'name': {}, 'number': {}}
+        if isinstance(daconfig['telnyx'], dict):
+            config_list = [daconfig['telnyx']]
+        else:
+            config_list = daconfig['telnyx']
+        for the_config in config_list:
+            if isinstance(the_config, dict) and 'app id' in the_config and 'api key' in the_config and 'number' in the_config:
+                if 'country' not in the_config:
+                    the_config['country'] = docassemble.webapp.backend.DEFAULT_COUNTRY or 'US'
+                if 'from email' not in the_config:
+                    the_config['from email'] = app.config['MAIL_DEFAULT_SENDER']
+                the_telnyx_config['number'][str(the_config['number'])] = the_config
+                if 'default' not in the_telnyx_config['name']:
+                    the_telnyx_config['name']['default'] = the_config
+                if 'name' in the_config:
+                    the_telnyx_config['name'][the_config['name']] = the_config
+            else:
+                sys.stderr.write("improper setup in twilio configuration\n")
+        if 'default' not in the_telnyx_config['name']:
+            the_telnyx_config = None
+    else:
+        the_telnyx_config = None
+    if fax_provider == 'telnyx' and the_telnyx_config is None:
+        sys.stderr.write("improper telnyx configuration; faxing will not be functional\n")
+    return the_telnyx_config
+
+telnyx_config = get_telnyx_config()
 
 def get_twilio_config():
     if 'twilio' in daconfig:
@@ -6487,7 +6522,7 @@ def index(action_argument=None, refer=None):
                     file_formats.append('raw')
                 for the_format in file_formats:
                     if the_format == 'raw':
-                        attachment_info.append({'filename': str(the_attachment['filename']) + '.' + the_attachment['raw'], 'number': the_attachment['file'][the_format], 'mimetype': the_attachment['mimetype'][the_format], 'attachment': the_attachment})
+                        attachment_info.append({'filename': str(the_attachment['filename']) + the_attachment['raw'], 'number': the_attachment['file'][the_format], 'mimetype': the_attachment['mimetype'][the_format], 'attachment': the_attachment})
                     else:
                         attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(docassemble.base.parse.extension_of_doc_format[the_format]), 'number': the_attachment['file'][the_format], 'mimetype': the_attachment['mimetype'][the_format], 'attachment': the_attachment})
                     attached_file_count += 1
@@ -22531,7 +22566,7 @@ def fax_callback():
 @app.route("/clicksend_fax_callback", methods=['POST'])
 @csrf.exempt
 def clicksend_fax_callback():
-    if clicksend_config is None:
+    if clicksend_config is None or fax_provider != 'clicksend':
         logmessage("clicksend_fax_callback: Clicksend not enabled")
         return ('', 204)
     post_data = request.form.copy()
@@ -22543,10 +22578,46 @@ def clicksend_fax_callback():
     try:
         params = json.loads(the_json)
     except:
-        logmessage("clicksend_fax_callback: message_id not found")
+        logmessage("clicksend_fax_callback: existing fax record could not be found")
         return ('', 204)
     for param in ('timestamp_send', 'timestamp', 'message_id', 'status', 'status_code', 'status_text', 'error_code', 'error_text', 'custom_string', 'user_id', 'subaccount_id', 'message_type'):
         params[param] = post_data.get(param, None)
+    pipe = r.pipeline()
+    pipe.set(the_key, json.dumps(params))
+    pipe.expire(the_key, 86400)
+    pipe.execute()
+    return ('', 204)
+
+@app.route("/telnyx_fax_callback", methods=['POST'])
+@csrf.exempt
+def telnyx_fax_callback():
+    if telnyx_config is None:
+        logmessage("telnyx_fax_callback: Telnyx not enabled")
+        return ('', 204)
+    data = request.get_json(silent=True)
+    try:
+        the_id = data['data']['payload']['fax_id']
+    except:
+        logmessage("telnyx_fax_callback: fax_id not found")
+        return ('', 204)
+    the_key = 'da:faxcallback:sid:' + str(the_id)
+    the_json = r.get(the_key)
+    try:
+        params = json.loads(the_json)
+    except:
+        logmessage("telnyx_fax_callback: existing fax record could not be found")
+        return ('', 204)
+    try:
+        if post_data['data']['event_type'] == 'fax.queued':
+            params['status'] = 'queued'
+        elif post_data['data']['event_type'] == 'fax.failed':
+            params['status'] = 'failed: ' + str(post_data['data']['payload'].get('failure_reason', 'no failure reason provided'))
+    except:
+        logmessage("telnyx_fax_callback: could not find event_type")
+    try:
+        params['latest_update_time'] = post_data['data']['occurred_at']
+    except:
+        logmessage("telnyx_fax_callback: could not update latest_update_time")
     pipe = r.pipeline()
     pipe.set(the_key, json.dumps(params))
     pipe.expire(the_key, 86400)
@@ -27613,7 +27684,7 @@ def get_email_obj(email, short_record, user):
     return email_obj
 
 def da_send_fax(fax_number, the_file, config, country=None):
-    if clicksend_config is not None:
+    if clicksend_config is not None and fax_provider == 'clicksend':
         if config not in clicksend_config['name']:
             raise Exception("There is no ClickSend configuration called " + str(config))
         info = docassemble.webapp.clicksend.send_fax(fax_number, the_file, clicksend_config['name'][config], country)
@@ -27623,6 +27694,16 @@ def da_send_fax(fax_number, the_file, config, country=None):
         pipe.expire(the_key, 86400)
         pipe.execute()
         return info['message_id']
+    if telnyx_config is not None and fax_provider == 'telnyx':
+        if config not in telnyx_config['name']:
+            raise Exception("There is no Telnyx configuration called " + str(config))
+        info = docassemble.webapp.telnyx.send_fax(fax_number, the_file, telnyx_config['name'][config], country)
+        the_key = 'da:faxcallback:sid:' + info['id']
+        pipe = r.pipeline()
+        pipe.set(the_key, json.dumps(info))
+        pipe.expire(the_key, 86400)
+        pipe.execute()
+        return info['id']
     if twilio_config is None:
         logmessage("da_send_fax: ignoring call to da_send_fax because Twilio not enabled")
         return None
@@ -28239,7 +28320,9 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          variables_snapshot_connection=variables_snapshot_connection,
                                          get_referer=get_referer,
                                          stash_data=stash_data,
-                                         retrieve_stashed_data=retrieve_stashed_data)
+                                         retrieve_stashed_data=retrieve_stashed_data,
+                                         secure_filename_spaces_ok=secure_filename_spaces_ok,
+                                         secure_filename=secure_filename)
 
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)

@@ -3548,7 +3548,9 @@ class DAFile(DAObject):
         if hasattr(self, 'mimetype'):
             del self.mimetype
         self.initialize(extension=output_extension, filename=output_filename)
-        if input_extension in ("docx", "doc", "odt", "rtf", "png", "jpg", "tif") and output_extension == "pdf":
+        if input_extension == output_extension:
+            shutil.copyfile(input_path, self.path())
+        elif input_extension in ("docx", "doc", "odt", "rtf", "png", "jpg", "tif") and output_extension == "pdf":
             shutil.copyfile(docassemble.base.pandoc.concatenate_files([input_path]), self.path())
         elif input_extension in ("docx", "doc", "odt", "rtf") and output_extension in ("docx", "doc", "odt", "rtf"):
             docassemble.base.pandoc.convert_file(input_path, self.path(), input_extension, output_extension)
@@ -4052,9 +4054,7 @@ class DAFile(DAObject):
         the future.
 
         """
-        #logmessage("commit")
         if hasattr(self, 'number'):
-            #logmessage("Committed " + str(self.number))
             sf = server.SavedFile(self.number, fix=True)
             sf.finalize()
     def show(self, width=None, wait=True, alt_text=None):
@@ -4106,11 +4106,16 @@ class DAFile(DAObject):
             del kwargs['attachment']
         return server.url_finder(self, **kwargs)
     def set_attributes(self, **kwargs):
-        """Sets attributes of the file stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
+        """Sets attributes of the file stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values.  Also takes the optional keyword argument filename."""
         if 'private' in kwargs and kwargs['private'] in [True, False]:
             self.private = kwargs['private']
         if 'persistent' in kwargs and kwargs['persistent'] in [True, False]:
             self.persistent = kwargs['persistent']
+        if 'filename' in kwargs:
+            kwargs['filename'] = server.secure_filename_spaces_ok(kwargs['filename'])
+            self.filename = kwargs['filename']
+        if 'session' in kwargs:
+            del kwargs['session']
         return server.file_set_attributes(self.number, **kwargs)
     def user_access(self, *pargs, **kwargs):
         """Allows or disallows access to the file for a given user."""
@@ -4251,6 +4256,8 @@ class DAFileCollection(DAObject):
         raise Exception("Could not find a file within a DACollection.")
     def set_attributes(self, **kwargs):
         """Sets attributes of the file(s) stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
+        if 'filename' in kwargs:
+            del kwargs['filename']
         for ext in self._extension_list():
             if hasattr(self, ext):
                 getattr(self, ext).set_attributes(**kwargs)
@@ -4385,6 +4392,8 @@ class DAFileList(DAList):
         return self.elements[0].url_for(**kwargs)
     def set_attributes(self, **kwargs):
         """Sets attributes of the file(s) stored on the server.  Takes optional keyword arguments private and persistent, which must be boolean values."""
+        if 'filename' in kwargs:
+            del kwargs['filename']
         for element in sorted(self.elements):
             if element.ok:
                 element.set_attributes(**kwargs)
@@ -7279,6 +7288,8 @@ class FaxStatus:
             return info['FaxStatus']
         if 'status_text' in info:
             return info['status_text'] or 'no-information'
+        if 'status' in info:
+            return info['status'] or 'no-information'
         return 'no-information'
     def pages(self):
         if self.sid is None:
@@ -7309,16 +7320,15 @@ class FaxStatus:
         return False
 
 def send_fax(fax_number, file_object, config='default', country=None):
-    if server.twilio_config is None:
-        logmessage("send_fax: ignoring because Twilio not enabled")
-        return FaxStatus(None)
-    if config not in server.twilio_config['name']:
-        logmessage("send_fax: ignoring because requested configuration does not exist")
-        return FaxStatus(None)
-    tconfig = server.twilio_config['name'][config]
-    if 'fax' not in tconfig or tconfig['fax'] in [False, None]:
-        logmessage("send_fax: ignoring because fax not enabled")
-        return FaxStatus(None)
+    if isinstance(file_object, DAFileCollection):
+        file_object = file_object._first_file()
+    if isinstance(file_object, DAFileList):
+        if len(file_object.elements) == 0:
+            raise Exception("send_fax: if passing a DAFileList, the DAFileList must have at least one element")
+        if len(file_object.elements) == 1:
+            file_object = file_object.elements[0]
+        else:
+            file_object = pdf_concatenate(file_object)
     return FaxStatus(server.send_fax(fax_string(fax_number, country=country), file_object, config, country=country))
 
 def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, task_persistent=False, attachments=None, mailgun_variables=None, dry_run=False):

@@ -64,6 +64,8 @@ bash -c \
    certbot==1.15.0 \
    certbot-nginx==1.15.0 \
    certbot-apache==1.15.0 \
+   nltk==3.6.6 \
+&& python /tmp/docassemble/Docker/nltkdownload.py \
 && pip3 install \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \

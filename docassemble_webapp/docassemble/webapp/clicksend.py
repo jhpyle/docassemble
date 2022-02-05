@@ -7,7 +7,6 @@ from docassemble.base.logger import logmessage
 
 def send_fax(fax_number, the_file, config, country=None):
     use_url = bool((hasattr(the_file, 'extension') and the_file.extension == 'pdf') or (hasattr(the_file, 'mimetype') and the_file.mimetype == 'application/pdf'))
-    the_file.url_for(temporary=True, seconds=600)
     configuration = clicksend_client.Configuration()
     configuration.username = config['api username']
     configuration.password = config['api key']
