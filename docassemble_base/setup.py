@@ -82,7 +82,7 @@ install_requires = [
     "docopt==0.6.2",
     "docutils==0.17.1",
     "docxcompose==1.3.2",
-    "docxtpl==0.11.5",
+    "docxtpl==0.15.2",
     "et-xmlfile==1.1.0",
     "future==0.18.2",
     "geographiclib==1.50",
