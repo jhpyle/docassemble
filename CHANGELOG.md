@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.3.21] - 2022-02-05
+### Added
+- The `fax provider` Configuration directive.
+- Option for faxing with [Telnyx] instead of [ClickSend].
+### Changed
+- The server name of a `DAFile` can be changed using `.set_attributes()`.
+- NLTK data files are downloaded during the building of the Docker
+  image, so that the initial boot process does not require an internet
+  connection.
+
 ## [1.3.20] - 2022-01-25
 ### Fixed
 - Error with the `.convert_to()` method of `DAFile`.
