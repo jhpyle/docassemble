@@ -4320,18 +4320,26 @@ If no configuration is named `default`, the first configuration will
 be used as the default.  The [call forwarding] feature uses the
 default configuration.
 
-## <a name="clicksend"></a>ClickSend configuration
+## <a name="fax provider"></a>Fax configuration
 
 The [fax sending] feature was previously provided by [Twilio], but
-[Twilio] has discontinued support for sending faxes.  If you want to
-use the [`send_fax()`] function, you will need to create an
-account with [ClickSend].
+[Twilio] discontinued support for sending faxes in 2021.  If you want
+to use the [`send_fax()`] function, you will need to create an account
+with [ClickSend] or [Telnyx].
 
-These features are enabled using a `clicksend` configuration directive.
+When using [ClickSend] or [Telnyx], set `fax provider` to
+either `clicksend` or `telnyx`. The default value is `clicksend`.
+
+### <a name="clicksend"></a>ClickSend configuration
+
+Sending faxes through [ClickSend] is enabled by setting `fax provider`
+to `clicksend` and specifying a `clicksend` configuration directive.
+
 Here is an example:
 
 {% highlight yaml %}
-twilio:
+fax provider: clicksend
+clicksend:
   api username: "dev@example.com"
   api key: "F8BE02C1-D95E-D3A9-297B-0028EFB6163B"
   number: "+12762510247"
@@ -4363,7 +4371,7 @@ at `https://docassemble.example.com`, you would write
 `https://docassemble.example.com/clicksend_fax_callback`.  Then make
 sure that the rule is set to "enabled."
 
-### <a name="multiple clicksend"></a>Multiple ClickSend configurations
+#### <a name="multiple clicksend"></a>Multiple ClickSend configurations
 
 You can use multiple [ClickSend] configurations on the same server.
 You might wish to do this if you want to use more than one [ClickSend]
@@ -4384,6 +4392,89 @@ clicksend:
     api key: "E7CE2453-253F-E3C1-3562-0129EDB727BC"
     number: "+13012503257"
     from email: "help@example.com"
+{% endhighlight %}
+
+When you call [`send_fax()`], you can indicate which configuration
+should be used:
+
+{% highlight python %}
+send_fax(to='202-943-0949', welcome_fax, config='bankruptcy')
+{% endhighlight %}
+
+This will cause the fax to be sent from 301-250-3257.
+
+If no configuration is named `default`, the first configuration will
+be used as the default.
+
+### <a name="telnyx"></a>Telnyx configuration
+
+Sending faxes through [Telnyx] is enabled by setting `fax provider`
+to `telnyx` and specifying a `telnyx` configuration directive.
+
+Here is an example:
+
+{% highlight yaml %}
+fax provider: telnyx
+telnyx:
+  number: "+16052519139"
+  api key: "KEY017D2E7B3D5C992F50E721E560AD262F_pYbe5lWyefduFhfUv2eUdd"
+  app id: "1823943157766443451"
+{% endhighlight %}
+
+The `api key` is a code that you can find in the [Telnyx] portal
+under "API Keys."  You may need to generate the API Key.
+
+The `app id` is the "App ID" of the "Fax Application" you want to use.
+
+The `number` is the fax phone number you purchased.  You can find the
+phone number under Numbers in the [Telnyx] portal.  The
+phone number must be written in [E.164] format.
+
+To set up Telnyx for use with **docassemble**, go to [Telnyx] and sign
+up for an account. You will need to provide your credit card
+information and add some money to your Balance.
+
+Go to "Numbers" and then "Search & Buy Numbers" to set up a phone
+number to use for faxing. Make a note of the phone number; you will
+need to put the phone number into your `telnyx` configuration as the
+`number`, in [E.164] format (e.g., `+12025551515`).
+
+Go to "API Keys" and create an API key for use with "Telnyx API v2."
+Make a note of the API key; you will need to put the API key into your
+`telnyx` configuration as the `api key`.
+
+Go to "Programmable Fax" and click "Add new App."  Give your "Fax
+Application" a name like "docassemble fax" (or whatever you
+want). Make a note of the "App ID"; this is what you will need to set
+in your `telnyx` configuration as the `app id`. Under "Send a webhook
+to the URL," put in the URL of your server, followed by
+`/telnyx_fax_callback`.  For example, if your server is at
+`https://docassemble.example.com`, you would write
+`https://docassemble.example.com/telnyx_fax_callback`. Then, under
+"Outbound Settings," set the "Outbound Voice Profile" to "Default" or
+to whatever other Outbound Voice Profile you want to use. You can
+click "Outbound Voice Profile" in the navigation menu to see the
+Outbound Voice Profiles that are configured on your account.
+
+#### <a name="multiple telnyx"></a>Multiple Telnyx configurations
+
+You can use multiple [Telnyx] configurations on the same server.
+You might wish to do this if you want to use more than one [Telnyx]
+fax number and/or account to send faxes.  You can do this by
+specifying the `telnyx` directive as a list of dictionaries, and
+giving each dictionary a `name`.  In this example, there are two
+configurations, one named `default`, and one named `bankruptcy`:
+
+{% highlight yaml %}
+telnyx:
+  - name: default
+    number: "+16052519139"
+    api key: "KEY017D2E7B3D5C992F50E721E560AD262F_pYbe5lWyefduFhfUv2eUdd"
+    app id: "1823943157766443451"
+  - name: bankruptcy
+    number: "+12025552033"
+    api key: "KEY017D2F7B5D5C992Y51E731E860BD365E_qYZbf7lUyeRdrFjfJv3eYfe"
+    app id: "1924953657746434242"
 {% endhighlight %}
 
 When you call [`send_fax()`], you can indicate which configuration

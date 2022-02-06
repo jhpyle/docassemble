@@ -305,7 +305,8 @@ that **docassemble** uses, including:
 * A web server, [NGINX], which is called `nginx` within the Supervisor
   configuration.
 * A application server, [uWSGI], called `uwsgi`.
-* A background task system, [Celery], called `celery`.
+* A background task system, [Celery], consisting of two processes,
+  `celery` and `celerysingle`.
 * A scheduled task runner, called `cron`.
 * A SQL server, [PostgreSQL], called `postgres`.
 * A distributed task queue system, [RabbitMQ], called `rabbitmq`.
@@ -314,10 +315,13 @@ that **docassemble** uses, including:
   kills them, called `watchdog`.
 * A [WebSocket] server that supports the [live help] functionality,
   called `websockets`.
+* A [unoconv] server, called `unoconv`
 
 In addition to starting background tasks, [Supervisor] coordinates the
 running of ad-hoc tasks, including:
 
+* A bare-bones web server called `nascent` that runs during the
+  initialization process, so that the application responds on port 80.
 * A script called `sync` that consolidates log files in one place,
   to support the [Logs] interface.
 * A script called `reset` that restarts the server.
@@ -329,10 +333,30 @@ dormant on a single-server system.  (The [syslog-ng] application is
 used in the multi-server arrangement to consolidate log files from
 multiple machines.)
 
+[NGINX] is used by default, but it is possible (mostly for backwards
+compatibility reasons) to run Apache instead of [NGINX]. For this
+reason, there is a service called `apache2`, which is defined in the
+configuration but does not run unless `DAWEBSERVER` is set to
+`apache`.
+
 Finally, there is a service called `initialize`, which runs
 automatically when [Supervisor] starts.  This is a shell script that
 initializes the server and starts the other services in the correct
 order.
+
+# <a name="nointernet"></a>Running without an internet connection
+
+If you wish to run **docassemble** without a connection to the
+internet, it should work. Some features will be unavailable, of
+course, such as features that interact with [GitHub] and [Google
+Cloud].
+
+If the server will not have access to the internet, you may wish to
+set `DAALLOWUPDATES` to `false` so that **docassemble** will not try
+to run `apt-get -q -y update` during the initialization
+process. However, even if you don't change `DAALLOWUPDATES`, the
+**docassemble** container should still start properly, because if
+`apt-get` cannot find a server it will fail and move on.
 
 # <a name="troubleshooting"></a>Troubleshooting
 

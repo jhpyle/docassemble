@@ -1764,8 +1764,7 @@ index=2)`.
 ## <a name="send_fax"></a>send_fax()
 
 The `send_fax()` function sends a PDF document as a fax.  This
-function requires you to create an account with [ClickSend] and define
-a [`clicksend`] directive in your [Configuration].
+function requires you to create an account with a [fax provider].
 
 `send_fax()` takes two arguments, a destination and a file.
 
@@ -1819,25 +1818,26 @@ object.
 The `send_fax()` function returns an object that represents the status
 of the fax sending.  The object has the following methods:
 
-* `.status()` - this will be one of [Twilio]'s [fax status values].
-  However, if there is a [Twilio] configuration error, it will be
-  `'not-configured'`, and if no result is available, it will be
-  `'no-information'`.
-* `.pages()` - this will be one of [Twilio]'s [fax status values].
-* `.info()` - this will be a [dictionary] containing the [status
-  callback values] returned from [ClickSend].
+* `.status()` - this will represent the status of the sending of the
+  fax. The available values depend on your fax provider. If there is a
+  configuration error, it will be `'not-configured'`, and if no result
+  is available, it will be `'no-information'`.
+* `.info()` - this will be a [dictionary] containing information about
+  the fax. The format depends on which fax provider you are using.
 * `.received()` - this will be `True` or `False` depending on whether
   the fax has been received yet.  It will be `None` if no result is
   available.
+* `.pages()` - if the fax is successfully delivered, this will return
+  the number of pages sent.
 
 Immediately after `send_fax()` is called, the result will likely be
-unavailable, because [ClickSend] will not have had time to start
+unavailable, because the fax provider will not have had time to start
 processing the request.
 
-In addition, the result will expire 24 hours after the last time
-[ClickSend] reported a change in the status of the fax sending.  Thus,
-if you want to ensure that the outcome of a fax sending gets recorded
-in the [interview session dictionary], you should launch a
+In addition, the result will expire 24 hours after the last time the
+fax provider reported a change in the status of the fax sending.
+Thus, if you want to ensure that the outcome of a fax sending gets
+recorded in the [interview session dictionary], you should launch a
 [`background_action()`] that polls the status, or set up a [scheduled
 task] that checks in hourly.
 
@@ -6970,6 +6970,33 @@ modules:
 ---
 {% endhighlight %}
 
+Note that the [`modules`] block has the same effect as:
+
+{% highlight python %}
+from docassemble.simplemath.test import *
+{% endhighlight %}
+
+This means that every name defined in the module file will be imported
+into the interview answers. It is recommended that you always define
+[`__all__`] in your modules in order to limit what gets imported. You
+should only import the names you actually need to use in your
+interview [YAML], such as the names of functions or classes.
+
+{% highlight python %}
+__all__ = ['plus_one']
+
+def plus_one(number):
+  return number + 1
+{% endhighlight %}
+
+When **docassemble** [pickles] the interview answers, it will screen
+out top-level names that refer to modules, functions, classes, and
+other standard objects that are not able to be [pickled]. However,
+custom objects like database connection objects will not be screened
+out, so you may encounter `pickle`-related errors if you import too
+much into your interview answers. Defining [`__all__`] in every module
+you write will protect against this.
+
 ## <a name="jinja2"></a>A caveat regarding functions called from docx templates
 
 If you write your own functions and they are called from markup inside
@@ -7607,6 +7634,7 @@ $(document).on('daPageLoad', function(){
 [in-memory database]: https://en.wikipedia.org/wiki/In-memory_database
 [object]: {{ site.baseurl }}/docs/objects.html
 [pickled]: https://docs.python.org/3/library/pickle.html
+[pickles]: https://docs.python.org/3/library/pickle.html
 [`db`]: {{ site.baseurl }}/docs/config.html#db
 [PostgreSQL]: http://www.postgresql.org/
 [`checkin interval`]: {{ site.baseurl }}/docs/config.html#checkin interval
@@ -7875,6 +7903,7 @@ $(document).on('daPageLoad', function(){
 [`auto terms`]: {{ site.baseurl }}/docs/initial.html#auto terms
 [`default language`]: {{ site.baseurl }}/docs/initial.html#default language
 [`language`]: {{ site.baseurl }}/docs/modifiers.html#language
-[ClickSend]: https://clicksend.com
 [`action_button_html()`]: #action_button_html
 [editable tables]: {{ site.baseurl }}/docs/groups.html#editing
+[`__all__`]: https://docs.python.org/3/tutorial/modules.html#importing-from-a-package
+[fax provider]: {{ site.baseurl }}/docs/config.html#fax provider

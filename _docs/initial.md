@@ -638,6 +638,21 @@ is equivalent to running the following Python code:
 from datetime import *
 {% endhighlight %}
 
+If you have a module file in the same package as the [YAML] file, you
+can import the names from the module file using Python's syntax for a
+relative module reference:
+
+{% highlight yaml %}
+---
+modules:
+  - .utils
+---
+{% endhighlight %}
+
+Note that if you use `modules` to import names from a module of your
+own, you should make sure to define [`__all__`] in the module to limit
+which names are imported.
+
 # <a name="data"></a>Storing structured `data` in a variable
 
 The `data` block allows you to specify a data structure in [YAML] in a
@@ -2523,3 +2538,4 @@ features:
 [provide CSS]: {{ site.baseurl }}/docs/initial.html#css
 [adjust the CSS]: {{ site.baseurl }}/docs/config.html#bootstrap theme
 [Bootstrap Navbar]: https://getbootstrap.com/docs/4.0/components/navbar/#supported-content
+[`__all__`]: https://docs.python.org/3/tutorial/modules.html#importing-from-a-package

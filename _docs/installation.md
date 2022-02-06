@@ -130,6 +130,7 @@ services:
 * [Twilio] for receiving text messages, sending text messages, and
   forwarding phone calls;
 * [ClickSend] for sending faxes;
+* [Telnyx] for sending faxes;
 * [VoiceRSS] for converting text to an audio file;
 * [Google APIs] for autocompleting addresses, normalizing addresses,
   drawing maps, translating text;
@@ -1685,3 +1686,4 @@ All of these system administration headaches can be avoided by
 [NGINX]: https://www.nginx.com/
 [Mailgun API]: {{ site.baseurl }}/docs/config.html#mailgun api
 [SendGrid API]: https://sendgrid.com/solutions/email-api/
+[Telnyx]: https://telnyx.com/
