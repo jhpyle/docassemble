@@ -58,7 +58,7 @@ from bs4 import BeautifulSoup
 import i18naddress
 from flask_mail import Message
 from pyzbar.pyzbar import decode
-from docxtpl import InlineImage, Subdoc
+from docxtpl import InlineImage, Subdoc, DocxTemplate
 #import tablib
 import pandas
 import PyPDF2
@@ -8097,7 +8097,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
     if isinstance(fields, dict):
         the_fields.update(fields)
     try:
-        docx_template = docassemble.base.file_docx.DocxTemplate(input_file)
+        docx_template = DocxTemplate(input_file)
         docassemble.base.functions.set_context('docx', template=docx_template)
         the_env = docassemble.base.parse.custom_jinja_env()
         the_xml = docx_template.get_xml()
@@ -8111,7 +8111,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
             if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
                 new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                 docx_template.save(new_template_file.name)
-                docx_template = docassemble.base.file_docx.DocxTemplate(new_template_file.name)
+                docx_template = DocxTemplate(new_template_file.name)
                 docassemble.base.functions.this_thread.misc['docx_template'] = docx_template
             else:
                 break
