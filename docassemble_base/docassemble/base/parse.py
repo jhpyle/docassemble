@@ -4737,9 +4737,10 @@ class Question:
                             the_docx_path = docassemble.base.file_docx.concatenate_files(template_files)
                         try:
                             docx_template = DocxTemplate(the_docx_path)
+                            docx_template.render_init()
                             the_env = custom_jinja_env(skip_undefined = options['skip_undefined'])
                             the_xml = docx_template.get_xml()
-                            the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
+                            the_xml = re.sub(r'<w:p([ >])', r'\n<w:p\1', the_xml)
                             the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
                             the_xml = docx_template.patch_xml(the_xml)
                             parsed_content = the_env.parse(the_xml)
@@ -6249,6 +6250,7 @@ class Question:
                                         with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False) as new_template_file:
                                             the_template.save(new_template_file.name) # Save and refresh the template
                                             the_template = DocxTemplate(new_template_file.name)
+                                            the_template.render_init()
                                             if result['hyperlink_style'] and result['hyperlink_style'] in the_template.docx.styles:
                                                 the_template.da_hyperlink_style = result['hyperlink_style']
                                             elif 'Hyperlink' in result['template'].docx.styles:
@@ -6566,6 +6568,7 @@ class Question:
                             else:
                                 docx_path = docassemble.base.file_docx.concatenate_files(docx_paths)
                             result['template'] = DocxTemplate(docx_path)
+                            result['template'].render_init()
                             if result['hyperlink_style'] and result['hyperlink_style'] in result['template'].docx.styles:
                                 result['template'].da_hyperlink_style = result['hyperlink_style']
                             elif 'Hyperlink' in result['template'].docx.styles:
@@ -9598,9 +9601,10 @@ def get_docx_variables(the_path):
         raise DAError("Missing docx template file " + os.path.basename(the_path))
     try:
         docx_template = DocxTemplate(the_path)
+        docx_template.render_init()
         the_env = custom_jinja_env()
         the_xml = docx_template.get_xml()
-        the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
+        the_xml = re.sub(r'<w:p([ >])', r'\n<w:p\1', the_xml)
         the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
         the_xml = docx_template.patch_xml(the_xml)
         parsed_content = the_env.parse(the_xml)

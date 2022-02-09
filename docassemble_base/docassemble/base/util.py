@@ -8098,10 +8098,11 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         the_fields.update(fields)
     try:
         docx_template = DocxTemplate(input_file)
+        docx_template.render_init()
         docassemble.base.functions.set_context('docx', template=docx_template)
         the_env = docassemble.base.parse.custom_jinja_env()
         the_xml = docx_template.get_xml()
-        the_xml = re.sub(r'<w:p>', '\n<w:p>', the_xml)
+        the_xml = re.sub(r'<w:p([ >])', r'\n<w:p\1', the_xml)
         the_xml = re.sub(r'({[\%\{].*?[\%\}]})', docassemble.base.parse.fix_quotes, the_xml)
         the_xml = docx_template.patch_xml(the_xml)
         the_env.parse(the_xml)
@@ -8112,6 +8113,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
                 new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                 docx_template.save(new_template_file.name)
                 docx_template = DocxTemplate(new_template_file.name)
+                docx_template.render_init()
                 docassemble.base.functions.this_thread.misc['docx_template'] = docx_template
             else:
                 break
