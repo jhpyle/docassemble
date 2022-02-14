@@ -234,10 +234,10 @@ through the triggering of undefined variable exceptions.
 So far, we have discussed three different techniques for specifying
 interview logic in **docassemble**:
 
-#. A series of [`question`] blocks with [`mandatory`] directives on them;
-#. Allowing `question` blocks to be asked implicitly as a result of
+1. A series of [`question`] blocks with [`mandatory`] directives on them;
+1. Allowing `question` blocks to be asked implicitly as a result of
    dependency satisfaction; and
-#. Writing a [`code`] block marked as [`mandatory`] containing an explicit
+1. Writing a [`code`] block marked as [`mandatory`] containing an explicit
    outline of the variables that need to be gathered and the
    conditions under which each variable definition should be sought.
 
