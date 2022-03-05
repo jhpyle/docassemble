@@ -58,6 +58,7 @@ equals_byte = bytes('=', 'utf-8')
 RangeType = type(range(1,2))
 NoneType = type(None)
 da_arch = platform.machine()
+standard_types = set(['integer', 'number', 'currency', 'float', 'file', 'files', 'range', 'multiselect', 'checkboxes', 'object_multiselect', 'object_checkboxes', 'user', 'camera', 'environment', 'date', 'datetime', 'time', 'email', 'microphone', 'ml', 'mlarea', 'noyes', 'noyesmaybe', 'noyesradio', 'noyeswide', 'yesno', 'yesnomaybe', 'yesnoradio', 'yesnowide', 'text', 'password', 'object'])
 
 DEBUG = True
 import_core = compile("from docassemble.base.util import objects_from_file, objects_from_structure", '<code block>', 'exec')
@@ -619,13 +620,15 @@ class InterviewStatus:
                             the_field.extras['show_if_var'] = safeid(re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', from_safeid(the_field.extras['show_if_var'])))
                         if 'show_if_js' in the_field.extras:
                             the_field.extras['show_if_js']['expression'].original_text = re.sub(iterator_re, '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['expression'].original_text)
-                            self.extras['show_if_js'][the_field.number]['expression'] = re.sub(iterator_re, '[' + str(list_indexno) + ']', self.extras['show_if_js'][the_field.number]['expression'])
+                            if the_field.number in self.extras['show_if_js']:
+                                self.extras['show_if_js'][the_field.number]['expression'] = re.sub(iterator_re, '[' + str(list_indexno) + ']', self.extras['show_if_js'][the_field.number]['expression'])
                             if the_field.extras['show_if_js']['expression'].uses_mako:
                                 the_field.extras['show_if_js']['expression'].template = MakoTemplate(the_field.extras['show_if_js']['expression'].original_text, strict_undefined=True, input_encoding='utf-8')
                             for ii in range(len(the_field.extras['show_if_js']['vars'])):
                                 the_field.extras['show_if_js']['vars'][ii] = re.sub(iterator_re, '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['vars'][ii])
-                            for ii in range(len(self.extras['show_if_js'][the_field.number]['vars'])):
-                                self.extras['show_if_js'][the_field.number]['vars'][ii] = re.sub(iterator_re, '[' + str(list_indexno) + ']', self.extras['show_if_js'][the_field.number]['vars'][ii])
+                            if the_field.number in self.extras['show_if_js']:
+                                for ii in range(len(self.extras['show_if_js'][the_field.number]['vars'])):
+                                    self.extras['show_if_js'][the_field.number]['vars'][ii] = re.sub(iterator_re, '[' + str(list_indexno) + ']', self.extras['show_if_js'][the_field.number]['vars'][ii])
                     if list_indexno >= list_len:
                         the_field.collect_type = 'extra'
                     else:
@@ -2325,7 +2328,7 @@ class Question:
         else:
             self.is_initial = False
             self.initial_code = None
-        if 'command' in data and data['command'] in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session'):
+        if 'command' in data and data['command'] in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session', 'interview_exit'):
             self.question_type = data['command']
             self.content = TextObject(data.get('url', ''), question=self)
         if 'objects from file' in data:
@@ -3230,6 +3233,8 @@ class Question:
                 field_data['saveas'] = data['field']
                 if 'datatype' in data and 'type' not in field_data:
                     field_data['type'] = data['datatype']
+                    if data['datatype'] not in standard_types and data['datatype'] in docassemble.base.functions.custom_types:
+                        self.interview.custom_data_types.add(data['datatype'])
                 elif is_boolean(field_data):
                     field_data['type'] = 'boolean'
                 elif is_threestate(field_data):
@@ -3560,6 +3565,9 @@ class Question:
                 manual_keys = set()
                 field_info = {'type': 'text', 'number': field_number}
                 custom_data_type = False
+                if 'choices' in field and isinstance(field['choices'], dict) and len(field['choices']) == 1 and 'code' in field['choices']:
+                    field['code'] = field['choices']['code']
+                    del field['choices']
                 if 'datatype' in field:
                     if field['datatype'] in ('radio', 'combobox', 'pulldown', 'ajax'):
                         field['input type'] = field['datatype']
@@ -3572,8 +3580,9 @@ class Question:
                         field['datatype'] = 'text'
                     if field['datatype'] in ('object', 'object_radio', 'multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
                         raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
-                    if field['datatype'] in docassemble.base.functions.custom_types:
+                    if field['datatype'] in docassemble.base.functions.custom_types and field['datatype'] not in standard_types:
                         custom_data_type = True
+                        self.interview.custom_data_types.add(field['datatype'])
                 if 'input type' in field:
                     if field['input type'] == 'ajax':
                         if 'action' not in field:
@@ -5988,11 +5997,11 @@ class Question:
         if 'role' in user_dict:
             current_role = user_dict['role']
             if len(self.role) > 0:
-                if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session'):
+                if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session', 'interview_exit'):
                     # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                     user_dict['role_needed'] = self.role
                     raise NameError("name 'role_event' is not defined")
-            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session'):
+            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session', 'interview_exit'):
                 # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
@@ -7056,6 +7065,7 @@ class Interview:
         self.scan_for_emojis = False
         self.consolidated_metadata = {}
         self.issue = {}
+        self.custom_data_types = set()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
             self.cross_reference_dependencies()
@@ -7210,7 +7220,7 @@ class Interview:
             if '_internal' in the_user_dict and title_name in the_user_dict['_internal'] and the_user_dict['_internal'][title_name] is not None:
                 title[title_abb] = str(the_user_dict['_internal'][title_name]).strip()
             elif status is not None and (title_name + ' text') in status.extras and status.extras[title_name + ' text'] is not None:
-                if title_name in ('exit link', 'exit url', ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window')):
+                if title_name in ('exit link', 'exit url', 'title url', 'title url opens in other window'):
                     title[title_abb] = status.extras[title_name + ' text']
                 else:
                     title[title_abb] = converter(status.extras[title_name + ' text'], title_name)
@@ -9211,13 +9221,18 @@ class DAEnvironment(Environment):
     def getitem(self, obj, argument):
         try:
             return obj[argument]
+        except (DAAttributeError, DAIndexError) as err:
+            varname = extract_missing_name(err)
+            return self.undefined(obj=missing, name=varname)
         except (AttributeError, TypeError, LookupError):
             return self.undefined(obj=obj, name=argument, accesstype='item')
-
     def getattr(self, obj, attribute):
         try:
             return getattr(obj, attribute)
-        except AttributeError:
+        except DAAttributeError as err:
+            varname = extract_missing_name(err)
+            return self.undefined(obj=missing, name=varname)
+        except AttributeError as err:
             pass
         return self.undefined(obj=obj, name=attribute, accesstype='attribute')
 

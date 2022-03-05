@@ -29,6 +29,7 @@ loaded = False
 in_celery = False
 errors = []
 env_messages = []
+allowed = {}
 
 def env_true_false(var):
     value = str(os.getenv(var, 'false')).lower().strip()
@@ -538,6 +539,8 @@ def load(**kwargs):
             daconfig['db']['port'] = '3306'
         elif daconfig['db']['prefix'].startswith('oracle'):
             daconfig['db']['port'] = '1521'
+    if 'default admin account' in daconfig:
+        config_error('For security, delete the default admin account directive, which is no longer needed')
     if 'ocr languages' not in daconfig:
         daconfig['ocr languages'] = {}
     if not isinstance(daconfig['ocr languages'], dict):
@@ -577,6 +580,34 @@ def load(**kwargs):
     if daconfig['verification code timeout'] < 1:
         config_error('verification code timeout must be one or greater')
         daconfig['verification code timeout'] = 180
+    if 'permissions' in daconfig:
+        if not isinstance(daconfig['permissions'], dict):
+            config_error("permissions must be in the form of a dict")
+            daconfig['permissions'] = {}
+        has_error = False
+        for key, val in daconfig['permissions'].items():
+            if key in ('admin', 'developer', 'cron', 'user'):
+                config_error("permissions cannot be used to change the allowed actions of the " + key + " privilege")
+                has_error = True
+                break
+            if not (isinstance(key, str) and isinstance(val, list)):
+                config_error("permissions must be a dictionary where the keys are strings and the values are lists")
+                has_error = True
+                break
+            for item in val:
+                if not isinstance(item, str):
+                    config_error("permissions must be a dictionary where the values are lists of strings")
+                    has_error = True
+                    break
+            if has_error:
+                break
+        if has_error:
+            daconfig['permissions'] = {}
+        for key, val in daconfig['permissions'].items():
+            if key not in allowed:
+                allowed[key] = set()
+            for item in val:
+                allowed[key].add(item)
     if 'api privileges' in daconfig:
         if not isinstance(daconfig['api privileges'], list):
             config_error("api privileges must be in the form of a list")

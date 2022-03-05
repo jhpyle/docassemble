@@ -4898,6 +4898,8 @@ class DALazyTableTemplate(DALazyTemplate):
         except:
             return table_safe(word(self.table_info.not_available_label))
     def header_and_contents(self):
+        if not hasattr(self, 'table_info'):
+            raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)
         header_output = [export_safe(x.text(user_dict_copy)) for x in self.table_info.header]
@@ -6402,11 +6404,13 @@ class Address(DAObject):
         while not success and try_number < 2:
             try:
                 success = geocoder.geocode(the_address, language=get_language())
+                assert hasattr(geocoder.data, 'longitude')
                 assert success
             except Exception as the_err:
                 logmessage(the_err.__class__.__name__ + ": " + str(the_err))
                 try_number += 1
                 time.sleep(try_number)
+                success = False
         self._geocoded = True
         self.geolocated = True
         if success:
@@ -8016,8 +8020,8 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         id_tag = ' id=' + json.dumps(id_tag)
     return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
 
-def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None):
-    """Overlays a page from a PDF file on top of the pages of another PDF file."""
+def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None, multi=False):
+    """Overlays one or more pages from a PDF file on top of the pages of another PDF file."""
     if isinstance(main_pdf, DAFileCollection):
         main_file = main_pdf.pdf.path()
     elif isinstance(main_pdf, (DAFile, DAStaticFile, DAFileList)):
@@ -8037,7 +8041,10 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
     outfile = DAFile()
     outfile.set_random_instance_name()
     outfile.initialize(extension='pdf')
-    docassemble.base.pdftk.overlay_pdf(main_file, logo_file, outfile.path(), first_page=first_page, last_page=last_page, logo_page=logo_page, only=only)
+    if multi:
+        docassemble.base.pdftk.overlay_pdf_multi(main_file, logo_file, outfile.path())
+    else:
+        docassemble.base.pdftk.overlay_pdf(main_file, logo_file, outfile.path(), first_page=first_page, last_page=last_page, logo_page=logo_page, only=only, multi=multi)
     outfile.commit()
     outfile.retrieve()
     return outfile

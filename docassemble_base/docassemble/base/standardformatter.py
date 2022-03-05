@@ -843,7 +843,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 if field.number in status.helptexts:
                     fieldlist.append('                <div class="row da-review da-review-help"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST" class="daformreview">\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformreview" method="POST">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
@@ -1352,7 +1352,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             if hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras):
                 fieldlist.append('                </div>\n')
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + ' class="daformfields">\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformfields" method="POST"' + enctype_string + '>\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div class="da-subquestion">\n' + sub_question_text
@@ -1655,7 +1655,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
     else:
         output += status.pre
-        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal" method="POST" class="daformcontinueother">\n'
+        output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformcontinueother" method="POST">\n'
         output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestionText:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'

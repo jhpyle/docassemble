@@ -6081,8 +6081,12 @@ Feature: Example interviews
 
   Scenario: Test the interview "Require user to log in"
     Given I start the interview "docassemble.base:data/questions/examples/user-logged-in.yml"
-    And I wait 1 second
-    Then I should see the phrase "Sign in"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I set "Fruit" to "apple"
+    And I click the button "Continue"
+    Then I should see the phrase "You need to log in to finish this interview."
+    And I click the button "Log in"
+    Then I should see the phrase "Password"
 
   Scenario: Test the interview ".docx include with parameters"
     Given I start the interview "docassemble.demo:data/questions/examples/subdoc-params.yml"

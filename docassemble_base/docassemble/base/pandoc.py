@@ -316,8 +316,8 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
         filename = 'file'
     filename = docassemble.base.functions.secure_filename(filename)
     tempdir = tempfile.mkdtemp()
-    from_file = os.path.join(tempdir, filename + "." + in_format)
-    to_file = os.path.join(tempdir, filename + ".pdf")
+    from_file = os.path.join(tempdir, "file." + in_format)
+    to_file = os.path.join(tempdir, "file.pdf")
     shutil.copyfile(in_file, from_file)
     tries = 0
     if pdfa:

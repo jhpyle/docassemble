@@ -186,6 +186,7 @@ class APIKey(FlaskForm):
     security = HiddenField()
     name = StringField(word('Name'), validators=[validators.Length(min=1, max=255)])
     method = SelectField(word('Security Method'))
+    permissions = SelectMultipleField(word('Limited Permissions'))
     submit = SubmitField(word('Create'))
     delete = SubmitField(word('Delete'))
     def validate(self, extra_validators=None):

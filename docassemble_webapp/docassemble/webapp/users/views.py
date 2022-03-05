@@ -24,9 +24,10 @@ PAGINATION_LIMIT_PLUS_ONE = PAGINATION_LIMIT + 1
 
 @app.route('/privilegelist', methods=['GET', 'POST'])
 @login_required
-@roles_required('admin')
+@roles_required('admin', permission='access_privileges')
 def privilege_list():
     setup_translation()
+    can_edit = bool(current_user.has_roles('admin') or current_user.can_do('edit_privileges'))
     output = """\
     <table class="table table-striped">
       <thead>
@@ -38,7 +39,7 @@ def privilege_list():
       <tbody>
 """
     for role in db.session.execute(select(Role).order_by(Role.name)).scalars():
-        if role.name not in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
+        if can_edit and role.name not in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
             output += '        <tr><td>' + str(role.name) + '</td><td class="text-end"><a class="btn ' + app.config['BUTTON_CLASS'] + ' btn-danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
         else:
             output += '        <tr><td>' + str(role.name) + '</td><td>&nbsp;</td></tr>\n'
@@ -47,13 +48,13 @@ def privilege_list():
       </tbody>
     </table>
 """
-    response = make_response(render_template('users/rolelist.html', version_warning=None, bodyclass='daadminbody', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output), 200)
+    response = make_response(render_template('users/rolelist.html', version_warning=None, bodyclass='daadminbody', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output, can_edit=can_edit), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
 @app.route('/userlist', methods=['GET'])
 @login_required
-@roles_required('admin')
+@roles_required(['admin', 'advocate'], permission='access_user_info')
 def user_list():
     setup_translation()
     page = request.args.get('page', None)
@@ -112,7 +113,7 @@ def user_list():
 
 @app.route('/privilege/<int:id>/delete', methods=['GET'])
 @login_required
-@roles_required('admin')
+@roles_required('admin', permission='edit_privileges')
 def delete_privilege(id):
     setup_translation()
     if not id:
@@ -120,7 +121,7 @@ def delete_privilege(id):
         return redirect(url_for('privilege_list'))
     role = db.session.execute(select(Role).filter_by(id=id)).scalar_one()
     user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
-    if user_role is None or role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron']:
+    if user_role is None or role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
         flash(word('The role could not be deleted.'), 'error')
     else:
         for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).unique().scalars():
@@ -142,9 +143,18 @@ def delete_privilege(id):
 
 @app.route('/user/<int:id>/editprofile', methods=['GET', 'POST'])
 @login_required
-@roles_required('admin')
+@roles_required('admin', permission='edit_user_info')
 def edit_user_profile_page(id):
     setup_translation()
+    is_admin = bool(current_user.has_roles('admin'))
+    if is_admin:
+        can_edit_privileges = True
+        can_delete = True
+        can_edit_user_active_status = True
+    else:
+        can_edit_privileges = current_user.can_do('edit_user_privileges')
+        can_delete = current_user.can_do('delete_user') and current_user.can_do('access_sessions') and current_user.can_do('edit_sessions')
+        can_edit_user_active_status = current_user.can_do('edit_user_active_status')
     if not id:
         flash(word('The user account did not exit.'), 'danger')
         return redirect(url_for('user_list'))
@@ -152,6 +162,15 @@ def edit_user_profile_page(id):
     if not user:
         flash(word('The user account did not exit.'), 'danger')
         return redirect(url_for('user_list'))
+    if not is_admin:
+        protected_user = False
+        for role in user.roles:
+            if role.name in ('admin', 'developer', 'advocate'):
+                protected_user = True
+                break
+        if protected_user:
+            flash(word('You do not have sufficient privileges to edit this user.'), 'danger')
+            return redirect(url_for('user_list'))
     the_tz = user.timezone if user.timezone else get_default_timezone()
     if user is None or user.social_id.startswith('disabled$'):
         return redirect(url_for('user_list'))
@@ -165,7 +184,7 @@ def edit_user_profile_page(id):
         db.session.commit()
         #docassemble.webapp.daredis.clear_user_cache()
         return redirect(url_for('edit_user_profile_page', id=id))
-    if daconfig.get('admin can delete account', True) and user.id != current_user.id:
+    if can_delete and daconfig.get('admin can delete account', True) and user.id != current_user.id:
         if 'delete_account' in request.args and int(request.args['delete_account']) == 1:
             server.user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
             delete_user_data(id, server.server_redis, server.server_redis_user)
@@ -200,19 +219,25 @@ def edit_user_profile_page(id):
     form.uses_mfa.data = bool(user.otp_secret is not None)
     admin_id = db.session.execute(select(Role.id).filter_by(name='admin')).scalar_one()
     if request.method == 'POST' and form.validate(user.id, admin_id):
+        if not can_edit_user_active_status:
+            form.active.data = user.active
         form.populate_obj(user)
-        roles_to_remove = []
-        the_role_id = []
-        for role in user.roles:
-            roles_to_remove.append(role)
-        for role in roles_to_remove:
-            user.roles.remove(role)
-        for role in db.session.execute(select(Role).order_by('id')).scalars():
-            if role.id in form.role_id.data:
-                user.roles.append(role)
-                the_role_id.append(role.id)
+        if can_edit_privileges:
+            roles_to_remove = []
+            the_role_id = []
+            for role in user.roles:
+                if not is_admin and role.name in ('admin', 'developer', 'advocate'):
+                    continue
+                roles_to_remove.append(role)
+            for role in roles_to_remove:
+                user.roles.remove(role)
+            for role in db.session.execute(select(Role).order_by('id')).scalars():
+                if not is_admin and role.name in ('admin', 'developer', 'advocate'):
+                    continue
+                if role.id in form.role_id.data:
+                    user.roles.append(role)
+                    the_role_id.append(role.id)
         db.session.commit()
-        #docassemble.webapp.daredis.clear_user_cache()
         flash(word('The information was saved.'), 'success')
         return redirect(url_for('user_list'))
     confirmation_feature = bool(user.id > 2)
@@ -228,12 +253,13 @@ def edit_user_profile_page(id):
     form.role_id.process_data(the_role_id)
     if user.active:
         form.active.default = 'checked'
-    response = make_response(render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id), extra_js=Markup(script)), 200)
+    response = make_response(render_template('users/edit_user_profile_page.html', version_warning=None, page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form, confirmation_feature=confirmation_feature, privileges_note=privileges_note, is_self=(user.id == current_user.id), extra_js=Markup(script), is_admin=is_admin, can_edit_privileges=can_edit_privileges, can_delete=can_delete, can_edit_user_active_status=can_edit_user_active_status), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required
+@roles_required('admin', permission='edit_privileges')
 def add_privilege():
     setup_translation()
     form = NewPrivilegeForm(request.form, obj=current_user)
@@ -246,7 +272,6 @@ def add_privilege():
 
         db.session.add(Role(name=form.name.data))
         db.session.commit()
-        #docassemble.webapp.daredis.clear_user_cache()
         flash(word('The privilege was added.'), 'success')
         return redirect(url_for('privilege_list'))
 
@@ -291,10 +316,11 @@ def _endpoint_url(endpoint):
 
 @app.route('/user/invite', methods=['GET', 'POST'])
 @login_required
-@roles_required('admin')
+@roles_required('admin', permission='create_user')
 def invite():
     """ Allows users to send invitations to register an account """
     setup_translation()
+    is_admin = bool(current_user.has_roles('admin'))
     user_manager = current_app.user_manager
 
     the_next = request.args.get('next',
@@ -302,7 +328,10 @@ def invite():
 
     user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
     invite_form = MyInviteForm(request.form)
-    invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name'))]
+    if is_admin:
+        invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name'))]
+    else:
+        invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin', Role.name != 'developer', Role.name != 'advocate')).order_by('name'))]
     if request.method=='POST' and invite_form.validate():
         email_addresses = []
         for email_address in re.split(r'[\n\r]+', invite_form.email.data.strip()):
@@ -312,6 +341,8 @@ def invite():
         the_role_id = None
 
         for role in db.session.execute(select(Role).order_by('id')).scalars():
+            if not is_admin and role.name in ('admin', 'developer', 'advocate'):
+                continue
             if role.id == int(invite_form.role_id.data) and role.name != 'admin' and role.name != 'cron':
                 the_role_id = role.id
 
@@ -337,14 +368,14 @@ def invite():
             db.session.commit()
             #docassemble.webapp.daredis.clear_user_cache()
             try:
-                logmessage("Trying to send e-mail to " + str(user_invite.email))
+                logmessage("Trying to send invite e-mail to " + str(user_invite.email))
                 emails.send_invite_email(user_invite, accept_invite_link)
                 logmessage("Sent e-mail invite to " + str(user_invite.email))
             except Exception as e:
                 try:
-                    logmessage("Failed to send e-mail: " + str(e))
+                    logmessage("Failed to send invite e-mail: " + e.__class__.__name__ + ': ' + str(e))
                 except:
-                    logmessage("Failed to send e-mail")
+                    logmessage("Failed to send invite e-mail")
                 db.session.delete(user_invite)
                 db.session.commit()
                 #docassemble.webapp.daredis.clear_user_cache()
@@ -365,12 +396,16 @@ def invite():
 
 @app.route('/user/add', methods=['GET', 'POST'])
 @login_required
-@roles_required('admin')
+@roles_required('admin', permission='create_user')
 def user_add():
     setup_translation()
+    is_admin = bool(current_user.has_roles('admin'))
     user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
     add_form = UserAddForm(request.form, role_id=[str(user_role.id)])
-    add_form.role_id.choices = [(r.id, r.name) for r in db.session.execute(select(Role.id, Role.name).where(Role.name != 'cron').order_by('name'))]
+    if is_admin:
+        add_form.role_id.choices = [(r.id, r.name) for r in db.session.execute(select(Role.id, Role.name).where(Role.name != 'cron').order_by('name'))]
+    else:
+        add_form.role_id.choices = [(r.id, r.name) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin', Role.name != 'developer', Role.name != 'advocate')).order_by('name'))]
     add_form.role_id.default = user_role.id
     if str(add_form.role_id.data) == 'None':
         add_form.role_id.data = user_role.id
@@ -398,9 +433,12 @@ def user_add():
         )
         num_roles = 0
         for role in db.session.execute(select(Role).order_by('id')).scalars():
+            if not is_admin and role.name in ('admin', 'developer', 'advocate'):
+                next
             if role.id in add_form.role_id.data:
-                the_user.roles.append(role)
-                num_roles +=1
+                if role.name != 'cron':
+                    the_user.roles.append(role)
+                    num_roles +=1
         if num_roles == 0:
             the_user.roles.append(user_role)
         db.session.add(user_auth)

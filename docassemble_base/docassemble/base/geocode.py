@@ -55,12 +55,16 @@ class GoogleV3GeoCoder(GeoCoder):
 #                    'subpremise': ('unit', 'long_name'),
             }
             for component in self.data.raw['address_components']:
-                if 'types' in component and 'long_name' in component:
+                if 'types' in component:
+                    found = False
                     for geo_type, addr_type in geo_types.items():
-                        if geo_type in component['types'] and ((not hasattr(address, addr_type[0])) or getattr(address, addr_type[0]) == '' or getattr(address, addr_type[0]) is None):
+                        if geo_type in component['types'] and ((not hasattr(address, addr_type[0])) or getattr(address, addr_type[0]) in ('', None)) and addr_type[1] in component:
                             setattr(address, addr_type[0], component[addr_type[1]])
-                        if (not hasattr(address, geo_type)) or getattr(address, geo_type) == '' or getattr(address, geo_type) is None:
-                            setattr(address, geo_type, component['long_name'])
+                            found = True
+                    if not found and 'long_name' in component:
+                        for google_type in component['types']:
+                            if (not hasattr(address, google_type)) or getattr(address, google_type) in ('', None):
+                                setattr(address, google_type, component['long_name'])
             geo_types = {
                 'administrative_area_level_1': 'state',
                 'administrative_area_level_2': 'county',

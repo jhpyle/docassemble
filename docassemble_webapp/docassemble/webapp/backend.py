@@ -1071,11 +1071,13 @@ def file_privilege_access(file_number, allow=None, disallow=None, disallow_all=F
 def clear_session(i):
     if 'sessions' in session and i in session['sessions']:
         del session['sessions'][i]
+    session.modified = True
 
 def clear_specific_session(i, uid):
     if 'sessions' in session and i in session['sessions']:
         if session['sessions'][i]['uid'] == uid:
             del session['sessions'][i]
+    session.modified = True
 
 def guess_yaml_filename():
     yaml_filename = None
@@ -1091,6 +1093,7 @@ def delete_obsolete():
     for name in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus'):
         if name in session:
             del session[name]
+    session.modified = True
 
 def get_session(i):
     if 'sessions' not in session:

@@ -3729,6 +3729,8 @@ def process_action():
         this_thread.internal['event_stack'][unique_id].insert(0, the_action)
         this_thread.current_info.update(the_action)
         raise ForcedReRun()
+    if the_action == '_da_exit':
+        command('interview_exit')
     if the_action == 'need':
         for key in ['variable', 'variables']:
             if key in this_thread.current_info['arguments']:
@@ -4424,11 +4426,11 @@ def noyes(the_value, invert=False):
         return ""
     if the_value:
         if invert:
-            return this_thread.misc.get('checkbox_export_the_value', 'Yes')
+            return 'Yes'
         return "No"
     if invert:
         return "No"
-    return this_thread.misc.get('checkbox_export_value', 'Yes')
+    return 'Yes'
 
 def split(text, breaks, index):
     """Splits text at particular breakpoints and returns the given piece."""
@@ -4581,12 +4583,20 @@ def manage_privileges(*pargs):
             command = arglist.pop(0)
         if command == 'list':
             return server.get_privileges_list()
+        if command == 'inspect':
+            if len(arglist) != 1:
+                raise Exception("manage_privileges: invalid number of arguments")
+            return server.get_permissions_of_privilege(arglist[0])
         if command == 'add':
             for priv in arglist:
                 server.add_privilege(priv)
+            if len(arglist) > 0:
+                return True
         elif command == 'remove':
             for priv in arglist:
                 server.remove_privilege(priv)
+            if len(arglist) > 0:
+                return True
         else:
             raise Exception("manage_privileges: invalid command")
     return None
@@ -4795,11 +4805,17 @@ def secure_filename(the_filename):
 custom_types = {}
 
 class CustomDataTypeRegister(type):
-    def __init__(cls, name, bases, clsdict):
+    def __init__(cls, name, bases, orig_clsdict):
+        clsdict = copy.copy(orig_clsdict)
         if len(cls.mro()) > 2:
             if 'name' in clsdict and isinstance(clsdict['name'], str) and not re.search(r'[^a-z0-9A-Z\-\_]', clsdict['name']):
                 dataname = clsdict['name']
                 new_type = {}
+                for base in bases:
+                    if base is not CustomDataType:
+                        for attr in ('container_class', 'input_class', 'input_type', 'javascript', 'jq_rule', 'jq_message', 'parameters', 'code_parameters', 'mako_parameters', 'skip_if_empty', 'is_object'):
+                            if attr not in clsdict and hasattr(base, attr):
+                                clsdict[attr] = getattr(base, attr)
                 new_type['container_class'] = clsdict.get('container_class', 'da-field-container-datatype-' + dataname)
                 new_type['input_class'] = clsdict.get('input_class', 'da' + dataname)
                 new_type['input_type'] = clsdict.get('input_type', 'text')
@@ -4809,8 +4825,8 @@ class CustomDataTypeRegister(type):
                 new_type['parameters'] = clsdict.get('parameters', [])
                 new_type['code_parameters'] = clsdict.get('code_parameters', [])
                 new_type['mako_parameters'] = clsdict.get('mako_parameters', [])
-                new_type['skip_if_empty'] = True if clsdict.get('skip_if_empty', True) else False
-                new_type['is_object'] = True if clsdict.get('is_object', False) else False
+                new_type['skip_if_empty'] = bool(clsdict.get('skip_if_empty', True))
+                new_type['is_object'] = bool(clsdict.get('is_object', False))
                 new_type['class'] = cls
                 custom_types[dataname] = new_type
         super().__init__(name, bases, clsdict)

@@ -829,6 +829,7 @@ if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.create_tables \"${DA_CONFIG_FILE}\"" www-data
     unset DA_ADMIN_EMAIL
     unset DA_ADMIN_PASSWORD
+    unset DA_ADMIN_API_KEY
 fi
 
 echo "initialize: Configuring log server, if applicable" >&2

@@ -148,7 +148,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
 def read_fields_pdftk(pdffile):
     output = subprocess.check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode()
     fields = []
-    if not len(output) > 0:
+    if len(output) == 0:
         return None
     for field in yaml.load_all(output, Loader=yaml.FullLoader):
         if 'FieldType' in field and field['FieldType'] == 'Button':
@@ -667,6 +667,17 @@ def flatten_pdf(filename):
         logmessage("Failed to flatten PDF form")
         raise DAError("Call to pdftk failed for template where arguments were " + " ".join(subprocess_arguments))
     shutil.move(outfile.name, filename)
+
+def overlay_pdf_multi(main_file, logo_file, out_file):
+    subprocess_arguments = [PDFTK_PATH, main_file, 'multistamp', logo_file, 'output', out_file]
+    try:
+        result = subprocess.run(subprocess_arguments, timeout=60, check=False).returncode
+    except subprocess.TimeoutExpired:
+        result = 1
+        logmessage("overlay_pdf_multi: call to pdftk took too long")
+    if result != 0:
+        logmessage("Failed to overlay PDF")
+        raise DAError("Call to pdftk failed for overlay where arguments were " + " ".join(subprocess_arguments))
 
 def overlay_pdf(main_file, logo_file, out_file, first_page=None, last_page=None, logo_page=None, only=None):
     main_pdf = safe_pypdf_reader(main_file)

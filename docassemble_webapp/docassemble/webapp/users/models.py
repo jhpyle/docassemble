@@ -1,5 +1,5 @@
 from docassemble.webapp.db_object import db, UserMixin
-from docassemble.base.config import dbtableprefix
+from docassemble.base.config import dbtableprefix, allowed
 
 class UserModel(db.Model, UserMixin):
     __tablename__ = dbtableprefix + 'user'
@@ -27,6 +27,40 @@ class UserModel(db.Model, UserMixin):
     modified_at = db.Column(db.DateTime())
     last_login = db.Column(db.DateTime())
     #email_is_phone_number = db.Column(db.Boolean(), nullable=True, server_default='0')
+    limited_api = False
+    def same_as(self, user_id):
+        if self.limited_api:
+            return False
+        return self.id == user_id
+    def has_role_or_permission(self, *specified_role_names, permissions=None):
+        if self.limited_api:
+            if isinstance(permissions, list):
+                for task in permissions:
+                    if self.can_do(task):
+                        return True
+            return False
+        role_result = super().has_role(*specified_role_names)
+        if not role_result and isinstance(permissions, list):
+            for task in permissions:
+                if self.can_do(task):
+                    return True
+        return role_result
+    def can_do(self, task):
+        if self.is_anonymous:
+            return False
+        if self.limited_api:
+            return bool(task in self.limits)
+        if hasattr(self, 'roles'):
+            roles = self.roles
+        else:
+            if hasattr(self, 'user_profile') and hasattr(self.user_profile, 'roles'):
+                roles = self.user_profile.roles
+            else:
+                roles = None
+        for role in roles:
+            if role.name in allowed and task in allowed[role.name]:
+                return True
+        return False
 
 class UserAuthModel(db.Model, UserMixin):
     __tablename__ = dbtableprefix + 'user_auth'

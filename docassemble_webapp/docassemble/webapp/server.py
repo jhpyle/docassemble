@@ -5,6 +5,7 @@ import codecs
 import collections
 import copy
 import datetime
+import email
 from distutils.version import LooseVersion
 import filecmp
 from functools import update_wrapper
@@ -52,6 +53,7 @@ from docassemble.base.config import daconfig, hostname, in_celery
 import docassemble.webapp.setup
 from docassemble.webapp.setup import da_version
 import docassemble.base.astparser
+from docassemble.webapp.api_key import encrypt_api_key
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
@@ -175,6 +177,26 @@ else:
 REQUIRE_IDEMPOTENT = not daconfig.get('allow non-idempotent questions', True)
 STRICT_MODE = daconfig.get('restrict input variables', False)
 PACKAGE_PROTECTION = daconfig.get('package protection', True)
+PERMISSIONS_LIST = [
+    'access_privileges',
+    'access_sessions',
+    'access_user_info',
+    'access_user_api_info',
+    'create_user',
+    'delete_user',
+    'demo_interviews',
+    'edit_privileges',
+    'edit_sessions',
+    'edit_user_active_status',
+    'edit_user_info',
+    'edit_user_api_info',
+    'edit_user_password',
+    'edit_user_privileges',
+    'interview_data',
+    'log_user_in',
+    'playground_control',
+    'template_parse'
+    ]
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 GITHUB_BRANCH = daconfig.get('github default branch name', 'main')
@@ -959,8 +981,11 @@ def logout():
     #     secret = str(secret)
     #     set_cookie = False
     user_manager = current_app.user_manager
-    if 'next' in request.args:
-        next_url = request.args['next']
+    if 'next_arg' in session:
+        next_url = session['next_arg']
+        del session['next_arg']
+    # if 'next' in request.args:
+    #     next_url = request.args['next']
     elif session.get('language', None) and session['language'] != DEFAULT_LANGUAGE:
         next_url = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
     else:
@@ -3005,9 +3030,10 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                         if app.config['ENABLE_PLAYGROUND']:
                             navbar +='<a class="dropdown-item" href="' + url_for('playground_page') + '">' + word('Playground') + '</a>'
                         navbar +='<a class="dropdown-item" href="' + url_for('utilities') + '">' + word('Utilities') + '</a>'
-                        if current_user.has_role('admin'):
-                            navbar +='<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
-                            navbar +='<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
+                    if current_user.has_role('admin', 'advocate') or current_user.can_do('access_user_info'):
+                        navbar +='<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
+                    if current_user.has_role('admin'):
+                        navbar +='<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
                     if app.config['SHOW_DISPATCH']:
                         navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a>'
                     for item in app.config['ADMIN_INTERVIEWS']:
@@ -3044,15 +3070,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     return navbar
 
 def exit_href(status):
-    exit_link = status.exit_link
-    if exit_link == 'logout':
-        if docassemble.base.functions.this_thread.current_info['user']['is_authenticated']:
-            exit_link = 'user.logout'
-        else:
-            exit_link = 'leave'
-    if status.exit_url:
-        return url_for(exit_link, next=status.exit_url)
-    return url_for(exit_link)
+    return docassemble.base.functions.url_action('_da_exit')
 
 def delete_session_for_interview(i=None):
     if i is not None:
@@ -3248,7 +3266,7 @@ def install_pip_package(packagename, limitation):
     db.session.commit()
 
 def get_package_info(exclude_core=False):
-    is_admin = bool(current_user.has_role('admin'))
+    is_admin = current_user.has_role('admin')
     package_list = []
     package_auth = {}
     seen = {}
@@ -5311,10 +5329,7 @@ def post_sign_in():
 
 @app.route("/leave", methods=['GET'])
 def leave():
-    if 'language' in session:
-        the_exit_page = request.args.get('next', exit_page)
-    else:
-        the_exit_page = exit_page
+    the_exit_page = exit_page
     # if current_user.is_authenticated:
     #     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     #     logout_user()
@@ -5364,10 +5379,7 @@ def new_session():
 
 @app.route("/exit", methods=['GET'])
 def exit_endpoint():
-    if 'language' in session:
-        the_exit_page = request.args.get('next', exit_page)
-    else:
-        the_exit_page = exit_page
+    the_exit_page = exit_page
     yaml_filename = request.args.get('i', None)
     if yaml_filename is not None:
         session_info = get_session(yaml_filename)
@@ -5379,10 +5391,7 @@ def exit_endpoint():
 
 @app.route("/exit_logout", methods=['GET'])
 def exit_logout():
-    if 'language' in session:
-        the_exit_page = request.args.get('next', exit_page)
-    else:
-        the_exit_page = exit_page
+    the_exit_page = exit_page
     yaml_filename = request.args.get('i', guess_yaml_filename())
     if yaml_filename is not None:
         session_info = get_session(yaml_filename)
@@ -6091,7 +6100,7 @@ def index(action_argument=None, refer=None):
     session_parameter = request.args.get('session', None)
     if session_info is None or reset_interview or new_interview:
         was_new = True
-        if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
+        if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not (current_user.has_role('admin', 'developer') or current_user.can_do('demo_interviews'))):
             raise DAError(word("Not authorized"), code=403)
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
             sys.stderr.write("Redirecting to login because no anonymous access allowed.\n")
@@ -6837,6 +6846,7 @@ def index(action_argument=None, refer=None):
                                 field_error[orig_key] = word("You need to enter a valid date.")
                             else:
                                 field_error[orig_key] = word("You need to enter a valid date and time.")
+                            new_values[key] = repr(data)
                             continue
                         test_data = data
                         is_date = True
@@ -6854,6 +6864,7 @@ def index(action_argument=None, refer=None):
                         except:
                             validated = False
                             field_error[orig_key] = word("You need to enter a valid time.")
+                            new_values[key] = repr(data)
                             continue
                         test_data = data
                         is_date = True
@@ -6870,6 +6881,7 @@ def index(action_argument=None, refer=None):
                 except:
                     validated = False
                     field_error[orig_key] = word("You need to enter a valid number.")
+                    new_values[key] = repr(data)
                     continue
                 data = "int(" + repr(data) + ")"
             elif known_datatypes[real_key] in ('ml', 'mlarea'):
@@ -6884,6 +6896,7 @@ def index(action_argument=None, refer=None):
                 except:
                     validated = False
                     field_error[orig_key] = word("You need to enter a valid number.")
+                    new_values[key] = repr(data)
                     continue
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ('object', 'object_radio'):
@@ -6922,6 +6935,7 @@ def index(action_argument=None, refer=None):
                     except DAValidationError as err:
                         validated = False
                         field_error[orig_key] = word(err)
+                        new_values[key] = repr(data)
                         continue
                     test_data = info['class'].transform(data)
                     if is_object:
@@ -6977,6 +6991,7 @@ def index(action_argument=None, refer=None):
                                 field_error[orig_key] = word("You need to enter a valid date.")
                             else:
                                 field_error[orig_key] = word("You need to enter a valid date and time.")
+                            new_values[key] = repr(data)
                             continue
                         test_data = data
                         is_date = True
@@ -6994,6 +7009,7 @@ def index(action_argument=None, refer=None):
                         except:
                             validated = False
                             field_error[orig_key] = word("You need to enter a valid time.")
+                            new_values[key] = repr(data)
                             continue
                         test_data = data
                         is_date = True
@@ -7039,6 +7055,7 @@ def index(action_argument=None, refer=None):
                     except DAValidationError as err:
                         validated = False
                         field_error[orig_key] = word(str(err))
+                        new_values[key] = repr(data)
                         continue
                     test_data = info['class'].transform(data)
                     data = repr(test_data)
@@ -7592,8 +7609,12 @@ def index(action_argument=None, refer=None):
         steps = 1
         changed = False
         interview.assemble(user_dict, interview_status)
-    title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
+    title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
+    if interview_status.question.question_type == "interview_exit":
+        exit_link = title_info.get('exit link', 'exit')
+        if exit_link in ('exit', 'leave', 'logout'):
+            interview_status.question.question_type = exit_link
     if interview_status.question.question_type == "exit":
         manual_checkout(manual_filename=yaml_filename)
         reset_user_dict(user_code, yaml_filename)
@@ -7671,12 +7692,12 @@ def index(action_argument=None, refer=None):
         if response_wrapper:
             response_wrapper(response)
         return response
-    if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None:
+    if interview.use_progress_bar and interview_status.question.progress is not None:
         if interview_status.question.progress == -1:
             user_dict['_internal']['progress'] = None
         elif user_dict['_internal']['progress'] is None or interview_status.question.interview.options.get('strict progress', False) or interview_status.question.progress > user_dict['_internal']['progress']:
             user_dict['_internal']['progress'] = interview_status.question.progress
-    if interview_status.question.interview.use_navigation and interview_status.question.section is not None:
+    if interview.use_navigation and interview_status.question.section is not None:
         user_dict['nav'].set_section(interview_status.question.section)
     if interview_status.question.question_type == "response":
         if is_ajax:
@@ -7739,9 +7760,9 @@ def index(action_argument=None, refer=None):
         if save_status == 'new':
             steps += 1
             user_dict['_internal']['steps'] = steps
-    if changed and interview_status.question.interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
+    if changed and interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
         advance_progress(user_dict, interview)
-    title_info = interview_status.question.interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
+    title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     if save_status != 'ignore':
         if save_status == 'overwrite':
             changed = False
@@ -7781,7 +7802,7 @@ def index(action_argument=None, refer=None):
     else:
         question_id = None
     question_id_dict = dict(id=question_id)
-    if interview_status.question.interview.options.get('analytics on', True):
+    if interview.options.get('analytics on', True):
         if 'segment' in interview_status.extras:
             question_id_dict['segment'] = interview_status.extras['segment']
         if 'ga_id' in interview_status.extras:
@@ -7792,8 +7813,8 @@ def index(action_argument=None, refer=None):
         scripts = standard_scripts(interview_language=current_language) + additional_scripts(interview_status, yaml_filename)
         if is_js:
             append_javascript += additional_scripts(interview_status, yaml_filename, as_javascript=True)
-        if 'javascript' in interview_status.question.interview.external_files:
-            for packageref, fileref in interview_status.question.interview.external_files['javascript']:
+        if 'javascript' in interview.external_files:
+            for packageref, fileref in interview.external_files['javascript']:
                 the_url = get_url_from_file_reference(fileref, _package=packageref)
                 if the_url is not None:
                     scripts += "\n" + '    <script src="' + get_url_from_file_reference(fileref, _package=packageref) + '"></script>'
@@ -7850,7 +7871,7 @@ def index(action_argument=None, refer=None):
         else:
             debug_readability_help = ''
             debug_readability_question = ''
-        if interview_status.question.interview.force_fullscreen is True or (re.search(r'mobile', str(interview_status.question.interview.force_fullscreen).lower()) and is_mobile_or_tablet()):
+        if interview.force_fullscreen is True or (re.search(r'mobile', str(interview.force_fullscreen).lower()) and is_mobile_or_tablet()):
             forceFullScreen = """
           if (data.steps > 1 && window != top) {
             top.location.href = location.href;
@@ -7859,8 +7880,8 @@ def index(action_argument=None, refer=None):
 """
         else:
             forceFullScreen = ''
-        the_checkin_interval = interview_status.question.interview.options.get('checkin interval', CHECKIN_INTERVAL)
-        if interview_status.question.interview.options.get('analytics on', True):
+        the_checkin_interval = interview.options.get('checkin interval', CHECKIN_INTERVAL)
+        if interview.options.get('analytics on', True):
             if ga_configured:
                 ga_id = google_config.get('analytics id')
             else:
@@ -10301,7 +10322,7 @@ def index(action_argument=None, refer=None):
         $("input.dainput-embedded").each(daAdjustInputWidth);
         var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
         var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
-          return new bootstrap.Popover(daPopoverTriggerEl, {trigger: """ + json.dumps(interview_status.question.interview.options.get('popover trigger', 'focus')) + """, html: true});
+          return new bootstrap.Popover(daPopoverTriggerEl, {trigger: """ + json.dumps(interview.options.get('popover trigger', 'focus')) + """, html: true});
         });
         $('label a[data-bs-toggle="popover"]').on('click', function(event){
           event.preventDefault();
@@ -11297,10 +11318,11 @@ def index(action_argument=None, refer=None):
         } catch (e) {}
         return false;
       });"""
-        for info in docassemble.base.functions.custom_types.values():
+        for custom_type in interview.custom_data_types:
+            info = docassemble.base.functions.custom_types[custom_type]
             if isinstance(info['javascript'], str):
                 the_js += "\n      try {\n" + indent_by(info['javascript'].strip(), 8).rstrip() + "\n      }\n      catch {\n        console.log('Error with JavaScript code of CustomDataType " + info['class'].__name__ + "');\n      }"
-        if interview_status.question.interview.options.get('send question data', False):
+        if interview.options.get('send question data', False):
             the_js += "\n      daQuestionData = " + json.dumps(interview_status.as_data(user_dict))
         scripts += """
     <script type="text/javascript" charset="utf-8">
@@ -11333,20 +11355,20 @@ def index(action_argument=None, refer=None):
     interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
     interview_status.back = title_info.get('back button label', the_main_page_parts['main page back button label'] or interview_status.question.back())
     interview_status.cornerback = title_info.get('corner back button label', the_main_page_parts['main page corner back button label'] or interview_status.question.back())
-    bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
+    bootstrap_theme = interview.get_bootstrap_theme()
     if not is_ajax:
         social = copy.deepcopy(daconfig['social'])
-        if 'social' in interview_status.question.interview.consolidated_metadata and isinstance(interview_status.question.interview.consolidated_metadata['social'], dict):
-            populate_social(social, interview_status.question.interview.consolidated_metadata['social'])
+        if 'social' in interview.consolidated_metadata and isinstance(interview.consolidated_metadata['social'], dict):
+            populate_social(social, interview.consolidated_metadata['social'])
         standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme, page_title=interview_status.title, social=social, yaml_filename=yaml_filename)
     if interview_status.question.question_type == "signature":
         interview_status.extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
-        if interview_status.question.interview.options.get('hide navbar', False):
+        if interview.options.get('hide navbar', False):
             bodyclass="dasignature navbarhidden"
         else:
             bodyclass="dasignature"
     else:
-        if interview_status.question.interview.options.get('hide navbar', False):
+        if interview.options.get('hide navbar', False):
             bodyclass="dabody"
         else:
             bodyclass="dabody da-pad-for-navbar"
@@ -11419,41 +11441,41 @@ def index(action_argument=None, refer=None):
                 break
         if not already_there:
             user_dict['_internal']['event_stack'][session_uid].insert(0, next_action_to_set)
-    if interview_status.question.interview.use_progress_bar and (interview_status.question.progress is None or interview_status.question.progress >= 0):
-        the_progress_bar = progress_bar(user_dict['_internal']['progress'], interview_status.question.interview)
+    if interview.use_progress_bar and (interview_status.question.progress is None or interview_status.question.progress >= 0):
+        the_progress_bar = progress_bar(user_dict['_internal']['progress'], interview)
     else:
         the_progress_bar = None
-    if interview_status.question.interview.use_navigation and user_dict['nav'].visible():
-        if interview_status.question.interview.use_navigation_on_small_screens == 'dropdown':
+    if interview.use_navigation and user_dict['nav'].visible():
+        if interview.use_navigation_on_small_screens == 'dropdown':
             current_dict = {}
-            dropdown_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, a_class='dropdown-item', hide_inactive_subs=False, always_open=True, return_dict=current_dict)
+            dropdown_nav_bar = navigation_bar(user_dict['nav'], interview, wrapper=False, a_class='dropdown-item', hide_inactive_subs=False, always_open=True, return_dict=current_dict)
             if dropdown_nav_bar != '':
                 dropdown_nav_bar = '        <div class="col d-md-none text-end">\n          <div class="dropdown">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + current_dict.get('title', word("Sections")) + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections">' + dropdown_nav_bar + '\n          </div>\n          </div>\n        </div>\n'
         else:
             dropdown_nav_bar = ''
-        if interview_status.question.interview.use_navigation == 'horizontal':
-            if interview_status.question.interview.use_navigation_on_small_screens is not True:
+        if interview.use_navigation == 'horizontal':
+            if interview.use_navigation_on_small_screens is not True:
                 nav_class = ' d-none d-md-block'
             else:
                 nav_class = ''
-            the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
+            the_nav_bar = navigation_bar(user_dict['nav'], interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
             if the_nav_bar != '':
                 the_nav_bar = dropdown_nav_bar + '        <div class="col' + nav_class + '">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz">\n            ' + the_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
         else:
-            if interview_status.question.interview.use_navigation_on_small_screens == 'dropdown':
+            if interview.use_navigation_on_small_screens == 'dropdown':
                 if dropdown_nav_bar:
                     horiz_nav_bar = dropdown_nav_bar + '\n      </div>\n      <div class="row tab-content">\n'
                 else:
                     horiz_nav_bar = ''
-            elif interview_status.question.interview.use_navigation_on_small_screens:
-                horiz_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
+            elif interview.use_navigation_on_small_screens:
+                horiz_nav_bar = navigation_bar(user_dict['nav'], interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
                 if horiz_nav_bar != '':
                     horiz_nav_bar = dropdown_nav_bar + '        <div class="col d-md-none">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz">\n            ' + horiz_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
             else:
                 horiz_nav_bar = ''
-            the_nav_bar = navigation_bar(user_dict['nav'], interview_status.question.interview)
+            the_nav_bar = navigation_bar(user_dict['nav'], interview)
         if the_nav_bar != '':
-            if interview_status.question.interview.use_navigation == 'horizontal':
+            if interview.use_navigation == 'horizontal':
                 interview_status.using_navigation = 'horizontal'
             else:
                 interview_status.using_navigation = 'vertical'
@@ -11524,8 +11546,8 @@ def index(action_argument=None, refer=None):
     append_css_urls = []
     if not is_ajax:
         start_output = standard_header_start
-        if 'css' in interview_status.question.interview.external_files:
-            for packageref, fileref in interview_status.question.interview.external_files['css']:
+        if 'css' in interview.external_files:
+            for packageref, fileref in interview.external_files['css']:
                 the_url = get_url_from_file_reference(fileref, _package=packageref)
                 if is_js:
                     append_css_urls.append(the_url)
@@ -11537,10 +11559,10 @@ def index(action_argument=None, refer=None):
         if is_js:
             append_javascript += additional_css(interview_status, js_only=True)
         start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
-    if interview_status.question.interview.options.get('hide navbar', False):
-        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params, extra_class='dainvisible')
+    if interview.options.get('hide navbar', False):
+        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params, extra_class='dainvisible')
     else:
-        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params)
+        output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params)
     output += flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
     if the_nav_bar != '':
         if interview_status.using_navigation == 'vertical':
@@ -11551,7 +11573,7 @@ def index(action_argument=None, refer=None):
         if interview_status.using_navigation == 'vertical':
             output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-3 col-xl-2 daright">\n'
         else:
-            if interview_status.question.interview.flush_left:
+            if interview.flush_left:
                 output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-6 col-xl-5 daright">\n'
             else:
                 output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-3 col-xl-3 daright">\n'
@@ -11563,7 +11585,7 @@ def index(action_argument=None, refer=None):
         if interview_status.using_navigation == 'vertical':
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
         else:
-            if interview_status.question.interview.flush_left:
+            if interview.flush_left:
                 output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
             else:
                 output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
@@ -11575,7 +11597,7 @@ def index(action_argument=None, refer=None):
         if interview_status.using_navigation == 'vertical':
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
         else:
-            if interview_status.question.interview.flush_left:
+            if interview.flush_left:
                 output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
             else:
                 output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
@@ -11647,7 +11669,7 @@ def index(action_argument=None, refer=None):
             do_action = interview_status.question.checkin
         else:
             do_action = None
-        if interview_status.question.interview.options.get('send question data', False):
+        if interview.options.get('send question data', False):
             response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict, question_data=interview_status.as_data(user_dict))
         else:
             response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=interview_status.tabtitle, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back, message_log=docassemble.base.functions.get_message_log(), id_dict=question_id_dict)
@@ -21205,7 +21227,7 @@ def request_developer():
             body += "Reason given: " + str(form.reason.data) + "\n\n"
         body += "Go to " + url_for('edit_user_profile_page', id=current_user.id, _external=True) + " to change the user's privileges."
         msg = Message("Request for developer account from " + str(current_user.email), recipients=recipients, body=body)
-        if not len(recipients):
+        if len(recipients) == 0:
             flash(word('No administrators could be found.'), 'error')
         else:
             try:
@@ -22042,11 +22064,12 @@ def train():
 
 def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True, delete_shared=False, admin=False, start_id=None, temp_user_id=None):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
-    if user_id is None and (current_user.is_anonymous or not current_user.has_role('admin', 'advocate')):
-        raise Exception('user_interviews: only administrators and advocates can access information about other users')
-    if user_id is not None and admin is False and not current_user.is_anonymous and current_user.id != user_id and not current_user.has_role('admin', 'advocate'):
-        raise Exception('user_interviews: only administrators and advocates can access information about other users')
-    if action is not None and admin is False and not current_user.has_role('admin', 'advocate'):
+    if user_id is None and (current_user.is_anonymous or not current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions'])):
+        raise Exception('user_interviews: you do not have sufficient privileges to access information about other users')
+    if user_id is not None:
+        if admin is False and not (current_user.is_authenticated and (current_user.same_as(user_id) or current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions']))):
+            raise Exception('user_interviews: you do not have sufficient privileges to access information about other users')
+    if action is not None and admin is False and not current_user.has_role_or_permission('admin', 'advocate', permissions=['edit_sessions']):
         if user_id is None:
             raise Exception("user_interviews: no user_id provided")
         the_user = get_person(int(user_id), {})
@@ -22379,7 +22402,7 @@ def interview_list():
             return redirect(url_for('index', i=daconfig.get('session list interview'), from_list='1', json='1'))
         else:
             return redirect(url_for('index', i=daconfig.get('session list interview'), from_list='1'))
-    exclude_invalid = not bool(current_user.has_role('admin', 'developer'))
+    exclude_invalid = not current_user.has_role('admin', 'developer')
     resume_interview = request.args.get('resume', None)
     if resume_interview is None and daconfig.get('auto resume interview', None) is not None and (request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer))):
         resume_interview = daconfig['auto resume interview']
@@ -23531,12 +23554,12 @@ def get_api_key():
         api_key = request.headers['X-API-Key']
     return api_key
 
-def api_verify(req, roles=None):
+def api_verify(req, roles=None, permissions=None):
     api_key = get_api_key()
     if api_key is None:
         logmessage("api_verify: no API key provided")
         return False
-    api_key = encrypt_api_key(api_key)
+    api_key = encrypt_api_key(api_key, app.secret_key)
     rkeys = r.keys('da:apikey:userid:*:key:' + api_key + ':info')
     if len(rkeys) == 0:
         logmessage("api_verify: API key not found")
@@ -23589,7 +23612,19 @@ def api_verify(req, roles=None):
         return False
     login_user(user, remember=False)
     update_last_login(user)
-    if roles:
+    if current_user.has_role('admin') and 'permissions' in info and len(info['permissions']) > 0:
+        current_user.limited_api = True
+        current_user.limits = info['permissions']
+    ok_permission = False
+    if permissions:
+        for permission in permissions:
+            if current_user.can_do(permission):
+                ok_permission = True
+                break
+        if current_user.limited_api and not ok_permission:
+            logmessage("api_verify: user did not have correct privileges for resource")
+            return False
+    if roles and not ok_permission:
         ok_role = False
         for role in roles:
             if current_user.has_role(role):
@@ -23612,8 +23647,8 @@ def true_or_false(text):
     return True
 
 def get_user_list(include_inactive=False, start_id=None):
-    if not (current_user.is_authenticated and current_user.has_role('admin', 'advocate')):
-        raise Exception("You cannot call get_user_list() unless you are an administrator or advocate")
+    if not (current_user.is_authenticated and current_user.has_role_or_permission('admin', 'advocate', permissions=['access_user_info', 'create_user'])):
+        raise Exception("You do not have sufficient privileges to access information about other users")
     user_length = 0
     user_list = []
     while True:
@@ -24204,7 +24239,7 @@ def translation_file():
 @app.route('/api/user_list', methods=['GET'])
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_user_list():
-    if not api_verify(request, roles=['admin', 'advocate']):
+    if not api_verify(request, roles=['admin', 'advocate'], permissions=['access_user_info']):
         return jsonify_with_status("Access denied.", 403)
     include_inactive = true_or_false(request.args.get('include_inactive', False))
     next_id_code = request.args.get('next_id', None)
@@ -24216,14 +24251,17 @@ def api_user_list():
             start_id = None
     else:
         start_id = None
-    (user_list, start_id) = get_user_list(include_inactive=include_inactive, start_id=start_id)
+    try:
+        (user_list, start_id) = get_user_list(include_inactive=include_inactive, start_id=start_id)
+    except Exception as err:
+        return jsonify_with_status(str(err), 400)
     if start_id is None:
         next_id = None
     else:
         next_id = safeid(str(start_id))
     return jsonify(dict(next_id=next_id, items=user_list))
 
-def get_user_info(user_id=None, email=None, case_sensitive=False):
+def get_user_info(user_id=None, email=None, case_sensitive=False, admin=False):
     if current_user.is_anonymous:
         raise Exception("You cannot call get_user_info() unless you are logged in")
     if user_id is not None:
@@ -24233,9 +24271,6 @@ def get_user_info(user_id=None, email=None, case_sensitive=False):
     if email is not None:
         assert isinstance(email, str)
         email = email.strip()
-    if not (current_user.has_role('admin', 'advocate')):
-        if (user_id is not None and current_user.id != user_id) or (email is not None and current_user.email != email):
-            raise Exception("You cannot call get_user_info() unless you are an administrator or advocate")
     user_info = dict(privileges=[])
     if user_id is not None:
         user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == user_id)).scalar()
@@ -24247,6 +24282,8 @@ def get_user_info(user_id=None, email=None, case_sensitive=False):
             user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.email.ilike(email))).scalar()
     if user is None or user.social_id.startswith('disabled$'):
         return None
+    if not admin and not current_user.has_role_or_permission('admin', 'advocate', permissions=['access_user_info']) and not current_user.same_as(user_id):
+        raise Exception("You do not have sufficient privileges to access information about other users")
     for role in user.roles:
         user_info['privileges'].append(role.name)
     for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'active'):
@@ -24256,11 +24293,11 @@ def get_user_info(user_id=None, email=None, case_sensitive=False):
 
 def make_user_inactive(user_id=None, email=None):
     if current_user.is_anonymous:
-        raise Exception("You cannot call make_user_inactive() unless you are logged in")
-    if not (current_user.has_role('admin')):
-        raise Exception("You cannot call make_user_inactive() unless you are an administrator")
+        raise Exception("You cannot make a user inactive unless you are logged in")
+    if not current_user.has_role_or_permission('admin', permissions=['edit_user_active_status']):
+        raise Exception("You do not have sufficient privileges to make a user inactive")
     if user_id is None and email is None:
-        raise Exception("You must call make_user_inactive() with a user ID or an e-mail address")
+        raise Exception("You must supply a user ID or an e-mail address to make a user inactive")
     if user_id is not None:
         user = db.session.execute(select(UserModel).filter_by(id=user_id)).scalar()
     else:
@@ -24278,6 +24315,8 @@ def make_user_inactive(user_id=None, email=None):
 def api_user():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
+    if current_user.limited_api and not current_user.can_do('access_user_info'):
+        return jsonify_with_status("You do not have sufficient privileges to access user information", 403)
     try:
         user_info = get_user_info(user_id=current_user.id)
     except Exception as err:
@@ -24287,6 +24326,8 @@ def api_user():
     if request.method == 'GET':
         return jsonify(user_info)
     if request.method == 'POST':
+        if current_user.limited_api and not current_user.can_do('edit_user_info'):
+            return jsonify_with_status("You do not have sufficient privileges to edit a user's information", 403)
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
@@ -24294,9 +24335,12 @@ def api_user():
         for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password'):
             if key in post_data:
                 info[key] = post_data[key]
-        if 'password' in info and not current_user.has_role('admin'):
-            return jsonify_with_status("You must have admin privileges to change a password.", 403)
-        set_user_info(user_id=current_user.id, **info)
+        if 'password' in info and not current_user.has_role_or_permission('admin', permissions='edit_user_password'):
+            return jsonify_with_status("You do not have sufficient privileges to change a user's password.", 403)
+        try:
+            set_user_info(user_id=current_user.id, **info)
+        except Exception as err:
+            return jsonify_with_status(str(err), 400)
         return ('', 204)
     return ('', 204)
 
@@ -24319,7 +24363,7 @@ def api_user_privileges():
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_create_user():
-    if not api_verify(request, roles=['admin']):
+    if not api_verify(request, roles=['admin'], permissions=['create_user']):
         return jsonify_with_status("Access denied.", 403)
     post_data = request.get_json(silent=True)
     if post_data is None:
@@ -24349,7 +24393,7 @@ def api_create_user():
         valid_role_names.add(rol.name)
     for role_name in role_list:
         if role_name not in valid_role_names:
-            return jsonify_with_status("Invalid privilege name.  " + role_name + " is not an existing privilege.", 400)
+            return jsonify_with_status("Invalid privilege name.  " + str(role_name) + " is not an existing privilege.", 400)
     password = post_data.get('password', random_alphanumeric(10)).strip()
     if len(password) < 4 or len(password) > 254:
         return jsonify_with_status("Password too short or too long", 400)
@@ -24360,10 +24404,88 @@ def api_create_user():
         return jsonify_with_status(str(err), 400)
     return jsonify_with_status(dict(user_id=user_id, password=password), 200)
 
+@app.route('/api/user_invite', methods=['POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
+def api_invite_user():
+    if not api_verify(request, roles=['admin'], permissions=['create_user']):
+        return jsonify_with_status("Access denied.", 403)
+    is_admin = current_user.has_role('admin')
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
+    send_emails = true_or_false(request.args.get('send_emails', True))
+    role_name = str(post_data.get('privilege', 'user')).strip() or 'user'
+    valid_role_names = set()
+    for rol in db.session.execute(select(Role).where(Role.name != 'cron').order_by(Role.id)).scalars():
+        if not is_admin and rol.name in ('admin', 'developer', 'advocate'):
+            continue
+        valid_role_names.add(rol.name)
+    if role_name not in valid_role_names:
+        return jsonify_with_status("Invalid privilege name.", 400)
+    raw_email_addresses = post_data.get('email_addresses', post_data.get('email_address', []))
+    if raw_email_addresses.startswith('[') or raw_email_addresses.startswith('"'):
+        try:
+            raw_email_addresses = json.loads(raw_email_addresses)
+        except:
+            return jsonify_with_status("The email_addresses field did not contain valid JSON.", 400)
+    if not isinstance(raw_email_addresses, list):
+        raw_email_addresses = [str(raw_email_addresses)]
+    email_addresses = []
+    for email_address in raw_email_addresses:
+        (part_one, part_two) = email.utils.parseaddr(str(email_address))
+        if not re.match(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', part_two):
+            return jsonify_with_status("Invalid e-mail address.", 400)
+        email_addresses.append(part_two)
+    if len(email_addresses) == 0:
+        return jsonify_with_status("One or more 'email_addresses' must be supplied.", 400)
+    the_role_id = None
+    for role in db.session.execute(select(Role).order_by('id')).scalars():
+        if role.name == role_name:
+            the_role_id = role.id
+            break
+    if the_role_id is None:
+        return jsonify_with_status("Invalid privilege name.", 400)
+    for email_address in email_addresses:
+        user, user_email = app.user_manager.find_user_by_email(email_address)
+        if user:
+            return jsonify_with_status("That e-mail address is already being used.", 400)
+    invite_info = []
+    for email_address in email_addresses:
+        user_invite = MyUserInvitation(email=email_address, role_id=the_role_id, invited_by_user_id=current_user.id)
+        db.session.add(user_invite)
+        db.session.commit()
+        token = app.user_manager.generate_token(user_invite.id)
+        accept_invite_link = url_for('user.register',
+                                     token=token,
+                                     _external=True)
+        user_invite.token = token
+        db.session.commit()
+        info = dict(email=email_address)
+        if send_emails:
+            try:
+                logmessage("Trying to send invite e-mail to " + str(user_invite.email))
+                docassemble_flask_user.emails.send_invite_email(user_invite, accept_invite_link)
+                logmessage("Sent e-mail invite to " + str(user_invite.email))
+                info['invitation_sent'] = True
+                info['url'] = accept_invite_link
+            except Exception as e:
+                try:
+                    logmessage("Failed to send invite e-mail: " + e.__class__.__name__ + ': ' + str(e))
+                except:
+                    logmessage("Failed to send invite e-mail")
+                db.session.delete(user_invite)
+                db.session.commit()
+                info['invitation_sent'] = False
+        else:
+            info['url'] = accept_invite_link
+        invite_info.append(info)
+    return jsonify(invite_info)
+
 @app.route('/api/user_info', methods=['GET'])
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_user_info():
-    if not api_verify(request, roles=['admin', 'advocate']):
+    if not api_verify(request, roles=['admin', 'advocate'], permissions=['access_user_info']):
         return jsonify_with_status("Access denied.", 403)
     if 'username' not in request.args:
         return jsonify_with_status("An e-mail address must be supplied.", 400)
@@ -24387,6 +24509,8 @@ def api_user_by_id(user_id):
         user_id = int(user_id)
     except:
         return jsonify_with_status("User ID must be an integer.", 400)
+    if not (current_user.same_as(user_id) or current_user.has_role_or_permission('admin', 'advocate', permissions=['access_user_info'])):
+        return jsonify_with_status("You do not have sufficient privileges to access user information", 403)
     try:
         user_info = get_user_info(user_id=user_id)
     except Exception as err:
@@ -24396,26 +24520,26 @@ def api_user_by_id(user_id):
     if request.method == 'GET':
         return jsonify(user_info)
     if request.method == 'DELETE':
-        if user_id == 1:
+        if user_id == 1 or user_id == current_user.id:
             return jsonify_with_status("This user account cannot be deleted or deactivated.", 403)
         if request.args.get('remove', None) == 'account':
-            if not (current_user.id == user_id or current_user.has_role('admin')):
-                return jsonify_with_status("You must have admin privileges to delete user accounts.", 403)
+            if not (current_user.id == user_id or current_user.has_role_or_permission('admin', permissions=['delete_user'])):
+                return jsonify_with_status("You do not have sufficient privileges to delete user accounts.", 403)
             user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
             delete_user_data(user_id, r, r_user)
         elif request.args.get('remove', None) == 'account_and_shared':
-            if not (current_user.id == user_id or current_user.has_role('admin')):
-                return jsonify_with_status("You must have admin privileges to delete user accounts.", 403)
+            if not current_user.has_role_or_permission('admin', permissions=['delete_user']):
+                return jsonify_with_status("You do not have sufficient privileges to delete user accounts.", 403)
             user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
             delete_user_data(user_id, r, r_user)
         else:
-            if not (current_user.id == user_id or current_user.has_role('admin')):
-                return jsonify_with_status("You must have admin privileges to inactivate user accounts.", 403)
+            if not current_user.has_role_or_permission('admin', permissions=['edit_user_active_status']):
+                return jsonify_with_status("You do not have sufficient privileges to inactivate user accounts.", 403)
             make_user_inactive(user_id=user_id)
         return ('', 204)
     if request.method == 'POST':
-        if not (current_user.has_role('admin', 'advocate') or current_user.id != user_id):
-            return jsonify_with_status("You must have admin or advocate privileges to edit user information.", 403)
+        if not (current_user.has_role_or_permission('admin', permissions=['edit_user_info']) or current_user.same_as(user_id)):
+            return jsonify_with_status("You do not have sufficient privileges to edit user information.", 403)
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
@@ -24423,7 +24547,7 @@ def api_user_by_id(user_id):
         for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password'):
             if key in post_data:
                 info[key] = post_data[key]
-        if 'password' in info and not current_user.has_role('admin'):
+        if 'password' in info and not current_user.has_role_or_permission('admin', permissions=['edit_user_password']):
             return jsonify_with_status("You must have admin privileges to change a password.", 403)
         try:
             set_user_info(user_id=user_id, **info)
@@ -24436,7 +24560,7 @@ def api_user_by_id(user_id):
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_fields():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['template_parse']):
         return jsonify_with_status("Access denied.", 403)
     post_data = request.get_json(silent=True)
     if post_data is None:
@@ -24485,9 +24609,12 @@ def api_privileges():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
     if request.method == 'GET':
-        return jsonify(get_privileges_list())
+        try:
+            return jsonify(get_privileges_list())
+        except Exception as err:
+            return jsonify_with_status(str(err), 400)
     if request.method == 'DELETE':
-        if not (current_user.has_role('admin')):
+        if not current_user.has_role_or_permission('admin', permissions=['edit_privileges']):
             return jsonify_with_status("Access denied.", 403)
         if 'privilege' not in request.args:
             return jsonify_with_status("A privilege name must be provided.", 400)
@@ -24497,7 +24624,7 @@ def api_privileges():
             return jsonify_with_status(str(err), 400)
         return ('', 204)
     if request.method == 'POST':
-        if not (current_user.has_role('admin')):
+        if not current_user.has_role_or_permission('admin', permissions=['edit_privileges']):
             return jsonify_with_status("Access denied.", 403)
         post_data = request.get_json(silent=True)
         if post_data is None:
@@ -24510,17 +24637,32 @@ def api_privileges():
             return jsonify_with_status(str(err), 400)
         return ('', 204)
 
-def get_privileges_list():
-    if not (current_user.has_role('admin', 'developer')):
-        raise Exception('You must have admin or developer privileges to call get_privileges_list().')
+def get_privileges_list(admin=False):
+    if admin is False and not current_user.has_role_or_permission('admin', 'developer', permissions=['access_privileges']):
+        raise Exception('You do not have sufficient privileges to see the list of privileges.')
     role_names = []
     for role in db.session.execute(select(Role.name).order_by(Role.name)):
         role_names.append(role.name)
     return role_names
 
+def get_permissions_of_privilege(privilege):
+    if not current_user.has_role_or_permission('admin', 'developer', permissions=['access_privileges']):
+        raise Exception('You do not have sufficient privileges to inspect privileges.')
+    if privilege == 'admin':
+        return copy.copy(PERMISSIONS_LIST)
+    if privilege == 'developer':
+        return ['demo_interviews', 'template_parse', 'interview_data']
+    if privilege == 'advocate':
+        return ['access_user_info', 'access_sessions', 'edit_sessions']
+    if privilege == 'cron':
+        return []
+    if privilege in docassemble.base.config.allowed:
+        return list(docassemble.base.config.allowed[privilege])
+    return []
+
 def add_privilege(privilege):
-    if not (current_user.has_role('admin')):
-        raise Exception('You must have admin privileges to call add_privilege().')
+    if not current_user.has_role_or_permission('admin', permissions=['edit_privileges']):
+        raise Exception('You do not have sufficient privileges to add a privilege.')
     role_names = get_privileges_list()
     if privilege in role_names:
         raise Exception("The given privilege already exists.")
@@ -24528,8 +24670,8 @@ def add_privilege(privilege):
     db.session.commit()
 
 def remove_privilege(privilege):
-    if not (current_user.has_role('admin')):
-        raise Exception('You must have admin privileges to call remove_privilege().')
+    if not current_user.has_role_or_permission('admin', permissions=['edit_privileges']):
+        raise Exception('You do not have sufficient privileges to delete a privilege.')
     if privilege in ['user', 'admin', 'developer', 'advocate', 'cron']:
         raise Exception('The specified privilege is built-in and cannot be deleted.')
     user_role = db.session.execute(select(Role).filter_by(name='user')).scalar()
@@ -24554,7 +24696,7 @@ def api_user_by_id_privileges(user_id):
     if request.method == 'GET':
         return jsonify(user_info['privileges'])
     if request.method in ('DELETE', 'POST'):
-        if not (current_user.has_role('admin')):
+        if not current_user.has_role_or_permission('admin', permissions=['edit_user_privileges']):
             return jsonify_with_status("Access denied.", 403)
         if request.method == 'DELETE':
             role_name = request.args.get('privilege', None)
@@ -24579,10 +24721,14 @@ def api_user_by_id_privileges(user_id):
         return ('', 204)
 
 def add_user_privilege(user_id, privilege):
-    if not (current_user.has_role('admin')):
-        raise Exception('You must have admin privileges to call add_user_privilege().')
-    if privilege not in get_privileges_list():
+    if not current_user.has_role_or_permission('admin', permissions=['edit_user_privileges']):
+        raise Exception('You do not have sufficient privileges to give another user a privilege.')
+    if privilege in ('admin', 'developer', 'advocate', 'cron') and not current_user.has_role_or_permission('admin'):
+        raise Exception('You do not have sufficient privileges to give the user this privilege.')
+    if privilege not in get_privileges_list(admin=True):
         raise Exception('The specified privilege does not exist.')
+    if privilege == 'cron':
+        raise Exception('You cannot give a user the cron privilege.')
     user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == user_id)).scalar()
     if user is None or user.social_id.startswith('disabled$'):
         raise Exception("The specified user did not exist")
@@ -24599,11 +24745,13 @@ def add_user_privilege(user_id, privilege):
     db.session.commit()
 
 def remove_user_privilege(user_id, privilege):
-    if not (current_user.has_role('admin')):
-        raise Exception('You must have admin privileges to call remove_user_privilege().')
+    if not current_user.has_role_or_permission('admin', permissions=['edit_user_privileges']):
+        raise Exception('You do not have sufficient privileges to take a privilege away from a user.')
     if current_user.id == user_id and privilege == 'admin':
         raise Exception('You cannot take away the admin privilege from the current user.')
-    if privilege not in get_privileges_list():
+    if privilege in ('admin', 'developer', 'advocate', 'cron') and not current_user.has_role('admin'):
+        raise Exception('You do not have sufficient privileges to take away this privilege.')
+    if privilege not in get_privileges_list(admin=True):
         raise Exception('The specified privilege does not exist.')
     user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == user_id)).scalar()
     if user is None or user.social_id.startswith('disabled$'):
@@ -24619,9 +24767,9 @@ def remove_user_privilege(user_id, privilege):
 
 def create_user(email, password, privileges=None, info=None):
     if current_user.is_anonymous:
-        raise Exception("You cannot call create_user() unless you are logged in")
-    if not (current_user.has_role('admin')):
-        raise Exception("You cannot call create_user() unless you are an administrator")
+        raise Exception("You cannot create a user unless you are logged in")
+    if not current_user.has_role_or_permission('admin', permissions=['create_user']):
+        raise Exception("You cannot create a user unless you are an administrator")
     email = email.strip()
     password = str(password).strip()
     if len(password) < 4 or len(password) > 254:
@@ -24669,8 +24817,9 @@ def create_user(email, password, privileges=None, info=None):
         confirmed_at = datetime.datetime.now()
     )
     num_roles = 0
+    is_admin = current_user.has_role('admin')
     for role in db.session.execute(select(Role).where(Role.name != 'cron').order_by(Role.id)).scalars():
-        if role.name in privileges:
+        if role.name in privileges and (is_admin or role.name not in ('admin', 'developer', 'advocate')):
             the_user.roles.append(role)
         num_roles +=1
     if num_roles == 0:
@@ -24688,27 +24837,41 @@ def set_user_info(**kwargs):
     email = kwargs.get('email', None)
     if user_id is None and email is None:
         user_id = current_user.id
-    if not (current_user.has_role('admin')):
+    if not current_user.has_role_or_permission('admin', permissions=['edit_user_info']):
         if (user_id is not None and current_user.id != user_id) or (email is not None and current_user.email != email):
-            raise Exception("You cannot call set_user_info() unless you are an administrator")
+            raise Exception("You do not have sufficient privileges to edit user information")
     if user_id is not None:
         user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
     else:
         user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(email=email)).scalar()
     if user is None or user.social_id.startswith('disabled$'):
         raise Exception("User not found")
+    editing_self = current_user.same_as(user.id)
+    if not current_user.has_role_or_permission('admin'):
+        if not editing_self:
+            if user.has_role('admin', 'developer', 'advocate', 'cron'):
+                raise Exception("You do not have sufficient privileges to edit this user's information.")
+            if 'password' in kwargs and not current_user.can_do('edit_user_password'):
+                raise Exception("You do not have sufficient privileges to change this user's password.")
+        if 'privileges' in kwargs:
+            if user.has_role('admin', 'developer', 'advocate', 'cron') or not current_user.can_do('edit_user_privileges'):
+                raise Exception("You do not have sufficient privileges to edit this user's privileges.")
+    if 'active' in kwargs:
+        if not isinstance(kwargs['active'], bool):
+            raise Exception("The active parameter must be True or False")
+        if editing_self:
+            raise Exception("Cannot change active status of the current user.")
+        else:
+            if not current_user.has_role_or_permission('admin', permissions=['edit_user_active_status']):
+                raise Exception("You do not have sufficient privileges to edit this user's active status.")
     for key, val in kwargs.items():
         if key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language'):
             setattr(user, key, val)
     if 'password' in kwargs:
-        if not (current_user.has_role('admin')):
-            raise Exception("You cannot call set_user_info() with a password unless you are an administrator.")
+        if not editing_self and not current_user.has_role_or_permission('admin', permissions=['edit_user_password']):
+            raise Exception("You do not have sufficient privileges to change a user's password.")
         user.user_auth.password = app.user_manager.hash_password(kwargs['password'])
     if 'active' in kwargs:
-        if not isinstance(kwargs['active'], bool):
-            raise Exception("The active parameter must be True or False")
-        if user.id == current_user.id:
-            raise Exception("Cannot change active status of the current user.")
         user.active = kwargs['active']
     db.session.commit()
     if 'privileges' in kwargs and isinstance(kwargs['privileges'], (list, tuple, set)):
@@ -24764,7 +24927,7 @@ def get_secret(username, password, case_sensitive=False):
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'DELETE', 'HEAD'], automatic_options=True)
 def api_users_interviews():
-    if not api_verify(request, roles=['admin', 'advocate']):
+    if not api_verify(request, roles=['admin', 'advocate'], permissions=['access_sessions']):
         return jsonify_with_status("Access denied.", 403)
     user_id = request.args.get('user_id', None)
     filename = request.args.get('i', None)
@@ -24812,7 +24975,7 @@ def api_users_interviews():
 def api_user_user_id_interviews(user_id):
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
-    if not (current_user.id == user_id or current_user.has_role('admin', 'advocate')):
+    if not (current_user.id == user_id or current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions'])):
         return jsonify_with_status("Access denied.", 403)
     filename = request.args.get('i', None)
     secret = request.args.get('secret', None)
@@ -25440,7 +25603,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     if advance_progress_meter:
         if interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
             advance_progress(user_dict, interview)
-        if interview.use_progress_bar and interview_status.question.progress is not None and (user_dict['_internal']['progress'] is None or interview_status.question.interview.options.get('strict progress', False) or interview_status.question.progress > user_dict['_internal']['progress']):
+        if interview.use_progress_bar and interview_status.question.progress is not None and (user_dict['_internal']['progress'] is None or interview.options.get('strict progress', False) or interview_status.question.progress > user_dict['_internal']['progress']):
             user_dict['_internal']['progress'] = interview_status.question.progress
     if save:
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=post_setting, steps=steps)
@@ -25506,7 +25669,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     interview_status.submit = title_info.get('submit', the_main_page_parts['main page submit'])
     interview_status.back = title_info.get('back button label', the_main_page_parts['main page back button label'] or interview_status.question.back())
     interview_status.cornerback = title_info.get('corner back button label', the_main_page_parts['main page corner back button label'] or interview_status.question.cornerback())
-    bootstrap_theme = interview_status.question.interview.get_bootstrap_theme()
+    bootstrap_theme = interview.get_bootstrap_theme()
     if steps is None:
         steps = user_dict['_internal']['steps']
     allow_going_back = bool(interview_status.question.can_go_back and (steps is None or (steps - user_dict['_internal']['steps_offset']) > 1))
@@ -25527,7 +25690,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         reload_after = 0
     #if next_action_review:
     #    data['next_action'] = next_action_review
-    data['interview_options'] = interview_status.question.interview.options
+    data['interview_options'] = interview.options
     if reload_after and reload_after > 0:
         data['reload_after'] = reload_after
     for key in list(data.keys()):
@@ -25559,7 +25722,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         login_url = url_for('user.login', next=url_for('index', i=yaml_filename))
     else:
         login_url = url_for('user.login')
-    if interview_status.question.interview.consolidated_metadata.get('show login', SHOW_LOGIN):
+    if interview.consolidated_metadata.get('show login', SHOW_LOGIN):
         if current_user.is_anonymous:
             if len(menu_items) > 0:
                 data['menu']['top'] = {'anchor': word("Menu")}
@@ -25567,12 +25730,12 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             else:
                 data['menu']['top'] = {'href': login_url, 'anchor': sign_in_text}
         else:
-            if len(menu_items) == 0 and interview_status.question.interview.options.get('hide standard menu', False):
+            if len(menu_items) == 0 and interview.options.get('hide standard menu', False):
                 data['menu']['top'] = {'anchor': (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id))}
             else:
                 data['menu']['top'] = {'anchor': current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)}
-                if not interview_status.question.interview.options.get('hide standard menu', False):
-                    if current_user.has_role('admin', 'developer') and interview_status.question.interview.debug:
+                if not interview.options.get('hide standard menu', False):
+                    if current_user.has_role('admin', 'developer') and interview.debug:
                         menu_items.append({'href': '#source', 'title': word("How this question came to be asked"), 'anchor': word('Source')})
                     if current_user.has_role('admin', 'advocate') and app.config['ENABLE_MONITOR']:
                         menu_items.append({'href': url_for('monitor'), 'anchor': word('Monitor')})
@@ -25585,8 +25748,9 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
                         if app.config['ENABLE_PLAYGROUND']:
                             menu_items.append({'href': url_for('playground_page'), 'anchor': word('Playground')})
                         menu_items.append({'href': url_for('utilities'), 'anchor': word('Utilities')})
-                        if current_user.has_role('admin'):
+                        if current_user.has_role('admin', 'advocate') or current_user.can_do('access_user_info'):
                             menu_items.append({'href': url_for('user_list'), 'anchor': word('User List')})
+                        if current_user.has_role('admin'):
                             menu_items.append({'href': url_for('config_page'), 'anchor': word('Configuration')})
                     if app.config['SHOW_DISPATCH']:
                         menu_items.append({'href': url_for('interview_start'), 'anchor': word('Available Interviews')})
@@ -25606,7 +25770,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     else:
         if len(menu_items) > 0:
             data['menu']['top'] = {'anchor': word("Menu")}
-            if not interview_status.question.interview.options.get('hide standard menu', False):
+            if not interview.options.get('hide standard menu', False):
                 menu_items.append({'href': exit_href(interview_status), 'anchor': interview_status.exit_label})
         else:
             data['menu']['top'] = {'href': exit_href(interview_status), 'anchor': interview_status.exit_label}
@@ -25704,7 +25868,7 @@ def api_session_action():
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_login_url():
-    if not api_verify(request, roles=['admin']):
+    if not api_verify(request, roles=['admin'], permissions=['log_user_in']):
         return jsonify_with_status("Access denied.", 403)
     post_data = request.get_json(silent=True)
     if post_data is None:
@@ -25834,7 +25998,7 @@ def api_user_interviews():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'DELETE', 'HEAD'], automatic_options=True)
 def api_interviews():
-    if not api_verify(request, roles=['admin', 'advocate']):
+    if not api_verify(request, roles=['admin', 'advocate'], permissions=['access_sessions']):
         return jsonify_with_status("Access denied.", 403)
     filename = request.args.get('i', None)
     session = request.args.get('session', None)
@@ -25863,6 +26027,8 @@ def api_interviews():
             next_id = safeid(str(start_id))
         return jsonify(dict(next_id=next_id, items=docassemble.base.functions.safe_json(the_list)))
     if request.method == 'DELETE':
+        if not current_user.has_role_or_permission('admin', 'advocate', permissions=['edit_sessions']):
+            return jsonify_with_status("Access denied.", 403)
         start_id = None
         while True:
             try:
@@ -25912,7 +26078,7 @@ def should_run_create(package_name):
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)
 def api_package():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['manage_packages']):
         return jsonify_with_status("Access denied.", 403)
     if request.method == 'GET':
         package_list, package_auth = get_package_info(exclude_core=True)
@@ -26064,7 +26230,7 @@ def api_package():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_package_update_status():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['manage_packages']):
         return jsonify_with_status("Access denied.", 403)
     code = request.args.get('task_id', None)
     if code is None:
@@ -26168,7 +26334,7 @@ def api_resume_url():
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_clear_cache():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     for key in r.keys('da:interviewsource:*'):
         r.incr(key.decode())
@@ -26178,7 +26344,7 @@ def api_clear_cache():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'PATCH', 'HEAD'], automatic_options=True)
 def api_config():
-    if not api_verify(request, roles=['admin']):
+    if not api_verify(request, roles=['admin'], permissions=['manage_config']):
         return jsonify_with_status("Access denied.", 403)
     if request.method == 'GET':
         try:
@@ -26247,7 +26413,7 @@ def api_config():
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_playground_pull():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     post_data = request.get_json(silent=True)
     if post_data is None:
@@ -26255,7 +26421,7 @@ def api_playground_pull():
     do_restart = true_or_false(post_data.get('restart', True))
     current_project = post_data.get('project', 'default')
     try:
-        if current_user.has_role('admin'):
+        if current_user.has_role_or_permission('admin', permissions=['playground_control']):
             user_id = int(post_data.get('user_id', current_user.id))
         else:
             if 'user_id' in post_data:
@@ -26314,7 +26480,7 @@ def api_playground_pull():
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_restart():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     return_val = jsonify_restart_task()
     restart_all()
@@ -26324,7 +26490,7 @@ def api_restart():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_restart_status():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     code = request.args.get('task_id', None)
     if code is None:
@@ -26343,7 +26509,7 @@ def api_restart_status():
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_playground_install():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     post_data = request.get_json(silent=True)
     if post_data is None:
@@ -26351,7 +26517,7 @@ def api_playground_install():
     do_restart = true_or_false(post_data.get('restart', True))
     current_project = post_data.get('project', 'default')
     try:
-        if current_user.has_role('admin'):
+        if current_user.has_role_or_permission('admin', permissions=['playground_control']):
             user_id = int(post_data.get('user_id', current_user.id))
         else:
             if 'user_id' in post_data:
@@ -26486,11 +26652,11 @@ def api_playground_install():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)
 def api_playground_projects():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     if request.method in ('GET', 'DELETE'):
         try:
-            if current_user.has_role('admin'):
+            if current_user.has_role_or_permission('admin', permissions=['playground_control']):
                 user_id = int(request.args.get('user_id', current_user.id))
             else:
                 if 'user_id' in request.args:
@@ -26513,7 +26679,7 @@ def api_playground_projects():
         if post_data is None:
             post_data = request.form.copy()
         try:
-            if current_user.has_role('admin'):
+            if current_user.has_role_or_permission('admin', permissions=['playground_control']):
                 user_id = int(post_data.get('user_id', current_user.id))
             else:
                 if 'user_id' in post_data:
@@ -26535,13 +26701,13 @@ def api_playground_projects():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)
 def api_playground():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     if request.method in ('GET', 'DELETE'):
         folder = request.args.get('folder', 'static')
         project = request.args.get('project', 'default')
         try:
-            if current_user.has_role('admin'):
+            if current_user.has_role_or_permission('admin', permissions=['playground_control']):
                 user_id = int(request.args.get('user_id', current_user.id))
             else:
                 if 'user_id' in request.args:
@@ -26555,8 +26721,9 @@ def api_playground():
             post_data = request.form.copy()
         folder = post_data.get('folder', 'static')
         project = post_data.get('project', 'default')
+        do_restart = true_or_false(post_data.get('restart', True))
         try:
-            if current_user.has_role('admin'):
+            if current_user.has_role_or_permission('admin', permissions=['playground_control']):
                 user_id = int(post_data.get('user_id', current_user.id))
             else:
                 if 'user_id' in post_data:
@@ -26565,6 +26732,7 @@ def api_playground():
         except:
             return jsonify_with_status("Invalid user_id.", 400)
     if request.method == 'DELETE':
+        do_restart = true_or_false(request.args.get('restart', True))
         if 'filename' not in request.args:
             return jsonify_with_status("Missing filename.", 400)
     if folder not in ('questions', 'sources', 'static', 'templates', 'modules'):
@@ -26590,7 +26758,7 @@ def api_playground():
         return response_to_send
     if request.method == 'DELETE':
         pg_section.delete_file(secure_filename_spaces_ok(request.args['filename']))
-        if section == 'modules':
+        if section == 'modules' and do_restart:
             return_val = jsonify_restart_task()
             restart_all()
             return return_val
@@ -26613,7 +26781,7 @@ def api_playground():
             return jsonify_with_status("No file found.", 400)
         for key in r.keys('da:interviewsource:docassemble.playground' + str(user_id) + project_name(project) + ':*'):
             r.incr(key.decode())
-        if section == 'modules':
+        if section == 'modules' and do_restart:
             return_val = jsonify_restart_task()
             restart_all()
             return return_val
@@ -26659,8 +26827,8 @@ def add_api_key(user_id, name, method, allowed):
     for attempt in range(10):
         api_key = random_alphanumeric(32)
         info['last_four'] = api_key[-4:]
-        new_api_key = encrypt_api_key(api_key)
-        if not len(r.keys('da:apikey:userid:*:key:' + new_api_key + ':info')):
+        new_api_key = encrypt_api_key(api_key, app.secret_key)
+        if len(r.keys('da:apikey:userid:*:key:' + new_api_key + ':info')) == 0:
             r.set('da:apikey:userid:' + str(user_id) + ':key:' + new_api_key + ':info', json.dumps(info))
             success = True
             break
@@ -26669,7 +26837,7 @@ def add_api_key(user_id, name, method, allowed):
     return api_key
 
 def api_key_exists(user_id, api_key):
-    rkeys = r.keys('da:apikey:userid:' + str(user_id) + ':key:' + encrypt_api_key(str(api_key)) + ':info')
+    rkeys = r.keys('da:apikey:userid:' + str(user_id) + ':key:' + encrypt_api_key(str(api_key), app.secret_key) + ':info')
     if len(rkeys) > 0:
         return True
     return False
@@ -26681,7 +26849,7 @@ def existing_api_names(user_id, except_for=None):
         key = key.decode()
         if except_for is not None:
             api_key = re.sub(r'.*:key:([^:]+):.*', r'\1', key)
-            if api_key == encrypt_api_key(except_for):
+            if api_key == encrypt_api_key(except_for, app.secret_key):
                 continue
         try:
             info = json.loads(r.get(key).decode())
@@ -26694,7 +26862,7 @@ def get_api_info(user_id, name=None, api_key=None):
     result = []
     rkeys = r.keys('da:apikey:userid:' + str(user_id) + ':key:*:info')
     if api_key is not None:
-        api_key = encrypt_api_key(api_key)
+        api_key = encrypt_api_key(api_key, app.secret_key)
     for key in rkeys:
         key = key.decode()
         try:
@@ -26711,17 +26879,19 @@ def get_api_info(user_id, name=None, api_key=None):
             return info
         if name is not None or api_key is not None:
             continue
+        if 'permissions' not in info:
+            info['permissions'] = []
         result.append(info)
     if name is not None or api_key is not None:
         return None
     return result
 
 def delete_api_key(user_id, api_key):
-    key = 'da:apikey:userid:' + str(user_id) + ':key:' + encrypt_api_key(api_key) + ':info'
+    key = 'da:apikey:userid:' + str(user_id) + ':key:' + encrypt_api_key(api_key, app.secret_key) + ':info'
     r.delete(key)
 
-def update_api_key(user_id, api_key, name, method, allowed, add_to_allowed, remove_from_allowed):
-    key = 'da:apikey:userid:' + str(user_id) + ':key:' + encrypt_api_key(api_key) + ':info'
+def update_api_key(user_id, api_key, name, method, allowed, add_to_allowed, remove_from_allowed, permissions, add_to_permissions, remove_from_permissions):
+    key = 'da:apikey:userid:' + str(user_id) + ':key:' + encrypt_api_key(api_key, app.secret_key) + ':info'
     try:
         info = json.loads(r.get(key).decode())
     except:
@@ -26749,6 +26919,23 @@ def update_api_key(user_id, api_key, name, method, allowed, add_to_allowed, remo
         for item in to_remove:
             if item in info['constraints']:
                 info['constraints'].remove(item)
+    if permissions is not None:
+        info['permissions'] = permissions
+    if add_to_permissions is not None:
+        if isinstance(add_to_permissions, list):
+            info['permissions'].extend(add_to_permissions)
+        elif isinstance(add_to_permissions, str):
+            info['permissions'].append(add_to_permissions)
+    if remove_from_permissions is not None:
+        if isinstance(remove_from_permissions, list):
+            to_remove = remove_from_permissions
+        elif isinstance(remove_from_permissions, str):
+            to_remove = [remove_from_permissions]
+        else:
+            to_remove = []
+        for item in to_remove:
+            if item in info['permissions']:
+                info['permissions'].remove(item)
     r.set(key, json.dumps(info))
     return True
 
@@ -26805,6 +26992,7 @@ def do_api_user_api(user_id):
         else:
             return jsonify(new_api_key)
     if request.method == 'PATCH':
+        user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
         patch_data = request.get_json(silent=True)
         if patch_data is None:
             patch_data = request.form.copy()
@@ -26858,7 +27046,63 @@ def do_api_user_api(user_id):
                     assert isinstance(item, str)
             except:
                 return jsonify_with_status("Allowed sites list not a valid list", 400)
-        result = update_api_key(user_id, api_key, name, method, allowed, add_to_allowed, remove_from_allowed)
+        if not (user.has_role('admin') and current_user.has_role_or_permission('admin')):
+            permissions = None
+            add_to_permissions = None
+            remove_from_permissions = None
+        else:
+            permissions = patch_data.get('permissions', None)
+            add_to_permissions = patch_data.get('add_to_permissions', None)
+            if add_to_permissions is not None:
+                if add_to_permissions.startswith('['):
+                    try:
+                        add_to_permissions = json.loads(add_to_permissions)
+                        for item in add_to_permissions:
+                            assert isinstance(item, str)
+                    except:
+                        return jsonify_with_status("add_to_permissions is not a valid list", 400)
+                    try:
+                        for item in add_to_permissions:
+                            assert item in PERMISSIONS_LIST
+                    except:
+                        return jsonify_with_status("add_to_permissions contained a permission that was not recognized", 400)
+                elif add_to_permissions not in PERMISSIONS_LIST:
+                    return jsonify_with_status("add_to_permissions contained a permission that was not recognized", 400)
+            remove_from_permissions = patch_data.get('remove_from_permissions', None)
+            if remove_from_permissions is not None:
+                if remove_from_permissions.startswith('['):
+                    try:
+                        remove_from_permissions = json.loads(remove_from_permissions)
+                        for item in remove_from_permissions:
+                            assert isinstance(item, str)
+                    except:
+                        return jsonify_with_status("remove_from_permissions is not a valid list", 400)
+                    try:
+                        for item in remove_from_permissions:
+                            assert item in PERMISSIONS_LIST
+                    except:
+                        return jsonify_with_status("remove_from_permissions contained a permission that was not recognized", 400)
+                elif remove_from_permissions not in PERMISSIONS_LIST:
+                    return jsonify_with_status("remove_from_permissions contained a permission that was not recognized", 400)
+            if permissions is not None:
+                if isinstance(permissions, str):
+                    try:
+                        permissions = json.loads(permissions)
+                    except:
+                        return jsonify_with_status("Permissions list not a valid list", 400)
+                if not isinstance(permissions, list):
+                    return jsonify_with_status("Permissions list not a valid list", 400)
+                try:
+                    for item in permissions:
+                        assert isinstance(item, str)
+                except:
+                    return jsonify_with_status("Permissions list not a valid list", 400)
+                try:
+                    for item in permissions:
+                        assert item in PERMISSIONS_LIST
+                except:
+                    return jsonify_with_status("Permissions list contained a permission that was not recognized", 400)
+        result = update_api_key(user_id, api_key, name, method, allowed, add_to_allowed, remove_from_allowed, permissions, add_to_permissions, remove_from_permissions)
         if not result:
             return jsonify_with_status("Error updating API key", 400)
         return ('', 204)
@@ -26869,6 +27113,11 @@ def do_api_user_api(user_id):
 def api_user_api():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
+    if current_user.limited_api:
+        if request.method == 'GET' and not current_user.can_do('access_user_api_info'):
+            return jsonify_with_status("You do not have sufficient privileges to access user API information", 403)
+        if request.method in ('PATCH', 'POST', 'DELETE') and not current_user.can_do('edit_user_api_info'):
+            return jsonify_with_status("You do not have sufficient privileges to edit user API information", 403)
     return do_api_user_api(current_user.id)
 
 @app.route('/api/user/<int:user_id>/api', methods=['GET', 'POST', 'DELETE', 'PATCH'])
@@ -26881,10 +27130,13 @@ def api_user_userid_api(user_id):
         user_id = int(user_id)
     except:
         return jsonify_with_status("User ID must be an integer.", 400)
-    if not (current_user.id == user_id or current_user.has_role('admin')):
-        return jsonify_with_status("Access denied.", 403)
+    if not current_user.same_as(user_id):
+        if request.method == 'GET' and not current_user.has_role_or_permission('admin', permissions=['access_user_api_info']):
+            return jsonify_with_status("You do not have sufficient privileges to access user API information", 403)
+        if request.method in ('POST', 'DELETE', 'PATCH') and not current_user.has_role_or_permission('admin', permissions=['edit_user_api_info']):
+            return jsonify_with_status("You do not have sufficient privileges to edit user API information", 403)
     try:
-        user_info = get_user_info(user_id=user_id)
+        user_info = get_user_info(user_id=user_id, admin=True)
     except Exception as err:
         return jsonify_with_status("Error obtaining user information: " + str(err), 400)
     if user_info is None:
@@ -26895,7 +27147,7 @@ def api_user_userid_api(user_id):
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_interview_data():
-    if not api_verify(request, roles=['admin', 'developer']):
+    if not api_verify(request, roles=['admin', 'developer'], permissions=['interview_data']):
         return jsonify_with_status("Access denied.", 403)
     filename = request.args.get('i', None)
     if filename is None:
@@ -26987,7 +27239,8 @@ def manage_api():
     form = APIKey(request.form)
     action = request.args.get('action', None)
     api_key = request.args.get('key', None)
-    argu = {}
+    is_admin = current_user.has_role('admin')
+    argu = {'is_admin': is_admin}
     argu['mode'] = 'list'
     if action is None:
         action = 'list'
@@ -27071,6 +27324,8 @@ def manage_api():
 </script>
 """)
     form.method.choices = [('ip', 'IP Address'), ('referer', 'Referring URL'), ('none', 'No authentication')]
+    if is_admin:
+        form.permissions.choices = [(permission, permission) for permission in PERMISSIONS_LIST]
     ip_address = get_requester_ip(request)
     if request.method == 'POST' and form.validate():
         action = form.action.data
@@ -27084,13 +27339,14 @@ def manage_api():
             argu['title'] = word("New API Key")
             argu['tab_title'] = argu['title']
             argu['page_title'] = argu['title']
-            info = dict(name=form.name.data, method=form.method.data, constraints=constraints)
+            permissions_data = form.permissions.data if is_admin else []
+            info = dict(name=form.name.data, method=form.method.data, constraints=constraints, limits=permissions_data)
             success = False
             for attempt in range(10):
                 api_key = random_alphanumeric(32)
                 info['last_four'] = api_key[-4:]
-                new_api_key = encrypt_api_key(api_key)
-                if not len(r.keys('da:apikey:userid:*:key:' + new_api_key + ':info')):
+                new_api_key = encrypt_api_key(api_key, app.secret_key)
+                if len(r.keys('da:apikey:userid:*:key:' + new_api_key + ':info')) == 0:
                     r.set('da:apikey:userid:' + str(current_user.id) + ':key:' + new_api_key + ':info', json.dumps(info))
                     success = True
                     break
@@ -27123,6 +27379,10 @@ def manage_api():
                 if form.method.data != info['method'] and form.method.data in ('ip', 'referer'):
                     info['method'] = form.method.data
                 info['constraints'] = constraints
+                if is_admin:
+                    info['permissions'] = form.permissions.data
+                else:
+                    info['permissions'] = []
                 r.set(rkey, json.dumps(info))
         action = 'list'
     if action == 'new':
@@ -27146,6 +27406,11 @@ def manage_api():
                 form.action.data = 'edit'
                 form.key.data = api_key
                 form.name.data = info.get('name')
+                if is_admin:
+                    if 'permissions' in info:
+                        form.permissions.data = info['permissions']
+                    else:
+                        form.permissions.data = []
                 argu['constraints'] = info.get('constraints')
                 argu['display_key'] = ('*' * 28) + info.get('last_four')
         if ip_address != '127.0.0.1':
@@ -27370,7 +27635,7 @@ def api_interview():
     docassemble.base.functions.this_thread.current_info = current_info(req=request, interface='api', secret=secret)
     if yaml_filename not in user_info['sessions'] or need_to_reset or new_session:
         was_new = True
-        if PREVENT_DEMO and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role('admin', 'developer')):
+        if PREVENT_DEMO and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not current_user.has_role_or_permission('admin', 'developer', permissions=['demo_interviews'])):
             return jsonify_with_status(word("Not authorized"), 403)
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
             output['redirect'] = url_for('user.login', next=url_for('index', i=yaml_filename, **url_args))
@@ -28306,6 +28571,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          remove_privilege=remove_privilege,
                                          add_user_privilege=add_user_privilege,
                                          remove_user_privilege=remove_user_privilege,
+                                         get_permissions_of_privilege=get_permissions_of_privilege,
                                          create_user=create_user,
                                          file_set_attributes=file_set_attributes,
                                          file_user_access=file_user_access,
@@ -28519,11 +28785,8 @@ def set_admin_interviews():
             sys.stderr.write("administrative interviews is not a list" + "\n")
     return admin_interviews
 
-def encrypt_api_key(key):
-    return codecs.encode(hashlib.pbkdf2_hmac('sha256', bytearray(key, 'utf-8'), bytearray(app.secret_key, encoding='utf-8'), 100000), 'base64').decode().strip()
-
 def fix_api_key(match):
-    return 'da:apikey:userid:' + match.group(1) + ':key:' + encrypt_api_key(match.group(2)) + ':info'
+    return 'da:apikey:userid:' + match.group(1) + ':key:' + encrypt_api_key(match.group(2), app.secret_key) + ':info'
 
 def fix_api_keys():
     to_delete = []

@@ -410,6 +410,7 @@
 "icon": Null
 "I do not understand what you mean by": Null
 "I don't know": Null
+"If no items are selected, user privileges will determine permissions of the API key.": Null
 "If you did not initiate this confirmation, you may safely ignore this email.": Null
 "If you did not initiate this password change, click the link below to reset it.": Null
 "If you did not initiate this password change,": Null
@@ -517,6 +518,7 @@
 "Libya": Null
 "License": Null
 "Liechtenstein": Null
+"Limited Permissions": Null
 "Linked folder": Null
 "link": Null
 "Links": Null
@@ -1229,6 +1231,7 @@
 "You do not have any API keys yet.": Null
 "You do not have permission to access '%(url)s'.": Null
 "You do not have permission to install this package.": Null
+"You do not have sufficient privileges to edit this user.": Null
 "You have been invited to join": Null
 "You have made too many login attempts.": Null
 "You have registered successfully.": Null

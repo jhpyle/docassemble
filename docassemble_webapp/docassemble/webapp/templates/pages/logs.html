@@ -47,8 +47,8 @@
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.file_name, value=current_file) }}
 </form>
-<div>
-  <pre class="dawrappre davspace">{{ content }}</pre>
+<div class="form-group">
+  <textarea class="form-control mt-2 dalogs" rows="24" readonly>{{ content }}</textarea>
 </div>
 <div>
   <p>{{ word("Only the last 30 lines are shown.  Download the file to see the previous lines.") }}</p>

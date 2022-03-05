@@ -62,6 +62,7 @@ app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_INVITE_URL'] = '/user/invite'
 app.config['USER_ENABLE_INVITATION'] = True
 app.config['USER_INVITE_EMAIL_TEMPLATE'] = 'flask_user/emails/invite'
+app.config['USER_ENABLE_FORGOT_PASSWORD'] = bool(daconfig.get('allow forgot password', True))
 app.config['FAVICON_MASK_COLOR'] = daconfig.get('favicon mask color', '#698aa7')
 app.config['FAVICON_THEME_COLOR'] = daconfig.get('favicon theme color', '#83b3dd')
 

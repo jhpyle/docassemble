@@ -190,7 +190,7 @@ class EditUserProfileForm(UserProfileForm):
         if user is not None and user.id != user_id:
             self.email.errors.append(word('That e-mail address is already taken.'))
             return False
-        if current_user.id == user_id:
+        if current_user.id == user_id and current_user.has_roles('admin'):
             if admin_id not in self.role_id.data:
                 self.role_id.errors.append(word('You cannot take away your own admin privilege.'))
                 return False

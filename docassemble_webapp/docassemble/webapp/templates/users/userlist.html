@@ -2,18 +2,24 @@
 
 {% block content %}
 
+{%- if current_user.has_role('admin') or current_user.can_do('create_user') or current_user.can_do('edit_privileges') %}
 <div class="row mb-2">
   <div class="col text-end">
     <div class="dropdown">
       <button class="btn {{ config['BUTTON_STYLE'] }}secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-bars"></i> {{ word('Menu') }}</button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+  {%- if current_user.has_role('admin') or current_user.can_do('create_user') %}
         <a class="dropdown-item" href="{{ url_for('user_add') }}"><i class="fas fa-user-plus fa-fw"></i> {{ word('Add a user') }}</a>
         <a class="dropdown-item" href="{{ url_for('invite') }}"><i class="fas fa-envelope fa-fw"></i> {{ word('Invite a user') }} </a>
+  {%- endif %}
+  {%- if current_user.has_role('admin') or current_user.can_do('edit_privileges') %}
         <a class="dropdown-item" href="{{ url_for('privilege_list') }}"><i class="fas fa-edit fa-fw"></i> {{ word('Edit privileges') }}</a>
+  {%- endif %}
       </div>
     </div>
   </div>
 </div>
+{%- endif %}
 
 <table class="table table-striped">
   <thead>
@@ -57,7 +63,11 @@
       <td class="text-danger">{{ user_info['email'] }}</td>
       <td class="text-danger">{{ user_info['name'] }}</td>
       {%- endif %}
+      {%- if current_user.has_role('admin') or (current_user.can_do('edit_user_info') and user_info['high_priv'] in ('trainer', 'user')) %}
       <td style="text-align:right;"><a class="btn btn-sm {{ config['BUTTON_STYLE'] }}secondary" href="{{ url_for('edit_user_profile_page', id=user_info['id']) }}"><i class="fas fa-pencil-alt"></i> {{ word('Edit') }}</a></td>
+      {%- else %}
+      <td style="text-align:right;">&nbsp;</td>
+      {%- endif %}
     </tr>
   {%- endfor %}
   </tbody>
