@@ -56,3 +56,4 @@ docassemble_webapp/docassemble/webapp/static/css
 docassemble_webapp/docassemble/webapp/static/js
 .history/
 settings.json
+docassemble_webapp/docassemble/webapp/.mypy_cache

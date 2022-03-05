@@ -8,7 +8,7 @@
 - The `/api/user_invite` API endpoint.
 - The `api key` option of `default admin account`.
 ### Changed
-- Upgraded the `boto3` library.
+- Upgraded the `boto3` and `docxtpl` libraries.
 - The Logs are now shown in a resizable `<textarea>`.
 - Safer implementation of `exit link` and `exit url`.
 - For safety reasons, `url_of('exit')` and similar URLs no longer
