@@ -1395,19 +1395,16 @@ The `url_of()` function also has a few special uses.
 * `url_of('new_session')` returns a URL that starts a new session of
   the current interview, preserving the existing session.
 * `url_of('exit')` returns a URL that deletes the interview session
-  and redirects to the URL at the `next` parameter, or to the
-  [`exitpage`] if there is no `next` parameter.
+  and redirects to the [`exitpage`].
 * `url_of('interview')` returns a URL to the interview page.  (See
   also [`interview_url()`].)
 * `url_of('logout')` returns a URL that logs the user out.  It accepts
   a `next` parameter.
 * `url_of('exit_logout')` returns a URL that deletes the interview session,
   logs the user out (if the user is logged in), and redirects to the
-  URL at the `next` parameter, or to the [`exitpage`] if there is no
-  `next` parameter.
-* `url_of('leave')` redirects to the URL at the `next` parameter, or to the
-  [`exitpage`] if there is no `next` parameter.  It does not log the
-  user out or delete the interview session.
+  [`exitpage`].
+* `url_of('leave')` redirects to the [`exitpage`].  It does not log
+  the user out or delete the interview session.
 * `url_of('register')` returns a URL to the user registration page.
   It accepts a `next` parameter.
 * `url_of('profile')` returns a URL to the logged-in user's profile page.
@@ -2262,9 +2259,9 @@ user back to the original session.
 
 The `user_privileges()` function returns the user's [privileges] as a
 list.  If the user is not logged in, the result is `['user']`.  If the
-user is a "user" as well as a "customer," the result is
-`['user', 'customer']`.  If the interview is running a
-[scheduled task], the result is `['cron']`.
+user is a "user" as well as a "customer," the result is `['user',
+'customer']`.  If the interview is running a [scheduled task], the
+result is `['cron']`.
 
 ## <a name="user_has_privilege"></a>user_has_privilege()
 
@@ -4029,8 +4026,9 @@ If the current user is logged in, [`interview_list()`] returns a list
 of dictionaries indicating information about the user's interview
 sessions.  This function provides a programmatic version of the screen
 available at `/interviews`.  In addition, the optional keyword
-parameter `user_id` can be used (by a user with `admin` [privileges]) to
-get information about sessions owned by other people.
+parameter `user_id` can be used (by a user with `admin` [privileges]
+or a user with a custom privilege with the `access_sessions`
+permission) to get information about sessions owned by other people.
 
 The function returns a two-item tuple.  The first item in the tuple is
 a [Python list] of [Python dictionaries], where the items in each
@@ -4110,9 +4108,10 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-If the current user has `admin` [privileges], the optional keyword
-argument `user_id` can be used to retrieve a list of sessions
-belonging to another user:
+If the current user has `admin` [privileges] or a custom privilege
+with the `access_sessions` [permission], the optional keyword argument
+`user_id` can be used to retrieve a list of sessions belonging to
+another user:
 
 {% highlight yaml %}
 question: Sessions John has started
@@ -4122,8 +4121,7 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-Or, if you want to list sessions belonging to any user, you can set
-`user_id` to `'all'`.
+To list sessions belonging to any user, set `user_id` to `'all'`.
 
 {% highlight yaml %}
 question: Who has what session
@@ -4253,12 +4251,14 @@ This will create an account with the e-mail address `testuser@example.com`
 and the password `xxxsecretxxx`.  The variable `new_user_id` will be
 set to the user ID of the newly-created account.
 
-Only users with [privileges] of `admin` can use this function.
+Only users with [privileges] of `admin` or users with a custom
+privilege with the `create_user` [permission] can use this function.
 
 The [`create_user()`] function also accepts an optional keyword
 parameter `privileges`, which can be set to the name of a [privilege]
 (e.g., `'advocate'`) or a list of [privileges] (e.g., `['advocate',
-'trainer']`).
+'trainer']`). Non-`admin` users do not have the power to confer
+privileges of `admin`, `developer`, or `advocate.
 
 The function also accepts an optional keyword parameter `info`, which
 is expected to be a dictionary containing information about the new
@@ -4286,8 +4286,11 @@ For an [API] version of this function, see [`/api/user/new`].
 The [`get_user_list()`] function returns a list of registered users on
 the server.  If the optional keyword parameter `include_inactive` is
 set to `True`, then any inactive users are included in the results;
-otherwise they are excluded.  Privileges of `admin` or `advocate` are
-required to use this function.
+otherwise they are excluded.
+
+In order to use this function, the user must have privileges of
+`admin`, `advocate`, or a custom privilege with the `access_user_info`
+[permission].
 
 The function returns a two-item tuple. The first item in the tuple is
 a [Python list] of [Python dictionaries], where each dictionary has
@@ -4347,11 +4350,13 @@ an argument (e.g., `get_user_info(email='jsmith@example.com')`, in
 which case it returns information about the user with that user ID or
 e-mail address.  If no user is found, `None` is returned.
 
-Only users with `admin` or `advocate` [privileges] can see information
-about other users.
-
 This function will only work if the user running the interview that
-calls the function is logged in.
+calls the function is logged in. If the user is not logged in, `None`
+will be returned.
+
+In order to see information about other users, the user must have
+[privileges] of `admin`, `advocate`, or a custom privilege with the
+`access_user_info` [permissions].
 
 For [API] versions of this function, see [`/api/user`] and
 [`/api/user/<user_id>`].  (Searching by e-mail address is not
@@ -4385,8 +4390,19 @@ changed using this function; these attributes are used only for
 selecting the user whose information is going to be changed.
 
 This function will only work if the user running the interview that
-calls the function is logged in.  Only users with `admin` [privileges]
-can change passwords with this function.
+calls the function is logged in.
+
+In order to change information about other users, the user must have
+[privileges] of `admin` or a custom [privilege] with the following
+[permissions], depending on what information they try to change:
+
+* `edit_user_info` for editing any information about other users;
+* `edit_user_password` for editing passwords;
+* `edit_user_active_status` for making a user inactive or active;
+* `edit_user_privileges` for editing a user's privileges.
+
+Only users with the `admin` [privilege] can edit the information of
+users with `admin`, `developer`, or `advocate` [privileges].
 
 Here is an example of a code block that updates the name of the user:
 
@@ -4396,26 +4412,28 @@ code: |
   set_user_info(first_name=user.name.first, last_name=user.name.last)
 {% endhighlight %}
 
-If the user running the interview that calls the function has `admin`
-[privileges], then the function can be used to change the profiles of
-other users.  A user account can be indicated by the inclusion of an
-additional keyword parameter, `user_id` or `email`, that identifies
-the user whose profile should be changed.
+If the user running the interview that calls the function has
+appropriate [privileges], then the function can be used to change the
+profiles of other users.  A user account can be indicated by the
+inclusion of an additional keyword parameter, `user_id` or `email`,
+that identifies the user whose profile should be changed.
 
 For example, the following [Python] code, when run by a user with
-`admin` [privileges], will change the "organization" setting of the user
-`jsmith@example.com`:
+sufficient [privileges], will change the "organization" setting of the
+user `jsmith@example.com`:
 
 {% highlight python %}
 set_user_info(email='jsmith@example.com', organization='Example, Inc.')
 {% endhighlight %}
 
-Users with `admin` [privileges] can disable user accounts by setting the
-`active` keyword parameter to `False` (or enable a disabled account by
-setting `active` to `True`).
+Users with `admin` [privileges] or the `edit_user_active_status`
+[permission] can disable user accounts by setting the `active` keyword
+parameter to `False` (or enable a disabled account by setting `active`
+to `True`).
 
-In addition, users with `admin` [privileges] can change the [privileges]
-of a user by setting the `privileges` keyword parameter to the list of
+In addition, users with `admin` [privileges] or the
+`edit_user_privileges` [permission] can change the [privileges] of a
+user by setting the `privileges` keyword parameter to the list of
 [privilege] names that the user should have.
 
 {% highlight python %}
@@ -4626,17 +4644,28 @@ For an [API] version of this function, see the [POST method of `/api/session/bac
 ## <a name="manage_privileges"></a>manage_privileges()
 
 The [`manage_privileges()`] function allows a user with `admin`
-[privileges] to list, add, or remove [privilege] types from the list of
-existing [privileges].
+[privileges] or a custom privilege with appropriate [permissions] to
+list, add, remove, or see additional information about [privilege]
+types from the list of existing [privileges].
 
 * `manage_privileges('list')` returns the list of existing [privilege]
-  types as an alphabetically sorted list.
+  types as an alphabetically sorted list. If the user does not have
+  `admin` privileges, the user must have a privilege with the
+  `access_privileges` [permission].
 * `manage_privileges('add', 'supervisor')` adds a [privilege] called
-  `supervisor` to the list of existing [privilege] types.
-* `manage_privileges('remove', 'supervisor')` removes the [privilege] called
-  `supervisor` from the list of existing [privilege] types.  Moreover,
-  if any users have the [privilege], the [privilege] is taken away from
-  the users.
+  `supervisor` to the list of existing [privilege] types. If the user
+  does not have `admin` privileges, the user must have a privilege
+  with the `access_privileges` and `edit_privileges` [permissions] in
+  order to use the `'add'` feature.
+* `manage_privileges('remove', 'supervisor')` removes the [privilege]
+  called `supervisor` from the list of existing [privilege] types.
+  Moreover, if any users have the [privilege], the [privilege] is
+  taken away from the users. If the user does not have `admin`
+  privileges, the user must have a privilege with the
+  `access_privileges` and `edit_privileges` [permissions] in
+  order to use the `'remove'` feature.
+* `manage_privileges('inspect', 'supervisor')` returns the
+  [permissions] of the custom privilege `supervisor`.
 
 For an [API] version of this function, see [`/api/privileges`].
 
@@ -5680,6 +5709,17 @@ If you only want to overlay over even-numbered pages, set `only` to
 If your document containing the logo has more than one page, you can
 specify which page to use by setting `logo_page` to the page number of
 the page you want to use.
+
+The optional keyword parameter `multi` is used when you want to
+overlay two PDF files with the same number of pages on top of one
+another.  (That is, page 1 of document A will be overlayed with page 1
+of document B, page 2 of document a will be overlayed with page 2 of
+document B, etc.)
+
+{% include demo-side-by-side.html demo="overlay-pdf-multi" %}
+
+When `multi=True` is used, the `first_page`, `last_page`, `only`, and
+`logo_page` parameters are disregarded.
 
 ## <a name="zip_file"></a>zip_file()
 
@@ -7907,3 +7947,5 @@ $(document).on('daPageLoad', function(){
 [editable tables]: {{ site.baseurl }}/docs/groups.html#editing
 [`__all__`]: https://docs.python.org/3/tutorial/modules.html#importing-from-a-package
 [fax provider]: {{ site.baseurl }}/docs/config.html#fax provider
+[permission]: {{ site.baseurl }}/docs/config.html#permissions
+[permissions]: {{ site.baseurl }}/docs/config.html#permissions

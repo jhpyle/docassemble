@@ -4,11 +4,42 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.22](https://github.com/jhpyle/docassemble/releases/tag/v1.3.22) - 2022-03-05
+
+### Added
+- The `permissions` Configuration directive.
+- Ability of `admin` users to create API keys with limited permissions.
+- The `multi` option of `overlay_pdf()`.
+- The `/api/user_invite` API endpoint.
+- The `api key` option of `default admin account`.
+
+### Changed
+- Upgraded the `boto3` and `docxtpl` libraries.
+- The Logs are now shown in a resizable `<textarea>`.
+- Safer implementation of `exit link` and `exit url`.
+- For safety reasons, `url_of('exit')` and similar URLs no longer
+  accept `next` parameters.
+- The JavaScript for `CustomDataType` objects will only be inserted if
+  the interview uses the custom datatype.
+
+### Fixed
+- URL of exit link was being set to `/interview` in some
+  circumstances.
+- When server-side validation failed, the fields the user saw on the
+  next screen were not always populated with the user's answers.
+- HTML typos in `<form>` elements.
+- Problem converting DOCX to PDF when `attachment` filename contained
+  a space.
+- Inaccurate exceptions were sometimes raised when `AttributeError` or
+  `IndexError` exceptions arise during assembly of a DOCX file.
+- Fixes to Google geocoding for situations where the latitude and
+  longitude are undefined.
+
 ## [1.3.21](https://github.com/jhpyle/docassemble/releases/tag/v1.3.21) - 2022-02-05
 
 ### Added
 - The `fax provider` Configuration directive.
-- Option for faxing with [Telnyx] instead of [ClickSend].
+- Option for faxing with Telnyx instead of ClickSend.
 
 ### Changed
 - The server name of a `DAFile` can be changed using `.set_attributes()`.

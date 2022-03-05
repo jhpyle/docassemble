@@ -159,9 +159,10 @@ whether you are using a laptop or [AWS].
 
 However, you should think of this as an educational exercise; don't
 start using the container for serious development work.  For a serious
-implementation, you will want to go through additional setup steps,
-such as configuring [HTTPS] for encryption and [data storage] for the
-safe, long-term storage of development data and user data.
+implementation, you should deploy **docassemble** on a server (in the
+cloud or on-premises), and go through additional setup steps, such as
+configuring [HTTPS] for encryption and [data storage] for the safe,
+long-term storage of development data and user data.
 
 ## <a name="starting"></a>Starting
 

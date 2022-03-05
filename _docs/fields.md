@@ -1236,7 +1236,7 @@ deliberately bypass client-side input validation.  So even if you
 have a [jQuery Validation Plugin] rule that works, it is a good idea
 to include a `validate()` class method.
 
-## <a name="custom datatype explanation"></a>How custom data types work
+### <a name="custom datatype explanation"></a>How custom data types work
 
 When the server starts, it looks through all of the packages under the
 `docassemble` namespace and loads every `.py` file that contains a

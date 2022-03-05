@@ -2434,6 +2434,25 @@ allow registration: False
 
 The default behavior is to allow any user to register.
 
+## <a name="allow forgot password"></a>Password reset
+
+By default, there is a "Forgot your password?" link on the login page
+that allows a user to reset their password after receiving an e-mail
+at their e-mail address. You can disable this feature with the `allow
+forgot password` directive:
+
+{% highlight yaml %}
+allow forgot password: False
+{% endhighlight %}
+
+Note that by default, interview answers are encrypted with the user's
+password. If the user forgets their password and resets it with the
+"Forgot your password?" feature, they will not be able to access their
+past interview sessions (unless `multi_user` is set to `True` in the
+interview answers, which disables encryption). By contrast, when a
+user changes their password, their sessions are re-encrypted with the
+new password, and the user does not lose access to their sessions.
+
 ## <a name="authorized registration domains"></a>Restricting e-mail/password registration to particular domains
 
 The `authorized registration domains` directive can be used to
@@ -4726,6 +4745,58 @@ jinja data:
   region: Delaware
 {% endhighlight %}
 
+## <a name="permissions"></a>Permissions
+
+You can customize **docassemble**'s [privileges] system using the
+`permissions` directive. This allows you to specify that users with a
+particular [privilege] have the permission to perform particular
+actions on the server that normally are limited to users with special
+privileges like `admin`, `developer`, and `advocate`.
+
+{% highlight yaml %}
+permissions:
+  apiuser:
+    - access_user_info
+    - edit_user_active_status
+    - edit_user_password
+  playgroundadmin:
+    - playground_control
+{% endhighlight %}
+
+The permissions available are as follows:
+
+* `demo_interviews` - run interviews in `docassemble.base` and
+  `docassemble.demo` if `debug` is `False` and `allow demo` is not `True`
+* `access_sessions` - list and see other users' session
+* `edit_sessions` - delete other users' sessions
+* `access_user_info` - see information about other users
+* `access_user_api_info` - see information about other users' API keys
+* `create_user` - create a new user and invite a user
+* `edit_user_info` - set information in a user profile
+* `edit_user_api_info` - modify others users' API keys
+* `edit_user_active_status` - set a user account to inactive or active
+* `delete_user` - delete a user account and its data
+* `edit_user_password` - change another user's password (however, only
+  an `admin` can change the password of a user with `admin`,
+  `developer`, or `advocate` privileges)
+* `template_parse` - access the `/api/fields` API
+* `access_privileges` - see a list of the available privileges defined
+  in the system
+* `edit_privileges` - add or delete custom privileges (also requires
+  `access_privileges`)
+* `edit_user_privileges` - edit the privileges of other users
+  (however, only an `admin` can edit the privileges of user with
+  `admin`, `developer`, or `advocate` privileges, or convey those
+  privileges to a user)
+* `playground_control` - can perform actions in any user's Playground
+* `log_user_in` - can use the [`/api/login_url`] endpoint of the [API]
+
+If you are using the [API] and you have `admin` privileges, you can
+create API keys under your user profile that have limited permissions,
+just as you can limit the privileges associated with custom
+[privileges]. When you create an API key, you can choose to limit the
+powers of the API key to one or more of the above permissions.
+
 ## <a name="config from"></a>Importing configuration directives
 
 The following sections, [Using AWS Secrets Manager](#aws_secrets) and
@@ -5248,6 +5319,7 @@ and Facebook API keys.
 [`twilio`]: #twilio
 [Google Authenticator]: https://en.wikipedia.org/wiki/Google_Authenticator
 [Authy]: https://authy.com/
+[privilege]: {{ site.baseurl }}/docs/users.html
 [privileges]: {{ site.baseurl }}/docs/users.html
 [bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
@@ -5451,3 +5523,4 @@ and Facebook API keys.
 [YAML preprocessor]: {{ site.baseurl }}/docs/interviews.html#jinja2
 [unoconv]: https://github.com/unoconv/unoconv
 [system upgrade]: {{ site.baseurl }}/docs/docker.html#upgrading
+[`/api/login_url`]: {{ site.baseurl }}/docs/api.html#login_url

@@ -55,7 +55,10 @@ The "privileges" system is intended to be used by **docassemble**
 developers in their interviews.  An `admin` user can add additional
 privileges by going to the [Privileges List].  In interview logic, you
 can call [`user_has_privilege()`] to send the user down a different
-logical path depending on what privilege or privileges the user has.
+logical path depending on what privilege or privileges the user
+has. In addition, an `admin` user can delegate administrative powers
+to users that have a given privilege by editing the [`permissions`]
+directive in the [Configuration].
 
 When **docassemble** is first installed, it creates a user with
 "admin" privileges with the following login information:
@@ -316,3 +319,5 @@ will run after [`imports`] and [`modules`] blocks, but before
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [API]: {{ site.baseurl }}/docs/api.html
+[`permissions`]: {{ site.baseurl }}/docs/config.html#permissions
+[Configuration]: {{ site.baseurl }}/docs/config.html
