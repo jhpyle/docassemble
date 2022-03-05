@@ -10,7 +10,7 @@ import subprocess
 from collections import deque
 from copy import deepcopy
 from xml.sax.saxutils import escape as html_escape
-from docxtpl import InlineImage, RichText, Document, DocxTemplate
+from docxtpl import InlineImage, RichText
 from docx.shared import Mm, Inches, Pt, Cm, Twips
 import docx.opc.constants
 from docx.oxml.section import CT_SectPr # For figuring out if an element is a section or not
@@ -127,7 +127,7 @@ def include_docx_template(template_file, **kwargs):
     else:
         template_path = package_template_filename(template_file, package=this_thread.current_package)
     sd = this_thread.misc['docx_template'].new_subdoc()
-    sd.subdocx = Document(template_path)
+    sd.subdocx = docx.Document(template_path)
     if not use_jinja:
         return sanitize_xml(str(sd))
     if '_inline' in kwargs:
