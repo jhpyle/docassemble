@@ -657,7 +657,7 @@ Parameters:
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
 
-Required privileges: 
+Required privileges:
 
  - `admin`
  - `advocate`
@@ -780,7 +780,7 @@ Required privileges:
    editing user information other than the password; [permissions]
    of `access_user_info`, `edit_user_info`, and `edit_user_password`
    for changing a user's password
- 
+
 Only users with `admin` privileges can edit users with `admin`,
 `developer`, or `advocate` privileges.
 
@@ -1029,7 +1029,7 @@ Data:
    `X-API-Key` cookie or header).
  - `privilege`: the name of the privilege to be added to the list.
 
-Required privileges: 
+Required privileges:
 
  - `admin` or
  - [permissions] of `access_privileges` and `edit_privileges`
@@ -1069,7 +1069,7 @@ Required privileges:
 
  - `admin` or
  - [permissions] of `access_privileges` and `edit_user_privileges`
-   
+
 Only a user with `admin` privileges can give `admin`, `developer`, or
 `advocate` privileges to another user.
 
@@ -1116,7 +1116,7 @@ Required privileges:
 
  - `admin` or
  - [permissions] of `edit_user_privileges`
- 
+
 Only a user with `admin` privileges can take away `admin`,
 `developer`, or `advocate` privileges from another user.
 
@@ -1239,9 +1239,9 @@ Parameters:
  - `session` (optional): set to a session ID if you want to delete
    only the interview session with the given session ID.
 
-Required privileges: 
+Required privileges:
 
- - `admin` or 
+ - `admin` or
  - [permissions] of `access_sessions` and `edit_sessions`
 
 Responses on failure:
@@ -1332,7 +1332,7 @@ Parameters:
    next page of results.  See the [pagination] section for more
    information.
 
-Required privileges: 
+Required privileges:
 
  - `admin`
  - `advocate`
@@ -1361,7 +1361,7 @@ Parameters:
  - `tag` (optional): set to a tag if you want to delete only those
    interview sessions with the given tag.
 
-Required privileges: 
+Required privileges:
 
  - `admin`
  - `advocate`
@@ -1489,9 +1489,9 @@ Data:
    `url_args` are supplied, these will be included in the resulting
    URL.
 
-Required privileges: 
+Required privileges:
 
- - `admin` or 
+ - `admin` or
  - [permissions] of `log_user_in`
 
 Responses on failure:
@@ -2625,7 +2625,7 @@ Required privileges:
 
  - `admin`
  - `developer` or
- - [permissions] of `playground_control` 
+ - [permissions] of `playground_control`
 
 Responses on failure:
 
@@ -3281,7 +3281,7 @@ Method: [DELETE]
 This behaves just like the [DELETE method of `/api/user/api`](#api_user_api_delete),
 except it deletes an API key of the user given by `user_id`.
 
-Required privileges: 
+Required privileges:
 
  - `admin`
  - the API owner's user ID is the same as `user_id` or

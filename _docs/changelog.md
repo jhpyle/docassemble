@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.23](https://github.com/jhpyle/docassemble/releases/tag/v1.3.23) - 2022-03-07
+
+### Changed
+- Upgraded CodeMirror.
+
+### Fixed
+- Error with `overlay_pdf()` introduced in the last version.
+
 ## [1.3.22](https://github.com/jhpyle/docassemble/releases/tag/v1.3.22) - 2022-03-05
 
 ### Added
@@ -12,6 +20,7 @@ short_title: Change Log
 - The `multi` option of `overlay_pdf()`.
 - The `/api/user_invite` API endpoint.
 - The `api key` option of `default admin account`.
+- The `allow forgot password` Configuration directive.
 
 ### Changed
 - Upgraded the `boto3` and `docxtpl` libraries.

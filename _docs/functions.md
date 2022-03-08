@@ -1092,7 +1092,7 @@ example:
 {% highlight yaml %}
 question: Hello
 subquestion: |
-  You can set lots of information by 
+  You can set lots of information by
   [clicking this link](${ url_action('set_stuff', fish='trout', berry='strawberry', money=65433, actor='Will Smith')}).
 ---
 event: set_stuff
