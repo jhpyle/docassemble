@@ -10,8 +10,8 @@ from docassemble.webapp.cloud import get_cloud
 def main():
     container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
     if ':all:' in container_role or ':cron:' in container_role:
-        (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli) = parse_redis_uri()
-        r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password, username=redis_username)
+        (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts) = parse_redis_uri()
+        r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password, username=redis_username, **ssl_opts)
         if r.get('da:skip_create_tables'):
             sys.stderr.write("restart: skipping create_tables\n")
             r.delete('da:skip_create_tables')

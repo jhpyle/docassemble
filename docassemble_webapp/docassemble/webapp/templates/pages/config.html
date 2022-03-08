@@ -19,7 +19,6 @@
             </div>
             {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
             {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
-            </div>
           </form>
           {%- if config_messages %}
           <h3>{{ word("Overrides") }}</h3>

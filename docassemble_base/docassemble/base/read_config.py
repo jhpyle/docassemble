@@ -131,7 +131,7 @@ if __name__ == "__main__":
         print('export DAWEBSOCKETSPORT=5000')
     if 'redis' in daconfig and daconfig['redis'] is not None:
         print('export REDIS="' + str(daconfig['redis']) + '"')
-        (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli) = parse_redis_uri()
+        (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts) = parse_redis_uri()
         print('export REDISCLI="' + str(redis_cli) + '"')
     if 'rabbitmq' in daconfig and daconfig['rabbitmq'] is not None:
         print('export RABBITMQ="' + str(daconfig['rabbitmq']) + '"')

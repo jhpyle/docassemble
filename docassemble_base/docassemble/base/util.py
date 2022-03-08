@@ -8044,7 +8044,7 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
     if multi:
         docassemble.base.pdftk.overlay_pdf_multi(main_file, logo_file, outfile.path())
     else:
-        docassemble.base.pdftk.overlay_pdf(main_file, logo_file, outfile.path(), first_page=first_page, last_page=last_page, logo_page=logo_page, only=only, multi=multi)
+        docassemble.base.pdftk.overlay_pdf(main_file, logo_file, outfile.path(), first_page=first_page, last_page=last_page, logo_page=logo_page, only=only)
     outfile.commit()
     outfile.retrieve()
     return outfile

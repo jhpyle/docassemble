@@ -20005,7 +20005,8 @@ def playground_project():
         mode = 'standard'
         page_title = word("Projects")
         description = word("You can divide up your Playground into multiple separate areas, apart from your default Playground area.  Each Project has its own question files and Folders.")
-    response = make_response(render_template('pages/manage_projects.html', version_warning=None, bodyclass='daadminbody', tab_title=word("Projects"), description=description, page_title=page_title, projects=get_list_of_projects(current_user.id), current_project=current_project, mode=mode, form=form), 200)
+    back_button = Markup('<span class="navbar-brand navbar-nav dabackicon me-3"><a href="' + url_for('playground_page', project=current_project) + '" class="dabackbuttoncolor nav-link" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fas fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
+    response = make_response(render_template('pages/manage_projects.html', version_warning=None, bodyclass='daadminbody', back_button=back_button, tab_title=word("Projects"), description=description, page_title=page_title, projects=get_list_of_projects(current_user.id), current_project=current_project, mode=mode, form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 

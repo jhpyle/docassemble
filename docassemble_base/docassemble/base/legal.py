@@ -288,7 +288,7 @@ class Court(DAObject):
     def init(self, *pargs, **kwargs):
         if 'jurisdiction' not in kwargs:
             self.jurisdiction = []
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def __str__(self):
         return str(self.name)
     def in_the_court(self, **kwargs):
@@ -314,7 +314,7 @@ class PartyList(DAList):
     PartyClass = Individual
     def init(self, *pargs, **kwargs):
         self.object_type = self.PartyClass
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
 
 class Case(DAObject):
     """Represents a case in court."""
@@ -330,7 +330,7 @@ class Case(DAObject):
         self.is_solo_action = False
         self.state = None
         self.action_type = 'plaintiff defendant'
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def __str__(self):
         return str(self.case_id)
     def set_action_type(self, the_value):

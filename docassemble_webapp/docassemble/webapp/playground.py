@@ -68,7 +68,7 @@ class DAInterview(DAObject):
         self.final_screen = DAQuestion()
         self.decorations = DADecorationDict()
         self.target_variable = None
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def has_decorations(self):
         if self.decorations.gathered and len(self.decorations) > 0:
             return True
@@ -137,7 +137,7 @@ class DAFieldList(DAList):
         self.object_type = DAField
         self.auto_gather = False
         self.gathered = True
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def __str__(self):
         return docassemble.base.functions.comma_and_list(map(lambda x: '`' + x.variable + '`', self.elements))
 
@@ -146,7 +146,7 @@ class DAQuestion(DAObject):
         self.field_list = DAFieldList()
         self.templates_used = set()
         self.static_files_used = set()
-        return super().init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
     def names_reduced(self):
         varsinuse = Playground().variables_from(self.interview.known_source(skip=self))
         var_list = sorted([field.variable for field in self.field_list])

@@ -839,16 +839,16 @@ def parse_redis_uri():
     if redis_url is None:
         redis_url = 'redis://localhost'
     redis_url = redis_url.strip()
-    if not redis_url.startswith('redis://'):
+    if not (redis_url.startswith('redis://') or redis_url.startswith('rediss://')):
         redis_url = 'redis://' + redis_url
-    m = re.search(r'redis://([^:@\?]*):([^:@\?]*)@(.*)', redis_url)
+    m = re.search(r'(rediss?://)([^:@\?]*):([^:@\?]*)@(.*)', redis_url)
     if m:
-        redis_username = m.group(1)
-        redis_password = m.group(2)
-        redis_url = 'redis://' + m.group(3)
+        redis_username = m.group(2)
+        redis_password = m.group(3)
+        redis_url = m.group(1) + m.group(4)
     else:
         redis_username = None
-        m = re.search(r'redis://([^:@\?]*)@(.*)', redis_url)
+        m = re.search(r'rediss?://([^:@\?]*)@(.*)', redis_url)
         if m:
             redis_password = m.group(1)
         else:
@@ -863,7 +863,7 @@ def parse_redis_uri():
         redis_db = 0
 
     redis_host = re.sub(r'\?.*', '', redis_url)
-    redis_host = re.sub(r'^redis://', r'', redis_host)
+    redis_host = re.sub(r'^rediss?://', r'', redis_host)
     m = re.search(r'/([0-9]+)', redis_host)
     if m:
         redis_db = int(m.group(1))
@@ -876,12 +876,42 @@ def parse_redis_uri():
         redis_port = '6379'
 
     redis_offset = daconfig.get('redis database offset', redis_db)
+    if redis_url.startswith('rediss://'):
+        redis_ssl = True
+        directory = daconfig.get('cert install directory', '/etc/ssl/docassemble')
+        redis_ca_cert = os.path.join(directory, 'redis_ca.crt')
+        redis_cert = os.path.join(directory, 'redis.crt')
+        redis_key = os.path.join(directory, 'redis.key')
+        if not os.path.isfile(redis_ca_cert):
+            redis_ca_cert = None
+        if not os.path.isfile(redis_cert):
+            redis_cert = None
+        if not os.path.isfile(redis_key):
+            redis_key = None
+        if redis_ca_cert is None and (redis_cert is None or redis_key is None):
+            redis_ssl = False
+            redis_url = re.sub(r'^rediss?://', r'redis://', redis_url)
+            sys.stderr.write("Error configuring Redis: certificates not found\n")
+    else:
+        redis_ssl = False
+        redis_ca_cert = None
+        redis_cert = None
+        redis_key = None
     redis_cli = 'redis-cli'
     if redis_host != 'localhost' or redis_port != '6379':
         redis_cli += ' -h ' + redis_host + ' -p ' + redis_port
     if redis_password is not None:
         redis_cli += ' -a ' + redis_password
-    return (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli)
+    ssl_opts = {}
+    if redis_ssl:
+        if redis_ca_cert is not None:
+            redis_cli += ' --tls --cacert ' + json.dumps(redis_ca_cert)
+            ssl_opts['ssl_ca_certs'] = redis_ca_cert
+        else:
+            redis_cli += ' --tls --cert ' + json.dumps(redis_cert) + ' --key ' + json.dumps(redis_key)
+            ssl_opts['ssl_certfile'] = redis_cert
+            ssl_opts['ssl_keyfile'] = redis_key
+    return (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts)
 
 def noquote(string):
     if isinstance(string, str):
