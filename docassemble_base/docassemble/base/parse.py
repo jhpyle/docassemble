@@ -1951,6 +1951,13 @@ class Question:
                 self.interview.options['labels above'] = bool(data['features']['labels above fields'])
             if 'send question data' in data['features']:
                 self.interview.options['send question data'] = bool(data['features']['send question data'])
+            if 'custom datatypes to load' in data['features']:
+                if isinstance(data['features']['custom datatypes to load'], str):
+                    data['features']['custom datatypes to load'] = [data['features']['custom datatypes to load']]
+                if isinstance(data['features']['custom datatypes to load'], list):
+                    for item in data['features']['custom datatypes to load']:
+                        if isinstance(item, str) and item not in standard_types and item in docassemble.base.functions.custom_types:
+                            self.interview.custom_data_types.add(item)
             if 'checkin interval' in data['features']:
                 if not isinstance(data['features']['checkin interval'], int):
                     raise DAError("A features section checkin interval entry must be an integer." + self.idebug(data))
