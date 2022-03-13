@@ -769,6 +769,21 @@ elif [ "$PGRUNNING" = false ] && [ "$DBTYPE" == "postgresql" ]; then
     export PGUSER="${DBUSER}"
     export PGPASSWORD="${DBPASSWORD}"
     export PGDATABASE="postgres"
+    if [ "$DBPORT" != "" ]; then
+	export PGPORT="${DBPORT}"
+    fi
+    if [ "$DBSSLMODE" != "" ]; then
+	export PGSSLMODE="${DBSSLMODE}"
+    fi
+    if [ "$DBSSLCERT" != "" ]; then
+	export PGSSLCERT="/etc/ssl/docassemble/${DBSSLCERT}"
+    fi
+    if [ "$DBSSLKEY" != "" ]; then
+	export PGSSLKEY="/etc/ssl/docassemble/${DBSSLKEY}"
+    fi
+    if [ "$DBSSLROOTCERT" != "" ]; then
+	export PGSSLROOTCERT="/etc/ssl/docassemble/${DBSSLROOTCERT}"
+    fi
     echo "initialize: Testing if remote SQL server is ready" >&2
     while ! pg_isready -q; do sleep 1; done
     echo "initialize: Testing if remote SQL database exists" >&2
@@ -781,6 +796,11 @@ elif [ "$PGRUNNING" = false ] && [ "$DBTYPE" == "postgresql" ]; then
     unset PGUSER
     unset PGPASSWORD
     unset PGDATABASE
+    unset PGPORT
+    unset PGSSLMODE
+    unset PGSSLCERT
+    unset PGSSLKEY
+    unset PGSSLROOTCERT
 fi
 
 echo "initialize: Copying SSL certificates into position, if necessary" >&2

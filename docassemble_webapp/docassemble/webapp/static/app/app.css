@@ -425,6 +425,10 @@ div.playgroundbox table td.playground-warning-box {
     border-radius: 4px;
 }
 
+textarea.datextarea {
+    resize: both;
+}
+
 textarea.dalogs {
     display: block;
     margin: 0;

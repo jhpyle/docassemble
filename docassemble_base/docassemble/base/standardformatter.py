@@ -2659,7 +2659,7 @@ def input_for(status, field, wide=False, embedded=False):
                 rows = noquote(str(status.extras['rows'][field.number]))
             else:
                 rows = '"4"'
-            output += '<textarea alt=' + fix_double_quote(word("Input box")) + ' class="form-control' + extra_class + '"' + title_text + ' rows=' + rows + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + disable_others_data + '>'
+            output += '<textarea alt=' + fix_double_quote(word("Input box")) + ' class="form-control datextarea' + extra_class + '"' + title_text + ' rows=' + rows + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + disable_others_data + '>'
             if defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)):
                 output += defaultvalue
             output += '</textarea>'

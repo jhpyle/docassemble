@@ -25044,13 +25044,17 @@ def api_session_back():
 
 def transform_json_variables(obj):
     if isinstance(obj, str):
-        if re.search(r'^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T', obj):
+        if re.search(r'^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]', obj):
             try:
                 return docassemble.base.util.as_datetime(dateutil.parser.parse(obj))
             except:
                 pass
-        else:
-            return obj
+        elif re.search(r'^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]', obj):
+            try:
+                return datetime.time.fromisoformat(obj)
+            except:
+                pass
+        return obj
     if isinstance(obj, (bool, int, float)):
         return obj
     if isinstance(obj, dict):
@@ -25309,7 +25313,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
         release_lock(session_id, yaml_filename)
     return data
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False, post_setting=True, use_lock=False, encode=False):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False, post_setting=True, use_lock=False, encode=False, process_objects=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
     device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
@@ -25328,6 +25332,8 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         if use_lock:
             release_lock(session_id, yaml_filename)
         raise Exception("Unable to obtain interview dictionary.")
+    if process_objects:
+        variables = transform_json_data(variables)
     pre_assembly_necessary = False
     for key, val in variables.items():
         if contains_volatile.search(key):
@@ -28594,7 +28600,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          stash_data=stash_data,
                                          retrieve_stashed_data=retrieve_stashed_data,
                                          secure_filename_spaces_ok=secure_filename_spaces_ok,
-                                         secure_filename=secure_filename)
+                                         secure_filename=secure_filename,
+                                         transform_json_variables=transform_json_variables)
 
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
