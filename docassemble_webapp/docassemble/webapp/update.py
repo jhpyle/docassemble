@@ -88,7 +88,7 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
     results = {}
     if full:
         sys.stderr.write("check_for_updates: 0.5 after " + str(time.time() - start_time) + " seconds\n")
-        for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2', 'azure-storage', 'Flask-User'):
+        for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2', 'azure-storage', 'Flask-User', 'Marisol'):
             result = db.session.execute(delete(Package).filter_by(name=package_name))
             if result.rowcount > 0:
                 db.session.commit()
@@ -133,6 +133,10 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
         if 'pdfminer' in here_already:
             sys.stderr.write("check_for_updates: uninstalling pdfminer\n")
             uninstall_package(DummyPackage('pdfminer'), start_time=start_time)
+            changed = True
+        if 'Marisol' in here_already:
+            sys.stderr.write("check_for_updates: uninstalling Marisol\n")
+            uninstall_package(DummyPackage('Marisol'), start_time=start_time)
             changed = True
         if 'pdfminer3k' in here_already:
             sys.stderr.write("check_for_updates: uninstalling pdfminer3k\n")
