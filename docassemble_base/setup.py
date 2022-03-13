@@ -128,7 +128,7 @@ install_requires = [
     "pathlib==1.0.1",
     "pdfminer.six==20201018",
     "phonenumbers==8.12.22",
-    "Pillow==9.0.0",
+    "Pillow==9.0.1",
     "pip==21.1",
     "pkginfo==1.7.0",
     "pluggy==0.13.1",
