@@ -835,6 +835,36 @@ fi
 if [ ! -f "${DA_ROOT}/certs/postgresql.crt" ] && [ -f "${DA_ROOT}/certs/postgresql.crt.orig" ]; then
     mv "${DA_ROOT}/certs/postgresql.crt.orig" "${DA_ROOT}/certs/postgresql.crt"
 fi
+if [ ! -f "${DA_ROOT}/certs/apache.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/apache.key.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/apache.key.orig" "${DA_ROOT}/certs/apache.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/apache.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/apache.crt.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/apache.crt.orig" "${DA_ROOT}/certs/apache.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/apache.ca.pem" ] && [ -f "${DA_ROOT}/config/defaultcerts/apache.ca.pem.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/apache.ca.pem.orig" "${DA_ROOT}/certs/apache.ca.pem"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/nginx.key.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/nginx.key.orig" "${DA_ROOT}/certs/nginx.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/nginx.crt.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/nginx.crt.orig" "${DA_ROOT}/certs/nginx.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.ca.pem" ] && [ -f "${DA_ROOT}/config/defaultcerts/nginx.ca.pem.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/nginx.ca.pem.orig" "${DA_ROOT}/certs/nginx.ca.pem"
+fi
+if [ ! -f "${DA_ROOT}/certs/exim.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/exim.key.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/exim.key.orig" "${DA_ROOT}/certs/exim.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/exim.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/exim.crt.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/exim.crt.orig" "${DA_ROOT}/certs/exim.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/postgresql.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/postgresql.key.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/postgresql.key.orig" "${DA_ROOT}/certs/postgresql.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/postgresql.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/postgresql.crt.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/postgresql.crt.orig" "${DA_ROOT}/certs/postgresql.crt"
+fi
 
 python -m docassemble.webapp.install_certs "${DA_CONFIG_FILE}" || exit 1
 
