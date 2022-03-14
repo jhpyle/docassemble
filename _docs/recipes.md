@@ -536,7 +536,7 @@ question: |
   Share this link with the signer.
 subquestion: |
   Suggested content for e-mailing to the signer:
-    
+
   > I need you to sign a document.  You can
   > sign it using a touchscreen or with a
   > mouse.  To see the document and start
@@ -552,7 +552,7 @@ question: |
 subquestion: |
   Click the document image below to read the document
   before signing it.
-  
+
   ${ draft_document.pdf }
 field: agrees_to_sign
 continue button label: I agree to sign
@@ -612,7 +612,7 @@ attachment:
   valid formats:
     - pdf
   docx template file:
-    code: template_file  
+    code: template_file
 ---
 event: final_screen
 prevent going back: True
@@ -2138,6 +2138,56 @@ counters for the early parts of the interview would be repeatedly
 incremented every time the screen loaded.  Using the `milestone`
 dictionary to track whether the milestone has been reached ensures
 that the counters are not incremented duplicatively.
+
+# <a name="headless"></a>Headless document assembly
+
+If you want to use the document assembly features of **docassemble**
+without the user interface, you can use the API to drive a "headless"
+interview.
+
+For example, you could use an interview like this:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  json_response(the_document.number)
+---
+attachment:
+  variable name: the_document
+  content: |
+    Your favorite fruit is ${ favorite_fruit }.
+{% endhighlight %}
+
+Then you could drive the interview with the API using code like this:
+
+{% highlight python %}
+root = 'https://docassemble.myhostname.com/api'
+headers = {'X-API-Key': 'XXXSECRETAPIKEYXXX'}
+username = 'jsmith'
+password = 'xxxsecretpasswordxxx'
+i = 'docassemble.mypackage:data/questions/headless.yml'
+
+r = requests.get(root + '/secret', params={'username': username, 'password': password}, headers=headers)
+if r.status_code != 200:
+    sys.exit(r.text)
+secret = r.json()
+
+r = requests.get(root + '/session/new', params={'secret': secret, 'i': i}, headers=headers)
+if r.status_code != 200:
+    sys.exit(r.text)
+session = r.json()['session']
+
+r = requests.post(root + '/session', json={'secret': secret, 'i': i, 'session': session, 'variables': {'favorite_fruit': 'apple'}}, headers=headers)
+if r.status_code != 200:
+    sys.exit(r.text)
+file_number = r.json()
+
+r = requests.get(root + '/file/' + str(file_number), params={'i': i, 'session': session, 'secret': secret}, headers=headers)
+if r.status_code != 200:
+    sys.exit(r.text)
+with open('the_file.pdf', 'wb') as fp:
+    fp.write(r.content)
+{% endhighlight %}
 
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if

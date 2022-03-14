@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.24](https://github.com/jhpyle/docassemble/releases/tag/v1.3.24) - 2022-03-14
+
+### Added
+- The `custom datatypes to load` directive under `features`.
+- The `set_variables()` function.
+- The `process_objects` parameter for `set_session_variables`.
+
+### Changed
+- Support for importing and exporting `datetime.date` and
+  `datetime.time` objects in the JSON representation of objects.
+- `input type: area` text boxes are resizable in both dimensions.
+
+### Fixed
+- Issue with `show if` and `labels above fields`.
+- Issues with using SSL for external PostgreSQL and Redis connections.
+
 ## [1.3.23](https://github.com/jhpyle/docassemble/releases/tag/v1.3.23) - 2022-03-07
 
 ### Changed

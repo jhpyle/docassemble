@@ -2308,6 +2308,25 @@ features:
   popover trigger: hover
 ```
 
+## <a name="custom datatypes to load"></a>Loading custom datatypes
+
+By default, **docassemble** will load the JavaScript for any
+`CustomDataType` data types that are used in the interview
+YAML. However, if fields are created by Python code, **docassemble**
+cannot detect which `CustomDataType` data types will be used. In this
+circumstance, you can manually specify which custom datatypes to load
+using the `custom datatypes to load` feature.
+
+```
+features:
+  custom datatypes to load:
+    - ssn
+    - iso639language
+```
+
+This will cause the web application to run the JavaScript for the
+`ssn` and `iso639language` custom data types.
+
 [Bootstrap popover feature]: https://getbootstrap.com/docs/4.0/components/popovers/
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [infinite loop protection]: {{ site.baseurl }}/docs/config.html#loop limit

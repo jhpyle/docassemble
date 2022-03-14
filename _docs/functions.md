@@ -215,6 +215,68 @@ After resetting a `mandatory` block, you may want to call
 [`re_run_logic()`].  Otherwise, the `mandatory` block will not have a
 chance to run again until the next time the screen loads.
 
+## <a name="set_variables"></a>set_variables()
+
+The `set_variables()` function is somewhat similar to `define()`,
+except that instead of setting a particular variable name, it simply
+updates the interview answers using a dictionary that you provide as
+input, where the dictionary keys represent variable names and the
+dictionary values represent values of those variables.  For example,
+if `trustee` is an [`Individual`], and you do:
+
+{% highlight python %}
+set_variables({'plaintiff': trustee, 'favorite_fruit': 'apple'})
+{% endhighlight %}
+
+then this will have the same effect as doing:
+
+{% highlight python %}
+plaintiff = trustee
+favorite_fruit = 'apple'
+{% endhighlight %}
+
+`set_variables()` accepts an optional keyword parameter
+`process_objects`, which can be set to `True` or `False`. The default
+is `False`. If `process_objects` is `True`, then the dictionary will
+be transformed from **docassemble**'s "serializable" representation of
+objects (see the [`.as_serializable()`] method) into actual Python
+objects.  For example, suppose you run the following code:
+
+{% highlight python %}
+my_json = """\
+{
+  "user": {
+    "_class": "docassemble.base.util.Individual",
+    "birthdate": "2000-04-01T00:00:00-05:00",
+    "favorite_fruit": "apple",
+    "instanceName": "user",
+    "name": {
+      "_class": "docassemble.base.util.IndividualName",
+      "instanceName": "user.name",
+      "uses_parts": true
+    }
+  }
+}
+"""
+set_variables(json.loads(my_json), process_objects=True)
+{% endhighlight %}
+
+This will have the effect of defining `user` as an [`Individual`]
+object, where `user.name` is an [`IndividualName`] object and
+`user.birthdate` is a [`DADateTime`] object.
+
+When `process_objects` is `True`, any dictionary with a `_class` item
+is converted into a Python object of the class represented by
+`_class`, and the other items of the dictionary are converted into
+attributes of that object.  In addition, if any string looks like a
+date or time (e.g. `2022-01-01`, `23:15:00`), an attempt will be made
+to convert it into a [`DADateTime`] or [`datetime.time`] object.
+
+Note that **docassemble**'s "JSON representation" of objects is not a
+full-featured object serialization method. It cannot do everything
+that Python's `pickle` can do. At most, `process_objects=True` can be
+used to import basic **docassemble** data structures.
+
 ## <a name="re_run_logic"></a>re_run_logic()
 
 The `re_run_logic()` function causes code to stop executing and causes
@@ -1570,6 +1632,12 @@ subquestion: |
 
 For more information about what the `[QR ...]` [markup] statement
 does, see the [QR markup documentation].
+
+Since this function returns `[QR ...]` [markup], if you want to use it
+within a [`docx template file`], you will need to use the `markdown`
+filter:
+
+> {% raw %}{%p qr_code(url) | markdown %}{% endraw %}
 
 Note that if you want to include a QR code that points to an interview
 or an interview action, there are shorthand functions for that.  See
@@ -4551,8 +4619,8 @@ same as the user who ran `create_session()`.
 ## <a name="set_session_variables"></a>set_session_variables()
 
 The [`set_session_variables()`] function allows you to write changes
-to any [interview session dictionary] (except the current interview session).  It has three required
-parameters: an interview filename (e.g.,
+to any [interview session dictionary] (except the current interview
+session).  It has three required parameters: an interview filename (e.g.,
 `'docassemble.demo:data/questions/questions.yml'`), a session ID
 (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`), and a [Python
 dictionary] containing the variables you want to set.
@@ -4601,6 +4669,15 @@ current user is used.
 It also accepts the optional keyword parameter `overwrite`, which can
 be set to `True` if you do not want to create a new step in the
 interview when the function runs.
+
+The [`set_session_variables()`] function accepts the optional keyword
+parameter `process_objects`, which can be set to `True` or
+`False`. The default is `False`. If set to `True`, the [Python
+dictionary] that you pass to [`set_session_variables()`] will be
+treated as a "serializable" representation of **docassemble** objects.
+For more information about how this works, see the documentation for
+the [`set_variables()`] function, which also accepts a
+`process_objects` keyword parameter.
 
 For an [API] version of this function, see the [POST method of
 `/api/session`].
@@ -7949,3 +8026,6 @@ $(document).on('daPageLoad', function(){
 [fax provider]: {{ site.baseurl }}/docs/config.html#fax provider
 [permission]: {{ site.baseurl }}/docs/config.html#permissions
 [permissions]: {{ site.baseurl }}/docs/config.html#permissions
+[`.as_serializable()`]: {{ site.baseurl }}/docs/objects.html#DAObject.as_serializable
+[`datetime.time`]: https://docs.python.org/3/library/datetime.html#datetime.time
+[`set_variables()`]: set_variables

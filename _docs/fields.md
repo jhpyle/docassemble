@@ -1236,6 +1236,24 @@ deliberately bypass client-side input validation.  So even if you
 have a [jQuery Validation Plugin] rule that works, it is a good idea
 to include a `validate()` class method.
 
+Python classes, when loaded into the Python web application, are
+loaded globally across all threads of the server; they are not loaded
+just for one interview or just for one session. Likewise, the `name`
+attribute associated with a `CustomDataType` class is also global on
+the server. For this reason, you may wish to "namespace" your
+`CustomDataType` `name`s, using a name like `aag_ssn` instead of of
+`ssn` (e.g., if your company name is AAG). That way, if a number of
+different packages are used together, it is less likely there will be
+"name collision."
+
+By default, **docassemble** will load the JavaScript for any
+`CustomDataType` data types that are used in the interview
+YAML. However, if fields are created by Python code, **docassemble**
+cannot detect what `CustomDataType` data types will be used. In this
+circumstance, you can manually list them under [`custom datatypes to
+load`] specifier under [`features`], and the necessary `JavaScript`
+will be loaded.
+
 ### <a name="custom datatype explanation"></a>How custom data types work
 
 When the server starts, it looks through all of the packages under the
@@ -3204,3 +3222,4 @@ why this needs to be done manually as opposed to automatically:
 [`labels above fields`]: {{ site.baseurl }}/docs/initial.html#labels above fields
 [`label above field`]: #label above field
 [Social Security number]: https://en.wikipedia.org/wiki/Social_Security_number
+[`custom datatypes to load`]: {{ site.baseurl }}/docs/initial.html#custom datatypes to load

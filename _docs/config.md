@@ -1426,7 +1426,7 @@ want to set it to `false` if backing up the SQL database could lead to
 the exhaustion of hard drive space.
 
 If you want to connect to a [PostgreSQL] server using an SSL
-certificate, you can use the `ssl mode`, `ssl cert`, `ssl key`, and
+certificate, you can use the `ssl mode`, `ssl cert`, `ssl key`, and/or
 `ssl root cert`:
 
 {% highlight yaml %}
@@ -1451,10 +1451,13 @@ The `ssl cert`, `ssl key`, and `ssl root cert` parameters correspond
 with the `sslcert`, `sslkey`, and `sslrootcert` parameters of [libpq].
 These parameters must refer to the names of files present in the
 **docassemble** certificates directory.  If you are using [S3] or
-[Azure Blob Storage], these files are stored under `certs`; otherwise,
-the files must be present in `/usr/share/docassemble/certs/`.  Note
-that if you change these files, you will need to stop and start you
-**docassemble** server for the changes to be recognized.
+[Azure Blob Storage], these files are stored under `certs/`;
+otherwise, the files must be present in
+`/usr/share/docassemble/certs/` at the time the system initializes
+(from there, they will be copied into other directories). For
+instructions on loading your own certificates when using [Docker], see
+[managing certificates with Docker]. See also the [`certs`]
+Configuration directive.
 
 ## <a name="sql ping"></a>Avoiding SQL errors
 
@@ -1574,31 +1577,30 @@ The default value is `/usr/share/docassemble/webapp/docassemble.wsgi`.
 ## <a name="certs"></a>Path to SSL certificates
 
 The `certs` directive indicates a central location where SSL
-certificates for the web server can be found.  The location can be a
-file path, an [S3] path, or an [Azure blob storage] path.  This is
-only relevant if you are using [HTTPS].
+certificates can be found.  The location can be a file path, an [S3]
+path (beginning with `s3://`), or an [Azure blob storage] path
+(beginning with `blob://`). In most cases, you should leave
+this directive alone.
 
-For example, you might keep your certificates on a network drive:
+You might keep your certificates on a network drive:
 
 {% highlight yaml %}
 certs: /netmount/files/docassemble/certs
 {% endhighlight %}
 
-By default, the [NGINX] HTTPS configuration contains:
+When the server is running, it expects certificates to reside in
+`/etc/ssl/docassemble`. For example, by default, the [NGINX] HTTPS
+configuration contains:
 
 {% highlight text %}
 ssl_certificate /etc/ssl/docassemble/nginx.crt;
 ssl_certificate_key /etc/ssl/docassemble/nginx.key;
 {% endhighlight %}
 
-When using a [multi-server arrangement] or [Docker], the [supervisor]
-process on each web server executes the
-[`docassemble.webapp.install_certs`] module during the
-[startup process].  This module copies certificates from the location
-indicated by `certs` to `/etc/ssl/docassemble` before starting the web
-server.  This is a convenience feature.  Otherwise, you would have to
-manually install the SSL certificates on every new **docassemble** web
-server you create.
+The [supervisor] process executes the
+[`docassemble.webapp.install_certs`] module during the [startup
+process].  This module copies certificates from the location indicated
+by `certs` to `/etc/ssl/docassemble` before starting the server.
 
 The value of `certs` can be a file path, an [S3]<span></span>
 [URI] (e.g., `s3://exampledotcom/certs`), or an
@@ -1610,14 +1612,23 @@ If you leave the `certs` setting undefined (which is recommended),
 **docassemble** will look in `/usr/share/docassemble/certs` if the
 [`s3`] and [`azure`] settings are not enabled.
 
-If [`s3`] is enabled, it will look for [S3] keys with the prefix
-`certs/` in the `bucket` defined in the [`s3`] configuration.
+If you are using [Docker] and you are not using [S3] or [Azure blob
+storage], you can create a volume, copy your certificates there, and
+then mount that volume as `/usr/share/docassemble/certs` when you
+execute `docker run`. For more information on how to do this, see
+[managing certificates with Docker].
+
+If [`s3`] is enabled, **docassemble** will look for [S3] keys with the
+prefix `certs/` in the `bucket` defined in the [`s3`] configuration.
 
 If [`azure`] is enabled, it will look for [Azure blob storage] objects
 with the prefix `certs/` in the `container` defined in the [`azure`]
 configuration.
 
-Here is an example.  Install [`s4cmd`] if you have not done so already:
+You can upload certificate files to [S3] or [Azure blob storage] using
+the web interface. It is also possible to copy certificate files to S3
+from the command line.  For example, if you are using Linux locally,
+install [`s4cmd`] (if you have not done so already):
 
 {% highlight bash %}
 apt-get install s4cmd
@@ -1638,10 +1649,6 @@ are stored in another location, you can specify a different location:
 {% highlight yaml %}
 certs: s3://otherbucket/certificates
 {% endhighlight %}
-
-If you want to use a location other than `/etc/ssl/docassemble`, you
-can change the [`cert install directory`] setting (see below).  You will
-also, of course, need to change the web server configuration file.
 
 ## <a name="mail"></a>E-mail configuration
 
@@ -3720,19 +3727,6 @@ with `@mail.example.com` at the end.
 If `incoming mail domain` is not specified, the value of
 [`external hostname`] will be used.
 
-## <a name="cert install directory"></a>Location of SSL certificates
-
-The `cert install directory` directive indicates the directory where
-the web server expects SSL certificates to reside.  By default, this
-is `/etc/ssl/docassemble`, but you can change it to wherever the web
-server will look for SSL certificates.  This is only applicable if you
-are using HTTPS.
-
-In a [multi-server arrangement] or [Docker], a [supervisor] process
-will run as root upon startup that will copy files from the [`certs`]
-directory to the `cert install directory` and set appropriate file
-permissions on the certificates.
-
 ## <a name="allow updates"></a>Whether software updating is allowed
 
 By default, a user with privileges of administrator or developer can
@@ -3808,7 +3802,27 @@ The `redis` directive needs to be written in the form of a
 `redis://192.168.0.2?password=xxsecretxx`.  You can specify a
 username along with the password
 (`redis://jsmith:xxsecretxx@192.168.0.2`), but [Redis] does not use
-usernames, so it will be ignored.
+usernames, so this may not work.
+
+To use SSL, use the prefix `rediss://` instead of `redis://`. You can
+provide your own certificates to Redis if necessary. If you are using
+[S3] or [Azure blob storage], you need to copy the certificate files
+to `certs/` in the bucket or container. Otherwise, you need to make
+sure the certificate files are in `/usr/share/docassemble/certs` when
+the server initializes (from there, the files are copied into working
+directories).  For more information, see [managing certificates with
+Docker] and [`certs`]. The certificate files must have the following
+names, which correspond with particular [parameters for connecting to
+Redis with Python].
+
+* `redis_ca.crt` - for the `ssl_ca_certs` file (certificate authority certificate)
+* `redis.crt` - for the `ssl_certfile` file (certificate)
+* `redis.key` - for the `ssl_keyfile` (certificate key)
+
+If the URL begins with `rediss://`, the connection is initialized with
+the parameter `ssl=True`. If any of the above files are present, the
+`ssl_ca_certs`, `ssl_certfile`, and/or `ssl_keyfile` parameters will
+be used as well.
 
 If you are using [Docker] with [S3] or [Azure blob storage], and you
 omit the `redis` directive or set it to `null`, then **docassemble**
@@ -4720,6 +4734,9 @@ not be able to use the site.  If you are using a load balancer or a
 proxy server that provides SSL termination, you must set `behind https
 load balancer` to `True`.
 
+Note that if you set `allow embedding: False`, users will have trouble
+logging in through third-party single-sign-on mechanisms.
+
 See also [`cross site domains`].
 
 ## <a name="pagination limit"></a>Pagination limit
@@ -5262,7 +5279,6 @@ and Facebook API keys.
 [`appname`]: #appname
 [PYTHONUSERBASE]: https://docs.python.org/3.8/using/cmdline.html#envvar-PYTHONUSERBASE
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
-[`cert install directory`]: #cert install directory
 [HTTPS]: {{ site.baseurl }}/docs/docker.html#https
 [startup process]: {{ site.github.repository_url }}/blob/master/Docker/initialize.sh
 [URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
@@ -5524,3 +5540,6 @@ and Facebook API keys.
 [unoconv]: https://github.com/unoconv/unoconv
 [system upgrade]: {{ site.baseurl }}/docs/docker.html#upgrading
 [`/api/login_url`]: {{ site.baseurl }}/docs/api.html#login_url
+[managing certificates with Docker]: {{ site.baseurl }}/docs/docker.html#own certificates
+[Telnyx]: https://telnyx.com/
+[parameters for connecting to Redis with Python]: https://redis-py.readthedocs.io/en/stable/connections.html

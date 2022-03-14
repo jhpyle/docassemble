@@ -898,7 +898,7 @@ your container for the new configuration to take effect.
 * <a name="DACELERYWORKERS"></a>`DACELERYWORKERS`: By default, the
   number of Celery workers is based on the number of CPUs on the
   machine.  If you want to set a different value, set
-  `DACELERYWORKERS` to integer greater than or equal to 1.  See the 
+  `DACELERYWORKERS` to integer greater than or equal to 1.  See the
   [`celery processes`] configuration directive.
 * <a name="SERVERADMIN"></a>`SERVERADMIN`: If your **docassemble** web
   server generates an error, the error message will contain an e-mail
@@ -1314,9 +1314,13 @@ when you `run` the `jhpyle/docassemble` image again, docassemble will
 keep running where it left off.
 
 If you are using [HTTPS] with your own certificates (as opposed to
-using [Let's Encrypt]), you can use a persistent volume to provide the
-certificates to the [Docker] container.  Just add `-v
-dacerts:/usr/share/docassemble/certs` to your [`docker run`] command.
+using [Let's Encrypt]), or you need to provide other SSL certificates
+to **docassemble** (for example, for PostgreSQL and/or Redis
+encryption) you can use a persistent volume to provide the
+certificates to the [Docker] container; add `-v
+dacerts:/usr/share/docassemble/certs` to your [`docker run`]
+command. For more information on creating a persistent volume for SSL
+certificates, see [below](#own certificates).
 
 To see what volumes exist on your [Docker] system, you can run:
 
@@ -1324,26 +1328,90 @@ To see what volumes exist on your [Docker] system, you can run:
 docker volume ls
 {% endhighlight %}
 
-[Docker] volumes are actual directories on the file system.  To find
-the path of a given volume, use [`docker volume inspect`]:
+A volume will be created when you run `docker run` with the `-v`
+option. For example, the `docker run` command above specified `-v
+dabackup:/usr/share/docassemble/backup`. If a volume called `dabackup`
+does not already exist, it will be created, and the
+`jhpyle/docassemble` container will initialize its contents. The
+`dabackup` volume will be associated with the directory
+`/usr/share/docassemble/backup` inside the container.  The `docker
+volume ls` command can be used to list the files inside of a
+volume. `docker cp` can be used to copy files from the host to the
+`/usr/share/docassemble/backup` folder.
+
+You might want to initialize a volume before starting your
+**docassemble** server, for example in order to provide certificates
+to **docassemble**. For example, to create a volume called `dacerts`,
+you can `docker run` the minimal `busybox` container with the volume
+mounted to `/data`:
 
 {% highlight bash %}
-docker volume inspect dabackup
+docker run -v dacerts:/data --name deleteme busybox true
 {% endhighlight %}
 
-For example, if you are using [HTTPS] with your own certificates, and
-you need to update the certificates your server should use, you can
-find the path where the `dacerts` volume lives (`docker volume inspect
-dacerts`), copy your certificates to that path (`cp mycertificate.key
-/var/lib/docker/volumes/dacerts/data/docassemble.key`), and then stop
-the container (`docker stop -t 600 <containerid>`) and start it again
-(`docker start <containerid>`).
+Then you can use `docker cp` to copy files to it:
+
+{% highlight bash %}
+docker cp redis.crt deleteme:/data/
+docker cp redis.key deleteme:/data/
+{% endhighlight %}
+
+Then you can delete the container, as it is no longer needed:
+
+Now delete the [BusyBox] container.  (The volume `dacerts` will not be
+deleted.)
+
+{% highlight bash %}
+docker rm deleteme
+{% endhighlight %}
+
+Now that the `dacerts` volume has already been created on the host, if
+you do:
+
+{% highlight bash %}
+docker run --env-file=env.list \
+-v dabackup:/usr/share/docassemble/backup \
+-v dacerts:/usr/share/docassemble/certs \
+-d -p 80:80 -p 443:443 --stop-timeout 600 \
+jhpyle/docassemble
+{% endhighlight %}
+
+then the directory `/usr/share/docassemble/certs` will already be
+prepopulated when **docassemble** starts.
+
+If you want to see the files in the `dacerts` volume, do:
+
+{% highlight bash %}
+docker volume ls dacerts
+{% endhighlight %}
+
+If you want to delete the `dacerts` volume, do:
+
+{% highlight bash %}
+docker volume rm dacerts
+{% endhighlight %}
 
 To delete all of the volumes, do:
 
 {% highlight bash %}
 docker volume rm $(docker volume ls -qf dangling=true)
 {% endhighlight %}
+
+Docker volumes are powerful but complicated. If you want to use them,
+you can read about them in the Docker documentation and other places
+on the internet.
+
+It is recommended that you do not create Docker volumes for
+directories other than `/usr/share/docassemble/certs` and
+`/usr/share/docassemble/backup`. If you try to mount other directories
+as volumes, you might experience hard-to-debug problems. Depending on
+the architecture, the directories might cause the container to
+malfunction because certain file system features that the software
+depends on are not available. If you create a volume for a directory,
+your directory will supplant the directory that is present in the
+Docker image, so unless you populate the directory with the same files
+that the image provides, your **docassemble** server may be
+non-functional.
 
 Ultimately, the better [data storage] solution is to use cloud storage
 ([S3](#persistent s3), [Azure blob storage](#persistent azure)) because:
@@ -1739,20 +1807,22 @@ the `web` role.  If you use the [e-mail receiving] feature with
 [TLS encryption], the `mail` role also has to share the server with
 the `web` and `cron` roles.
 
-### <a name="without letsencrypt"></a>Without Let's Encrypt
+### <a name="own certificates"></a>Using your own certificates
+
+If you do not want to use Let's Encrypt to support HTTPS, or you have
+other SSL certificates that your server needs to use, you can pass
+your certificates to **docassemble**.
 
 Using your own SSL certificates with [Docker] requires that your SSL
 certificates reside within each container.  There are several ways to
-accomplish this:
+get your certificates into th:
 
 * Use [S3](#persistent s3) or [Azure blob storage](#persistent azure)
-  and upload the certificates to your bucket/container.
+  and upload the certificates to `certs/` in your bucket/container.
 * [Build your own private image] in which your SSL certificates are
-  placed in `Docker/ssl/nginx.key`, `Docker/ssl/nginx.crt`, and
-  `Docker/ssl/nginx.ca.pem`.  During the build process, these files
-  will be copied into `/usr/share/docassemble/certs`.
+  placed in `Docker/ssl`.  During the build process, these files will
+  be copied into `/usr/share/docassemble/certs`.
 * Use [persistent volumes] and copy the SSL certificate files
-  (`nginx.key` and `nginx.crt`)
   into the volume for `/usr/share/docassemble/certs` before starting
   the container.
 
@@ -1771,8 +1841,21 @@ The meaning of these files is as follows:
 * `nginx.key`: this file is generated at the time you create
   your certificate signing request.
 
-In order to make sure that these files are replicated on every web
-server, the [supervisor] will run the
+Other certificate files that **docassemble** uses include:
+
+* `exim.crt` - certificate for the Exim mail daemon
+* `exim.key` - certificate key for Exim mail daemon
+* `redis.crt` - certificate for an external Redis server
+* `redis.key` - certificate key for an external Redis server
+* `redis_ca.crt` - certificate authority certificate for an external
+  Redis server
+
+In addition, if your [`db`] configuration refers to an `ssl cert`,
+`ssl key`, or `ssl root cert`, these need to be the names of files
+that are present in certificate storage.
+
+In order to make sure that these certificates are replicated on every
+web server, the [supervisor] will run the
 `docassemble.webapp.install_certs` module before starting the web
 server.
 
@@ -1798,11 +1881,8 @@ persistent volume for the directory `/usr/share/docassemble/certs`,
 you can copy the SSL certificate files into that directory before
 starting the container.
 
-Note that the files need to be called `nginx.crt` and `nginx.key`,
-because this is what the standard web server configuration expects.
-
 If you are starting a new server using a [persistent volume], you can
-set up HTTPS with your own certificates as follows.
+set up your own certificates as follows.
 
 Create an `env.list` file like the following:
 
@@ -1829,6 +1909,9 @@ docker cp nginx.crt deleteme:/data/
 docker cp nginx.key deleteme:/data/
 {% endhighlight %}
 
+You may want to copy other certificates as well, for example for
+PostgreSQL or Redis.
+
 Now delete the [BusyBox] container.  (Your volume will not be
 deleted.)
 
@@ -1848,8 +1931,8 @@ docker run \
   -d -p 80:80 -p 443:443 jhpyle/docassemble
 {% endhighlight %}
 
-When it comes time to update the certificate files, save the new
-certificates as `nginx.crt` and `nginx.key`, and then do:
+When it comes time to update your NGINX certificate files, save the
+new certificates as `nginx.crt` and `nginx.key`, and then do:
 
 {% highlight bash %}
 docker cp nginx.crt a3970318cb38:/usr/share/docassemble/certs/
@@ -1866,18 +1949,18 @@ docker stop -t 600 a3970318cb38
 docker start a3970318cb38
 {% endhighlight %}
 
-Instead of restarting your container, you could instead `docker exec`
-into the container and do:
-
-{% highlight bash %}
-cp /usr/share/docassemble/certs/nginx.??? /etc/ssl/docassemble/
-supervisorctl restart nginx
-{% endhighlight %}
+This last step is important; the location
+`/usr/share/docassemble/certs/` is not a working directory, but a
+staging area. If the server is running, changing the files in that
+directory will not change the certificates that **docassemble**
+uses. You need to stop and start the container for
+`docassemble.webapp.install_certs` to copy the files to the correct
+working directories and for the services to restart using the new
+certificates.
 
 If you want to use different filesystem or cloud locations, the
 `docassemble.webapp.install_certs` module can be configured to use
-different locations.  See the [configuration] variables [`certs`] and
-[`cert install directory`].
+different locations.  See the [configuration] variable [`certs`].
 
 ## <a name="tls"></a>Using TLS for incoming e-mail
 
@@ -2281,7 +2364,6 @@ line), as the containers depend on the images.
 [IAM Console]: https://console.aws.amazon.com/iam
 [create your own Docker image]: #build
 [`certs`]: {{ site.baseurl }}/docs/config.html#certs
-[`cert install directory`]: {{ site.baseurl }}/docs/config.html#cert install directory
 [cron]: https://en.wikipedia.org/wiki/Cron
 [Python virtual environment]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 [configuration options]: #configuration options
@@ -2361,7 +2443,7 @@ line), as the containers depend on the images.
 [TLS]: https://en.wikipedia.org/wiki/Transport_Layer_Security
 [`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
 [git]: https://en.wikipedia.org/wiki/Git
-[without Let's Encrypt]: #without letsencrypt
+[without Let's Encrypt]: #own certificates
 [script]: {{ site.github.repository_url }}/blob/master/Docker/cron/docassemble-cron-weekly.sh
 [TLS encryption]: #tls
 [Azure Portal]: https://portal.azure.com/

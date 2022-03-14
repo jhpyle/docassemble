@@ -1072,7 +1072,7 @@ that nothing more needs to be done to populate the items in the group.
 You can still add more items to the list if you want to, using
 [`code` block]s.
 
-# Detailed explanation of gathering process
+# <a name="details"></a>Detailed explanation of gathering process
 
 At a very basic level, it is not complicated to gather a list of
 things from a user.  For example, you can do this:
@@ -1179,6 +1179,57 @@ and will return `True` when the list has been fully populated.  The
 Here is a complete example:
 
 {% include side-by-side.html demo="gather-fruit" %}
+
+# <a name="notrigger"></a>Avoiding triggering the gathering process
+
+**docassemble** implicitly calls `.gather()` in many circumstances,
+such as when you do `for item in my_list:`, `len(my_list)`, or
+`my_dict.items()`. In some situations, you may want to use a `DAList`,
+`DADict`, or `DASet` while the gathering process is still going on, or
+has not been started yet.
+
+To test whether a group has been gathered, you can call
+[`.has_been_gathered()`] on it. This will return `True` if the group
+has been gathered, and `False` otherwise.
+
+To test whether the gathering process has been started, you can access
+the [`.gathering_started`] attribute.
+
+To get the number of items in a group without triggering the gathering
+process, call [`.number_gathered()`]. This will return the number of
+items gathered so far.
+
+To sort a group even if it has not been fully gathered yet, call
+[`.sort_elements()`] instead of [`.sort()`].
+
+The `DAList`, `DADict`, and `DASet` objects have an attribute
+`.elements` that is a plain Python `list`, `dict`, or `set` containing
+the items in the group. To bypass the special features of `DAList`,
+`DADict`, and `DASet`, you can access `.elements` directly, and the
+list gathering process will not be triggered.
+
+When the gathering process is still going on and your group contains
+objects, `.elements` may contain one or more items that are not
+usable. For example, when the interview is in the process of asking
+for the fifth item in the group, you may want to show the user the
+first four items. However, if you try to loop over `.elements` and
+display information about each one, you may find yourself in a
+Catch-22 because your code expects attributes of the fifth item to be
+defined when those attributes are defined by the very same
+[`question`] you are trying to ask. Instead of accessing `.elements`,
+you can call [`.complete_elements()`]. This will return a `DAList`,
+`DADict`, or `DASet` containing only elements that are "complete."
+Whether an item is "complete" depends on whether the group has a
+[`complete_attribute`]. If the group has a [`complete_attribute`], an
+item in the group will be considered "complete" if the item has an
+attribute by the name of the [`complete_attribute`]. If the group does
+not have a [`complete_attribute`], an item will be considered
+"complete" if it can be reduced to text without encountering an
+undefined variable. For example, an [`Individual`] object can be
+reduced to text if the `.name.first` attribute is defined, so if a
+[`DAList`] called `my_list` contains several [`Individual`] objects,
+`my_list.complete_elements()` will return a [`DAList`] containing a
+only those objects where `.name.first` is defined.
 
 # <a name="for loop"></a>Using "for loops"
 
@@ -1642,6 +1693,7 @@ after it is defined.
 [`PartyList`]: {{ site.baseurl }}/docs/legal.html#PartyList
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`.number()`]: {{ site.baseurl }}/docs/objects.html#DAList.number
+[`.number_gathered()`]: {{ site.baseurl }}/docs/objects.html#DAList.number_gathered
 [Python interpreter]: https://docs.python.org/3.8/tutorial/interpreter.html
 [Python list]: https://docs.python.org/3.8/tutorial/datastructures.html
 [Python lists]: https://docs.python.org/3.8/tutorial/datastructures.html
@@ -1698,3 +1750,8 @@ after it is defined.
 [`income.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/income.py
 [Subclassing]: https://www.codesdope.com/python-subclass-of-a-class/
 [`words`]: {{ site.baseurl }}/docs/config.html#words
+[`.has_been_gathered()`]: {{ site.baseurl }}/docs/objects.html#DAList.has_been_gathered
+[`.sort_elements()`]: {{ site.baseurl }}/docs/objects.html#DAList.sort_elements
+[`.sort()`]: {{ site.baseurl }}/docs/objects.html#DAList.sort
+[`.gathering_started`]: {{ site.baseurl }}/docs/objects.html#DAList.gathering_started
+[`.complete_elements()`]: {{ site.baseurl }}/docs/objects.html#DAList.complete_elements

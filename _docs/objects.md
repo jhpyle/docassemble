@@ -1032,12 +1032,13 @@ by the argument.  For example, `thing.pronoun_possessive('reason')`
 returns `'its reason'`.
 
 <a name="DAObject.as_serializable"></a>The `.as_serializable()` method
-returns a representation of the object and its attributes.  Objects
-are converted to [Python dict]s, so that they can be serialized to
-[JSON].  The conversion is not reversible, and much information cannot
-be converted.  Nevertheless, this can be a useful way to access
-information in your objects in other systems.  See also the
-[`all_variables()`] function.
+returns a simplified representation of the object and its attributes.
+Objects are converted to [Python dict]s, so that they can be
+serialized to [JSON] or other formats.  The conversion is not
+reversible, and much information cannot be converted.  Nevertheless,
+this can be a useful way to convert the information in your objects
+into a form that can be digested by non-Python-based systems.  See
+also the [`all_variables()`] and [`set_variables()`] functions.
 
 <a name="DAObject.copy_shallow"></a>The `copy_shallow()` method
 creates a copy of the object and gives it a new intrinsic name.
@@ -6845,6 +6846,7 @@ the `_uid` of the table rather than the `id`.
 [`google maps api key`]: {{ site.baseurl }}/docs/config.html#google
 [`api key`]: {{ site.baseurl }}/docs/config.html#google
 [`all_variables()`]: {{ site.baseurl }}/docs/functions.html#all_variables
+[`set_variables()`]: {{ site.baseurl }}/docs/functions.html#set_variables
 [translation system]: {{ site.baseurl }}/docs/functions.html#translation
 [`docassemble.base.util.update_language_function()`]: {{ site.baseurl }}/docs/functions.html#linguistic
 [`docassemble.base.functions`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/functions.py
