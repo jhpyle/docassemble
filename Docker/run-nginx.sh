@@ -7,7 +7,7 @@ export DA_DEFAULT_LOCAL="local3.8"
 
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
-source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.base.read_config \"$DA_CONFIG_FILE\"" www-data | grep -e '^export LOCALE=' -e '^export DAHOSTNAME=' -e '^export EC2=' -e '^export BEHINDHTTPSLOADBALANCER=' -e '^export USELETSENCRYPT=' -e '^export DALOCATIONREWRITE=' -e '^export WSGIROOT=' -e '^export POSTURLROOT=' -e '^export DAMAXCONTENTLENGTH=' -e '^export DASSLCERTIFICATE=' -e '^export DASSLCERTIFICATEKEY=' -e '^export DASSLPROTOCOLS=' -e '^export DAWEBSOCKETSIP=' -e '^export DAWEBSOCKETSPORT=' -e '^export PORT=')
+source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.base.read_config \"$DA_CONFIG_FILE\"" www-data | grep -e '^export LOCALE=' -e '^export DAHOSTNAME=' -e '^export EC2=' -e '^export BEHINDHTTPSLOADBALANCER=' -e '^export USELETSENCRYPT=' -e '^export DALOCATIONREWRITE=' -e '^export WSGIROOT=' -e '^export POSTURLROOT=' -e '^export DAMAXCONTENTLENGTH=' -e '^export DASSLPROTOCOLS=' -e '^export DAWEBSOCKETSIP=' -e '^export DAWEBSOCKETSPORT=' -e '^export PORT=' -e '^export USEHTTPS=')
 
 set -- $LOCALE
 export LANG=$1

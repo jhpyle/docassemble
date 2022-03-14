@@ -142,7 +142,7 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	    cp /var/lib/redis/dump.rdb "${BACKUPDIR}/redis.rdb"
         fi
     elif [[ $CONTAINERROLE =~ .*:cron:.* ]] && [ "${REDIS:-redis://localhost}" != "redis://localhost" ]; then
-	$REDISCLI --rdb "${BACKUPDIR}/redis.rdb"
+	$REDISCLI --rdb "${BACKUPDIR}/redis.rdb" &> /dev/null
     fi
 
     if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then

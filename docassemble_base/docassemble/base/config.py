@@ -844,6 +844,8 @@ def parse_redis_uri():
     m = re.search(r'(rediss?://)([^:@\?]*):([^:@\?]*)@(.*)', redis_url)
     if m:
         redis_username = m.group(2)
+        if redis_username == '':
+            redis_username = None
         redis_password = m.group(3)
         redis_url = m.group(1) + m.group(4)
     else:
@@ -888,10 +890,6 @@ def parse_redis_uri():
             redis_cert = None
         if not os.path.isfile(redis_key):
             redis_key = None
-        if redis_ca_cert is None and (redis_cert is None or redis_key is None):
-            redis_ssl = False
-            redis_url = re.sub(r'^rediss?://', r'redis://', redis_url)
-            sys.stderr.write("Error configuring Redis: certificates not found\n")
     else:
         redis_ssl = False
         redis_ca_cert = None
@@ -904,12 +902,16 @@ def parse_redis_uri():
         redis_cli += ' -a ' + redis_password
     ssl_opts = {}
     if redis_ssl:
+        redis_cli += ' --tls'
+        ssl_opts['ssl'] = True
         if redis_ca_cert is not None:
-            redis_cli += ' --tls --cacert ' + json.dumps(redis_ca_cert)
+            redis_cli += '--cacert ' + json.dumps(redis_ca_cert)
             ssl_opts['ssl_ca_certs'] = redis_ca_cert
-        else:
-            redis_cli += ' --tls --cert ' + json.dumps(redis_cert) + ' --key ' + json.dumps(redis_key)
+        if redis_cert is not None:
+            redis_cli += '--cert ' + json.dumps(redis_cert)
             ssl_opts['ssl_certfile'] = redis_cert
+        if redis_key is not None:
+            redis_cli += ' --key ' + json.dumps(redis_key)
             ssl_opts['ssl_keyfile'] = redis_key
     return (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts)
 

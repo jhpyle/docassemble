@@ -393,6 +393,10 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DBPORT}}/'"${DBPORT:-null}"'/' \
         -e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX:-null}"'/' \
         -e 's/{{DBBACKUP}}/'"${DBBACKUP:-true}"'/' \
+        -e 's/{{DBSSLMODE}}/'"${DBSSLMODE:-null}"'/' \
+        -e 's/{{DBSSLCERT}}/'"${DBSSLCERT:-null}"'/' \
+        -e 's/{{DBSSLKEY}}/'"${DBSSLKEY:-null}"'/' \
+        -e 's/{{DBSSLROOTCERT}}/'"${DBSSLROOTCERT:-null}"'/' \
         -e 's#{{CONFIGFROM}}#'"${CONFIGFROM:-null}"'#' \
         -e 's/{{S3ENABLE}}/'"${S3ENABLE:-false}"'/' \
         -e 's#{{S3ACCESSKEY}}#'"${S3ACCESSKEY:-null}"'#' \
@@ -707,6 +711,71 @@ if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; 
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.cloud_register \"${DA_CONFIG_FILE}\"" www-data
 fi
 
+echo "initialize: Copying SSL certificates into position, if necessary" >&2
+
+if [ ! -f "${DA_ROOT}/certs/apache.key" ] && [ -f "${DA_ROOT}/certs/apache.key.orig" ]; then
+    mv "${DA_ROOT}/certs/apache.key.orig" "${DA_ROOT}/certs/apache.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/apache.crt" ] && [ -f "${DA_ROOT}/certs/apache.crt.orig" ]; then
+    mv "${DA_ROOT}/certs/apache.crt.orig" "${DA_ROOT}/certs/apache.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/apache.ca.pem" ] && [ -f "${DA_ROOT}/certs/apache.ca.pem.orig" ]; then
+    mv "${DA_ROOT}/certs/apache.ca.pem.orig" "${DA_ROOT}/certs/apache.ca.pem"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.key" ] && [ -f "${DA_ROOT}/certs/nginx.key.orig" ]; then
+    mv "${DA_ROOT}/certs/nginx.key.orig" "${DA_ROOT}/certs/nginx.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.crt" ] && [ -f "${DA_ROOT}/certs/nginx.crt.orig" ]; then
+    mv "${DA_ROOT}/certs/nginx.crt.orig" "${DA_ROOT}/certs/nginx.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.ca.pem" ] && [ -f "${DA_ROOT}/certs/nginx.ca.pem.orig" ]; then
+    mv "${DA_ROOT}/certs/nginx.ca.pem.orig" "${DA_ROOT}/certs/nginx.ca.pem"
+fi
+if [ ! -f "${DA_ROOT}/certs/exim.key" ] && [ -f "${DA_ROOT}/certs/exim.key.orig" ]; then
+    mv "${DA_ROOT}/certs/exim.key.orig" "${DA_ROOT}/certs/exim.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/exim.crt" ] && [ -f "${DA_ROOT}/certs/exim.crt.orig" ]; then
+    mv "${DA_ROOT}/certs/exim.crt.orig" "${DA_ROOT}/certs/exim.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/postgresql.key" ] && [ -f "${DA_ROOT}/certs/postgresql.key.orig" ]; then
+    mv "${DA_ROOT}/certs/postgresql.key.orig" "${DA_ROOT}/certs/postgresql.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/postgresql.crt" ] && [ -f "${DA_ROOT}/certs/postgresql.crt.orig" ]; then
+    mv "${DA_ROOT}/certs/postgresql.crt.orig" "${DA_ROOT}/certs/postgresql.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/apache.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/apache.key.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/apache.key.orig" "${DA_ROOT}/certs/apache.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/apache.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/apache.crt.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/apache.crt.orig" "${DA_ROOT}/certs/apache.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/apache.ca.pem" ] && [ -f "${DA_ROOT}/config/defaultcerts/apache.ca.pem.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/apache.ca.pem.orig" "${DA_ROOT}/certs/apache.ca.pem"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/nginx.key.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/nginx.key.orig" "${DA_ROOT}/certs/nginx.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/nginx.crt.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/nginx.crt.orig" "${DA_ROOT}/certs/nginx.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/nginx.ca.pem" ] && [ -f "${DA_ROOT}/config/defaultcerts/nginx.ca.pem.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/nginx.ca.pem.orig" "${DA_ROOT}/certs/nginx.ca.pem"
+fi
+if [ ! -f "${DA_ROOT}/certs/exim.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/exim.key.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/exim.key.orig" "${DA_ROOT}/certs/exim.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/exim.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/exim.crt.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/exim.crt.orig" "${DA_ROOT}/certs/exim.crt"
+fi
+if [ ! -f "${DA_ROOT}/certs/postgresql.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/postgresql.key.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/postgresql.key.orig" "${DA_ROOT}/certs/postgresql.key"
+fi
+if [ ! -f "${DA_ROOT}/certs/postgresql.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/postgresql.crt.orig" ]; then
+    cp "${DA_ROOT}/config/defaultcerts/postgresql.crt.orig" "${DA_ROOT}/certs/postgresql.crt"
+fi
+
+python -m docassemble.webapp.install_certs "${DA_CONFIG_FILE}" || exit 1
+
 echo "initialize: Testing if PostgreSQL is running" >&2
 
 if pg_isready -q; then
@@ -802,71 +871,6 @@ elif [ "$PGRUNNING" = false ] && [ "$DBTYPE" == "postgresql" ]; then
     unset PGSSLKEY
     unset PGSSLROOTCERT
 fi
-
-echo "initialize: Copying SSL certificates into position, if necessary" >&2
-
-if [ ! -f "${DA_ROOT}/certs/apache.key" ] && [ -f "${DA_ROOT}/certs/apache.key.orig" ]; then
-    mv "${DA_ROOT}/certs/apache.key.orig" "${DA_ROOT}/certs/apache.key"
-fi
-if [ ! -f "${DA_ROOT}/certs/apache.crt" ] && [ -f "${DA_ROOT}/certs/apache.crt.orig" ]; then
-    mv "${DA_ROOT}/certs/apache.crt.orig" "${DA_ROOT}/certs/apache.crt"
-fi
-if [ ! -f "${DA_ROOT}/certs/apache.ca.pem" ] && [ -f "${DA_ROOT}/certs/apache.ca.pem.orig" ]; then
-    mv "${DA_ROOT}/certs/apache.ca.pem.orig" "${DA_ROOT}/certs/apache.ca.pem"
-fi
-if [ ! -f "${DA_ROOT}/certs/nginx.key" ] && [ -f "${DA_ROOT}/certs/nginx.key.orig" ]; then
-    mv "${DA_ROOT}/certs/nginx.key.orig" "${DA_ROOT}/certs/nginx.key"
-fi
-if [ ! -f "${DA_ROOT}/certs/nginx.crt" ] && [ -f "${DA_ROOT}/certs/nginx.crt.orig" ]; then
-    mv "${DA_ROOT}/certs/nginx.crt.orig" "${DA_ROOT}/certs/nginx.crt"
-fi
-if [ ! -f "${DA_ROOT}/certs/nginx.ca.pem" ] && [ -f "${DA_ROOT}/certs/nginx.ca.pem.orig" ]; then
-    mv "${DA_ROOT}/certs/nginx.ca.pem.orig" "${DA_ROOT}/certs/nginx.ca.pem"
-fi
-if [ ! -f "${DA_ROOT}/certs/exim.key" ] && [ -f "${DA_ROOT}/certs/exim.key.orig" ]; then
-    mv "${DA_ROOT}/certs/exim.key.orig" "${DA_ROOT}/certs/exim.key"
-fi
-if [ ! -f "${DA_ROOT}/certs/exim.crt" ] && [ -f "${DA_ROOT}/certs/exim.crt.orig" ]; then
-    mv "${DA_ROOT}/certs/exim.crt.orig" "${DA_ROOT}/certs/exim.crt"
-fi
-if [ ! -f "${DA_ROOT}/certs/postgresql.key" ] && [ -f "${DA_ROOT}/certs/postgresql.key.orig" ]; then
-    mv "${DA_ROOT}/certs/postgresql.key.orig" "${DA_ROOT}/certs/postgresql.key"
-fi
-if [ ! -f "${DA_ROOT}/certs/postgresql.crt" ] && [ -f "${DA_ROOT}/certs/postgresql.crt.orig" ]; then
-    mv "${DA_ROOT}/certs/postgresql.crt.orig" "${DA_ROOT}/certs/postgresql.crt"
-fi
-if [ ! -f "${DA_ROOT}/certs/apache.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/apache.key.orig" ]; then
-    cp "${DA_ROOT}/config/defaultcerts/apache.key.orig" "${DA_ROOT}/certs/apache.key"
-fi
-if [ ! -f "${DA_ROOT}/certs/apache.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/apache.crt.orig" ]; then
-    cp "${DA_ROOT}/config/defaultcerts/apache.crt.orig" "${DA_ROOT}/certs/apache.crt"
-fi
-if [ ! -f "${DA_ROOT}/certs/apache.ca.pem" ] && [ -f "${DA_ROOT}/config/defaultcerts/apache.ca.pem.orig" ]; then
-    cp "${DA_ROOT}/config/defaultcerts/apache.ca.pem.orig" "${DA_ROOT}/certs/apache.ca.pem"
-fi
-if [ ! -f "${DA_ROOT}/certs/nginx.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/nginx.key.orig" ]; then
-    cp "${DA_ROOT}/config/defaultcerts/nginx.key.orig" "${DA_ROOT}/certs/nginx.key"
-fi
-if [ ! -f "${DA_ROOT}/certs/nginx.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/nginx.crt.orig" ]; then
-    cp "${DA_ROOT}/config/defaultcerts/nginx.crt.orig" "${DA_ROOT}/certs/nginx.crt"
-fi
-if [ ! -f "${DA_ROOT}/certs/nginx.ca.pem" ] && [ -f "${DA_ROOT}/config/defaultcerts/nginx.ca.pem.orig" ]; then
-    cp "${DA_ROOT}/config/defaultcerts/nginx.ca.pem.orig" "${DA_ROOT}/certs/nginx.ca.pem"
-fi
-if [ ! -f "${DA_ROOT}/certs/exim.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/exim.key.orig" ]; then
-    cp "${DA_ROOT}/config/defaultcerts/exim.key.orig" "${DA_ROOT}/certs/exim.key"
-fi
-if [ ! -f "${DA_ROOT}/certs/exim.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/exim.crt.orig" ]; then
-    cp "${DA_ROOT}/config/defaultcerts/exim.crt.orig" "${DA_ROOT}/certs/exim.crt"
-fi
-if [ ! -f "${DA_ROOT}/certs/postgresql.key" ] && [ -f "${DA_ROOT}/config/defaultcerts/postgresql.key.orig" ]; then
-    cp "${DA_ROOT}/config/defaultcerts/postgresql.key.orig" "${DA_ROOT}/certs/postgresql.key"
-fi
-if [ ! -f "${DA_ROOT}/certs/postgresql.crt" ] && [ -f "${DA_ROOT}/config/defaultcerts/postgresql.crt.orig" ]; then
-    cp "${DA_ROOT}/config/defaultcerts/postgresql.crt.orig" "${DA_ROOT}/certs/postgresql.crt"
-fi
-
-python -m docassemble.webapp.install_certs "${DA_CONFIG_FILE}" || exit 1
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     echo "initialize: Obtaining default e-mail and password from mounted credentials, if available" >&2

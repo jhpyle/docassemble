@@ -9,6 +9,10 @@ db:
   password: {{DBPASSWORD}}
   host: {{DBHOST}}
   port: {{DBPORT}}
+  ssl mode: {{DBSSLMODE}}
+  ssl cert: {{DBSSLCERT}}
+  ssl key: {{DBSSLKEY}}
+  ssl root cert: {{DBSSLROOTCERT}}
   table prefix: {{DBTABLEPREFIX}}
   backup: {{DBBACKUP}}
 oauth:

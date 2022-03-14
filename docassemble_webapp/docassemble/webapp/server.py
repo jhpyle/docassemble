@@ -21571,6 +21571,7 @@ def needs_to_change_password():
         return False
     #logmessage("needs_to_change_password: starting")
     if app.user_manager.verify_password('password', current_user):
+        session.pop('_flashes', None)
         flash(word("Your password is insecure and needs to be changed"), "warning")
         return True
     #logmessage("needs_to_change_password: ending")
