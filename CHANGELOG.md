@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.3.24] - 2022-03-13
+## [1.3.24] - 2022-03-14
 ### Added
 - The `custom datatypes to load` directive under `features`.
 - The `set_variables()` function.
@@ -11,7 +11,7 @@
 - `input type: area` text boxes are resizable in both dimensions.
 ### Fixed
 - Issue with `show if` and `labels above fields`.
-- Issue with initialization script where PostgreSQL database uses SSL.
+- Issues with using SSL for external PostgreSQL and Redis connections.
 
 ## [1.3.23] - 2022-03-07
 ### Changed
