@@ -6982,11 +6982,11 @@ It also takes the following optional keyword parameters:
 * `return_content`: if you want the contents of the file to be
   returned, instead of a file path, set `return_content` to `True`.
 
-Here is an example of an interview that uses `assembled_docx()` in a
+Here is an example of an interview that uses `assemble_docx()` in a
 contract assembly interview.  All of the clauses of the contract are
 in the [`contract.docx`] DOCX template file, but they are written in
 such a way that they can be extracted from the DOCX file using
-`assembled_docx()` and converted into [Markdown].  Extracting clauses
+`assemble_docx()` and converted into [Markdown].  Extracting clauses
 in [Markdown] format is useful because:
 
 * It allows you to manage your contract clauses as a list of
