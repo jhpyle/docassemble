@@ -451,6 +451,12 @@ element we wanted to define during the gathering process, we could
 have written `friend.complete_attribute = 'birthdate'` and skipped the
 [`code` block] entirely.
 
+You can also set `complete_attribute` to a list of attribute names. In
+this case, the item will be considered complete when it has a
+definition for each attribute in the list of of attributes.
+
+{% include side-by-side.html demo="gather-list-friend-good-order-2" %}
+
 When you write your own class definitions, you can set a
 default `complete_attribute` that is not really an attribute, but a method
 that behaves like an attribute.

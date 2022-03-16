@@ -4,6 +4,17 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.25](https://github.com/jhpyle/docassemble/releases/tag/v1.3.25) - 2022-03-16
+
+### Changed
+- `complete_attribute` can refer to a list of attributes.
+
+### Fixed
+- Markdown-to-HTML conversion was not being applied to the `pre` or
+  `submit` screen parts.
+- `[TARGET ...]` was not working in `html`.
+- Issues with the Training page.
+
 ## [1.3.24](https://github.com/jhpyle/docassemble/releases/tag/v1.3.24) - 2022-03-14
 
 ### Added
