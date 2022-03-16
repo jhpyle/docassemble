@@ -1,0 +1,48 @@
+metadata:
+  title: Gathering a list of people
+  short title: People list
+  documentation: "https://docassemble.org/docs/groups.html#list of objects"
+  example start: 1
+  example end: 6
+---
+objects:
+  - friend: |
+      DAList.using(
+        object_type=Individual,
+        complete_attribute=['name.first', 'birthdate', 'favorite_animal'],
+        there_are_any=True)
+---
+mandatory: True
+question: |
+  Your friends
+subquestion: |
+  % for x in friend:
+  * ${ x } likes
+  ${ noun_plural(x.favorite_animal).lower() }
+  and is
+  ${ x.age_in_years() }
+  years old.
+  % endfor
+---
+question: |
+  What is the name of your ${ ordinal(i) }
+  friend?
+fields:
+  - First Name: friend[i].name.first
+---
+question: |
+  What is
+  ${ friend[i].possessive('birthdate') }?
+fields:
+  - Birthdate: friend[i].birthdate
+    datatype: date
+---
+question: |
+  What is
+  ${ friend[i].possessive('favorite animal') }?
+fields:
+  - Favorite animal: friend[i].favorite_animal
+---
+question: |
+  Do you have any other friends?
+yesno: friend.there_is_another

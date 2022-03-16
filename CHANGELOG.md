@@ -1,9 +1,13 @@
 # Change Log
 
 ## [1.3.25] - 2022-03-16
+### Changed
+- `complete_attribute` can refer to a list of attributes.
 ### Fixed
-- Issues with Training page.
-- `[TARGET ...]` not working in `html`.
+- Markdown-to-HTML conversion was not being applied to the `pre` or
+  `submit` screen parts.
+- `[TARGET ...]` was not working in `html`.
+- Issues with the Training page.
 
 ## [1.3.24] - 2022-03-14
 ### Added

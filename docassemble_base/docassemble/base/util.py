@@ -686,7 +686,8 @@ class DAObject:
                         object_type = self.__class__
                     self.new_relation.initializeObject(relationship_type, object_type, **filter_by)
                 if complete_attribute:
-                    getattr(self.new_relation[relationship_type], complete_attribute)
+                    for attrib in self._complete_attributes(complete_attribute):
+                        complex_getattr(self.new_relation[relationship_type], attrib)
                 else:
                     str(self.new_relation[relationship_type])
                 new_item = self.new_relation[relationship_type]
@@ -732,7 +733,8 @@ class DAObject:
                         object_type = self.__class__
                     self.new_peer_relation.initializeObject(relationship_type, object_type)
                 if complete_attribute:
-                    getattr(self.new_peer_relation[relationship_type], complete_attribute)
+                    for attrib in self._complete_attributes(complete_attribute):
+                        complex_getattr(self.new_peer_relation[relationship_type], attrib)
                 else:
                     str(self.new_peer_relation[relationship_type])
                 new_item = self.new_peer_relation[relationship_type]
@@ -1407,9 +1409,9 @@ class DAList(DAObject):
             self.doing_gathered_and_complete = True
             if hasattr(self, 'complete_attribute') and self.complete_attribute == 'complete':
                 for item in self.elements:
-                    if hasattr(item, self.complete_attribute):
+                    if hasattr(item, 'complete'):
                         try:
-                            delattr(item, self.complete_attribute)
+                            delattr(item, 'complete')
                         except:
                             pass
             if hasattr(self, 'gathered'):
@@ -1482,12 +1484,13 @@ class DAList(DAObject):
         if hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
         if mark_incomplete and self.complete_attribute is not None:
-            for item in self.elements:
-                if hasattr(item, self.complete_attribute):
-                    try:
-                        delattr(item, self.complete_attribute)
-                    except:
-                        pass
+            for attrib in self._complete_attributes():
+                for item in self.elements:
+                    if complex_hasattr(item, attrib):
+                        try:
+                            complex_delattr(item, attrib)
+                        except:
+                            pass
         if recursive:
             self._reset_gathered_recursively()
     def has_been_gathered(self):
@@ -1801,7 +1804,12 @@ class DAList(DAObject):
             if item is None:
                 continue
             if complete_attribute is not None:
-                if not hasattr(item, complete_attribute):
+                should_skip = False
+                for attrib in self._complete_attributes(complete_attribute):
+                    if not complex_hasattr(item, attrib):
+                        should_skip = True
+                        break
+                if should_skip:
                     continue
             else:
                 try:
@@ -1811,6 +1819,16 @@ class DAList(DAObject):
             items.append(item)
         items.gathered = True
         return items
+    def _complete_attributes(self, complete_attribute=None):
+        if complete_attribute is None:
+            complete_attribute = self.complete_attribute
+        if isinstance(complete_attribute, str):
+            return [complete_attribute]
+        if isinstance(complete_attribute, list):
+            return complete_attribute
+        if isinstance(complete_attribute, DAList):
+            return complete_attribute.elements
+        return []
     def _validate(self, item_object_type, complete_attribute):
         if self.ask_object_type:
             for indexno in range(len(self.elements)):
@@ -1825,14 +1843,16 @@ class DAList(DAObject):
                         raise Exception("new_object_type must be an object type")
                     self.elements[indexno] = object_type_to_use(self.instanceName + '[' + str(indexno) + ']', **parameters_to_use)
                 if complete_attribute is not None:
-                    getattr(self.elements[indexno], complete_attribute)
+                    for attrib in self._complete_attributes(complete_attribute):
+                        complex_getattr(self.elements[indexno], attrib)
                 else:
                     str(self.elements[indexno])
             if hasattr(self, 'new_object_type'):
                 delattr(self, 'new_object_type')
         for elem in self.elements:
             if item_object_type is not None and complete_attribute is not None:
-                getattr(elem, complete_attribute)
+                for attrib in self._complete_attributes(complete_attribute):
+                    complex_getattr(elem, attrib)
             else:
                 str(elem)
     def _allow_appending(self):
@@ -2130,7 +2150,7 @@ class DAList(DAObject):
             else:
                 items += [{'follow up': [self.instanceName + '[' + repr(index) + ']']}]
             if self.complete_attribute is not None and self.complete_attribute != 'complete':
-                items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
+                items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + attrib for attrib in self._complete_attributes()]))]
             if ensure_complete:
                 items += [dict(action='_da_list_ensure_complete', arguments=dict(group=self.instanceName))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit"><span class="text-nowrap"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</span></a> '
@@ -2454,12 +2474,13 @@ class DADict(DAObject):
         if hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
         if mark_incomplete and self.complete_attribute is not None:
-            for item in list(self.elements.values()):
-                if hasattr(item, self.complete_attribute):
-                    try:
-                        delattr(item, self.complete_attribute)
-                    except:
-                        pass
+            for attrib in self._complete_attributes():
+                for item in list(self.elements.values()):
+                    if complex_hasattr(item, attrib):
+                        try:
+                            complex_delattr(item, attrib)
+                        except:
+                            pass
         if recursive:
             self._reset_gathered_recursively()
     def slice(self, *pargs):
@@ -2588,7 +2609,12 @@ class DADict(DAObject):
             if val is None:
                 continue
             if complete_attribute is not None:
-                if not hasattr(val, complete_attribute):
+                should_skip = False
+                for attrib in self._complete_attributes(complete_attribute):
+                    if not complex_hasattr(val, attrib):
+                        should_skip = True
+                        break
+                if should_skip:
                     continue
             else:
                 try:
@@ -2601,6 +2627,16 @@ class DADict(DAObject):
         return sorted(self.keys())
     def _sorted_elements_keys(self):
         return sorted(self.elements.keys())
+    def _complete_attributes(self, complete_attribute=None):
+        if complete_attribute is None:
+            complete_attribute = self.complete_attribute
+        if isinstance(complete_attribute, str):
+            return [complete_attribute]
+        if isinstance(complete_attribute, list):
+            return complete_attribute
+        if isinstance(complete_attribute, DAList):
+            return complete_attribute.elements
+        return []
     def _validate(self, item_object_type, complete_attribute, keys=None):
         if keys is None:
             try:
@@ -2627,7 +2663,8 @@ class DADict(DAObject):
         for key in keys:
             elem = self.elements[key]
             if item_object_type is not None and complete_attribute is not None:
-                getattr(elem, complete_attribute)
+                for attrib in self._complete_attributes(complete_attribute):
+                    complex_getattr(elem, attrib)
             else:
                 str(elem)
     def gathered_and_complete(self):
@@ -2636,9 +2673,9 @@ class DADict(DAObject):
             self.doing_gathered_and_complete = True
             if self.complete_attribute == 'complete':
                 for item in list(self.elements.values()):
-                    if hasattr(item, self.complete_attribute):
+                    if hasattr(item, 'complete'):
                         try:
-                            delattr(item, self.complete_attribute)
+                            delattr(item, 'complete')
                         except:
                             pass
             if hasattr(self, 'gathered'):
@@ -2751,7 +2788,8 @@ class DADict(DAObject):
             delattr(self, 'new_item_value')
         for elem in self._sorted_elements_values():
             if self.object_type is not None and self.complete_attribute is not None:
-                getattr(elem, self.complete_attribute)
+                for attrib in self._complete_attributes():
+                    complex_getattr(elem, attrib)
             else:
                 str(elem)
     def comma_and_list(self, **kwargs):
@@ -2963,13 +3001,13 @@ class DADict(DAObject):
         if use_edit:
             items = []
             if self.complete_attribute == 'complete':
-                items += [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
+                items += [dict(action='_da_undefine', arguments=dict(variables=[item.instanceName + '.complete']))]
             if len(the_args) > 0:
                 items += [{'follow up': [item.instanceName + ('' if y.startswith('[') else '.') + y for y in the_args]}]
             else:
                 items += [{'follow up': [self.instanceName + '[' + repr(index) + ']']}]
             if self.complete_attribute is not None and self.complete_attribute != 'complete':
-                items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + self.complete_attribute]))]
+                items += [dict(action='_da_define', arguments=dict(variables=[item.instanceName + '.' + attrib for attrib in self._complete_attributes()]))]
             if ensure_complete:
                 items += [dict(action='_da_dict_ensure_complete', arguments=dict(group=self.instanceName))]
             output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
@@ -3081,9 +3119,9 @@ class DASet(DAObject):
             self.doing_gathered_and_complete = True
             if hasattr(self, 'complete_attribute') and self.complete_attribute == 'complete':
                 for item in self.elements:
-                    if hasattr(item, self.complete_attribute):
+                    if hasattr(item, 'complete'):
                         try:
-                            delattr(item, self.complete_attribute)
+                            delattr(item, 'complete')
                         except:
                             pass
             if hasattr(self, 'gathered'):
@@ -3106,7 +3144,12 @@ class DASet(DAObject):
             if item is None:
                 continue
             if complete_attribute is not None:
-                if not hasattr(item, complete_attribute):
+                should_skip = False
+                for attrib in self._complete_attributes(complete_attribute):
+                    if not complex_hasattr(item, attrib):
+                        should_skip = True
+                        break
+                if should_skip:
                     continue
             else:
                 try:
@@ -3160,12 +3203,13 @@ class DASet(DAObject):
         if hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
         if mark_incomplete and self.complete_attribute is not None:
-            for item in list(self.elements):
-                if hasattr(item, self.complete_attribute):
-                    try:
-                        delattr(item, self.complete_attribute)
-                    except:
-                        pass
+            for attrib in self._complete_attributes():
+                for item in list(self.elements):
+                    if complex_hasattr(item, attrib):
+                        try:
+                            complex_delattr(item, attrib)
+                        except:
+                            pass
         if recursive:
             self._reset_gathered_recursively()
     def has_been_gathered(self):
@@ -8853,3 +8897,26 @@ def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resoluti
         raise Exception("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output.decode()))
     sys.stderr.write("ocr_page finished with page " + str(page) + "\n")
     return dict(indexno=indexno, page=page, text=text)
+
+def complex_getattr(obj, attr):
+    parts = attr.split('.')
+    while len(parts) > 1:
+        pre_attr = parts.pop(0)
+        obj = getattr(obj, pre_attr)
+    return getattr(obj, parts[0])
+
+def complex_hasattr(obj, attr):
+    parts = attr.split('.')
+    while len(parts) > 1:
+        pre_attr = parts.pop(0)
+        if not hasattr(obj, pre_attr):
+            return False
+        obj = getattr(obj, pre_attr)
+    return hasattr(obj, parts[0])
+
+def complex_delattr(obj, attr):
+    parts = attr.split('.')
+    while len(parts) > 1:
+        pre_attr = parts.pop(0)
+        obj = getattr(obj, pre_attr)
+    delattr(obj, parts[0])
