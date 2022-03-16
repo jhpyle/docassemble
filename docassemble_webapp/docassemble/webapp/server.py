@@ -21665,10 +21665,16 @@ def train():
     setup_translation()
     the_package = request.args.get('package', None)
     if the_package is not None:
-        the_package = werkzeug.utils.secure_filename(the_package)
+        if the_package.startswith('_'):
+            the_package = '_' + werkzeug.utils.secure_filename(the_package)
+        else:
+            the_package = werkzeug.utils.secure_filename(the_package)
     the_file = request.args.get('file', None)
     if the_file is not None:
-        the_file = secure_filename_spaces_ok(the_file)
+        if the_file.startswith('_'):
+            the_file = '_' + secure_filename_spaces_ok(the_file)
+        else:
+            the_file = secure_filename_spaces_ok(the_file)
     the_group_id = request.args.get('group_id', None)
     show_all = int(request.args.get('show_all', 0))
     form = TrainingForm(request.form)
@@ -21761,7 +21767,7 @@ def train():
         show_cond = MachineLearning.id != None
     else:
         show_all = 0
-        show_cond = MachineLearning.dependent is None
+        show_cond = MachineLearning.dependent == None
     package_list = {}
     file_list = {}
     group_id_list = {}

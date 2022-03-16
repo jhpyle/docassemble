@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.3.25] - 2022-03-16
+### Fixed
+- Issues with Training page.
+- `[TARGET ...]` not working in `html`.
+
 ## [1.3.24] - 2022-03-14
 ### Added
 - The `custom datatypes to load` directive under `features`.

@@ -8,7 +8,7 @@ from io import StringIO
 from html.parser import HTMLParser
 from docassemble.base.functions import word, get_currency_symbol, comma_and_list, server, custom_types
 from docassemble.base.util import format_date, format_datetime
-from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape
+from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape, process_target
 from docassemble.base.parse import Question
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
@@ -274,7 +274,7 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
                     info_message = to_text(markdown_to_html(status.extras['note'][the_field.number], status=status), terms, links)
                     continue
                 if the_field.datatype == 'html':
-                    info_message = to_text(status.extras['html'][the_field.number].rstrip(), terms, links)
+                    info_message = to_text(process_target(status.extras['html'][the_field.number].rstrip()), terms, links)
                     continue
             #logmessage("field number is " + str(the_field.number))
             if not hasattr(the_field, 'saveas'):
@@ -698,7 +698,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += word('Sign Your Name')
         output += '</div>\n                </div>\n              </div>\n              <div class="dasigtoppart" id="dasigtoppart">\n                <div id="daerrormess" class="dasigerrormessage dasignotshowing">' + word("You must sign your name to continue.") + '</div>\n'
         if status.pre:
-            output += '                <div class="d-none d-sm-block">' + status.pre + '</div>\n'
+            output += '                <div class="d-none d-sm-block">' + markdown_to_html(status.pre, trim=False, status=status) + '</div>\n'
         if status.questionText:
             output += '                <div class="da-page-header d-none d-sm-block"><h1 class="h3">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         output += '              </div>'
@@ -711,7 +711,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += '                <div class="d-none d-sm-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-sm-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'
         output += "\n              </div>"
         if status.submit:
-            output += '                <div class="d-none d-sm-block">' + status.submit + '</div>\n'
+            output += '                <div class="d-none d-sm-block">' + markdown_to_html(status.submit, trim=False, status=status) + '</div>\n'
         output += """
               <fieldset class="da-button-set d-none d-sm-block da-signature">
                 <legend class="visually-hidden">""" + word('Press one of the following buttons:') + """</legend>
@@ -887,7 +887,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         null_question = True
         for field in field_list:
             if 'html' in status.extras and field.number in status.extras['html']:
-                note_fields[field.number] = status.extras['html'][field.number].rstrip()
+                note_fields[field.number] = process_target(status.extras['html'][field.number].rstrip())
             elif 'note' in status.extras and field.number in status.extras['note']:
                 note_fields[field.number] = markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input)
             if hasattr(field, 'saveas'):

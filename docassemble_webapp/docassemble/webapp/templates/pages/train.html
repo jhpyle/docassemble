@@ -275,9 +275,17 @@
           {%- if choices %}
           <div class="col-md-4">
             <select data-id-number="{{ entry.id }}" id="selector{{ entry.id }}" class="form-select trainer">
+              {%- if entry.dependent is none %}
               <option value="" selected>{{ word("Select one") }}</option>
+              {%- else %}
+              <option value="">{{ word("Select one") }}</option>
+              {%- endif %}
               {%- for item, count in choices %}
+              {%- if item == entry.dependent %}
+              <option value="{{ item }}" selected>{{ item }}</option>
+              {%- else %}
               <option value="{{ item }}">{{ item }}</option>
+              {%- endif %}
               {%- endfor %}
             </select>
           </div>

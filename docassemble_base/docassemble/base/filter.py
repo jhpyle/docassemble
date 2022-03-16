@@ -1659,6 +1659,9 @@ def get_video_urls(the_video, question=None):
                     output.append([url, mimetype])
     return output
 
+def process_target(text):
+    return re.sub(r'\[TARGET ([^\]]+)\]', target_html, text)
+
 def to_text(html_doc, terms, links):
     output = ""
     #logmessage("to_text: html doc is " + str(html_doc))
