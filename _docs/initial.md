@@ -255,7 +255,8 @@ screen with a [`question`]:
 When the interview encounters an error, the interview will run the
 [action] given by `error action`.  In this case, `error action` is
 `on_error`, and calling this [action] shows a [`question`] to the
-user.
+user. If you would like to use the error message in the [action], you
+can access it by calling `action_argument('error_message')`.
 
 An [action] can also run code that changes the interview logic.  For
 example, an `error action` could skip through the remainder of the
