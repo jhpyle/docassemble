@@ -942,18 +942,20 @@ your container for the new configuration to take effect.
   run in order to set the system time zone.  The default is
   `America/New_York`.  See the [`timezone`] configuration directive.
 * <a name="LOCALE"></a>`LOCALE`: You can use this to enable a locale
-  on the server.  When the server starts, the value of `LOCALE` is
-  appended to `/etc/locale.gen` and `locale-gen` and `update-locale`
-  are run.  The default is `en_US.UTF-8 UTF-8`.  See the [`os locale`]
-  configuration directive.
+  on the server.  The value needs to match an entry in
+  `/etc/locale.gen` on [Ubuntu].  These are the locale values that
+  [Ubuntu]/[Debian] recognizes.  When the server starts, the value of
+  `LOCALE` is appended to `/etc/locale.gen` and `locale-gen` and
+  `update-locale` are run.  The default is `en_US.UTF-8 UTF-8`.  See
+  the [`os locale`] configuration directive.
 * <a name="OTHERLOCALES"></a>`OTHERLOCALES`: You can use this to set
   up other locales on the system besides the default locale.  Set this
   to a comma separated list of locales.  The values need to match
-  entries in [Debian]'s `/etc/locale.gen`.  See the
+  entries in `/etc/locale.gen` on [Ubuntu].  See the
   [`other os locales`] configuration directive.
 * <a name="PACKAGES"></a>`PACKAGES`: If your interviews use code that
-  depends on certain [Debian] packages being installed, you can
-  provide a comma-separated list of [Debian] packages in the
+  depends on certain [Ubuntu] packages being installed, you can
+  provide a comma-separated list of [Ubuntu] packages in the
   `PACKAGES` environment variable.  The packages will be installed
   when the container is started.  See the [`debian packages`]
   configuration directive.
@@ -2222,7 +2224,7 @@ is simply an illustration of creating an image called
 Starting with version 0.5, the **docassemble** image is split into two
 parts.  The `jhpyle/docassemble` image uses `jhpyle/docassemble-os` as
 a base image.  The `jhpyle/docassemble-os` image consists of the
-underlying [Debian] operating system with required [Debian] packages
+underlying [Ubuntu] operating system with required [Ubuntu] packages
 installed.  The `jhpyle/docassemble-os` image is updated much less
 frequently than the `jhpyle/docassemble` image.  If you want to build
 your own version of `jhpyle/docassemble-os`, you can do so by running:
@@ -2414,7 +2416,7 @@ line), as the containers depend on the images.
 [`debian packages`]: {{ site.baseurl }}/docs/config.html#debian packages
 [`url root`]: {{ site.baseurl }}/docs/config.html#url root
 [`root`]: {{ site.baseurl }}/docs/config.html#root
-[Debian]: https://www.debian.org/
+[Ubuntu]: https://ubuntu.com/
 [using S3]: #persistent s3
 [using Azure blob storage]: #persistent azure
 [environment variables]: #configuration options

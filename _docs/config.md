@@ -1922,8 +1922,16 @@ If you are using [Docker], the `os locale` directive will set the
 default operating system locale.
 
 {% highlight yaml %}
-os locale: en_US.UTF-8 UTF-8
+os locale: so_SO.UTF-8 UTF-8
 {% endhighlight %}
+
+The `os locale` must exactly match one of the commented lines (without
+the `#`) in `/etc/locale.gen` on an [Ubuntu]/[Debian] system. These
+are the locale values that [Ubuntu]/[Debian] recognizes.
+
+When the server starts, the value of `os locale` is appended to
+`/etc/locale.gen` (if not already there in uncommented form) and
+`locale-gen` and `update-locale` are run.
 
 ## <a name="other os locales"></a>Other available locales
 
@@ -1939,6 +1947,14 @@ other os locales:
   - en_GB.UTF-8 UTF-8
   - es_MX.UTF-8 UTF-8
 {% endhighlight %}
+
+The `other os locales` must exactly match one of the commented lines
+(without the `#`) in `/etc/locale.gen` on an [Ubuntu]/[Debian] system.
+These are the locale values that [Ubuntu]/[Debian] recognizes.
+
+When the server starts, each of the `other os locales` is appended to
+`/etc/locale.gen` (if not already there in uncommented form) and
+`locale-gen` and `update-locale` are run.
 
 ## <a name="server administrator email"></a>E-mail address of server administrator
 
@@ -5605,3 +5621,5 @@ and Facebook API keys.
 [managing certificates with Docker]: {{ site.baseurl }}/docs/docker.html#own certificates
 [Telnyx]: https://telnyx.com/
 [parameters for connecting to Redis with Python]: https://redis-py.readthedocs.io/en/stable/connections.html
+[Ubuntu]: https://ubuntu.com/
+[Debian]: https://www.debian.org
