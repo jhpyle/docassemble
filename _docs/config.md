@@ -1172,19 +1172,7 @@ order to generate [favicon] files from it.  Upload a square image that
 is at least 512x512 in size.  In addition to uploading your file, you
 will need to make some choices about different colors that should be
 used in different circumstances.  At the end, you will download a Zip
-file containing a number of graphics files and other files.
-
-Put the contents of this Zip file in a folder in a **docassemble**
-package and then add a `favicon` directive to the configuration,
-pointing to this folder.  For example:
-
-{% highlight yaml %}
-favicon: docassemble.abcincorporated:data/static/favicon
-{% endhighlight %}
-
-In this example, `data/static/favicon` in the
-`docassemble.abcincorporated` package is a folder that is expected to
-contain the following files, which were contained in the Zip file:
+file containing a number of graphics files and other files:
 
 * `android-chrome-192x192.png`
 * `android-chrome-512x512.png`
@@ -1193,9 +1181,44 @@ contain the following files, which were contained in the Zip file:
 * `favicon-16x16.png`
 * `favicon-32x32.png`
 * `favicon.ico`
-* `manifest.json`
 * `mstile-150x150.png`
 * `safari-pinned-tab.svg`
+* `site.webmanifest`
+
+If any of the above files is missing, your [favicon] will probably
+still work in most circumstances.  The most important file is
+`favicon.ico`, a special graphics file in Microsoft's [ICO] format.
+
+To instruct **docassemble** to use these files for the [Favicon], you
+need to set a directive in the configuration like this:
+
+{% highlight yaml %}
+favicon: docassemble.abcincorporated:data/static
+{% endhighlight %}
+
+This indicates that **docassemble** should use the [Favicon] files
+located in the `data/static` folder of the **docassemble** add-on
+package called `docassemble.abcincorporated`, which is installed on
+your server.  For more information about how **docassemble** uses
+packages, see the [Packages] section.
+
+To create a package (called, for example,
+`docassemble.abcincorporated`), you can use the Playground. First,
+upload the [Favicon] files to the "Static" folder of the Playground.
+Then go to the "Packages" folder of the Playground and create ("Add")
+a new package called `abcincorporated`.  Under "Static files," select
+all of the [Favicon] files you uploaded. Click "Save" to save the
+package definition, then click the "Install" button at the bottom of
+the screen to install the package on your server.
+
+If you are creating package outside of the Playground, you can store
+your [Favicon] files in a subfolder under `data/static`. For example,
+you can create a subfolder called `favicon`. Then your Configuration
+would contain:
+
+{% highlight yaml %}
+favicon: docassemble.abcincorporated:data/static/favicon
+{% endhighlight %}
 
 In addition to providing you with a Zip file containing the above
 files, the above web site will instruct you to place particular
@@ -1204,26 +1227,71 @@ does this for you automatically, so you can ignore most of this.
 However, two of the lines are important.  The will look like this:
 
 {% highlight html %}
-<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#698aa7">
+<link rel="mask-icon" href="/safari-pinned-tab.svg?v=2" color="#698aa7">
+<meta name="msapplication-TileColor" content="#da532c">
 <meta name="theme-color" content="#83b3dd">
 {% endhighlight %}
 
-Note the `color` in the first line and the `content` in the second
-line.  Then add the following two lines to your configuration,
-corresponding to the above two lines:
+Note the `color` in the first line and the `content` in the second and
+third lines.  Then add the following three lines to your
+configuration, corresponding to the above three lines:
 
 {% highlight yaml %}
 favicon mask color: "#698aa7"
+favicon tile color: "#da532c"
 favicon theme color: "#83b3dd"
 {% endhighlight %}
 
-If you do not specify `favicon mask color` or `favicon theme color`,
-your custom [favicon] will still work, but **docassemble** will choose
-colors for you.  (The colors above are the defaults.)
+If you do not specify `favicon mask color`, `favicon tile color`, or
+`favicon theme color`, your custom [favicon] will still work, but
+**docassemble** will choose colors for you.  (The colors above are the
+defaults.)
 
-If any of the above files is missing, your [favicon] will probably
-still work in most circumstances.  The most important file is
-`favicon.ico`, a special graphics file in Microsoft's [ICO] format.
+Note that most web browsers will store a cache of the [Favicon], so
+that when you make a change to your app's [Favicon], it may seem that
+your change is not working when it actually is.  The way that web
+browsers cache the [Favicon] is different from the way they cache
+other resources, so even if you do a forced reload of the page, you
+will still see the cached [Favicon].
+
+**docassemble** tries to mitigate this problem by appending `?v=`
+followed by the version number of the package referenced in `favicon`
+to the URLs for the [Favicon] files. That way, when you install a new
+version of your package, web browsers will think that the [Favicon]
+has changed, and they will download a new version. (The server
+actually ignores the `v` URL parameter, but browsers assume it is
+significant.) **docassemble** assumes the version number is the value
+of the variable `__version__` defined in the `__init__.py` file of the
+package. The Playground sets this variable when it creates a package,
+but if you are creating packages on your own, you will need to update
+this variable manually.
+
+You can also manually specify a `v` parameter by specifying `favicon
+version`:
+
+{% highlight yaml %}
+favicon version: 2
+{% endhighlight %}
+
+You can then change this number every time you want the web browser to
+download a new [Favicon].
+
+Note that
+[https://realfavicongenerator.net](https://realfavicongenerator.net)
+also has an option for setting the version number of your files. You
+may need to use this as well to force applications to retrieve new
+icons for your files.  This adds, for example, `?v=2` to URLs
+referenced in the `browserconfig.xml` and `site.webmanifest` URLs,
+much in the same way the above `favicon version` directive will result
+in `?v=2` being appended to URLs in the HTML source.
+
+Because of caching, it can be difficult to test changes to your
+[Favicon]. One way to check to see if the server is delivering the
+correct [Favicon] is to manually visit the [Favicon] file by entering
+the `/favicon.ico` address in your browser location bar, and then
+forcing a page reload. If you see the correct image in the browser,
+then the server is delivering the right file, but you are just not
+seeing it because of a caching issue.
 
 Note that if you have set the [`root`] directive (if your
 **docassemble** site at `https://example.com/something/` instead of
@@ -1234,12 +1302,6 @@ contain URL references.  If your site is at `/something/`, then
 `manifest.json` will need to refer to
 `"/something/android-chrome-192x192.png"` instead of
 `"/android-chrome-192x192.png"`.
-
-Note that most web browsers will store a cache of the [Favicon], so
-that when you make a change to your app's [Favicon], it may seem that
-your change is not working when it actually is.  If it seems that your
-[Favicon] has not taken effect, try accessing the app a web browser
-that you do not normally use.
 
 ## <a name="robots"></a>Controlling the robots.txt file
 
