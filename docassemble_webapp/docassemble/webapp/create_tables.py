@@ -267,8 +267,11 @@ def main():
                 test_for_errors(start_time=start_time)
             except:
                 sys.stderr.write("create_tables.main: unable to test for errors after " + str(time.time() - start_time) + " seconds.\n")
+        sys.stderr.write("create_tables.main: populating tables after " + str(time.time() - start_time) + " seconds.\n")
         populate_tables(start_time=start_time)
+        sys.stderr.write("create_tables.main: disposing engine after " + str(time.time() - start_time) + " seconds.\n")
         db.engine.dispose()
+    sys.stderr.write("create_tables.main: finishing after " + str(time.time() - start_time) + " seconds.\n")
 
 if __name__ == "__main__":
     main()

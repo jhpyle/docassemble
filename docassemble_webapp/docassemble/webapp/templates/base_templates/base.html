@@ -53,12 +53,13 @@
 {%- for key in config['SOCIAL']['fb'] %}
     <meta name="fb:{{ key }}" content="{{ config['SOCIAL']['fb'][key] }}">
 {%- endfor %}
-    <link rel="shortcut icon" href="{{ url_for('favicon') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon') }}">
-    <link rel="icon" type="image/png" href="{{ url_for('favicon_md') }}" sizes="32x32">
-    <link rel="icon" type="image/png" href="{{ url_for('favicon_sm') }}" sizes="16x16">
-    <link rel="manifest" href="{{ url_for('favicon_manifest_json') }}">
-    <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab') }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
+    <link rel="shortcut icon" href="{{ url_for('favicon') }}{{ config['FAVICON_VERSION'] }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon') }}{{ config['FAVICON_VERSION'] }}">
+    <link rel="icon" type="image/png" href="{{ url_for('favicon_md') }}{{ config['FAVICON_VERSION'] }}" sizes="32x32">
+    <link rel="icon" type="image/png" href="{{ url_for('favicon_sm') }}{{ config['FAVICON_VERSION'] }}" sizes="16x16">
+    <link rel="manifest" href="{{ url_for('favicon_site_webmanifest') }}{{ config['FAVICON_VERSION'] }}">
+    <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab') }}{{ config['FAVICON_VERSION'] }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
+    <meta name="msapplication-TileColor" content="{{ config['FAVICON_TILE_COLOR'] }}">
     <meta name="theme-color" content="{{ config['FAVICON_THEME_COLOR'] }}">
     <script defer src="{{ url_for('static', filename='fontawesome/js/all.min.js', v=config['DA_VERSION']) }}"></script>
     <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css', v=config['DA_VERSION']) }}{% endif %}" rel="stylesheet">
@@ -70,7 +71,7 @@
         {% if back_button %}{{ back_button }}{% endif %}{% if request.path == "/playground" %}<div class="dropdown"><div class="navbar-brand dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ page_title }}</div><div class="dropdown-menu daheightlim" aria-labelledby="dropdownMenuButton">{% if current_project != 'default' %}<a class="dropdown-item" href="?project=default"><i class="fas fa-archive"></i> {{ word("Default Playground") }}</a>{% endif %}{% for project in projects %}{% if project != current_project %}<a class="dropdown-item" href="?project={{ project }}"><i class="fas fa-archive"></i> {{ project }}</a>{% endif %}{% endfor %}<a class="dropdown-item" href="{{ url_for('playground_project', project=current_project) }}"><i class="fas fa-tasks"></i> {{ word('Manage Projects') }}</a></div></div>{% else %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>{% endif %}
         {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}
         <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#danavbar-collapse">
-          <span class="navbar-toggler-icon"></span>
+          <span class="navbar-toggler-icon"><span class="visually-hidden">{{ word("Display the menu") }}</span></span>
         </button>
         {%- endif %}
         <div class="collapse navbar-collapse" id="danavbar-collapse">

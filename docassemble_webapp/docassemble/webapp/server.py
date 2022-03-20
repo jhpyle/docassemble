@@ -2315,7 +2315,7 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootst
         bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon', _external=external) + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external) + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external) + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external) + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json', _external=external) + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external) + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.min.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/bundle.css', v=da_version, _external=external) + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_site_webmanifest', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external, **app.config['FAVICON_PARAMS']) + '" color="' + app.config['FAVICON_MASK_COLOR'] + '">\n    <meta name="msapplication-TileColor" content="' + app.config['FAVICON_TILE_COLOR'] + '">\n    <meta name="theme-color" content="' + app.config['FAVICON_THEME_COLOR'] + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.min.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/bundle.css', v=da_version, _external=external) + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     page_title = page_title.replace('\n', ' ').replace('"', '&quot;').strip()
@@ -4076,6 +4076,7 @@ def restart_on(host):
     return True
 
 def restart_all():
+    logmessage("restarting all")
     for interview_path in [x.decode() for x in r.keys('da:interviewsource:*')]:
         r.delete(interview_path)
     restart_others()
@@ -20971,7 +20972,7 @@ def server_error(the_error):
       });
     </script>"""
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
-    if request.path.endswith('/interview') and 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata and docassemble.base.functions.interview_path() is not None:
+    if (request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')) and 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata and docassemble.base.functions.interview_path() is not None:
         session['in error'] = True
         #session['action'] = docassemble.base.functions.myb64quote(json.dumps({'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}))
         return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}, refer=['error'])
@@ -20986,7 +20987,7 @@ def server_error(the_error):
         yaml_filename = docassemble.base.functions.interview_path()
     except:
         yaml_filename = None
-    show_retry = request.path.endswith('/interview')
+    show_retry = request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')
     return render_template(the_template, verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=str(the_history), logtext=str(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug, yaml_filename=yaml_filename, show_retry=show_retry), error_code
 
 @app.route('/bundle.css', methods=['GET'])
@@ -21615,7 +21616,11 @@ def ensure_training_loaded(interview):
                                     if isinstance(train_list, list):
                                         for entry in train_list:
                                             if 'independent' in entry:
-                                                new_entry = MachineLearning(group_id=source_filename + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
+                                                depend = entry.get('dependent', None)
+                                                if depend is not None:
+                                                    new_entry = MachineLearning(group_id=source_filename + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(depend), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
+                                                else:
+                                                    new_entry = MachineLearning(group_id=source_filename + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=False, key=entry.get('key', None))
                                                 db.session.add(new_entry)
                                 db.session.commit()
                             else:
@@ -21715,15 +21720,25 @@ def train():
                     db.session.commit()
                     for entry in train_list:
                         if 'independent' in entry:
-                            new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
+                            depend = entry.get('dependent', None)
+                            if depend is not None:
+                                new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(depend), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
+                            else:
+                                new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=False, key=entry.get('key', None))
                             db.session.add(new_entry)
                 elif uploadform.importtype.data == 'merge':
                     indep_in_use = set()
                     for record in db.session.execute(select(MachineLearning).filter_by(group_id=the_prefix + ':' + group_id)).scalars():
-                        indep_in_use.add(fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')))
+                        indep = fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
+                        if indep is not None:
+                            indep_in_use.add(indep)
                     for entry in train_list:
                         if 'independent' in entry and entry['independent'] not in indep_in_use:
-                            new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
+                            depend = entry.get('dependent', None)
+                            if depend is not None:
+                                new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(depend), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
+                            else:
+                                new_entry = MachineLearning(group_id=the_prefix + ':' + group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=False, key=entry.get('key', None))
                             db.session.add(new_entry)
             db.session.commit()
             flash(word("Training data were successfully imported."), 'success')
@@ -21973,6 +21988,8 @@ def train():
         model = docassemble.base.util.SimpleTextMachineLearner(group_id=group_id_to_use)
         for record in db.session.execute(select(MachineLearning.id, MachineLearning.group_id, MachineLearning.key, MachineLearning.info, MachineLearning.independent, MachineLearning.dependent, MachineLearning.create_time, MachineLearning.modtime, MachineLearning.active).where(and_(MachineLearning.group_id == group_id_to_use, show_cond))):
             new_entry = dict(id=record.id, group_id=record.group_id, key=record.key, independent=fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')) if record.independent is not None else None, dependent=fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')) if record.dependent is not None else None, info=fix_pickle_obj(codecs.decode(bytearray(record.info, encoding='utf-8'), 'base64')) if record.info is not None else None, create_type=record.create_time, modtime=record.modtime, active=MachineLearning.active)
+            if new_entry['dependent'] is None and new_entry['active'] is True:
+                new_entry['active'] = False
             if isinstance(new_entry['independent'], DADict) or isinstance(new_entry['independent'], dict):
                 new_entry['independent_display'] = '<div class="damldatacontainer">' + '<br>'.join(['<span class="damldatakey">' + str(key) + '</span>: <span class="damldatavalue">' + str(val) + ' (' + str(val.__class__.__name__) + ')</span>' for key, val in new_entry['independent'].items()]) + '</div>'
                 new_entry['type'] = 'data'
@@ -22029,7 +22046,8 @@ def train():
             if record.dependent is None:
                 continue
             key = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
-            choices[key] = record.cnt
+            if key is not None:
+                choices[key] = record.cnt
         if len(choices) > 0:
             #logmessage("There are choices")
             choices = [(x, choices[x]) for x in sorted(choices, key=operator.itemgetter(0), reverse=False)]
@@ -22750,15 +22768,21 @@ def sms_body(phone_number, body='question', config='default'):
         return None
     return resp.verbs[0].verbs[0].body
 
-def favicon_file(filename):
+def favicon_file(filename, alt=None):
     the_dir = docassemble.base.functions.package_data_filename(daconfig.get('favicon', 'docassemble.webapp:data/static/favicon'))
     if the_dir is None or not os.path.isdir(the_dir):
         logmessage("favicon_file: could not find favicon directory")
         return ('File not found', 404)
     the_file = os.path.join(the_dir, filename)
     if not os.path.isfile(the_file):
-        return ('File not found', 404)
-    extension, mimetype = get_ext_and_mimetype(the_file)
+        if alt is not None:
+            the_file = os.path.join(the_dir, alt)
+        if not os.path.isfile(the_file):
+            return ('File not found', 404)
+    if filename == 'site.webmanifest':
+        mimetype = 'application/manifest+json'
+    else:
+        extension, mimetype = get_ext_and_mimetype(the_file)
     response = send_file(the_file, mimetype=mimetype)
     return response
 
@@ -22774,9 +22798,12 @@ def favicon_md():
 @app.route("/favicon-16x16.png", methods=['GET'])
 def favicon_sm():
     return favicon_file('favicon-16x16.png')
+@app.route("/site.webmanifest", methods=['GET'])
+def favicon_site_webmanifest():
+    return favicon_file('site.webmanifest', alt='manifest.json')
 @app.route("/manifest.json", methods=['GET'])
 def favicon_manifest_json():
-    return favicon_file('manifest.json')
+    return favicon_file('manifest.json', alt='site.webmanifest')
 @app.route("/safari-pinned-tab.svg", methods=['GET'])
 def favicon_safari_pinned_tab():
     return favicon_file('safari-pinned-tab.svg')
@@ -23708,7 +23735,7 @@ def translation_file():
     if yaml_filename is None or not re.search(r'\S', yaml_filename):
         flash(word("You must provide an interview filename"), 'error')
         return redirect(url_for('utilities'))
-    tr_lang = form.language.data
+    tr_lang = form.tr_language.data
     if tr_lang is None or not re.search(r'\S', tr_lang):
         flash(word("You must provide a language"), 'error')
         return redirect(url_for('utilities'))
@@ -26128,6 +26155,7 @@ def api_package():
             return jsonify_with_status("You are not allowed to uninstall that package.", 400)
         uninstall_package(target)
         if do_restart:
+            logmessage("Starting process of updating packages followed by restarting server")
             result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(target)))
         else:
             result = docassemble.webapp.worker.update_packages.delay(restart=False)
@@ -26175,6 +26203,7 @@ def api_package():
                     install_pip_package(existing_package.name, existing_package.limitation)
             db.session.commit()
             if do_restart:
+                logmessage("Starting process of updating packages followed by restarting server")
                 result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(target)))
             else:
                 result = docassemble.webapp.worker.update_packages.delay(restart=False)
@@ -26193,6 +26222,7 @@ def api_package():
             if user_can_edit_package(giturl=github_url) and user_can_edit_package(pkgname=packagename):
                 install_git_package(packagename, github_url, branch)
                 if do_restart:
+                    logmessage("Starting process of updating packages followed by restarting server")
                     result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                 else:
                     result = docassemble.webapp.worker.update_packages.delay(restart=False)
@@ -26211,6 +26241,7 @@ def api_package():
             if user_can_edit_package(pkgname=packagename):
                 install_pip_package(packagename, limitation)
                 if do_restart:
+                    logmessage("Starting process of updating packages followed by restarting server")
                     result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                 else:
                     result = docassemble.webapp.worker.update_packages.delay(restart=False)
@@ -26232,6 +26263,7 @@ def api_package():
                 if user_can_edit_package(pkgname=pkgname):
                     install_zip_package(pkgname, file_number)
                     if do_restart:
+                        logmessage("Starting process of updating packages followed by restarting server")
                         result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(pkgname)))
                     else:
                         result = docassemble.webapp.worker.update_packages.delay(restart=False)

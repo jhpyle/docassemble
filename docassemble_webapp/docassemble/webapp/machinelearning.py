@@ -42,7 +42,7 @@ class MachineLearningEntry(DAObject):
         """Saves the entry to the data set.  The independent variable must be
         defined in order to save."""
         args = dict(independent=self.independent)
-        if hasattr(self, 'dependent'):
+        if hasattr(self, 'dependent') and self.dependent is not None:
             args['dependent'] = self.dependent
         if hasattr(self, 'key'):
             args['key'] = self.key
@@ -110,7 +110,9 @@ class MachineLearner:
             query = db.session.execute(select(MachineLearning.dependent).where(and_(MachineLearning.group_id == self.group_id, MachineLearning.key == key)).group_by(MachineLearning.dependent))
         for record in query:
             if record.dependent is not None:
-                in_use.add(fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
+                depend = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
+                if depend is not None:
+                    in_use.add(depend)
         return sorted(in_use)
     def is_empty(self):
         existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id)).first()
@@ -140,13 +142,20 @@ class MachineLearner:
             nowtime = datetime.datetime.utcnow()
             for entry in aref:
                 if 'independent' in entry:
-                    new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None), info=codecs.encode(pickle.dumps(entry['info']), 'base64').decode() if entry.get('info', None) is not None else None)
+                    depend = entry.get('dependent', None)
+                    if depend is not None:
+                        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(depend), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None), info=codecs.encode(pickle.dumps(entry['info']), 'base64').decode() if entry.get('info', None) is not None else None)
+                    else:
+                        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=False, key=entry.get('key', None), info=codecs.encode(pickle.dumps(entry['info']), 'base64').decode() if entry.get('info', None) is not None else None)
                     db.session.add(new_entry)
             db.session.commit()
     def add_to_training_set(self, independent, dependent, key=None, info=None):
         self._initialize()
         nowtime = datetime.datetime.utcnow()
-        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(independent), 'base64').decode(), dependent=codecs.encode(pickle.dumps(dependent), 'base64').decode(), info=codecs.encode(pickle.dumps(info), 'base64').decode() if info is not None else None, create_time=nowtime, modtime=nowtime, active=True, key=key)
+        if dependent is not None:
+            new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(independent), 'base64').decode(), dependent=codecs.encode(pickle.dumps(dependent), 'base64').decode(), info=codecs.encode(pickle.dumps(info), 'base64').decode() if info is not None else None, create_time=nowtime, modtime=nowtime, active=True, key=key)
+        else:
+            new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(independent), 'base64').decode(), info=codecs.encode(pickle.dumps(info), 'base64').decode() if info is not None else None, create_time=nowtime, modtime=nowtime, active=False, key=key)
         db.session.add(new_entry)
         db.session.commit()
         return new_entry.id
@@ -155,7 +164,7 @@ class MachineLearner:
         if key is None:
             existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, dependent=None, independent=codecs.encode(pickle.dumps(indep), 'base64').decode())).scalar()
         else:
-            existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, key=key, independent=codecs.encode(pickle.dumps(indep), 'base64').decode())).scalar()
+            existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, dependent=None, key=key, independent=codecs.encode(pickle.dumps(indep), 'base64').decode())).scalar()
         if existing_entry is not None:
             #logmessage("entry is already there")
             return existing_entry.id
@@ -170,7 +179,8 @@ class MachineLearner:
             raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
         if existing_entry.dependent:
             dependent = fix_pickle_obj(codecs.decode(bytearray(existing_entry.dependent, encoding='utf-8'), 'base64'))
-            return MachineLearningEntry(ml=self, id=existing_entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(existing_entry.independent, encoding='utf-8'), 'base64')), dependent=dependent, create_time=existing_entry.create_time, key=existing_entry.key, info=fix_pickle_obj(codecs.decode(bytearray(existing_entry.info, encoding='utf-8'), 'base64')) if existing_entry.info is not None else None)
+            if dependent is not None:
+                return MachineLearningEntry(ml=self, id=existing_entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(existing_entry.independent, encoding='utf-8'), 'base64')), dependent=dependent, create_time=existing_entry.create_time, key=existing_entry.key, info=fix_pickle_obj(codecs.decode(bytearray(existing_entry.info, encoding='utf-8'), 'base64')) if existing_entry.info is not None else None)
         return MachineLearningEntry(ml=self, id=existing_entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(existing_entry.independent, encoding='utf-8'), 'base64')), create_time=existing_entry.create_time, key=existing_entry.key, info=fix_pickle_obj(codecs.decode(bytearray(existing_entry.info, encoding='utf-8'), 'base64')) if existing_entry.info is not None else None)
     def one_unclassified_entry(self, key=None):
         self._initialize()
@@ -204,7 +214,9 @@ class MachineLearner:
         else:
             query = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, active=True, key=key).order_by(MachineLearning.id)).scalars()
         for entry in query:
-            results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64')), dependent=fix_pickle_obj(codecs.decode(bytearray(entry.dependent, encoding='utf-8'), 'base64')), info=fix_pickle_obj(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64')) if entry.info is not None else None, create_time=entry.create_time, key=entry.key)
+            depend = fix_pickle_obj(codecs.decode(bytearray(entry.dependent, encoding='utf-8'), 'base64'))
+            if depend is not None:
+                results.appendObject(MachineLearningEntry, ml=self, id=entry.id, independent=fix_pickle_obj(codecs.decode(bytearray(entry.independent, encoding='utf-8'), 'base64')), dependent=depend, info=fix_pickle_obj(codecs.decode(bytearray(entry.info, encoding='utf-8'), 'base64')) if entry.info is not None else None, create_time=entry.create_time, key=entry.key)
         return results
     def _save_entry(self, **kwargs):
         self._initialize()
@@ -215,18 +227,21 @@ class MachineLearner:
             existing = False
         else:
             the_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, id=the_id)).scalar()
+            if the_entry is None:
+                raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
             existing = True
-        if the_entry is None:
-            raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
         if 'dependent' in kwargs:
-            if existing and the_entry.dependent is not None and the_entry.dependent != kwargs['dependent']:
+            depend = codecs.encode(pickle.dumps(kwargs['dependent']), 'base64').decode()
+            if existing and the_entry.dependent is not None and the_entry.dependent != depend:
                 need_to_reset = True
-            the_entry.dependent = codecs.encode(pickle.dumps(kwargs['dependent']), 'base64').decode()
-            the_entry.active = True
+            if kwargs['dependent'] is not None:
+                the_entry.dependent = depend
+                the_entry.active = True
         if 'independent' in kwargs:
-            if existing and the_entry.independent is not None and the_entry.independent != kwargs['independent']:
+            indep = codecs.encode(pickle.dumps(kwargs['independent']), 'base64').decode()
+            if existing and the_entry.independent is not None and the_entry.independent != indep:
                 need_to_reset = True
-            the_entry.independent = codecs.encode(pickle.dumps(kwargs['independent']), 'base64').decode()
+            the_entry.independent = indep
         if 'key' in kwargs:
             the_entry.key = kwargs['key']
         if 'info' in kwargs:
@@ -243,9 +258,13 @@ class MachineLearner:
         if existing_entry is None:
             db.session.commit()
             raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
-        existing_entry.dependent = codecs.encode(pickle.dumps(the_dependent), 'base64').decode()
         existing_entry.modtime = datetime.datetime.utcnow()
-        existing_entry.active = True
+        if the_dependent is None:
+            existing_entry.dependent = None
+            existing_entry.active = False
+        else:
+            existing_entry.dependent = codecs.encode(pickle.dumps(the_dependent), 'base64').decode()
+            existing_entry.active = True
         db.session.commit()
     def delete_by_id(self, the_id):
         self._initialize()
@@ -266,8 +285,12 @@ class MachineLearner:
         success = False
         for record in db.session.execute(select(MachineLearning.independent, MachineLearning.dependent).where(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > ml_thread.lastmodtime[self.group_id]))).all():
             #logmessage("Training...")
-            self._train(fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64')))
-            success = True
+            if record.dependent is not None and record.independent is not None:
+                indep = fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
+                depend = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
+                if indep is not None and depend is not None:
+                    self._train(indep, depend)
+                    success = True
         ml_thread.lastmodtime[self.group_id] = nowtime
         return success
     def delete_training_set(self):
@@ -416,8 +439,12 @@ class RandomForestMachineLearner(MachineLearner):
         data = []
         depend_data = []
         for record in db.session.execute(select(MachineLearning).where(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > ml_thread.lastmodtime[self.group_id]))).scalars().all():
+            if record.independent is None or record.dependent is None:
+                continue
             indep_var = fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64'))
             depend_var = fix_pickle_obj(codecs.decode(bytearray(record.dependent, encoding='utf-8'), 'base64'))
+            if depend_var is None:
+                continue
             if isinstance(depend_var, str):
                 depend_var = str(depend_var)
             if ml_thread.learners[self.group_id]['dep_type'] is not None:

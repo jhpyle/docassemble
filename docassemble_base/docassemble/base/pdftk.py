@@ -724,10 +724,10 @@ def apply_qpdf(filename):
             result = subprocess.run(qpdf_subprocess_arguments, timeout=60, check=False).returncode
         except subprocess.TimeoutExpired:
             result = 1
-            logmessage("fill_template: call to qpdf took too long")
+            logmessage("apply_qpdf: call to qpdf took too long")
         if result != 0:
-            logmessage("Failed to convert PDF template " + str(filename))
-            logmessage("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
+            logmessage("Failed to convert PDF " + str(filename))
+            logmessage("Call to qpdf failed for " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
             raise Exception("qpdf error")
         pypdf.PdfFileReader(open(new_file.name, 'rb'), overwriteWarnings=False)
     except:

@@ -1,5 +1,6 @@
 from datetime import timedelta
 import re
+import importlib
 from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 import docassemble.webapp.database
@@ -63,7 +64,26 @@ app.config['USER_INVITE_URL'] = '/user/invite'
 app.config['USER_ENABLE_INVITATION'] = True
 app.config['USER_INVITE_EMAIL_TEMPLATE'] = 'flask_user/emails/invite'
 app.config['USER_ENABLE_FORGOT_PASSWORD'] = bool(daconfig.get('allow forgot password', True))
+fi_version = daconfig.get('favicon version', None)
+
+if fi_version is None and 'favicon' in daconfig and isinstance(daconfig['favicon'], str):
+    m = re.search(r'([^:]+):', daconfig['favicon'])
+    if m:
+        try:
+            importlib.import_module(m.group(1))
+            fi_version = eval(m.group(1) + '.__version__')
+        except:
+            pass
+
+if fi_version is not None:
+    app.config['FAVICON_VERSION'] = '?v=' + str(fi_version)
+    app.config['FAVICON_PARAMS'] = {'v': str(fi_version)}
+else:
+    app.config['FAVICON_VERSION'] = ''
+    app.config['FAVICON_PARAMS'] = {}
+
 app.config['FAVICON_MASK_COLOR'] = daconfig.get('favicon mask color', '#698aa7')
+app.config['FAVICON_TILE_COLOR'] = daconfig.get('favicon tile color', '#da532c')
 app.config['FAVICON_THEME_COLOR'] = daconfig.get('favicon theme color', '#83b3dd')
 
 if not daconfig.get('allow registration', True):

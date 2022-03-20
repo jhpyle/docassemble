@@ -24,7 +24,7 @@ code: |
   favorite_number
   final_screen
 ---
-sets: fail_safe
+event: fail_safe
 code: |
   if not defined('favorite_fruit'):
     favorite_fruit = '_________'

@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.3.26] - 2022-03-19
+### Added
+- The `favicon tile color` Configuration directive.
+- The `favicon version` Configuration directive.
+### Changed
+- Favicon feature now uses the package version number when available.
+- Favicon feature now supports `site.webmanifest`.
+- Additional logging during server restart.
+- UI accessibility improvements.
+### Fixed
+- Problem importing unclassified machine learning entries from JSON.
+
 ## [1.3.25] - 2022-03-16
 ### Changed
 - `complete_attribute` can refer to a list of attributes.

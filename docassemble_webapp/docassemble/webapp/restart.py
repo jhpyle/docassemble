@@ -1,3 +1,4 @@
+import datetime
 import sys
 import os
 import redis
@@ -7,8 +8,12 @@ if __name__ == "__main__":
 from docassemble.base.config import daconfig, parse_redis_uri
 from docassemble.webapp.cloud import get_cloud
 
+def errlog(text):
+    sys.stderr.write(str(datetime.datetime.now()) + " " + text + "\n")
+
 def main():
     container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
+    errlog("checking to see if running create_tables if necessary")
     if ':all:' in container_role or ':cron:' in container_role:
         (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts) = parse_redis_uri()
         r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password, username=redis_username, **ssl_opts)
@@ -16,8 +21,10 @@ def main():
             sys.stderr.write("restart: skipping create_tables\n")
             r.delete('da:skip_create_tables')
         else:
+            errlog("running create_tables")
             import docassemble.webapp.create_tables
             docassemble.webapp.create_tables.main()
+            errlog("finished create_tables")
         if ':cron:' in container_role:
             r.delete('da:cron_restart')
 
@@ -30,9 +37,10 @@ def main():
             sys.stderr.write("Wrote config file based on copy on cloud\n")
     wsgi_file = webapp_path
     if os.path.isfile(wsgi_file):
+        errlog("touching wsgi file")
         with open(wsgi_file, 'a', encoding='utf-8'):
             os.utime(wsgi_file, None)
-        sys.stderr.write("Restarted.\n")
+        errlog("Restarted.")
     sys.exit(0)
 
 if __name__ == "__main__":
