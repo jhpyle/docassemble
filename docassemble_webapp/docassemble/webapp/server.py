@@ -2315,7 +2315,7 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootst
         bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_site_webmanifest', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external, **app.config['FAVICON_PARAMS']) + '" color="' + app.config['FAVICON_MASK_COLOR'] + '">\n    <meta name="msapplication-TileColor" content="' + app.config['FAVICON_TILE_COLOR'] + '">\n    <meta name="theme-color" content="' + app.config['FAVICON_THEME_COLOR'] + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.min.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/bundle.css', v=da_version, _external=external) + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    ' + ('<link rel="shortcut icon" href="' + url_for('favicon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_FAVICON'] else '') + ('<link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_APPLE_TOUCH_ICON'] else '') + ('<link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="32x32">\n    ' if app.config['USE_FAVICON_MD'] else '') + ('<link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="16x16">\n    ' if app.config['USE_FAVICON_SM'] else '') + ('<link rel="manifest" href="' + url_for('favicon_site_webmanifest', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_SITE_WEBMANIFEST'] else '') + ('<link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external, **app.config['FAVICON_PARAMS']) + '" color="' + app.config['FAVICON_MASK_COLOR'] + '">\n    ' if app.config['USE_SAFARI_PINNED_TAB'] else '') + '<meta name="msapplication-TileColor" content="' + app.config['FAVICON_TILE_COLOR'] + '">\n    <meta name="theme-color" content="' + app.config['FAVICON_THEME_COLOR'] + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.min.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/bundle.css', v=da_version, _external=external) + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     page_title = page_title.replace('\n', ' ').replace('"', '&quot;').strip()
@@ -22786,6 +22786,18 @@ def favicon_file(filename, alt=None):
     response = send_file(the_file, mimetype=mimetype)
     return response
 
+def test_favicon_file(filename, alt=None):
+    the_dir = docassemble.base.functions.package_data_filename(daconfig.get('favicon', 'docassemble.webapp:data/static/favicon'))
+    if the_dir is None or not os.path.isdir(the_dir):
+        return False
+    the_file = os.path.join(the_dir, filename)
+    if not os.path.isfile(the_file):
+        if alt is not None:
+            the_file = os.path.join(the_dir, alt)
+        if not os.path.isfile(the_file):
+            return False
+    return True
+
 @app.route("/favicon.ico", methods=['GET'])
 def favicon():
     return favicon_file('favicon.ico')
@@ -28893,6 +28905,12 @@ def initialize():
         url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
         url = url_root + 'interview'
         with app.test_request_context(base_url=url_root, path=url):
+            app.config['USE_FAVICON'] = test_favicon_file('favicon.ico')
+            app.config['USE_APPLE_TOUCH_ICON'] = test_favicon_file('apple-touch-icon.png')
+            app.config['USE_FAVICON_MD'] = test_favicon_file('favicon-32x32.png')
+            app.config['USE_FAVICON_SM'] = test_favicon_file('favicon-16x16.png')
+            app.config['USE_SITE_WEBMANIFEST'] = test_favicon_file('site.webmanifest', alt='manifest.json')
+            app.config['USE_SAFARI_PINNED_TAB'] = test_favicon_file('safari-pinned-tab.svg')
             if 'bootstrap theme' in daconfig and daconfig['bootstrap theme']:
                 try:
                     app.config['BOOTSTRAP_THEME'] = get_url_from_file_reference(daconfig['bootstrap theme'])

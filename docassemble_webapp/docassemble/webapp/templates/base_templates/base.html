@@ -53,12 +53,24 @@
 {%- for key in config['SOCIAL']['fb'] %}
     <meta name="fb:{{ key }}" content="{{ config['SOCIAL']['fb'][key] }}">
 {%- endfor %}
+{%- if config['USE_FAVICON'] %}
     <link rel="shortcut icon" href="{{ url_for('favicon') }}{{ config['FAVICON_VERSION'] }}">
+{%- endif %}
+{%- if config['USE_APPLE_TOUCH_ICON'] %}
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon') }}{{ config['FAVICON_VERSION'] }}">
+{%- endif %}
+{%- if config['USE_FAVICON_MD'] %}
     <link rel="icon" type="image/png" href="{{ url_for('favicon_md') }}{{ config['FAVICON_VERSION'] }}" sizes="32x32">
+{%- endif %}
+{%- if config['USE_FAVICON_SM'] %}
     <link rel="icon" type="image/png" href="{{ url_for('favicon_sm') }}{{ config['FAVICON_VERSION'] }}" sizes="16x16">
+{%- endif %}
+{%- if config['USE_SITE_WEBMANIFEST'] %}
     <link rel="manifest" href="{{ url_for('favicon_site_webmanifest') }}{{ config['FAVICON_VERSION'] }}">
+{%- endif %}
+{%- if config['USE_SAFARI_PINNED_TAB'] %}
     <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab') }}{{ config['FAVICON_VERSION'] }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
+{%- endif %}
     <meta name="msapplication-TileColor" content="{{ config['FAVICON_TILE_COLOR'] }}">
     <meta name="theme-color" content="{{ config['FAVICON_THEME_COLOR'] }}">
     <script defer src="{{ url_for('static', filename='fontawesome/js/all.min.js', v=config['DA_VERSION']) }}"></script>

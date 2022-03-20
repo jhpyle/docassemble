@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.27] - 2022-03-20
+### Changed
+- Favicons not present will not be referenced in HTML.
+
 ## [1.3.26] - 2022-03-19
 ### Added
 - The `favicon tile color` Configuration directive.
