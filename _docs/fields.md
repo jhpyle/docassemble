@@ -1822,7 +1822,7 @@ If you set `label above field` to `True`, then the label will be
 positioned above the field and not to the left of it.  (By default, on
 larger screens, the label is positioned to the left of the field.)
 
-{% include side-by-side.html demo="no-label-field" %}
+{% include side-by-side.html demo="label-above-field" %}
 
 You can use the [`labels above fields`] feature to make this the
 default setting for all fields in your interview.
