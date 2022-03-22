@@ -3971,6 +3971,8 @@ class Question:
                     #     field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
                     elif key == 'shuffle':
                         field_info['shuffle'] = field[key]
+                    elif key == 'group':
+                        field_info['group'] = field[key]
                     elif key == 'none of the above' and 'datatype' in field and field['datatype'] in ('checkboxes', 'object_checkboxes', 'object_radio'):
                         if isinstance(field[key], bool):
                             field_info['nota'] = field[key]
@@ -5576,6 +5578,8 @@ class Question:
                                     new_item['help'] = choice['help'].text(user_dict)
                                 if 'default' in choice:
                                     new_item['default'] = choice['default']
+                                if 'group' in choice:
+                                    new_item['group'] = choice['group']
                                 if isinstance(choice['key'], TextObject):
                                     new_item['key'] = choice['key'].text(user_dict)
                                 else:
@@ -8886,12 +8890,14 @@ def process_selections(data, exclude=None):
                 the_item = {}
                 for key in entry:
                     if len(entry) > 1:
-                        if key in ['default', 'help', 'image', 'label']:
+                        if key in ['default', 'help', 'image', 'label', 'group']:
                             continue
                         if 'default' in entry:
                             the_item['default'] = entry['default']
                         if 'help' in entry:
                             the_item['help'] = entry['help']
+                        if 'group' in entry:
+                            the_item['group'] = entry['group']
                         if 'image' in entry:
                             if entry['image'].__class__.__name__ == 'DAFile':
                                 entry['image'].retrieve()
@@ -8920,7 +8926,7 @@ def process_selections(data, exclude=None):
                         the_item['label'] = entry[key]
                         is_not_boolean = False
                         for key, val in entry.items():
-                            if key in ['default', 'help', 'image', 'label']:
+                            if key in ['default', 'help', 'image', 'label', 'group']:
                                 continue
                             if val not in (True, False):
                                 is_not_boolean = True

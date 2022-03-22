@@ -8,6 +8,7 @@ from io import StringIO
 from html.parser import HTMLParser
 from docassemble.base.functions import word, get_currency_symbol, comma_and_list, server, custom_types
 from docassemble.base.util import format_date, format_datetime
+from docassemble.base.generate_key import random_string
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape, process_target
 from docassemble.base.parse import Question
 from docassemble.base.logger import logmessage
@@ -2191,8 +2192,17 @@ def input_for(status, field, wide=False, embedded=False):
             pairlist = list(status.selectcompute[field.number])
         else:
             raise Exception("Unknown choicetype " + field.choicetype)
-        if hasattr(field, 'shuffle') and field.shuffle:
+        using_opt_groups = all(['group' in pair for pair in pairlist])
+        using_shuffle = hasattr(field, 'shuffle') and field.shuffle
+        if using_opt_groups:
+            # Using optgroups, each option has an associated group
+            if using_shuffle:
+                pairlist = sorted(pairlist, key=lambda p: p.get('group'))
+            else:
+                pairlist = sorted(pairlist, key=lambda p: p.get('group') + random_string(10))
+        elif using_shuffle:
             random.shuffle(pairlist)
+
         if field.datatype in ['multiselect', 'object_multiselect']:
             if field.datatype == 'object_multiselect':
                 daobject = ' damultiselect daobject'
@@ -2215,7 +2225,14 @@ def input_for(status, field, wide=False, embedded=False):
                 output += '<span class="da-inline-error-wrapper">'
             output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + disable_others_data + ' multiple>'
             the_options = ''
+            last_group = None
             for pair in pairlist:
+                if using_opt_groups and pair.get('group') != last_group:
+                    pair_group = pair.get('group')
+                    if last_group != None:
+                        the_options += '</optgroup>'
+                    the_options += f'<optgroup label="{pair_group}">'
+                    last_group = pair_group
                 if isinstance(pair['key'], str):
                     inner_field = safeid(from_safeid(saveas_string) + "[B" + myb64quote(pair['key']) + "]")
                     key_data = ' data-valname=' + myb64doublequote(pair['key'])
@@ -2242,6 +2259,8 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     isselected = ''
                 the_options += '<option value=' + fix_double_quote(inner_field) + key_data + isselected + '>' + markdown_to_html(str(pair['label']), status=status, escape='option', trim=True, do_terms=False) + '</option>'
+            if using_opt_groups:
+                the_options += '</optgroup>'
             output += the_options
             if embedded:
                 output += '</select></span> '
