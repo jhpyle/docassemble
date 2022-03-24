@@ -381,13 +381,8 @@ objects:
 mandatory: True
 code: |
   email_sent
-  reconsider('signature_obtained')
-  if signature_obtained:
-    final_screen
-  elif r.get_data(redis_key) is None:
-    timeout_screen
-  else:
-    waiting_screen
+  signature_obtained
+  final_screen
 ---
 code: |
   send_email(to=email_address, template=email_template)
@@ -437,15 +432,20 @@ subquestion: |
 reload: 5
 ---
 code: |
-  if r.get_data(redis_key) not in ('waiting', None):
-    signature = DAFile('signature')
-    signature.initialize(filename="signature.png")
-    signature.write(r.get_data(redis_key), binary=True)
-    signature.commit()
-    r.delete(redis_key)
-    signature_obtained = True
-  else:
-    signature_obtained = False
+  result = r.get_data(redis_key)
+  if result is None:
+    del result
+    timeout_screen
+  elif result == 'waiting':
+    del result
+    waiting_screen
+  signature = DAFile('signature')
+  signature.initialize(filename="signature.png")
+  signature.write(result, binary=True)
+  signature.commit()
+  r.delete(redis_key)
+  signature_obtained = True
+  del result
 {% endhighlight %}
 
 Second interview (referenced in the first as `second-interview.yml`):
