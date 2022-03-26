@@ -5,7 +5,7 @@ short_title: Overview
 ---
 
 When you log in to a **docassemble** server, the options available to
-you in the menu in the upper-right corner will depend on what 
+you in the menu in the upper-right corner will depend on what
 [privileges] have been enabled for your account.
 
 There are four special privileges built in to **docassemble**.
@@ -285,9 +285,16 @@ The columns of the spreadsheet are:
 * index_num: an number that indexes the phrase within a given
   question.
 * hash: an [MD5 hash] of the phrase (which can be used to test whether
-  the text in the "orig_text" column was edited, which it should not be) 
+  the text in the "orig_text" column was edited, which it should not be)
 * orig_lang: the original language of the phrase, as indicated by the
-  [`language`] specifier of the [`question`].
+  [`language`] specifier of the [`question`]. If the [`question`] does
+  not specify a [`language`], the default language of the YAML file as
+  indicated by the [`default language`] block will be used to
+  determine the language of the [`question`]. If no [`default
+  language`] is specified, the [`default language` specifier in the
+  interview `metadata`] will be used. If no such specifier exists in
+  the [`metadata`], the default language of the server (as indicated by
+  the [`langauge` Configuration directive]) will be used.
 * tr_lang: the language into which the phrase should be translated.
 * orig_text: the text of the phrase
 * tr_text: the translated phrase (which is blank if the phrase has not
@@ -314,6 +321,9 @@ that are not present in the interview, perhaps because they used to be
 present but are no longer present, these extra phrases will be listed
 at the end of the interview and their "index_num" values will be
 numbered starting with 1000.
+
+When using interview phrase translation files, it is important to set
+the [`default language` specifier in the interview `metadata`].
 
 ### <a name="word addin manifest"></a>Word add-in manifest XML file
 
@@ -353,7 +363,7 @@ The profile fields that you can edit include:
 
 * E-mail: this must be unique; no two users can have the same e-mail address.
 * First name
-* Last name 
+* Last name
 * Country code: an uppercase [ISO 3166] country code
 * State
 * County
@@ -675,3 +685,6 @@ For tips on troubleshooting your **docassemble** system, see the
 [`admin can delete account`]: {{ site.baseurl }}/docs/config.html#admin can delete account
 [XLSX]: https://en.wikipedia.org/wiki/Office_Open_XML
 [XLIFF]: https://en.wikipedia.org/wiki/XLIFF
+[`default language`]: {{ site.baseurl }}/docs/initial.html#default language
+[`langauge` Configuration directive]: {{ site.baseurl }}/docs/config.html#language
+[`default language` specifier in the interview `metadata`]: {{ site.baseurl }}/docs/initial.html#metadata default language

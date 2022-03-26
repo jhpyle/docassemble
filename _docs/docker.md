@@ -30,11 +30,6 @@ As much as [Docker] simplifies the process of installing
 **docassemble**, it takes some time to understand the concepts behind
 "running," "stopping," and "starting" containers.
 
-If you are not familiar with [Docker] or with hosting web
-applications, and you want to get up and running fast, you may want to
-use one of the [third party providers] that provide
-**docassemble**-based interview development platforms.
-
 [Docker] can also be used to deploy even the most complex
 **docassemble** installations.  For example, [Kubernetes] or Amazon's
 [EC2 Container Service] can be used to maintain a cluster of
@@ -57,7 +52,8 @@ loose real-world analogies:
 * Doing [`docker stop`] is analogous to turning off a computer (and
   forcibly unplugging it after a certain number of seconds after you
   initiate the shutdown from the Windows "start" menu).
-* Doing [`docker start`] is analogous to turning on a computer.
+* Doing [`docker start`] is analogous to turning on a computer that
+  already has Windows installed on it.
 * Doing [`docker rm`] is analogous to tossing a computer into a
   trash incinerator.
 * Doing [`docker rmi`] is analogous to tossing a Windows installation
@@ -149,6 +145,17 @@ running `sudo groupadd docker` before you run the `usermod` command.
 [Docker] will probably start automatically after it is installed.  On
 Linux, you many need to do `sudo /etc/init.d/docker start`, `sudo
 systemctl start docker`, or `sudo service docker start`.
+
+The operating system that runs inside of the **docassemble** Docker
+container is Ubuntu 21 (`impish`). This is a fairly recent version of
+Ubuntu. When using Docker, it is recommended that you run a recent
+version of Docker on a recent operating system, such as Ubuntu 20
+or 21. (If you run Docker on Mac or Windows, it will likely start a
+virtual machine and then deploy the **docassemble** Docker container
+inside that virtual machine; the operating system of that virtual
+machine, which is likely a flavor of Linux, should be recent.) You may
+encounter difficult-to-diagnose problems if **docassemble**'s Ubuntu
+21 does not fully function inside its host operating system.
 
 # <a name="single server arrangement"></a>Quick start
 

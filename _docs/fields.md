@@ -792,12 +792,29 @@ from the keys, you can specify the choices in the following manner:
 
 {% include side-by-side.html demo="fields-checkboxes-different-labels" %}
 
+The [`all_true()`], [`all_false()`], [`any_true()`] and
+[`any_false()`] methods of [`DADict`] can be used to analyze the
+values set by a checkboxes field.  For example:
+
+{% highlight yaml %}
+mandatory: True
+question: |
+  Your fruit preferences
+subquestion: |
+  % if likes_fruit.all_true():
+  You like all the fruit.
+  % elif likes_fruit.all_false():
+  You don't like any of the fruit.
+  % elif likes_fruit.any_true():
+  You like at least one fruit.
+  % elif likes_fruit.any_false():
+  There is at least one fruit you don't like.
+  % endif
+{% endhighlight %}
+
 You can generate checkbox choices with code:
 
 {% include side-by-side.html demo="fields-checkboxes-code" %}
-
-The [`all_true()`], [`all_false()`], [`any_true()`] and [`any_false()`]
-methods can be used to analyze the values set by a checkboxes field.
 
 ### <a name="fields checkboxes defaults"></a>Default values for checkboxes
 

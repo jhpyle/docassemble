@@ -3663,7 +3663,7 @@
     favorite_number
     final_screen
   ---
-  sets: fail_safe
+  event: fail_safe
   code: |
     if not defined('favorite_fruit'):
       favorite_fruit = '_________'
@@ -12936,6 +12936,70 @@
           keys=['employment', 'benefits', 'interest'],
           complete_attribute='complete',
           there_is_another=False)
+"indexdemo": |-
+  modules:
+    - docassemble.demo.index
+  ---
+  mandatory: True
+  objects:
+    - index: MyIndex
+  ---
+  on change:
+    user.name.first: |
+      index.update({'first_name': user.name.first})
+    user.name.last: |
+      index.update({'last_name': user.name.last})
+  ---
+  objects:
+    - user: Individual
+  ---
+  mandatory: True
+  code: |
+    favorite_fruit
+    favorite_vegetable
+    finish_time_stored
+    final_screen
+  ---
+  question: |
+    What is your name?
+  fields:
+    - First: user.name.first
+    - Last: user.name.last
+  ---
+  question: |
+    What is your favorite fruit, ${ user }?
+  fields:
+    - Fruit: favorite_fruit
+  ---
+  question: |
+    What is your favorite vegetable?
+  fields:
+    - Vegetable: favorite_vegetable
+  ---
+  code: |
+    index.update({'finish_time': current_datetime()})
+    finish_time_stored = True
+  ---
+  event: final_screen
+  question: |
+    Thank you for that information.
+"indexdemoquery": |-
+  modules:
+    - docassemble.demo.index
+  ---
+  objects:
+    - index: MyIndex
+  ---
+  mandatory: True
+  question: |
+    People who have used the interview in the last month
+  subquestion: |
+    % for data in index.report(filter_by="(data->>'start_time')::date > 'today'::date - '1 month'::interval", order_by="(data->>'start_time')::timestamp"):
+    * ${ data['first_name'] } ${ data['last_name'] }
+      % if 'finish_time' not in data:
+    (unfinished)
+      % endif
+    % endfor
 "interview_in_interview": "objects:\n  - user_global: Individual\n  - user: Individual\n\
   \  - endpoint: DADict\n---\nmandatory: True\ncode: |\n  while True:\n    del endpoint[user.goal]\n\
   \    del user\n---\nquestion: |\n  What interview would you like to complete?\n\

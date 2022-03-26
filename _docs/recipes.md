@@ -2189,6 +2189,84 @@ with open('the_file.pdf', 'wb') as fp:
     fp.write(r.content)
 {% endhighlight %}
 
+# <a name="json index"></a>Building a database for reporting
+
+If you want to be able to run reports on variables in interview
+sessions, calling `interview_list()` may be too inefficient because
+unpickling the interview answers of a large quantity of interview
+sessions is computationally intensive.
+
+The [`store_variables_snapshot()`] function allows you to save
+variable values to a dictionary in a PostgreSQL database. This
+database can be the the standard database where interview answers are
+stored ([`db`]) or a different database ([`variables snapshot
+db`]). You can then write queries that use [JSONB] to access the
+variables in the dictionary.
+
+Here is an example of a module, [`index.py`], that uses
+[`store_variables_snapshot()`] to create a database that lets you run
+reports showing the names of users along with when they started and
+stopped their interviews.
+
+{% highlight python %}
+import json
+from docassemble.base.util import store_variables_snapshot, DAObject, user_info, start_time, variables_snapshot_connection
+
+__all__ = ['MyIndex']
+
+class MyIndex(DAObject):
+    def init(self, *pargs, **kwargs):
+        super().init(*pargs, **kwargs)
+        if not hasattr(self, 'data'):
+            self.data = {}
+        if not hasattr(self, 'key'):
+            self.key = 'myindex'
+    def save(self):
+        data = dict(self.data)
+        data['session'] = user_info().session
+        data['filename'] = user_info().filename
+        data['start_time'] = start_time().astimezone()
+        store_variables_snapshot(data, key=self.key)
+    def set(self, data):
+        if not isinstance(data, dict):
+            raise Exception("MyIndex.set: data parameter must be a dictionary")
+        self.data = data
+        self.save()
+    def update(self, new_data):
+        self.data.update(new_data)
+        self.save()
+    def report(self, filter_by=None, order_by=None):
+        if filter_by is None:
+            filter_string = ''
+        else:
+            filter_string = ' and ' + filter_by
+        if order_by is None:
+            order_string = ''
+        else:
+            order_string = ' order by ' + order_by
+        conn = variables_snapshot_connection()
+        with conn.cursor() as cur:
+            cur.execute("select data from jsonstorage where tags='" + self.key + "'" + filter_string + order_string)
+            results = [record[0] for record in cur.fetchall()]
+        conn.close()
+        return results
+
+{% endhighlight %}
+
+Here is an example of an interview that uses a `MyIndex` object to
+store information about each interview in JSON storage.
+
+{% include demo-side-by-side.html demo="indexdemo" %}
+
+Note that the `index` object is defined in a `mandatory` block. This
+ensures that the `index` object exists before the [`on change`] code
+runs. Code that runs inside of [`on change`] cannot encounter any
+undefined variables.
+
+To run a query on the data, you can do something like this:
+
+{% include demo-side-by-side.html demo="indexdemoquery" %}
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml
@@ -2295,3 +2373,9 @@ with open('the_file.pdf', 'wb') as fp:
 [Mako]: http://www.makotemplates.org/
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
 [Language Support]: {{ site.baseurl }}/docs/language.html
+[`store_variables_snapshot()`]: {{ site.baseurl }}/docs/functions.html#store_variables_snapshot
+[`db`]: https://docassemble.org/docs/config.html#db
+[`variables snapshot db`]: https://docassemble.org/docs/config.html#variables snapshot db
+[JSONB]: https://www.postgresql.org/docs/current/functions-json.html
+[`on change`]: {{ site.baseurl }}/docs/initial.html#on change
+[`index.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/index.py

@@ -402,6 +402,37 @@ scans the [YAML] files in a directory and outputs [YAML] containing
 the excerpts, which is then processed by the [Jekyll] documentation
 site that is hosted on [GitHub Pages].
 
+<a name="metadata default language"></a>If you are using the [translation
+files] system for translating an interview into multiple languages,
+you should specify a `default language` in the `metadata`. If you
+wrote the `question` blocks in English and your [translation files]
+translate questions from English into other languages, set `default
+language: en` in the `metadata`. The [`default language`] block will
+override the `default language` in the `metadata`, and the [`language`
+modifier] will override the [`default language`] block. If you don't
+specify a `default language` in the `metadata`, **docassemble** will
+assume the default language is the language indicated by the
+[`language`] directive in the [Configuration]. Setting a `default
+language` in the `metadata` ensures that your interview can be
+installed on a server that uses a different system-wide default
+language.
+
+It is important to put your `metadata` directive at the top of your
+interview YAML (i.e. before `question` blocks and `include`
+directives). The `default language` in the `metadata` is only
+effective for blocks that follow the `metadata` directive. This means
+that another `default language` directive can change the default
+language of your interview. For example, if your interview starts out
+with a `metadata` block that sets the `default language` to `de`, but
+then you have an `include` block that brings in a YAML file containing
+a `metadata` block that sets the `default language` to `es`, then all
+blocks processed afterward will be considered to be written in Spanish
+(assuming no [`default language`] block or `language` modifier is
+used). Although this may be what you want, in general, the best way to
+indicate the default language of a YAML file is the [`default
+language`] block, rather than `metadata`; the purpose of the
+`metadata` is to specify an interview-wide default.
+
 ## <a name="overlapping metadata"></a>Effect of multiple `metadata` blocks
 
 An interview can contain multiple metadata blocks.  Values in later
@@ -1506,16 +1537,20 @@ This allows you to support multi-lingual interviews while having a
 code base that is all in one language.
 
 To obtain such a spreadsheet for a given interview, visit the
-[Utilities] page and go to the section called [Download an interview phrase translation file].
+[Utilities].
 
 The `translations` block is only capable of defining translations for
 blocks that come after the `translations` block.  Therefore, it is a
 good practice to make sure that the `translations` block is placed as
 one of the very first blocks in your interview [YAML] file.
 
-The [language support] for more information about how to create
-[multi-lingual interviews].  See [question modifiers] for information
-about the `language` setting of a question.
+For more information about using translation files, read the section
+[Download an interview phrase translation file]. See [language
+support] for more information about how to create [multi-lingual
+interviews].  See [question modifiers] for information about the
+`language` setting of a question.  See also the [`default language`]
+block and the [`default language` specifier under
+`metadata`](#metadata default language).
 
 # <a name="default screen parts"></a>Default screen parts
 
@@ -2559,3 +2594,5 @@ This will cause the web application to run the JavaScript for the
 [adjust the CSS]: {{ site.baseurl }}/docs/config.html#bootstrap theme
 [Bootstrap Navbar]: https://getbootstrap.com/docs/4.0/components/navbar/#supported-content
 [`__all__`]: https://docs.python.org/3/tutorial/modules.html#importing-from-a-package
+[translation files]: #translations
+[`language`]: {{ site.baseurl }}/docs/config.html#language
