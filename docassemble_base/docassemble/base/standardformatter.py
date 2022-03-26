@@ -1481,7 +1481,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     inner_fieldlist = inner_fieldlist[1:]
                 if status.question.question_variety in ["dropdown", "combobox"]:
                     if status.question.question_variety == 'combobox':
-                        combobox = ' combobox'
+                        combobox = ' form-control combobox'
                         daspaceafter = ' daspaceafter'
                         if defaultvalue:
                             datadefault = ' data-default=' + fix_double_quote(str(defaultvalue))
@@ -1489,11 +1489,11 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                             datadefault = ''
                         field_container_class = ' da-field-container-combobox'
                     else:
-                        combobox = ''
+                        combobox = ' form-select'
                         datadefault = ''
                         daspaceafter = ''
                         field_container_class = ' da-field-container-dropdown'
-                    output += '                <div class="row' + field_container_class + '"><div class="col-md-12' + daspaceafter + '"><select class="form-select daspaceafter' + combobox + '"' + datadefault + ' name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '">' + "".join(inner_fieldlist) + '</select></div></div>\n'
+                    output += '                <div class="row' + field_container_class + '"><div class="col-md-12' + daspaceafter + '"><select class="daspaceafter' + combobox + '"' + datadefault + ' name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = []
                     validation_rules['messages'][status.question.fields[0].saveas] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
@@ -1530,16 +1530,16 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     inner_fieldlist = inner_fieldlist[1:]
                 if status.question.question_variety in ["dropdown", "combobox"]:
                     if status.question.question_variety == 'combobox':
-                        combobox = ' combobox'
+                        combobox = 'form-control combobox'
                         daspaceafter = ' daspaceafter'
                     else:
-                        combobox = ' daspaceafter'
+                        combobox = 'form-select daspaceafter'
                         daspaceafter = ''
                     if defaultvalue:
                         datadefault = ' data-default=' + fix_double_quote(str(defaultvalue))
                     else:
                         datadefault = ''
-                    output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="form-select ' + combobox + '"' + datadefault + ' name="X211bHRpcGxlX2Nob2ljZQ">' + "".join(inner_fieldlist) + '</select></div></div>\n'
+                    output += '                <div class="row"><div class="col-md-12' + daspaceafter + '"><select class="' + combobox + '"' + datadefault + ' name="X211bHRpcGxlX2Nob2ljZQ">' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = []
                     validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
@@ -2412,7 +2412,7 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 output += '<p class="visually-hidden">' + word('Select box') + '</p>'
                 if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
-                    emb_text = 'class="form-select dasingleselect combobox' + daobject + '" '
+                    emb_text = 'class="form-control dasingleselect combobox' + daobject + '" '
                 else:
                     emb_text = 'class="form-select dasingleselect' + daobject + '" '
             if embedded:
@@ -2686,7 +2686,7 @@ def input_for(status, field, wide=False, embedded=False):
                 default_val = ''
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
-            output += '<select data-action=' + fix_double_quote(field.combobox_action['action']) + ' data-trig="' + str(field.combobox_action['trig']) + '" alt="' + word("Input box") + '" class="form-select da-ajax-combobox' + extra_class + '"' + extra_style + title_text + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"><option' + defaultstring + ' selected="selected">' + option_escape(default_val) + '</option></select>'
+            output += '<select data-action=' + fix_double_quote(field.combobox_action['action']) + ' data-trig="' + str(field.combobox_action['trig']) + '" alt="' + word("Input box") + '" class="form-control da-ajax-combobox' + extra_class + '"' + extra_style + title_text + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"><option' + defaultstring + ' selected="selected">' + option_escape(default_val) + '</option></select>'
             if embedded:
                 if field.datatype == 'currency':
                     output += '</span></span>'

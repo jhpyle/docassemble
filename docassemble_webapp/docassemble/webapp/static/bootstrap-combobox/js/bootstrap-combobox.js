@@ -212,7 +212,7 @@
       if (this.options.bsVersion == "2") {
         return '<div class="combobox-container"><input type="hidden" /> <div class="input-append"> <input type="text" autocomplete="off" /> <span class="add-on dropdown-toggle" data-bs-dropdown="dropdown"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>';
       } else {
-        return '<div class="combobox-container"> <input type="hidden" /> <div class="input-group"> <input type="text" autocomplete="off" />  <button class="btn btn-outline-secondary dacomboboxtoggle" data-bs-toggle="dropdown" type="button"><span class="fas fa-caret-down"></span><span class="fas fa-times"></span></button> </div> </div>';
+        return '<div class="combobox-container"> <input type="hidden" /> <div class="input-group"> <input type="text" autocomplete="off" />  <div class="input-group-append"><button class="btn btn-outline-secondary dacomboboxtoggle" data-bs-toggle="dropdown" type="button"><span class="fas fa-caret-down"></span><span class="fas fa-times"></span></button> </div> </div> </div>';
       }
     },
 

@@ -1251,7 +1251,7 @@ fi
 
 echo "initialize: Checking to see if unoconv should be started" >&2
 
-if [ "$ENABLEUNOCONV" == "true" ] && [[ -x /usr/bin/unoconv ]]; then
+if [ "$ENABLEUNOCONV" == "true" ] && command -v unoconv &> /dev/null; then
     echo "initialize: Starting unoconv" >&2
     supervisorctl --serverurl http://localhost:9001 start unoconv
 fi

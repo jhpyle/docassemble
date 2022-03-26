@@ -1406,11 +1406,11 @@ class TextObject:
         if translate and question is not None and len(question.interview.translations) and isinstance(x, str):
             if self.original_text in question.interview.translation_dict:
                 if question.language == '*':
-                    self.language = docassemble.base.functions.server.default_language
+                    self.language = question.interview.default_language
                 else:
                     self.language = question.language
                 for orig_lang in question.interview.translation_dict[self.original_text]:
-                    if orig_lang == question.language or (question.language == '*' and orig_lang == docassemble.base.functions.server.default_language):
+                    if orig_lang == question.language or (question.language == '*' and orig_lang == question.interview.default_language):
                         for target_lang in question.interview.translation_dict[self.original_text][orig_lang]:
                             if self.uses_mako:
                                 self.other_lang[target_lang] = (question.interview.translation_dict[self.original_text][orig_lang][target_lang], MakoTemplate(question.interview.translation_dict[self.original_text][orig_lang][target_lang], strict_undefined=True, input_encoding='utf-8'))
@@ -2598,6 +2598,8 @@ class Question:
             if isinstance(data['metadata'], dict):
                 data['metadata']['_origin_path'] = self.from_source.path
                 data['metadata']['_origin_package'] = self.from_source.get_package()
+                if 'default language' in data['metadata']:
+                    self.interview.default_language = data['metadata']['default language']
                 self.interview.metadata.append(data['metadata'])
             else:
                 raise DAError("A metadata section must be organized as a dictionary." + self.idebug(data))
@@ -7077,6 +7079,7 @@ class Interview:
         self.consolidated_metadata = {}
         self.issue = {}
         self.custom_data_types = set()
+        self.default_language = docassemble.base.functions.server.default_language
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
             self.cross_reference_dependencies()

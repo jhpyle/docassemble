@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.3.28] - 2022-03-26
+### Added
+- The `default language` specifier in `metadata`.
+- Recipe for running reports.
+### Fixed
+- Some functions did not work in `on change` code.
+- UI issue with comboboxes.
+
 ## [1.3.27] - 2022-03-20
 ### Changed
 - Favicons not present will not be referenced in HTML.

@@ -1,0 +1,52 @@
+metadata:
+  title: Reporting database
+  documentation: "https://docassemble.org/docs/recipes.html#json index"
+  example start: 1
+  example end: 10
+---
+modules:
+  - docassemble.demo.index
+---
+mandatory: True
+objects:
+  - index: MyIndex
+---
+on change:
+  user.name.first: |
+    index.update({'first_name': user.name.first})
+  user.name.last: |
+    index.update({'last_name': user.name.last})
+---
+objects:
+  - user: Individual
+---
+mandatory: True
+code: |
+  favorite_fruit
+  favorite_vegetable
+  finish_time_stored
+  final_screen
+---
+question: |
+  What is your name?
+fields:
+  - First: user.name.first
+  - Last: user.name.last
+---
+question: |
+  What is your favorite fruit, ${ user }?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+code: |
+  index.update({'finish_time': current_datetime()})
+  finish_time_stored = True
+---
+event: final_screen
+question: |
+  Thank you for that information.

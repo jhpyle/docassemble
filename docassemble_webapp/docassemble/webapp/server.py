@@ -7231,6 +7231,7 @@ def index(action_argument=None, refer=None):
                     error_messages.append(("error", "Error: " + str(errMess)))
                 if should_assemble_now and not already_assembled:
                     interview.assemble(user_dict, interview_status)
+                    already_assembled = True
                 for orig_file_field_raw in file_fields:
                     if orig_file_field_raw in known_varnames:
                         orig_file_field_raw = known_varnames[orig_file_field_raw]
@@ -7382,6 +7383,7 @@ def index(action_argument=None, refer=None):
                     error_messages.append(("error", "Error: " + str(errMess)))
                 if not already_assembled:
                     interview.assemble(user_dict, interview_status)
+                    already_assembled = True
                 for orig_file_field_raw in file_fields:
                     if orig_file_field_raw not in raw_visible_fields:
                         continue
@@ -7562,7 +7564,12 @@ def index(action_argument=None, refer=None):
                 steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     if validated:
         for var_name in vars_set:
-            if var_name in interview.invalidation_todo or var_name in interview.onchange_todo:
+            if var_name in interview.invalidation_todo:
+                interview.invalidate_dependencies(var_name, user_dict, old_values)
+            elif var_name in interview.onchange_todo:
+                if not already_assembled:
+                    interview.assemble(user_dict, interview_status)
+                    already_assembled = True
                 interview.invalidate_dependencies(var_name, user_dict, old_values)
             try:
                 del user_dict['_internal']['dirty'][var_name]
@@ -21409,7 +21416,7 @@ def utilities():
                 wrapping = workbook.add_format({'num_format': '@'})
                 wrapping.set_align('top')
                 wrapping.set_text_wrap()
-                wrapping.set_locked(False)
+                # wrapping.set_locked(False)
                 numb = workbook.add_format()
                 numb.set_align('top')
                 worksheet.write('A1', 'orig_lang', bold)
@@ -23881,7 +23888,7 @@ def translation_file():
         fixedunlockedcell = workbook.add_format()
         fixedunlockedcell.set_align('top')
         fixedunlockedcell.set_text_wrap()
-        fixedunlockedcell.set_locked(False)
+        # fixedunlockedcell.set_locked(False)
         fixed = workbook.add_format()
         fixedone = workbook.add_format()
         fixedone.set_bold()
@@ -23912,19 +23919,19 @@ def translation_file():
         wholefixedunlocked = workbook.add_format()
         wholefixedunlocked.set_align('top')
         wholefixedunlocked.set_text_wrap()
-        wholefixedunlocked.set_locked(False)
+        # wholefixedunlocked.set_locked(False)
         wholefixedunlockedone = workbook.add_format()
         wholefixedunlockedone.set_bold()
         wholefixedunlockedone.set_font_color('green')
         wholefixedunlockedone.set_align('top')
         wholefixedunlockedone.set_text_wrap()
-        wholefixedunlockedone.set_locked(False)
+        # wholefixedunlockedone.set_locked(False)
         wholefixedunlockedtwo = workbook.add_format()
         wholefixedunlockedtwo.set_bold()
         wholefixedunlockedtwo.set_font_color('blue')
         wholefixedunlockedtwo.set_align('top')
         wholefixedunlockedtwo.set_text_wrap()
-        wholefixedunlockedtwo.set_locked(False)
+        # wholefixedunlockedtwo.set_locked(False)
         numb = workbook.add_format()
         numb.set_align('top')
         worksheet.write('A1', 'interview', bold)
@@ -23935,24 +23942,24 @@ def translation_file():
         worksheet.write('F1', 'tr_lang', bold)
         worksheet.write('G1', 'orig_text', bold)
         worksheet.write('H1', 'tr_text', bold)
-        options = {
-            'objects':               False,
-            'scenarios':             False,
-            'format_cells':          False,
-            'format_columns':        False,
-            'format_rows':           False,
-            'insert_columns':        False,
-            'insert_rows':           True,
-            'insert_hyperlinks':     False,
-            'delete_columns':        False,
-            'delete_rows':           True,
-            'select_locked_cells':   True,
-            'sort':                  True,
-            'autofilter':            True,
-            'pivot_tables':          False,
-            'select_unlocked_cells': True,
-        }
-        worksheet.protect('', options)
+        # options = {
+        #     'objects':               False,
+        #     'scenarios':             False,
+        #     'format_cells':          False,
+        #     'format_columns':        False,
+        #     'format_rows':           False,
+        #     'insert_columns':        False,
+        #     'insert_rows':           True,
+        #     'insert_hyperlinks':     False,
+        #     'delete_columns':        False,
+        #     'delete_rows':           True,
+        #     'select_locked_cells':   True,
+        #     'sort':                  True,
+        #     'autofilter':            True,
+        #     'pivot_tables':          False,
+        #     'select_unlocked_cells': True,
+        # }
+        # worksheet.protect('', options)
         worksheet.set_column(0, 0, 25)
         worksheet.set_column(1, 1, 15)
         worksheet.set_column(2, 2, 12)
@@ -23965,9 +23972,9 @@ def translation_file():
                 continue
             language = question.language
             if language == '*':
-                language = interview_source.language
+                language = question.from_source.get_language()
             if language == '*':
-                language = DEFAULT_LANGUAGE
+                language = interview.default_language
             if language == tr_lang:
                 continue
             indexno = 0

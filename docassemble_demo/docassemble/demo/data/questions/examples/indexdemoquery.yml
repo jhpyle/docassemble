@@ -1,0 +1,22 @@
+metadata:
+  title: Querying database
+  documentation: "https://docassemble.org/docs/recipes.html#json index"
+  example start: 1
+  example end: 3
+---
+modules:
+  - docassemble.demo.index
+---
+objects:
+  - index: MyIndex
+---
+mandatory: True
+question: |
+  People who have used the interview in the last month
+subquestion: |
+  % for data in index.report(filter_by="(data->>'start_time')::date > 'today'::date - '1 month'::interval", order_by="(data->>'start_time')::timestamp"):
+  * ${ data['first_name'] } ${ data['last_name'] }
+    % if 'finish_time' not in data:
+  (unfinished)
+    % endif
+  % endfor
