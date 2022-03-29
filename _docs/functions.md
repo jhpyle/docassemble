@@ -6728,6 +6728,49 @@ database.  If you connect to the database with the credentials from
 The `stash_data()` and `retrieve_stashed_data()` functions can be used
 to store encrypted data in [Redis] for a period of time.
 
+The `stash_data()` function stores a [Python dictionary]. The
+dictionary given to `stash_data()` can contain any `pickle`-able
+Python objects in any structure. In this example, the `user` object is
+stored.
+
+{% highlight python %}
+(key, secret) = stash_data({'user': user}, expire=300)
+{% endhighlight %}
+
+The `key` and `secret` are needed to retrieve and decrypt the
+data later. The optional keyword parameter `expire` indicates that the
+data should disappear after five minutes (300 seconds). If `expire` is
+not provided, the default period is 90 days.
+
+The `retrieve_stashed_data()` function takes the `key` and `secret` as
+input and returns the [Python dictionary] that was stored.
+
+{% highlight python %}
+stored_data = retrieve_stashed_data(key, secret)
+if stored_data is not None:
+  set_variables(stored_data)
+{% endhighlight %}
+
+If the data cannot be retrieved, `retrieve_stashed_data()` returns
+`None`.  This example uses the [`set_variables()`] function to set the
+variable `user` in the interview answers.
+
+`retrieve_stashed_data()` accepts the optional keyword parameter
+`delete`, which indicates whether the data should be deleted after
+being retrieved. The default is `False`. It is generally a good idea
+to use `delete=True` whenever possible because it frees up space in
+[Redis].
+
+`retrieve_stashed_data()` accepts the optional keyword parameter
+`refresh`, which can be set to `True` or an integer number of seconds.
+If `refresh` is `True`, then after the information is accessed, the
+expiration date of the data stash will be reset to 90 days from the
+current time. If `refresh` is set to an integer number of seconds,
+then the data stash will be deleted after that number of seconds.
+
+For [API] versions of these functions, see [`/api/stash_data`] and
+[`/api/retrieve_stashed_data`].
+
 # <a name="docx"></a>Functions for working with DOCX templates
 
 ## <a name="include_docx_template"></a>include_docx_template()
@@ -8029,3 +8072,5 @@ $(document).on('daPageLoad', function(){
 [`.as_serializable()`]: {{ site.baseurl }}/docs/objects.html#DAObject.as_serializable
 [`datetime.time`]: https://docs.python.org/3/library/datetime.html#datetime.time
 [`set_variables()`]: set_variables
+[`/api/stash_data`]: {{ site.baseurl }}/docs/api.html#stash_data
+[`/api/retrieve_stashed_data`]: {{ site.baseurl }}/docs/api.html#retrieve_stashed_data
