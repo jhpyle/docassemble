@@ -349,9 +349,12 @@ def language_name(language_code:str)->str:
     function."""
     ensure_definition(language_code)
     try:
-        return word(pycountry.languages.get(alpha_2=language_code).name)
+        if len(language_code) == 2:
+            return word(pycountry.languages.get(alpha_2=language_code).name)
+        else:
+            return word(pycountry.languages.get(alpha_3=language_code).name)
     except:
-        return language_code        
+        return language_code
 
 def subdivision_type(country_code):
     """Returns the name of the most common country subdivision type for
