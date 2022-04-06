@@ -4493,20 +4493,20 @@ def get_user_object(user_id):
 
 @lm.request_loader
 def load_request(request):
+    # print('load_request')
     auth_key = daconfig.get('verify id token key', '__session')
-    logmessage('auth_key', auth_key)
     auth = request.cookies.get(auth_key, None)
-    verifyURI = daconfig.get('verify id token URI')
-    logmessage('verifyURI' + str(verifyURI))
-    logmessage('auth ' + auth)
-    if auth:
-        unquoted = urllibunquote(auth)
-        data = json.loads(unquoted)
-        uid = data['uid']
-        r = requests.post(verifyURI,None,data)
-        logmessage('verify uid' + uid)
-        logmessage('status code' + r.status_code)
+    verifyURI = daconfig.get('verify id token URI', '')
+    # print('auth' + str(auth))
+    # print('verifyURI' + verifyURI)
+    if auth and verifyURI:
+        cookies = {'__session': auth}
+        origin = daconfig.get('verify id token origin', 'http://da')
+        # print('origin' + origin)
+        headers = {'origin': origin}
+        r = requests.post(verifyURI,cookies=cookies,headers=headers)
         if r.status_code == 200:
+            uid = r.text
             user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.email == uid)).scalar()
             return user
     return None
@@ -5805,7 +5805,7 @@ def apply_security_headers(response):
     if daconfig.get('allow embedding', False) is not True:
         response.headers["X-Frame-Options"] = 'SAMEORIGIN'
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self';"
-    elif daconfig.get('cross site domains', []):
+    if daconfig.get('cross site domains', []):
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self' " + ' '.join(daconfig['cross site domains']) + ';'
     return response
 
