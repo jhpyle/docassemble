@@ -343,10 +343,12 @@ def state_name(state_code, country_code=None):
     return state_code
     #return us.states.lookup(state_code).name
 
-def language_name(language_code:str)->str:
-    """Given a 2 digit language code abbreviation, returns the full
-    name of the language. The language name will be passed through the `word()`
-    function."""
+def language_name(language_code):
+    """Given a 2 digit language code abbreviation, returns the full name
+    of the language. The language name will be passed through the
+    `word()` function.
+
+    """
     ensure_definition(language_code)
     try:
         if len(language_code) == 2:
@@ -354,7 +356,7 @@ def language_name(language_code:str)->str:
         else:
             return word(pycountry.languages.get(alpha_3=language_code).name)
     except:
-        return language_code
+        return word(language_code)
 
 def subdivision_type(country_code):
     """Returns the name of the most common country subdivision type for
