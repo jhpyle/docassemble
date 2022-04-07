@@ -18,5 +18,4 @@ export LANG=$1
 
 export HOME=/var/www
 
-echo "Data dirs: " $EDG_DATA_DIRS
 /usr/bin/unoconv --listener

@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.3.29] - 2022-04
+## [1.3.29] - 2022-04-07
 ### Added
 - The option for using Google Cloud Vision when using `ocr_file()` and
   other OCR functions.
