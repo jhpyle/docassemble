@@ -2207,6 +2207,12 @@ docker rmi $(docker images -f "dangling=true" -q)
 Then, run whatever `docker run` command you use to launch
 **docassemble**.
 
+If you don't know what you are doing, do not follow the instructions
+above and instead get help, or spend time learning how [Docker] works
+before you attempt this. Doing `docker rm` permanently deletes your
+server, so it's not something you should be doing unless you know for
+a fact that your data are backed up in [data storage].
+
 # <a name="downgrading"></a>Installing an earlier version of **docassemble** when using Docker
 
 When you do `docker run` or `docker pull`, the only image available on

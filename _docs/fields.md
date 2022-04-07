@@ -42,6 +42,11 @@ referring to the attribute `fish1` of the object `fried`)
 * `favorite animal` (spaces are not allowed)
 * `beneficiary#1` (punctuation marks other than `_` are not allowed)
 * `applicant_résumé` (only plain alphabet characters can be used)
+* `user.__ssn` (attributes beginning with `__` are not allowed)
+* `for` or `license.for` (attributes cannot share names with built-in
+  Python syntax. Names like `for`, `while`, or `in` will result in
+  errors if used as variable names or attribute names. See [reserved
+  variable names] for a list of names that cannot be used.
 
 If you find yourself using variable names like `automobile_one` and
 `automobile_two`, you should learn about [groups] and
@@ -1606,6 +1611,7 @@ content:
 > Favorite fruit: {% raw %}{{ favorite_fruit }}{% endraw %}
 >
 > Favorite apple: {% raw %}{{ favorite_apple }}{% endraw %}
+{: .blockquote}
 
 In this case, you may find that when `favorite_fruit` is `Orange` or
 `Peach` and you press Continue, you will end up back at the same
@@ -1618,6 +1624,7 @@ The way to fix this is to put your logic into the document:
 > Favorite fruit: {% raw %}{{ favorite_fruit }}{% endraw %}
 >
 > Favorite apple: {% raw %}{% if favorite_fruit == 'Apple' %}{{ favorite_apple }}{% else %}N/A{% endif %}{% endraw %}
+{: .blockquote}
 
 This way, your [interview logic] will not include the value of
 `favorite_apple` unless it is applicable.
@@ -1625,6 +1632,7 @@ This way, your [interview logic] will not include the value of
 You may be tempted to write something like this:
 
 > Favorite apple: {% raw %}{% if defined('favorite_apple') %}{{ favorite_apple }}{% else %}N/A{% endif %}{% endraw %}
+{: .blockquote}
 
 However, this is a bad practice that will lead to problems.  For
 example, if your users revise their answers, the interview answers

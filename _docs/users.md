@@ -150,6 +150,7 @@ with the [`appname`] directive.  If the [`appname`] is
 > https://mydocassemble.example.com/user/register?token=Vi7kc6ClSffW5RDKx9Coeg.CySLUQ.dJOwakdJ7F3aluWwr7SYwLAvt18
 >
 > -- MyDocassemble 
+{: .blockquote}
 
 # <a name="screening"></a>Screening users
 

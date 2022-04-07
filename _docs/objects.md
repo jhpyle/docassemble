@@ -710,6 +710,7 @@ This will result in the following error:
 > There was a reference to a variable 'long_branch.length' that could
 > not be looked up in the question file or in any of the files
 > incorporated by reference into the question file.
+{: .blockquote}
 
 You might think, "hey, why doesn't my interview ask the question that
 sets `tree.branch.length`?"  The reason is that `tree.branch` is just
@@ -2562,28 +2563,28 @@ specific to the user, so that each user will have their own personal
 In the above interview, the object `preferences` is just a `DAObject`
 with no special properties.  It is an object stored in the interview
 answers.  You can consider it a "working copy" of the object that is
-stored in the database.  It is initialized by this line:
+stored in the database.  It is initialized by this YAML:
 
-{% highlight python %}
-preferences = userdata.get("prefs") or DAObject('preferences')
+{% highlight yaml %}
+objects:
+  - userdata: DAStore
+  - preferences: DAObject
+---
+code: |
+  if userdata.defined("prefs"):
+    preferences = userdata.get("prefs")
 {% endhighlight %}
 
 This means "set the variable `preferences` to the object stored in the
-database under the key `"prefs"`, but if that object has a false value
-(e.g., if `userdata.get("prefs")` returns `None`) then set
-`preferences` to a new `DAObject` with the `instanceName` of
-`preferences`."  (Running `preferences = DAObject('preferences')` is
-effectively the same thing as having an `objects` block with the item
-`preferences: DAObject`.)
+database under the key `"prefs"`, but if the `"prefs"` key does not
+exist, then fall back to initializing `preferences` as an empty
+`DAObject`.
 
-The interview logic (the `mandatory`<span> </span>`code` block)
+The interview logic (the `mandatory`<span> </span>`code` blocks)
 ensures that `preferences.favorite_fruit` exists.  If
 `preferences.favorite_fruit` is not defined, the `question` will be
 asked.  Then the `code` block will save the `preferences` object to
 the database, but only if there is no database entry for `"prefs"`.
-Note that this means the interview logic in this interview is only
-capable of inserting a record into the database where none exists; it
-will not update the user's preferences.
 
 Note that in the final block of the interview, the `subquestion`
 refers to `userdata.get("prefs").favorite_fruit` instead of
@@ -3659,6 +3660,9 @@ The methods of the [`DAGoogleAPI`] object that can be used with the
 * `google_cloud_storage_client()` - this returns a
   `google.cloud.storage.Client` object that can be used to access the
   [Google Cloud Storage] API.
+* `google_cloud_vision_client()` - this returns a
+  `google.cloud.vision.ImageAnnotatorClient` object that can be used to access the
+  [Google Cloud Vision] API.
 
 Here is an example of a [Python module] that uses the [Google Cloud
 Storage] API (the [`google.cloud.storage`] Python package):
@@ -6886,6 +6890,7 @@ the `_uid` of the table rather than the `id`.
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [Google Drive]: https://www.google.com/drive/
 [Google Cloud Storage]: https://cloud.google.com/storage/docs/reference/libraries
+[Google Cloud Vision]: https://cloud.google.com/vision/docs/reference/libraries
 [LibreOffice]: https://www.libreoffice.org/
 [`service account credentials`]: {{ site.baseurl }}/docs/config.html#service account credentials
 [Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/

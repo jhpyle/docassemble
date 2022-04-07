@@ -137,7 +137,7 @@ can be used to send messages through [Twilio]'s [WhatsApp API].
 ## <a name="persist sessions"></a>Persistent interview sessions
 
 The interview answers in an interview session are stored in encrypted
-form inside of rows in a SQL table.  Documents are stored on the
+form inside of rows in a [SQL] table.  Documents are stored on the
 server or in a cloud storage system.  If a user who is not logged in
 completes an interview, they will not be able to access their
 interview session again after closing their browser, because the
@@ -168,34 +168,34 @@ be deleted when the interview session is deleted.
 
 ## <a name="sql"></a>Saving to SQL
 
-A session's interview answers are stored in a SQL server, but not in a
+A session's interview answers are stored in a [SQL] server, but not in a
 way that is easily accessible across interview sessions.  Interview
 sessions are not persistent; the user can delete a session, and a
 session may be deleted due to inactivity (unless the [`interview
 delete days`] configuration directive is set to disable automatic
 deletion).
 
-If you want to save information in SQL in a way that will persist
+If you want to save information in [SQL] in a way that will persist
 indefinitely and that will not be encrypted, you can use the
 [`store_variables_snapshot()`] function to store the interview answers
-to a special SQL table in a [JSON] format that allows you to write SQL
+to a special [SQL] table in a [JSON] format that allows you to write [SQL]
 queries that access individual variables inside the data structure.
 You can also use [`write_record()`], [`delete_record()`] and
 [`read_records()`] functions to store data (including Python objects)
-in SQL records.  These methods do not preserve server-side encryption,
+in [SQL] records.  These methods do not preserve server-side encryption,
 however.
 
-You can save information in encrypted form in SQL in a [Redis]-like
+You can save information in encrypted form in [SQL] in a [Redis]-like
 fashion using a [`DAStore`] object.
 
-It is also possible for [`DAObject`]s to "mirror" rows in a SQL
+It is also possible for [`DAObject`]s to "mirror" rows in a [SQL]
 database.  To do this, you need to write custom classes that are
 subclasses of [`DAObject`] and the special object [`SQLObject`].  For
 more information, see the documentation for [`SQLObject`].
 
 ## <a name="redis"></a>Saving to Redis
 
-Instead of saving to the SQL database, you can write persistent data
+Instead of saving to the [SQL] database, you can write persistent data
 to [Redis] using an instance of the [`DARedis`] object.
 
 # <a name="third party api"></a>Using third-party APIs
@@ -241,6 +241,104 @@ For more complex examples, see the [sample interviews in the
 documentation] that read data from a [Google Sheet] and write data to
 a [Google Sheet].
 
+# <a name="across sessions"></a>Sharing information across sessions
+
+Users' answers to questions in an interview are stored in the
+"interview answers," which is a pickled Python dictionary stored on
+the [SQL] server.  Each set of "interview answers" is specific to a
+particular interview (e.g.,
+`docassemble.demo:data/questions/questions.yml`) and specific to a
+particular session in that interview (e.g., session ID
+`BoJSwJHppIPFYtFEOeBU1y4koaM3L9zP`).
+
+Every time the user proceeds from one screen to another, the interview
+answers are changed, the interview logic is evaluated (which may
+change the interview answers further) and a new set of interview
+answers is saved. The user can incrementally "undo" changes to the
+interview answers by pressing the "back" button, which restores an
+earlier saved state of the interview answers.
+
+**docassemble**'s interview logic system is based on this system of
+the "interview answers."  If the interview logic calls for a value of
+a variable that is undefined, **docassemble** will ask a `question` or
+run `code` to obtain a definition of that variable.  **docassemble**
+asks for information that is missing in the interview answers.
+
+By default, the interview answers are encrypted on the server and can
+only be accessed when the user provides the decryption key via a web
+browser cookie.  This gives the user control over their information.
+
+The way that **docassemble** works with interview answers is very
+different from the way that a typical web-based database works with
+data. A web-based database will typically use a [SQL] backend, where the
+front end allows the user to populate fields of data records, where
+the fields are columns and the data records are rows in [SQL]
+tables. These applications are known as "[CRUD]" applications, because
+the front end facilitates creating, retrieving, updating, and deleting
+rows in tables. In **docassemble**, by contrast, the interview answers
+are not values in two-dimensional data tables, but rather Python data
+structures that at any point in time may be only be partially
+populated.
+
+If you want to share information across sessions, you can do so, but
+the methods for doing so are not going to be the same as the methods
+for accessing data in a [CRUD] application.
+
+There are multiple ways that you can share information across
+sessions:
+
+* Push data: from session A, you can populate variables in session B
+  by calling [`set_session_variables()`]. If session B does not exist
+  yet, you can first initiate it by calling [`create_session()`].
+* Pull data: from session B, you can retrieve variables from session A
+  by calling [`get_session_variables()`].
+* Share data in a common storage area: from session A, you can use a
+  [`DAStore`] object to save data to a storage area that is specific
+  to the user but can be accessed from any session. In session B, you
+  can write `code` blocks that initialize variables to values that are
+  stored in that storage area, if the storage area exists. By default,
+  data are encrypted using the same encryption system as interview
+  answers, and encryption can be turned off.
+* Share data using [Redis]: [`DARedis`] can also be used as a storage
+  area. From session A, you can use the [`.set_data()`] method of
+  [`DARedis`] to save a Python data structure to [Redis], and then
+  inside of session B, you can call the [`.get_data()`] method of
+  [`DARedis`] to retrieve the data structure. [Redis] is a fast,
+  in-memory data storage area, so it is best used with information
+  that only needs to be stored temporarily. Encryption is not
+  available.
+* Share data in a list of records: the [`write_record()`] and
+  [`read_records()`] functions are useful for storing lists of data
+  records, where each list is identified by a key that is global to
+  the server. Inside of session A, you can call [`write_record()`] to
+  store a row in a list. Inside of session B, you can call
+  [`read_records()`] to retrieve all of the records in that
+  list. Encryption is not available.
+* Sync data to a SQL database: if you would like to use a traditional
+  [SQL] database as a "single source of truth" for variables in your
+  interview, you can use the [`SQLObject`] system. This allows you to
+  "sync" variables in your interview answers with a [SQL]
+  database. Encryption is not supported.
+* Stash data temporarily in an encrypted data store: from session A,
+  you can call [`stash_data()`] to store particular interview answers
+  in an encrypted location. [`stash_data()`] returns tokens that can
+  be used to access the stashed data. Session A can offer the user
+  URLs to other interviews, in which the tokens are URL parameters. If
+  the user clicks one of these URLs and starts session B, the
+  interview logic in session B can get look for the tokens in
+  `url_args` and call [`retrieve_stashed_data()`] to retrieve the
+  interview answers that had been stored by session A. The stored data
+  can be deleted once they are retrieved, and can automatically expire
+  after a period of time. This is a secure way to pass data from one
+  session to another. It avoids storing human-readable information in
+  the URL parameters when passing data from one session to a
+  prospective session. It avoids the unnecessary creation of a new
+  session if the user does not want to proceed to start a new
+  session. The encryption system is independent of the encryption
+  system for interview answers, so that knowledge of the tokens does
+  not lead to knowledge of any interview answers. There are [API
+  interfaces] for stashing data and retrieving stashed data.
+
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [`requests`]: https://requests.readthedocs.io/en/master/
 [`gettime.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/gettime.py
@@ -280,7 +378,17 @@ a [Google Sheet].
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
 [`.set_attributes()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_attributes
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
+[`.set_data()`]: {{ site.baseurl }}/docs/objects.html#DARedis.set_data
+[`.get_data()`]: {{ site.baseurl }}/docs/objects.html#DARedis.get_data
 [Redis]: https://redis.io/
 [`SQLObject`]: {{ site.baseurl }}/docs/objects.html#SQLObject
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`store_variables_snapshot()`]: {{ site.baseurl }}/docs/functions.html#store_variables_snapshot
+[CRUD]: https://en.wikipedia.org/wiki/Create,_read,_update_and_delete
+[`create_session()`]: {{ site.baseurl }}/docs/functions.html#create_session
+[`set_session_variables()`]: {{ site.baseurl }}/docs/functions.html#set_session_variables
+[`get_session_variables()`]: {{ site.baseurl }}/docs/functions.html#get_session_variables
+[`stash_data()`]: {{ site.baseurl }}/docs/functions.html#stash_data
+[`retrieve_stashed_data()`]: {{ site.baseurl }}/docs/functions.html#retrieve_stashed_data
+[SQL]: https://en.wikipedia.org/wiki/SQL
+[API interfaces]: {{ site.baseurl }}/docs/api.html#stash_data

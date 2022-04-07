@@ -78,6 +78,7 @@ if/then/else statement means:
 > started!", but otherwise if the day of the month is less than 15,
 > write "It is the beginning part of the month."; otherwise, write "It
 > is the latter part of the month."
+{: .blockquote}
 
 As with [Python], it is critical that you include `:` at the end of
 any line where you indicate a condition.

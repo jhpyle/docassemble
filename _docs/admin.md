@@ -84,6 +84,7 @@ times a year, you may see a notification on the screen saying:
 
 > A new docassemble system version is available.  If you are using
 > Docker, install a new Docker image.
+{: .blockquote}
 
 This means that non-Python files in the **docassemble** system have
 been upgraded.  If you are using [Docker] with [persistent storage],

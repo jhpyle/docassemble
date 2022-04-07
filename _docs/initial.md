@@ -990,11 +990,7 @@ In this example, the `code` evaluated to the name of a file in the
 templates folder.  The `code` may also evaluate to a URL, [`DAFile`],
 [`DAFileList`], [`DAFileCollection`], or [`DAStaticFile`].
 
-When a `template` variable is inserted into a [`docx template file`],
-the contents are converted into paragraph-level DOCX text.  This means
-you must always use the `{% raw %}{{p{% endraw %}` prefix when
-inserting `template`s or you use `template.show()`.  For more
-information about this use of `template`s, see the section on
+For more information about this use of `template`s, see the section on
 [Inserting multi-line or formatted text into a single field in a DOCX
 file].
 

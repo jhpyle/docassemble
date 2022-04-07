@@ -2108,6 +2108,7 @@ Then test your interviews to see if this message is shown in the
 screen at any point:
 
 > Input not processed because the question changed.  Please continue.
+{: .blockquote}
 
 A message will also be written to the logs beginning with `index: not
 the same question name`.
@@ -3207,6 +3208,7 @@ package `docassemble.eviction`.  In that case, the `pageview` will
 record a view of the following pseudo-URL on your site:
 
 > /eviction/answer/lead_certification
+{: .blockquote}
 
 Since the [`id`] is also used as a unique identifier for a
 [`question`], you might to use a different identifier for purposes of
@@ -4698,6 +4700,7 @@ that you assemble using [`docx template file`], you would include the
 template as follows:
 
 > {% raw %}{{r the_template }}{% endraw %}
+{: .blockquote}
 
 The template text would be inserted as a single "run," meaning that it
 cannot contain any proper paragraph breaks, only manual line breaks.
@@ -4709,6 +4712,7 @@ compatible with the original system, because under the new system you
 need to include the [`template`] as follows:
 
 > {% raw %}{{p the_template }}{% endraw %}
+{: .blockquote}
 
 To upgrade to the new system today, set the following in your
 Configuration:

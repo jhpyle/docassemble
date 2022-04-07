@@ -465,6 +465,7 @@ server is `interview.example.com`, users will be able to run the
 interview by visiting a URL like:
 
 > https://interview.example.com/interview?i=docassemble.helloworld:data/questions/hello.yml
+{: .blockquote}
 
 Previously, the URL to your interview ended with something like
 `?i=docassemble.playground1:hello.yml`.  That is a link to the
@@ -483,6 +484,7 @@ Alternatively, you can use a more presentable URL, which is like a
 shorthand version of the above URL:
 
 > https://interview.example.com/start/helloworld/hello/
+{: .blockquote}
 
 When you run this interview, the URL in the location bar will switch
 to https://interview.example.com/run/helloworld/hello/.  The

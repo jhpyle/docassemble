@@ -422,6 +422,7 @@ package is `docassemble.mypackage`, and the name of your interview
 file is `myinterview.yml`, your users can access the interview at:
 
 > https://interview.example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
+{: .blockquote}
 
 If your interview is in the [Playground], the name of the interview
 will be something like `docassemble.playground1:myinterview.yml` where
@@ -451,10 +452,12 @@ developer where the interview file is located in the Python package.
 If you want a more readable URL, you can use:
 
 > https://interview.example.com/start/mypackage/myinterview/
+{: .blockquote}
 
 which launches the same interview as
 
 > https://interview.example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
+{: .blockquote}
 
 Once the user visits a URL like `/start/mypackage/myinterview/`, the
 URL in the location bar will change to `/run/mypackage/myinterview/`.
@@ -467,6 +470,7 @@ from which to choose, there is a special page of the site, located at
 `/list`, which displays a [list of interviews] available on your site.
 
 > https://interview.example.com/list
+{: .blockquote}
 
 This list is not automatically-generated.  You need to configure the
 list using the [`dispatch`] configuration directive.  The list of
@@ -482,6 +486,7 @@ start new sessions in specific interviews at human-readable URLs like:
 
 > https://interview.example.com/start/eviction/<br>
 > https://interview.example.com/start/namechange/
+{: .blockquote}
 
 Once the user visits a URL like `/start/eviction/`, the URL in the
 location bar will change to `/run/eviction/`.
@@ -502,11 +507,13 @@ and you want users to be able to start it by visiting an easy-to-type
 URL such as:
 
 > https://interview.example.com
+{: .blockquote}
 
 If you have set [`root redirect url`], your [`default interview`]
 interview will still be accessible at:
 
 > https://interview.example.com/interview
+{: .blockquote}
 
 If you do not have a [`default interview`], but you have configured a
 `/list` page using the [`dispatch`] configuration directive, then the

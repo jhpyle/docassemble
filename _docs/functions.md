@@ -72,6 +72,7 @@ You might be tempted to write something like this in a DOCX template:
 
 > {% raw %}{% if defined('date_of_marriage') %}{% endraw %}Plaintiff is married and was
 > married on {% raw %}{{ date_of_marriage }}.{% endif %}{% endraw %}
+{: .blockquote}
 
 This will work if your interview does not allow the user to go back
 and edit answers.  But if you allow the user to edit answers, what if
@@ -87,6 +88,7 @@ The solution is to always base your logic off of actual facts:
 
 > {% raw %}{% if married %}{% endraw %}Plaintiff is married and was
 > married on {% raw %}{{ date_of_marriage }}.{% endif %}{% endraw %}
+{: .blockquote}
 
 By analogy, suppose that a lawyer worked on a case and wrote on a
 notepad: "we are still within the statute of limitations period; ok to
@@ -742,6 +744,7 @@ Here is a link that runs this interview.  Notice how the name "Fred" is
 embedded in the URL.  The result is an immediate PDF document.
 
 > [{{ site.demourl }}/interview?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred]({{ site.demourl }}/interview?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred){:target="_blank"}
+{: .blockquote}
 
 When you write code that runs in a [scheduled task], you can use
 `response()` to finish the scheduled task.  In this context, you can
@@ -849,6 +852,7 @@ you presumably wanted, which was no text at all.
 
 > * Your phone number: **202-555-2030**
 > * Your fax number: &#42;&#42;&#42;&#42;
+{: .blockquote}
 
 Instead, you can write:
 
@@ -862,6 +866,7 @@ This leads to:
 
 > * Your phone number: **202-555-2030**
 > * Your fax number:
+{: .blockquote}
 
 Alternatively, you can pass an optional keyword argument, `default`,
 if it should plug in something different when empty.
@@ -876,6 +881,7 @@ This leads to:
 
 > * Your phone number: **202-555-2030**
 > * Your fax number: **Not available**
+{: .blockquote}
 
 Calling `italic('apple')` function returns `_apple`.
 
@@ -1638,6 +1644,7 @@ within a [`docx template file`], you will need to use the `markdown`
 filter:
 
 > {% raw %}{%p qr_code(url) | markdown %}{% endraw %}
+{: .blockquote}
 
 Note that if you want to include a QR code that points to an interview
 or an interview action, there are shorthand functions for that.  See
@@ -2696,6 +2703,22 @@ very early on in the interview, you may need to set a default value
 for `user_language` before asking the user what `user_language` should
 be.
 
+## <a name="language_name"></a>language_name()
+
+Given a [ISO-639-1] or [ISO-639-3] language code, such as `'en'`,
+`'de'`, `'eng'`, or `'deu'`, `language_name()` returns the name of the
+language, such as `'English'` or `'German'`.  The database of
+languages comes from the [`pycountry` package].
+
+The language name is passed through the [`word()`] function, so that
+you can use the [`words`] system to provide translations from English
+representations of a language name into other languages. Language
+names are not listed by default in the system phrase translation file
+because there are 7,847 of them, so you will need to add them manually.
+
+If the language cannot be found, the language code is returned,
+also passed through [`word()`].
+
 ## <a name="get_dialect"></a>get_dialect()
 
 Returns the current dialect, as set by the `dialect` keyword argument
@@ -3057,6 +3080,7 @@ Today's date is ${ today() }.
 becomes, for example:
 
 > Today's date is August 1, 2018.
+{: .blockquote}
 
 The fact that the object is a [`DADateTime`] object means you can use
 methods on it.  For example, you can write things like `Your term
@@ -3074,6 +3098,7 @@ Today's date is ${ today(format='M/d/YYYY') }.
 becomes, for example:
 
 > Today's date is 8/1/2018.
+{: .blockquote}
 
 ## <a name="timezone_list"></a>timezone_list()
 
@@ -3635,6 +3660,7 @@ file contains:
 > {% raw %}{%p for item in fruit | add_separators %}{% endraw %}<br>
 >     1. {% raw %}{{ item }}{% endraw %}<br>
 > {% raw %}{%p endfor %}{% endraw %}
+{: .blockquote}
 
 ## <a name="currency"></a>currency()
 
@@ -5405,6 +5431,42 @@ In addition, the following optional parameters, which are passed to
 If you want a [PDF] with embedded OCRed text, see the [`make_ocr_pdf()`]
 method of [`DAFile`].
 
+By default, the `ocr_file()` function uses [Tesseract] to do optical
+character recognition. Optionally, you can use [Google Cloud Vision]
+instead.  To do so, call `ocr_file()` with the keyword parameter
+`use_google=True`.
+
+{% highlight python %}
+ocr_file(the_file, use_google=True)
+{% endhighlight %}
+
+When `use_google=True` is used, none of the other keyword arguments
+(`language`, `psm`, `f`, `l`, etc.) are applicable. Those arguments are
+specific to the default [Tesseract] engine.
+
+In order to use `use_google=True`, you need to follow the [setup
+instructions] for [`DAGoogleAPI`]. In addition, in your app in Google
+Cloud Console, under "APIs & Services," you need to enable the APIs
+for [Google Cloud Vision] and [Google Cloud Storage]. In addition, you
+need to provide the name of a bucket in [Google Cloud Storage] that
+`ocr_file()` can use to do its work.
+
+{% highlight yaml %}
+google:
+  work bucket: some-unique-name-a28b3d97d
+{% endhighlight %}
+
+The `ocr_file()` will create this bucket in your [Google Cloud
+Storage] if it does not already exist. It needs this bucket in order
+to temporarily store files for use by the [Google Cloud Vision]
+API. Unless something goes wrong, it will delete the files it writes
+to the bucket.
+
+Note that [Google Cloud Vision] is not necessarily faster than the
+[Tesseract] OCR engine, so you may need to use
+[`ocr_file_in_background()`] (which also accepts the `use_google=True`
+keyword parameter`).
+
 ## <a name="ocr_file_in_background"></a>ocr_file_in_background()
 
 Note that the OCR process usually takes a long time; it takes a lot of
@@ -5490,6 +5552,12 @@ be found in the attribute `.error_message`.  When you put the output
 of `.get()` inside of a `${ ... }` [Mako] tag, the object is forced to
 be text, in which case either `.content` or `.error_message` is used,
 depending on the success of the OCR process.
+
+By default, `ocr_file_in_background()` uses [Tesseract] as the OCR
+engine. Optionally, you can use [Google Cloud Vision] as an OCR engine
+by passing `use_google=True` as a keyword parameter to
+`ocr_file_in_background()`. For more information about setting this
+up, see the documentation about `use_google=True` in [`ocr_file()`].
 
 If you want a [PDF] with embedded OCRed text, see the
 [`make_ocr_pdf_in_background()`] method of [`DAFile`].
@@ -6766,7 +6834,7 @@ to use `delete=True` whenever possible because it frees up space in
 If `refresh` is `True`, then after the information is accessed, the
 expiration date of the data stash will be reset to 90 days from the
 current time. If `refresh` is set to an integer number of seconds,
-then the data stash will be deleted after that number of seconds.
+then the expiration time is set to that number of seconds.
 
 For [API] versions of these functions, see [`/api/stash_data`] and
 [`/api/retrieve_stashed_data`].
@@ -6876,6 +6944,7 @@ only contains one paragraph, and then include something like the
 following in your main document:
 
 > I state the following: {% raw %}{{r include_docx_template('statement.docx', _inline=True) }}{% endraw %}`
+{: .blockquote}
 
 Note the use of {% raw %}{{r{% endraw %}; this is necessary because
 when `include_docx_template()` is called with `_inline=True`, it
@@ -6927,6 +6996,7 @@ make sure to bring {% raw %}{{ list_of_fruit }}{% endraw %} to the party
 This will result in:
 
 > make sure to bring apples and oranges to the party
+{: .blockquote}
 
 When the [`DAList`] is converted to text, the [`.comma_and_list()`]
 method is automatically applied to make the data structure
@@ -6948,6 +7018,7 @@ and you will get:
 > Don't forget to bring p!
 > Don't forget to bring p!
 > Don't forget to bring l!
+{: .blockquote}
 
 and so on.  That is certainly not what you want!
 
@@ -6968,6 +7039,7 @@ Now, the resulting DOCX file will contain:
 
 > Don't forget to bring apples!
 > Don't forget to bring oranges!
+{: .blockquote}
 
 Note that another way to pass "raw" values to a DOCX template is to
 use a list of [`raw field variables`].
@@ -8074,3 +8146,7 @@ $(document).on('daPageLoad', function(){
 [`set_variables()`]: set_variables
 [`/api/stash_data`]: {{ site.baseurl }}/docs/api.html#stash_data
 [`/api/retrieve_stashed_data`]: {{ site.baseurl }}/docs/api.html#retrieve_stashed_data
+[`DAGoogleAPI`]: {{ site.baseurl }}/docs/objects.html#DAGoogleAPI
+[setup instructions]: {{ site.baseurl }}/docs/objects.html#DAGoogleAPI setup
+[Google Cloud Vision]: https://cloud.google.com/vision/
+[Google Cloud Storage]: https://cloud.google.com/storage/

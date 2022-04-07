@@ -28,6 +28,7 @@ This become the following in the resulting document:
 > Hello, John Doe.  This text is in **bold face**.
 >
 > You cannot be trusted!
+{: .blockquote}
 
 In this way, you can produce documents in [PDF](#pdf), [RTF](#rtf),
 and [DOCX](#docx) format.
@@ -46,16 +47,18 @@ For example, suppose you write this in the [DOCX](#docx template file)
 template file:
 
 > Hello, {% raw %}{{ user }}{% endraw %}.  This text is in **bold face**.
-> 
+>
 > {% raw %}{%p if user.age_in_years() > 30 %}{% endraw %}<br>
 > You cannot be trusted!<br>
 > {% raw %}{%p endif %}{% endraw %}
+{: .blockquote}
 
 The document content would look like this:
 
 > Hello, John Doe.  This text is in **bold face**.
 >
 > You cannot be trusted!
+{: .blockquote}
 
 From the [DOCX](#docx template file) template, you can generate PDF or
 DOCX output.
@@ -92,6 +95,7 @@ In the [.docx template](#docx template file) method, you have to
 write:
 
 > I {% raw %}{% if employed %}have a job.{% else %}am unemployed.{% endif %}{% endraw %}
+{: .blockquote}
 
 By contrast, [Markdown](#from markdown) treats single line breaks as
 spaces, so you can write:
@@ -287,7 +291,7 @@ documents.
 * <a name="hyphen"></a>`[HYPHEN]` - Insert a hyphen.  Normally, `---` produces an em-dash, but if you want to
   be explicit, `[HYPHEN]` will do the same thing.
 * <a name="blank"></a>`[BLANK]` - Insert `___________________`.
-* <a name="blank"></a>`[BLANKFILL]` - Insert a wider version of 
+* <a name="blank"></a>`[BLANKFILL]` - Insert a wider version of
   `__________________`.  In some output formats, this will fill the
   width of the area.
 * <a name="pagebreak"></a>`[PAGEBREAK]` - Insert a manual page break.
@@ -576,20 +580,21 @@ friends.
 In [Jinja2], you would write:
 
 {% highlight text %}
-You may wish to distribute your property to your 
+You may wish to distribute your property to your
 {% raw %}{% if user.child.number() > 0 %}heirs.{% else %}friends.{% endif %}{% endraw %}
 {% endhighlight %}
 
 Another big difference is that [Jinja2] does not allow you to use
 [Python built-in functions] like `max()` and `any()`, or built-in
 Python names like `None`.  Instead, it provides you with a variety of
-[filters] and [tests].  For example, instead of writing `You have {%
-raw %}{{ len(favorite_fruits) }}{% endraw %} favorite fruits`, you
-would write `You have {% raw %}{{ favorite_fruits | length }}{% endraw
-%} favorite fruits`.  Instead of writing `{% raw %}{% if
-result_of_api_call is None %}N/A{% endif %}{% endraw %}` you would
-write `{% raw %}{% if none(result_of_api_call) %}N/A{% endif %}{%
-endraw %}`
+[filters] and [tests].  For example, instead of writing
+`You have {% raw %}{{ len(favorite_fruits) }}{% endraw %} favorite fruits`, you
+would write
+`You have {% raw %}{{ favorite_fruits | length }}{% endraw %} favorite fruits`.
+Instead of writing
+`{% raw %}{% if result_of_api_call is None %}N/A{% endif %}{% endraw %}`
+you would write
+`{% raw %}{% if none(result_of_api_call) %}N/A{% endif %}{% endraw %}`
 
 Also, the [`python-docx-template`] package uses a slightly modified
 version of the [Jinja2] syntax to account for the fact that it is
@@ -623,12 +628,12 @@ table columns, and `r` for "rich text."
 
 If you have a bulleted or numbered list in a DOCX template and you want
 to display an item in the list conditionally (using an if .. endif statement),
-you should use the  `{% raw %}{%p if ... %}{% endraw %}` syntax. Place 
+you should use the  `{% raw %}{%p if ... %}{% endraw %}` syntax. Place
 the `{% raw %}{%p if ... %}{% endraw %}` and
-the `{% raw %}{%p endif %}{% endraw %}` statements on their own lines in the list. 
+the `{% raw %}{%p endif %}{% endraw %}` statements on their own lines in the list.
 If you place the `{% raw %}{%p endif %}{% endraw %}` on the same line
 as the `{% raw %}{%p if... %}{% endraw %}` line, you may get an error about
-a missing `endif` statement, since the `p` modifier could cause the 
+a missing `endif` statement, since the `p` modifier could cause the
 `endif` statement to be deleted before it is processed.
 
 The following code in a DOCX template:
@@ -636,12 +641,14 @@ The following code in a DOCX template:
 > 1. {% raw %}{% if my_var == 'A' %}{% endraw %}The variable is A.{% raw %}{% endif %}{% endraw %}
 > 2. item2
 > 3. item3
+{: .blockquote}
 
 will result in the following output if `my_var` is not equal to `'A'`:
 
-> 1. 
+> 1. &nbsp;
 > 2. item2
 > 3. item3
+{: .blockquote}
 
 Instead, if you write:
 
@@ -650,11 +657,13 @@ Instead, if you write:
 > 3. {% raw %}{%p endif %}{% endraw %}
 > 4. item2
 > 5. item3
+{: .blockquote}
 
 The output will be:
 
 > 1. item2
 > 2. item3
+{: .blockquote}
 
 The `p` prefix in `{% raw %}{%p ... %}{% endraw %}` means "process the
 Jinja2 in this paragraph, but don't actually include this paragraph in
@@ -757,15 +766,18 @@ more information.  Note that it is important to use the `p` form of
 [Jinja2] markup, by itself on a line in the document:
 
 > {% raw %}{{p include_docx_template('sub_document.docx') }}{% endraw %}
+{: .blockquote}
 
 If you have a DOCX file in the form of a [`DAFile`] or [`DAFileList`]
 object, then you can do:
 
 > {% raw %}{{p include_docx_template(the_file) }}{% endraw %}
+{: .blockquote}
 
 or just
 
 > {% raw %}{{p the_file }}{% endraw %}
+{: .blockquote}
 
 ## <a name="docx tables"></a>Inserting tables into DOCX templates
 
@@ -869,6 +881,7 @@ make sure to bring {% raw %}{{ vegetable_list }}{% endraw %} to the party
 This will result in:
 
 > make sure to bring potatoes and beets to the party
+{: .blockquote}
 
 When the [`DAList`] is converted, the [`.comma_and_list()`] method is
 automatically applied to make the data structure "presentable."
@@ -894,6 +907,7 @@ will loop over each character, not over each vegetable.  You will get:
 > Don't forget to bring a!
 >
 > Don't forget to bring t!
+{: .blockquote}
 
 and so on.
 
@@ -915,6 +929,7 @@ real list that [Jinja2] can process.  The output will be what you expected:
 
 > Don't forget to bring potatoes!
 > Don't forget to bring beets!
+{: .blockquote}
 
 The conversion to text is also done if you use `field code` or `code`
 to pass variables to a DOCX template.  In order to pass variables in
@@ -938,7 +953,20 @@ instead.
 If the text that you want to insert contains [Markdown] formatting,
 and you want that formatting to be translated into DOCX formatting,
 insert it using `markdown` [Jinja2] filter or the `inline_markdown`
-filter.
+[Jinja2] filter.
+
+If `some_variable` contains Markdown formatting that includes
+paragraph breaks, lists, or other paragraph-level formatting, write:
+
+> {% raw %}{{p some_variable \| markdown }}{% endraw %}
+{: .blockquote}
+
+If `some_variable` contains Markdown indicating bold, italics, or
+other character-level formatting, but no paragraph breaks, lists, or
+other paragraph-level formatting, write:
+
+> I went to {% raw %}{{r some_variable \| inline markdown }}{% endraw %} for lunch.
+{: .blockquote}
 
 It is important that you understand the difference between
 character-level content and paragraph-level content.  You see this
@@ -950,82 +978,72 @@ numbering.  A paragraph break is a paragraph-level concept, whereas a
 manual line break is a character-level concept.
 
 Under the rules of [`python-docx-template`], you need to use the
-prefix `{% raw %}{{r{% endraw %}` when the contents return
-character-level DOCX text, and you need to use `{% raw %}{{p{% endraw
-%}` when the contents return paragraph-level DOCX text.  It is very
-important that you get this right, because the symptoms of a mistake
-are confusing: the contents may simply disappear, or the DOCX file may
-get corrupted because you are inserting bad XML.
+prefix `{% raw %}{{r{% endraw %}` when the contents contain
+character-level DOCX formatting (which is what the `inline_markdown`
+filter produces), and you need to use `{% raw %}{{p{% endraw %}` when
+the contents return paragraph-level DOCX formatting (which is what the
+`markdown` filter and the the `insert_docx_template()` function
+produce).  It is very important that you get this right, because the
+symptoms of a mistake are confusing: the contents may simply
+disappear, or the DOCX file may get corrupted because you are
+inserting bad XML.
 
-The `markdown` filter will return paragraph-level text, and the
-`inline_markdown` filter will return character level text.  However,
-this depends on whether you have enabled `new markdown to docx: True`
-in your [Configuration].  If you created your server relatively
-recently (since April 2020), this will already be there in your
-[Configuration], but if your server is relatively old, you will need
-to add `new markdown to docx: True` to your [Configuration] to upgrade
-to the "new" behavior.  Just keep in mind that when you make this
-change, you may have to update your `docx template file`s.  (That's
-why you need to opt in to the new system.)
+When using the `markdown` filter to insert multiple paragraphs into a
+DOCX file, note that according to the [Markdown] standard, a single
+newline does not break a paragraph; you need two newlines to break a
+paragraph.  If you want to convert single newlines into paragraphs
+breaks, there is another [Jinja2] filter that can help.  Instead of
+writing
+`{% raw %}{{p the_text | markdown }}{% endraw %}`, write
+`{% raw %}{{p the_text | paragraphs | markdown }}{% endraw %}`.
+The `paragraphs` filter runs the text through the
+[`single_to_double_newlines()`] function.
 
-Under the `new markdown to docx: True` system, the `markdown` filter
-inserts paragraph-level text, and needs to be used with `{% raw
-%}{{p{% endraw %}`.  Under the "old" Markdown-to-DOCX system, the
-`markdown` filter only inserted character-level text, and it needed to
-be used with `{% raw %}{{r{% endraw %}`.  The rest of the
-documentation will assume that you are using `new markdown to docx:
-True`, which you should.  So if you have not made that change yet, you
-should do so.
+Since 2020, there have been changes to the way the `markdown` filter
+works. If you installed **docassemble** before these changes went into
+effect, you will not see these changes unless you update your
+Configuration. The changes were implemented in this way so as not to
+break backwards-compatibility.
 
-If you want to insert [Markdown]-formatted text within a paragraph
-(character-level text), you can use the `inline_markdown` filter:
-
-> {% raw %}{{r the_text \| inline_markdown }}{% endraw %}
-
-With this filter, the text in `the_text` will be inserted as
-characters into the existing paragraph.  If the [Markdown] contains
-paragraph breaks, the paragraph breaks will be manual newlines rather
-than actual paragraph breaks.
-
-If you are insert a `template` variable into a DOCX file, the
-`markdown` filter is applied automatically (and how it works depends
-on the `new markdown to docx` setting).  Suppose your YAML has:
+The following Configuration directives enable the modern (superior)
+functionality:
 
 {% highlight yaml %}
-template: disclaimer
-content: |
-  I disclaim **everything**.
-  
-  I have zero liability.  ZERO.
+new markdown to docx: True
+new template markdown behavior: True
 {% endhighlight %}
 
-In your DOCX file, you would write:
+If you created your Configuration (i.e. did `docker run` for the first
+time) since version 1.3.29, your configuration will already contain
+these directives.
 
-> {% raw %}{{p disclaimer }}{% endraw %}
+If you created your Configuration before 1.3.29, you should edit your
+Configuration so that it contains these lines, and then you will have
+the modern functionality. Keep in mind, though, that you may need to
+edit your existing templates if they rely on the legacy behavior.
 
-Since the `{% raw %}{{p{% endraw %}` prefix is being used, this needs
-to be by itself in a DOCX paragraph.
+One legacy behavior was that the `markdown` filter was applied
+automatically to any `template` inserted into a `docx template
+file`. You could get around this by inserting the template with
+`my_template.show_as_markdown()`, which would not apply the
+filter. The `new template markdown behavior: True` Configuration
+directive, which is available as of version 1.3.29, enables better
+functionality, which is not to apply the `markdown` filter
+automatically.  If `my_template` is a `template`, you need to insert
+it using `{% raw %}{{p my_template | markdown }}{% endraw %}` or `{%
+raw %}{{r my_template | inline_markdown }}{% endraw %}`, depending
+on whether the template should be treated as paragraph-level or inline.
 
-If you have a `template` but you want the contents to be inserted as
-character-level text, you can write
-
-> Here is the disclaimer.
-> {% raw %}{{r disclaimer.show_as_markdown() }}{% endraw %}
-> There you have it.
-
-A `template` block will create a [`DALazyTemplate`] object, and
-`.show_as_markdown()` is one of the methods of the [`DALazyTemplate`]
-class.  It is a variant on the method `.show()`, which is the method
-that is called implicitly when you reduce a [`DALazyTemplate`] object
-to a textual form.
-
-Note that according to the [Markdown] standard, a single newline does
-not break a paragraph; you need two newlines to break a paragraph.  If
-you want to convert single newlines into paragraphs breaks, there is
-another [Jinja2] filter that can help.  Instead of writing `the_text |
-markdown`, write `the_text | paragraphs | markdown`.  The `paragraphs`
-filter runs the text through the [`single_to_double_newlines()`]
-function.
+Another legacy behavior is that the `markdown` filter only worked with
+character-level Markdown formatting, and had to be included in DOCX
+files using `{% raw %}{{r some_variable | markdown }}{% endraw %}`.
+The `new markdown to docx: True` Configuration directive, which is
+available as of version 1.1.2, enables better functionality, which is
+that the `markdown` filter inserts paragraph-level DOCX formatting,
+and is used with the `p` prefix (`{% raw %}{{p some_variable |
+markdown }}{% endraw %}`) while the `inline_markdown` filter inserts
+inline DOCX formatting, and is used with the `r` prefix (`{% raw %}{{r
+some_variable | inline_markdown }}{% endraw %}`).
 
 Another way to insert formatted text using [Jinja2] is to use the
 "rich text" feature of [`python-docx-template`].  The `RichText`
@@ -1034,6 +1052,7 @@ text:
 
 > The swift brown {% raw %}{{r animal \| RichText }}{% endraw %}
 > jumped over the lazy dog.
+{: .blockquote}
 
 Using this filter, any newline (`\n`) in `animal` will be converted
 into a manual line break and any `\a` character will be converted into
@@ -1115,7 +1134,7 @@ following content:
 
 ![team.docx screenshot]({{ site.baseurl }}/img/macros_screenshot.png){: .maybe-full-width }
 
-Note the use of `{% raw %}{%p macro ... %}{% endraw %}` and 
+Note the use of `{% raw %}{%p macro ... %}{% endraw %}` and
 `{% raw %}{%p endmacro ... %}{% endraw %}`.
 
 The [macro] in this document contains two paragraphs with [Jinja2]
@@ -1129,10 +1148,12 @@ Here is an interview that assembles a document from [`team.docx`]:
 You can also define a [macro] that includes character-level text.
 
 > {% raw %}{% macro say_hello(friend) %}Hello, {{ friend }}!{% endmacro %}{% endraw %}
+{: .blockquote}
 
 Then you can use the macro by calling it inside brackets:
 
 > {% raw %}{{ say_hello(plaintiff) }}{% endraw %}  How are you today?
+{: .blockquote}
 
 The difference from the previous example is that the `p` prefix is not
 used.
@@ -1304,7 +1325,7 @@ this subsection, work both with [`pdf template file`] and
 of your interview variables, you will normally only need to use `field
 variables` with PDF templates.
 
-Suppose you want to pass the results of functions or methods to a 
+Suppose you want to pass the results of functions or methods to a
 template that looks like this:
 
 ![letter template]({{ site.baseurl }}/img/letter.png){: .maybe-full-width }
@@ -1566,7 +1587,7 @@ question: |
 attachment:
   - name: Your letter
     filename: letter
-    docx template file: 
+    docx template file:
       code: |
         the_template_file
 {% endhighlight %}
@@ -1672,6 +1693,7 @@ into your assembled file using the [Markdown] format for a hyperlink.
 For example, you can put the following into a DOCX file.
 
 > For more information, visit {% raw %}{{r the_link \| inline_markdown }}{% endraw %}.
+{: .blockquote}
 
 Then in your [YAML] you can write something like:
 
@@ -1723,10 +1745,12 @@ You can remedy this by defining a `language` for the `attachment`.
 Without `language: en`, the output would be:
 
 > This customer would like to order fries y a Coke.
+{: .blockquote}
 
 With `language: en`, the output is:
 
 > This customer would like to order fries and a Coke.
+{: .blockquote}
 
 The value of `language` must be plain text like `en` or `fr`; it
 cannot be a [Mako] expression.
@@ -1955,7 +1979,7 @@ number of different ways:
 The [`.url_for()`] method works on [`DAFileCollection`] and [`DAFile`]
 objects.
 
-If a [`DAFile`] is inserted into a template 
+If a [`DAFile`] is inserted into a template
 (e.g., with `${ complaint }`), and the [`DAFile`] is a PDF, a shrunken
 image of the first page is shown.  If the [`DAFile`] is an RTF or a
 DOCX file, a link is shown.

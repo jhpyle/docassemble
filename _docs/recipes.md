@@ -485,6 +485,7 @@ to `True`).  The attorney inputs the attorney's e-mail address and
 uploads a DOCX file containing:
 
 > {% raw %}{{ signature }}{% endraw %}
+{: .blockquote}
 
 where the client's signature should go.  The attorney then receives a
 hyperlink that the attorney can send to the client.
@@ -1259,6 +1260,7 @@ and try submitting the form.  The e-mail recipient designated in your
 YAML code should receive an e-mail containing the text:
 
 > A session has started. Go to it now.
+{: .blockquote}
 
 where "Go to it now" is a hyperlink to an interview session.  When the
 e-mail recipient clicks the link, they will resume an interview
@@ -2314,6 +2316,8 @@ To run a query on the data, you can do something like this:
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [`check in`]: {{ site.baseurl }}/docs/background.html#check in
 [`DARedis`]: {{ site.baseurl }}/docs/objects.html#DARedis
+[`.set_data()`]: {{ site.baseurl }}/docs/objects.html#DARedis.set_data
+[`.get_data()`]: {{ site.baseurl }}/docs/objects.html#DARedis.get_data
 [Redis]: https://redis.io/
 [Celery]: http://www.celeryproject.org/
 [background task]: {{ site.baseurl }}/docs/background.html#background
@@ -2379,3 +2383,5 @@ To run a query on the data, you can do something like this:
 [JSONB]: https://www.postgresql.org/docs/current/functions-json.html
 [`on change`]: {{ site.baseurl }}/docs/initial.html#on change
 [`index.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/index.py
+[`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
+[`read_records()`]: {{ site.baseurl }}/docs/functions.html#read_records

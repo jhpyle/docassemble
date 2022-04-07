@@ -88,6 +88,7 @@ Here are some error messages you might encounter in **docassemble**
 and how to avoid them.
 
 > can't pickle module objects
+{: .blockquote}
 
 Interview variables are stored in a Python dictionary.  This
 dictionary is passed to [Mako] and [exec] and becomes the environment
@@ -113,6 +114,7 @@ are not [pickleable].
 > or mandatory, and finished asking all questions marked as mandatory
 > (if any).  It is a best practice to end your interview with a
 > question that says goodbye and offers an Exit button.
+{: .blockquote}
 
 If you see this message, it is because **docassemble** was able to go
 through all the questions of your interview and reach the end without
@@ -139,6 +141,7 @@ buttons
 > <flask.blueprints.Blueprint object at 0x7fab59da1b90>.  Both
 > share the same name "flask_user".  Blueprints that are created
 > on the fly need unique names.
+{: .blockquote}
 
 If you get this error, try restarting the web server.  Normally,
 "touch"ing the [WSGI] file succeeds at restarting the server, but
