@@ -1209,8 +1209,8 @@ def get_clicksend_config():
             the_clicksend_config = None
     else:
         the_clicksend_config = None
-    if fax_provider == 'clicksend' and the_clicksend_config is None:
-        sys.stderr.write("improper clicksend configuration; faxing will not be functional\n")
+    #if fax_provider == 'clicksend' and the_clicksend_config is None:
+    #    sys.stderr.write("improper clicksend configuration; faxing will not be functional\n")
     return the_clicksend_config
 
 clicksend_config = get_clicksend_config()
@@ -3972,6 +3972,9 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         if item not in vocab_dict and not base_name_info.get('exclude', False):
             vocab_dict[item] = base_name_info.get('insert', item)
     return content, sorted(vocab_set), vocab_dict
+
+def ocr_google_in_background(image_file, user_code):
+    return docassemble.webapp.worker.ocr_google.delay(image_file, user_code)
 
 def make_png_for_pdf(doc, prefix, page=None):
     if prefix == 'page':
@@ -28618,6 +28621,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          retrieve_emails=retrieve_emails,
                                          get_short_code=get_short_code,
                                          make_png_for_pdf=make_png_for_pdf,
+                                         ocr_google_in_background=ocr_google_in_background,
                                          task_ready=task_ready,
                                          wait_for_task=wait_for_task,
                                          user_interviews=user_interviews,
@@ -28973,13 +28977,13 @@ def initialize():
                     except:
                         pass
             if app.config['ENABLE_PLAYGROUND']:
-                obtain_lock('init', 'init')
+                obtain_lock('init' + hostname, 'init')
                 try:
                     copy_playground_modules()
                 except Exception as err:
                     sys.stderr.write("There was an error copying the playground modules: " + err.__class__.__name__ + "\n")
                 write_pypirc()
-                release_lock('init', 'init')
+                release_lock('init' + hostname, 'init')
             try:
                 macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
                 if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7167:

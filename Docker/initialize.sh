@@ -1123,9 +1123,8 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
                     rm -f "${DA_ROOT}/backup/letsencrypt.tar.gz"
                     tar -zcf "${DA_ROOT}/backup/letsencrypt.tar.gz" etc/letsencrypt
                 fi
-                rm -rf "${DA_ROOT}/backup/apache"
                 mkdir -p "${DA_ROOT}/backup/apache"
-                rsync -auq /etc/apache2/sites-available/ "${DA_ROOT}/backup/apache/"
+                rsync -auq --delete /etc/apache2/sites-available/ "${DA_ROOT}/backup/apache/"
             fi
         fi
     }
@@ -1360,7 +1359,7 @@ function deregister {
         fi
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
-        if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
+	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
             s4cmd dsync "${DA_ROOT}/log" "s3://${S3BUCKET}/log"
         fi
         if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
@@ -1388,7 +1387,7 @@ function deregister {
                 done
             fi
             if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
-		echo "initialize: Saving NGINX log files to Azure Blob Storage" >&2
+                echo "initialize: Saving NGINX log files to Azure Blob Storage" >&2
                 for the_file in $(find /var/log/nginx -type f | cut -c 16-); do
                     cmd_retry blob-cmd -f cp "/var/log/nginx/${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/nginxlogs/${the_file}"
                 done
@@ -1396,33 +1395,27 @@ function deregister {
         fi
     else
         if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
-	    echo "initialize: Saving Configuration" >&2
+            echo "initialize: Saving Configuration" >&2
             rm -f "${DA_ROOT}/backup/config.yml"
             cp "${DA_CONFIG_FILE}" "${DA_ROOT}/backup/config.yml"
-	    echo "initialize: Saving files" >&2
-            rm -rf "${DA_ROOT}/backup/files"
-            rsync -auq "${DA_ROOT}/files" "${DA_ROOT}/backup/"
-	    echo "initialize: Done saving files" >&2
+            echo "initialize: Saving files" >&2
+            rsync -auq --delete "${DA_ROOT}/files" "${DA_ROOT}/backup/"
+            echo "initialize: Done saving files" >&2
         fi
         if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
             if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
-		echo "initialize: Saving Apache log files" >&2
-                rm -rf "${DA_ROOT}/backup/apachelogs"
+                echo "initialize: Saving Apache log files" >&2
                 mkdir -p "${DA_ROOT}/backup/apachelogs"
-                rsync -auq /var/log/apache2/ "${DA_ROOT}/backup/apachelogs/"
+                rsync -auq --delete /var/log/apache2/ "${DA_ROOT}/backup/apachelogs/"
             fi
             if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
-		echo "initialize: Saving NGINX log files" >&2
-                rm -rf "${DA_ROOT}/backup/nginxlogs"
+                echo "initialize: Saving NGINX log files" >&2
                 mkdir -p "${DA_ROOT}/backup/nginxlogs"
-                rsync -auq /var/log/nginx/ "${DA_ROOT}/backup/nginxlogs/"
+                rsync -auq --delete /var/log/nginx/ "${DA_ROOT}/backup/nginxlogs/"
             fi
         fi
-        if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-	    echo "initialize: Saving log files" >&2
-            rm -rf "${DA_ROOT}/backup/log"
-            rsync -auq "${LOGDIRECTORY}/" "${DA_ROOT}/backup/log/"
-        fi
+        echo "initialize: Saving log files" >&2
+        rsync -auq --delete "${LOGDIRECTORY}/" "${DA_ROOT}/backup/log/"
     fi
     rm -f /etc/da_running
     echo "initialize: finished shutting down initialize" >&2

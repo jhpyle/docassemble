@@ -4773,7 +4773,7 @@ class Question:
                                 the_error.docx_context = map(lambda x: re.sub(r'<[^>]+>', '', x), the_xml.splitlines()[line_number:(line_number + 7)])
                             raise the_error
                         for key in jinja2meta.find_undeclared_variables(parsed_content):
-                            if not key.startswith('_'):
+                            if not key.startswith('__'):
                                 self.mako_names.add(key)
                     for key in ('field code', 'fields'):
                         if key in target:
@@ -7998,6 +7998,8 @@ class Interview:
                     interview_status.populate(the_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
                 except AttributeError as the_error:
+                    if 'pending_error' in docassemble.base.functions.this_thread.misc:
+                        del docassemble.base.functions.this_thread.misc['pending_error']
                     #logmessage("Regular attributeerror")
                     docassemble.base.functions.reset_context()
                     #logmessage(str(the_error.args))
@@ -9237,17 +9239,24 @@ class DAEnvironment(Environment):
             return obj[argument]
         except (DAAttributeError, DAIndexError) as err:
             varname = extract_missing_name(err)
+            if 'pending_error' in docassemble.base.functions.this_thread.misc:
+                del docassemble.base.functions.this_thread.misc['pending_error']
             return self.undefined(obj=missing, name=varname)
         except (AttributeError, TypeError, LookupError):
+            if 'pending_error' in docassemble.base.functions.this_thread.misc:
+                del docassemble.base.functions.this_thread.misc['pending_error']
             return self.undefined(obj=obj, name=argument, accesstype='item')
     def getattr(self, obj, attribute):
         try:
             return getattr(obj, attribute)
         except DAAttributeError as err:
+            if 'pending_error' in docassemble.base.functions.this_thread.misc:
+                del docassemble.base.functions.this_thread.misc['pending_error']
             varname = extract_missing_name(err)
             return self.undefined(obj=missing, name=varname)
         except AttributeError as err:
-            pass
+            if 'pending_error' in docassemble.base.functions.this_thread.misc:
+                del docassemble.base.functions.this_thread.misc['pending_error']
         return self.undefined(obj=obj, name=attribute, accesstype='attribute')
 
 def ampersand_filter(value):
@@ -9636,7 +9645,7 @@ def get_docx_variables(the_path):
     except Exception as the_err:
         raise DAError("There was an error parsing the docx file: " + the_err.__class__.__name__ + " " + str(the_err))
     for key in jinja2meta.find_undeclared_variables(parsed_content):
-        if not key.startswith('_'):
+        if not key.startswith('__'):
             names.add(key)
     from docassemble.base.legal import __all__ as legal_all
     for name in legal_all:

@@ -1442,6 +1442,7 @@ server.alchemy_url = null_func_str
 server.connect_args = null_func_str
 server.applock = null_func
 server.bg_action = null_func
+server.ocr_google_in_background = null_func
 server.button_class_prefix = 'btn-'
 server.chat_partners_available = null_func
 server.chord = null_func_func

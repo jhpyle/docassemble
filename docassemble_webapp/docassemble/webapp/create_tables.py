@@ -107,7 +107,7 @@ def test_for_errors(start_time=None):
         max_value = db.session.execute(select(db.func.max(getattr(tableclass, column)))).scalar()
         if max_value is not None and max_value > last_value:
             sys.stderr.write('create_tables.test_for_errors: ' + table + " has an error: " + str(last_value) + " " + str(max_value) + " after " + str(time.time() - start_time) + "\n")
-            db.session.execute(text("alter sequence " + table + "_" + column + "_seq restart with :newval"), {'newval': last_value})
+            db.session.execute(text("alter sequence " + table + "_" + column + "_seq restart with :newval"), {'newval': max_value + 1})
             db.session.commit()
 
 def populate_tables(start_time=None):

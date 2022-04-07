@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.3.29] - 2022-04
+### Added
+- The option for using Google Cloud Vision when using `ocr_file()` and
+  other OCR functions.
+### Changed
+- When `new template markdown behavior: True` is set in the
+  Configuration (which is now part of the default initial
+  configuration), `template` variables do not have the `markdown`
+  filter automatically applied when they are used in a DOCX template
+  file. It is recommended that you add this to your Configuration,
+  and then modify your `docx template file` templates that use
+  `template` variables, adding ` | markdown` if necessary.
+### Fixed
+- Improved efficiency of system shutdown. (Requires a system upgrade.)
+- Problem with Let's Encrypt certificates not renewing. (Requires a
+  system upgrade.)
+- The `single_worker.log` file was missing from log rotation.
+- Erroneous exceptions could be raised if a `DAObject` attribute name
+  began with `_`. Attributes can begin with `_` but they cannot begin
+  with `__`.
+- The `DBSSLMODE`, `DBSSLCERT`, `DBSSLKEY`, and `DBSSLROOTCERT`
+  variables were not affected by `ENVIRONMENT_TAKES_PRECEDENCE`.
+
 ## [1.3.28] - 2022-03-26
 ### Added
 - The `default language` specifier in `metadata`.

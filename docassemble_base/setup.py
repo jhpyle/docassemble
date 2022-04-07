@@ -92,6 +92,8 @@ install_requires = [
     "google-auth-httplib2==0.1.0",
     "google-auth-oauthlib==0.4.4",
     "google-auth==1.30.0",
+    "google-cloud-storage==1.38.0",
+    "google-cloud-vision==2.3.1",
     "google-i18n-address==2.4.0",
     "googleapis-common-protos==1.53.0",
     "greenlet==1.1.0",

@@ -44,3 +44,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
     fi
 fi
+
+if [ "${S3ENABLE:-false}" == "false" ] && [ "${AZUREENABLE:-false}" == "false" ]; then
+    rsync -auq --delete "${DA_ROOT}/files" "${DA_ROOT}/backup/"
+fi

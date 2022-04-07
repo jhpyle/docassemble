@@ -1288,3 +1288,17 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
             return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, value=interview_status.question.backgroundresponse, extra=extra)
     sys.stderr.write("Time in error callback was " + str(time.time() - start_time) + "\n")
     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
+
+@workerapp.task
+def ocr_google(image_file, user_code):
+    sys.stderr.write("ocr_google started in worker\n")
+    if not hasattr(worker_controller, 'loaded'):
+        initialize_db()
+    url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+    url = url_root + 'interview'
+    with worker_controller.flaskapp.app_context():
+        with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
+            worker_controller.functions.reset_local_variables()
+            worker_controller.functions.set_uid(user_code)
+            worker_controller.set_request_active(False)
+            return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.util.google_ocr_file(image_file))

@@ -6,6 +6,7 @@ import codecs
 import copy
 import datetime
 import inspect
+import io
 import json
 import mimetypes
 import os
@@ -63,6 +64,7 @@ from docxtpl import InlineImage, Subdoc, DocxTemplate
 import pandas
 import PyPDF2
 from docx import Document
+import google.cloud
 
 capitalize_func = capitalize
 NoneType = type(None)
@@ -388,7 +390,7 @@ class DAEmpty:
     def __init__(self, *pargs, **kwargs):
         self.str = str(kwargs.get('str', ''))
     def __getattr__(self, thename):
-        if thename.startswith('_') or thename == 'str':
+        if thename.startswith('__') or thename == 'str':
             return object.__getattribute__(self, thename)
         return DAEmpty()
     def __str__(self):
@@ -821,9 +823,11 @@ class DAObject:
     def _map_info(self):
         return None
     def __getattr__(self, thename):
-        if thename.startswith('_') or hasattr(self.__class__, thename):
+        if thename.startswith('__') or hasattr(self.__class__, thename):
             if 'pending_error' in docassemble.base.functions.this_thread.misc:
-                raise docassemble.base.functions.this_thread.misc['pending_error']
+                pending_error = docassemble.base.functions.this_thread.misc['pending_error']
+                del docassemble.base.functions.this_thread.misc['pending_error']
+                raise pending_error
             return object.__getattribute__(self, thename)
         var_name = object.__getattribute__(self, 'instanceName') + "." + thename
         docassemble.base.functions.this_thread.misc['pending_error'] = DAAttributeError("name '" + var_name + "' is not defined")
@@ -917,9 +921,9 @@ class DAObject:
         if len(pargs) == 0:
             raise Exception("alternative: attribute must be provided")
         attribute = pargs[0]
-        value = getattr(self, attribute)
-        if value in kwargs:
-            return kwargs[value]
+        the_value = getattr(self, attribute)
+        if the_value in kwargs:
+            return kwargs[the_value]
         if '_default' in kwargs:
             return kwargs['_default']
         if 'default' in kwargs:
@@ -1652,10 +1656,10 @@ class DAList(DAObject):
     def remove(self, *pargs):
         """Removes the given arguments from the list, if they are in the list"""
         something_removed = False
-        for value in pargs:
-            if value in self.elements:
-                self.hook_on_remove(value)
-                self.elements.remove(value)
+        for the_value in pargs:
+            if the_value in self.elements:
+                self.hook_on_remove(the_value)
+                self.elements.remove(the_value)
                 something_removed = True
         self._reset_instance_names()
         if something_removed and len(self.elements) == 0:
@@ -1664,9 +1668,9 @@ class DAList(DAObject):
         """Removes items from the list, by index number"""
         new_list = []
         list_truncated = False
-        for indexno in range(len(self.elements)):
+        for indexno, item in enumerate(self.elements):
             if indexno not in pargs:
-                new_list.append(self.elements[indexno])
+                new_list.append(item)
             else:
                 list_truncated = True
         self.elements = new_list
@@ -1675,7 +1679,7 @@ class DAList(DAObject):
             del self._necessary_length
     def insert(self, *pargs):
         """Inserts an item at the given position."""
-        result = self.elements.insert(*pargs)
+        self.elements.insert(*pargs)
         self._reset_instance_names()
         self.there_are_any = True
     def count(self, item):
@@ -4816,9 +4820,10 @@ class DALazyTemplate(DAObject):
     an object of this type.  The two attributes are "subject" and
     "content." """
     def __getstate__(self):
+        return_val = {}
         if hasattr(self, 'instanceName'):
-            return dict(instanceName=self.instanceName)
-        return {}
+            return_val['instanceName'] = self.instanceName
+        return return_val
     def subject_as_html(self, **kwargs):
         the_args = {}
         for key, val in kwargs.items():
@@ -4864,7 +4869,7 @@ class DALazyTemplate(DAObject):
         user_dict_copy.update(self.tempvars)
         user_dict_copy.update(kwargs)
         content = self.source_content.text(user_dict_copy).rstrip()
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx' and server.daconfig.get('new template markdown behavior', False):
             content = re.sub(r'\\_', r'\\\\_', content)
             return str(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
         return content
@@ -4877,7 +4882,7 @@ class DALazyTemplate(DAObject):
         user_dict_copy.update(kwargs)
         return self.source_content.text(user_dict_copy).rstrip()
     def __str__(self):
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx' and server.daconfig.get('new template markdown behavior', False):
             content = self.content
             content = re.sub(r'\\_', r'\\\\_', content)
             return str(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
@@ -5671,9 +5676,12 @@ class DAGoogleAPI(DAObject):
     def project_id(self):
         """Returns the ID of the project referenced in the google service account credentials in the Configuration."""
         return server.google_api.project_id()
-    def google_cloud_storage_client(self, scope=None):
+    def google_cloud_storage_client(self):
         """Returns a google.cloud.storage.Client object."""
-        return server.google_api.google_cloud_storage_client(scope)
+        return server.google_api.google_cloud_storage_client()
+    def google_cloud_vision_client(self):
+        """Returns an google.cloud.vision.ImageAnnotatorClient object."""
+        return server.google_api.google_cloud_vision_client()
 
 def run_python_module(module, arguments=None):
     """Runs a python module, as though from the command line, and returns the output."""
@@ -7548,34 +7556,37 @@ def int_or_none(number):
 def ocr_file_in_background(*pargs, **kwargs):
     """Starts optical character recognition on one or more image files or PDF
     files and returns an object representing the background task created."""
-    language = kwargs.get('language', None)
-    f = int_or_none(kwargs.get('f', None))
-    l = int_or_none(kwargs.get('l', None))
-    psm = kwargs.get('psm', 6)
-    x = int_or_none(kwargs.get('x', None))
-    y = int_or_none(kwargs.get('y', None))
-    W = int_or_none(kwargs.get('W', None))
-    H = int_or_none(kwargs.get('H', None))
-    the_message = kwargs.get('message', None)
     image_file = pargs[0]
     if len(pargs) > 1:
         ui_notification = pargs[1]
     else:
         ui_notification = None
-    args = dict(yaml_filename=this_thread.current_info['yaml_filename'], user=this_thread.current_info['user'], user_code=this_thread.current_info['session'], secret=this_thread.current_info['secret'], url=this_thread.current_info['url'], url_root=this_thread.current_info['url_root'], language=language, f=f, l=l, psm=psm, x=x, y=y, W=W, H=H, extra=ui_notification, message=the_message, pdf=False, preserve_color=False)
-    collector = server.ocr_finalize.s(**args)
-    todo = []
-    indexno = 0
-    for item in ocr_page_tasks(image_file, **args):
-        todo.append(server.ocr_page.s(indexno, **item))
-        indexno += 1
-    the_chord = server.chord(todo)(collector)
+    if kwargs.get('use_google', False):
+        the_task = server.ocr_google_in_background(image_file, docassemble.base.functions.this_thread.current_info['session'])
+    else:
+        language = kwargs.get('language', None)
+        f = int_or_none(kwargs.get('f', None))
+        l = int_or_none(kwargs.get('l', None))
+        psm = kwargs.get('psm', 6)
+        x = int_or_none(kwargs.get('x', None))
+        y = int_or_none(kwargs.get('y', None))
+        W = int_or_none(kwargs.get('W', None))
+        H = int_or_none(kwargs.get('H', None))
+        the_message = kwargs.get('message', None)
+        args = dict(yaml_filename=this_thread.current_info['yaml_filename'], user=this_thread.current_info['user'], user_code=this_thread.current_info['session'], secret=this_thread.current_info['secret'], url=this_thread.current_info['url'], url_root=this_thread.current_info['url_root'], language=language, f=f, l=l, psm=psm, x=x, y=y, W=W, H=H, extra=ui_notification, message=the_message, pdf=False, preserve_color=False)
+        collector = server.ocr_finalize.s(**args)
+        todo = []
+        indexno = 0
+        for item in ocr_page_tasks(image_file, **args):
+            todo.append(server.ocr_page.s(indexno, **item))
+            indexno += 1
+        the_task = server.chord(todo)(collector)
     if ui_notification is not None:
         worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
         #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key + "\n")
-        server.server_redis.rpush(worker_key, the_chord.id)
+        server.server_redis.rpush(worker_key, the_task.id)
     #sys.stderr.write("ocr_file_in_background finished\n")
-    return the_chord
+    return the_task
 
 # def ocr_file_in_background(image_file, ui_notification=None, language=None, psm=6, x=None, y=None, W=None, H=None):
 #     """Starts optical character recognition on one or more image files or PDF
@@ -7583,11 +7594,99 @@ def ocr_file_in_background(*pargs, **kwargs):
 #     sys.stderr.write("ocr_file_in_background: started\n")
 #     return server.async_ocr(image_file, ui_notification=ui_notification, language=language, psm=psm, x=x, y=y, W=W, H=H, user_code=this_thread.current_info.get('session', None))
 
-def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None):
+
+def get_work_bucket():
+    bucket_name = server.daconfig.get('google', {}).get('work bucket', None)
+    if bucket_name is None:
+        raise Exception("Cannot use Google Storage unless there is a work bucket configured in the google configuration")
+    api = DAGoogleAPI()
+    client = api.google_cloud_storage_client()
+    try:
+        bucket = client.get_bucket(bucket_name)
+    except:
+        try:
+            bucket = client.create_bucket(bucket_name)
+        except Exception as err:
+            raise Exception("failed to create bucket named " + bucket_name + ": " + str(err))
+    return bucket
+
+def google_ocr_file(image_file):
+    if isinstance(image_file, DAFile):
+        image_file = [image_file]
+    api = docassemble.base.util.DAGoogleAPI()
+    client = api.google_cloud_vision_client()
+    output = ''
+    bucket = None
+    for doc in image_file:
+        if hasattr(doc, 'extension'):
+            if doc.extension not in ['pdf', 'png', 'jpg', 'gif']:
+                return word("(Not a readable image file)")
+            path = doc.path()
+            if doc.extension == 'pdf':
+                if bucket is None:
+                    bucket = get_work_bucket()
+                if isinstance(doc, DAFile):
+                    input_prefix = 'ocr/ocr_input_' + str(doc.number).zfill(12) + '.pdf'
+                    output_prefix = 'ocr/ocr_result_' + str(doc.number).zfill(12)
+                else:
+                    suffix = random_alphanumeric(12) + '_' + space_to_underscore(os.path.basename(path))
+                    input_prefix = 'ocr/ocr_input_' + suffix
+                    output_prefix = 'ocr/ocr_result_' + suffix
+                blob = bucket.blob(input_prefix)
+                blob.upload_from_filename(path)
+                gcs_source_uri = 'gs://' + bucket.name + '/' + input_prefix
+                gcs_destination_uri = 'gs://' + bucket.name + '/' + output_prefix
+                batch_size = 2
+                mime_type = 'application/pdf'
+
+                feature = google.cloud.vision.Feature(
+                    type_=google.cloud.vision.Feature.Type.DOCUMENT_TEXT_DETECTION)
+
+                gcs_source = google.cloud.vision.GcsSource(uri=gcs_source_uri)
+                input_config = google.cloud.vision.InputConfig(
+                    gcs_source=gcs_source, mime_type=mime_type)
+
+                gcs_destination = google.cloud.vision.GcsDestination(uri=gcs_destination_uri)
+                output_config = google.cloud.vision.OutputConfig(
+                    gcs_destination=gcs_destination, batch_size=batch_size)
+
+                async_request = google.cloud.vision.AsyncAnnotateFileRequest(
+                    features=[feature], input_config=input_config,
+                    output_config=output_config)
+
+                operation = client.async_batch_annotate_files(
+                    requests=[async_request])
+
+                operation.result(timeout=420)
+                blob.delete()
+                blob_list = [blob for blob in list(bucket.list_blobs(prefix=output_prefix)) if not blob.name.endswith('/')]
+                for blob in blob_list:
+                    json_string = blob.download_as_string()
+                    the_response = json.loads(json_string)
+
+                    for item in the_response['responses']:
+                        output += item['fullTextAnnotation']['text'] + "\n"
+                for blob in blob_list:
+                    blob.delete()
+            else:
+                image = google.cloud.vision.Image()
+                with io.open(path, 'rb') as the_image_file:
+                    content = the_image_file.read()
+                image = google.cloud.vision.Image(content=content)
+                the_response = client.text_detection(image=image)
+                if the_response.error.message:
+                    raise Exception("Failed to OCR file with Google Cloud Vision: " + the_response.error.message)
+                for text in the_response.text_annotations:
+                    output += text.description + "\n"
+    return output
+
+def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None, use_google=False):
     """Runs optical character recognition on one or more image files or PDF
     files and returns the recognized text."""
     if not isinstance(image_file, (DAFile, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
+    if use_google:
+        return google_ocr_file(image_file)
     x = int_or_none(x)
     y = int_or_none(y)
     W = int_or_none(W)

@@ -89,6 +89,7 @@ install_requires = [
     "google-cloud-core==1.5.0",
     "google-cloud-storage==1.38.0",
     "google-cloud-translate==3.1.0",
+    "google-cloud-vision==2.3.1",
     "google-crc32c==1.1.2",
     "google-i18n-address==2.4.0",
     "google-reauth==0.1.1",

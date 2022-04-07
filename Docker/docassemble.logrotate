@@ -6,6 +6,7 @@
 /usr/share/docassemble/log/uwsgi.log
 /usr/share/docassemble/log/websockets.log
 /usr/share/docassemble/log/worker.log
+/usr/share/docassemble/log/single_worker.log
 {
         su www-data www-data
 	create 600 www-data www-data

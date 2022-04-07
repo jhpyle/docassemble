@@ -109,6 +109,7 @@ allow non-idempotent questions: False
 restrict input variables: True
 web server: {{DAWEBSERVER}}
 new markdown to docx: True
+new template markdown behavior: True
 stable version: {{DASTABLEVERSION}}
 sql ping: {{DASQLPING}}
 default icons: font awesome

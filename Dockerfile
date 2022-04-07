@@ -71,7 +71,11 @@ bash -c \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \
-   /tmp/docassemble/docassemble_webapp"
+   /tmp/docassemble/docassemble_webapp \
+&& touch /usr/share/docassemble/log/worker.log \
+&& touch /usr/share/docassemble/log/single_worker.log \
+&& touch /usr/share/docassemble/log/uwsgi.log \
+&& touch /usr/share/docassemble/log/websockets.log"
 
 USER root
 RUN \
