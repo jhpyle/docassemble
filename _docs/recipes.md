@@ -2269,6 +2269,84 @@ To run a query on the data, you can do something like this:
 
 {% include demo-side-by-side.html demo="indexdemoquery" %}
 
+# <a name="flask page"></a>Building a custom page with Flask
+
+**docassemble** is a [Flask] application, which means that web
+endpoints can be added simply by declaring a function that uses the
+[Flask] `route` decorator.
+
+Here is an example of a Python module that, when installed on a
+**docassemble** server, enables `/hello` as a GET endpoint.
+
+{% highlight python %}
+# pre-load
+
+from docassemble.webapp.app_object import app
+from flask import render_template_string, Markup
+
+@app.route('/hello', methods=['GET'])
+def hello_endpoint():
+    content = """\
+{% raw %}{% extends "base_templates/base.html" %}{% endraw %}
+
+{% raw %}{% block main %}{% endraw %}
+<div class="row">
+  <div class="col">
+    <h1>Hello, {% raw %}{{ planet }}{% endraw %}!</h1>
+
+    <p>Modi velit ut aut delectus alias nisi a. Animi
+    in rerum quia error et. Adipisci dolores occaecati
+    quasi veniam aliquid asperiores sint sint. Aliquid
+    veritatis qui autem quo laborum. Enim et repellendus
+    sed sed quasi.</p>
+  </div>
+</div>
+{% raw %}{% endblock %}{% endraw %}
+"""
+    return render_template_string(
+        content,
+        bodyclass='daadminbody',
+        title='Hello world',
+        tab_title='Hello tab',
+        page_title='Hello there',
+        extra_css=Markup('\n    <!-- put your link href="" stuff here -->'),
+        extra_js=Markup('\n    <!-- put your script src="" stuff here -->'),
+        planet='world')
+{% endhighlight %}
+
+This example uses the `base_templates/base.html` Jinja2 template,
+which is the default template for pages in **docassemble**. Using this
+template allows you to create a page that uses the same look-and-feel
+and the same metadata as other pages of the **docassemble** app. Note
+that the keyword arguments to `render_template_string()` define
+variables that the `base_templates/base.html` uses. You can customize
+different parts of the page by setting these values. The exception is
+`planet`, which is a variable that is used in the HTML for the
+`/hello` page. Note that in order to insert raw HTML using keyword
+parameters, you need to use [Flask]'s `Markup()` function.
+
+[Flask] only permits one template folder, and the template folder in
+the **docassemble** app is the one in `docassemble.webapp`. This
+cannot be changed. However, you can provide a complete HTML page to
+`render_template_string()` if you do not want to use a template.
+
+The line `# pre-load` at the top of the module is important. This
+ensures that the module will be loaded when the server starts.
+
+The root endpoint `/` already has a definition in
+`docassemble.webapp.server`, but you can tell the server to redirect
+requests from `/` to a custom endpoint that you create.
+
+{% highlight yaml %}
+root redirect url: /hello
+{% endhighlight %}
+
+You might want to use this technique to host your own web site on
+various endpoints of the **docassemble** server and then incorporate
+**docassemble** interviews using a `<div>` or an `<iframe>`. This
+avoids problems with CORS that might otherwise interfere with
+embedding.
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml
@@ -2385,3 +2463,4 @@ To run a query on the data, you can do something like this:
 [`index.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/index.py
 [`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
 [`read_records()`]: {{ site.baseurl }}/docs/functions.html#read_records
+[Flask]: http://flask.pocoo.org/
