@@ -14489,6 +14489,15 @@
   \    show if: wants_email\nunder: \"\"\n---\ntemplate: save_resume_template\nsubject:\
   \ |\n  Your interview\ncontent: |\n  To resume your interview, \n  [click here](${\
   \ interview_url() })."
+"setparts": |-
+  metadata:
+    title: Custody Complaint
+  ---
+  on change:
+    user.name.first: |
+      set_parts(title='Custody Complaint for ' + user.name.full())
+    standing_reason: |
+      set_parts(subtitle=standing_reason + ' standing ')
 "sign": "mandatory: True\ncode: |\n  multi_user = True\n---\nmandatory: True\ncode:\
   \ |\n  multi_user = True\n  signature = '(Your signature will go here)'\n---\nmandatory:\
   \ True\ncode: |\n  intro_seen\n  email_address\n  template_file\n  notified_of_url\n\
@@ -15020,6 +15029,25 @@
     - Tires: number_of_tires
       datatype: integer
       validate: is_multiple_of_four
+"watermark": |-
+  objects:
+    - watermark_image: DAStaticFile.using(filename='draft.eps')
+  ---
+  mandatory: True
+  question: |
+    Document
+  attachment:
+    content: |
+      Hello, ${ planet }!
+    metadata:
+      header-includes:
+        - \usepackage{draftwatermark}
+        - \SetWatermarkText{\includegraphics{${ watermark_image.path() }}}
+  ---
+  question: |
+    What is the name of the planet you wish to greet?
+  fields:
+    - Planet: planet
 "wc_common": |-
   code: |
     user_key = 'workers_comp_user:' + user_info().email

@@ -2347,6 +2347,43 @@ various endpoints of the **docassemble** server and then incorporate
 avoids problems with CORS that might otherwise interfere with
 embedding.
 
+# <a name="screen parts"></a>Synchronizing screen parts with interview answers
+
+If you run multiple sessions in the same interview and you want to be
+able to keep sessions organized on the My Interviews page, you might
+want to use [`set_parts()`] to dynamically change the interview title
+or subtitle. You can use `metadata` to set default values of `title`
+or `subtitle` that will apply when the user first starts the
+interview. Then after the user answers certain questions, you can call
+`set_parts()` to change the `title` or `subtitle`. That way, when you
+go to the My Interviews page, you will be able to tell your sessions
+apart.
+
+This example uses [`on change`] to trigger calls to [`set_parts()`]
+when a variable changes. Although you could also call [`set_parts()`]
+in your ordinary interview logic, using `on change` is helpful because
+if you allow the user to make changes to variables in a `review`
+screen, you don't need to worry about making sure that [`set_parts()`]
+gets called again.
+
+{% include demo-side-by-side.html demo="setparts" %}
+
+# <a name="watermark"></a>Inserting a watermark when using Markdown to PDF
+
+If you are using the Markdown-to-PDF document assembly method and you
+want the resulting PDF documents to bear a [watermark] on each page,
+you can use the [`draftwatermark`] package in [LaTeX] to place an
+image in the center of each page. This package is not enabled by
+default in the [default LaTeX template] or its [default metadata], so
+you need to tell **docassemble** to load it in the preamble of the
+`.tex` file. The [default LaTeX template] allows you to add your own
+lines to the preamble of the `.tex` file by setting the
+`header-includes` metadata variable to a list of lines.
+
+{% include demo-side-by-side.html demo="watermark" %}
+
+Another [LaTeX] package that does something similar is [`background`].
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml
@@ -2464,3 +2501,10 @@ embedding.
 [`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
 [`read_records()`]: {{ site.baseurl }}/docs/functions.html#read_records
 [Flask]: http://flask.pocoo.org/
+[`set_parts()`]: {{ site.baseurl }}/docs/functions.html#set_parts
+[watermark]: https://en.wikipedia.org/wiki/Watermark
+[LaTeX]: http://www.latex-project.org/
+[`draftwatermark`]: https://www.ctan.org/pkg/draftwatermark
+[default LaTeX template]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.tex
+[default metadata]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.yml
+[`background`]: https://www.ctan.org/pkg/background

@@ -428,6 +428,9 @@ the next section).
   of [hyperref], which will default to `magenta` if this is not defined.
 * `abstract` - default is not defined.  If defined, it will include an
   article abstract in the standard [LaTeX] format.
+* `header-includes` - you can set this to a list of lines that will be
+  included in the header of the [LaTeX] file. You can use this if you
+  want to load a custom package, for example.
 
 ## <a name="customization"></a>Additional customization of document formatting
 
@@ -436,30 +439,34 @@ your own template files for [Pandoc].  The default template files are
 located in the [`docassemble.base`] package in the
 `docassemble/base/data/templates` directory.  The files include:
 
-* `Legal-Template.tex`: this is the [LaTeX] template that [Pandoc]
+* [`Legal-Template.tex`]: this is the [LaTeX] template that [Pandoc]
   uses to generate PDF files.
-* `Legal-Template.yml`: default [Pandoc] metadata for the
-  `Legal-Template.tex` template, in [YAML] format.  Options passed
+* [`Legal-Template.yml`]: default [Pandoc] metadata for the
+  [`Legal-Template.tex`] template, in [YAML] format.  Options passed
   through `metadata` items within an [`attachment`] will append or
   overwrite these default options.
-* `Legal-Template.rtf`: this is the template that [Pandoc] uses to
+* [`Legal-Template.rtf`]: this is the template that [Pandoc] uses to
   generate RTF files.
-* `Legal-Template.docx`: this is the reference file that [Pandoc] uses
+* [`Legal-Template.docx`]: this is the reference file that [Pandoc] uses
   to generate DOCX files.  You can edit this file to change default
   styles, headers, and footers.
 
 To use your own template files, specify them using the following
 options to [`attachment`]:
 
-* <a name="initial yaml"></a>`initial yaml`: one or more [YAML] files from which [Pandoc]
-  metadata options should be gathered.  If specified, the default file
-  `Legal-Template.yml` is not loaded.  If specifying more than one
+* <a name="initial yaml"></a>`initial yaml`: one or more [YAML] files
+  from which [Pandoc] metadata options should be gathered.  If
+  specified, the default file [`Legal-Template.yml`] is not loaded, so
+  you can use this as a way to substitute a different set of metadata
+  in place of [`Legal-Template.yml`] while still using the standard
+  `template file` [`Legal-Template.tex`].  If specifying more than one
   file, use [YAML] list syntax.
-* <a name="additional yaml"></a>`additional yaml`: one or more [YAML] files from which [Pandoc]
-  metadata options should be gathered, in addition to whatever options
-  are loaded through `initial_yaml`.  This can be used to load the
-  metadata in `Legal-Template.yml` but to overwrite particular values.
-  If specifying more than one file, use [YAML] list syntax.
+* <a name="additional yaml"></a>`additional yaml`: one or more [YAML]
+  files from which [Pandoc] metadata options should be gathered, in
+  addition to whatever options are loaded through `initial_yaml`.
+  This can be used to load the metadata in [`Legal-Template.yml`] but
+  to overwrite particular values.  If specifying more than one file,
+  use [YAML] list syntax.
 * <a name="template file"></a>`template file`: a single `.tex` file to be used as the [Pandoc]
   template for converting [Markdown] to PDF.
 * <a name="rtf reference file"></a>`rtf template file`: a single `.rtf` file to be used as the [Pandoc]
@@ -2141,3 +2148,7 @@ interview, see the [`cache documents` feature].
 [`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
 [`update_language_function()`]: {{ site.baseurl }}/docs/functions.html#linguistic
 [`markdown` filter]: #markdown to docx
+[`Legal-Template.tex`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.tex
+[`Legal-Template.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.yml
+[`Legal-Template.rtf`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.rtf
+[`Legal-Template.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.docx

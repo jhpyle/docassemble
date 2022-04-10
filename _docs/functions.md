@@ -4119,14 +4119,73 @@ of the variable is only returned if the variable is defined.
 If the current user is logged in, [`interview_list()`] returns a list
 of dictionaries indicating information about the user's interview
 sessions.  This function provides a programmatic version of the screen
-available at `/interviews`.  In addition, the optional keyword
-parameter `user_id` can be used (by a user with `admin` [privileges]
-or a user with a custom privilege with the `access_sessions`
-permission) to get information about sessions owned by other people.
+available at `/interviews`.
 
-The function returns a two-item tuple.  The first item in the tuple is
-a [Python list] of [Python dictionaries], where the items in each
-dictionary are:
+`interview_list()` takes the following optional keyword parameters:
+
+* `exclude_invalid` - if `True`, do not return any sessions where the
+  interview could not be found or the interview_answers (the `dict`)
+  could not be unencrypted. The default is `True`.
+* `action` - if set to `'delete_all'`, then `interview_list()` will
+  delete the sessions and return the number of sessions deleted. This
+  can be limited by specifying `filename`, `session`, `user_id`, or
+  `query`. The `action` parameter can also be set to `'delete'`, in
+  which case a `filename` and a `session` must be specified, and that
+  single session will be deleted.
+* `filename` - if set, `interview_list()` will only act on sessions
+  with this interview filename (e.g., `docassemble.demo:data/questions/questions.yml`).
+* `session` - if set, `interview_list()` will only act on sessions
+  with this session ID.
+* `user_id` - if set to an integer, `interview_list()` will only act
+  on sessions that the user with the given user ID is a user of.  If
+  set to `'all'`, `interview_list()` will act on all interviews on the
+  server.  If not set, `interview_list()` will act on interviews owned
+  by the current user.  Only users with `admin` [privileges] (or users
+  with a custom privilege with the `access_sessions` permission) can
+  access sessions of other users.
+* `query` - this can be set to a query expression if you want to do a
+  complex query. The syntax is explained below.
+* `include_dict` - if `True`, then `interview_list()` will return the
+  interview answers in the response.  If you are not going to use the
+  interview answers, it is best to set this to `False`.  The default
+  is `True`.
+* `delete_shared` - this can be set to `True` if you set `action` to
+  `'delete_all'` or `'delete'`, in which case all of the interview
+  answers of the deleted sessions will be deleted even if the user is
+  one of several users in the session. The default is `False`.
+* `next_id` - this is used for pagination (more on that later).
+
+When `action` is set to `'delete_all'` or `'delete'`,
+`interview_list()` returns an integer indicating the number of
+sessions deleted. Otherwise, `interview_list()` returns a list of
+sessions.
+
+Since the list of sessions may be very long, `interview_list()` uses
+pagination.  When you first call `interview_list()`, up to 100 records
+are returned in the first item in the tuple. The number of records
+returned is configurable using the [`pagination limit`] Configuration
+directive.  If additional records exist, the second item in the tuple
+will be a code.  To obtain the next page of records, call
+`interview_list()` again, this time with the `next_id` optional
+keyword parameter set to the second item in the tuple.  By making
+multiple calls to `interview_list()`, you can obtain the complete list
+of user records.  For example:
+
+{% highlight python %}
+from docassemble.base.util import interview_list
+
+sessions_list = []
+next_id = None
+while True:
+    (items, next_id) = interview_list(next_id=next_id)
+    sessions_list.extend(items)
+    if not next_id:
+        break
+{% endhighlight %}
+
+The first item in the tuple (`items` in this example) is a [Python
+list] of [Python dictionaries], where the items in each dictionary
+are:
 
 * `dict`: the [interview session dictionary] for the session (not
   present if `include_dict` is `False`).
@@ -4157,31 +4216,9 @@ dictionary are:
   from being resumed, or the [interview session dictionary] is not able
   to be decrypted.
 
-The second item in the tuple is a code that is used for pagination.
-Since the list of sessions may be very long, `interview_list()` uses
-pagination.  When you first call `interview_list()`, up to 100 records
-are returned in the first item in the tuple (configurable using the
-[`pagination limit`] Configuration directive).  If additional records
-exist, the second item in the tuple will be a code.  To obtain the
-next page of records, call `interview_list()` again, this time with the
-`next_id` optional keyword parameter set to the second item in the
-tuple.  By making multiple calls to `interview_list()`, you can obtain
-the complete list of user records.  For example:
-
-{% highlight python %}
-from docassemble.base.util import interview_list
-
-sessions_list = []
-next_id = None
-while True:
-    (items, next_id) = interview_list(next_id=next_id)
-    sessions_list.extend(items)
-    if not next_id:
-        break
-{% endhighlight %}
-
-The following question will display a list of the titles of each
-session associated with the current user (or the first 100):
+Sometimes you might not need to use pagination. For example, the
+following question will display a list of the titles of each session
+associated with the current user (at most the first 100):
 
 {% highlight yaml %}
 question: Sessions
@@ -4284,6 +4321,70 @@ and all of its data.  However, if you set the optional keyword
 parameter `delete_shared` to `True`, then the session and its data
 will be deleted regardless of whether it is shared by one or more
 other users.
+
+<a name="session query string"></a>If you want to filter the results
+by attributes other than `filename`, `session`, and `user_id`, or you
+want to filter with a boolean query, you can set the keyword parameter
+`query` to an expression such as the following:
+
+* `DA.Sessions.modtime < '4/5/2022'`
+* `DA.Sessions.email == 'jsmith@docassemble.org'`
+* `DA.Sessions.email.Like('%@abc.com') & DA.Sessions.modtime < '4/5/2022'`
+* `DA.Sessions.first_name == 'Joseph' | DA.Sessions.first_name == 'Joe'`
+* `DA.Sessions.first_name == 'Joseph' | (DA.Sessions.first_name == 'Joe' & DA.Sessions.last_name == 'Smith')`
+
+The available fields are:
+
+* `DA.Sessions.indexno` - the integer number of the latest step in the
+  interview answers of the session. This is the integer that is used
+  for `next_id`.
+* `DA.Sessions.modtime` - the timestamp of the latest step in the
+  interview answers.
+* `DA.Sessions.filename` - the filename of the interview.
+* `DA.Sessions.session` - the session ID of the session.
+* `DA.Sessions.encrypted` - a boolean value representing whether the
+  latest step in the interview answers of the session is encrypted.
+
+The following fields are available for sessions that are tied to a
+logged-in user. They come from the user profile.
+
+* `DA.Sessions.user_id` - the `user_id` of the user.
+* `DA.Sessions.email` - the e-mail address of the user.
+* `DA.Sessions.first_name` - the user's first name.
+* `DA.Sessions.last_name` - the user's last name.
+* `DA.Sessions.country` - the user's country.
+* `DA.Sessions.subdivisionfirst` - the user's first geographical subdivision.
+* `DA.Sessions.subdivisionsecond` - the user's second geographical subdivision.
+* `DA.Sessions.subdivisionthird` - the user's third geographical subdivision.
+* `DA.Sessions.organization` - the user's organization name.
+* `DA.Sessions.timezone` - the user's time zone.
+* `DA.Sessions.language` - the user's language code.
+* `DA.Sessions.last_login` - the timestamp of the user's last login.
+
+When writing `query` expressions, you can indicate "and" and "or" in
+two different ways.
+
+* `DA.Sessions.modtime >= '4/1/2022' & DA.Sessions.modtime < '5/1/2022'`
+* `DA.And(Sessions.modtime >= '4/1/2022', DA.Sessions.modtime < '5/1/2022')`
+
+Likewise, the following are equivalent:
+
+* `DA.Sessions.first_name == 'Joseph' | DA.Sessions.first_name == 'Joe'`
+* `DA.Or(Sessions.first_name == 'Joseph', DA.Sessions.first_name == 'Joe')`
+
+The operators `==`, `!=`, `>=`, `>`, `<=`, and `<` are available. In
+addition, the `~` operator can be used to negate conditions. For
+example, to exclude sessions owned by users named Joseph, you would
+write something like:
+
+* `~DA.Or(Sessions.first_name == 'Joseph', DA.Sessions.first_name == 'Joe')`
+* `~Sessions.first_name.like('Jo%')`
+* `~(Sessions.first_name == 'Joseph')`
+
+There are two methods available, `Like` and `In`:
+
+* `DA.Sessions.email.Like('%@abc.com')`
+* `DA.Sessions.last_name.In('Smith', 'Jones')`
 
 For [API] versions of this function, see [`/api/interviews`],
 [`/api/user/interviews`], and [`/api/user/<user_id>/interviews`].
@@ -5439,6 +5540,19 @@ instead.  To do so, call `ocr_file()` with the keyword parameter
 {% highlight python %}
 ocr_file(the_file, use_google=True)
 {% endhighlight %}
+
+To get the raw output of the [Google Cloud Vision] API, set
+`raw_result` to `True`:
+
+{% highlight python %}
+ocr_file(the_file, use_google=True, raw_result=True)
+{% endhighlight %}
+
+The output will then be a [Python list] of data structures returned
+from the [Google Cloud Vision] API. The format will be different
+depending on whether a PDF or other image was provided. Consult the
+[Google Cloud Vision] API to figure out what the data structures
+represent.
 
 When `use_google=True` is used, none of the other keyword arguments
 (`language`, `psm`, `f`, `l`, etc.) are applicable. Those arguments are

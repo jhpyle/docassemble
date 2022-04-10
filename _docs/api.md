@@ -1159,12 +1159,15 @@ Parameters:
  - `secret` (optional): set to the user's [secret](#secret) if you
    want to be able to access information about interview sessions that
    may be encrypted.
- - `tag` (optional): set to a tag if you want to select only those
-   interview sessions with the given tag.
  - `i` (optional): set to an interview filename if you want to select
    only those interview sessions with the given interview filename.
  - `session` (optional): set to a session ID if you want to select
    only the interview session with the given session ID.
+ - `query` (optional): set to a [session query string] if you want to
+   filter the list of sessions by criteria other than interview
+   filename and session ID.
+ - `tag` (optional): set to a tag if you want to select only those
+   interview sessions with the given tag.
  - `include_dictionary` (optional): set to `1` if you want a [JSON]
    version of the interview answers to be returned.  The default is
    not to return the interview answers.
@@ -1232,12 +1235,15 @@ Parameters:
 
  - `key`: the API key (optional if the API key is passed in an
    `X-API-Key` cookie or header).
- - `tag` (optional): set to a tag if you want to delete only those
-   interview sessions with the given tag.
  - `i` (optional): set to an interview filename if you want to delete
    only those interview sessions with the given interview filename.
  - `session` (optional): set to a session ID if you want to delete
    only the interview session with the given session ID.
+ - `query` (optional): set to a [session query string] if you want to
+   select a list of sessions to delete by criteria other than
+   interview filename and session ID.
+ - `tag` (optional): set to a tag if you want to delete only those
+   interview sessions with the given tag.
 
 Required privileges:
 
@@ -1260,7 +1266,7 @@ delete interview sessions from the system, even all of them.  The filters
 with "and").  If you include no filters, all of the interview
 sessions, regardless of user, are deleted.
 
-See also the [`/api/user/interviews`](#user_interview_delete) method
+See also the [`/api/user/interviews`](#user_interviews_delete) method
 and the [`/api/user/<user_id>/interviews`](#user_user_id_interviews_delete) method.
 
 ## <a name="user_interviews"></a>List interview sessions of the user
@@ -1273,12 +1279,6 @@ a single API call, [pagination] is used.
 Path: `/api/user/interviews`
 
 Method: [GET]
-
-Parameters:
-
- - `next_id` (optional): the ID that can be provided to retrieve the
-   next page of results.  See the [pagination] section for more
-   information.
 
 Required privileges: None, except that an API key with limited
 [permissions] needs to have the `access_sessions` [permission]
@@ -1326,6 +1326,11 @@ Parameters:
  - `i` (optional): set to a filename of an interview, e.g.,
    `docassemble.demo:data/questions/questions.yml`, if you want to
    retrieve only those sessions for a given interview file.
+ - `session` (optional): set to a session ID if you want to select
+   only the interview session with the given session ID.
+ - `query` (optional): set to a [session query string] if you want to
+   filter the list of sessions by criteria other than interview
+   filename and session ID.
  - `tag` (optional): set to a tag if you want to retrieve only those
    interview sessions with the given tag.
  - `next_id` (optional): the ID that can be provided to retrieve the
@@ -1358,6 +1363,11 @@ Parameters:
  - `i` (optional): set to a filename of an interview, e.g.,
    `docassemble.demo:data/questions/questions.yml`, if you want to
    delete only those sessions for a given interview file.
+ - `session` (optional): set to a session ID if you want to delete
+   only the interview session with the given session ID.
+ - `query` (optional): set to a [session query string] if you want to
+   select a list of sessions to delete by criteria other than
+   interview filename and session ID.
  - `tag` (optional): set to a tag if you want to delete only those
    interview sessions with the given tag.
 
@@ -3676,4 +3686,9 @@ function.
 [`/api/restart_status`]: #restart_status
 [form data]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
+[permission]: {{ site.baseurl }}/docs/config.html#permissions
 [permissions]: {{ site.baseurl }}/docs/config.html#permissions
+[session query string]: {{ site.baseurl }}/docs/functions.html#session query string
+[`/api/playground_pull`]: #playground_pull
+[`/api/config`]: #config_read
+[`/api/playground`]: #playground_get
