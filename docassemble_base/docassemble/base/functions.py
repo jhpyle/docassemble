@@ -1765,6 +1765,7 @@ this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extens
 this_thread.saved_files = {}
 this_thread.message_log = []
 this_thread.misc = {}
+this_thread.probing = False
 this_thread.prevent_going_back = False
 this_thread.current_question = None
 
@@ -2138,6 +2139,7 @@ def reset_local_variables():
     this_thread.saved_files = {}
     this_thread.message_log = []
     this_thread.misc = {}
+    this_thread.probing = False
     this_thread.current_info = {}
     this_thread.current_package = None
     this_thread.current_question = None
@@ -3911,6 +3913,7 @@ def undefine(*pargs, invalidate=False):
                 return False
         else:
             the_user_dict = frame.f_locals
+    this_thread.probing = True
     if invalidate:
         for var in vars_to_delete:
             try:
@@ -3922,6 +3925,7 @@ def undefine(*pargs, invalidate=False):
             exec('del ' + var, the_user_dict)
         except:
             pass
+    this_thread.probing = False
 
 def dispatch(var):
     """Shows a menu screen."""
@@ -3995,15 +3999,16 @@ def defined(var):
             if variable in the_user_dict:
                 break
             else:
+                this_thread.probing = False
                 return False
         else:
             the_user_dict = frame.f_locals
     if variable not in the_user_dict:
-        #logmessage("Returning False1")
         return False
     if len(components) == 1:
         return True
     cum_variable = ''
+    this_thread.probing = True
     for elem in components:
         if elem[0] == 'name':
             cum_variable += elem[1]
@@ -4015,12 +4020,13 @@ def defined(var):
             try:
                 the_index = eval(elem[1], the_user_dict)
             except:
-                #logmessage("Returning False2")
+                this_thread.probing = False
                 return False
             try:
                 the_cum = eval(cum_variable, the_user_dict)
             except:
                 #logmessage("Returning False2.5")
+                this_thread.probing = False
                 return False
             if hasattr(the_cum, 'instanceName') and hasattr(the_cum, 'elements'):
                 if isinstance(the_index, int):
@@ -4037,11 +4043,14 @@ def defined(var):
             result = eval(to_eval, the_user_dict)
         except Exception as err:
             #logmessage("Returning False3 after " + to_eval + ": " + str(err))
+            this_thread.probing = False
             return False
         if result:
             continue
         #logmessage("Returning False4")
+        this_thread.probing = False
         return False
+    this_thread.probing = False
     return True
 
 def illegal_variable_name(var):
@@ -4554,7 +4563,7 @@ def decode_name(var):
     """Convert a base64-encoded variable name to plain text."""
     return codecs.decode(repad_byte(bytearray(var, encoding='utf-8')), 'base64').decode('utf-8')
 
-def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, include_dict=True, delete_shared=False, next_id=None):
+def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, query=None, include_dict=True, delete_shared=False, next_id=None):
     """Returns a list of interviews that users have started."""
     if this_thread.current_info['user']['is_authenticated']:
         if user_id == 'all' or session is not None:
@@ -4576,11 +4585,11 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
                     raise DAError("interview_list: invalid next_id.")
             else:
                 start_id = None
-            (the_list, start_id) = server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared, start_id=start_id)
+            (the_list, start_id) = server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared, start_id=start_id, query=query)
             if start_id is None:
                 return (the_list, None)
             return (the_list, myb64quote(str(start_id)))
-        return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared)
+        return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared, query=query)
     return None
 
 def interview_menu(*pargs, **kwargs):

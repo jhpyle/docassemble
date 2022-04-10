@@ -50,6 +50,7 @@ import docassemble.base.geocode
 import docassemble.base.pandoc
 import docassemble.base.parse
 import docassemble.base.pdftk
+import docassemble.base.DA as DA
 import dateutil
 import dateutil.parser
 import babel.dates
@@ -326,7 +327,8 @@ __all__ = [
     'chain',
     'DABreadCrumbs',
     'set_variables',
-    'language_name'
+    'language_name',
+    'DA'
 ]
 
 #knn_machine_learner = DummyObject
@@ -2019,7 +2021,7 @@ class DAList(DAObject):
         try:
             return self.elements[index]
         except:
-            if self.auto_gather and hasattr(self, 'gathered') and not (hasattr(self, '_appending_allowed') and self._appending_allowed):
+            if (self.auto_gather and hasattr(self, 'gathered') and not (hasattr(self, '_appending_allowed') and self._appending_allowed)) or docassemble.base.functions.this_thread.probing:
                 try:
                     logmessage("list index " + str(index) + " out of range on " + str(self.instanceName))
                 except:
@@ -2807,7 +2809,7 @@ class DADict(DAObject):
             return comma_and_list(self.elements.keys(), **kwargs)
     def __getitem__(self, index):
         if index not in self.elements:
-            if self.object_type is None:
+            if self.object_type is None or docassemble.base.functions.this_thread.probing:
                 var_name = object.__getattribute__(self, 'instanceName') + "[" + repr(index) + "]"
                 raise DAIndexError("name '" + var_name + "' is not defined")
             self.initializeObject(index, self.object_type, **self.object_type_parameters)
@@ -7563,7 +7565,7 @@ def ocr_file_in_background(*pargs, **kwargs):
     else:
         ui_notification = None
     if kwargs.get('use_google', False):
-        the_task = server.ocr_google_in_background(image_file, docassemble.base.functions.this_thread.current_info['session'])
+        the_task = server.ocr_google_in_background(image_file, kwargs.get('raw_result', False), docassemble.base.functions.this_thread.current_info['session'])
     else:
         language = kwargs.get('language', None)
         f = int_or_none(kwargs.get('f', None))
@@ -7611,12 +7613,15 @@ def get_work_bucket():
             raise Exception("failed to create bucket named " + bucket_name + ": " + str(err))
     return bucket
 
-def google_ocr_file(image_file):
+def google_ocr_file(image_file, raw_result=False):
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     api = docassemble.base.util.DAGoogleAPI()
     client = api.google_cloud_vision_client()
-    output = ''
+    if raw_result:
+        output = []
+    else:
+        output = ''
     bucket = None
     for doc in image_file:
         if hasattr(doc, 'extension'):
@@ -7664,9 +7669,11 @@ def google_ocr_file(image_file):
                 for blob in blob_list:
                     json_string = blob.download_as_string()
                     the_response = json.loads(json_string)
-
-                    for item in the_response['responses']:
-                        output += item['fullTextAnnotation']['text'] + "\n"
+                    if raw_result:
+                        output.append(the_response)
+                    else:
+                        for item in the_response['responses']:
+                            output += item['fullTextAnnotation']['text'] + "\n"
                 for blob in blob_list:
                     blob.delete()
             else:
@@ -7677,17 +7684,20 @@ def google_ocr_file(image_file):
                 the_response = client.text_detection(image=image)
                 if the_response.error.message:
                     raise Exception("Failed to OCR file with Google Cloud Vision: " + the_response.error.message)
-                for text in the_response.text_annotations:
-                    output += text.description + "\n"
+                if raw_result:
+                    output.append(json.loads(google.cloud.vision.AnnotateImageResponse.to_json(the_response)))
+                else:
+                    for text in the_response.text_annotations:
+                        output += text.description + "\n"
     return output
 
-def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None, use_google=False):
+def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None, use_google=False, raw_result=False):
     """Runs optical character recognition on one or more image files or PDF
     files and returns the recognized text."""
     if not isinstance(image_file, (DAFile, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
     if use_google:
-        return google_ocr_file(image_file)
+        return google_ocr_file(image_file, raw_result=raw_result)
     x = int_or_none(x)
     y = int_or_none(y)
     W = int_or_none(W)

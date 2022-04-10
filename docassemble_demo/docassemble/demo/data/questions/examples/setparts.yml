@@ -1,0 +1,42 @@
+metadata:
+  example start: 1
+  example end: 2
+  documentation: "https://docassemble.org/docs/recipes.html#screen parts"
+---
+metadata:
+  title: Custody Complaint
+---
+on change:
+  user.name.first: |
+    set_parts(title='Custody Complaint for ' + user.name.full())
+  standing_reason: |
+    set_parts(subtitle=standing_reason + ' standing ')
+---
+objects:
+  - user: Individual
+---
+mandatory: True
+question: |
+  Here is your complaint
+attachment:
+  name: Custody Complaint
+  filename: custody_complaint
+  content: |
+    My name is ${ user }.  
+    
+    I have standing as a ${ standing_reason }.
+    
+    Give me custody.
+---
+question: |
+  What is your name?
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+---
+question: |
+  What is your relation to the child?
+field: standing_reason
+choices: 
+  - Parent: parent
+  - Grandparent: grandparent

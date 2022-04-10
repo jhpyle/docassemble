@@ -379,7 +379,10 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                 writer._root_object.update({pypdf.generic.NameObject(key): val})
             writer.page_list = []
             recursive_get_pages(writer._root_object['/Pages'], writer.page_list)
-            recursive_add_bookmark(original, writer, original.getOutlines())
+            try:
+                recursive_add_bookmark(original, writer, original.getOutlines())
+            except:
+                pass
             with open(new_pdf_file.name, "wb") as outFile:
                 writer.write(outFile)
             shutil.copyfile(new_pdf_file.name, pdf_file.name)

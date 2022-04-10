@@ -1,9 +1,28 @@
 # Change Log
 
+## [1.3.30] - 2022-04-10
+
+### Added
+- The `query` option for `interview_list()` and API endpoints like
+  `/api/interviews`.
+- Recipes for setting screen parts and watermarking Markdown-to-PDF
+  files.
+- The `raw_result` keyword parameter for `ocr_file()` and
+  `ocr_file_in_background()` when used with Google Cloud Vision.
+### Changed
+- SQL tables now use a uniqueness constraint on primary key columns.
+- Errors with bookmarks in PDF templates will be ignored instead of
+  raising exceptions.
+### Fixed
+- Problem with the processing of `metadata` in the Markdown-to-PDF
+  feature.
+- Issue with `__getattr__()` causing objects to be created as a result
+  of testing for their existence.
+
 ## [1.3.29] - 2022-04-07
 ### Added
 - The option for using Google Cloud Vision when using `ocr_file()` and
-  other OCR functions.
+  `ocr_file_in_background()`.
 ### Changed
 - When `new template markdown behavior: True` is set in the
   Configuration (which is now part of the default initial

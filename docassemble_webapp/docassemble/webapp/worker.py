@@ -1290,7 +1290,7 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
 
 @workerapp.task
-def ocr_google(image_file, user_code):
+def ocr_google(image_file, raw_result, user_code):
     sys.stderr.write("ocr_google started in worker\n")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
@@ -1301,4 +1301,4 @@ def ocr_google(image_file, user_code):
             worker_controller.functions.reset_local_variables()
             worker_controller.functions.set_uid(user_code)
             worker_controller.set_request_active(False)
-            return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.util.google_ocr_file(image_file))
+            return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.util.google_ocr_file(image_file, raw_result=raw_result))

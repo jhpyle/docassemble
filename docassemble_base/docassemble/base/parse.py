@@ -4627,9 +4627,9 @@ class Question:
                     raise DAError('Unknown data type ' + str(type(target['metadata'])) + ' in attachment metadata.' + self.idebug(target))
                 for key in target['metadata']:
                     data = target['metadata'][key]
-                    if data is list:
+                    if isinstance(data, list):
                         for sub_data in data:
-                            if sub_data is not str:
+                            if not isinstance(sub_data, str):
                                 raise DAError('Unknown data type ' + str(type(sub_data)) + ' in list in attachment metadata' + self.idebug(target))
                         newdata = list(map((lambda x: TextObject(x, question=self)), data))
                         metadata[key] = newdata

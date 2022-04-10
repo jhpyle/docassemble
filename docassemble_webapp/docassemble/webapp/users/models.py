@@ -3,7 +3,7 @@ from docassemble.base.config import dbtableprefix, allowed
 
 class UserModel(db.Model, UserMixin):
     __tablename__ = dbtableprefix + 'user'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
     social_id = db.Column(db.String(255), nullable=False, unique=True)
     nickname = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), nullable=True, unique=True, index=True)
@@ -64,7 +64,7 @@ class UserModel(db.Model, UserMixin):
 
 class UserAuthModel(db.Model, UserMixin):
     __tablename__ = dbtableprefix + 'user_auth'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
     password = db.Column(db.String(255), nullable=False, server_default='')
     reset_password_token = db.Column(db.String(100), nullable=False, server_default='')
@@ -73,13 +73,13 @@ class UserAuthModel(db.Model, UserMixin):
 
 class Role(db.Model):
     __tablename__ = dbtableprefix + 'role'
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True, unique=True)
     name = db.Column(db.String(50), unique=True, index=True)
     description = db.Column(db.String(255))
 
 class UserRoles(db.Model):
     __tablename__ = dbtableprefix + 'user_roles'
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True, unique=True)
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
     role_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'role.id', ondelete='CASCADE'), index=True)
 
@@ -107,11 +107,11 @@ db.Index(dbtableprefix + 'ix_userdictkeys_key_filename', UserDictKeys.key, UserD
 
 class TempUser(db.Model):
     __tablename__ = dbtableprefix + 'tempuser'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
 
 class ChatLog(db.Model):
     __tablename__ = dbtableprefix + "chatlog"
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True, unique=True)
     filename = db.Column(db.String(255), index=True)
     key = db.Column(db.String(250), index=True)
     message = db.Column(db.Text())
@@ -125,7 +125,7 @@ class ChatLog(db.Model):
 
 class MyUserInvitation(db.Model):
     __tablename__ = dbtableprefix + 'user_invite'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
     email = db.Column(db.String(255), nullable=False)
     role_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'role.id', ondelete='CASCADE'))
     # save the user of the invitee
