@@ -568,8 +568,9 @@ Other methods available on a `DAList` are:
   this method is not currently called by the **docassemble** code, but
   it is available for your use in subclasses.  The intention is for
   this method to be called immediately before the `complete_attribute`
-  is set.  If your class does not provide a `.hook_on_item_complete()`
-  method, this method does nothing.
+  is set.  E.g., `my_list.hook_on_item_complete(my_list[i])`.  If your
+  class does not provide a `.hook_on_item_complete()` method, this
+  method does nothing.
 * <a name="DAList.filter"></a><a name="DASet.filter"></a>`filter()` -
   returns a [shallow copy] of the list object where the elements of
   the list are filtered according to criteria specified in keyword
