@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.3.31] - 2022-04-13
+
+### Fixed
+- Bug in `delete_all` feature of `interview_list()`.
+
 ## [1.3.30] - 2022-04-10
 
 ### Added

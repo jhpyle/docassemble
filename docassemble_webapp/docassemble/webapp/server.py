@@ -22206,7 +22206,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 where_clause.append(UserDictKeys.user_id == user_id)
             if filename is not None:
                 where_clause.append(UserDictKeys.filename == filename)
-            interview_query = db.session.execute(select(UserDictKeys.filename, UserDictKeys.key, UserDictKeys.user_id, UserDictKeys.temp_user_id).where(*where_clause).group_by(UserDictKeys.filename, UserDictKeys.key))
+            interview_query = db.session.execute(select(UserDictKeys.filename, UserDictKeys.key, UserDictKeys.user_id, UserDictKeys.temp_user_id).where(*where_clause).group_by(UserDictKeys.filename, UserDictKeys.key, UserDictKeys.user_id, UserDictKeys.temp_user_id))
             for interview_info in interview_query:
                 sessions_to_delete.add((interview_info.key, interview_info.filename, interview_info.user_id, interview_info.temp_user_id))
             if user_id is not None:
