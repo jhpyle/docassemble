@@ -2938,7 +2938,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
 """
         else:
             navbar += """\
-        <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
+        <form hidden style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
 """
     if status.title_url:
         if str(status.title_url_opens_in_other_window) == 'False':
@@ -2972,20 +2972,22 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     chat_sr = word("Live chat")
     source_message = word("Information for the developer")
     if debug_mode:
-        source_button = '<li class="nav-item d-none d-md-block"><button class="btn btn-link nav-link da-no-outline" title=' + json.dumps(source_message) + ' id="dasourcetoggle" data-bs-toggle="collapse" data-bs-target="#dasource"><i class="fas fa-code"></i></button></li>'
-        source_menu_item = '<a class="dropdown-item d-block d-md-none" title=' + json.dumps(source_message) + ' id="dasourcetoggle" href="#dasource" data-bs-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
+        source_button = '<div class="nav-item navbar-nav d-none d-md-block"><button class="btn btn-link nav-link da-no-outline" title=' + json.dumps(source_message) + ' id="dasourcetoggle" data-bs-toggle="collapse" data-bs-target="#dasource"><i class="fas fa-code"></i></button></div>'
+        source_menu_item = '<a class="dropdown-item d-block d-md-none navbar" title=' + json.dumps(source_message) + ' id="dasourcetogglemenu" href="#dasource" data-bs-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
     else:
         source_button = ''
         source_menu_item = ''
-    navbar += '        <ul class="nav navbar-nav damynavbar-right" role="tablist">' + source_button + '<li class="nav-item dainvisible" role="presentation"><button class="btn btn-link nav-link active da-no-outline" id="daquestionlabel" data-bs-toggle="tab" data-bs-target="#daquestion">' + word('Question') + '</button></li>'
+    hidden_question_button = '<div hidden class="nav-item dainvisible" role="presentation"><button class="btn btn-link nav-link active da-no-outline" id="daquestionlabel" data-bs-toggle="tab" data-bs-target="#daquestion">' + word('Question') + '</button></div>'
+    navbar += '        ' + source_button + hidden_question_button + '<ul id="nav-bar-tab-list" class="nav navbar-nav damynavbar-right" role="tablist">'
     if len(status.interviewHelpText) > 0 or (len(status.helpText) > 0 and not status.question.interview.question_help_button):
         if status.question.helptext is None or status.question.interview.question_help_button:
-            navbar += '<li class="nav-item" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" data-bs-target="#dahelp" data-bs-toggle="tab" id="dahelptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</button></li>'
+            navbar += '<li class="nav-item" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" data-bs-target="#dahelp" data-bs-toggle="tab" role="tab" id="dahelptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</button></li>'
         else:
-            navbar += '<li class="nav-item" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline daactivetext" data-bs-target="#dahelp" data-bs-toggle="tab" id="dahelptoggle" title=' + json.dumps(extra_help_message) + '>' + help_label + ' <i class="fas fa-star"></i></button></li>'
+            navbar += '<li class="nav-item" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline daactivetext" data-bs-target="#dahelp" data-bs-toggle="tab" role="tab" id="dahelptoggle" title=' + json.dumps(extra_help_message) + '>' + help_label + ' <i class="fas fa-star"></i></button></li>'
     else:
-        navbar += '<li class="nav-item dainvisible" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" id="dahelptoggle" data-bs-target="#dahelp" data-bs-toggle="tab">' + word('Help') + '</button></li>'
-    navbar += '<li class="nav-item dainvisible" id="daPhoneAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" title=' + json.dumps(phone_message) + ' class="btn btn-link nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-phone da-chat-active"></i><span class="visually-hidden">' + phone_sr + '</span></button></li><li class="nav-item dainvisible" id="daChatAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" class="btn btn-link nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-comment-alt"></i><span class="visually-hidden">' + chat_sr + '</span></button></li></ul>'
+        navbar += '<li hidden class="nav-item dainvisible" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" id="dahelptoggle" data-bs-target="#dahelp" data-bs-toggle="tab" role="tab">' + word('Help') + '</button></li>'
+    navbar += '<li hidden class="nav-item dainvisible" id="daPhoneAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" role="tab" title=' + json.dumps(phone_message) + ' class="btn btn-link nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-phone da-chat-active"></i><span class="visually-hidden">' + phone_sr + '</span></button></li>' + \
+              '<li class="nav-item dainvisible" id="daChatAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" class="btn btn-link nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-comment-alt"></i><span class="visually-hidden">' + chat_sr + '</span></button></li></ul>'
     navbar += """
         <button id="damobile-toggler" type="button" class="navbar-toggler ms-auto" data-bs-toggle="collapse" data-bs-target="#danavbar-collapse">
           <span class="navbar-toggler-icon"></span><span class="visually-hidden">""" + word("Display the menu") + """</span>
@@ -9643,6 +9645,14 @@ def index(action_argument=None, refer=None):
           $("#daSend").prop('disabled', false);
           daInformAbout('chat');
         }
+        var anyTabs = $("#daChatAvailable").is(":visible") 
+            || $("daPhoneAvailable").is(":visible") 
+            || $("#dahelptoggle").is(":visible");
+        if (anyTabs) {
+          $("#nav-bar-tab-list").removeClass("dainvisible");
+        } else {
+          $("#nav-bar-tab-list").addClass("dainvisible");
+        }
       }
       function daChatLogCallback(data){
         if (data.action && data.action == 'reload'){
@@ -9822,6 +9832,14 @@ def index(action_argument=None, refer=None):
               daInitializeSocket();
             }
           }
+        }
+        var anyTabs = $("#daChatAvailable").is(":visible") 
+            || $("daPhoneAvailable").is(":visible") 
+            || $("#dahelptoggle").is(":visible");
+        if (anyTabs) {
+          $("#nav-bar-tab-list").removeClass("dainvisible");
+        } else {
+          $("#nav-bar-tab-list").addClass("dainvisible");
         }
       }
       function daCheckoutCallback(data){
@@ -11129,6 +11147,14 @@ def index(action_argument=None, refer=None):
         }
         if (daUsingSegment){
           daSegmentEvent();
+        }
+        var anyTabs = $("#daChatAvailable").is(":visible") 
+            || $("daPhoneAvailable").is(":visible") 
+            || $("#dahelptoggle").is(":visible");
+        if (anyTabs) {
+          $("#nav-bar-tab-list").removeClass("dainvisible");
+        } else {
+          $("#nav-bar-tab-list").addClass("dainvisible");
         }
         $(document).trigger('daPageLoad');
       }
