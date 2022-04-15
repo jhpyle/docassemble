@@ -5674,6 +5674,8 @@ class Question:
                                     new_item['help'] = candidate['help'].text(user_dict)
                                 if 'default' in candidate:
                                     new_item['default'] = candidate['default']
+                                if 'group' in candidate:
+                                    new_item['group'] = candidate['group']
                                 if new_item['key'] not in to_exclude:
                                     selectcompute[field.number].append(new_item)
                         else:
@@ -5689,6 +5691,8 @@ class Question:
                                     new_item['help'] = item['help'].text(user_dict)
                                 if 'default' in item:
                                     new_item['default'] = item['default']
+                                if 'group' in item:
+                                    new_item['group'] = item['group']
                                 selectcompute[field.number].append(new_item)
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
@@ -5705,6 +5709,8 @@ class Question:
                                 new_item['help'] = item['help'].text(user_dict)
                             if 'default' in item:
                                 new_item['default'] = item['default']
+                            if 'group' in item:
+                                new_item['group'] = item['group']
                             if isinstance(item['key'], TextObject):
                                 new_item['key'] = item['key'].text(user_dict)
                             else:
@@ -5726,6 +5732,8 @@ class Question:
                                 new_item['help'] = item['help'].text(user_dict)
                             if 'default' in item:
                                 new_item['default'] = item['default']
+                            if 'group' in item:
+                                new_item['group'] = item['group']
                             new_item['label'] = item['label'].text(user_dict)
                             new_item['key'] = item['key']
                             selectcompute[field.number].append(new_item)
@@ -6086,6 +6094,7 @@ class Question:
     def parse_fields(self, the_list, register_target, uses_field):
         result_list = []
         has_code = False
+        logmessage(f'the_list: {the_list}, uses_field: {uses_field}')
         if isinstance(the_list, dict):
             new_list = []
             for key, value in the_list.items():
@@ -6111,6 +6120,9 @@ class Question:
                         continue
                     if key == 'default':
                         result_dict['default'] = value
+                        continue
+                    if key == 'group':
+                        result_dict['group'] = value
                         continue
                 if uses_field:
                     if key == 'code':
@@ -6878,12 +6890,14 @@ class Question:
                     the_item = {}
                     for key in entry:
                         if len(entry) > 1:
-                            if key in ['default', 'help', 'image']:
+                            if key in ['default', 'help', 'image', 'group']:
                                 continue
                             if 'key' in entry and 'label' in entry and key != 'key':
                                 continue
                             if 'default' in entry:
                                 the_item['default'] = entry['default']
+                            if 'group' in entry:
+                                the_item['group'] = entry['group']
                             if 'help' in entry:
                                 the_item['help'] = TextObject(entry['help'], question=self)
                             if 'image' in entry:
