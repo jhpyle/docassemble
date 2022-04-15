@@ -1460,11 +1460,18 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 using_opt_groups = all(['group' in pair for pair in pairlist])
                 using_shuffle = hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle
                 if using_opt_groups:
+                    group_order = list(range(len(pairlist)))
                     if using_shuffle:
-                        pairlist = sorted(pairlist, key=lambda p: p.get('group') + random_string(10))
+                        random.shuffle(group_order)
+                    groups = {}
+                    for idx, p in zip(group_order, pairlist):
+                        if not p.get('group') in groups:
+                            groups[p.get('group')] = idx
+                    if using_shuffle:
+                        pairlist = sorted(pairlist, key=lambda p: groups[p.get('group')] * 1000 + random.randint(1, 1000))
                     else:
                         # stable sort: keep group items in the same relative order
-                        pairlist = sorted(pairlist, key=lambda p: p.get('group')) 
+                        pairlist = sorted(pairlist, key=lambda p: groups[p.get('group')])
                 elif using_shuffle:
                     random.shuffle(pairlist)
                 found_default = False
@@ -1472,7 +1479,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 for pair in pairlist:
                     if using_opt_groups and pair.get('group') != last_group:
                         if last_group != None:
-                            the_options += '</optgroup>'
+                            inner_fieldlist.append('</optgroup>')
                         pair_group = pair.get('group')
                         inner_fieldlist.append(f'<optgroup label="{pair_group}">')
                         last_group = pair_group
@@ -2208,21 +2215,26 @@ def input_for(status, field, wide=False, embedded=False):
             pairlist = list(status.selectcompute[field.number])
         else:
             raise Exception("Unknown choicetype " + field.choicetype)
-        logmessage(f'pairlist: {pairlist}')
         using_opt_groups = all(['group' in pair for pair in pairlist])
-        logmessage(f'using_opt_groups: {using_opt_groups}')
         using_shuffle = hasattr(field, 'shuffle') and field.shuffle
-        logmessage(f'using_shuffle: {using_shuffle}')
+        # Using optgroups, each option has an associated group
         if using_opt_groups:
-            # Using optgroups, each option has an associated group
+            # Keep groups and group items in same relative order they're added in interview
+            # or shuffle the groups, and items w/in groups, but keep items in same groups together
+            group_order = list(range(len(pairlist)))
             if using_shuffle:
-                pairlist = sorted(pairlist, key=lambda p: p.get('group') + random_string(10))
+                random.shuffle(group_order)
+            groups = {}
+            for idx, p in zip(group_order, pairlist):
+                if not p.get('group') in groups:
+                    groups[p.get('group')] = idx
+
+            if using_shuffle:
+                pairlist = sorted(pairlist, key=lambda p: (groups[p.get('group')], random.random()))
             else:
-                # stable sort: keep group items in the same relative order
-                pairlist = sorted(pairlist, key=lambda p: p.get('group'))
+                pairlist = sorted(pairlist, key=lambda p: groups[p.get('group')])
         elif using_shuffle:
             random.shuffle(pairlist)
-        logmessage(f'new pairlist: {pairlist}')
 
         if field.datatype in ['multiselect', 'object_multiselect']:
             if field.datatype == 'object_multiselect':
