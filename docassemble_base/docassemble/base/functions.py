@@ -3861,35 +3861,6 @@ class lister(ast.NodeVisitor):
     def visit_Constant(self, node):
         return
 
-def str_for_op(op):
-    if isinstance(op, ast.Add):
-      return '+'
-    if isinstance(op, ast.Sub):
-      return '-'
-    if isinstance(op, ast.Mult):
-      return '*'
-    if isinstance(op, ast.Div):
-      return '/'
-    if isinstance(op, ast.FloorDiv):
-      return '//'
-    if isinstance(op, ast.Mod):
-      return '%'
-    if isinstance(op, ast.Pow):
-      return '**'
-    if isinstance(op, ast.LShift):
-      return '<<'
-    if isinstance(op, ast.RShift):
-      return '>>'
-    if isinstance(op, ast.BitOr):
-      return '|'
-    if isinstance(op, ast.BitXor):
-      return '^'
-    if isinstance(op, ast.BitAnd):
-      return '&'
-    else: # if isinstance(op, ast.BitMatMult):
-      return '@'
-
-
 def components_of(full_variable):
     node = ast.parse(full_variable, mode='eval')
     crawler = lister()
@@ -4026,10 +3997,11 @@ def _defined_internal(var, caller:DefCaller, alt=None):
     `caller` is the name of the function calling (which determines what to do
     if the variable is found to be defined or not).
 
-    If caller = 'defined', then True/False is returned depending on if the variable is defined
-    If caller = 'value', then the actual value of the variable is returned, after asking the
+    if caller is:
+    * DEFINED, then True/False is returned depending on if the variable is defined
+    * VALUE, then the actual value of the variable is returned, after asking the
       user all of the questions necessary to answer it
-    If caller = 'showifdef', then the value if returned, but only if no questions have to be asked
+    * SHOWIFDEF, then the value if returned, but only if no questions have to be asked
     """
     frame = inspect.stack()[1][0]
     components = components_of(var)
@@ -4037,7 +4009,7 @@ def _defined_internal(var, caller:DefCaller, alt=None):
         raise Exception("defined: variable " + repr(var) + " is not a valid variable name")
     variable = components[0][1]
     the_user_dict = frame.f_locals
-    failure_val = False if caller == DefCaller.DEFINED else alt
+    failure_val = False if caller.is_predicate() else alt
     while variable not in the_user_dict:
         frame = frame.f_back
         if frame is None:
