@@ -17,11 +17,13 @@ def init_flask():
                 super().apply_pool_defaults(app, options)
                 options["pool_pre_ping"] = True
                 options["future"] = True
+                return options
     else:
         class SQLAlchemy(_BaseSQLAlchemy):
             def apply_pool_defaults(self, app, options):
                 super().apply_pool_defaults(app, options)
                 options["future"] = True
+                return options
     db = SQLAlchemy()
     UserMixin = docassemble_flask_user.UserMixin
     return db

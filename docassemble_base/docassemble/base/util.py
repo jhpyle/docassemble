@@ -30,7 +30,7 @@ from requests.exceptions import RequestException
 import httplib2
 import oauth2client.client
 import apiclient
-import pytz
+from backports import zoneinfo
 from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pycountry
@@ -328,7 +328,8 @@ __all__ = [
     'DABreadCrumbs',
     'set_variables',
     'language_name',
-    'DA'
+    'DA',
+    'DAGlobal'
 ]
 
 #knn_machine_learner = DummyObject
@@ -2213,13 +2214,13 @@ class DAList(DAObject):
         if url_only:
             return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
         return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
-    def hook_on_gather(self):
+    def hook_on_gather(self, *pargs, **kwargs):
         pass
-    def hook_after_gather(self):
+    def hook_after_gather(self, *pargs, **kwargs):
         pass
-    def hook_on_item_complete(self, item):
+    def hook_on_item_complete(self, item, *pargs, **kwargs):
         pass
-    def hook_on_remove(self, item):
+    def hook_on_remove(self, item, *pargs, **kwargs):
         pass
     def __eq__(self, other):
         self._trigger_gather()
@@ -3072,13 +3073,13 @@ class DADict(DAObject):
         return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
     def _new_elements(self):
         return {}
-    def hook_on_gather(self):
+    def hook_on_gather(self, *pargs, **kwargs):
         pass
-    def hook_after_gather(self):
+    def hook_after_gather(self, *pargs, **kwargs):
         pass
-    def hook_on_item_complete(self, item):
+    def hook_on_item_complete(self, item, *pargs, **kwargs):
         pass
-    def hook_on_remove(self, item):
+    def hook_on_remove(self, item, *pargs, **kwargs):
         pass
     def __eq__(self, other):
         self._trigger_gather()
@@ -3538,13 +3539,13 @@ class DASet(DAObject):
     def pronoun_subjective(self, **kwargs):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
-    def hook_on_gather(self):
+    def hook_on_gather(self, *pargs, **kwargs):
         pass
-    def hook_after_gather(self):
+    def hook_after_gather(self, *pargs, **kwargs):
         pass
-    def hook_on_item_complete(self, item):
+    def hook_on_item_complete(self, item, *pargs, **kwargs):
         pass
-    def hook_on_remove(self, item):
+    def hook_on_remove(self, item, *pargs, **kwargs):
         pass
     def __eq__(self, other):
         self._trigger_gather()
@@ -5289,6 +5290,94 @@ class DAUserLocal(DAObject):
     def __init__(self, *pargs, **kwargs):
         super().__init__('user_local')
 
+class DAGlobal(DAObject):
+    """A class for objects that are stored in an unencrypted global area outside of the interview answers."""
+    @classmethod
+    def keys(cls, base):
+        if base == 'interview':
+            globalbase = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', ''))
+        elif base == 'global':
+            globalbase = 'da:daglobal:global'
+        else:
+            globalbase =  'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id'])
+        return server.server_sql_keys(globalbase + ':')
+    @classmethod
+    def defined(cls, base, key):
+        """Returns True if the key exists in the data store, otherwise returns False."""
+        if base == 'interview':
+            globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
+        elif base == 'global':
+            globalkey = 'da:daglobal:global:' + str(key)
+        else:
+            globalkey =  'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(key)
+        return server.server_sql_defined(globalkey)
+    def init(self, *pargs, **kwargs):
+        super().init(*pargs, **kwargs)
+        if 'base' not in kwargs:
+            self.base = 'user'
+        if 'key' not in kwargs:
+            self.key = random_alphanumeric(32)
+        if self.base == 'interview':
+            globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(self.key)
+        elif self.base == 'global':
+            globalkey = 'da:daglobal:global:' + str(self.key)
+        else:
+            globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(self.key)
+        saved_dict = server.server_sql_get(globalkey)
+        if isinstance(saved_dict, dict):
+            for key, val in saved_dict.items():
+                setattr(self, key, val)
+    def __getstate__(self):
+        if hasattr(self, 'base') and hasattr(self, 'key'):
+            if self.base == 'interview':
+                globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(self.key)
+            elif self.base == 'global':
+                globalkey = 'da:daglobal:global:' + str(self.key)
+            else:
+                globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(self.key)
+            dict_to_save = copy.copy(self.__dict__)
+            dict_to_return = {'attrList': []}
+            if 'instanceName' in dict_to_save:
+                dict_to_return['instanceName'] = dict_to_save['instanceName']
+                del dict_to_save['instanceName']
+            if 'has_nonrandom_instance_name' in dict_to_save:
+                dict_to_return['has_nonrandom_instance_name'] = dict_to_save['has_nonrandom_instance_name']
+                del dict_to_save['has_nonrandom_instance_name']
+            if 'base' in dict_to_save:
+                dict_to_return['base'] = dict_to_save['base']
+                del dict_to_save['base']
+            if 'key' in dict_to_save:
+                dict_to_return['key'] = dict_to_save['key']
+                del dict_to_save['key']
+            server.server_sql_set(globalkey, dict_to_save, encrypted=False)
+            return dict_to_return
+        dict_to_return = copy.copy(self.__dict__)
+        return dict_to_return
+    def __setstate__(self, pickle_dict):
+        self.__dict__ = pickle_dict
+        if 'base' in pickle_dict and 'key' in pickle_dict:
+            if pickle_dict['base'] == 'interview':
+                globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(pickle_dict['key'])
+            elif pickle_dict['base'] == 'global':
+                globalkey = 'da:daglobal:global:' + str(pickle_dict['key'])
+            else:
+                globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(pickle_dict['key'])
+
+            saved_dict = server.server_sql_get(globalkey)
+            if isinstance(saved_dict, dict):
+                for key, val in saved_dict.items():
+                    setattr(self, key, val)
+    def delete(self):
+        """Deletes the data in the global storage area and undefines all attributes."""
+        if self.base == 'interview':
+            globalkey = 'da:daglobal:i:' + this_thread.current_info.get('yaml_filename', '') + ':' + self.key
+        elif self.base == 'global':
+            globalkey = 'da:daglobal:global:' + self.key
+        else:
+            globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + self.key
+        server.server_sql_delete(globalkey)
+        self.__dict__ = dict(instanceName=self.instanceName, attrList=[], has_nonrandom_instance_name=self.has_nonrandom_instance_name)
+
 class DAStore(DAObject):
     """A class used to save objects to SQL."""
     def is_encrypted(self):
@@ -5711,7 +5800,7 @@ def today(timezone=None, format=None):
     ensure_definition(timezone, format)
     if timezone is None:
         timezone = get_default_timezone()
-    val = pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone))
+    val = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone))
     if format is not None:
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0)).format_date(format)
     return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
@@ -5918,7 +6007,7 @@ def current_datetime(timezone=None):
     ensure_definition(timezone)
     if timezone is None:
         timezone = get_default_timezone()
-    return dd(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)))
+    return dd(datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
 
 def as_datetime(the_date, timezone=None):
     """Converts the_date to a DADateTime object with a timezone.  Uses the
@@ -5933,9 +6022,9 @@ def as_datetime(the_date, timezone=None):
     else:
         new_datetime = dateutil.parser.parse(the_date)
     if new_datetime.tzinfo:
-        new_datetime = new_datetime.astimezone(pytz.timezone(timezone))
+        new_datetime = new_datetime.astimezone(zoneinfo.ZoneInfo(timezone))
     else:
-        new_datetime = pytz.timezone(timezone).localize(new_datetime)
+        new_datetime = new_datetime.replace(tzinfo=zoneinfo.ZoneInfo(timezone))
     return dd(new_datetime)
 
 def dd(obj):
@@ -5972,13 +6061,13 @@ def date_difference(starting=None, ending=None, timezone=None):
     if not isinstance(ending, datetime.datetime):
         ending = dateutil.parser.parse(ending)
     if starting.tzinfo:
-        starting = starting.astimezone(pytz.timezone(timezone))
+        starting = starting.astimezone(zoneinfo.ZoneInfo(timezone))
     else:
-        starting = pytz.timezone(timezone).localize(starting)
+        starting = starting.replace(tzinfo=zoneinfo.ZoneInfo(timezone))
     if ending.tzinfo:
-        ending = ending.astimezone(pytz.timezone(timezone))
+        ending = ending.astimezone(zoneinfo.ZoneInfo(timezone))
     else:
-        ending = pytz.timezone(timezone).localize(ending)
+        ending = ending.replace(tzinfo=zoneinfo.ZoneInfo(timezone))
     delta = ending - starting
     output = DateTimeDelta()
     output.start = starting
@@ -6050,7 +6139,7 @@ def valid_datetime(the_datetime):
 
 def timezone_list():
     """Returns a list of timezone choices, expressed as text."""
-    return sorted(list(pytz.all_timezones))
+    return sorted(list(zoneinfo.available_timezones()))
 
 def returning_user(minutes=None, hours=None, days=None):
     """Returns True if the user is returning to the interview after six
@@ -6144,14 +6233,14 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
     if max_time is None:
         return None
     if timezone is not None:
-        return dd(pytz.utc.localize(max_time).astimezone(pytz.timezone(timezone)))
-    return dd(pytz.utc.localize(max_time).astimezone(pytz.utc))
+        return dd(max_time.replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
+    return dd(max_time.replace(tzinfo=datetime.timezone.utc))
 
 def start_time(timezone=None):
     """Returns the time the interview was started, as a DADateTime object."""
     if timezone is not None:
-        return dd(pytz.utc.localize(this_thread.internal['starttime']).astimezone(pytz.timezone(timezone)))
-    return dd(pytz.utc.localize(this_thread.internal['starttime']).astimezone(pytz.utc))
+        return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
+    return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc))
 
 class LatitudeLongitude(DAObject):
     """Represents a GPS location."""
@@ -8032,7 +8121,7 @@ def zip_file(*pargs, **kwargs):
         info = zipfile.ZipInfo(zip_path)
         info.compress_type = zipfile.ZIP_DEFLATED
         info.external_attr = 0o644 << 16
-        info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(path)).replace(tzinfo=pytz.utc).astimezone(pytz.timezone(timezone)).timetuple()
+        info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(path)).replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)).timetuple()
         with open(path, 'rb') as fp:
             zf.writestr(info, fp.read())
     zf.close()

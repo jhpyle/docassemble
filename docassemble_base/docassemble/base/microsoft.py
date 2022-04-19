@@ -3,13 +3,12 @@ import io
 import mimetypes
 import os
 import re
-import pytz
 import yaml
 from azure.storage.blob import BlobServiceClient, BlobSasPermissions, ContentSettings, generate_blob_sas
 from azure.identity import ManagedIdentityCredential
 from azure.keyvault.secrets import SecretClient
 
-epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
+epoch = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=datetime.timezone.utc)
 
 class azureobject:
     def __init__(self, azure_config):

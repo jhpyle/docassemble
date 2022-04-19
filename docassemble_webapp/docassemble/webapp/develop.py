@@ -23,12 +23,12 @@ def validate_package_name(form, field):
 
 class CreatePackageForm(FlaskForm):
     name = StringField(word('Package name'), validators=[
-        validators.Required(word('Package name is required')), validate_name])
+        validators.DataRequired(word('Package name is required')), validate_name])
     submit = SubmitField(word('Get template'))
 
 class CreatePlaygroundPackageForm(FlaskForm):
     name = SelectField(word('Package'), validators=[
-        validators.Required(word('Package name is required')), validate_name])
+        validators.DataRequired(word('Package name is required')), validate_name])
     submit = SubmitField(word('Get package'))
 
 class UpdatePackageForm(FlaskForm):
@@ -94,7 +94,7 @@ class PlaygroundFilesEditForm(FlaskForm):
 
 class RenameProject(FlaskForm):
     name = StringField(word('New Name'), validators=[
-        validators.Required(word('Project name is required')), validate_project_name])
+        validators.DataRequired(word('Project name is required')), validate_project_name])
     submit = SubmitField(word('Rename'))
 
 class DeleteProject(FlaskForm):
@@ -102,7 +102,7 @@ class DeleteProject(FlaskForm):
 
 class NewProject(FlaskForm):
     name = StringField(word('Name'), validators=[
-        validators.Required(word('Project name is required')), validate_project_name])
+        validators.DataRequired(word('Project name is required')), validate_project_name])
     submit = SubmitField(word('Save'))
 
 class PullPlaygroundPackage(FlaskForm):
@@ -115,7 +115,7 @@ class PullPlaygroundPackage(FlaskForm):
 class PlaygroundPackagesForm(FlaskForm):
     original_file_name = StringField(word('Original Name'))
     file_name = StringField(word('Package Name'), validators=[validators.Length(min=1, max=50),
-        validators.Required(word('Package Name is required')), validate_package_name])
+        validators.DataRequired(word('Package Name is required')), validate_package_name])
     license = StringField(word('License'), default='The MIT License (MIT)', validators=[validators.Length(min=0, max=255)])
     author_name = StringField(word('Author Name'), validators=[validators.Length(min=0, max=255)])
     author_email = StringField(word('Author E-mail'), validators=[validators.Length(min=0, max=255)])

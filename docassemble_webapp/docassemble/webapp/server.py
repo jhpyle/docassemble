@@ -80,6 +80,7 @@ from docassemble.webapp.db_object import db
 from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm, FunctionFileForm, RenameProject, DeleteProject, NewProject
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.webapp.fixpickle import fix_pickle_obj
+from docassemble.webapp.info import system_packages
 from docassemble.webapp.jsonstore import read_answer_json, write_answer_json, delete_answer_json, variables_snapshot_connection
 import docassemble.webapp.machinelearning
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
@@ -127,7 +128,8 @@ import pyotp
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import YamlLexer, PythonLexer
-import pytz
+import pytz # should be loaded into memory because pickled objects might use it
+from backports import zoneinfo
 import qrcode
 import qrcode.image.svg
 from rauth import OAuth1Service, OAuth2Service
@@ -1820,6 +1822,11 @@ def encrypt_session(secret, user_code=None, filename=None):
 def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
     if user is None:
         user = current_user
+    device_id = request.cookies.get('ds', None)
+    if device_id is None:
+        device_id = random_string(16)
+    the_current_info = current_info(yaml=None, req=request, action=None, session_info=None, secret=oldsecret, device_id=device_id)
+    docassemble.base.functions.this_thread.current_info = the_current_info
     temp_user = session.get('tempuser', None)
     #logmessage("substitute_secret: " + repr(oldsecret) + " and " + repr(newsecret) + " and temp_user is " + repr(temp_user))
     if oldsecret in ('None', newsecret):
@@ -1827,6 +1834,8 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
         return newsecret
     #logmessage("substitute_secret: continuing")
     if temp_user is not None:
+        temp_user_info = dict(email=None, the_user_id='t' + str(temp_user), theid=temp_user, roles=[])
+        the_current_info['user'] = temp_user_info
         for object_entry in db.session.execute(select(GlobalObjectStorage).filter_by(user_id=user.id, encrypted=True).with_for_update()).scalars():
             try:
                 object_entry.value = encrypt_object(decrypt_object(object_entry.value, oldsecret), newsecret)
@@ -1847,6 +1856,9 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
     else:
         to_do = set(to_convert)
     for (filename, user_code) in to_do:
+        the_current_info['yaml_filename'] = filename
+        the_current_info['session'] = user_code
+        the_current_info['encrypted'] = True
         #obtain_lock(user_code, filename)
         #logmessage("substitute_secret: filename is " + str(filename) + " and key is " + str(user_code))
         for record in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename, encrypted=True).with_for_update()).scalars():
@@ -2462,6 +2474,16 @@ def sub_temp_user_dict_key(temp_user_id, user_id):
 
 def sub_temp_other(user):
     if 'tempuser' in session:
+        device_id = request.cookies.get('ds', None)
+        if device_id is None:
+            device_id = random_string(16)
+        url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+        url = url_root + 'interview'
+        role_list = [role.name for role in user.roles]
+        if len(role_list) == 0:
+            role_list = ['user']
+        the_current_info = dict(user=dict(email=user.email, roles=role_list, the_user_id=user.id, theid=user.id, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, language=user.language, location=None, session_uid='admin', device_id=device_id), session=None, secret=None, yaml_filename=None, url=url, url_root=url_root, encrypted=False, action=None, interface='web', arguments={})
+        docassemble.base.functions.this_thread.current_info = the_current_info
         for chat_entry in db.session.execute(select(ChatLog).filter_by(temp_user_id=int(session['tempuser'])).with_for_update()).scalars():
             chat_entry.user_id = user.id
             chat_entry.temp_user_id = None
@@ -2471,11 +2493,10 @@ def sub_temp_other(user):
             chat_entry.temp_owner_id = None
         db.session.commit()
         keys_in_use = {}
-        for object_entry in db.session.execute(select(GlobalObjectStorage.id, GlobalObjectStorage.key).filter_by(user_id=user.id)).all():
-            if object_entry.key.startswith('da:userid:{:d}:'.format(user.id)):
-                if object_entry.key not in keys_in_use:
-                    keys_in_use[object_entry.key] = []
-                keys_in_use[object_entry.key].append(object_entry.id)
+        for object_entry in db.session.execute(select(GlobalObjectStorage.id, GlobalObjectStorage.key).filter(or_(GlobalObjectStorage.key.like('da:userid:{:d}:%'.format(user.id)), GlobalObjectStorage.key.like('da:daglobal:userid:{:d}:%'.format(user.id))))).all():
+            if object_entry.key not in keys_in_use:
+                keys_in_use[object_entry.key] = []
+            keys_in_use[object_entry.key].append(object_entry.id)
         ids_to_delete = []
         for object_entry in db.session.execute(select(GlobalObjectStorage).filter_by(temp_user_id=int(session['tempuser'])).with_for_update()).scalars():
             object_entry.user_id = user.id
@@ -2490,6 +2511,11 @@ def sub_temp_other(user):
                     object_entry.value = encrypt_object(decrypt_object(object_entry.value, str(request.cookies.get('secret', None))), session['newsecret'])
                 except Exception as err:
                     logmessage("Failure to change encryption of object " + object_entry.key + ": " + str(err))
+        for object_entry in db.session.execute(select(GlobalObjectStorage).filter(and_(GlobalObjectStorage.temp_user_id == None, GlobalObjectStorage.user_id == None, GlobalObjectStorage.key.like('da:daglobal:userid:t{:d}:%'.format(session['tempuser'])))).with_for_update()).scalars():
+            new_key = re.sub(r'^da:daglobal:userid:t{:d}:'.format(session['tempuser']), 'da:daglobal:userid:{:d}:'.format(user.id), object_entry.key)
+            object_entry.key = new_key
+            if new_key in keys_in_use:
+                ids_to_delete.extend(keys_in_use[new_key])
         for the_id in ids_to_delete:
             db.session.execute(delete(GlobalObjectStorage).filter_by(id=the_id))
         db.session.commit()
@@ -3284,12 +3310,11 @@ def get_package_info(exclude_core=False):
         if package.type is not None:
             can_update = not bool(package.type == 'zip')
             can_uninstall = bool(is_admin or (package.id in package_auth and current_user.id in package_auth[package.id]))
-            if package.core or package.name in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
-                can_uninstall = False
-                can_update = is_admin
-            if exclude_core and package.name in ('docassemble', 'docassemble.base', 'docassemble.webapp'):
+            if package.name in system_packages:
                 can_uninstall = False
                 can_update = False
+            if package.name == 'docassemble.webapp':
+                can_update = is_admin
             package_list.append(Object(package=package, can_update=can_update, can_uninstall=can_uninstall))
     return package_list, package_auth
 
@@ -3647,7 +3672,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             name_info[var]['doc'] += '<br>'
         else:
             name_info[var]['doc'] = ''
-        name_info[var]['doc'] += "<a target='_blank' href='" + documentation_dict[var] + "'>" + view_doc_text + "</a>"
+        name_info[var]['doc'] += "<a target='_blank' href='" + DOCUMENTATION_BASE + documentation_dict[var] + "'>" + view_doc_text + "</a>"
     for var in name_info:
         if 'methods' in name_info[var]:
             for method in name_info[var]['methods']:
@@ -3657,7 +3682,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     else:
                         method['doc'] += '<br>'
                     if view_doc_text not in method['doc']:
-                        method['doc'] += "<a target='_blank' href='" + documentation_dict[var + '.' + method['name']] + "'>" + view_doc_text + "</a>"
+                        method['doc'] += "<a target='_blank' href='" + DOCUMENTATION_BASE + documentation_dict[var + '.' + method['name']] + "'>" + view_doc_text + "</a>"
     content = ''
     if has_error and show_messages:
         error_style = 'danger'
@@ -4237,16 +4262,16 @@ def call_sync():
 
 def formatted_current_time():
     if current_user.timezone:
-        the_timezone = pytz.timezone(current_user.timezone)
+        the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
     else:
-        the_timezone = pytz.timezone(get_default_timezone())
+        the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
     return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime('%H:%M:%S %Z')
 
 def formatted_current_date():
     if current_user.timezone:
-        the_timezone = pytz.timezone(current_user.timezone)
+        the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
     else:
-        the_timezone = pytz.timezone(get_default_timezone())
+        the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
     return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime("%Y-%m-%d")
 
 class Object:
@@ -4772,7 +4797,7 @@ def phone_login_verify():
                         to_convert.append((filename, info['uid']))
                         save_user_dict_key(info['uid'], filename, priors=True, user=user)
                         update_session(filename, key_logged=True)
-            secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), to_convert=to_convert)
+            secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()), user=user, to_convert=to_convert)
             response = redirect(url_for('interview_list', from_login='1'))
             response.set_cookie('secret', secret, httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite=app.config['SESSION_COOKIE_SAMESITE'])
             return response
@@ -5467,7 +5492,7 @@ class ChatPartners:
 def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=None):
     if timezone is None:
         timezone = get_default_timezone()
-    timezone = pytz.timezone(timezone)
+    timezone = zoneinfo.ZoneInfo(timezone)
     output = []
     if yaml_filename is None or session_id is None:
         return output
@@ -5546,11 +5571,14 @@ def checkin():
         auth_user_id = current_user.id
         the_user_id = current_user.id
         temp_user_id = None
+    the_current_info = current_info(yaml=yaml_filename, req=request, action=None, session_info=session_info, secret=secret, device_id=request.cookies.get('ds', None))
+    docassemble.base.functions.this_thread.current_info = the_current_info
     if request.form.get('action', None) == 'chat_log':
         #sys.stderr.write("checkin: fetch_user_dict1\n")
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         if user_dict is None or user_dict['_internal']['livehelp']['availability'] != 'available':
             return jsonify_with_cache(success=False)
+        the_current_info['encrypted'] == is_encrypted
         messages = get_chat_log(user_dict['_internal']['livehelp']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
         return jsonify_with_cache(success=True, messages=messages)
     if request.form.get('action', None) == 'checkin':
@@ -5567,8 +5595,9 @@ def checkin():
             obtain_lock(session_id, yaml_filename)
             #sys.stderr.write("checkin: fetch_user_dict2\n")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+            the_current_info['encrypted'] == is_encrypted
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, session_info=session_info, secret=secret, device_id=request.cookies.get('ds', None)))
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
             interview_status.checkin = True
             interview.assemble(user_dict, interview_status=interview_status)
             interview_status.current_info.update(dict(action=do_action, arguments=parameters))
@@ -5626,6 +5655,7 @@ def checkin():
         if str(chatstatus) != 'off': #in ('waiting', 'standby', 'ringing', 'ready', 'on', 'hangup', 'observeonly'):
             #sys.stderr.write("checkin: fetch_user_dict3\n")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+            the_current_info['encrypted'] == is_encrypted
             if user_dict is None:
                 sys.stderr.write("checkin: error accessing dictionary for %s and %s" % (session_id, yaml_filename))
                 return jsonify_with_cache(success=False)
@@ -5918,7 +5948,9 @@ def test_embed():
     yaml_filename = request.args.get('i', final_default_yaml_filename)
     user_dict = fresh_dictionary()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, location=None, interface='web', device_id=request.cookies.get('ds', None)))
+    the_current_info = current_info(yaml=yaml_filename, req=request, action=None, location=None, interface='web', device_id=request.cookies.get('ds', None))
+    docassemble.base.functions.this_thread.current_info = the_current_info
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
     try:
         interview.assemble(user_dict, interview_status)
     except:
@@ -6027,6 +6059,15 @@ def refresh_or_continue(interview, post_data):
         pass
     return return_val
 
+def update_current_info_with_session_info(the_current_info, session_info):
+    if session_info is not None:
+        user_code = session_info['uid']
+        encrypted = session_info['encrypted']
+    else:
+        user_code = None
+        encrypted = True
+    the_current_info.update({'session': user_code, 'encrypted': encrypted})
+
 @app.route(index_path, methods=['POST', 'GET'])
 def index(action_argument=None, refer=None):
     is_ajax = bool(request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']))
@@ -6101,8 +6142,35 @@ def index(action_argument=None, refer=None):
             sys.stderr.write("Redirecting to dispatch page because no YAML filename provided.\n")
             return redirect(url_for('interview_start'))
         yaml_filename = final_default_yaml_filename
+    action = None
+    if '_action' in request.form and 'in error' not in session:
+        action = tidy_action(json.loads(myb64unquote(request.form['_action'])))
+        no_defs = True
+    elif 'action' in request.args and 'in error' not in session:
+        action = tidy_action(json.loads(myb64unquote(request.args['action'])))
+        no_defs = True
+    elif action_argument:
+        action = tidy_action(action_argument)
+        no_defs = False
+    else:
+        no_defs = False
+    disregard_input = not bool(request.method == 'POST' and not no_defs)
+    if disregard_input:
+        post_data = {}
+    else:
+        post_data = request.form.copy()
+    if current_user.is_anonymous:
+        the_user_id = 't' + str(session['tempuser'])
+    else:
+        the_user_id = current_user.id
+    if '_track_location' in post_data and post_data['_track_location']:
+        the_location = json.loads(post_data['_track_location'])
+    else:
+        the_location = None
     session_info = get_session(yaml_filename)
     session_parameter = request.args.get('session', None)
+    the_current_info = current_info(yaml=yaml_filename, req=request, action=None, location=the_location, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id)
+    docassemble.base.functions.this_thread.current_info = the_current_info
     if session_info is None or reset_interview or new_interview:
         was_new = True
         if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not (current_user.has_role('admin', 'developer') or current_user.can_do('demo_interviews'))):
@@ -6115,6 +6183,7 @@ def index(action_argument=None, refer=None):
                 raise DAError(word("Not authorized"), code=403)
         else:
             yaml_filename = re.sub(r':([^\/]+)$', r':data/questions/\1', yaml_filename)
+            docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
         show_flash = False
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
         if session_info is None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base") and not yaml_filename.startswith("docassemble.demo") and SHOW_LOGIN and not new_interview and len(session['sessions']) > 0:
@@ -6147,6 +6216,8 @@ def index(action_argument=None, refer=None):
                             reset_user_dict(session_id, yaml_filename)
                         else:
                             break
+                        the_current_info['session'] = session_id
+                        the_current_info['encrypted'] = encrypted
                     reset_interview = 1
             if current_user.is_anonymous:
                 if (not interview.allowed_to_initiate(is_anonymous=True)) or (not interview.allowed_to_access(is_anonymous=True)):
@@ -6171,6 +6242,7 @@ def index(action_argument=None, refer=None):
                 release_lock(user_code, yaml_filename)
                 need_to_reset = True
             session_info = get_session(yaml_filename)
+            update_current_info_with_session_info(the_current_info, session_info)
         else:
             unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
             if unique_sessions is not False and not current_user.is_authenticated:
@@ -6198,9 +6270,11 @@ def index(action_argument=None, refer=None):
                 save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
                 release_lock(user_code, yaml_filename)
                 session_info = get_session(yaml_filename)
+                update_current_info_with_session_info(the_current_info, session_info)
                 need_to_reset = True
             else:
                 session_info = update_session(yaml_filename, uid=session_parameter)
+                update_current_info_with_session_info(the_current_info, session_info)
                 need_to_reset = True
             if show_flash:
                 if current_user.is_authenticated:
@@ -6215,6 +6289,7 @@ def index(action_argument=None, refer=None):
         was_new = False
         if session_parameter is not None and not need_to_reset:
             session_info = update_session(yaml_filename, uid=session_parameter)
+            update_current_info_with_session_info(the_current_info, session_info)
             need_to_reset = True
     user_code = session_info['uid']
     encrypted = session_info['encrypted']
@@ -6257,7 +6332,6 @@ def index(action_argument=None, refer=None):
     if encrypted != is_encrypted:
         update_session(yaml_filename, encrypted=is_encrypted)
         encrypted = is_encrypted
-    action = None
     if user_dict.get('multi_user', False) is True and encrypted is True:
         encrypted = False
         update_session(yaml_filename, encrypted=encrypted)
@@ -6266,20 +6340,10 @@ def index(action_argument=None, refer=None):
         encrypt_session(secret, user_code=user_code, filename=yaml_filename)
         encrypted = True
         update_session(yaml_filename, encrypted=encrypted)
+    the_current_info['encrypted'] = encrypted
     if not session_info['key_logged']:
         save_user_dict_key(user_code, yaml_filename)
         update_session(yaml_filename, key_logged=True)
-    if '_action' in request.form and 'in error' not in session:
-        action = tidy_action(json.loads(myb64unquote(request.form['_action'])))
-        no_defs = True
-    elif 'action' in request.args and 'in error' not in session:
-        action = tidy_action(json.loads(myb64unquote(request.args['action'])))
-        no_defs = True
-    elif action_argument:
-        action = tidy_action(action_argument)
-        no_defs = False
-    else:
-        no_defs = False
     url_args_changed = False
     if len(request.args) > 0:
         for argname in request.args:
@@ -6303,21 +6367,8 @@ def index(action_argument=None, refer=None):
         response_wrapper = make_response_wrapper(set_cookie, secret, set_device_id, device_id, expire_visitor_secret)
     else:
         response_wrapper = None
-    disregard_input = not bool(request.method == 'POST' and not no_defs)
-    if disregard_input:
-        post_data = {}
-    else:
-        post_data = request.form.copy()
-    if current_user.is_anonymous:
-        the_user_id = 't' + str(session['tempuser'])
-    else:
-        the_user_id = current_user.id
-    if '_track_location' in post_data and post_data['_track_location']:
-        the_location = json.loads(post_data['_track_location'])
-    else:
-        the_location = None
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=None, location=the_location, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id), tracker=user_dict['_internal']['tracker'])
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info, tracker=user_dict['_internal']['tracker'])
     old_user_dict = None
     if '_back_one' in post_data and steps > 1:
         ok_to_go_back = True
@@ -6326,13 +6377,16 @@ def index(action_argument=None, refer=None):
             if not interview_status.question.can_go_back:
                 ok_to_go_back = False
         if ok_to_go_back:
+            action = None
+            the_current_info = current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id)
+            docassemble.base.functions.this_thread.current_info = the_current_info
             old_user_dict = user_dict
             steps, user_dict, is_encrypted = fetch_previous_user_dict(user_code, yaml_filename, secret)
             if encrypted != is_encrypted:
                 encrypted = is_encrypted
                 update_session(yaml_filename, encrypted=encrypted)
-            action = None
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id), tracker=user_dict['_internal']['tracker'])
+            the_current_info['encrypted'] = encrypted
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info, tracker=user_dict['_internal']['tracker'])
             post_data = {}
             disregard_input = True
     known_varnames = {}
@@ -7598,7 +7652,9 @@ def index(action_argument=None, refer=None):
         user_dict = fresh_dictionary()
         user_dict['url_args'] = url_args
         user_dict['_internal']['referer'] = referer
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id))
+        the_current_info = current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id)
+        docassemble.base.functions.this_thread.current_info = the_current_info
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
         reset_user_dict(user_code, yaml_filename)
         if 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
@@ -7610,7 +7666,9 @@ def index(action_argument=None, refer=None):
         manual_checkout(manual_filename=yaml_filename)
         url_args = user_dict['url_args']
         referer = user_dict['_internal'].get('referer', None)
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id))
+        the_current_info = current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id)
+        docassemble.base.functions.this_thread.current_info = the_current_info
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
         release_lock(user_code, yaml_filename)
         user_code, user_dict = reset_session(yaml_filename, secret)
         user_dict['url_args'] = url_args
@@ -16027,14 +16085,14 @@ class Fruit(DAObject):
         zf = zipfile.ZipFile(saved_file.path, mode='w')
         trimlength = len(directory) + 1
         if current_user.timezone:
-            the_timezone = pytz.timezone(current_user.timezone)
+            the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
         else:
-            the_timezone = pytz.timezone(get_default_timezone())
+            the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
         for root, dirs, files in os.walk(packagedir):
             for the_file in files:
                 thefilename = os.path.join(root, the_file)
                 info = zipfile.ZipInfo(thefilename[trimlength:])
-                info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=pytz.utc).astimezone(the_timezone).timetuple()
+                info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=datetime.timezone.utc).astimezone(the_timezone).timetuple()
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = 0o644 << 16
                 with open(thefilename, 'rb') as fp:
@@ -17571,7 +17629,9 @@ def playground_office_addin():
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + pg_var_file, testing=True)
         interview = interview_source.get_interview()
         ensure_ml_file_exists(interview, pg_var_file, current_project)
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + pg_var_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
+        the_current_info = current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + pg_var_file, req=request, action=None, device_id=request.cookies.get('ds', None))
+        docassemble.base.functions.this_thread.current_info = the_current_info
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
         if use_html:
             variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True, current_project=current_project)
             return jsonify({'success': True, 'current_project': current_project, 'variables_html': variables_html, 'vocab_list': list(vocab_list), 'vocab_dict': vocab_dict})
@@ -18892,10 +18952,10 @@ def playground_packages():
         the_files = request.files.getlist('uploadfile')
         need_to_restart = False
         if current_user.timezone:
-            the_timezone = pytz.timezone(current_user.timezone)
+            the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
         else:
-            the_timezone = pytz.timezone(get_default_timezone())
-        epoch_date = datetime.datetime(1970, 1, 1).replace(tzinfo=pytz.utc)
+            the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
+        epoch_date = datetime.datetime(1970, 1, 1).replace(tzinfo=datetime.timezone.utc)
         if the_files:
             for up_file in the_files:
                 zip_filename = werkzeug.utils.secure_filename(up_file.filename)
@@ -19318,10 +19378,10 @@ def playground_packages():
             with open(current_commit_file, 'r', encoding='utf-8') as fp:
                 commit_code = fp.read().strip()
             if current_user.timezone:
-                the_timezone = pytz.timezone(current_user.timezone)
+                the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
             else:
-                the_timezone = pytz.timezone(get_default_timezone())
-            commit_code_date = datetime.datetime.utcfromtimestamp(os.path.getmtime(current_commit_file)).replace(tzinfo=pytz.utc).astimezone(the_timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
+                the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
+            commit_code_date = datetime.datetime.utcfromtimestamp(os.path.getmtime(current_commit_file)).replace(tzinfo=datetime.timezone.utc).astimezone(the_timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
         if commit_code:
             github_message += '  ' + word('The current branch is %s and the current commit is %s.') % ('<a target="_blank" href="' + html_url + '/tree/' + old_info['github_branch'] + '">' + old_info['github_branch'] + '</a>', '<a target="_blank" href="' + html_url + '/commit/' + commit_code + '"><code>' + commit_code[0:7] + '</code></a>') + '  ' + word('The commit was saved locally at %s.') % commit_code_date
         else:
@@ -19783,7 +19843,9 @@ def variables_report():
     interview = interview_source.get_interview()
     ensure_ml_file_exists(interview, the_file, current_project)
     yaml_file = 'docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + the_file
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
+    the_current_info = current_info(yaml=yaml_file, req=request, action=None, device_id=request.cookies.get('ds', None))
+    docassemble.base.functions.this_thread.current_info = the_current_info
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
     variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)
     results = []
     result_dict = {}
@@ -19851,7 +19913,9 @@ def playground_variables():
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
         ensure_ml_file_exists(interview, active_file, current_project)
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
+        the_current_info = current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None, device_id=request.cookies.get('ds', None))
+        docassemble.base.functions.this_thread.current_info = the_current_info
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
         variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)
         return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list, current_project=current_project)
     return jsonify(success=False, reason=2)
@@ -20272,7 +20336,9 @@ def playground_page():
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
                 ensure_ml_file_exists(interview, active_file, current_project)
-                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
+                the_current_info = current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None, device_id=request.cookies.get('ds', None))
+                docassemble.base.functions.this_thread.current_info = the_current_info
+                interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
                 variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)
                 if form.submit.data:
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success', is_ajax=is_ajax)
@@ -20316,7 +20382,9 @@ def playground_page():
     interview = interview_source.get_interview()
     if hasattr(interview, 'mandatory_id_issue') and interview.mandatory_id_issue:
         console_messages.append(word("Note: it is a best practice to tag every mandatory block with an id."))
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None, device_id=request.cookies.get('ds', None)))
+    the_current_info = current_info(yaml='docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None, device_id=request.cookies.get('ds', None))
+    docassemble.base.functions.this_thread.current_info = the_current_info
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
     variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)
     pulldown_files = [x['name'] for x in files]
     define_examples()
@@ -21137,7 +21205,7 @@ def logs():
             info = zipfile.ZipInfo(f)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
-            info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(zip_path)).replace(tzinfo=pytz.utc).astimezone(pytz.timezone(timezone)).timetuple()
+            info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(zip_path)).replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)).timetuple()
             with open(zip_path, 'rb') as fp:
                 zf.writestr(info, fp.read())
         zf.close()
@@ -22236,9 +22304,9 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         #release_lock(session, filename)
         return True
     if admin is False and current_user and current_user.is_authenticated and current_user.timezone:
-        the_timezone = pytz.timezone(current_user.timezone)
+        the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
     else:
-        the_timezone = pytz.timezone(get_default_timezone())
+        the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
 
     interviews_length = 0
     interviews = []
@@ -22262,7 +22330,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             if len(subq_filter_elements) > 0:
                 subq = subq.where(and_(*subq_filter_elements))
             subq = subq.group_by(UserDictKeys.filename, UserDictKeys.key).subquery()
-            interview_query = select(*query_elements).select_from(subq.join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).outerjoin(UserModel, 0 == 1))
+            interview_query = select(*query_elements).select_from(subq.join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key, UserDictKeys.temp_user_id == temp_user_id)).outerjoin(UserModel, 0 == 1))
             if query is not None:
                 interview_query = interview_query.where(the_query)
             interview_query = interview_query.order_by(UserDict.indexno)
@@ -22283,7 +22351,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
             if len(subq_filter_elements) > 0:
                 subq = subq.where(and_(*subq_filter_elements))
             subq = subq.group_by(UserDictKeys.filename, UserDictKeys.key).subquery()
-            interview_query = select(*query_elements).select_from(subq.join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key)).join(UserModel, UserDictKeys.user_id == UserModel.id))
+            interview_query = select(*query_elements).select_from(subq.join(UserDict, subq.c.indexno == UserDict.indexno).join(UserDictKeys, and_(UserDict.filename == UserDictKeys.filename, UserDict.key == UserDictKeys.key, UserDictKeys.user_id == user_id)).join(UserModel, UserDictKeys.user_id == UserModel.id))
             if query is not None:
                 interview_query = interview_query.where(the_query)
             interview_query = interview_query.order_by(UserDict.indexno)
@@ -22517,6 +22585,11 @@ def interview_list():
     resume_interview = request.args.get('resume', None)
     if resume_interview is None and daconfig.get('auto resume interview', None) is not None and (request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer))):
         resume_interview = daconfig['auto resume interview']
+    device_id = request.cookies.get('ds', None)
+    if device_id is None:
+        device_id = random_string(16)
+    the_current_info = current_info(yaml=None, req=request, interface='web', session_info=None, secret=secret, device_id=device_id)
+    docassemble.base.functions.this_thread.current_info = the_current_info
     if resume_interview is not None:
         (interviews, start_id) = user_interviews(user_id=current_user.id, secret=secret, exclude_invalid=True, filename=resume_interview, include_dict=True)
         if len(interviews) > 0:
@@ -22967,6 +23040,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     inp = form['Body'].strip()
     #logmessage("do_sms: received >" + inp + "<")
     key = 'da:sms:client:' + form["From"] + ':server:' + tconfig['number']
+    action = None
+    action_performed = False
     for try_num in (0, 1):
         sess_contents = r.get(key)
         if sess_contents is None:
@@ -23004,6 +23079,17 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 reset_user_dict(sess_info['uid'], sess_info['yaml_filename'], temp_user_id=sess_info['tempuser'])
             r.delete(key)
             return resp
+        user = None
+        if sess_info['user_id'] is not None:
+            user = load_user(sess_info['user_id'])
+        if user is None:
+            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None, session_uid=sess_info['session_uid'], device_id=form["From"]), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers={}, clientip=None, method=None, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
+        else:
+            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None, session_uid=sess_info['session_uid'], device_id=form["From"]), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers={}, clientip=None, method=None, skip=user_dict['_internal']['skip'])
+        if action is not None:
+            logmessage("do_sms: setting action to " + str(action))
+            ci.update(action)
+        docassemble.base.functions.this_thread.current_info = ci
         obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
         steps, user_dict, is_encrypted = fetch_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
         if user_dict is None:
@@ -23011,8 +23097,6 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             continue
         break
     encrypted = sess_info['encrypted']
-    action = None
-    action_performed = False
     while True:
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
@@ -23040,16 +23124,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         #     action_manual = True
         # else:
         #     action_manual = False
-        user = None
-        if sess_info['user_id'] is not None:
-            user = load_user(sess_info['user_id'])
-        if user is None:
-            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + str(sess_info['tempuser']), roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, timezone=None, location=None, session_uid=sess_info['session_uid'], device_id=form["From"]), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers={}, clientip=None, method=None, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
-        else:
-            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, timezone=user.timezone, location=None, session_uid=sess_info['session_uid'], device_id=form["From"]), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers={}, clientip=None, method=None, skip=user_dict['_internal']['skip'])
-        if action is not None:
-            logmessage("do_sms: setting action to " + str(action))
-            ci.update(action)
+        ci['encrypted'] = is_encrypted
         interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
         interview.assemble(user_dict, interview_status)
         logmessage("do_sms: back from assemble 1; had been seeking variable " + str(interview_status.sought))
@@ -23111,6 +23186,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             if steps > 1 and interview_status.can_go_back:
                 old_user_dict = user_dict
                 steps, user_dict, is_encrypted = fetch_previous_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
+                ci['encrypted'] = is_encrypted
                 if 'question' in sess_info:
                     del sess_info['question']
                     r.set(key, pickle.dumps(sess_info))
@@ -25182,6 +25258,7 @@ def api_session_back():
     reply_with_question = true_or_false(post_data.get('question', True))
     if yaml_filename is None or session_id is None:
         return jsonify_with_status("Parameters i and session are required.", 400)
+    docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
     try:
         data = go_back_in_session(yaml_filename, session_id, secret=secret, return_question=reply_with_question)
     except Exception as the_err:
@@ -25259,6 +25336,7 @@ def api_session():
             secret = str(secret)
         if yaml_filename is None or session_id is None:
             return jsonify_with_status("Parameters i and session are required.", 400)
+        docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
         try:
             variables = get_session_variables(yaml_filename, session_id, secret=secret)
         except Exception as the_err:
@@ -25278,6 +25356,7 @@ def api_session():
         reply_with_question = true_or_false(post_data.get('question', True))
         if yaml_filename is None or session_id is None:
             return jsonify_with_status("Parameters i and session are required.", 400)
+        docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
         if 'variables' in post_data and isinstance(post_data['variables'], dict):
             variables = post_data['variables']
         else:
@@ -25627,6 +25706,7 @@ def api_session_new():
             continue
         if re.match('[A-Za-z_][A-Za-z0-9_]*', argname):
             url_args[argname] = request.args[argname]
+    docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
     try:
         (encrypted, session_id) = create_new_interview(yaml_filename, secret, url_args=url_args, req=request)
     except Exception as err:
@@ -25702,6 +25782,7 @@ def api_session_question():
         secret = str(secret)
     if yaml_filename is None or session_id is None:
         return jsonify_with_status("Parameters i and session are required.", 400)
+    docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
     try:
         data = get_question_data(yaml_filename, session_id, secret)
     except Exception as err:
@@ -25963,19 +26044,20 @@ def api_session_action():
                 return jsonify_with_status("Arguments data is not a dict.", 400)
     else:
         arguments = {}
+    device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
+    session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
+    ci = current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments), secret=secret, device_id=device_id, session_uid=session_uid)
+    ci['session'] = session_id
+    ci['secret'] = secret
+    docassemble.base.functions.this_thread.current_info = ci
     obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
         release_lock(session_id, yaml_filename)
         return jsonify_with_status("Unable to obtain interview dictionary.", 400)
-    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
-    session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
-    ci = current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments), secret=secret, device_id=device_id, session_uid=session_uid)
-    ci['session'] = session_id
     ci['encrypted'] = is_encrypted
-    ci['secret'] = secret
+    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     if not persistent:
         interview_status.checkin = True
@@ -26073,6 +26155,7 @@ def api_login_url():
     if len(url_args) > 0:
         info['url_args'] = url_args
     if 'i' in info:
+        docassemble.base.functions.this_thread.current_info['yaml_filename'] = info['i']
         if 'session' in info:
             try:
                 steps, user_dict, is_encrypted = fetch_user_dict(info['session'], info['i'], secret=secret)
@@ -28788,6 +28871,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
 
 base_words = get_base_words()
 title_documentation = get_title_documentation()
+DOCUMENTATION_BASE = daconfig.get('documentation base url', 'https://docassemble.org/docs/')
 documentation_dict = get_documentation_dict()
 base_name_info = get_name_info()
 

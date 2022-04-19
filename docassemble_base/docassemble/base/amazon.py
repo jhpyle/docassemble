@@ -1,11 +1,10 @@
 import os
 import mimetypes
 import datetime
-import pytz
 from botocore.errorfactory import ClientError
 import boto3
 
-epoch = pytz.utc.localize(datetime.datetime.utcfromtimestamp(0))
+epoch = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=datetime.timezone.utc)
 
 class s3object:
     def __init__(self, s3_config):

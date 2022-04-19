@@ -36,7 +36,7 @@ from jinja2.ext import Extension
 from docxtpl import DocxTemplate
 import pandas
 import dateutil.parser
-import pytz
+from backports import zoneinfo
 from bs4 import BeautifulSoup
 from docassemble_textstat.textstat import textstat
 import qrcode
@@ -1981,7 +1981,7 @@ class Question:
                     if not isinstance(data['features'][key], str):
                         raise DAError("A features section " + key + " entry must be plain text." + self.idebug(data))
                     try:
-                        self.interview.options[key] = pytz.timezone(docassemble.base.functions.get_default_timezone()).localize(dateutil.parser.parse(data['features'][key]))
+                        self.interview.options[key] = dateutil.parser.parse(data['features'][key]).astimezone(zoneinfo.ZoneInfo(docassemble.base.functions.get_default_timezone()))
                     except:
                         raise DAError("The " + key + " in features did not contain a valid date." + self.idebug(data))
         if 'field' in data and not ('yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data or 'choices' in data or 'dropdown' in data or 'combobox' in data):

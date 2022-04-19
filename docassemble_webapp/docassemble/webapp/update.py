@@ -12,6 +12,7 @@ import fcntl
 from distutils.version import LooseVersion
 import docassemble.base.config
 from docassemble.base.config import daconfig
+from docassemble.webapp.info import system_packages
 
 installed_distribution_cache = None
 
@@ -72,6 +73,17 @@ class DummyPackage:
         self.type = 'pip'
         self.limitation = None
 
+def clear_invalid_package_auth(start_time=None):
+    if start_time is None:
+        start_time = time.time()
+    sys.stderr.write("clear_invalid_package_auth: starting after " + str(time.time() - start_time) + " seconds\n")
+    from docassemble.webapp.db_object import db
+    from docassemble.webapp.packages.models import PackageAuth
+    from sqlalchemy import delete
+    db.session.execute(delete(PackageAuth).filter_by(package_id=None))
+    db.session.commit()
+    sys.stderr.write("clear_invalid_package_auth: finishing after " + str(time.time() - start_time) + " seconds\n")
+
 def check_for_updates(start_time=None, invalidate_cache=True, full=True):
     if start_time is None:
         start_time = time.time()
@@ -83,9 +95,9 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
     from docassemble.webapp.db_object import db
     from docassemble.webapp.packages.models import Package, Install, PackageAuth
     from sqlalchemy import select, delete
-    ok = True
-    here_already = {}
-    results = {}
+    ok = True # tracks whether there have been any errors
+    here_already = {} # packages that are installed on this server, based on pip list. package name -> package version
+    results = {} # result of actions taken on a package. package name -> message
     if full:
         sys.stderr.write("check_for_updates: 0.5 after " + str(time.time() - start_time) + " seconds\n")
         for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2', 'azure-storage', 'Flask-User', 'Marisol'):
@@ -97,6 +109,7 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
     for package in installed_packages:
         here_already[package.key] = package.version
     changed = False
+    # clean up old packages that cause problems.
     if full:
         if 'psycopg2' in here_already:
             sys.stderr.write("check_for_updates: uninstalling psycopg2\n")
@@ -172,31 +185,52 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
             here_already = {}
             for package in installed_packages:
                 here_already[package.key] = package.version
-    packages = {}
-    installs = {}
-    to_install = []
-    to_uninstall = []
-    uninstall_done = {}
-    uninstalled_packages = {}
     logmessages = ''
-    package_by_name = {}
+    packages = {} # packages that the database says are active and that have a type; package id -> package row
+    installs = {} # install rows representing what the database says in installed; package id -> install row
+    to_install = [] # package rows of packages to install
+    to_uninstall = [] # package rows of packages to uninstall
+    system_packages_to_fix = []
+    uninstall_done = set() # set of package names of packages already uninstalled
+    uninstalled_packages = {} # packages with active=False; package id -> package row
+    package_ids_to_delete = set() # set if IDs of package rows that have active=False but there is another
+                                  # row with active= True
+    package_by_name = {} # packages the database says are active; package name -> package row
     sys.stderr.write("check_for_updates: 2 after " + str(time.time() - start_time) + " seconds\n")
+    # create dict package_by_name that maps a package name to a package database row,
+    # for packages that the database says should be installed
     for package in db.session.execute(select(Package.name).filter_by(active=True)):
         package_by_name[package.name] = package
         #sys.stderr.write("check_for_updates: database includes a package called " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
     # packages is what is supposed to be installed
     sys.stderr.write("check_for_updates: 3 after " + str(time.time() - start_time) + " seconds\n")
+    # create dict packages that maps a package ID to a package database row if the type is not null
     for package in db.session.execute(select(Package).filter_by(active=True)).scalars():
         if package.type is not None:
             packages[package.id] = package
             #sys.stderr.write("check_for_updates: database includes a package called " + package.name + " that has a type after " + str(time.time() - start_time) + " seconds\n")
             #print("Found a package " + package.name)
     sys.stderr.write("check_for_updates: 4 after " + str(time.time() - start_time) + " seconds\n")
+    # create dict uninstalled_packages that maps a package ID to a package database row if SQL wants the package deleted
     for package in db.session.execute(select(Package).filter_by(active=False)).scalars():
-        if package.name not in package_by_name:
+        # don't uninstall a system package
+        if package.name in system_packages:
+            system_packages_to_fix.append(package)
+            continue
+        if package.name in package_by_name:
+            # there are two Package entries for the same package, one with active=True, one with active=False
+            sys.stderr.write("check_for_updates: conflicting package entries for " + package.name + " after " + str(time.time() - start_time) + " seconds\n")
+            # let's delete the one with active=False
+            package_ids_to_delete.add(package.id)
+        else:
             #sys.stderr.write("check_for_updates: database says " + package.name + " should be uninstalled after " + str(time.time() - start_time) + " seconds\n")
             uninstalled_packages[package.id] = package # this is what the database says should be uninstalled
     sys.stderr.write("check_for_updates: 5 after " + str(time.time() - start_time) + " seconds\n")
+    # build to_uninstall, which is the list of Package database entries targeted for uninstallation.
+    # Only add if there is an Install entry linked to the package id and there is no active Package row
+    # with the same name.
+    # Also build installs, which is a dict mapping package IDs to install rows, based on
+    # what the Install table says
     for install in db.session.execute(select(Install).filter_by(hostname=hostname)).scalars():
         installs[install.package_id] = install # this is what the database says in installed on this server
         if install.package_id in uninstalled_packages and uninstalled_packages[install.package_id].name not in package_by_name:
@@ -208,6 +242,8 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
     for auth in db.session.execute(select(PackageAuth).filter_by(authtype='owner')).scalars():
         package_owner[auth.package_id] = auth.user_id
     sys.stderr.write("check_for_updates: 7 after " + str(time.time() - start_time) + " seconds\n")
+    # Add Install rows for any active Package rows with non-null types if the package is present on the server
+    # Also add to the installs dict after adding.
     for package in packages.values():
         if package.id not in installs and package.name in here_already:
             sys.stderr.write("check_for_updates: package " + package.name + " here already.  Writing an Install record for it.\n")
@@ -241,7 +277,10 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
         if package.id not in installs:
             sys.stderr.write("check_for_updates: the package " + package.name + " is not in the table of installed packages for this server after " + str(time.time() - start_time) + " seconds\n")
         if package.id not in installs or package_version_greater or new_version_needed or package_missing:
-            to_install.append(package)
+            if package.name in system_packages:
+                system_packages_to_fix.append(package)
+            else:
+                to_install.append(package)
     #sys.stderr.write("done with that" + "\n")
     sys.stderr.write("check_for_updates: 9 after " + str(time.time() - start_time) + " seconds\n")
     for package in to_uninstall:
@@ -256,7 +295,7 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
         else:
             sys.stderr.write("check_for_updates: calling uninstall_package on " + package.name + "\n")
             returnval, newlog = uninstall_package(package, start_time=start_time)
-        uninstall_done[package.name] = 1
+        uninstall_done.add(package.name)
         logmessages += newlog
         if returnval == 0:
             db.session.execute(delete(Install).filter_by(hostname=hostname, package_id=package.id))
@@ -402,17 +441,16 @@ def add_dependencies(user_id, start_time=None):
         did_something = True
         db.session.commit()
         for package in packages_to_add:
-            package_auth = PackageAuth(user_id=user_id)
             if package.key.startswith('docassemble.'):
                 if home_pages is None:
                     home_pages = get_home_page_dict()
                 home_page = home_pages.get(package.key.lower(), None)
                 if home_page is not None and re.search(r'/github.com/', home_page):
-                    package_entry = Package(name=package.key, package_auth=package_auth, type='git', giturl=home_page, packageversion=package.version, dependency=True)
+                    package_entry = Package(name=package.key, package_auth=PackageAuth(user_id=user_id), type='git', giturl=home_page, packageversion=package.version, dependency=True)
                 else:
-                    package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
+                    package_entry = Package(name=package.key, package_auth=PackageAuth(user_id=user_id), type='pip', packageversion=package.version, dependency=True)
             else:
-                package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
+                package_entry = Package(name=package.key, package_auth=PackageAuth(user_id=user_id), type='pip', packageversion=package.version, dependency=True)
             db.session.add(package_entry)
             db.session.commit()
             install = Install(hostname=hostname, packageversion=package_entry.packageversion, version=package_entry.version, package_id=package_entry.id)
@@ -632,6 +670,7 @@ def main():
         from docassemble.webapp.packages.models import Package
         from sqlalchemy import select
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
+        clear_invalid_package_auth(start_time=start_time)
         if mode == 'initialize':
             sys.stderr.write("update: updating with mode initialize after " + str(time.time() - start_time) + " seconds\n")
             update_versions(start_time=start_time)

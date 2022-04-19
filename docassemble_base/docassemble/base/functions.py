@@ -1470,7 +1470,7 @@ server.default_dialect = 'us'
 server.default_language = 'en'
 server.default_locale = 'US.utf8'
 try:
-    server.default_timezone = tzlocal.get_localzone().zone
+    server.default_timezone = tzlocal.get_localzone_name()
 except:
     server.default_timezone = 'America/New_York'
 server.delete_answer_json = null_func

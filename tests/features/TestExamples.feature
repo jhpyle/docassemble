@@ -4227,7 +4227,7 @@ Feature: Example interviews
   Scenario: Test the interview "Subdivision type"
     Given I start the interview "docassemble.base:data/questions/examples/subdivision-type.yml"
     Then I should see the phrase "Geography lesson"
-    And I should see the phrase "In Bulgaria, you live in a Region."
+    And I should see the phrase "In Bulgaria, you live in a District."
     And I should see the phrase "In Sweden, you live in a County."
     And I should see the phrase "In Tunisia, you live in a Governorate."
     And I should see the phrase "In Viet Nam, you live in a Province."

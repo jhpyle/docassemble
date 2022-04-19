@@ -11,7 +11,7 @@ import zipfile
 from distutils.version import LooseVersion
 from flask import url_for
 from flask_login import current_user
-import pytz
+from backports import zoneinfo
 import requests
 import pycurl
 from docassemble.base.config import daconfig
@@ -481,11 +481,11 @@ def make_package_zip(pkgname, info, author_info, tz_name, current_project='defau
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
     zf = zipfile.ZipFile(temp_zip, mode='w')
-    the_timezone = pytz.timezone(tz_name)
+    the_timezone = zoneinfo.ZoneInfo(tz_name)
     for root, dirs, files in os.walk(packagedir):
         for file in files:
             thefilename = os.path.join(root, file)
-            zinfo = zipfile.ZipInfo(thefilename[trimlength:], date_time=datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=pytz.utc).astimezone(the_timezone).timetuple())
+            zinfo = zipfile.ZipInfo(thefilename[trimlength:], date_time=datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=datetime.timezone.utc).astimezone(the_timezone).timetuple())
             zinfo.compress_type = zipfile.ZIP_DEFLATED
             zinfo.external_attr = 0o644 << 16
             with open(thefilename, 'rb') as fp:

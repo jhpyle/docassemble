@@ -275,7 +275,6 @@ def get_info_from_file_number_with_uids(*pargs, **kwargs):
         kwargs['uids'] = get_session_uids()
     return get_info_from_file_number(*pargs, **kwargs)
 
-
 classes = daconfig['table css class'].split(',')
 DEFAULT_TABLE_CLASS = json.dumps(classes[0].strip())
 if len(classes) > 1:
@@ -592,6 +591,8 @@ def decrypt_object(obj_string, secret):
     return fix_pickle_obj(unpad(decrypter.decrypt(codecs.decode(obj_string[16:], 'base64'))))
 
 def parse_the_user_id(the_user_id):
+    if the_user_id is None:
+        return (None, None)
     m = re.match(r'(t?)([0-9]+)', str(the_user_id))
     if m:
         if m.group(1) == 't':
@@ -704,6 +705,8 @@ def delete_temp_user_data(temp_user_id, r):
     db.session.commit()
     db.session.execute(delete(GlobalObjectStorage).where(GlobalObjectStorage.temp_user_id == temp_user_id))
     db.session.commit()
+    db.session.execute(delete(GlobalObjectStorage).where(or_(GlobalObjectStorage.key.like('da:userid:t' + str(temp_user_id) + ':%'), GlobalObjectStorage.key.like('da:daglobal:userid:t' + str(temp_user_id) + ':%'))).execution_options(synchronize_session=False))
+    db.session.commit()
     files_to_delete = []
     for short_code_item in db.session.execute(select(Shortener).filter_by(temp_user_id=temp_user_id)).scalars():
         for email in db.session.execute(select(Email).filter_by(short=short_code_item.short)).scalars():
@@ -734,6 +737,8 @@ def delete_user_data(user_id, r, r_user):
     db.session.execute(delete(ChatLog).where(ChatLog.user_id == user_id))
     db.session.commit()
     db.session.execute(delete(GlobalObjectStorage).where(GlobalObjectStorage.user_id == user_id))
+    db.session.commit()
+    db.session.execute(delete(GlobalObjectStorage).where(or_(GlobalObjectStorage.key.like('da:userid:' + str(user_id) + ':%'), GlobalObjectStorage.key.like('da:daglobal:userid:' + str(user_id) + ':%'))).execution_options(synchronize_session=False))
     db.session.commit()
     for package_auth in db.session.execute(select(PackageAuth).filter_by(user_id=user_id)).scalars():
         package_auth.user_id = 1
@@ -858,7 +863,7 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
             files_to_delete.append(upload.indexno)
         db.session.execute(delete(Uploads).filter_by(key=user_code, yamlfile=filename, persistent=False))
         db.session.commit()
-        db.session.execute(delete(GlobalObjectStorage).where(GlobalObjectStorage.key.like('da:uid:' + user_code + ':i:' + filename + ':%')).execution_options(synchronize_session=False))
+        db.session.execute(delete(GlobalObjectStorage).where(or_(GlobalObjectStorage.key.like('da:uid:' + user_code + ':i:' + filename + ':%'), GlobalObjectStorage.key.like('da:daglobal:uid:' + user_code + ':i:' + filename + ':%'))).execution_options(synchronize_session=False))
         db.session.commit()
         db.session.execute(delete(ChatLog).filter_by(key=user_code, filename=filename))
         db.session.commit()

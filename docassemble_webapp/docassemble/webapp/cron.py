@@ -204,6 +204,7 @@ def run_cron(the_cron_type):
                     if len(records) == 0:
                         break
                     for indexno, key, the_filename, dictionary, steps in records:
+                        docassemble.base.functions.this_thread.current_info = dict(user=user_info, session=key, secret=None, yaml_filename=the_filename, url=base_url, url_root=path_url, encrypted=False, action=None, interface='cron', arguments={})
                         last_index = indexno
                         try:
                             the_dict = unpack_dictionary(dictionary)
@@ -219,8 +220,10 @@ def run_cron(the_cron_type):
                             else:
                                 try:
                                     docassemble.base.functions.reset_local_variables()
+                                    ci = dict(user=user_info, session=key, secret=None, yaml_filename=the_filename, url=base_url, url_root=path_url, encrypted=False, action=cron_type_to_use, interface='cron', arguments={})
+                                    docassemble.base.functions.this_thread.current_info = ci
+                                    interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
                                     obtain_lock_patiently(key, the_filename)
-                                    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron', device_id='cron'), session=key, secret=None, yaml_filename=the_filename, url=None, url_root=None, encrypted=False, action=cron_type_to_use, interface='cron', arguments={}))
                                     interview.assemble(the_dict, interview_status)
                                     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
                                     if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:

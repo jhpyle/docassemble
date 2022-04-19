@@ -1989,11 +1989,11 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             var the_element_id = id_list[i].replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             if (theVal == null || theVal == ""){
               daDisableIfNotHidden("#daform [name='" + the_element_id + "']:not([type=hidden])", false);
-              $("#daform [name='" + the_element_id + "']:not([type=hidden])").parent().parent().removeClass("dagreyedout");
+              $("#daform [name='" + the_element_id + "']:not([type=hidden])").parents(".da-form-group").removeClass("dagreyedout");
             }
             else{
               daDisableIfNotHidden("#daform [name='" + the_element_id + "']:not([type=hidden])", true);
-              $("#daform [name='" + the_element_id + "']:not([type=hidden])").parent().parent().addClass("dagreyedout");
+              $("#daform [name='" + the_element_id + "']:not([type=hidden])").parents(".da-form-group").addClass("dagreyedout");
             }
           }
         }
@@ -2002,17 +2002,17 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             daDisableIfNotHidden("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])", false);
             daDisableIfNotHidden("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])", false);
             daDisableIfNotHidden("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])", false);
-            $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("dagreyedout");
-            $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("dagreyedout");
-            $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").parent().parent().removeClass("dagreyedout");
+            $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parents(".da-form-group").removeClass("dagreyedout");
+            $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parents(".da-form-group").removeClass("dagreyedout");
+            $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").parents(".da-form-group").removeClass("dagreyedout");
           }
           else{
             $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").prop("disabled", true);
             $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").prop("disabled", true);
             $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").prop("disabled", true);
-            $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().addClass("dagreyedout");
-            $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parent().parent().addClass("dagreyedout");
-            $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").parent().parent().addClass("dagreyedout");
+            $("#daform input:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parents(".da-form-group").addClass("dagreyedout");
+            $("#daform select:not([name='"""  + element_id  + """']):not([id^='"""  + element_id  + """']):not([type=hidden])").parents(".da-form-group").addClass("dagreyedout");
+            $("#daform textarea:not([name='"""  + element_id  + """']):not([type=hidden])").parents(".da-form-group").addClass("dagreyedout");
           }
         }
       });

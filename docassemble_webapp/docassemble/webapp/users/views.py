@@ -2,7 +2,7 @@ import datetime
 import email.utils
 import json
 import re
-import pytz
+from backports import zoneinfo
 #import docassemble.webapp.daredis
 from docassemble.webapp.app_object import app
 from docassemble.webapp.backend import delete_user_data
@@ -212,7 +212,7 @@ def edit_user_profile_page(id):
     else:
         form.role_id.choices = [(r.id, r.name) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name'))]
         privileges_note = word("Note: only users with e-mail/password accounts can be given admin privileges.")
-    form.timezone.choices = [(x, x) for x in sorted(list(pytz.all_timezones))]
+    form.timezone.choices = [(x, x) for x in sorted(list(zoneinfo.available_timezones()))]
     form.timezone.default = the_tz
     if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
         form.timezone.data = the_tz
@@ -288,7 +288,7 @@ def user_profile_page():
         form = PhoneUserProfileForm(request.form, obj=current_user)
     else:
         form = UserProfileForm(request.form, obj=current_user)
-    form.timezone.choices = [(x, x) for x in sorted(list(pytz.all_timezones))]
+    form.timezone.choices = [(x, x) for x in sorted(list(zoneinfo.available_timezones()))]
     form.timezone.default = the_tz
     if str(form.timezone.data) == 'None' or str(form.timezone.data) == '':
         form.timezone.data = the_tz

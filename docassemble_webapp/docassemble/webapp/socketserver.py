@@ -31,7 +31,6 @@ from simplekv.memory.redisstore import RedisStore
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker, joinedload
 import netifaces as ni
-import pytz
 import redis
 
 store = RedisStore(docassemble.webapp.daredis.r_store)
@@ -382,6 +381,11 @@ def on_interview_manual_disconnect(data):
 def on_interview_disconnect():
     sys.stderr.write('Client disconnected from interview\n')
 
+def get_current_info(yaml_filename, session_id, secret):
+    url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
+    url = url_root + 'interview'
+    return dict(user=dict(is_anonymous=False, is_authenticated=True, email='admin@admin.com', theid=1, the_user_id=1, roles=['admin'], firstname='Admin', lastname='User', nickname='', country='', subdivisionfirst='', subdivisionsecond='', subdivisionthird='', organization='', location=None, session_uid='admin', device_id='admin'), session=session_id, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=True, action=None, interface='chat', arguments={})
+
 def get_dict(yaml_filename):
     session_info = get_session(yaml_filename)
     if session_info is not None:
@@ -395,12 +399,14 @@ def get_dict(yaml_filename):
         sys.stderr.write('Attempt to get dictionary where session not defined\n')
         return None
     #obtain_lock(session_id, yaml_filename)
+    docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         #release_lock(session_id, yaml_filename)
         sys.stderr.write('get_dict: attempt to get dictionary failed: ' + str(err) + '\n')
         return None
+    docassemble.base.functions.this_thread.current_info['encrypted'] = is_encrypted
     #release_lock(session_id, yaml_filename)
     return user_dict
 
@@ -417,12 +423,14 @@ def get_dict_encrypt(yaml_filename):
         sys.stderr.write('Attempt to get dictionary where session not defined\n')
         return None, None
     #obtain_lock(session_id, yaml_filename)
+    docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         #release_lock(session_id, yaml_filename)
         sys.stderr.write('get_dict_encrypt: attempt to get dictionary failed: ' + str(err) + '\n')
         return None, None
+    docassemble.base.functions.this_thread.current_info['encrypted'] = is_encrypted
     #release_lock(session_id, yaml_filename)
     return user_dict, is_encrypted
 
@@ -777,6 +785,7 @@ def monitor_chat_message(data):
     if secret is not None:
         secret = str(secret)
     #obtain_lock(session_id, yaml_filename)
+    docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     with session_scope() as dbsession:
         try:
             steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
@@ -785,6 +794,7 @@ def monitor_chat_message(data):
             sys.stderr.write("monitor_chat_message: could not get dictionary: " + str(err) + "\n")
             return
         #release_lock(session_id, yaml_filename)
+        docassemble.base.functions.this_thread.current_info['encrypted'] = encrypted
         nowtime = datetime.datetime.utcnow()
         if encrypted:
             message = encrypt_phrase(data['data'], secret)
@@ -843,12 +853,14 @@ def monitor_chat_log(data):
         if secret is not None:
             secret = str(secret)
         #obtain_lock(session_id, yaml_filename)
+        docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
         try:
             steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         except Exception as err:
             #release_lock(session_id, yaml_filename)
             sys.stderr.write("monitor_chat_log: could not get dictionary: " + str(err) + "\n")
             return
+        docassemble.base.functions.this_thread.current_info['encrypted'] = encrypted
         #release_lock(session_id, yaml_filename)
         chat_mode = user_dict['_internal']['livehelp']['mode']
         m = re.match('t([0-9]+)', chat_user_id)

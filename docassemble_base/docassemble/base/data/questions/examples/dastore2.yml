@@ -1,0 +1,35 @@
+metadata:
+  title: DAStore Update
+  example start: 1
+  example end: 5
+  documentation: "https://docassemble.org/docs/objects.html#DAStore"
+---
+objects:
+  - userdata: DAStore
+  - preferences: DADict.using(gathered=True)
+---
+mandatory: True
+code: |
+  preferences['favorite_fruit']
+  preferences.saved
+  final_screen
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: preferences['favorite_fruit']
+---
+code: |
+  if userdata.defined("prefsdict"):
+    working_copy = userdata.get("prefsdict")
+    working_copy.update(preferences)
+  else:
+    working_copy = preferences
+  userdata.set("prefsdict", working_copy)
+  preferences.saved = True
+---
+event: final_screen
+question: All done
+subquestion: |
+  Your favorite fruit is
+  ${ userdata.get("prefsdict")['favorite_fruit'] }.
