@@ -12239,7 +12239,7 @@ def do_serve_stored_file(uid, number, filename, extension, download=False):
     else:
         if not os.path.isfile(file_info['path']):
             return ('File not found', 404)
-        response = send_file(file_info['path'], mimetype=file_info['mimetype'])
+        response = send_file(file_info['path'], mimetype=file_info['mimetype'], download_name=filename + '.' + extension)
         if download:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -12264,7 +12264,7 @@ def do_serve_temporary_file(code, filename, extension, download=False):
     if not os.path.isfile(the_path):
         return ('File not found', 404)
     (extension, mimetype) = get_ext_and_mimetype(filename + '.' + extension)
-    response = send_file(the_path, mimetype=mimetype)
+    response = send_file(the_path, mimetype=mimetype, download_name=filename + '.' + extension)
     if download:
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
     return response
@@ -12288,8 +12288,8 @@ def download_zip_package():
         file_info = get_info_from_file_number(package.upload, privileged=True)
     except:
         return ('File not found', 404)
-    response = send_file(file_info['path'] + '.zip', mimetype='application/zip')
     filename = re.sub(r'\.', '-', package_name) + '.zip'
+    response = send_file(file_info['path'] + '.zip', mimetype='application/zip', download_name=filename)
     response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -12327,7 +12327,7 @@ def do_serve_uploaded_file_with_filename_and_extension(number, filename, extensi
             if os.path.isfile(file_info['path'] + '.' + extension):
                 #logmessage("Using " + file_info['path'] + '.' + extension)
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
-                response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
+                response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype, download_name=filename + '.' + extension)
                 if download:
                     response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -12335,7 +12335,7 @@ def do_serve_uploaded_file_with_filename_and_extension(number, filename, extensi
             if os.path.isfile(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension)):
                 #logmessage("Using " + os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension))
                 extension, mimetype = get_ext_and_mimetype(filename + '.' + extension)
-                response = send_file(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension), mimetype=mimetype)
+                response = send_file(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension), mimetype=mimetype, download_name=filename + '.' + extension)
                 if download:
                     response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename + '.' + extension)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -12372,7 +12372,7 @@ def do_serve_uploaded_file_with_extension(number, extension, download=False):
         else:
             if os.path.isfile(file_info['path'] + '.' + extension):
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
-                response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
+                response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype, download_name=str(number) + '.' + extension)
                 if download:
                     response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(str(number) + '.' + extension)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -12397,7 +12397,7 @@ def do_serve_uploaded_file(number, download=False):
     else:
         if not os.path.isfile(file_info['path']):
             return ('File not found', 404)
-        response = send_file(file_info['path'], mimetype=file_info['mimetype'])
+        response = send_file(file_info['path'], mimetype=file_info['mimetype'], download_name=os.path.basename(file_info['path']))
         if download:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(os.path.basename(file_info['path']))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -12441,11 +12441,11 @@ def do_serve_uploaded_page(number, page, download=False, size='page'):
     if filename is None:
         logmessage("do_serve_uploaded_page: sending blank image")
         the_file = docassemble.base.functions.package_data_filename('docassemble.base:data/static/blank_page.png')
-        response = send_file(the_file, mimetype='image/png')
+        response = send_file(the_file, mimetype='image/png', download_name='blank_page.png')
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
     if os.path.isfile(filename):
-        response = send_file(filename, mimetype='image/png')
+        response = send_file(filename, mimetype='image/png', download_name=os.path.basename(filename))
         if download:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(os.path.basename(filename))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -17433,7 +17433,7 @@ def playground_static(current_project, userid, filename):
     if os.path.isfile(path):
         filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)
-        response = send_file(path, mimetype=str(mimetype))
+        response = send_file(path, mimetype=str(mimetype), download_name=filename)
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         return response
@@ -17460,7 +17460,7 @@ def playground_modules(current_project, userid, filename):
     if os.path.isfile(path):
         filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)
-        response = send_file(path, mimetype=str(mimetype))
+        response = send_file(path, mimetype=str(mimetype), download_name=filename)
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -17489,7 +17489,7 @@ def playground_sources(current_project, userid, filename):
     if os.path.isfile(path):
         filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)
-        response = send_file(path, mimetype=str(mimetype))
+        response = send_file(path, mimetype=str(mimetype), download_name=filename)
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -17517,7 +17517,7 @@ def playground_template(current_project, userid, filename):
     if os.path.isfile(path):
         filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)
-        response = send_file(path, mimetype=str(mimetype))
+        response = send_file(path, mimetype=str(mimetype), download_name=filename)
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -21162,7 +21162,7 @@ def package_static(package, filename):
     if not os.path.isfile(the_file):
         return ('File not found', 404)
     extension, mimetype = get_ext_and_mimetype(the_file)
-    response = send_file(the_file, mimetype=str(mimetype))
+    response = send_file(the_file, mimetype=str(mimetype), download_name=filename)
     if attach:
         filename = os.path.basename(filename)
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(filename)
@@ -22941,7 +22941,7 @@ def favicon_file(filename, alt=None):
         mimetype = 'application/manifest+json'
     else:
         extension, mimetype = get_ext_and_mimetype(the_file)
-    response = send_file(the_file, mimetype=mimetype)
+    response = send_file(the_file, mimetype=mimetype, download_name=filename)
     return response
 
 def test_favicon_file(filename, alt=None):
@@ -23001,7 +23001,7 @@ def robots():
         return ('File not found', 404)
     if not os.path.isfile(the_file):
         return ('File not found', 404)
-    response = send_file(the_file, mimetype='text/plain')
+    response = send_file(the_file, mimetype='text/plain', download_name='robots.txt')
     return response
 
 @app.route("/sms", methods=['POST'])

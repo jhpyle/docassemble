@@ -29,7 +29,7 @@ review:
     field: profile.user.name.first
     button: |
       #### Name
-      
+
       ${ profile.user }
   - label: Edit
     field: profile.user.address.address
