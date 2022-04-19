@@ -3084,10 +3084,8 @@ google:
   api key: UIJGeyD-23aSdgSE34gEGRg3GDRGdrge9z-YUia
 {% endhighlight %}
 
-This is required for the use of the [`map_of()`] feature.
-
-This will also enable you to use the [Google Maps Geocoding API] (see
-the [`.geocode()`] method), and will also enable the [Google Cloud
+This will enable you to use the [Google Maps Geocoding API] (see the
+[`.geocode()`] method), and will also enable the [Google Cloud
 Translation API] for the feature in Utilities for translating system
 words into other languages.
 
@@ -3097,25 +3095,27 @@ on the API key in order to use the geocoding feature.  To avoid charges, you may
 [restrict the API](https://developers.google.com/maps/faq#usage_cap) to no more than 2,500
 requests per day.
 
-If you also specify a specific `google maps api key`, this key will be
-used for the [`map_of()`] feature and the [address autocomplete]
-feature instead of the `api key`.
+The `api key` under `google` is used when the server sends requests to
+Google; thus, you can add security based on IP address to the API key.
+
+**docassemble** also has features, including [address autocomplete]
+and the [`map_of()`] function, which cause the user's web browser to
+call the Google API.
 
 {% highlight yaml %}
 google:
-  api key: UIJGeyD-23aSdgSE34gEGRg3GDRGdrge9z-YUia
   google maps api key: YyFeyuE-36grDgEE34jETRy3WDjGerye0y-wrRb
 {% endhighlight %}
 
-If you use both geocoding and Google Maps, you will probably want to
-use a separate `google maps api key` because you can secure it
-differently.  Note that the [`map_of()`] feature and the [address
-autocomplete] feature put the API key in the [JavaScript] source, and
-the communications with Google's server will come from the user's
-computer.  By contrast, when you use the [`.geocode()`] method, the
-communications with Google's server come from your server.  Thus, you
-may wish to secure the `api key` using IP addresses, and secure the
-`google maps api key` using "Referer" headers.
+These features require sharing the API key with the web browser, which
+means your API key is not secret. Google allows you to add security
+based on the `Referer` header, so that the API key can only be used
+when it is called from a particular web site.
+
+Therefore, if you use both the server-side features and the
+client-side features, you should obtain two API keys from Google, and
+lock down the `api key` based on the IP address of your server, and
+lock down the `google maps api key` based on the URL of your site.
 
 When using the [address autocomplete] feature, Google
 [biases](https://developers.google.com/maps/documentation/javascript/localization#Region)

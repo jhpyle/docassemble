@@ -670,7 +670,7 @@ The following names are imported automatically:
 * [`url_action`]
 * [`url_ask`]
 * [`url_of`]
-* [`us`]
+* <a name="us"></a>[`us`] - [United States state metadata information](https://pypi.org/project/us/)
 * [`user_has_privilege`]
 * [`user_info`]
 * [`user_lat_lon`]

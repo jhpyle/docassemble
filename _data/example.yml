@@ -1981,6 +1981,36 @@
   subquestion: |
     Your favorite fruit is
     ${ userdata.get("prefs").favorite_fruit }.
+"dastore2": |-
+  objects:
+    - userdata: DAStore
+    - preferences: DADict.using(gathered=True)
+  ---
+  mandatory: True
+  code: |
+    preferences['favorite_fruit']
+    preferences.saved
+    final_screen
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: preferences['favorite_fruit']
+  ---
+  code: |
+    if userdata.defined("prefsdict"):
+      working_copy = userdata.get("prefsdict")
+      working_copy.update(preferences)
+    else:
+      working_copy = preferences
+    userdata.set("prefsdict", working_copy)
+    preferences.saved = True
+  ---
+  event: final_screen
+  question: All done
+  subquestion: |
+    Your favorite fruit is
+    ${ userdata.get("prefsdict")['favorite_fruit'] }.
 "data": |-
   variable name: fruits
   data:
@@ -12377,6 +12407,46 @@
   fields:
     - Date of birth: date_of_birth
       datatype: date
+"daglobal": "objects:\n  - g: DAGlobal.using(base=the_base, key=the_key)\n  - g.fruits:\
+  \ DAList.using(object_type=Thing)\n---\nquestion: |\n  In what scope should the\
+  \ object `g` be global?\nfield: the_base\nchoices:\n  - User: user\n  - Interview:\
+  \ interview\n  - Global: global\n---\nquestion: |\n  Under what key in the `${ the_base\
+  \ }` scope should the object `g` be\n  saved?\nsubquestion: |\n  Note: you can see\
+  \ what keys already exist by calling\n  `DAGlobal.keys(${ repr(the_base) })`.\n\n\
+  \  You can test to see if a key is defined by calling\n  `DAGlobal.defined(${ repr(the_base)\
+  \ }, some_key)`. It will return\n  `True` if the key is defined and `False` otherwise.\n\
+  \n  The result of `DAGlobal.keys(${ repr(the_base) })` is:\n  `${ repr(DAGlobal.keys(the_base))\
+  \ }`.\nfields:\n  - Key: the_key\n    maxlength: 50\n---\nquestion: |\n  Now we\
+  \ will gather a list of fruit into `g.fruits`.\ncontinue button field: g.fruits.there_are_any\n\
+  ---\nquestion: |\n  What is the name of the ${ ordinal(i) } fruit?\nfields:\n  -\
+  \ Fruit: g.fruits[i].name.text\n---\nquestion: |\n  Besides ${ g.fruits }, are there\
+  \ any more fruits in the list?\nyesno: g.fruits.there_is_another\n---\nmandatory:\
+  \ True\nquestion: |\n  The list of fruits from `g.fruits`\nsubquestion: |\n  `g`\
+  \ is an object of class `DAGlobal` with `g.base` set to\n  `${ repr(g.base) }` and\
+  \ `g.key` set to `${ repr(g.key) }`.\n  \n  This list of fruits, known as `g.fruits`\
+  \ in the interview answers,\n  is stored as the `fruits` attribute of an object\
+  \ in global object\n  storage on the SQL server, separate from the interview answers.\n\
+  \n  The fruits are:\n\n  % for fruit in g.fruits:\n  * ${ fruit }\n  % endfor\n\
+  \  \n  Because you set `g.base` to `${ repr(g.base) }`,\n  % if g.base == 'user':\n\
+  \  `g.fruits` will be the same for the current user, regardless of the\n  interview\
+  \ and regardless of the session, any time `g.key` is set to\n  `${ repr(g.key) }`.\
+  \ The data will only be deleted if someone runs\n  `g.delete()` or the user deletes\
+  \ their account.\n  % elif g.base == 'interview':\n  `g.fruits` will be the same\
+  \ in this interview,\n  `${ user_info().filename }`, regardless of the user and\
+  \ regardless\n  of the session, any time `g.key` is set to `${ repr(g.key) }`.\n\
+  \  The data will not be deleted unless someone runs `g.delete()`.\n  % else:\n \
+  \ `g.fruits` will be the same on this server, regardless of the user,\n  session,\
+  \ or interview, any time `g.key` is set to\n  `${ repr(g.key) }`.  The data will\
+  \ not be deleted unless someone\n  runs `g.delete()`.\n  % endif\n\n  The attributes\
+  \ of `g` do not live in the interview answers; they\n  live in a separate, global\
+  \ area. Every time the interview answers\n  load, the attributes of `g` are fetched\
+  \ from the separate area of\n  the database, and every time the interview answers\
+  \ are saved, the\n  attributes of `g` are saved to that separate area of the database.\n\
+  \n  Unlike the interview answers, this separate area of the database\n  does not\
+  \ use versioning. Thus, your use of `DAGlobal` objects may\n  interfere with the\
+  \ way that the \"Back\" button works. You may wish to\n  use `prevent going back:\
+  \ True` strategically throughout your\n  interview so that the user is not confused.\n\
+  buttons:\n  - Restart: restart"
 "demo-multi-sign": |-
   include:
     - docassemble.demo:data/questions/sign.yml
@@ -12775,6 +12845,138 @@
     According to the World Clock API, the
     current time in the Eastern time zone is
     ${ get_time() }.
+"globalprofile": |-
+  objects:
+    - profile: DAGlobal.using(key='profile')
+    - profile.user: Individual
+    - profile.preferences: DADict
+  ---
+  mandatory: True
+  code: |
+    multi_user = True
+    profile
+    screen = {item: True for item in ['name', 'address', 'preferences']}
+  ---
+  mandatory: True
+  question: |
+    This is interview A.
+  subquestion: |
+    Go to your [Profile](${ url_action('profile_page') }).
+  buttons:
+    - Restart: restart
+  ---
+  event: profile_page
+  question: |
+    Your profile
+  review:
+    - label: Edit
+      field: screen['name']
+      button: |
+        #### Name
+        % if defined('profile.user.name.first'):
+        ${ profile.user }
+        % else:
+        <span class="text-muted">Your name has not been defined.</span>
+        % endif
+    - label: Edit
+      field: screen['address']
+      button: |
+        #### Address
+
+        % if defined('profile.user.address.address'):
+        ${ profile.user.address.block() }
+        % else:
+        <span class="text-muted">You have not yet provided your address.</span>
+        % endif
+    - label: Edit
+      fields: screen['preferences']
+      button: |
+        #### Preferences
+
+        % if defined('profile.preferences.favorite_fruit'):
+        Favorite fruit: ${ profile.preferences.favorite_fruit }.
+
+        Favorite vegetable: ${ profile.preferences.favorite_vegetable }.
+
+        Screen mode: ${ profile.preferences.screen_mode }.
+        % else:
+        <span class="text-muted">Your preferences have not been set yet.</span>
+        % endif
+  skip undefined: False
+  ---
+  question: |
+    Your name
+  fields:
+    - First name: profile.user.name.first
+    - Middle name: profile.user.name.middle
+      required: False
+    - Last name: profile.user.name.last
+  continue button field: screen['name']
+  ---
+  question: |
+    Your address
+  fields:
+    - Address: profile.user.address.address
+      address autocomplete: True
+    - Unit: profile.user.address.unit
+      required: False
+    - City: profile.user.address.city
+    - State: profile.user.address.state
+      code: |
+        states_list()
+    - Zip: profile.user.address.zip
+  continue button field: screen['address']
+  ---
+  question: |
+    Preferences
+  fields:
+    - Favorite fruit: profile.preferences.favorite_fruit
+    - Favorite vegetable: profile.preferences.favorite_vegetable
+    - Screen mode: profile.preferences.screen_mode
+      choices:
+        - Dark
+        - Light
+  continue button field: screen['preferences']
+"globalprofile2": |-
+  objects:
+    - profile: DAGlobal.using(key='profile')
+    - profile.user: Individual
+    - profile.preferences: DADict
+  ---
+  mandatory: True
+  code: |
+    multi_user = True
+    profile
+    screen = {item: True for item in ['name', 'address', 'preferences']}
+  ---
+  mandatory: True
+  question: |
+    This is interview B.
+  subquestion: |
+    Go to your [Profile](${ url_action('profile_page') }).
+  buttons:
+    - Restart: restart
+"globalprofile3": "objects:\n  - profile: DAGlobal.using(key='profile')\n  - profile.user:\
+  \ Individual\n  - profile.preferences: DADict\n---\nmandatory: True\ncode: |\n \
+  \ multi_user = True\n---\nmandatory: True\nquestion: |\n  This is interview A.\n\
+  subquestion: |\n  Go to your [Profile](${ url_action('profile_page') }).\nbuttons:\n\
+  \  - Restart: restart\n---\nevent: profile_page\nquestion: |\n  Your profile\nreview:\n\
+  \  - label: Edit\n    field: profile.user.name.first\n    button: |\n      ####\
+  \ Name\n      \n      ${ profile.user }\n  - label: Edit\n    field: profile.user.address.address\n\
+  \    button: |\n      #### Address\n\n      ${ profile.user.address.block() }\n\
+  \  - label: Edit\n    fields: profile.preferences.favorite_fruit\n    button: |\n\
+  \      #### Preferences\n\n      Favorite fruit: ${ profile.preferences.favorite_fruit\
+  \ }.\n\n      Favorite vegetable: ${ profile.preferences.favorite_vegetable }.\n\
+  \n      Screen mode: ${ profile.preferences.screen_mode }.\nskip undefined: False\n\
+  ---\nquestion: |\n  Your name\nfields:\n  - First name: profile.user.name.first\n\
+  \  - Middle name: profile.user.name.middle\n    required: False\n  - Last name:\
+  \ profile.user.name.last\n---\nquestion: |\n  Your address\nfields:\n  - Address:\
+  \ profile.user.address.address\n    address autocomplete: True\n  - Unit: profile.user.address.unit\n\
+  \    required: False\n  - City: profile.user.address.city\n  - State: profile.user.address.state\n\
+  \    code: |\n      states_list()\n  - Zip: profile.user.address.zip\n---\nquestion:\
+  \ |\n  Preferences\nfields:\n  - Favorite fruit: profile.preferences.favorite_fruit\n\
+  \  - Favorite vegetable: profile.preferences.favorite_vegetable\n  - Screen mode:\
+  \ profile.preferences.screen_mode\n    choices:\n      - Dark\n      - Light"
 "google-drive": |-
   modules:
     - .google_drive

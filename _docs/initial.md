@@ -283,11 +283,16 @@ values are content.
 {% highlight yaml %}
 metadata:
   post:
-    en: |
+    "*": |
       This interview was sponsored in part by a grant from the Example Foundation.
-    es: |
+    "es": |
       Esta entrevista fue patrocinada en parte por una beca de la Fundación Ejemplo.
 {% endhighlight %}
+
+In this example, the text indicated by `"*"` will be used as the
+`post` screen part with `question` blocks that have no `language`. The
+text indicated by `"es"` will will be used as the `post` screen part
+with `question` blocks that are modified with `language: es`.
 
 For information about other ways to set defaults for different parts
 of the screens during interviews, see the [screen parts] section.
@@ -1561,7 +1566,14 @@ an infinite loop.  If any of your screen parts require information
 from the user, your interview will need to pose a [`question`] to the
 user to gather that information, but in order to pose the
 [`question`], it will need the information.  To avoid this, you can
-use the [`defined()`] function or other methods.
+use the [`defined()`] function, the [`showifdef()`] function, or other
+methods.
+
+In a multi-lingual interview, you can use multiple `default screen
+parts` blocks with different [`language` modifier]s. If you are using
+a [`translations`] block, the screen parts in a `default screen
+parts` block can be translated through the XLSX or XLIFF files that
+your [`translations`] block references.
 
 For information about other ways to set defaults for different parts
 of the screens during interviews, see the [screen parts] section.
@@ -2586,9 +2598,11 @@ This will cause the web application to run the JavaScript for the
 [`update_terms()`]: {{ site.baseurl }}/docs/functions.html#update_terms
 [Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.htmlmarkdown to docx
 [`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
-[provide CSS]: {{ site.baseurl }}/docs/initial.html#css
+[provide CSS]: #css
 [adjust the CSS]: {{ site.baseurl }}/docs/config.html#bootstrap theme
 [Bootstrap Navbar]: https://getbootstrap.com/docs/4.0/components/navbar/#supported-content
 [`__all__`]: https://docs.python.org/3/tutorial/modules.html#importing-from-a-package
 [translation files]: #translations
 [`language`]: {{ site.baseurl }}/docs/config.html#language
+[`showifdef()`]: {{ site.baseurl }}/docs/functions.html#showifdef
+[`translations`]: #translations

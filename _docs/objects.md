@@ -2598,6 +2598,20 @@ preferences had been stored yet.  Calling
 returns the user's favorite fruit, even if it had been changed since
 the `preferences` "working copy" was created.
 
+Here is a different example, where the user's preferences are a
+`DADict` and the interview merely updates the preferences after asking
+for the user's favorite fruit.
+
+{% include side-by-side.html demo="dastore2" %}
+
+In this example, the `prefsdict` dictionary might be used in numerous
+interviews and contain many different key/value pairs.  Each interview
+that uses the `prefsdict` dictionary would not need to know about all
+the other key/value pairs; it just updates the key/value pairs that it
+works with. Also, note that in this example interview, the user is
+always asked for their favorite fruit, even if there is a
+`favorite_fruit` preference in the `prefsdict` storage area.
+
 A user can have any number of unique keys in the database.  Typically,
 it makes sense to use a single key to store a number of different
 objects.  For example, you can store a [`DAObject`] and keep different
@@ -2706,6 +2720,138 @@ objects:
 
 If you want to use different settings for different keys, you can
 include more than one `DAStore` variable in your interview.
+
+## <a name="DAGlobal"></a>DAGlobal
+
+The `DAGlobal` is a type of `DAObject` that stores its attributes in a
+global, unencrypted area of the SQL database rather than in the
+interview answers. A `DAGlobal` object can be used to share a Python
+object across multiple sessions. With a `DAGlobal` object, you do not
+need to manually retrieve and save (as you do with a `DAStore`); the
+"retrieve" happens automatically when the server loads the interview
+answers, and the "save" happens automatically when the server saves
+the interview answers (similar to the way a [`SQLObject`] works).
+
+Here is an example interview that lets you explore how the `DAGlobal`
+object works.
+
+{% include demo-side-by-side.html demo="daglobal" %}
+
+The `DAGlobal` object takes two attributes, which should be defined at
+the time the object is created (e.g., with `.using()`):
+
+* `key` - the textual identifier for the object. The default is a
+  random alphanumeric string, but that is not very useful so you
+  should always specify a key of your own.
+* `base` - can be one of `'global'`, `'interview'`, or `'user'`. This
+  indicates the scope in which the `key` will operate. The default is
+  `'user'`.
+
+The `'global'` scope indicates that the `DAGlobal` object is "global"
+across the entire server. If the `base` is `'global'`, then regardless
+of what interview is being used, who the user is, and what the session
+is, `DAGlobal` objects with the same `key` will always have the same
+attributes.
+
+The `'interview'` scope indicates that the `DAGlobal` object is
+"global" across sessions in the current interview (the YAML file for
+starting the interview). If a user has multiple sessions in the
+current interview, and another user also has a session of their own in
+the same interview, then even though these are all separate sessions,
+the `DAGlobal` object will be the same across them all.
+
+The `'user'` scope indicates that the `DAGlobal` object is "global"
+across all sessions belonging to the current user.
+
+If you want to use custom scopes, you can adopt a convention of adding
+prefixes to your `key`. (Internally, this is what the `base` attribute
+does inside the `DAGlobal` class.)
+
+The data associated with a `DAGlobal` object will persist if the
+interview answers are deleted. Objects with the `base` of `'user'`
+will be deleted if the user deletes their account. To delete the data
+associated with a `DAGlobal` object, you can call the `.delete()`
+method on it. This will delete the object from storage and also delete
+all of the attributes of the Python object.
+
+The `DAGlobal` class supports some helpful class methods.
+
+Calling `DAGlobal.keys(the_base)` will return a list of defined keys
+for the given base (`'global'`, `'interview'`, or `'user'`).
+
+Calling `DAGlobal.keys(the_base, the_key)` will return `True` or
+`False` depending on whether the given key is defined within the given
+base.
+
+Note that these are class methods, not instance methods.
+
+Since the data associated with a `DAGlobal` object is not stored in
+the interview answers, but is stored instead on a "global" area, there
+is no versioning as there is with the regular interview answers. There
+is always just one copy of the data. As a result, using a `DAGlobal`
+object in your interview logic can cause unexpected behavior when the
+user presses the back button. Pressing the back button restores the
+previous version of the interview answers, which ordinarily results in
+the user seeing the screen they saw before. However, since the
+`DAGlobal` data is always retrieved from a global area, rather than
+from the interview answers, the attributes of the `DAGlobal` object
+will be the same despite the back button.
+
+It is generally advisable to use `DAGlobal` objects for things the
+user might expect to be unaffected by the back button, such as a "user
+profile."  Here is an example of an interview that provides an
+interface for editing a "profile" for the user.
+
+{% include demo-side-by-side.html demo="globalprofile" %}
+
+After you complete the above interview, if you go into a separate
+interview that has a `DAGlobal` object with the same `base` and `key`,
+you will see the same data.
+
+{% include demo-side-by-side.html demo="globalprofile2" %}
+
+Note that if you restart your session in one of these interviews
+(which deletes the interview answers of the current session and starts
+a new session), you can see that your data in the `DAGlobal` object
+persists.
+
+The above interview uses a [`review`] screen based on `continue button
+field` variables to take the user to different screens. This style is
+used because it maintains the back button functionality that users
+expect. If the interview had been written without `continue button
+field` variables, it would have looked like this:
+
+{% include demo-side-by-side.html demo="globalprofile3" %}
+
+In this example, the [`review`] screen with `skip undefined: False`
+will cause `profile.user.name.first`, `profile.user.address.address`,
+and `profile.preferences.favorite_fruit` to be defined before the user
+can see the [`review`] screen. This works as long as the user only
+goes forward. But if you try pressing the back button after defining
+one of these variables, you will see that the screen does not change.
+
+Here are some possible applications of a `DAGlobal` object:
+
+* Storing basic information about the user in a form that follows them
+  from session to session, using a `DAGlobal` object with `'user'` as
+  the `base`. You could develop an editing interface for this basic
+  information, package it in a YAML file, and then [`include`] that
+  YAML file into all of your interviews, so that the user can edit
+  their basic information from inside of any session.
+* Aggregating responses to questions in a given interview. For
+  example, you could conduct a poll by incrementing integer attributes
+  of a `DAGlobal` object with `'interview'` as the `base`. You could
+  make one of the attributes of a `DAGlobal` object a Python `set` and
+  `.add()` items to it, building a "crowdsourced" set of items that
+  could be used as the choices in a multiple choice question.
+* Track usage statistics across your server by incrementing integer
+  attributes of a `DAGlobal` object with `'global'` as the `base`.
+
+Note that the `DAGlobal` object, like the `DAStore` object, is not
+meant to be a replacement for a database. If you need to maintain a
+large database, storing large amounts of data in a pickled object is
+not a good idea. Instead, you should call the API of third-party
+database software, or use a [`SQLObject`] tied to a real SQL database.
 
 ## <a name="DACloudStorage"></a>DACloudStorage
 
@@ -7010,3 +7156,4 @@ the `_uid` of the table rather than the `id`.
 [`png screen resolution`]: {{ site.baseurl }}/docs/config.html#png screen resolution
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
 [Font Awesome]: https://fontawesome.com
+[`include`]: {{ site.baseurl }}/docs/initial.html#include

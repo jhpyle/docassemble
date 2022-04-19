@@ -4,6 +4,18 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.32](https://github.com/jhpyle/docassemble/releases/tag/v1.3.32) - 2022-04-19
+
+
+### Added
+- The `DAGlobal` class.
+
+### Changed
+- Upgraded dependencies.
+
+### Fixed
+- Issue with CSS classes and `disable others`.
+
 ## [1.3.31](https://github.com/jhpyle/docassemble/releases/tag/v1.3.31) - 2022-04-13
 
 
