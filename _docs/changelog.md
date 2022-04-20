@@ -4,6 +4,11 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.33](https://github.com/jhpyle/docassemble/releases/tag/v1.3.33) - 2022-04-19
+
+### Fixed
+- Error introduced in 1.3.32 with filenames on download.
+
 ## [1.3.32](https://github.com/jhpyle/docassemble/releases/tag/v1.3.32) - 2022-04-19
 
 
