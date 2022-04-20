@@ -10302,6 +10302,7 @@ def index(action_argument=None, refer=None):
             }
           }
         });
+        // iOS will truncate text in `select` options. Adding an empty optgroup fixes that
         if (navigator.userAgent.match(/(iPad|iPhone|iPod touch);/i)) {
           var selects = document.querySelectorAll("select");
           for (var i = 0; i < selects.length; i++){
