@@ -277,10 +277,7 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
         if package.id not in installs:
             sys.stderr.write("check_for_updates: the package " + package.name + " is not in the table of installed packages for this server after " + str(time.time() - start_time) + " seconds\n")
         if package.id not in installs or package_version_greater or new_version_needed or package_missing:
-            if package.name in system_packages:
-                system_packages_to_fix.append(package)
-            else:
-                to_install.append(package)
+            to_install.append(package)
     #sys.stderr.write("done with that" + "\n")
     sys.stderr.write("check_for_updates: 9 after " + str(time.time() - start_time) + " seconds\n")
     for package in to_uninstall:

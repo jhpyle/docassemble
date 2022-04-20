@@ -197,7 +197,7 @@ if 'timezone' in daconfig and daconfig['timezone'] is not None:
     DEFAULT_TIMEZONE = daconfig['timezone']
 else:
     try:
-        DEFAULT_TIMEZONE = tzlocal.get_localzone().zone
+        DEFAULT_TIMEZONE = tzlocal.get_localzone_name()
     except:
         DEFAULT_TIMEZONE = 'America/New_York'
 

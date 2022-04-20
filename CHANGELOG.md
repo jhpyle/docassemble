@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.34] - 2022-04-19
+### Fixed
+- Error that interferes with package updates.
+
 ## [1.3.33] - 2022-04-19
 ### Fixed
 - Error introduced in 1.3.32 with filenames on download.
