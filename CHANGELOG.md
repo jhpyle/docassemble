@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.33] - 2022-04-19
+### Fixed
+- Error introduced in 1.3.32 with filenames on download.
+
 ## [1.3.32] - 2022-04-19
 
 ### Added

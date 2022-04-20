@@ -3855,11 +3855,11 @@ class lister(ast.NodeVisitor):
     def visit_Subscript(self, node):
         self.stack.append(['index', re.sub(r'\n', '', astunparse.unparse(node.slice))])
         ast.NodeVisitor.generic_visit(self, node)
-    def visit_BinOp(self, node):
-        self.stack.append(['binop', re.sub(r'\n', '', astunparse.unparse(node))]) 
-        ast.NodeVisitor.generic_visit(self, node)
-    def visit_Constant(self, node):
-        return
+    # def visit_BinOp(self, node):
+    #     self.stack.append(['binop', re.sub(r'\n', '', astunparse.unparse(node))])
+    #     ast.NodeVisitor.generic_visit(self, node)
+    # def visit_Constant(self, node):
+    #     return
 
 def components_of(full_variable):
     node = ast.parse(full_variable, mode='eval')
@@ -4014,7 +4014,6 @@ def _defined_internal(var, caller:DefCaller, alt=None):
         frame = frame.f_back
         if frame is None:
             if caller.is_pure():
-                this_thread.probing = False
                 return failure_val
             force_ask(variable, persistent=False)
         if 'user_dict' in frame.f_locals:
@@ -4023,7 +4022,6 @@ def _defined_internal(var, caller:DefCaller, alt=None):
                 break
             else:
                 if caller.is_pure():
-                    this_thread.probing = False
                     return failure_val
                 force_ask(variable, persistent=False)
         else:
@@ -4033,13 +4031,13 @@ def _defined_internal(var, caller:DefCaller, alt=None):
             return failure_val
         force_ask(variable, persistent=False)
     if len(components) == 1:
-        if caller.is_predicate(): 
+        if caller.is_predicate():
             return True
-        else: 
-            return eval(variable, the_user_dict)
+        return eval(variable, the_user_dict)
 
     cum_variable = ''
-    this_thread.probing = True
+    if caller.is_pure():
+        this_thread.probing = True
     for elem in components:
         if elem[0] == 'name':
             # on a new name, we re-accumulate the prev checked code from scratch
@@ -4073,15 +4071,14 @@ def _defined_internal(var, caller:DefCaller, alt=None):
             else:
                 to_eval = elem[1] + " in " + var_elements
             cum_variable += '[' + elem[1] + ']'
-        elif elem[0] == 'binop':
-            # no easy way to check if 2 objs can be compared w/o just comparing
-            to_eval = elem[1]
-            cum_variable += elem[1]
+        # elif elem[0] == 'binop':
+        #     # no easy way to check if 2 objs can be compared w/o just comparing
+        #     to_eval = elem[1]
+        #     cum_variable += elem[1]
         try:
             result = eval(to_eval, the_user_dict)
         except Exception as err:
             if caller.is_pure():
-                #logmessage("Returning False3 after " + to_eval + ": " + str(err))
                 this_thread.probing = False
                 return failure_val
             force_ask(to_eval, persistent=False)
@@ -4090,10 +4087,9 @@ def _defined_internal(var, caller:DefCaller, alt=None):
         if caller.is_pure():
             return failure_val
         force_ask(var, persistent=False)
-    if caller.is_predicate(): 
+    if caller.is_predicate():
         return True
-    else:
-        return eval(cum_variable, the_user_dict)
+    return eval(cum_variable, the_user_dict)
 
 def value(var:str):
     """Returns the value of the variable given by the string 'var'."""
@@ -4150,39 +4146,6 @@ def illegal_variable_name(var):
     detector = docassemble.base.astparser.detectIllegal()
     detector.visit(t)
     return detector.illegal
-
-
-# def _undefine(*pargs):
-#     logmessage("called _undefine")
-#     for var in pargs:
-#         _undefine(var)
-
-# def undefine(var):
-#     """Makes the given variable undefined."""
-#     logmessage("called undefine")
-#     if type(var) not in [str, unicode]:
-#         raise Exception("undefine() must be given one or more strings")
-#     components = components_of(var)
-#     variable = components[0][1]
-#     frame = inspect.stack()[1][0]
-#     the_user_dict = frame.f_locals
-#     while variable not in the_user_dict:
-#         frame = frame.f_back
-#         if frame is None:
-#             return
-#         if 'user_dict' in frame.f_locals:
-#             the_user_dict = eval('user_dict', frame.f_locals)
-#             if variable in the_user_dict:
-#                 break
-#             else:
-#                 return
-#         else:
-#             the_user_dict = frame.f_locals
-#     try:
-#         exec("del " + var, the_user_dict)
-#     except:
-#         logmessage("Failed to delete " + var)
-#         pass
 
 def single_paragraph(text):
     """Reduces the text to a single paragraph.  Useful when using Markdown
