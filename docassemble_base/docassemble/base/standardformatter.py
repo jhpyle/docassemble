@@ -8,6 +8,7 @@ from io import StringIO
 from html.parser import HTMLParser
 from docassemble.base.functions import word, get_currency_symbol, comma_and_list, server, custom_types
 from docassemble.base.util import format_date, format_datetime
+from docassemble.base.generate_key import random_string
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape, process_target
 from docassemble.base.parse import Question
 from docassemble.base.logger import logmessage
@@ -1456,10 +1457,32 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             if hasattr(status.question.fields[0], 'saveas'):
                 id_index = 0
                 pairlist = list(status.selectcompute[status.question.fields[0].number])
-                if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
+                using_opt_groups = all(['group' in pair for pair in pairlist])
+                using_shuffle = hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle
+                if using_opt_groups:
+                    group_order = list(range(len(pairlist)))
+                    if using_shuffle:
+                        random.shuffle(group_order)
+                    groups = {}
+                    for idx, p in zip(group_order, pairlist):
+                        if not p.get('group') in groups:
+                            groups[p.get('group')] = idx
+                    if using_shuffle:
+                        pairlist = sorted(pairlist, key=lambda p: groups[p.get('group')] * 1000 + random.randint(1, 1000))
+                    else:
+                        # stable sort: keep group items in the same relative order
+                        pairlist = sorted(pairlist, key=lambda p: groups[p.get('group')])
+                elif using_shuffle:
                     random.shuffle(pairlist)
                 found_default = False
+                last_group = None
                 for pair in pairlist:
+                    if using_opt_groups and pair.get('group') != last_group:
+                        if last_group != None:
+                            inner_fieldlist.append('</optgroup>')
+                        pair_group = pair.get('group')
+                        inner_fieldlist.append(f'<optgroup label="{pair_group}">')
+                        last_group = pair_group
                     if 'image' in pair:
                         the_icon = icon_html(status, pair['image']) + ' '
                     else:
@@ -2182,17 +2205,37 @@ def input_for(status, field, wide=False, embedded=False):
     if 'css class' in status.extras and field.number in status.extras['css class']:
         extra_class += ' ' + clean_whitespace(status.extras['css class'][field.number])
     if hasattr(field, 'choicetype'):
-        # logmessage("In a choicetype where field datatype is " + field.datatype)
-        # if hasattr(field, 'inputtype'):
-        #     logmessage("inputtype is" + field.inputtype)
-        # else:
-        #     logmessage("No inputtype")
+        logmessage("In a choicetype where field datatype is " + field.datatype)
+        logmessage(field.choicetype)
+        if hasattr(field, 'inputtype'):
+            logmessage("inputtype is" + field.inputtype)
+        else:
+            logmessage("No inputtype")
         if field.choicetype in ['compute', 'manual']:
             pairlist = list(status.selectcompute[field.number])
         else:
             raise Exception("Unknown choicetype " + field.choicetype)
-        if hasattr(field, 'shuffle') and field.shuffle:
+        using_opt_groups = all(['group' in pair for pair in pairlist])
+        using_shuffle = hasattr(field, 'shuffle') and field.shuffle
+        # Using optgroups, each option has an associated group
+        if using_opt_groups:
+            # Keep groups and group items in same relative order they're added in interview
+            # or shuffle the groups, and items w/in groups, but keep items in same groups together
+            group_order = list(range(len(pairlist)))
+            if using_shuffle:
+                random.shuffle(group_order)
+            groups = {}
+            for idx, p in zip(group_order, pairlist):
+                if not p.get('group') in groups:
+                    groups[p.get('group')] = idx
+
+            if using_shuffle:
+                pairlist = sorted(pairlist, key=lambda p: (groups[p.get('group')], random.random()))
+            else:
+                pairlist = sorted(pairlist, key=lambda p: groups[p.get('group')])
+        elif using_shuffle:
             random.shuffle(pairlist)
+
         if field.datatype in ['multiselect', 'object_multiselect']:
             if field.datatype == 'object_multiselect':
                 daobject = ' damultiselect daobject'
@@ -2215,7 +2258,14 @@ def input_for(status, field, wide=False, embedded=False):
                 output += '<span class="da-inline-error-wrapper">'
             output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + disable_others_data + ' multiple>'
             the_options = ''
+            last_group = None
             for pair in pairlist:
+                if using_opt_groups and pair.get('group') != last_group:
+                    if last_group != None:
+                        the_options += '</optgroup>'
+                    pair_group = pair.get('group')
+                    the_options += f'<optgroup label="{pair_group}">'
+                    last_group = pair_group
                 if isinstance(pair['key'], str):
                     inner_field = safeid(from_safeid(saveas_string) + "[B" + myb64quote(pair['key']) + "]")
                     key_data = ' data-valname=' + myb64doublequote(pair['key'])
@@ -2242,6 +2292,8 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     isselected = ''
                 the_options += '<option value=' + fix_double_quote(inner_field) + key_data + isselected + '>' + markdown_to_html(str(pair['label']), status=status, escape='option', trim=True, do_terms=False) + '</option>'
+            if using_opt_groups:
+                the_options += '</optgroup>'
             output += the_options
             if embedded:
                 output += '</select></span> '
@@ -2440,13 +2492,25 @@ def input_for(status, field, wide=False, embedded=False):
             #logmessage("defaultvalue_is_printable is " + repr(defaultvalue_is_printable))
             found_default = False
             other_options = ''
+            last_group = None
             for pair in pairlist:
-                #logmessage("Considering " + repr(pair['key']) + " and " + repr(pair['label']))
+                if using_opt_groups and pair.get('group') != last_group:
+                    if last_group != None:
+                        other_options += '</optgroup>'
+                    pair_group = pair.get('group')
+                    other_options += f'<optgroup label="{pair_group}">'
+                    last_group = pair_group
                 other_options += '<option value=' + fix_double_quote(str(pair['key']))
-                if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and defaultvalue_is_printable and str(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype == 'object' and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']) or (defaultvalue_set and defaultvalue is None and str(pair['key']) == 'None'):
+                if ('default' in pair and pair['default']) or \
+                      (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == defaultvalue_printable) or \
+                      (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and defaultvalue_is_printable and str(pair['label']) == defaultvalue_printable) or \
+                      (hasattr(field, 'datatype') and field.datatype == 'object' and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']) or \
+                      (defaultvalue_set and defaultvalue is None and str(pair['key']) == 'None'):
                     other_options += ' selected="selected"'
                     found_default = True
                 other_options += '>' + markdown_to_html(str(pair['label']), status=status, escape='option', trim=True, do_terms=False) + '</option>'
+            if using_opt_groups:
+                other_options += '</optgroup>'
             if (not status.extras['required'][field.number]) or (not found_default):
                 output += first_option
             output += other_options
