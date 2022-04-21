@@ -316,11 +316,13 @@ img.example {
     margin-bottom: 10px;
     @include box-shadow(0px 0px 6px rgba(0,0,0,.3), inset 0px 0px 0px rgba(255,255,255,.8));
     max-width: 100%;
+    height: auto;
     border-radius: 4px;
 }
 
 img.full-width {
     width: 100%;
+    height: auto;
 }
 
 div.vert-scroll {
@@ -334,6 +336,7 @@ div.vert-scroll {
 
 div.vert-scroll img {
     max-width: 100%;
+    height: auto;
 }
 
 table.gsc-table-result td {
@@ -352,6 +355,15 @@ img.nofloat {
 img.maybe-full-width {
     float: none;
     max-width: 100%;
+    height: auto;
+}
+
+@media (min-width: 992px) {
+    img.maybe-full-width {
+	float: none;
+	max-width: 65%;
+	height: auto;
+    }
 }
 
 h1 > a.bookmark,

@@ -1352,6 +1352,45 @@ set `auto open` to `True`.
 
 {% include side-by-side.html demo="sections-auto-open" %}
 
+Note that **docassemble**'s logic system is very different from that
+of SurveyMonkey or TypeForm, where defining a sequence of questions
+and dividing those questions into sections is straightforward. In
+**docassemble**, the question that is asked at any given time is based
+on the interview logic. The interview logic is evaluated and if a
+necessary piece of information is undefined, **docassemble** will ask
+a question (or run a `code` block) to get a definition of that piece
+of information. This is convenient when working toward an end goal,
+because the interview developer can focus on specifying correct rules,
+without worrying about the complexities of designing an interview
+process. The downside is that the sequence of questions might be
+different from one interview to another, and the sequence might not be
+easy to fit into well-defined sections. Once variables are defined,
+the sequence of questions that led to those variables being defined is
+lost and cannot be repeated. Nor should the original interview process
+be repeated, necessarily, because if the user makes changes that
+impact the logic, the sequence should be different.
+
+Given the way that **docassemble**'s interview logic works, if you
+want to let the user revisit a section they have already completed,
+you need to specify a process for that. Clicking on a section heading
+and going to a special [`review`] screen is one of the ways you can
+specify a process.
+
+The idea of a [`review`] screen for a section is that you can give the
+user an overview of the information they already entered. If users can
+see their information from a summary perspective, it helps them notice
+what might be incorrect or inconsistent. The `review` screen can be
+divided into subsections with headings indicated in Markdown. You can
+embed Mako logic in the text and explain to the user the significance
+of what they have entered.
+
+A [`review`] screen should ideally not have one button per variable, but
+rather have one button for a sequence of one or more screens that the
+user might want to revisit, after which they are returned to the
+`review` screen and they can see what has changed. If the user has
+entered information into [groups], you can show the user a `table` of
+the information they entered and let them add, edit, or delete items.
+
 # <a name="interview help"></a>Assisting users with `interview help`
 
 {% highlight yaml %}
