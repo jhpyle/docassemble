@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.35](https://github.com/jhpyle/docassemble/releases/tag/v1.3.35) - 2022-04-20
+
+### Added
+- Recipe for creating appointment invitations.
+
+### Fixed
+- Error with implicit instantiation of dictionary keys after certain
+  uses of `defined()` or `showifdef()`.
+- Issue with populating default values in `time` fields.
+- Error with obtaining API keys for non-`admin` users.
+
+## [1.3.34](https://github.com/jhpyle/docassemble/releases/tag/v1.3.34) - 2022-04-19
+
+### Fixed
+- Error that interferes with package updates.
+
 ## [1.3.33](https://github.com/jhpyle/docassemble/releases/tag/v1.3.33) - 2022-04-19
 
 ### Fixed

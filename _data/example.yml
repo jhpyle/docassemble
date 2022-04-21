@@ -12204,6 +12204,14 @@
       Your favorite type of apple is ${ favorite_apple }.
 
       % endif
+"calendar": |-
+  modules:
+    - .calendar
+  ---
+  objects:
+    - event: Thing
+    - user: Person
+    - attendees: DAList.using(object_type=Person)
 "clauses": "objects:\n  - markdown_clause: DADict\n  - edited_clause: DADict\n---\n\
   code: |\n  markdown_clause[i] = assemble_docx('data/templates/contract.docx', fields={'clause':\
   \ i}, output_format='md', return_content=True)\n---\ncode: |\n  # This variable\
@@ -12956,27 +12964,82 @@
     Go to your [Profile](${ url_action('profile_page') }).
   buttons:
     - Restart: restart
-"globalprofile3": "objects:\n  - profile: DAGlobal.using(key='profile')\n  - profile.user:\
-  \ Individual\n  - profile.preferences: DADict\n---\nmandatory: True\ncode: |\n \
-  \ multi_user = True\n---\nmandatory: True\nquestion: |\n  This is interview A.\n\
-  subquestion: |\n  Go to your [Profile](${ url_action('profile_page') }).\nbuttons:\n\
-  \  - Restart: restart\n---\nevent: profile_page\nquestion: |\n  Your profile\nreview:\n\
-  \  - label: Edit\n    field: profile.user.name.first\n    button: |\n      ####\
-  \ Name\n      \n      ${ profile.user }\n  - label: Edit\n    field: profile.user.address.address\n\
-  \    button: |\n      #### Address\n\n      ${ profile.user.address.block() }\n\
-  \  - label: Edit\n    fields: profile.preferences.favorite_fruit\n    button: |\n\
-  \      #### Preferences\n\n      Favorite fruit: ${ profile.preferences.favorite_fruit\
-  \ }.\n\n      Favorite vegetable: ${ profile.preferences.favorite_vegetable }.\n\
-  \n      Screen mode: ${ profile.preferences.screen_mode }.\nskip undefined: False\n\
-  ---\nquestion: |\n  Your name\nfields:\n  - First name: profile.user.name.first\n\
-  \  - Middle name: profile.user.name.middle\n    required: False\n  - Last name:\
-  \ profile.user.name.last\n---\nquestion: |\n  Your address\nfields:\n  - Address:\
-  \ profile.user.address.address\n    address autocomplete: True\n  - Unit: profile.user.address.unit\n\
-  \    required: False\n  - City: profile.user.address.city\n  - State: profile.user.address.state\n\
-  \    code: |\n      states_list()\n  - Zip: profile.user.address.zip\n---\nquestion:\
-  \ |\n  Preferences\nfields:\n  - Favorite fruit: profile.preferences.favorite_fruit\n\
-  \  - Favorite vegetable: profile.preferences.favorite_vegetable\n  - Screen mode:\
-  \ profile.preferences.screen_mode\n    choices:\n      - Dark\n      - Light"
+"globalprofile3": |-
+  objects:
+    - profile: DAGlobal.using(key='profile')
+    - profile.user: Individual
+    - profile.preferences: DADict
+  ---
+  mandatory: True
+  code: |
+    multi_user = True
+  ---
+  mandatory: True
+  question: |
+    This is interview A.
+  subquestion: |
+    Go to your [Profile](${ url_action('profile_page') }).
+  buttons:
+    - Restart: restart
+  ---
+  event: profile_page
+  question: |
+    Your profile
+  review:
+    - label: Edit
+      field: profile.user.name.first
+      button: |
+        #### Name
+
+        ${ profile.user }
+    - label: Edit
+      field: profile.user.address.address
+      button: |
+        #### Address
+
+        ${ profile.user.address.block() }
+    - label: Edit
+      fields: profile.preferences.favorite_fruit
+      button: |
+        #### Preferences
+
+        Favorite fruit: ${ profile.preferences.favorite_fruit }.
+
+        Favorite vegetable: ${ profile.preferences.favorite_vegetable }.
+
+        Screen mode: ${ profile.preferences.screen_mode }.
+  skip undefined: False
+  ---
+  question: |
+    Your name
+  fields:
+    - First name: profile.user.name.first
+    - Middle name: profile.user.name.middle
+      required: False
+    - Last name: profile.user.name.last
+  ---
+  question: |
+    Your address
+  fields:
+    - Address: profile.user.address.address
+      address autocomplete: True
+    - Unit: profile.user.address.unit
+      required: False
+    - City: profile.user.address.city
+    - State: profile.user.address.state
+      code: |
+        states_list()
+    - Zip: profile.user.address.zip
+  ---
+  question: |
+    Preferences
+  fields:
+    - Favorite fruit: profile.preferences.favorite_fruit
+    - Favorite vegetable: profile.preferences.favorite_vegetable
+    - Screen mode: profile.preferences.screen_mode
+      choices:
+        - Dark
+        - Light
 "google-drive": |-
   modules:
     - .google_drive

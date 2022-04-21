@@ -2384,6 +2384,16 @@ lines to the preamble of the `.tex` file by setting the
 
 Another [LaTeX] package that does something similar is [`background`].
 
+# <a name="calendar"></a>E-mailing a calendar invite
+
+If you install the [`ics`] package, you can send calendar invites
+using [`send_email()`].
+
+{% include demo-side-by-side.html demo="calendar" %}
+
+This interview uses the module file [`calendar.py`], which imports
+the [`ics`] package.
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml
@@ -2508,3 +2518,6 @@ Another [LaTeX] package that does something similar is [`background`].
 [default LaTeX template]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.tex
 [default metadata]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.yml
 [`background`]: https://www.ctan.org/pkg/background
+[`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
+[`ics`]: https://icspy.readthedocs.io/en/stable/
+[`calendar.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/calendar.py
