@@ -3314,6 +3314,7 @@ def get_package_info(exclude_core=False):
                 can_uninstall = False
                 can_update = False
             if package.name == 'docassemble.webapp':
+                can_uninstall = False
                 can_update = is_admin
             package_list.append(Object(package=package, can_update=can_update, can_uninstall=can_uninstall))
     return package_list, package_auth
@@ -27582,6 +27583,8 @@ def manage_api():
     form.method.choices = [('ip', 'IP Address'), ('referer', 'Referring URL'), ('none', 'No authentication')]
     if is_admin:
         form.permissions.choices = [(permission, permission) for permission in PERMISSIONS_LIST]
+    else:
+        form.permissions.choices = []
     ip_address = get_requester_ip(request)
     if request.method == 'POST' and form.validate():
         action = form.action.data

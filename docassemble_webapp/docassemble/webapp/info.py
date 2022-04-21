@@ -4,7 +4,6 @@ system_packages = [
     "docassemble",
     "docassemble.base",
     "docassemble.demo",
-    "docassemble.webapp",
     "3to2",
     "acme",
     "airtable-python-wrapper",

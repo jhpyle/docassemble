@@ -7,7 +7,7 @@ import datetime
 from io import StringIO
 from html.parser import HTMLParser
 from docassemble.base.functions import word, get_currency_symbol, comma_and_list, server, custom_types
-from docassemble.base.util import format_date, format_datetime
+from docassemble.base.util import format_date, format_datetime, format_time
 from docassemble.base.generate_key import random_string
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape, process_target
 from docassemble.base.parse import Question
@@ -2735,6 +2735,9 @@ def input_for(status, field, wide=False, embedded=False):
                     defaultvalue = int(float(defaultvalue))
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
                 default_val = defaultvalue
+            elif isinstance(defaultvalue, datetime.time):
+                defaultstring = ' value="' + format_time(defaultvalue, format='HH:mm') + '"'
+                default_val = format_time(defaultvalue, format='HH:mm')
             elif isinstance(defaultvalue, datetime.datetime):
                 if field.datatype == 'datetime':
                     defaultstring = ' value="' + format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm') + '"'
@@ -2762,6 +2765,10 @@ def input_for(status, field, wide=False, embedded=False):
                     the_date = format_date(defaultvalue, format='yyyy-MM-dd')
                     if the_date != word("Bad date"):
                         defaultvalue = the_date
+                elif field.datatype == 'time':
+                    the_time = format_time(defaultvalue, format='HH:mm')
+                    if the_time != word("Bad date"):
+                        defaultvalue = the_time
                 elif field.datatype == 'datetime':
                     the_date = format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm')
                     if the_date != word("Bad date"):
@@ -2773,6 +2780,8 @@ def input_for(status, field, wide=False, embedded=False):
                 elif field.datatype in ('currency', 'number') and hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(float(status.extras['step'][field.number])) == float(status.extras['step'][field.number]):
                     defaultvalue = int(float(defaultvalue))
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
+            elif isinstance(defaultvalue, datetime.time):
+                defaultstring = ' value="' + format_time(defaultvalue, format='HH:mm') + '"'
             elif isinstance(defaultvalue, datetime.datetime):
                 if field.datatype == 'datetime':
                     defaultstring = ' value="' + format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm') + '"'

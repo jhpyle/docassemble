@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.3.35] - 2022-04-20
+### Added
+- Recipe for creating appointment invitations.
+### Fixed
+- Error with implicit instantiation of dictionary keys after certain
+  uses of `defined()` or `showifdef()`.
+- Issue with populating default values in `time` fields.
+- Error with obtaining API keys for non-`admin` users.
+
 ## [1.3.34] - 2022-04-19
 ### Fixed
 - Error that interferes with package updates.

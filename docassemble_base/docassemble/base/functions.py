@@ -3865,7 +3865,12 @@ def components_of(full_variable):
     node = ast.parse(full_variable, mode='eval')
     crawler = lister()
     crawler.visit(node)
-    return list(reversed(crawler.stack))
+    components = list(reversed(crawler.stack))
+    start_index = 0
+    for the_index, elem in enumerate(components):
+        if elem[0] == 'name':
+            start_index = the_index
+    return components[start_index:]
 
 def get_user_dict():
     frame = inspect.stack()[1][0]
@@ -4034,7 +4039,6 @@ def _defined_internal(var, caller:DefCaller, alt=None):
         if caller.is_predicate():
             return True
         return eval(variable, the_user_dict)
-
     cum_variable = ''
     if caller.is_pure():
         this_thread.probing = True
@@ -4085,8 +4089,11 @@ def _defined_internal(var, caller:DefCaller, alt=None):
         if result:
             continue
         if caller.is_pure():
+            this_thread.probing = False
             return failure_val
         force_ask(var, persistent=False)
+    if caller.is_pure():
+        this_thread.probing = False
     if caller.is_predicate():
         return True
     return eval(cum_variable, the_user_dict)

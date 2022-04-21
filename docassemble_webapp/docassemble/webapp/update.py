@@ -215,6 +215,7 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
     for package in db.session.execute(select(Package).filter_by(active=False)).scalars():
         # don't uninstall a system package
         if package.name in system_packages:
+            logmessages += "Not uninstalling " + str(package.name) + " because it is a system package.\n"
             system_packages_to_fix.append(package)
             continue
         if package.name in package_by_name:
@@ -277,7 +278,12 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
         if package.id not in installs:
             sys.stderr.write("check_for_updates: the package " + package.name + " is not in the table of installed packages for this server after " + str(time.time() - start_time) + " seconds\n")
         if package.id not in installs or package_version_greater or new_version_needed or package_missing:
-            to_install.append(package)
+            if package.name in system_packages:
+                logmessages += "Not upgrading " + str(package.name) + " because it is a system package and its version needs to be consistent with the version of the package that is required by the docassemble.webapp package.\n"
+                sys.stderr.write("check_for_updates: the package " + package.name + " is a system package and cannot be updated except through docassemble.webapp after " + str(time.time() - start_time) + " seconds\n")
+                system_packages_to_fix.append(package)
+            else:
+                to_install.append(package)
     #sys.stderr.write("done with that" + "\n")
     sys.stderr.write("check_for_updates: 9 after " + str(time.time() - start_time) + " seconds\n")
     for package in to_uninstall:
