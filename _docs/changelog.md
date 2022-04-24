@@ -4,6 +4,12 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.36](https://github.com/jhpyle/docassemble/releases/tag/v1.3.36) - 2022-04-23
+
+### Fixed
+- Error with background tasks.
+- Minor user experience issues in Playground.
+
 ## [1.3.35](https://github.com/jhpyle/docassemble/releases/tag/v1.3.35) - 2022-04-20
 
 ### Added
