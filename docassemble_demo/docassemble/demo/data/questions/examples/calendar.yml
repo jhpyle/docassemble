@@ -3,7 +3,7 @@ metadata:
   short title: Invite
   documentation: "https://docassemble.org/docs/recipes.html#calendar"
   example start: 1
-  example end: 2
+  example end: 12
 ---
 modules:
   - .calendar

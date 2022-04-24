@@ -4173,7 +4173,7 @@ def get_requester_ip(req):
 def current_info(yaml=None, req=None, action=None, location=None, interface='web', session_info=None, secret=None, device_id=None, session_uid=None):
     #logmessage("interface is " + str(interface))
     if current_user.is_authenticated and not current_user.is_anonymous:
-        role_list = [role.name for role in current_user.roles]
+        role_list = [str(role.name) for role in current_user.roles]
         if len(role_list) == 0:
             role_list = ['user']
         ext = dict(email=current_user.email, roles=role_list, the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization, timezone=current_user.timezone, language=current_user.language)
@@ -4215,7 +4215,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
     else:
         user_code = None
         encrypted = True
-    return_val = {'session': user_code, 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': encrypted, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'session_uid': session_uid, 'device_id': device_id}, 'headers': headers, 'clientip': clientip, 'method': method}
+    return_val = {'session': user_code, 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': encrypted, 'user': {'is_anonymous': bool(current_user.is_anonymous), 'is_authenticated': bool(current_user.is_authenticated), 'session_uid': session_uid, 'device_id': device_id}, 'headers': headers, 'clientip': clientip, 'method': method}
     if action is not None:
         #logmessage("current_info: setting an action " + repr(action))
         return_val.update(action)
@@ -17625,7 +17625,7 @@ def playground_office_addin():
             interview_source.set_testing(True)
         else:
             #logmessage("playground_office_addin: file " + str(pg_var_file) + " was not found")
-            if pg_var_file == '':
+            if pg_var_file == '' and current_project == 'default':
                 pg_var_file = 'test.yml'
             content = "modules:\n  - docassemble.base.util\n---\nmandatory: True\nquestion: hi"
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + pg_var_file, testing=True)
@@ -19907,7 +19907,7 @@ def playground_variables():
             interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + project_name(current_project) + ':' + active_file)
             interview_source.set_testing(True)
         else:
-            if active_file == '':
+            if active_file == '' and current_project == 'default':
                 active_file = 'test.yml'
             content = ''
             if 'playground_content' in post_data:
@@ -20052,6 +20052,7 @@ def playground_project():
                 create_project(current_user.id, form.name.data)
                 current_project = set_current_project(form.name.data)
                 mode = 'standard'
+                return redirect(url_for('playground_page', project=current_project))
     elif request.args.get('delete'):
         form = DeleteProject(request.form)
         mode = 'delete'
@@ -20218,7 +20219,7 @@ def playground_page():
                     flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
         return redirect(url_for('playground_page', project=current_project))
     if request.method == 'POST' and (form.submit.data or form.run.data or form.delete.data):
-        if form.validate() and form.playground_name.data:
+        if valid_form and form.playground_name.data:
             the_file = secure_filename_spaces_ok(form.playground_name.data)
             #the_file = re.sub(r'[^A-Za-z0-9\_\-\. ]', '', the_file)
             if the_file != '':
@@ -20243,6 +20244,9 @@ def playground_page():
     else:
         content = ''
     if the_file and not is_new and the_file not in file_listing:
+        if request.method == 'GET':
+            delete_current_file(current_project, 'questions')
+            return redirect(url_for('playground_page', project=current_project))
         the_file = ''
     is_default = False
     if request.method == 'GET' and not the_file and not is_new:
@@ -20253,10 +20257,15 @@ def playground_page():
             delete_current_file(current_project, 'questions')
             if len(files) > 0:
                 the_file = sorted(files, key=lambda x: x['modtime'])[-1]['name']
-            else:
+            elif current_project == 'default':
                 the_file = 'test.yml'
                 is_default = True
                 content = default_playground_yaml
+            else:
+                the_file = ''
+                is_default = False
+                content = ''
+                is_new = True
     if the_file in file_listing:
         set_current_file(current_project, 'questions', the_file)
     active_file = the_file
@@ -20268,12 +20277,12 @@ def playground_page():
             delete_variable_file(current_project)
     if the_file != '':
         filename = os.path.join(the_directory, the_file)
-        if not os.path.isfile(filename):
+        if valid_form and not os.path.isfile(filename):
             with open(filename, 'w', encoding='utf-8') as fp:
                 fp.write(content)
             playground.finalize()
     console_messages = []
-    if request.method == 'POST' and the_file != '' and form.validate():
+    if request.method == 'POST' and the_file != '' and valid_form:
         if form.delete.data:
             filename_to_del = os.path.join(the_directory, form.playground_name.data)
             if os.path.isfile(filename_to_del):
@@ -20287,10 +20296,11 @@ def playground_page():
                 current_variable_file = get_variable_file(current_project)
                 if current_variable_file == the_file or current_variable_file == form.playground_name.data:
                     delete_variable_file(current_project)
+                delete_current_file(current_project, 'questions')
                 return redirect(url_for('playground_page', project=current_project))
             else:
                 flash(word('File not deleted.  There was an error.'), 'error')
-        if (form.submit.data or form.run.data) and form.playground_content.data:
+        if (form.submit.data or form.run.data):
             if form.original_playground_name.data and form.original_playground_name.data != the_file:
                 old_filename = os.path.join(the_directory, form.original_playground_name.data)
                 if not is_ajax:
@@ -20358,7 +20368,7 @@ def playground_page():
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
-    if the_file != '':
+    if valid_form is not False and the_file != '':
         with open(filename, 'r', encoding='utf-8') as fp:
             form.original_playground_name.data = the_file
             form.playground_name.data = the_file
@@ -20375,7 +20385,10 @@ def playground_page():
             interview_source.set_testing(True)
     else:
         is_fictitious = True
-        active_file = 'test.yml'
+        if current_project == 'default':
+            active_file = 'test.yml'
+        else:
+            is_new = True
         if form.playground_content.data:
             content = re.sub(r'\r', '', form.playground_content.data)
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(current_user.id) + project_name(current_project), path="docassemble.playground" + str(current_user.id) + project_name(current_project) + ":" + active_file, testing=True)
@@ -20400,6 +20413,7 @@ def playground_page():
 var exampleData;
 var originalFileName = """ + json.dumps(the_file) + """;
 var isNew = """ + json.dumps(is_new) + """;
+var validForm = """ + json.dumps(valid_form) + """;
 var vocab = """ + json.dumps(vocab_list) + """;
 var existingFiles = """ + json.dumps(file_listing) + """;
 var currentProject = """ + json.dumps(current_project) + """;
@@ -20725,7 +20739,7 @@ $( document ).ready(function() {
     return;
   });
   $("#daRun").click(function(event){
-    if (originalFileName != $("#playground_name").val()){
+    if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == ''){
       $("#form button[name='submit']").click();
       event.preventDefault();
       return false;
@@ -20757,6 +20771,11 @@ $( document ).ready(function() {
       event.preventDefault();
       return false;
     }
+    if ($("#playground_name").val() == ''){
+      $("#form button[name='submit']").click();
+      event.preventDefault();
+      return false;
+    }
     thisWindow.location.replace('""" + url_for('sync_with_google_drive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
     return true;
   });
@@ -20767,11 +20786,16 @@ $( document ).ready(function() {
       event.preventDefault();
       return false;
     }
+    if ($("#playground_name").val() == ''){
+      $("#form button[name='submit']").click();
+      event.preventDefault();
+      return false;
+    }
     thisWindow.location.replace('""" + url_for('sync_with_onedrive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
   });
   $("#form button[name='submit']").click(function(event){
     daCodeMirror.save();
-    if (isNew == "True" || originalFileName != $("#playground_name").val() || $("#playground_name").val().trim() == ""){
+    if (validForm == false || isNew == true || originalFileName != $("#playground_name").val() || $("#playground_name").val().trim() == ""){
       return true;
     }
     disableButtonsUntilCallback();
@@ -20915,7 +20939,7 @@ $( document ).ready(function() {
     page_title = word("Playground")
     if current_project != 'default':
         page_title += " / " + current_project
-    response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(current_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_setup + '<script>\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "' + ('yamlmixed' if daconfig.get('test yamlmixed mode') else 'yamlmixed') + '", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true, lineWrapping: ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + '});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    $("#my-form").trigger("reinitialize.areYouSure");\n      $("#daVariablesReport").on("shown.bs.modal", function () { daFetchVariableReport(); })\n    </script>'), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200)
+    response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(current_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=current_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_setup + '<script>\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == \'\'){ $("#form button[name=\'submit\']").click(); event.preventDefault(); return false; } if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "' + ('yamlmixed' if daconfig.get('test yamlmixed mode') else 'yamlmixed') + '", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true, lineWrapping: ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + '});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    $("#my-form").trigger("reinitialize.areYouSure");\n      $("#daVariablesReport").on("shown.bs.modal", function () { daFetchVariableReport(); })\n    </script>'), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new), valid_form=str(valid_form)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 

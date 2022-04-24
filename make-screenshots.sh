@@ -434,8 +434,8 @@ rm -f $datafile
 
 if [ -d ~/gh-pages-da ]
 then
-    ./get_yaml_from_example.py docassemble_base/docassemble/base/data/questions/examples > ~/gh-pages-da/_data/example.yml
-    ./get_yaml_from_example.py docassemble_demo/docassemble/demo/data/questions/examples >> ~/gh-pages-da/_data/example.yml
+    ./get_yaml_from_example.py docassemble_base/docassemble/base/data/questions/examples ~/gh-pages-da/img/examples > ~/gh-pages-da/_data/example.yml
+    ./get_yaml_from_example.py docassemble_demo/docassemble/demo/data/questions/examples ~/gh-pages-da/img/examples >> ~/gh-pages-da/_data/example.yml
     #rsync -auv docassemble_webapp/docassemble/webapp/static/examples ~/gh-pages-da/img/
     list_of_files=`mktemp /tmp/XXXXXXX.txt`
     grep '^    - ' docassemble_base/docassemble/base/data/questions/example-list.yml | sed 's/^    - \(.*\)/\1.png/' > $list_of_files

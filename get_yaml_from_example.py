@@ -5,6 +5,7 @@ import os
 import codecs
 import re
 import yaml
+from PIL import Image
 
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 fix_tabs = re.compile(r'\t')
@@ -12,20 +13,29 @@ fix_initial = re.compile(r'^---\n')
 
 def main():
     if len(sys.argv) < 2:
-        sys.exit("Usage: get_yaml_from_example.py some_file.yml")
+        sys.exit("Usage: get_yaml_from_example.py yaml_directory png_directory")
     dirname = sys.argv[1]
-    output = dict()
     if not os.path.isdir(dirname):
         sys.exit("Directory " + str(dirname) + " not found")
+    pngdirname = sys.argv[2]
+    if not os.path.isdir(pngdirname):
+        sys.exit("Directory " + str(pngdirname) + " not found")
+    output = dict()
     for filename in os.listdir(dirname):
         if not re.search(r'.ya*ml$', filename, flags=re.IGNORECASE):
             continue
         if re.search(r'\#', filename):
             continue    
         example_name = os.path.splitext(filename)[0]
-        result = read_file(os.path.join(dirname, filename))
-        if result is None:
+        result = {}
+        result['yaml'] = read_file(os.path.join(dirname, filename))
+        if result['yaml'] is None:
+            sys.stderr.write("Missing YAML filename " + os.path.join(dirname, filename) + "\n")
             continue
+        png_filename = os.path.join(pngdirname, re.sub(r'\.yml$', '.png', filename))
+        if os.path.isfile(png_filename):
+            image = Image.open(png_filename)
+            (result['width'], result['height']) = image.size
         output[example_name] = result
     print(yaml.safe_dump(output, default_flow_style=False, default_style = '|'))
 
