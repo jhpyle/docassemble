@@ -2977,8 +2977,8 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     else:
         source_button = ''
         source_menu_item = ''
-    hidden_question_button = '<div hidden class="nav-item dainvisible" role="presentation"><button class="btn btn-link nav-link active da-no-outline" id="daquestionlabel" data-bs-toggle="tab" data-bs-target="#daquestion">' + word('Question') + '</button></div>'
-    navbar += '        ' + source_button + hidden_question_button + '<ul id="nav-bar-tab-list" class="nav navbar-nav damynavbar-right" role="tablist">'
+    hidden_question_button = '<li class="nav-item dainvisible"><button class="btn btn-link nav-link active da-no-outline" id="daquestionlabel" data-bs-toggle="tab" data-bs-target="#daquestion">' + word('Question') + '</button></li>'
+    navbar += '        ' + source_button + '<ul id="nav-bar-tab-list" class="nav navbar-nav damynavbar-right" role="tablist">' + hidden_question_button
     if len(status.interviewHelpText) > 0 or (len(status.helpText) > 0 and not status.question.interview.question_help_button):
         if status.question.helptext is None or status.question.interview.question_help_button:
             navbar += '<li class="nav-item" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" data-bs-target="#dahelp" data-bs-toggle="tab" role="tab" id="dahelptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</button></li>'
@@ -8208,6 +8208,18 @@ def index(action_argument=None, refer=None):
       function daatob(str) {
         return window.atob(str);
       }
+      function hideTablist() {
+        var anyTabs = $("#daChatAvailable").is(":visible") 
+            || $("daPhoneAvailable").is(":visible") 
+            || $("#dahelptoggle").is(":visible");
+        if (anyTabs) {
+          $("#nav-bar-tab-list").removeClass("dainvisible");
+          $("#daquestionlabel").parent().removeClass("dainvisible");
+        } else {
+          $("#nav-bar-tab-list").addClass("dainvisible");
+          $("#daquestionlabel").parent().addClass("dainvisible");
+        }
+      }
       function getFields(){
         var allFields = [];
         for (var rawFieldName in daVarLookup){
@@ -9645,14 +9657,7 @@ def index(action_argument=None, refer=None):
           $("#daSend").prop('disabled', false);
           daInformAbout('chat');
         }
-        var anyTabs = $("#daChatAvailable").is(":visible") 
-            || $("daPhoneAvailable").is(":visible") 
-            || $("#dahelptoggle").is(":visible");
-        if (anyTabs) {
-          $("#nav-bar-tab-list").removeClass("dainvisible");
-        } else {
-          $("#nav-bar-tab-list").addClass("dainvisible");
-        }
+        hideTablist();
       }
       function daChatLogCallback(data){
         if (data.action && data.action == 'reload'){
@@ -9833,14 +9838,7 @@ def index(action_argument=None, refer=None):
             }
           }
         }
-        var anyTabs = $("#daChatAvailable").is(":visible") 
-            || $("daPhoneAvailable").is(":visible") 
-            || $("#dahelptoggle").is(":visible");
-        if (anyTabs) {
-          $("#nav-bar-tab-list").removeClass("dainvisible");
-        } else {
-          $("#nav-bar-tab-list").addClass("dainvisible");
-        }
+        hideTablist();
       }
       function daCheckoutCallback(data){
       }
@@ -11148,14 +11146,7 @@ def index(action_argument=None, refer=None):
         if (daUsingSegment){
           daSegmentEvent();
         }
-        var anyTabs = $("#daChatAvailable").is(":visible") 
-            || $("daPhoneAvailable").is(":visible") 
-            || $("#dahelptoggle").is(":visible");
-        if (anyTabs) {
-          $("#nav-bar-tab-list").removeClass("dainvisible");
-        } else {
-          $("#nav-bar-tab-list").addClass("dainvisible");
-        }
+        hideTablist();
         $(document).trigger('daPageLoad');
       }
       $(document).ready(function(){
