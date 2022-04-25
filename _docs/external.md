@@ -292,13 +292,21 @@ sessions:
   yet, you can first initiate it by calling [`create_session()`].
 * Pull data: from session B, you can retrieve variables from session A
   by calling [`get_session_variables()`].
-* Share data in a common storage area: from session A, you can use a
-  [`DAStore`] object to save data to a storage area that is specific
-  to the user but can be accessed from any session. In session B, you
-  can write `code` blocks that initialize variables to values that are
-  stored in that storage area, if the storage area exists. By default,
-  data are encrypted using the same encryption system as interview
-  answers, and encryption can be turned off.
+* Initialize variables from values stored in a common storage area:
+  from session A, you can use a [`DAStore`] object to save data to a
+  storage area that is specific to the user but can be accessed from
+  any session. In session B, you can write `code` blocks that
+  initialize variables to values that are stored in that storage area,
+  if the storage area exists. By default, data are encrypted using the
+  same encryption system as interview answers, and encryption can be
+  turned off.
+* Share global variables across sessions: in session A, you can use a
+  [`DAGlobal`] object to store the part of the interview answers you
+  want to share. In session B, you can use a [`DAGlobal`] object with
+  the same "base" and "key," and the attributes of the object in both
+  sessions will be stored in a common storage area rather than in the
+  interview answers of either session. Encryption is not available
+  with this option.
 * Share data using [Redis]: [`DARedis`] can also be used as a storage
   area. From session A, you can use the [`.set_data()`] method of
   [`DARedis`] to save a Python data structure to [Redis], and then
@@ -350,6 +358,7 @@ sessions:
 [Google Sheets]: https://sheets.google.com
 [Google Sheet]: https://sheets.google.com
 [`DAStore`]: {{ site.baseurl }}/docs/objects.html#DAStore
+[`DAGlobal`]: {{ site.baseurl }}/docs/objects.html#DAGlobal
 [`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
 [`delete_record()`]: {{ site.baseurl }}/docs/functions.html#delete_record
 [`read_records()`]: {{ site.baseurl }}/docs/functions.html#read_records
