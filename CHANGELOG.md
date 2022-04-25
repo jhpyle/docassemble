@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.37] - 2022-04-25
+### Fixed
+- Error with user registration.
+
 ## [1.3.36] - 2022-04-23
 ### Fixed
 - Error with background tasks.

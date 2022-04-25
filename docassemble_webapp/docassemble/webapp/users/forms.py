@@ -35,7 +35,7 @@ def get_requester_ip(req):
     return req.remote_addr
 
 def fix_nickname(form, field):
-    field.data = form.first_name.data + ' ' + form.last_name.data
+    field.data = str(form.first_name.data) + ' ' + str(form.last_name.data)
 
 class MySignInForm(LoginForm):
     def validate(self):

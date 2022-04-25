@@ -6094,7 +6094,6 @@ class Question:
     def parse_fields(self, the_list, register_target, uses_field):
         result_list = []
         has_code = False
-        logmessage(f'the_list: {the_list}, uses_field: {uses_field}')
         if isinstance(the_list, dict):
             new_list = []
             for key, value in the_list.items():

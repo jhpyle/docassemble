@@ -2205,12 +2205,6 @@ def input_for(status, field, wide=False, embedded=False):
     if 'css class' in status.extras and field.number in status.extras['css class']:
         extra_class += ' ' + clean_whitespace(status.extras['css class'][field.number])
     if hasattr(field, 'choicetype'):
-        logmessage("In a choicetype where field datatype is " + field.datatype)
-        logmessage(field.choicetype)
-        if hasattr(field, 'inputtype'):
-            logmessage("inputtype is" + field.inputtype)
-        else:
-            logmessage("No inputtype")
         if field.choicetype in ['compute', 'manual']:
             pairlist = list(status.selectcompute[field.number])
         else:
