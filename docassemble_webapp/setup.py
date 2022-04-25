@@ -182,7 +182,7 @@ install_requires = [
     "pyotp==2.6.0",
     "pyparsing==3.0.8",
     "pyPdf==1.13",
-    "PyPDF2==1.27.4",
+    "PyPDF2==1.27.5",
     "pypdftk==0.5",
     "pypng==0.0.21",
     "PySocks==1.7.1",
