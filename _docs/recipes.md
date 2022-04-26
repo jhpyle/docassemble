@@ -2455,7 +2455,7 @@ the [`ics`] package.
 [`pdf template file`]: {{ site.baseurl }}/docs/documents.html#pdf template file
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`signature-diversion.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/signature-diversion.yml
-[collapse feature]: https://getbootstrap.com/docs/4.0/components/collapse/
+[collapse feature]: https://getbootstrap.com/docs/5.0/components/collapse/
 [Bootstrap]: https://getbootstrap.com/
 [`disable others`]: {{ site.baseurl }}/docs/fields.html#disable others
 [`object` datatype]: {{ site.baseurl }}/docs/fields.html#object
