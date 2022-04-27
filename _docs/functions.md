@@ -1248,20 +1248,34 @@ The server-side encryption merely protects against the scenario in
 which the server running **docassemble** is compromised.
 
 You can include keyword arguments to `interview_url()`.  These will be
-passed to the interview as [`url_args`].
+included as additional URL parameters. When the user visits the URL,
+**docassemble** will store the names and values in the [`url_args`]
+dictionary of the interview, and the interview logic of the interview
+can access the names and values by inspecting [`url_args`].
 
-The keyword argument `i` is special, however: you can set this to the
-name of an interview (e.g.,
-`docassemble.demo:data/questions/questions.yml`) and this interview
-will be used instead of the current interview.  In this case, the URL
-functions as a referral to a different interview, with a fresh
-variable store.
+The keyword argument `i` is special: you can set this to the name of
+an interview (e.g., `docassemble.demo:data/questions/questions.yml`)
+and this interview will be used instead of the current interview.  In
+this case, the `session` parameter is omitted and the URL functions as
+a referral to a different interview, with a fresh variable store.
 
-The keyword argument `session` is also special: set this to the
-session ID of an interview (e.g., obtained from [`interview_list()`]),
-and also set `i` to the filename of the interview corresponding with
-the session.  Then the link will point not to the current session, but
-to the session indicated by the session ID.
+The keyword argument `session` is also special: you can set this to
+the known session ID of an interview (e.g., obtained from
+[`interview_list()`]), and also set `i` to the filename of the
+interview corresponding with the session.  Then the link will point
+not to the current session, but to the session indicated by the
+session ID.
+
+If you want the URL to always starts a new session when the user
+clicks on it, include the keyword argument `new_session` and set it to
+`1`. For more information about how this works, see the documentation
+for the [`new_session`] URL parameter.
+
+If you want the URL to restart any existing sessions that the user
+already is running in the interview, set `reset=1`. For more
+information about how this works, see the documentation for the
+[`reset`] URL parameter.
+
 
 The keyword argument `local` is also special: set this to `True` if
 you want the URL to be relative (i.e., it will start with `?`).  Note
@@ -8264,3 +8278,5 @@ $(document).on('daPageLoad', function(){
 [setup instructions]: {{ site.baseurl }}/docs/objects.html#DAGoogleAPI setup
 [Google Cloud Vision]: https://cloud.google.com/vision/
 [Google Cloud Storage]: https://cloud.google.com/storage/
+[`new_session`]: {{ site.baseurl }}/docs/interviews.html#new_session
+[`reset`]: {{ site.baseurl }}/docs/interviews.html#reset
