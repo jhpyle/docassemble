@@ -816,7 +816,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ] && [ "$DB
 	if [ -d "${PGBACKUPDIR}" ]; then
 	    cd "$PGBACKUPDIR"
 	    chown -R postgres.postgres "$PGBACKUPDIR"
-	    for db in $( ls ); do
+	    for db in $( find . -maxdepth 1 -type f ! -iname ".*" ); do
 		echo "initialize: Restoring postgres database $db" >&2
 		pg_restore -f - -F c -C -c $db | su -c psql postgres
 	    done
@@ -1337,6 +1337,15 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
         supervisorctl --serverurl http://localhost:9001 start syslogng
     fi
 fi
+
+echo "initialize: creating crashpad folder" >&2
+
+mkdir -p /tmp/Crashpad/attachments
+mkdir -p /tmp/Crashpad/completed
+mkdir -p /tmp/Crashpad/new
+mkdir -p /tmp/Crashpad/pending
+touch /tmp/Crashpad/settings.dat
+chmod -R ogu+rwx /tmp/Crashpad
 
 function deregister {
     rm -f "${DA_ROOT}/webapp/ready"

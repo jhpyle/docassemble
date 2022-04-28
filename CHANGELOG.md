@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.3.38] - 2022-04-28
+### Changed
+- The `permissions` system can now give privileges to `anonymous`
+  (non-logged in) users.
+### Fixed
+- Error with new Playground initialization.
+
 ## [1.3.37] - 2022-04-25
 ### Fixed
 - Error with user registration.

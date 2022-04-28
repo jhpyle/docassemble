@@ -18,7 +18,7 @@ source /dev/stdin < <(python -m docassemble.base.read_config "$DA_CONFIG_FILE")
 
 echo "`date` starting docassemble.webapp.restart" >&2
 python -m docassemble.webapp.restart
-echo "`date` finsihed docassemble.webapp.restart" >&2
+echo "`date` finished docassemble.webapp.restart" >&2
 
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
     echo "`date` stopping celery" >&2

@@ -1,5 +1,25 @@
 from docassemble.webapp.db_object import db, UserMixin
 from docassemble.base.config import dbtableprefix, allowed
+from flask_login import AnonymousUserMixin
+
+class AnonymousUserModel(AnonymousUserMixin):
+    @property
+    def id(self):
+        return -1
+    def same_as(self, user_id):
+        return False
+    def has_role(self, *pargs, **kwargs):
+        return False
+    def has_roles(self, *pargs, **kwargs):
+        return False
+    def has_role_or_permission(self, *specified_role_names, permissions=None):
+        if isinstance(permissions, list):
+            for task in permissions:
+                if self.can_do(task):
+                    return True
+        return False
+    def can_do(self, task):
+        return bool('anonymous' in allowed and task in allowed['anonymous'])
 
 class UserModel(db.Model, UserMixin):
     __tablename__ = dbtableprefix + 'user'

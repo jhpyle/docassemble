@@ -88,7 +88,7 @@ from docassemble.webapp.playground import PlaygroundSection
 from docassemble.webapp.screenreader import to_text
 from docassemble.webapp.translations import setup_translation
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm, ManageAccountForm, RequestDeveloperForm
-from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog, MyUserInvitation, Role, UserRoles
+from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog, MyUserInvitation, Role, UserRoles, AnonymousUserModel
 from docassemble.webapp.users.views import user_profile_page
 if not in_celery:
     import docassemble.webapp.worker
@@ -1131,6 +1131,7 @@ the_user_manager.init_app(app, db_adapter=the_db_adapter, login_form=MySignInFor
 lm = LoginManager()
 lm.init_app(app)
 lm.login_view = 'custom_login'
+lm.anonymous_user = AnonymousUserModel
 
 def login_as_admin(url, url_root):
     found = False
@@ -18572,22 +18573,22 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
         package_file = tempfile.NamedTemporaryFile(suffix='.tar.gz')
         try:
             http = httplib2.Http()
-            resp, content = http.request("https://pypi.python.org/pypi/" + str(pypi_package) + "/json", "GET")
-            pypi_url = None
+            resp, content = http.request(pypi_url + "/" + str(pypi_package) + "/json", "GET")
+            the_pypi_url = None
             if int(resp['status']) == 200:
                 pypi_response = json.loads(content.decode())
                 for file_option in pypi_response['releases'][pypi_response['info']['version']]:
                     if file_option['packagetype'] == 'sdist':
-                        pypi_url = file_option['url']
+                        the_pypi_url = file_option['url']
                         break
             else:
                 return dict(action='fail', message=word("The package you specified could not be downloaded from PyPI."))
-            if pypi_url is None:
+            if the_pypi_url is None:
                 return dict(action='fail', message=word("The package you specified could not be downloaded from PyPI as a tar.gz file."))
         except Exception as err:
             return dict(action='error', message="error getting information about PyPI package.  " + str(err))
         try:
-            urlretrieve(pypi_url, package_file.name)
+            urlretrieve(the_pypi_url, package_file.name)
         except Exception as err:
             return dict(action='error', message="error downloading PyPI package.  " + str(err))
         try:
@@ -20277,7 +20278,7 @@ def playground_page():
             delete_variable_file(current_project)
     if the_file != '':
         filename = os.path.join(the_directory, the_file)
-        if valid_form and not os.path.isfile(filename):
+        if (valid_form or is_default) and not os.path.isfile(filename):
             with open(filename, 'w', encoding='utf-8') as fp:
                 fp.write(content)
             playground.finalize()
@@ -24496,8 +24497,6 @@ def api_user_list():
     return jsonify(dict(next_id=next_id, items=user_list))
 
 def get_user_info(user_id=None, email=None, case_sensitive=False, admin=False):
-    if current_user.is_anonymous:
-        raise Exception("You cannot call get_user_info() unless you are logged in")
     if user_id is not None:
         assert isinstance(user_id, int)
     if user_id is None and email is None:
@@ -24526,8 +24525,6 @@ def get_user_info(user_id=None, email=None, case_sensitive=False, admin=False):
     return user_info
 
 def make_user_inactive(user_id=None, email=None):
-    if current_user.is_anonymous:
-        raise Exception("You cannot make a user inactive unless you are logged in")
     if not current_user.has_role_or_permission('admin', permissions=['edit_user_active_status']):
         raise Exception("You do not have sufficient privileges to make a user inactive")
     if user_id is None and email is None:
@@ -25000,10 +24997,8 @@ def remove_user_privilege(user_id, privilege):
     db.session.commit()
 
 def create_user(email, password, privileges=None, info=None):
-    if current_user.is_anonymous:
-        raise Exception("You cannot create a user unless you are logged in")
     if not current_user.has_role_or_permission('admin', permissions=['create_user']):
-        raise Exception("You cannot create a user unless you are an administrator")
+        raise Exception("You do not have sufficient privileges to create a user")
     email = email.strip()
     password = str(password).strip()
     if len(password) < 4 or len(password) > 254:
@@ -25065,12 +25060,10 @@ def create_user(email, password, privileges=None, info=None):
     return the_user.id
 
 def set_user_info(**kwargs):
-    if current_user.is_anonymous:
-        raise Exception("You cannot call set_user_info() unless you are logged in")
     user_id = kwargs.get('user_id', None)
     email = kwargs.get('email', None)
     if user_id is None and email is None:
-        user_id = current_user.id
+        user_id = int(current_user.id)
     if not current_user.has_role_or_permission('admin', permissions=['edit_user_info']):
         if (user_id is not None and current_user.id != user_id) or (email is not None and current_user.email != email):
             raise Exception("You do not have sufficient privileges to edit user information")
