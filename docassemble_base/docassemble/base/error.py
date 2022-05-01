@@ -1,5 +1,6 @@
 import re
 
+
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
 class DAIndexError(IndexError):
@@ -66,7 +67,7 @@ class ForcedNameError(NameError):
             arg = the_args.pop(0)
             if isinstance(arg, dict):
                 if (len(arg.keys()) == 2 and 'action' in arg and 'arguments' in arg) or (len(arg.keys()) == 1 and 'action' in arg):
-                    arg['context'] = {}
+                    arg['context'] = the_context
                     self.set_action(arg)
                 elif len(arg) == 1 and ('undefine' in arg or 'invalidate' in arg or 'recompute' in arg or 'set' in arg or 'follow up' in arg):
                     if 'set' in arg:

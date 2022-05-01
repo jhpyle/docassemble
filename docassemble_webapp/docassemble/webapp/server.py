@@ -778,7 +778,13 @@ def custom_register():
                 if db_adapter.UserAuthClass:
                     if field_name in user_auth_class_fields:
                         user_auth_fields[field_name] = field_value
-
+        while True:
+            new_social = 'local$' + random_alphanumeric(32)
+            existing_user = db.session.execute(select(UserModel).filter_by(social_id=new_social)).first()
+            if existing_user:
+                continue
+            break
+        user_fields['social_id'] = new_social
         # Add User record using named arguments 'user_fields'
         user = db_adapter.add_object(User, **user_fields)
 
@@ -29098,15 +29104,6 @@ def fix_api_keys():
     for rkey in to_delete:
         r.delete(rkey)
 
-def random_social():
-    while True:
-        new_social = 'local$' + random_alphanumeric(32)
-        existing_user = db.session.execute(select(UserModel).filter_by(social_id=new_social)).first()
-        if existing_user:
-            continue
-        break
-    return new_social
-
 class TestContext:
     def __init__(self, package):
         self.package = package
@@ -29132,7 +29129,6 @@ def initialize():
     global global_css
     global global_js
     with app.app_context():
-        app.user_manager.random_social = random_social
         url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
         url = url_root + 'interview'
         with app.test_request_context(base_url=url_root, path=url):

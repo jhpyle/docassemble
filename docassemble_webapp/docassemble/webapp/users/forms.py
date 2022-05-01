@@ -143,7 +143,6 @@ def da_registration_restrict_validator(form, field):
 class MyRegisterForm(RegisterForm):
     first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
     last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
-    social_id = StringField(word('Social ID'))
     nickname = StringField(word('Nickname'), [fix_nickname])
     email = StringField(word('Email'), validators=[
         validators.DataRequired(word('Email is required')),

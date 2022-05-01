@@ -799,7 +799,7 @@ def delete_user_data(user_id, r, r_user):
 
 #@elapsed('reset_user_dict')
 def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=False):
-    #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
+    #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename) + " and " + str(user_id) + " and " + str(temp_user_id) + " and " + str(force))
     if force:
         the_user_id = None
     else:
@@ -827,7 +827,7 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
             db.session.execute(delete(UserDictKeys).filter_by(key=user_code, filename=filename, temp_user_id=the_user_id))
         db.session.commit()
         existing_user_dict_key = db.session.execute(select(UserDictKeys).filter_by(key=user_code, filename=filename)).scalar()
-        do_delete = bool(existing_user_dict_key)
+        do_delete = not bool(existing_user_dict_key)
     if not force:
         files_to_save = []
         for upload in db.session.execute(select(Uploads).filter_by(key=user_code, yamlfile=filename, persistent=True)).scalars():

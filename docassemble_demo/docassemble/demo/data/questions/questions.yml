@@ -544,9 +544,10 @@ fields:
     datatype: checkboxes
     code: |
       {'chimney': 'Chimney', 'stove': 'Stove'}
-  - note: |
+  - label: |
       How would you describe the general *milieu* of ${ x.possessive('abode') }?
-  - no label: x.address.milieu
+    field: x.address.milieu
+    label above field: True
     required: False
 comment: |
   In this question, the type of home uses a "radio" selector.  The

@@ -9077,15 +9077,15 @@ Feature: Example interviews
   # Scenario: Test the interview "Stage two"
   #   Given I start the interview "docassemble.demo:data/questions/examples/stage-two.yml"
 
-  Scenario: Test the interview "SSN"
-    Given I start the interview "docassemble.demo:data/questions/examples/testssn.yml"
-    Then I should see the phrase "What is your SSN?"
-    And I set "SSN" to "04"
-    And I unfocus
-    Then I should see the phrase "You need to enter a valid SSN"
-    And I set "SSN" to "042232323"
-    And I click the button "Continue"
-    Then I should see the phrase "Your SSN is 042-23-2323."
+  # Scenario: Test the interview "SSN"
+  #   Given I start the interview "docassemble.demo:data/questions/examples/testssn.yml"
+  #   Then I should see the phrase "What is your SSN?"
+  #   And I set "SSN" to "04"
+  #   And I unfocus
+  #   Then I should see the phrase "You need to enter a valid SSN"
+  #   And I set "SSN" to "042232323"
+  #   And I click the button "Continue"
+  #   Then I should see the phrase "Your SSN is 042-23-2323."
 
   # Scenario: Test the interview "Universal assembler"
   #   Given I start the interview "docassemble.demo:data/questions/examples/universal-document.yml"

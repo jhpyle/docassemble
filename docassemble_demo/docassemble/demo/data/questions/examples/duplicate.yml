@@ -1,0 +1,44 @@
+metadata:
+  title: Duplicate session
+  short title: Duplicate
+  documentation: "https://docassemble.org/docs/recipes.html#duplicate"
+  example start: 1
+  example end: 5
+---
+objects:
+  - user: Individual
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: user.favorite_fruit
+---
+attachment: 
+  variable name: receipt
+  name: Favorite fruit receipt
+  filename: fruit
+  content: |
+    Let it be known that your favorite fruit is
+    ${ user.favorite_fruit }.
+---
+event: duplicate_session
+code: |
+  session_id = create_session(user_info().filename)
+  set_session_variables(user_info().filename, session_id,
+                        all_variables(simplify=False), 
+                        overwrite=True)
+  set_session_variables(user_info().filename, session_id,
+                        {"_internal['answered']": _internal['answered'], 
+                         "_internal['answers']": _internal['answers'],
+                         "_internal['device_local']": _internal['device_local'],
+                         "_internal['user_local']": _internal['user_local']},
+                         overwrite=True)
+  set_save_status('overwrite')
+  log('A <a href="' + interview_url(session=session_id, from_list=1) + '">duplicate session</a> has been created.', 'info')
+---
+mandatory: True
+question: |
+  Your favorite fruit is ${ user.favorite_fruit }.
+subquestion: |
+  You can [duplicate this session](${ url_action('duplicate_session') }).
+attachment code: receipt

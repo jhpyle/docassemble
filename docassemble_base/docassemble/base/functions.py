@@ -146,6 +146,8 @@ def pop_event_stack(var):
         if len(this_thread.internal['event_stack'][unique_id]) > 0 and this_thread.internal['event_stack'][unique_id][0]['action'] == var:
             this_thread.internal['event_stack'][unique_id].pop(0)
             #logmessage("popped the event stack")
+    if 'action' in this_thread.current_info and this_thread.current_info['action'] == var:
+        del docassemble.base.functions.this_thread.current_info['action']
 
 def pop_current_variable():
     #logmessage("pop_current_variable: " + str(this_thread.current_variable))
@@ -846,7 +848,8 @@ def interview_url(**kwargs):
             args['from_list'] = 1
     else:
         args['i'] = this_thread.current_info['yaml_filename']
-        args['session'] = this_thread.current_info['session']
+        if not args.get('session', None):
+            args['session'] = this_thread.current_info['session']
     if not do_local:
         args['_external'] = True
     try:
@@ -1776,9 +1779,17 @@ def backup_thread_variables():
     for key in ('interview', 'interview_status', 'open_files', 'current_question'):
         if hasattr(this_thread, key):
             backup[key] = getattr(this_thread, key)
-    for key in ['language', 'dialect', 'country', 'locale', 'current_info', 'internal', 'initialized', 'session_id', 'gathering_mode', 'current_variable', 'global_vars', 'current_package', 'initialized', 'session_id', 'evaluation_context', 'misc', 'prevent_going_back']:
+    for key in ['language', 'dialect', 'country', 'locale', 'current_info', 'internal', 'initialized', 'session_id', 'current_package', 'interview', 'interview_status', 'evaluation_context', 'gathering_mode', 'global_vars', 'current_variable', 'saved_files', 'message_log', 'misc', 'probing', 'prevent_going_back', 'current_question']:
         if hasattr(this_thread, key):
-            backup[key] = copy.deepcopy(getattr(this_thread, key))
+            backup[key] = getattr(this_thread, key)
+            if key == 'global_vars':
+                this_thread.global_vars = GenericObject()
+            elif key in ('current_info', 'misc'):
+                setattr(this_thread, key, copy.deepcopy(getattr(this_thread, key)))
+            elif key in ('internal', 'gathering_mode', 'saved_files'):
+                setattr(this_thread, key, {})
+            elif key in ('current_variable', 'message_log'):
+                setattr(this_thread, key, [])
     return backup
 
 def restore_thread_variables(backup):
@@ -3246,8 +3257,13 @@ def all_variables(simplify=True, include_internal=False, special=False, make_cop
     if simplify:
         return serializable_dict(get_user_dict(), include_internal=include_internal)
     if make_copy:
-        return copy.deepcopy(pickleable_objects(get_user_dict()))
-    return pickleable_objects(get_user_dict())
+        new_dict = copy.deepcopy(pickleable_objects(get_user_dict()))
+    else:
+        new_dict = pickleable_objects(get_user_dict())
+    if not include_internal and '_internal' in new_dict:
+        new_dict = copy.copy(new_dict)
+        del new_dict['_internal']
+    return new_dict
 
 def command(*pargs, **kwargs):
     """Executes a command, such as exit, logout, restart, or leave."""
@@ -3523,7 +3539,7 @@ def process_action():
         if 'forgive_missing_question' in this_thread.misc:
             del this_thread.misc['forgive_missing_question']
         return
-    #sys.stderr.write("process_action() continuing")
+    #logmessage("process_action() continuing")
     the_action = this_thread.current_info['action']
     #logmessage("process_action: action is " + repr(the_action))
     del this_thread.current_info['action']

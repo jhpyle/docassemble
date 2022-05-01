@@ -132,7 +132,6 @@ do
 	 "$file" = "jinjayaml-included" -o \
 	 "$file" = "join" -o \
 	 "$file" = "json-response" -o \
-	 "$file" = "label-above-field" -o \
 	 "$file" = "language-change" -o \
 	 "$file" = "leave" -o \
 	 "$file" = "life_story" -o \

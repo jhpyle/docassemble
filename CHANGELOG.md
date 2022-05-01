@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.3.39] - 2022-04-30
+### Changed
+- Calling `all_variables(simplify=False, include_internal=False)` now
+  omits `_internal`.
+- The HTML now uses `required` and `aria-required="true"` to indicate
+  required fields.
+### Fixed
+- `interview_url()` can now receive `session` without also receiving
+  `i` and `i` will be set to the current filename without overwriting
+  `session`.
+- Calling `create_session()` and other functions for manipulating
+  other sessions could disrupt `_internal` variables in some
+  circumstances.
+- `url_ask()` can now begin with an action.
+- Error in session deletion that caused sessions not to be deleted in
+  some circumstances.
+
 ## [1.3.38] - 2022-04-28
 ### Changed
 - The `permissions` system can now give privileges to `anonymous`

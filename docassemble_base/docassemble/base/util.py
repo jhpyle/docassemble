@@ -8212,6 +8212,7 @@ def url_ask(data):
             if contains_volatile.search(the_saveas['action']):
                 raise DAError("url_ask cannot be used with a generic object or a variable iterator")
             variables.append(dict(action=the_saveas['action'], arguments=the_saveas['arguments']))
+            continue
         if not isinstance(the_saveas, str):
             raise DAError("url_ask: invalid variable name " + repr(the_saveas) + ".  " + repr(data))
         the_saveas = the_saveas.strip()
