@@ -2394,6 +2394,11 @@ using [`send_email()`].
 This interview uses the module file [`calendar.py`], which imports
 the [`ics`] package.
 
+# <a name="duplicate"></a>Duplicating a session
+
+
+{% include demo-side-by-side.html demo="duplicate" %}
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml

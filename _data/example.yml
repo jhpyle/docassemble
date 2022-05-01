@@ -8245,6 +8245,10 @@
       - label: Fruit
         field: favorite_fruit
 "label-above-field":
+  "height": !!int |-
+    208
+  "width": !!int |-
+    488
   "yaml": |-
     question: |
       Your sign
@@ -16170,6 +16174,29 @@
       What is your name?
     fields:
       - Name: user_name
+"duplicate":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": "objects:\n  - user: Individual\n---\nquestion: |\n  What is your favorite\
+    \ fruit?\nfields:\n  - Fruit: user.favorite_fruit\n---\nattachment: \n  variable\
+    \ name: receipt\n  name: Favorite fruit receipt\n  filename: fruit\n  content:\
+    \ |\n    Let it be known that your favorite fruit is\n    ${ user.favorite_fruit\
+    \ }.\n---\nevent: duplicate_session\ncode: |\n  session_id = create_session(user_info().filename)\n\
+    \  set_session_variables(user_info().filename, session_id,\n                 \
+    \       all_variables(simplify=False), \n                        overwrite=True)\n\
+    \  set_session_variables(user_info().filename, session_id,\n                 \
+    \       {\"_internal['answered']\": _internal['answered'], \n                \
+    \         \"_internal['answers']\": _internal['answers'],\n                  \
+    \       \"_internal['device_local']\": _internal['device_local'],\n          \
+    \               \"_internal['user_local']\": _internal['user_local']},\n     \
+    \                    overwrite=True)\n  set_save_status('overwrite')\n  log('A\
+    \ <a href=\"' + interview_url(session=session_id, from_list=1) + '\">duplicate\
+    \ session</a> has been created.', 'info')\n---\nmandatory: True\nquestion: |\n\
+    \  Your favorite fruit is ${ user.favorite_fruit }.\nsubquestion: |\n  You can\
+    \ [duplicate this session](${ url_action('duplicate_session') }).\nattachment\
+    \ code: receipt"
 "explain":
   "height": !!int |-
     176

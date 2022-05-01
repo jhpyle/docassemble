@@ -591,8 +591,7 @@ make_copy=True)`.
 variables and uses it for a variety of internal purposes.  By default,
 it is not included in the output of [`all_variables()`].  If you want
 `_internal` to be included, set the optional keyword parameter
-`include_internal` to `True`.  This parameter has no effect when
-`simplify` is `False`.
+`include_internal` to `True`.
 
 The [`all_variables()`] function also has three special behaviors:
 
@@ -1565,6 +1564,10 @@ result in the asking of certain [`question`]s when the user visits it.
   `favorite_fruit`; then undefine the variable `fruit_to_offer` if it
   is defined; then compute the value of `fruit_to_offer`; then ask the
   [`question`] that defines `favorite_vegetable`.
+* `url_ask([{'action': 'increment_counter', arguments={'amount': 2}},
+  'follow_up_screen'])` - Run the action `increment_counter` with the
+  argument `amount` set to `2`, and when that is done, ask the
+  question that defines `follow_up_screen`.
 
 For more information on how these data structures work, see the
 subsection on [customizing the display of `review` options].

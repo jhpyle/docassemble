@@ -1521,6 +1521,10 @@ instructions on loading your own certificates when using [Docker], see
 [managing certificates with Docker]. See also the [`certs`]
 Configuration directive.
 
+After changing the `db` configuration, you need to restart the server
+(typically by doing `docker stop -t 600 <containerID>` followed by
+`docker start <containerID>`) in order for the change to take effect.
+
 ## <a name="sql ping"></a>Avoiding SQL errors
 
 If your **docassemble** server runs in an environment in which
@@ -4895,6 +4899,19 @@ create API keys under your user profile that have limited permissions,
 just as you can limit the privileges associated with custom
 [privileges]. When you create an API key, you can choose to limit the
 powers of the API key to one or more of the above permissions.
+
+The special privilege `anonymous` can be used if you want to confer
+privileges on users who are not logged in. For example:
+
+{% highlight yaml %}
+permissions:
+  anonymous:
+    - create_user
+    - access_user_info
+{% endhighlight %}
+
+However, please be aware of the security implications of giving
+elevated privileges to non-logged in users.
 
 ## <a name="config from"></a>Importing configuration directives
 

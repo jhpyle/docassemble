@@ -5,9 +5,9 @@ description: >-
   A free, open-source expert system for guided interviews and document assembly, based on Python, YAML, and Markdown.
 baseurl: ""
 #url: "https://docassemble.org"
-demourl: "https://demo.docassemble.org"
+#demourl: "https://demo.docassemble.org"
 slackurl: https://join.slack.com/t/docassemble/shared_invite/zt-ohrn8y9z-_Fb3RAl~JPBU6Km7odBPfQ
-#demourl: "http://localhost"
+demourl: "http://localhost"
 repository: jhpyle/docassemble
 github_username: jhpyle
 collections:
