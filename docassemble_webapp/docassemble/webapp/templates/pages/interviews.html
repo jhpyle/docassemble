@@ -5,7 +5,7 @@
 {%- set extra_js = get_part('interview page extra javascript') %}
 {%- extends 'flask_user/public_base.html' %}
 {%- block content %}
-            <h1 class="da-page-header dainterviewpage">{{ get_part('interview page heading', word('Resume an interview')) }}</h1>
+            <h1 class="da-page-header dainterviewpage h3">{{ get_part('interview page heading', word('Resume an interview')) }}</h1>
 {{ get_part('interview page pre') }}
             {%- if tag %}
             <p>

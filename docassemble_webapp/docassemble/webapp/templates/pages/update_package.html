@@ -3,10 +3,9 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_select_field, render_submit_field, render_checkbox_field with context %}
 
-<h1>{{ word('Package Management') }}</h1>
 
 {%- if allowed_to_upgrade %}
-<h2>{{ word('Upgrade docassemble') }}</h2>
+<h1 class="h2">{{ word('Upgrade docassemble') }}</h1>
 <p class="h6">{{ version }}</p>
 
 <div>
@@ -18,12 +17,12 @@
 
 <form action="{{ url_for('update_package') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
-  <h3>{{ word('You can provide a:') }}</h3>
+  <h2 class="h4">{{ word('You can provide a:') }}</h2>
   {{ render_field(form.giturl, placeholder='https://github.com/username/packagename') }}
   {{ render_select_field(form.gitbranch) }}
-  <h3>{{ word('Or you can upload a:') }}</h3>
+  <h2 class="h4">{{ word('Or you can upload a:') }}</h2>
   {{ render_file_field(form.zipfile) }}
-  <h3>{{ word('Or you can specify a:') }}</h3>
+  <h2 class="h4">{{ word('Or you can specify a:') }}</h2>
   {{ render_field(form.pippackage) }}
   {{ render_submit_field(form.submit) }}
 </form>

@@ -2973,7 +2973,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     source_message = word("Information for the developer")
     if debug_mode:
         source_button = '<div class="nav-item navbar-nav d-none d-md-block"><button class="btn btn-link nav-link da-no-outline" title=' + json.dumps(source_message) + ' id="dasourcetoggle" data-bs-toggle="collapse" data-bs-target="#dasource"><i class="fas fa-code"></i></button></div>'
-        source_menu_item = '<a class="dropdown-item d-block d-md-none navbar" title=' + json.dumps(source_message) + ' id="dasourcetogglemenu" href="#dasource" data-bs-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
+        source_menu_item = '<a class="dropdown-item d-block d-md-none navbar" title=' + json.dumps(source_message) + ' href="#dasource" data-bs-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
     else:
         source_button = ''
         source_menu_item = ''
