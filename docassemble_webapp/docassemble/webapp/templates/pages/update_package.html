@@ -17,12 +17,12 @@
 
 <form action="{{ url_for('update_package') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
-  <h2 class="h4">{{ word('You can provide a:') }}</h2>
+  <h3 class="h4">{{ word('You can provide a:') }}</h2>
   {{ render_field(form.giturl, placeholder='https://github.com/username/packagename') }}
   {{ render_select_field(form.gitbranch) }}
-  <h2 class="h4">{{ word('Or you can upload a:') }}</h2>
+  <h3 class="h4">{{ word('Or you can upload a:') }}</h2>
   {{ render_file_field(form.zipfile) }}
-  <h2 class="h4">{{ word('Or you can specify a:') }}</h2>
+  <h3 class="h4">{{ word('Or you can specify a:') }}</h2>
   {{ render_field(form.pippackage) }}
   {{ render_submit_field(form.submit) }}
 </form>
