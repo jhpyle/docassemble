@@ -7,7 +7,7 @@ from docassemble.base.error import DAError
 def pdf_to_pdfa(filename):
     outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
     directory = tempfile.mkdtemp()
-    commands = ['gs', '-dPDFA', '-dBATCH', '-dNOPAUSE', '-sProcessColorModel=DeviceCMYK', '-sDEVICE=pdfwrite', '-sPDFACompatibilityPolicy=1', '-sOutputFile=' + outfile.name, filename]
+    commands = ['gs', '-dPDFA', '-dBATCH', '-dNOPAUSE', '-sColorConversionStrategy=UseDeviceIndependentColor', '-sProcessColorModel=DeviceCMYK', '-sDEVICE=pdfwrite', '-sPDFACompatibilityPolicy=1', '-sOutputFile=' + outfile.name, filename]
     try:
         output = subprocess.check_output(commands, cwd=directory, stderr=subprocess.STDOUT).decode()
     except subprocess.CalledProcessError as err:
