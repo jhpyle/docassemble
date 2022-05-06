@@ -3300,7 +3300,7 @@ functions do not do anything besides keep track of information.  A
 good reason to use these functions is to increase the readability of
 your code.
 
-## <a name="task_performed"></a>task_performed():
+## <a name="task_performed"></a>task_performed()
 
 The `task_performed()` function returns `True` if the task has been
 performed at least once, otherwise `False`.
@@ -3309,13 +3309,13 @@ For example, `task_performed('application_for_assistance')` will
 return `False` until
 `mark_task_as_performed('application_for_assistance')` is called.
 
-## <a name="task_not_yet_performed"></a>task_not_yet_performed():
+## <a name="task_not_yet_performed"></a>task_not_yet_performed()
 
 The `task_not_yet_performed()` function returns `True` if the task has
 never been performed, otherwise `False`.  It is simply the opposite of
 [`task_performed()`].
 
-## <a name="mark_task_as_performed"></a>mark_task_as_performed():
+## <a name="mark_task_as_performed"></a>mark_task_as_performed()
 
 The `mark_task_as_performed()` function increases by 1 the number of
 times the task has been performed.
@@ -3327,16 +3327,16 @@ you call `mark_task_as_performed('remind_user')`, then
 
 If you call `mark_task_as_performed('remind_user')` again,
 `task_performed('send_reminder')` will still return `True`, and
-`times_task_performed('remind_user`) will now return `2`.
+`times_task_performed('remind_user')` will now return `2`.
 
-## <a name="times_task_performed"></a>times_task_performed():
+## <a name="times_task_performed"></a>times_task_performed()
 
 The `times_task_performed()` function returns the number of times the
 task has been performed (i.e., the number of times
 [`mark_task_as_performed()`] is called).  If the task has never been
 performed, `0` is returned.
 
-## <a name="set_task_counter"></a>set_task_counter():
+## <a name="set_task_counter"></a>set_task_counter()
 
 The `set_task_counter()` function allows you to manually set the
 number of times the task has been performed.

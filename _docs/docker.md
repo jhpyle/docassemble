@@ -546,9 +546,9 @@ services so that they use the new [Configuration].  When the container
 stops, it will safely shut down, and
 `/usr/share/docassemble/config/config.yml` will be backed up to
 `/usr/share/docassemble/backup/config.yml`.  If you are using
-[persistent volumes], the `backup` folder will be in the Docker volume
-that will persist even if you `docker rm` the container.  If the
-status of `initialize` is `FAILED` or `EXITED`, then this backup
+[persistent volumes], the `backup` folder will be in the [Docker
+volume] that will persist even if you `docker rm` the container.  If
+the status of `initialize` is `FAILED` or `EXITED`, then this backup
 process will not take place; in that case, you should make your
 changes to `/usr/share/docassemble/backup/config.yml`, and then
 restart your container by doing [`docker stop -t 600`] followed by
@@ -1406,11 +1406,11 @@ To delete all of the volumes, do:
 docker volume rm $(docker volume ls -qf dangling=true)
 {% endhighlight %}
 
-Docker volumes are powerful but complicated. If you want to use them,
-you can read about them in the Docker documentation and other places
-on the internet.
+[Docker volumes] are powerful but complicated. If you want to use
+them, you can read about them in the Docker documentation and other
+places on the internet.
 
-It is recommended that you do not create Docker volumes for
+It is recommended that you do not create [Docker volumes] for
 directories other than `/usr/share/docassemble/certs` and
 `/usr/share/docassemble/backup`. If you try to mount other directories
 as volumes, you might experience hard-to-debug problems. Depending on
@@ -1437,7 +1437,7 @@ Ultimately, the better [data storage] solution is to use cloud storage
    about copying your data on and off the machines.
 
 However, you can get around the second problem by using [`docker
-volume create`] to put your Docker volume on a separate drive.  That
+volume create`] to put your [Docker volume] on a separate drive.  That
 way, you could remove the virtual machine that runs the application,
 along with its primary drive, without affecting the drive with the
 **docassemble** data.
@@ -2149,69 +2149,225 @@ from the menu and clicking the "Upgrade" button.
 
 However, sometimes a "system upgrade" is necessary.  This can happen
 when changes are made to **docassemble**'s underlying operating system
-files.  When it is time for a "system upgrade," you will see a message
-on the [Configuration] screen that says "A new docassemble system
-version is available.  If you are using Docker, install a new Docker
-image."  Performing a "system upgrade" requires retrieving a new
-**docassemble** [Docker] image and running `docker run` to start a new
-container.
+files, or new versions of Python packages become incompatible with old
+versions of operating system files.  Performing a "system upgrade"
+requires stopping your **docassemble** container and running `docker
+run` with a new version of the **docassemble** image in order to start
+a new container based on the new image.
 
-The first time you use [`docker run`] to start a container, [Docker]
-will download the image from [Docker Hub], store it on your system,
-and then create a new container from that image.  However, subsequent
-[`docker run`] commands will always use the version of the image that
-is stored on your system, even if a new version is available on
+Doing a system upgrade is only safe if you are already using a form
+of [data storage]. If you aren't using a [Docker volume], [S3], or
+[Azure blob storage], then your data will be lost if you attempt a
+system upgrade.
+
+## <a name="upgrading basic"></a>Overview of a system upgrade
+
+The basic steps of a system upgrade on a server are:
+
+1. Safely shut down the **docassemble** server using `docker
+   stop`. This will save your SQL database, Redis database, and files
+   to [data storage].
+2. Free up disk space by using `docker rm` and `docker rmi` to delete
+   copies of the old **docassemble** containers and images.
+3. Start a new container from the latest **docassemble** image using
+   the same `docker run` command you ran when you created
+   the original container.
+
+When the new container starts up, it will retrieve the SQL database,
+Redis database, and files from [data storage] and restore them into
+the new container. Python packages you had installed on your old
+container will be installed during the startup process. Your new
+**docassemble** container will work just like the old one, except its
+operating system will be upgraded and the **docassemble** software
+will be fully upgraded.
+
+## <a name="upgrading understanding docker"></a>Docker tools that are helpful when doing a system upgrade
+
+If you are going to perform a system upgrade, it is important that you
+understand some things about how Docker works.
+
+[Docker] saves every image it uses to disk. So if you ran `docker run`
+two years ago, [Docker] downloaded the image `jhpyle/docassemble` and
+stored a copy of it. If you ran `docker run` today on the
+`jhpyle/docassemble` image, [Docker] would use the downloaded image
+from two years ago instead of downloading the latest image from
 [Docker Hub].
 
-You can download the latest version of **docassemble** to your system
-by running:
+The **docassemble** images take up a lot of disk space. One of the
+easiest ways to run out of disk space when using **docassemble** is to
+download too many copies of the `jhpyle/docassemble` image without
+deleting old ones.
+
+**docassemble** containers also take up disk space. If you have old
+unused containers on your server, they will take up disk space and
+also prevent you from deleting the images from which they were
+created.
+
+As long as you know that your data are backed up to [data storage],
+you can clear up disk space and you don't need to worry about losing
+your data. If you are using [S3] or [Azure blob storage] as your [data
+storage] method, there is little to worry about; you can even delete
+the host computer without worrying about losing your data. However, if
+you are using a [Docker volume] for [data storage], you need to be
+careful not to delete your volume (typically called `dabackup`) or the
+host computer. If you want to switch to a different host computer, you
+can copy the volume from one computer to another.
+
+Here are some [Docker] commands you might want to use while doing a
+system upgrade:
+
+* `docker ps` will list all of the containers that are currently
+  running.
+* `docker stop -t 600 45034cf698b1` will stop the container with
+  container ID `45034cf698b1` and it will give it ten minutes (600
+  seconds) to shut down safely.
+* `docker ps -a` will list all of the containers on the server,
+  whether they are running or not.
+* `docker rm 45034cf698b1` will delete the container with container ID
+  `45034cf698b1` if the container is stopped.
+* `docker images` will list the docker images that [Docker] has
+  downloaded.
+* `docker rmi 22cd380ad224` will delete the image with the image ID
+  `22cd380ad224` so long as no existing containers depend on the
+  image.
+* `docker volume ls` will list the [Docker] volumes that exist on the
+  system.
+* `docker system df` will report how much disk space [Docker] is
+  using.
+
+## <a name="upgrading stopping"></a>Stopping the Docker container
+
+The first step of doing a system upgrade is to stop the Docker
+container.  Use `docker ps` to determine the container ID or name
+(e.g., `45034cf698b1`, and then use `docker stop -t 600 45034cf698b1`
+to stop the container. The `-t 600` indicates that [Docker] should
+wait 600 seconds, or ten minutes, for the container to safely stop.
+
+It is very important that the shutdown is given enough time to
+complete, because part of the shutdown process involves dumping the
+SQL database, saving the Redis database, and copying files to [data
+storage]. Shutdown will be quicker if you are using [S3]/[Azure blob
+storage], because in that case your files are already located in [data
+storage] and don't need to be copied there. Shutdown will be even
+quicker if you are using an external SQL server and an external
+[Redis] server, in which case those databases do not need to be dumped
+out to [data storage].
+
+Doing `docker stop -t 600` gives the machine ten minutes to shut down,
+which is probably more than enough time. If you think it actually took
+10 minutes for the `docker stop` command to complete, then you should
+do `docker ps -a` to see what the exit status was. If it says
+something like `Exited (0) About a minute ago`, then that is good,
+because the exit status was `0`. If the exit status was something
+else, that means Docker had to forcibly kill the container, which may
+have interrupted the container's backup process. In that case, you
+should start the container again, wait for it to boot, and then do the
+shutdown again, but give it even more time to shut down. Or, you may
+need to investigate why it took so long to shut down in the first
+place.
+
+If you are using a [Docker volume] for [data storage], it is important
+to make sure that the backup procedures that were carried out when you
+did `docker stop` did not exhaust your disk space. If you have
+voluminous generated and uploaded files, you will need disk space to
+support multiple copies of the files. If the process of backing up the
+files exhausts disk space, then your [data storage] will not contain
+all of your files. 
+
+You can `docker exec` into your container and do:
 
 {% highlight bash %}
-docker pull jhpyle/docassemble-os
-docker pull jhpyle/docassemble
+df -h
 {% endhighlight %}
 
-Then, subsequent [`docker run`] commands will use the latest
-**docassemble** image.  This means that when you are using [Docker],
-you can upgrade **docassemble** to the newest version by running
-[`docker stop -t 600`] on your existing **docassemble** container,
-followed by [`docker rm`], followed by `docker pull
-jhpyle/docassemble-os`, followed by `docker pull jhpyle/docassemble`,
-and then running whatever [`docker run`] command you use to start a
-new container.
+This will give a report like:
 
-Note, however, that [`docker rm`] will delete all of the data on the
-server.  This is not a problem if your [`docker run`] command
-instructs **docassemble** to use a [data storage] system; in that case,
-when your new container starts up, it will use the SQL server, files,
-and other information that were backed up when you did [`docker stop`].
+{% highlight text %}
+Filesystem      Size  Used Avail Use% Mounted on
+overlay          78G   28G   50G  36% /
+tmpfs            64M     0   64M   0% /dev
+tmpfs           2.0G     0  2.0G   0% /sys/fs/cgroup
+shm              64M   24K   64M   1% /dev/shm
+/dev/vda1        78G   28G   50G  36% /etc/hosts
+tmpfs           2.0G     0  2.0G   0% /proc/acpi
+tmpfs           2.0G     0  2.0G   0% /proc/scsi
+tmpfs           2.0G     0  2.0G   0% /sys/firmware
+{% endhighlight %}
 
-Note also that [`docker pull`] may use up a lot of disk space.  This
-is because [Docker] does not automatically delete old versions of
-images, and **docassemble** images are very large.  So if your disk
-space is limited, you probably don't want to run [`docker pull`] until
-you get rid of the old images.  (See the [next section](#cleanup).)
+The important line is the one that relates to the filesystem mounted
+on `/`. The `Avail` column indicates how much free space is available.
 
-Thus, so long as you are using [data storage], and you aren't running
-any applications other than **docassemble** using Docker, it is
-recommended that you perform a system upgrade by running:
+To find out how much space your uploaded and generated files are
+using, you can do:
+
+{% highlight bash %}
+du -hs /usr/share/docassemble/files
+{% endhighlight %}
+
+This will report something like:
+
+{% highlight text %}
+4.1G	/usr/share/docassemble/files
+{% endhighlight %}
+
+If you are using [S3] or [Azure blob storage], files are not stored in
+`/usr/share/docassemble/files`; disk space is likely only going to be
+an issue if you are using a [Docker volume] for [data storage].
+
+
+The following three lines will stop all containers, remove all
+containers, and then remove all of the images that [Docker] created
+during the build process.
 
 {% highlight bash %}
 docker stop -t 600 $(docker ps -a -q)
 docker rm $(docker ps -a -q)
-docker pull jhpyle/docassemble-os
-docker pull jhpyle/docassemble
-docker rmi $(docker images -f "dangling=true" -q)
+docker rmi $(docker images | awk "{print $3}")
 {% endhighlight %}
 
-Then, run whatever `docker run` command you use to launch
-**docassemble**.
+While these commands are helpful, you should understand what they are
+doing before you run them. The first command stops all the
+containers. It uses the output of `docker ps -a -q` to get a list of
+the container IDs of all of the containers on the system, and passes
+that list to `docker stop`. The second command deletes all of the
+containers on the system. The third command deletes all the images on
+the server. This last command frees up the most disk space. It is
+usually necessary to remove the containers first (the [`docker rm`]
+line), as the containers depend on the images.
+
+Note that if you try to run these commands, you might get an error
+like `"docker stop" requires at least 1 argument.` This is harmless;
+it happens when the part inside `$()` does not return any output.
+
+
+
+Thus, so long as you are using [data storage], and you aren't running
+any applications other than **docassemble** using Docker, it is
+recommended that you perform a system upgrade by running:
 
 If you don't know what you are doing, do not follow the instructions
 above and instead get help, or spend time learning how [Docker] works
 before you attempt this. Doing `docker rm` permanently deletes your
 server, so it's not something you should be doing unless you know for
 a fact that your data are backed up in [data storage].
+
+If your host OS is old, you may want to upgrade your host OS and
+Docker itself while the **docassemble** server is stopped. You may
+also want to migrate to a new host.
+
+If you want to move your **docassemble** server to a new host, and
+you are using a Docker volume for [data storage], then the steps are:
+
+1. On the existing host, safely shut down the **docassemble** server
+   using `docker stop`.
+2. Create a new host.
+3. Transfer the Docker volume to the new host using:
+{% highlight text %}
+docker run --rm -v dabackup:/from alpine ash -c "cd /from ; tar -cf - . " | ssh -i cert.rsa username@newhost 'docker run --rm -i -v dabackup:/to alpine ash -c "cd /to ; tar -xpvf - " '
+{% endhighlight %}
+4. Start a new container from the latest **docassemble** image using
+   `docker run`.
+
 
 # <a name="downgrading"></a>Installing an earlier version of **docassemble** when using Docker
 
@@ -2270,27 +2426,6 @@ maintained together.  However, the latest version of the
 [docassemble-os repository] is usually several versions behind that of
 the [docassemble repository].
 
-# <a name="cleanup"></a>Cleaning up after Docker
-
-If you run [`docker pull`] to retrieve new versions of **docassemble**,
-or you build your own **docassemble** images more than once, you may
-find your disk space being used up.  The full **docassemble** image is
-about 4GB in size, and whenever you run [`docker pull`] or build a new
-image, a new image is created -- the old image is not overwritten.
-
-The following three lines will stop all containers, remove all
-containers, and then remove all of the images that [Docker] created
-during the build process.
-
-{% highlight bash %}
-docker stop -t 600 $(docker ps -a -q)
-docker rm $(docker ps -a -q)
-docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
-{% endhighlight %}
-
-The last line, which deletes images, frees up the most disk space.  It
-is usually necessary to remove the containers first (the [`docker rm`]
-line), as the containers depend on the images.
 
 [Redis]: http://redis.io/
 [Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/
@@ -2550,3 +2685,5 @@ line), as the containers depend on the images.
 [`celery processes`]: {{ site.baseurl }}/docs/config.html#celery processes
 [bash]: https://en.wikipedia.org/wiki/Bash_(Unix_shell)
 [`backup file storage`]: {{ site.baseurl }}/docs/config.html#backup file storage
+[Docker volume]: https://docs.docker.com/storage/volumes/
+[Docker volumes]: https://docs.docker.com/storage/volumes/
