@@ -22276,11 +22276,12 @@ def user_interviews_filter(obj):
 
 def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True, delete_shared=False, admin=False, start_id=None, temp_user_id=None, query=None):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
-    if user_id is None and (current_user.is_anonymous or not current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions'])):
+    if session is not None and user_id is None and temp_user_id is None and current_user.is_authenticated and not current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions']):
+        user_id = current_user.id
+    elif user_id is None and (current_user.is_anonymous or not current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions'])):
         raise Exception('user_interviews: you do not have sufficient privileges to access information about other users')
-    if user_id is not None:
-        if admin is False and not (current_user.is_authenticated and (current_user.same_as(user_id) or current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions']))):
-            raise Exception('user_interviews: you do not have sufficient privileges to access information about other users')
+    if user_id is not None and admin is False and not (current_user.is_authenticated and (current_user.same_as(user_id) or current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions']))):
+        raise Exception('user_interviews: you do not have sufficient privileges to access information about other users')
     if action is not None and admin is False and not current_user.has_role_or_permission('admin', 'advocate', permissions=['edit_sessions']):
         if user_id is None:
             raise Exception("user_interviews: no user_id provided")
@@ -22307,6 +22308,8 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 where_clause.append(UserDictKeys.user_id == user_id)
             if filename is not None:
                 where_clause.append(UserDictKeys.filename == filename)
+            if session is not None:
+                where_clause.append(UserDictKeys.key == session)
             interview_query = db.session.execute(select(UserDictKeys.filename, UserDictKeys.key, UserDictKeys.user_id, UserDictKeys.temp_user_id).where(*where_clause).group_by(UserDictKeys.filename, UserDictKeys.key, UserDictKeys.user_id, UserDictKeys.temp_user_id))
             for interview_info in interview_query:
                 sessions_to_delete.add((interview_info.key, interview_info.filename, interview_info.user_id, interview_info.temp_user_id))

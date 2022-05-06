@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.3.40] - 2022-05-05
+### Fixed
+- Logged-in user could not delete own interview session using
+  `interview_list()` without special permissions.
+
 ## [1.3.39] - 2022-04-30
 ### Changed
 - Calling `all_variables(simplify=False, include_internal=False)` now
