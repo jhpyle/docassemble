@@ -1493,7 +1493,6 @@ def add_terms(termname, terms, label=None, status=None, question=None):
             noquote(markdown_to_html(terms[lower_termname]['definition'],
                 trim=True, default_image_width='100%', do_terms=False, status=status, question=question
             )) + '>' + label + '</a>'
-    #logmessage(lower_termname + " is not in terms dictionary\n")
     return '[[' + termname + ']]'
 
 def audio_control(files, preload="metadata", title_text=None):
