@@ -8252,7 +8252,7 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
     else:
         icon = ''
     if new_window is True:
-        target = 'target="_blank"'
+        target = 'target="_blank" '
     elif new_window is False:
         target = 'target="_self" '
     elif new_window:

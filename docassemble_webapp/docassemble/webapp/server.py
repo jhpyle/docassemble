@@ -9388,7 +9388,7 @@ def index(action_argument=None, refer=None):
         }
         $(daTargetDiv).html(data);
       }
-      function daProcessAjax(data, form, doScroll){
+      function daProcessAjax(data, form, doScroll, actionURL){
         daInformedChanged = false;
         if (daDisable != null){
           clearTimeout(daDisable);
@@ -9494,6 +9494,9 @@ def index(action_argument=None, refer=None):
           location.reload(true);
         }
         else if (data.action == 'resubmit'){
+          if (form == null){
+            window.location = actionURL;
+          }
           $("input[name='ajax']").remove();
           if (daSubmitter != null){
             var input = $("<input>")
@@ -9520,18 +9523,19 @@ def index(action_argument=None, refer=None):
           $(this).blur();
           return false;
         }
-        var data = decodeURIComponent($(this).data('embaction'));
+        var actionData = decodeURIComponent($(this).data('embaction'));
+        var theURL = $(this).attr("href");
         $.ajax({
           type: "POST",
           url: daInterviewUrl,
-          data: $.param({_action: data, csrf_token: daCsrf, ajax: 1}),
+          data: $.param({_action: actionData, csrf_token: daCsrf, ajax: 1}),
           beforeSend: addCsrfHeader,
           xhrFields: {
             withCredentials: true
           },
           success: function(data){
             setTimeout(function(){
-              daProcessAjax(data, $("#daform"), 1);
+              daProcessAjax(data, null, 1, theURL);
             }, 0);
           },
           error: function(xhr, status, error){
@@ -27737,6 +27741,7 @@ def html_index():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'HEAD'], automatic_options=True)
 def api_interview():
+    abort(404)
     if request.method == 'POST':
         post_data = request.get_json(silent=True)
         if post_data is None:

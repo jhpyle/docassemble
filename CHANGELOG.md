@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.3.41] - 2022-05-09
+### Fixed
+- `action buttons` were not called using Ajax.
+- `response()` was not functional when called from an action via Ajax.
+
 ## [1.3.40] - 2022-05-05
 ### Fixed
 - Logged-in user could not delete own interview session using

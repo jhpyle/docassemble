@@ -2812,7 +2812,7 @@ class Question:
                     if target is True:
                         target = '_blank'
                     elif target is False:
-                        target = None
+                        target = '_self'
                     label = item.get('label', None)
                     color = item.get('color', 'primary')
                     icon = item.get('icon', None)

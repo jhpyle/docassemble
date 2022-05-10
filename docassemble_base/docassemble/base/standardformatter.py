@@ -616,8 +616,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 icon = '<i class="' + icon + '"></i> '
             else:
                 icon = ''
-            action_search = re.search(r'^\?action=([^\&]+)', item['action'])
-            if action_search:
+            action_search = re.search(r'[\?\&]action=([^\&]+)', item['action'])
+            if action_search and ('/interview' in item['action'] or '/run' in item['action'] or '/start' in item['action'] or item['action'].startswith('?')):
                 action_data = 'data-embaction="' + action_search.group(1) + '" '
             else:
                 action_data = ''
