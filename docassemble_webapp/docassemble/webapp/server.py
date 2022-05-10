@@ -493,7 +493,7 @@ keymap = daconfig.get('keymap', None)
 google_config = daconfig.get('google', {})
 
 contains_volatile = re.compile(r'^(x\.|x\[|.*\[[ijklmn]\])')
-is_integer = re.compile(r'[0-9]+')
+is_integer = re.compile(r'^[0-9]+$')
 detect_mobile = re.compile(r'Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune')
 alphanumeric_only = re.compile(r'[\W_]+')
 phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
@@ -511,8 +511,8 @@ key_requires_preassembly = re.compile(r'^(session_local\.|device_local\.|user_lo
 match_brackets = re.compile(r'\[[BR]?\'[^\]]*\'\]$')
 match_inside_and_outside_brackets = re.compile(r'(.*)(\[[BR]?\'[^\]]*\'\])$')
 match_inside_brackets = re.compile(r'\[([BR]?)\'([^\]]*)\'\]')
-valid_python_var = re.compile(r'[A-Za-z][A-Za-z0-9\_]*')
-valid_python_exp = re.compile(r'[A-Za-z][A-Za-z0-9\_\.]*')
+valid_python_var = re.compile(r'^[A-Za-z][A-Za-z0-9\_]*$')
+valid_python_exp = re.compile(r'^[A-Za-z][A-Za-z0-9\_\.]*$')
 
 default_title = daconfig.get('default title', daconfig.get('brandname', 'docassemble'))
 default_short_title = daconfig.get('default short title', default_title)
@@ -2713,12 +2713,12 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
             elif len(x) == 1:
                 #logmessage("The len is one")
                 the_key = list(x)[0]
-                test_for_valid_var(the_key)
                 value = x[the_key]
                 if isinstance(value, list):
                     subitems = value
                     the_title = the_key
                 else:
+                    test_for_valid_var(the_key)
                     the_title = value
             else:
                 raise DAError("navigation_bar: too many keys in dict.  " + str(the_sections))
@@ -17868,7 +17868,7 @@ def playground_files():
     for a_file in files:
         extension, mimetype = get_ext_and_mimetype(a_file)
         if (mimetype and mimetype in ok_mimetypes) or (extension and extension in ok_extensions) or (mimetype and mimetype.startswith('text')):
-            if section == 'sources' and re.match(r'ml-.*\.json', a_file):
+            if section == 'sources' and re.match(r'ml-.*\.json$', a_file):
                 trainable_files[a_file] = re.sub(r'^ml-|\.json$', '', a_file)
             else:
                 editable_files.append(dict(name=a_file, modtime=os.path.getmtime(os.path.join(the_directory, a_file))))
@@ -21715,7 +21715,7 @@ def ensure_training_loaded(interview):
     #logmessage("Source filename is " + source_filename)
     source_filename = interview.get_ml_store()
     parts = source_filename.split(':')
-    if len(parts) == 3 and parts[0].startswith('docassemble.') and re.match(r'data/sources/.*\.json', parts[1]):
+    if len(parts) == 3 and parts[0].startswith('docassemble.') and re.match(r'data/sources/.*\.json$', parts[1]):
         the_file = docassemble.base.functions.package_data_filename(source_filename)
         if the_file is not None:
             record = db.session.execute(select(MachineLearning.group_id).where(MachineLearning.group_id.like(source_filename + ':%'))).first()
@@ -21944,7 +21944,7 @@ def train():
             #logmessage("Group id is " + str(parts))
             if not is_package_ml(parts):
                 continue
-            if re.match(r'data/sources/ml-.*\.json', parts[1]):
+            if re.match(r'data/sources/ml-.*\.json$', parts[1]):
                 parts[1] = re.sub(r'^data/sources/ml-|\.json$', '', parts[1])
             if parts[1] not in file_list:
                 file_list[parts[1]] = 0
@@ -21955,7 +21955,7 @@ def train():
                 #logmessage("Other group id is " + str(parts))
                 if not is_package_ml(parts):
                     continue
-                if re.match(r'data/sources/ml-.*\.json', parts[1]):
+                if re.match(r'data/sources/ml-.*\.json$', parts[1]):
                     parts[1] = re.sub(r'^data/sources/ml-|\.json$', '', parts[1])
                 if parts[1] not in file_list:
                     file_list[parts[1]] = 0
@@ -21963,7 +21963,7 @@ def train():
             area = SavedFile(current_user.id, fix=False, section='playgroundsources')
             for filename in area.list_of_files():
                 #logmessage("hey file is " + str(filename))
-                if re.match(r'ml-.*\.json', filename):
+                if re.match(r'ml-.*\.json$', filename):
                     short_file_name = re.sub(r'^ml-|\.json$', '', filename)
                     if short_file_name not in file_list:
                         file_list[short_file_name] = 0
