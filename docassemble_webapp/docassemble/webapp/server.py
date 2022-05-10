@@ -25594,7 +25594,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             release_lock(session_id, yaml_filename)
         raise Exception("Unable to obtain interview dictionary.")
     if process_objects:
-        variables = transform_json_data(variables)
+        variables = transform_json_variables(variables)
     pre_assembly_necessary = False
     for key, val in variables.items():
         if contains_volatile.search(key):
