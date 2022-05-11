@@ -3,8 +3,9 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_select_field, render_submit_field, render_checkbox_field with context %}
 
+
 {%- if allowed_to_upgrade %}
-<h2>{{ word('Upgrade docassemble') }}</h2>
+<h1 class="h2">{{ word('Upgrade docassemble') }}</h1>
 <p class="h6">{{ version }}</p>
 
 <div>
@@ -12,21 +13,21 @@
 </div>
 {%- endif %}
 
-<h2>{{ word('Install or update a package') }}</h2>
+<h1 class="h2">{{ word('Install or update a package') }}</h1>
 
 <form action="{{ url_for('update_package') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
-  <h4>{{ word('You can provide a:') }}</h4>
+  <h2 class="h4">{{ word('You can provide a:') }}</h2>
   {{ render_field(form.giturl, placeholder='https://github.com/username/packagename') }}
   {{ render_select_field(form.gitbranch) }}
-  <h4>{{ word('Or you can upload a:') }}</h4>
+  <h2 class="h4">{{ word('Or you can upload a:') }}</h2>
   {{ render_file_field(form.zipfile) }}
-  <h4>{{ word('Or you can specify a:') }}</h4>
+  <h2 class="h4">{{ word('Or you can specify a:') }}</h2>
   {{ render_field(form.pippackage) }}
   {{ render_submit_field(form.submit) }}
 </form>
 
-<h2>{{ word('Update or uninstall an existing package') }}</h2>
+<h1 class="h2">{{ word('Update or uninstall an existing package') }}</h1>
 
 <table class="table table-striped">
   <thead>
