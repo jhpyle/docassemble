@@ -13,21 +13,21 @@
 </div>
 {%- endif %}
 
-<h2>{{ word('Install or update a package') }}</h2>
+<h1 class="h2">{{ word('Install or update a package') }}</h1>
 
 <form action="{{ url_for('update_package') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
-  <h3 class="h4">{{ word('You can provide a:') }}</h2>
+  <h2 class="h4">{{ word('You can provide a:') }}</h2>
   {{ render_field(form.giturl, placeholder='https://github.com/username/packagename') }}
   {{ render_select_field(form.gitbranch) }}
-  <h3 class="h4">{{ word('Or you can upload a:') }}</h2>
+  <h2 class="h4">{{ word('Or you can upload a:') }}</h2>
   {{ render_file_field(form.zipfile) }}
-  <h3 class="h4">{{ word('Or you can specify a:') }}</h2>
+  <h2 class="h4">{{ word('Or you can specify a:') }}</h2>
   {{ render_field(form.pippackage) }}
   {{ render_submit_field(form.submit) }}
 </form>
 
-<h2>{{ word('Update or uninstall an existing package') }}</h2>
+<h1 class="h2">{{ word('Update or uninstall an existing package') }}</h1>
 
 <table class="table table-striped">
   <thead>

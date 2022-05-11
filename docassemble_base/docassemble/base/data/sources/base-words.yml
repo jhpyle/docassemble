@@ -129,11 +129,11 @@
 "Change username": Null
 "Chat message you want to send": Null
 "Check at least one option, or check “%s”": Null
-"Checkboxes:": Null
 "Check box": Null
 "Check if applicable": Null
 "Chile": Null
 "China": Null
+"Choices (choose one):": Null
 "Choices:": Null
 "Christmas Island": Null
 "Classes": Null
@@ -459,6 +459,7 @@
 "Interview files": Null
 "Interview": Null
 "Interview:": Null
+"Interview Progress": Null
 "Interviews": Null
 "in the": Null
 "Invalid action.": Null
@@ -965,6 +966,7 @@
 "Telephone assistance": Null
 "Template files": Null
 "Templates": Null
+"(term definition)": Null
 "Terms used in this question:": Null
 "Terms used:": Null
 "Test": Null

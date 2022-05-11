@@ -1460,20 +1460,15 @@ def my_escape(result):
     result = amp_match.sub('&amp;', result)
     return result
 
-def no_emoji(string):
-    """Takes the emoji indicators (:emoji-here:) in terms and replaces them with open and close parenthesis.
-      Used to avoid emoji substituion later in the process inside of aria-labels.
-    """
-    return emoji_match.sub((lambda x: f"({x.group(1)} emoji)"), string)
-
 def noquote(string):
     #return json.dumps(string.replace('\n', ' ').rstrip())
     return '"' + string.replace('\n', ' ').replace('"', '&quot;').rstrip() + '"'
 
 def add_terms_mako(termname, terms, status=None, question=None):
-    lower_termname = re.sub(r'\s+', ' ', termname.lower(), re.DOTALL)
+    lower_termname = re.sub(r'\s+', ' ', str(termname).lower(), re.DOTALL)
     if lower_termname in terms:
-        return '<a tabindex="0" class="daterm" aria-label=' + noquote(no_emoji(str(termname)) + ' ' + word("(term definition)")) +\
+        term_as_text = to_text(markdown_to_html(str(termname), trim=False, do_terms=False, status=status, question=question), None, None)
+        return '<a tabindex="0" class="daterm" aria-label=' + noquote(term_as_text + ' ' + word("(term definition)")) +\
             ' data-bs-toggle="popover" data-bs-container="body" data-bs-placement="bottom" data-bs-content=' +\
             noquote(markdown_to_html(terms[lower_termname]['definition'].text({}),
                 trim=True, default_image_width='100%', do_terms=False, status=status, question=question
@@ -1488,7 +1483,8 @@ def add_terms(termname, terms, label=None, status=None, question=None):
         label = re.sub(r'^\|', '', label)
     lower_termname = re.sub(r'\s+', ' ', termname.lower(), re.DOTALL)
     if lower_termname in terms:
-        return '<a tabindex="0" class="daterm" aria-label=' + noquote(no_emoji(label) + ' ' + word("(term definition)")) +\
+        term_as_text = to_text(markdown_to_html(label, trim=False, do_terms=False, status=status, question=question), None, None)
+        return '<a tabindex="0" class="daterm" aria-label=' + noquote(term_as_text + ' ' + word("(term definition)")) +\
             ' data-bs-toggle="popover" data-bs-container="body" data-bs-placement="bottom" data-bs-content=' +\
             noquote(markdown_to_html(terms[lower_termname]['definition'],
                 trim=True, default_image_width='100%', do_terms=False, status=status, question=question

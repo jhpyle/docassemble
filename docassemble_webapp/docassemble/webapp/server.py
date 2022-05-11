@@ -2844,7 +2844,7 @@ def progress_bar(progress, interview):
         percentage = str(int(progress)) + '%'
     else:
         percentage = ''
-    return '<div class="progress mt-2"><div class="progress-bar" aria-label="Interview Progress" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n'
+    return '<div class="progress mt-2"><div class="progress-bar" aria-label="' + noquote(word('Interview Progress')) + '" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n'
 
 def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
@@ -2977,7 +2977,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     else:
         source_button = ''
         source_menu_item = ''
-    hidden_question_button = '<li class="nav-item dainvisible"><button class="btn btn-link nav-link active da-no-outline" id="daquestionlabel" data-bs-toggle="tab" data-bs-target="#daquestion">' + word('Question') + '</button></li>'
+    hidden_question_button = '<li class="nav-item visually-hidden-focusable"><button class="btn btn-link nav-link active da-no-outline" id="daquestionlabel" data-bs-toggle="tab" data-bs-target="#daquestion">' + word('Question') + '</button></li>'
     navbar += '        ' + source_button + '<ul id="nav-bar-tab-list" class="nav navbar-nav damynavbar-right" role="tablist">' + hidden_question_button
     if len(status.interviewHelpText) > 0 or (len(status.helpText) > 0 and not status.question.interview.question_help_button):
         if status.question.helptext is None or status.question.interview.question_help_button:
@@ -8209,8 +8209,8 @@ def index(action_argument=None, refer=None):
         return window.atob(str);
       }
       function hideTablist() {
-        var anyTabs = $("#daChatAvailable").is(":visible") 
-            || $("daPhoneAvailable").is(":visible") 
+        var anyTabs = $("#daChatAvailable").is(":visible")
+            || $("daPhoneAvailable").is(":visible")
             || $("#dahelptoggle").is(":visible");
         if (anyTabs) {
           $("#nav-bar-tab-list").removeClass("dainvisible");
