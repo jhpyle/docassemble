@@ -9,9 +9,6 @@ short_title: Change Log
 ### Changed
 - Accessibility improvements.
 
-### Fixed
-- Added a color conversion strategy to Ghostscript for PDF/A compliance.
-
 ## [1.3.42](https://github.com/jhpyle/docassemble/releases/tag/v1.3.42) - 2022-05-10
 
 ### Fixed
