@@ -742,7 +742,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
-        output += '                <fieldset class="da-button-set da-field-' + status.question.question_type + '" aria-required="true">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
+        output += '                <fieldset class="da-button-set da-field-' + status.question.question_type + '">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
         output += back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_YES + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_NO + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.no() + '</button>'
         if status.question.question_type == 'yesnomaybe':
             output += '\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_MAYBE + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + markdown_to_html(status.question.maybe(), trim=True, do_terms=False, status=status) + '</button>'
@@ -1447,7 +1447,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         if status.question.question_variety in ["radio", "dropdown", "combobox"]:
             if status.question.question_variety == "radio":
                 verb = 'check'
-                output += '                <fieldset class="da-field-' + status.question.question_variety +'" aria-required="true">\n                  <legend class="visually-hidden">' + word("Choices:") + "</legend>\n"
+                output += '                <fieldset class="da-field-' + status.question.question_variety +'">\n                  <legend class="visually-hidden">' + word("Choices (choose one):") + "</legend>\n"
             else:
                 verb = 'select'
                 if status.question.question_variety == "dropdown":
@@ -2309,7 +2309,11 @@ def input_for(status, field, wide=False, embedded=False):
             if embedded:
                 output += '<span class="da-embed-checkbox-wrapper">'
             else:
-                output += '<fieldset class="da-field-checkboxes" role="group"' + req_aria + '><legend class="visually-hidden">' + word('Checkboxes:') + '</legend>'
+                if req_aria:
+                  legend_text = 'Checkboxes (select at least one):'
+                else:
+                  legend_text = 'Checkboxes:'
+                output += '<fieldset class="da-field-checkboxes" role="group"><legend class="visually-hidden">' + word(legend_text) + '</legend>'
             for pair in pairlist:
                 if 'image' in pair:
                     the_icon = icon_html(status, pair['image']) + ' '
