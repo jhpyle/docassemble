@@ -4,6 +4,14 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.43](https://github.com/jhpyle/docassemble/releases/tag/v1.3.43) - 2022-05-11
+
+### Changed
+- Accessibility improvements.
+
+### Fixed
+- Added a color conversion strategy to Ghostscript for PDF/A compliance.
+
 ## [1.3.42](https://github.com/jhpyle/docassemble/releases/tag/v1.3.42) - 2022-05-10
 
 ### Fixed
