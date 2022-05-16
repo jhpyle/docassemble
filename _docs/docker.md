@@ -847,6 +847,13 @@ over any values you specify in `env.list`.  If you are using
 edit these configuration files in the cloud and then stop and start
 your container for the new configuration to take effect.
 
+* <a name="DA_ADMIN_EMAIL"></a>DA_ADMIN_EMAIL: This is used to set
+  the initial admin user's email. If not set it defaults to
+  "admin@admin.com".
+* <a name="DA_ADMIN_PASSWORD"></a>DA_ADMIN_PASSWORD: This is used to
+  set the initial admin user's password. If not set it defaults to
+  "password". This should be set to avoid leaving the default
+  admin password exposed.
 * <a name="DAWEBSERVER"></a>`DAWEBSERVER`: This can be set either to
   `nginx` (the default) or `apache`.  See the [`web server`]
   configuration directive.
