@@ -850,6 +850,8 @@ def ocr_finalize(*pargs, **kwargs):
                         user_object = worker_controller.get_user_object(user_info['theid'])
                         worker_controller.login_user(user_object, remember=False)
                     #sys.stderr.write("ocr_finalize: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
+                    the_current_info = dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, interface='worker')
+                    docassemble.base.functions.this_thread.current_info = the_current_info
                     worker_controller.set_request_active(False)
                     worker_controller.obtain_lock_patiently(session_code, yaml_filename)
                     try:

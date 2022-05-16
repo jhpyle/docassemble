@@ -87,7 +87,7 @@ from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.playground import PlaygroundSection
 from docassemble.webapp.screenreader import to_text
 from docassemble.webapp.translations import setup_translation
-from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm, ManageAccountForm, RequestDeveloperForm
+from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm, PhoneLoginForm, PhoneLoginVerifyForm, MFASetupForm, MFAReconfigureForm, MFALoginForm, MFAChooseForm, MFASMSSetupForm, MFAVerifySMSSetupForm, MyResendConfirmEmailForm, ManageAccountForm, RequestDeveloperForm, InterviewsListForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog, MyUserInvitation, Role, UserRoles, AnonymousUserModel
 from docassemble.webapp.users.views import user_profile_page
 if not in_celery:
@@ -4588,6 +4588,11 @@ def run_temp():
     code = request.args.get('c', None)
     if code is None:
         abort(403)
+    ua_string = request.headers.get('User-Agent', None)
+    if ua_string is not None:
+        response = ua_parse(ua_string)
+        if response.device.brand == 'Spider':
+            return render_template_string('')
     the_key = 'da:temporary_url:' + str(code)
     data = r.get(the_key)
     if data is None:
@@ -4604,6 +4609,11 @@ def run_temp():
 
 @app.route('/user/autologin', methods=['GET'])
 def auto_login():
+    ua_string = request.headers.get('User-Agent', None)
+    if ua_string is not None:
+        response = ua_parse(ua_string)
+        if response.device.brand == 'Spider':
+            return render_template_string('')
     if 'key' not in request.args or len(request.args['key']) != 40:
         abort(403)
     code = str(request.args['key'][16:40])
@@ -5399,6 +5409,7 @@ def restart_session():
         secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
+    docassemble.base.functions.this_thread.current_info = current_info(yaml=yaml_filename, req=request, interface='vars', device_id=request.cookies.get('ds', None), session_uid=current_user.email)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
@@ -5911,6 +5922,7 @@ def get_variables():
     if session_id is None or yaml_filename is None:
         return jsonify(success=False)
     #sys.stderr.write("get_variables: fetch_user_dict\n")
+    docassemble.base.functions.this_thread.current_info = current_info(yaml=yaml_filename, req=request, interface='vars', device_id=request.cookies.get('ds', None))
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         assert user_dict is not None
@@ -22575,11 +22587,14 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
 @login_required
 def interview_list():
     setup_translation()
+    form = InterviewsListForm(request.form)
     is_json = bool(('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])))
     if 'lang' in request.form:
         session['language'] = request.form['lang']
         docassemble.base.functions.set_language(session['language'])
     tag = request.args.get('tag', None)
+    if request.method == 'POST':
+        tag = form.tags.data
     if tag is not None:
         tag = werkzeug.utils.secure_filename(tag)
     if 'newsecret' in session:
@@ -22605,22 +22620,23 @@ def interview_list():
     if secret is not None:
         secret = str(secret)
     #logmessage("interview_list: secret is " + repr(secret))
-    if 'action' in request.args and request.args.get('action') == 'delete_all':
-        num_deleted = user_interviews(user_id=current_user.id, secret=secret, action='delete_all', tag=tag)
-        if num_deleted > 0:
-            flash(word("Deleted interviews"), 'success')
-        if is_json:
-            return redirect(url_for('interview_list', json='1'))
-        return redirect(url_for('interview_list'))
-    elif 'action' in request.args and request.args.get('action') == 'delete':
-        yaml_file = request.args.get('filename', None)
-        session_id = request.args.get('session', None)
-        if yaml_file is not None and session_id is not None:
-            user_interviews(user_id=current_user.id, secret=secret, action='delete', session=session_id, filename=yaml_file)
-            flash(word("Deleted interview"), 'success')
-        if is_json:
-            return redirect(url_for('interview_list', json='1'))
-        return redirect(url_for('interview_list'))
+    if request.method == 'POST':
+        if form.delete_all.data:
+            num_deleted = user_interviews(user_id=current_user.id, secret=secret, action='delete_all', tag=tag)
+            if num_deleted > 0:
+                flash(word("Deleted interviews"), 'success')
+            if is_json:
+                return redirect(url_for('interview_list', json='1'))
+            return redirect(url_for('interview_list'))
+        elif form.delete.data:
+            yaml_file = form.i.data
+            session_id = form.session.data
+            if yaml_file is not None and session_id is not None:
+                user_interviews(user_id=current_user.id, secret=secret, action='delete', session=session_id, filename=yaml_file)
+                flash(word("Deleted interview"), 'success')
+            if is_json:
+                return redirect(url_for('interview_list', json='1'))
+            return redirect(url_for('interview_list'))
     #if daconfig.get('resume interview after login', False) and 'i' in session and 'uid' in session and (request.args.get('from_login', False) or (re.search(r'user/(register|sign-in)', str(request.referrer)) and 'next=' not in str(request.referrer))):
     #    if is_json:
     #        return redirect(url_for('index', i=session['i'], json='1'))
@@ -22681,7 +22697,19 @@ def interview_list():
         return jsonify(action="interviews", interviews=interviews, next_id=next_id)
     script = """
     <script>
-      $("#deleteall").on('click', function(event){
+      $(".dadeletebutton").on('click', function(event){
+        console.log("Doing click");
+        var yamlFilename = $("<input>")
+          .attr("type", "hidden")
+          .attr("name", "i").val($(this).data('i'));
+        $("#daform").append($(yamlFilename));
+        var session = $("<input>")
+          .attr("type", "hidden")
+          .attr("name", "session").val($(this).data('session'));
+        $("#daform").append($(session));
+        return true;
+      });
+      $("#delete_all").on('click', function(event){
         if (confirm(""" + json.dumps(word("Are you sure you want to delete all saved interviews?")) + """)){
           return true;
         }
@@ -22689,7 +22717,6 @@ def interview_list():
         return false;
       });
     </script>"""
-    script += global_js
     if re.search(r'user/register', str(request.referrer)) and len(interviews) == 1:
         return redirect(url_for('index', i=interviews[0]['filename'], session=interviews[0]['session'], from_list=1))
     tags_used = set()
@@ -22699,7 +22726,7 @@ def interview_list():
                 tags_used.add(the_tag)
     #interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
     #title = word(daconfig.get('interview page heading', 'Resume an interview'))
-    argu = dict(version_warning=version_warning, tags_used=sorted(tags_used) if len(tags_used) > 0 else None, numinterviews=len([y for y in interviews if not y['metadata'].get('hidden', False)]), interviews=sorted(interviews, key=valid_date_key), tag=tag, next_id=next_id, show_back=show_back) # extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title
+    argu = dict(version_warning=version_warning, tags_used=sorted(tags_used) if len(tags_used) > 0 else None, numinterviews=len([y for y in interviews if not y['metadata'].get('hidden', False)]), interviews=sorted(interviews, key=valid_date_key), tag=tag, next_id=next_id, show_back=show_back, form=form, page_js=Markup(script)) # extra_css=Markup(global_css), extra_js=Markup(script), tab_title=interview_page_title, page_title=interview_page_title, title=title
     if 'interview page template' in daconfig and daconfig['interview page template']:
         the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
         if the_page is None:
@@ -25334,7 +25361,7 @@ def transform_json_variables(obj):
     if isinstance(obj, (bool, int, float)):
         return obj
     if isinstance(obj, dict):
-        if '_class' in obj and obj['_class'] == 'type' and 'name' in obj and isinstance(obj['name'], str) and valid_python_exp.match(obj['name']):
+        if '_class' in obj and obj['_class'] == 'type' and 'name' in obj and isinstance(obj['name'], str) and obj['name'].startswith('docassemble.') and not illegal_variable_name(obj['name']):
             if '.' in obj['name']:
                 the_module = re.sub(r'\.[^\.]+$', '', obj['name'])
             else:
@@ -25342,15 +25369,20 @@ def transform_json_variables(obj):
             try:
                 if the_module:
                     importlib.import_module(the_module)
-                return eval(obj['name'])
+                new_obj = eval(obj['name'])
+                if not isinstance(the_class, TypeType):
+                    raise Exception("name is not a class")
+                return new_obj
             except Exception as err:
                 logmessage("transform_json_variables: " + err.__class__.__name__ + ": " + str(err))
                 return None
-        if '_class' in obj and isinstance(obj['_class'], str) and 'instanceName' in obj and valid_python_exp.match(obj['_class']) and isinstance(obj['instanceName'], str):
+        if '_class' in obj and isinstance(obj['_class'], str) and 'instanceName' in obj and obj['_class'].startswith('docassemble.') and not illegal_variable_name(obj['_class']) and isinstance(obj['instanceName'], str):
             the_module = re.sub(r'\.[^\.]+$', '', obj['_class'])
             try:
                 importlib.import_module(the_module)
                 the_class = eval(obj['_class'])
+                if not isinstance(the_class, TypeType):
+                    raise Exception("_class was not a class")
                 new_obj = the_class(obj['instanceName'])
                 for key, val in obj.items():
                     if key == '_class':
@@ -25360,11 +25392,10 @@ def transform_json_variables(obj):
             except Exception as err:
                 logmessage("transform_json_variables: " + err.__class__.__name__ + ": " + str(err))
                 return None
-        else:
-            new_dict = {}
-            for key, val in obj.items():
-                new_dict[transform_json_variables(key)] = transform_json_variables(val)
-            return new_dict
+        new_dict = {}
+        for key, val in obj.items():
+            new_dict[transform_json_variables(key)] = transform_json_variables(val)
+        return new_dict
     if isinstance(obj, list):
         return [transform_json_variables(val) for val in obj]
     if isinstance(obj, set):
@@ -25539,14 +25570,18 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True,
     #sys.stderr.write("get_session_variables: fetch_user_dict\n")
     if secret is None:
         secret = docassemble.base.functions.this_thread.current_info.get('secret', None)
+    tbackup = docassemble.base.functions.backup_thread_variables()
+    docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=str(secret))
     except Exception as the_err:
         if use_lock:
             release_lock(session_id, yaml_filename)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         raise Exception("Unable to decrypt interview dictionary: " + str(the_err))
     if use_lock:
         release_lock(session_id, yaml_filename)
+    docassemble.base.functions.restore_thread_variables(tbackup)
     if user_dict is None:
         raise Exception("Unable to obtain interview dictionary.")
     if simplify:
@@ -25558,25 +25593,31 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True,
 def go_back_in_session(yaml_filename, session_id, secret=None, return_question=False, use_lock=False, encode=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
+    tbackup = docassemble.base.functions.backup_thread_variables()
+    docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
         if use_lock:
             release_lock(session_id, yaml_filename)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         raise Exception("Unable to decrypt interview dictionary.")
     if user_dict is None:
         if use_lock:
             release_lock(session_id, yaml_filename)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         raise Exception("Unable to obtain interview dictionary.")
     if steps == 1:
         if use_lock:
             release_lock(session_id, yaml_filename)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         raise Exception("Cannot go back.")
     old_user_dict = user_dict
     steps, user_dict, is_encrypted = fetch_previous_user_dict(session_id, yaml_filename, secret)
     if user_dict is None:
         if use_lock:
             release_lock(session_id, yaml_filename)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         raise Exception("Unable to obtain interview dictionary.")
     if return_question:
         try:
@@ -25584,31 +25625,40 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
         except Exception as the_err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
+            docassemble.base.functions.restore_thread_variables(tbackup)
             raise Exception("Problem getting current question:" + str(the_err))
     else:
         data = None
     if use_lock:
         release_lock(session_id, yaml_filename)
+    docassemble.base.functions.restore_thread_variables(tbackup)
     return data
 
 def set_session_variables(yaml_filename, session_id, variables, secret=None, return_question=False, literal_variables=None, del_variables=None, question_name=None, event_list=None, advance_progress_meter=False, post_setting=True, use_lock=False, encode=False, process_objects=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
+    tbackup = docassemble.base.functions.backup_thread_variables()
+    sbackup = backup_session()
     device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
     session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
     if secret is None:
         secret = docassemble.base.functions.this_thread.current_info.get('secret', None)
+    docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
         if use_lock:
             release_lock(session_id, yaml_filename)
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         raise Exception("Unable to decrypt interview dictionary.")
     vars_set = set()
     old_values = {}
     if user_dict is None:
         if use_lock:
             release_lock(session_id, yaml_filename)
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         raise Exception("Unable to obtain interview dictionary.")
     if process_objects:
         variables = transform_json_variables(variables)
@@ -25629,12 +25679,33 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 break
     if pre_assembly_necessary:
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+        if current_user.is_anonymous:
+            if not interview.allowed_to_access(is_anonymous=True):
+                if use_lock:
+                    release_lock(session_id, yaml_filename)
+                restore_session(sbackup)
+                docassemble.base.functions.restore_thread_variables(tbackup)
+                raise Exception('Insufficient permissions to run this interview.')
+        else:
+            if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+                if use_lock:
+                    release_lock(session_id, yaml_filename)
+                restore_session(sbackup)
+                docassemble.base.functions.restore_thread_variables(tbackup)
+                raise Exception('Insufficient permissions to run this interview.')
         ci = current_info(yaml=yaml_filename, req=request, secret=secret, device_id=device_id, session_uid=session_uid)
         ci['session'] = session_id
         ci['encrypted'] = is_encrypted
         ci['secret'] = secret
         interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
-        interview.assemble(user_dict, interview_status)
+        try:
+            interview.assemble(user_dict, interview_status)
+        except Exception as err:
+            if use_lock:
+                release_lock(session_id, yaml_filename)
+            restore_session(sbackup)
+            docassemble.base.functions.restore_thread_variables(tbackup)
+            raise Exception("Error processing session: " + err.__class__.__name__ + ": " + str(err))
     try:
         for key, val in variables.items():
             if illegal_variable_name(key):
@@ -25653,6 +25724,8 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             del user_dict['_xxxtempvarxxx']
         if use_lock:
             release_lock(session_id, yaml_filename)
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         raise Exception("Problem setting variables:" + str(the_err))
     if literal_variables is not None:
         exec('import docassemble.base.util', user_dict)
@@ -25660,26 +25733,46 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             if illegal_variable_name(key):
                 if use_lock:
                     release_lock(session_id, yaml_filename)
+                restore_session(sbackup)
+                docassemble.base.functions.restore_thread_variables(tbackup)
                 raise Exception("Illegal value as variable name.")
             exec(str(key) + ' = ' + val, user_dict)
             process_set_variable(str(key), user_dict, vars_set, old_values)
     if question_name is not None:
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+        if current_user.is_anonymous:
+            if not interview.allowed_to_access(is_anonymous=True):
+                if use_lock:
+                    release_lock(session_id, yaml_filename)
+                restore_session(sbackup)
+                docassemble.base.functions.restore_thread_variables(tbackup)
+                raise Exception('Insufficient permissions to run this interview.')
+        else:
+            if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+                if use_lock:
+                    release_lock(session_id, yaml_filename)
+                restore_session(sbackup)
+                docassemble.base.functions.restore_thread_variables(tbackup)
+                raise Exception('Insufficient permissions to run this interview.')
         if question_name in interview.questions_by_name:
             interview.questions_by_name[question_name].mark_as_answered(user_dict)
         else:
+            if use_lock:
+                release_lock(session_id, yaml_filename)
+            restore_session(sbackup)
+            docassemble.base.functions.restore_thread_variables(tbackup)
             raise Exception("Problem marking question as completed")
     if del_variables is not None:
         try:
             for key in del_variables:
                 if illegal_variable_name(key):
-                    if use_lock:
-                        release_lock(session_id, yaml_filename)
                     raise Exception("Illegal value as variable name.")
                 exec('del ' + str(key), user_dict)
         except Exception as the_err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
+            restore_session(sbackup)
+            docassemble.base.functions.restore_thread_variables(tbackup)
             raise Exception("Problem deleting variables: " + str(the_err))
     session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
     #if 'event_stack' in user_dict['_internal']:
@@ -25718,6 +25811,8 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         except Exception as the_err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
+            restore_session(sbackup)
+            docassemble.base.functions.restore_thread_variables(tbackup)
             raise Exception("Problem getting current question:" + str(the_err))
     else:
         data = None
@@ -25732,6 +25827,8 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 is_encrypted = True
     if use_lock:
         release_lock(session_id, yaml_filename)
+    restore_session(sbackup)
+    docassemble.base.functions.restore_thread_variables(tbackup)
     return data
 
 @app.route('/api/session/new', methods=['GET'])
@@ -25781,9 +25878,11 @@ def create_new_interview(yaml_filename, secret, url_args=None, referer=None, req
         req = request
     if secret is None:
         secret = random_string(16)
+    tbackup = docassemble.base.functions.backup_thread_variables()
+    sbackup = backup_session()
     session_id, user_dict = reset_session(yaml_filename, secret)
     add_referer(user_dict, referer=referer)
-    if url_args:
+    if url_args and (isinstance(url_args, dict) or (hasattr(url_args, 'instanceName') and hasattr(url_args, 'elements') and isinstance(url_args.elements, dict))):
         for key, val in url_args.items():
             if isinstance(val, str):
                 val = val.encode('unicode_escape').decode()
@@ -25796,8 +25895,6 @@ def create_new_interview(yaml_filename, secret, url_args=None, referer=None, req
     ci['secret'] = secret
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     interview_status.checkin = True
-    tbackup = docassemble.base.functions.backup_thread_variables()
-    sbackup = backup_session()
     try:
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
@@ -25843,6 +25940,21 @@ def api_session_question():
 def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dict=None, steps=None, is_encrypted=None, old_user_dict=None, save=True, post_setting=False, advance_progress_meter=False, action=None, encode=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
+    tbackup = docassemble.base.functions.backup_thread_variables()
+    sbackup = backup_session()
+    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    if current_user.is_anonymous:
+        if not interview.allowed_to_access(is_anonymous=True):
+            raise Exception('Insufficient permissions to run this interview.')
+    else:
+        if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+            raise Exception('Insufficient permissions to run this interview.')
+    device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
+    session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
+    ci = current_info(yaml=yaml_filename, req=request, secret=secret, device_id=device_id, action=action, session_uid=session_uid)
+    ci['session'] = session_id
+    ci['secret'] = secret
+    docassemble.base.functions.this_thread.current_info = ci
     if user_dict is None:
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
@@ -25850,17 +25962,9 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             if use_lock:
                 release_lock(session_id, yaml_filename)
             raise Exception("Unable to obtain interview dictionary: " + str(err))
-    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
-    session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
-    ci = current_info(yaml=yaml_filename, req=request, secret=secret, device_id=device_id, action=action, session_uid=session_uid)
-    ci['session'] = session_id
     ci['encrypted'] = is_encrypted
-    ci['secret'] = secret
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     #interview_status.checkin = True
-    tbackup = docassemble.base.functions.backup_thread_variables()
-    sbackup = backup_session()
     try:
         interview.assemble(user_dict, interview_status=interview_status, old_user_dict=old_user_dict)
     except DAErrorMissingVariable as err:
@@ -26073,24 +26177,33 @@ def api_session_action():
     post_data = request.get_json(silent=True)
     if post_data is None:
         post_data = request.form.copy()
-    yaml_filename = post_data.get('i', None)
-    session_id = post_data.get('session', None)
-    secret = post_data.get('secret', None)
-    action = post_data.get('action', None)
-    persistent = true_or_false(post_data.get('persistent', False))
+    result = run_action_in_session(**post_data)
+    if not isinstance(result, dict):
+        return result
+    if result['status'] == 'success':
+        return ('', 204)
+    return jsonify_with_status(result['message'], 400)
+
+def run_action_in_session(**kwargs):
+    yaml_filename = kwargs.get('i', None)
+    session_id = kwargs.get('session', None)
+    secret = kwargs.get('secret', None)
+    action = kwargs.get('action', None)
+    persistent = true_or_false(kwargs.get('persistent', False))
+    overwrite = true_or_false(kwargs.get('overwrite', False))
     if yaml_filename is None or session_id is None or action is None:
-        return jsonify_with_status("Parameters i, session, and action are required.", 400)
+        return {"status": "error", "message": "Parameters i, session, and action are required."}
     secret = str(secret)
-    if 'arguments' in post_data:
-        if isinstance(post_data['arguments'], dict):
-            arguments = post_data['arguments']
+    if 'arguments' in kwargs and kwargs['arguments'] is not None:
+        if isinstance(kwargs['arguments'], dict):
+            arguments = kwargs['arguments']
         else:
             try:
-                arguments = json.loads(post_data['arguments'])
+                arguments = json.loads(kwargs['arguments'])
             except:
-                return jsonify_with_status("Malformed arguments.", 400)
+                return {"status": "error", "message": "Malformed arguments."}
             if not isinstance(arguments, dict):
-                return jsonify_with_status("Arguments data is not a dict.", 400)
+                return {"status": "error", "message": "Arguments data is not a dict."}
     else:
         arguments = {}
     device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
@@ -26098,34 +26211,73 @@ def api_session_action():
     ci = current_info(yaml=yaml_filename, req=request, action=dict(action=action, arguments=arguments), secret=secret, device_id=device_id, session_uid=session_uid)
     ci['session'] = session_id
     ci['secret'] = secret
+    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    if current_user.is_anonymous:
+        if not interview.allowed_to_access(is_anonymous=True):
+            raise Exception('Insufficient permissions to run this interview.')
+    else:
+        if not interview.allowed_to_access(has_roles=[role.name for role in current_user.roles]):
+            raise Exception('Insufficient permissions to run this interview.')
+    tbackup = docassemble.base.functions.backup_thread_variables()
+    sbackup = backup_session()
     docassemble.base.functions.this_thread.current_info = ci
     obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
         release_lock(session_id, yaml_filename)
-        return jsonify_with_status("Unable to obtain interview dictionary.", 400)
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
+        return {"status": "error", "message": "Unable to obtain interview dictionary."}
     ci['encrypted'] = is_encrypted
-    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
     if not persistent:
         interview_status.checkin = True
-    old_language = docassemble.base.functions.get_language()
+    changed = True
     try:
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable as err:
-        steps += 1
-        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
+        if overwrite:
+            save_status = 'overwrite'
+            changed = False
+        else:
+            save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
+        if save_status == 'new':
+            steps += 1
+            user_dict['_internal']['steps'] = steps
+        if save_status != 'ignore':
+            save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=changed, steps=steps)
+            if user_dict.get('multi_user', False) is True and is_encrypted is True:
+                is_encrypted = False
+                decrypt_session(secret, user_code=session_id, filename=yaml_filename)
+            if user_dict.get('multi_user', False) is False and is_encrypted is False:
+                encrypt_session(secret, user_code=session_id, filename=yaml_filename)
+                is_encrypted = True
         release_lock(session_id, yaml_filename)
-        docassemble.base.functions.set_language(old_language)
-        return ('', 204)
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
+        return {"status": "success"}
     except Exception as e:
         release_lock(session_id, yaml_filename)
-        docassemble.base.functions.set_language(old_language)
-        return jsonify_with_status("api_session_action: failure to assemble interview: " + e.__class__.__name__ + ": " + str(e), 400)
-    docassemble.base.functions.set_language(old_language)
-    steps += 1
-    save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=True, steps=steps)
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
+        return {"status": "error", "message": "api_session_action: failure to assemble interview: " + e.__class__.__name__ + ": " + str(e)}
+    if overwrite:
+        save_status = 'overwrite'
+        changed = False
+    else:
+        save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
+    if save_status == 'new':
+        steps += 1
+        user_dict['_internal']['steps'] = steps
+    if save_status != 'ignore':
+        save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=changed, steps=steps)
+        if user_dict.get('multi_user', False) is True and is_encrypted is True:
+            is_encrypted = False
+            decrypt_session(secret, user_code=session_id, filename=yaml_filename)
+        if user_dict.get('multi_user', False) is False and is_encrypted is False:
+            encrypt_session(secret, user_code=session_id, filename=yaml_filename)
+            is_encrypted = True
     release_lock(session_id, yaml_filename)
     if interview_status.question.question_type == "response":
         if hasattr(interview_status.question, 'all_variables'):
@@ -26139,18 +26291,28 @@ def api_session_action():
         else:
             response_to_send = make_response(interview_status.questionText.encode('utf-8'), '200 OK')
         response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         return response_to_send
     if interview_status.question.question_type == "sendfile":
         if interview_status.question.response_file is not None:
             the_path = interview_status.question.response_file.path()
         else:
+            restore_session(sbackup)
+            docassemble.base.functions.restore_thread_variables(tbackup)
             return jsonify_with_status("Could not send file because the response was None", 404)
         if not os.path.isfile(the_path):
+            restore_session(sbackup)
+            docassemble.base.functions.restore_thread_variables(tbackup)
             return jsonify_with_status("Could not send file because " + str(the_path) + " not found", 404)
         response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        restore_session(sbackup)
+        docassemble.base.functions.restore_thread_variables(tbackup)
         return response_to_send
-    return ('', 204)
+    restore_session(sbackup)
+    docassemble.base.functions.restore_thread_variables(tbackup)
+    return {'status': 'success'}
 
 @app.route('/api/login_url', methods=['POST'])
 @csrf.exempt
@@ -26161,62 +26323,79 @@ def api_login_url():
     post_data = request.get_json(silent=True)
     if post_data is None:
         post_data = request.form.copy()
-    username = post_data.get('username', None)
-    password = post_data.get('password', None)
+    result = get_login_url(**post_data)
+    if result['status'] == 'error':
+        return jsonify_with_status(result['message'], 400)
+    if result['status'] == 'auth_error':
+        return jsonify_with_status(result['message'], 403)
+    if result['status'] == 'success':
+        return jsonify(result['url'])
+    return jsonify_with_status("Error", 400)
+
+def get_login_url(**kwargs):
+    username = kwargs.get('username', None)
+    password = kwargs.get('password', None)
     if username is None or password is None:
-        return jsonify_with_status("A username and password must be supplied", 400)
+        return {"status": "error", "message": "A username and password must be supplied"}
+    username = str(username)
+    password = str(password)
     try:
-        secret = get_secret(str(username), str(password))
+        secret = get_secret(username, password)
     except Exception as err:
-        return jsonify_with_status(str(err), 403)
+        return {"status": "auth_error", "message": str(err)}
     try:
-        expire = int(post_data.get('expire', 15))
+        expire = int(kwargs.get('expire', 15))
         assert expire > 0
     except:
-        return jsonify_with_status("Invalid number of seconds.", 400)
-    if 'url_args' in post_data:
-        if isinstance(post_data['url_args'], dict):
-            url_args = post_data['url_args']
+        return {"status": "error", "message": "Invalid number of seconds."}
+    if 'url_args' in kwargs:
+        if isinstance(kwargs['url_args'], dict):
+            url_args = kwargs['url_args']
         else:
             try:
-                url_args = json.loads(post_data['url_args'])
+                url_args = json.loads(kwargs['url_args'])
                 assert isinstance(url_args, dict)
             except:
-                return jsonify_with_status("Malformed URL arguments", 400)
+                return {"status": "error", "message": "Malformed URL arguments"}
     else:
         url_args = {}
     username = re.sub(r'\%', '', username)
     user = db.session.execute(select(UserModel).where(UserModel.email.ilike(username))).scalar()
     if user is None:
-        return jsonify_with_status("Username not known", 403)
+        return {"status": "auth_error", "message": "Username not known"}
     info = dict(user_id=user.id, secret=secret)
     del user
-    if 'next' in post_data:
+    if 'next' in kwargs:
         try:
-            path = get_url_from_file_reference(post_data['next'])
+            path = get_url_from_file_reference(kwargs['next'])
             assert isinstance(path, str)
             assert not path.startswith('javascript')
         except:
-            return jsonify_with_status("Unknown path for next", 400)
+            return {"status": "error", "message": "Unknown path for next"}
     for key in ['i', 'next', 'session']:
-        if key in post_data:
-            info[key] = post_data[key]
+        if key in kwargs:
+            info[key] = kwargs[key]
     if len(url_args) > 0:
         info['url_args'] = url_args
     if 'i' in info:
+        old_yaml_filename = docassemble.base.functions.this_thread.current_info.get('yaml_filename', None)
         docassemble.base.functions.this_thread.current_info['yaml_filename'] = info['i']
         if 'session' in info:
             try:
                 steps, user_dict, is_encrypted = fetch_user_dict(info['session'], info['i'], secret=secret)
                 info['encrypted'] = is_encrypted
             except:
-                return jsonify_with_status("Could not decrypt dictionary", 400)
-        elif true_or_false(post_data.get('resume_existing', False)) or daconfig.get('auto login resume existing', False):
+                if old_yaml_filename:
+                    docassemble.base.functions.this_thread.current_info['yaml_filename'] = old_yaml_filename
+                return {"status": "error", "message": "Could not decrypt dictionary"}
+        elif true_or_false(kwargs.get('resume_existing', False)) or daconfig.get('auto login resume existing', False):
             interviews = user_interviews(user_id=info['user_id'], secret=secret, exclude_invalid=True, filename=info['i'], include_dict=True)[0]
             if len(interviews) > 0:
                 info['session'] = interviews[0]['session']
                 info['encrypted'] = interviews[0]['encrypted']
             del interviews
+        if old_yaml_filename:
+            docassemble.base.functions.this_thread.current_info['yaml_filename'] = old_yaml_filename
     encryption_key = random_string(16)
     encrypted_text = encrypt_dictionary(info, encryption_key)
     while True:
@@ -26228,7 +26407,7 @@ def api_login_url():
     pipe.set(the_key, encrypted_text)
     pipe.expire(the_key, expire)
     pipe.execute()
-    return jsonify(url_for('auto_login', key=encryption_key + code, _external=True))
+    return {"status": "success", "url": url_for('auto_login', key=encryption_key + code, _external=True)}
 
 @app.route('/api/list', methods=['GET'])
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
@@ -26575,7 +26754,7 @@ def api_temporary_redirect():
     if url is None:
         return jsonify_with_status("No url supplied.", 400)
     try:
-        one_time = bool(int(request.args.get('one_time', 0)))
+        one_time = true_or_false(request.args.get('one_time', 0))
     except:
         one_time = False
     try:
@@ -28913,7 +29092,9 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          retrieve_stashed_data=retrieve_stashed_data,
                                          secure_filename_spaces_ok=secure_filename_spaces_ok,
                                          secure_filename=secure_filename,
-                                         transform_json_variables=transform_json_variables)
+                                         transform_json_variables=transform_json_variables,
+                                         get_login_url=get_login_url,
+                                         run_action_in_session=run_action_in_session)
 
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)

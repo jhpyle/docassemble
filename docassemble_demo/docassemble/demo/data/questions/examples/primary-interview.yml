@@ -1,0 +1,73 @@
+metadata:
+  title: Action in other session
+  short title: Action
+  documentation: "https://docassemble.org/docs/functions.html#run_action_in_session"
+  example start: 1
+  example end: 8
+---
+code: |
+  interview_filename = 'docassemble.demo:data/questions/examples/secondary-interview.yml'
+---
+mandatory: True
+question: |
+  Press Continue to start a new session in
+  `${ interview_filename }`.
+continue button field: first_screen
+---
+code: |
+  session_id = create_session(interview_filename)
+---
+mandatory: True
+question: |
+  The session ID of the other session is
+  `${ session_id }`.
+subquestion: |
+  `number_of_fruit` in the other session is
+  currently
+  `${ get_session_variables(interview_filename, session_id)['number_of_fruit'] }`.
+
+  `favorite_fruit` in the other session is
+  currently
+  `${ get_session_variables(interview_filename, session_id)['favorite_fruit'] }`.
+
+  Press Continue to set the variable
+  `favorite_fruit` in the other session
+  to `'apple'`.
+continue button field: second_screen
+---
+mandatory: True
+code: |
+  set_session_variables(interview_filename,
+                        session_id,
+                        {'favorite_fruit': 'apple'})
+---
+mandatory: True
+question: |
+  The favorite fruit in the other session is now
+  `${ get_session_variables(interview_filename, session_id)['favorite_fruit'] }`.
+subquestion: |
+  Press Continue to run the action
+  `add_to_fruit_count` in the other session
+  with action argument `number` set to `2`.
+continue button field: third_screen
+---
+mandatory: True
+code: |
+  run_action_in_session(interview_filename,
+                        session_id,
+                        'add_to_fruit_count',
+                        arguments={'number': 2})
+---
+mandatory: True
+question: |
+  `number_of_fruit` in the other session
+  is now
+  `${ get_session_variables(interview_filename, session_id)['number_of_fruit'] }`.
+subquestion: |
+  Note: if you press the Back button
+  and press Continue again, you will see
+  number increase again, since the other
+  session is not affected by the Back
+  button in this session.
+
+  ${ action_button_html(interview_url(i=interview_filename, session=session_id), label='Visit other session', new_window=True) }

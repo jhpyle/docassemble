@@ -70,7 +70,7 @@ TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 contains_volatile = re.compile('^(x\.|x\[|.*\[[ijklmn]\])')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'create_session', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot', 'update_terms', 'set_variables', 'language_name']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'create_session', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot', 'update_terms', 'set_variables', 'language_name', 'run_action_in_session']
 
 # debug = False
 # default_dialect = 'us'
@@ -1564,6 +1564,34 @@ def delete_record(key, the_id):
     return server.delete_record(key, the_id)
 def url_of(file_reference, **kwargs):
     """Returns a URL to a file within a docassemble package, or another page in the application."""
+    if file_reference == 'temp_url':
+        url = kwargs.get('url', None)
+        if url is None:
+            raise Exception("url_of: a url keyword parameter must accompany temp_url")
+        expire = kwargs.get('expire', None)
+        local = kwargs.get('local', False)
+        one_time = kwargs.get('one_time', False)
+        if expire is None:
+            expire = 60*60*24*90
+        try:
+            expire = int(expire)
+            assert expire > 0
+        except:
+            raise Exception("url_of: invalid expire value")
+        return temp_redirect(url, expire_seconds, bool(local), bool(one_time))
+    if file_reference == 'login_url':
+        username = kwargs.get('username', None)
+        password = kwargs.get('password', None)
+        if username is None or password is None:
+            raise Exception("url_of: username and password must accompany login_url")
+        info = {'username': username, 'password': password}
+        for param in ('expire', 'url_args', 'next', 'i', 'session', 'resume_existing'):
+            if param in kwargs and kwargs[param] is not None:
+                info[param] = kwargs[param]
+        result = server.get_login_url(**info)
+        if result['status'] == 'success':
+            return result['url']
+        raise Exception("url_of: " + result['message'])
     if 'package' not in kwargs:
         kwargs['_package'] = get_current_package()
     if 'question' not in kwargs:
@@ -4341,7 +4369,10 @@ def safe_json(the_object, level=0, is_key=False):
             new_list.append(safe_json(sub_object, level=level+1))
         return new_list
     if isinstance(the_object, TypeType):
-        return {'_class': 'type', 'name': class_name(the_object)}
+        the_class_name = class_name(the_object)
+        if not the_class_name.startswith('docassemble.'):
+            return 'None'
+        return {'_class': 'type', 'name': the_class_name}
     if isinstance(the_object, (types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, FileType)):
         return 'None' if is_key else None
     if isinstance(the_object, (datetime.datetime, datetime.date, datetime.time)):
@@ -4683,22 +4714,48 @@ def create_session(yaml_filename, secret=None, url_args=None):
 
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
     """Returns the interview dictionary for the given interview session."""
+    if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
+        raise Exception("You cannot get variables from the current interview session")
+    if secret is None:
+        secret = this_thread.current_info.get('secret', None)
     return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=simplify)
 
 def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None, overwrite=False, process_objects=False):
     """Sets variables in the interview dictionary for the given interview session."""
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise Exception("You cannot set variables in the current interview session")
+    if secret is None:
+        secret = this_thread.current_info.get('secret', None)
     server.set_session_variables(yaml_filename, session_id, variables, secret=secret, question_name=question_name, post_setting=False if overwrite else True, process_objects=process_objects)
+
+def run_action_in_session(yaml_filename, session_id, action, arguments=None, secret=None, persistent=False, overwrite=False):
+    if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
+        raise Exception("You cannot run an action in the current interview session")
+    if arguments is None:
+        arguments = {}
+    if secret is None:
+        secret = this_thread.current_info.get('secret', None)
+    result = server.run_action_in_session(i=yaml_filename, session=session_id, secret=secret, action=action, persistent=persistent, overwrite=overwrite, arguments=arguments)
+    if isinstance(result, dict):
+        if result['status'] == 'success':
+            return True
+        raise Exception("run_action_in_session: " + result['message'])
+    return True
 
 def get_question_data(yaml_filename, session_id, secret=None):
     """Returns data about the current question for the given interview session."""
+    if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
+        raise Exception("You cannot get question data from the current interview session")
+    if secret is None:
+        secret = this_thread.current_info.get('secret', None)
     return server.get_question_data(yaml_filename, session_id, secret)
 
 def go_back_in_session(yaml_filename, session_id, secret=None):
     """Goes back one step in an interview session."""
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise Exception("You cannot go back in the current interview session")
+    if secret is None:
+        secret = this_thread.current_info.get('secret', None)
     server.go_back_in_session(yaml_filename, session_id, secret=secret)
 
 def turn_to_at_sign(match):

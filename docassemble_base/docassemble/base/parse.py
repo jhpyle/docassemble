@@ -9547,6 +9547,25 @@ def rejectattr_filter(*pargs, **kwargs):
             if not mygetattr(item, pargs[1]):
                 yield item
 
+def chain_filter(*pargs, **kwargs):
+    the_list = []
+    for parg in pargs:
+        if isinstance(parg, str):
+            the_list.append(parg)
+        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')):
+            if isinstance(parg.elements, dict):
+                for sub_parg in parg.values():
+                    the_list.append(sub_parg)
+            else:
+                for sub_parg in parg:
+                    the_list.append(sub_parg)
+        elif isinstance(parg, abc.Iterable):
+            for sub_parg in parg:
+                the_list.append(sub_parg)
+        else:
+            the_list.append(parg)
+    return chain(*the_list)
+
 def map_filter(*pargs, **kwargs):
     if len(pargs) >= 2:
         array = pargs[0]
@@ -9629,7 +9648,8 @@ builtin_jinja_filters = {
     'fix_punctuation': docassemble.base.functions.fix_punctuation,
     'redact': docassemble.base.functions.redact,
     'verbatim': docassemble.base.functions.verbatim,
-    'map': map_filter
+    'map': map_filter,
+    'chain': chain_filter
 }
 
 registered_jinja_filters = {}

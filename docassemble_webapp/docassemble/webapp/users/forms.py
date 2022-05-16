@@ -314,3 +314,10 @@ class MyResendConfirmEmailForm(FlaskForm):
 class ManageAccountForm(FlaskForm):
     confirm = StringField(word('Type \"delete my account\" here to confirm that you want to delete your account.'), [validators.AnyOf(LazyArray([word("delete my account")]), message=word('Since you did not type \"delete my account\" I did not delete your account.'))])
     delete = SubmitField(word('Delete Account'))
+
+class InterviewsListForm(FlaskForm):
+    i = StringField()
+    session = StringField()
+    tags = StringField()
+    delete = SubmitField()
+    delete_all = SubmitField()

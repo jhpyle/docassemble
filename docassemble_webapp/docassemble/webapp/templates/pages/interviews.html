@@ -7,22 +7,25 @@
 {%- block content %}
             <h1 class="da-page-header dainterviewpage h3">{{ get_part('interview page heading', word('Resume an interview')) }}</h1>
 {{ get_part('interview page pre') }}
+            <form id="daform" action="{{ url_for('interview_list') }}" method="POST" class="form" role="form">
+            {{ form.hidden_tag() }}
             {%- if tag %}
             <p>
               {{ word('Showing interviews tagged with:') }} <a class="dabadge btn btn-primary da-label" href="?tag={{ tag }}">{{ tag }}</a>.
               <a href="?">{{ word("Show all") }}</a>
+              <input type="hidden" name="tags" value="{{ tag }}" />
             </p>
             {%- else %}
             {%- if tags_used %}
             <p>
               {{ word('Filter by tag') }}:
               {% for tag in tags_used %}<a class="dabadge btn btn-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
+              <input type="hidden" name="tags" value="" />
             </p>
             {%- endif %}
             {%- endif %}
 
             <p class="dainterviewpage">{{ word('Click interview title to resume an interview you already started.') }}</p>
-
             <table class="table table-striped dainterviewpage">
               <thead>
                 <tr>
@@ -40,12 +43,10 @@
                 <tr>
                   <td>{% if interview['valid'] %}<a href="{{ url_for('index', i=interview['filename'], session=interview['session'], from_list=1) }}">{{ interview['title'] | safe }}</a>{% else %}{{ interview['title'] | safe }}{% endif %}{% if interview['subtitle'] %}<br><span class="text-muted dainterviewsubtitle">{{ interview['subtitle'] | safe}}</span>{% endif %}</td>
                   {%- if tags_used %}
-                  <td>
-                    {% for tag in interview['tags'] %}<a class="dabadge btn btn-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
-                  </td>
+                  <td>{% for tag in interview['tags'] %}<a class="dabadge btn btn-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}</td>
                   {%- endif %}
                   <td>{{ interview['starttime'] }}</td>
-                  <td><a class="btn btn-sm {{ config['BUTTON_STYLE'] }}warning" href="{{ url_for('interview_list', action='delete', filename=interview['filename'], session=interview['session']) }}">{{ word('Delete') }}</a></td>
+                  <td><button type="submit" class="btn btn-sm {{ config['BUTTON_STYLE'] }}warning dadeletebutton" name="delete" data-i="{{ interview['filename'] }}" data-session="{{ interview['session'] }}" value="1">{{ word('Delete') }}</button></td>
                 </tr>
               {%- endif %}
               {%- endfor %}
@@ -56,11 +57,12 @@
                   <td>&nbsp;</td>
                   {%- endif %}
                   <td>&nbsp;</td>
-                  <td><a id="delete_all" class="btn btn-sm {{ config['BUTTON_STYLE'] }}danger" href="{% if tag %}{{ url_for('interview_list', action='delete_all', tag=tag) }}{% else %}{{ url_for('interview_list', action='delete_all') }}{% endif %}">{{ word('Delete All') }}</a></td>
+                  <td><button type="submit" id="delete_all" class="btn btn-sm {{ config['BUTTON_STYLE'] }}danger" name="delete_all" value="1">{{ word('Delete All') }}</button></td>
                 </tr>
               {%- endif %}
               </tbody>
             </table>
+            </form>
             {%- if next_id or show_back %}
             <div class="row">
               <div class="col-xs-8 mx-auto">
