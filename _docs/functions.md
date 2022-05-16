@@ -1511,6 +1511,12 @@ The `url_of()` function also has a few special uses.
   of the [Playground].
 * `url_of('configuration')` returns a URL to the [Configuration] page.
 * `url_of('root')` returns the root URL of your server.
+* `url_of('temp_url', url=some_url)` returns a URL that redirects to
+  `some_url`. This special feature is explained below.
+* `url_of('login_url', username='user@someserver.com',
+  password='abc123', i='docassemble.foo:data/questions/bar.yml')`
+  returns a URL that a user can click on to be automatically logged in
+  This special feature is explained below.
 
 By default, `url_of()` returns relative URLs, which begin with `/`.
 However, if you want a full URL, you can call, e.g., `url_of('root',
@@ -1542,6 +1548,76 @@ subquestion: |
   [Your draft e-mail](${ url_of('mailto:' + addressee, subject=subject, body=body) })
   is ready.
 {% endhighlight %}
+
+`url_of('redirect', url=some_url)` acts like a URL shortener; it
+returns a URL to the `/goto` endpoint of the **docassemble** server
+with a URL parameter `c` set to a 32-character code. When this URL is
+visited, the server responds with a redirect to the URL indicated by
+the `url` parameter. The `/goto` URL expires after 90 days or another
+time period you indicate.
+
+{% highlight yaml %}
+mandatory: True
+question: |
+  All done
+subquestion: |
+  [Click here within 60 seconds](${ url_of('redirect', url='https://google.com', expire=60) })
+{% endhighlight %}
+
+The `temp_url` variant of `url_of()` returns a URL that redirects to
+another URL. It uses four keyword parameters:
+
+* `url` (required): the URL to which the user should be redirected.
+* `expire` (optional): this indicates the number of seconds until the
+  temporary URL should no longer funtion. The default is 7,776,000
+  sends (90 days).
+* `local` (optional): if `local` is true, the `/goto` URL returned by
+  `temporary_url()` will be a relative URL (e.g., `/goto`). If `local`
+  is false (which is the default), the URL will be complete (e.g.,
+  `https://yourserver.com/goto`).
+* `one_time` (optional): if `one_time` is true, then the redirect link
+  can only be used once. If the `/goto` URL is visited once, the
+  temporary URL immediately expires. This has security advantages. If
+  the `/goto` link is visited by a bot (for example, if Slack tries to
+  visit the link in order to fetch its metatag information and show
+  "preview" information) then `/goto` responds with a blank page; this
+  helps protect against the link expiring prematurely when `one_time`
+  is used. By default, redirect links can be used more than once.
+
+If the URL that you want to shorten is a URL created with
+`interview_url()`, you do not need to use `url_of('temp_url')`; the
+`temporary` and `once_temporary` keyword parameters to
+`interview_url()` do the same thing.
+
+The `login_url` variant of `url_of()` provides a URL containing a
+special code that logs the user in and directs them to an interview
+session or another destination. It uses the following keyword
+parameters:
+
+* `username`: the user name of the user.
+* `password`: the password of the user.
+* `i` (optional): the filename of an interview to which the user will
+   be redirected after they log in.  E.g.,
+   `docassemble.demo:data/questions/questions.yml`.
+* `session` (optional): the session ID for the interview session (if
+  `i` is also provided).  Providing this here rather than in the
+  `url_args` prevents sending the session ID to the user's browser.
+* `resume_existing` (optional): set this to `1` if you do not know
+   the `session` code but you are providing an `i` filename and you
+   want the user to resume an existing session in that interview, if
+   they have one.
+* `expire` (optional): the number of seconds after which the URL will
+   expire.  The default is 15 seconds.
+* `url_args` (optional): a dictionary containing additional URL
+   arguments that should be included in the URL to which the user is
+   directed after they log in.
+* `next` (optional): if the user should be directed after login to a
+   page that is not an interview, you can omit `i` and instead set
+   this parameter to a value like `playground` (for the [Playground])
+   or `config` (for the [Configuration] page).  For a list of all
+   possible values, see above (these are the "special uses" of
+   [`url_of()`]).  If `url_args` are supplied, these will be included
+   in the resulting URL.
 
 ## <a name="url_ask"></a>url_ask()
 
@@ -4747,7 +4823,12 @@ The `session_id` that is returned can then be passed to functions like
 The first and only required parameter is the file name of the YAML
 interview for which you want to create a session.
 
-The optional keyword parameter `secret` can be set to the output of
+[`create_session()`] supports two optional keyword parameters:
+
+* `secret`
+* `url_args`
+
+The parameter `secret` can be set to the output of
 `get_user_secret()`.  If the target interview does not use server-side
 encryption ([`multi_user`] is set to `False`), then the `secret`
 parameter is not important.  If you do not provide a `secret`
@@ -4802,9 +4883,16 @@ will no longer be able to access the file.  Note also that if
 `private` is set to `False`, then the file will be accessible on the
 internet from a URL.
 
-This function has an optional keyword parameter `question_name`.  If
-you set `question_name` to the ID of a question in the interview, the
-question will be marked as answered.  You can obtain the ID of a
+[`set_session_variables()`] supports the following optional keyword
+parameters:
+
+* `question_name`
+* `secret`
+* `overwrite`
+* `process_objects`
+
+If you set `question_name` to the ID of a question in the interview,
+the question will be marked as answered.  You can obtain the ID of a
 question from the `questionName` attribute in the question data using
 [`get_question_data()`] or the [`/api/session/question`] API method.
 It is only necessary to specify a `question_name` when you are setting
@@ -4812,26 +4900,68 @@ a variable for purposes of answering a [`mandatory`] question.  You
 can tell if a question is [`mandatory`] by checking for the presence
 of the attribute `mandatory` in the question data.
 
-The [`set_session_variables()`] function accepts the optional keyword
-parameter `secret`, an encryption key for decrypting the interview
-answers.  If no `secret` is provided, the encryption key of the
-current user is used.
+The keyword parameter `secret` can be an encryption key for decrypting
+the interview answers.  If no `secret` is provided, the encryption key
+of the current user is used.
 
-It also accepts the optional keyword parameter `overwrite`, which can
-be set to `True` if you do not want to create a new step in the
-interview when the function runs.
+The parameter `overwrite` can be set to `True` if you do not want to
+create a new step in the interview when the function runs.
 
-The [`set_session_variables()`] function accepts the optional keyword
-parameter `process_objects`, which can be set to `True` or
-`False`. The default is `False`. If set to `True`, the [Python
-dictionary] that you pass to [`set_session_variables()`] will be
+The parameter `process_objects` can be set to `True` if you want the
+[Python dictionary] that you pass to [`set_session_variables()`] to be
 treated as a "serializable" representation of **docassemble** objects.
 For more information about how this works, see the documentation for
 the [`set_variables()`] function, which also accepts a
-`process_objects` keyword parameter.
+`process_objects` keyword parameter. By default,
+[`set_session_variables()`] does not process the variables as
+**docassemble** objects.
 
 For an [API] version of this function, see the [POST method of
 `/api/session`].
+
+## <a name="run_action_in_session"></a>run_action_in_session()
+
+The `run_action_in_session()` function runs an [action] in a different
+session. It requires three positional parameters: the YAML filename of
+the interview, the session ID of the session in that interview, and
+the action to run.
+
+For example, this [`code`] block runs the action `do_the_thing` in the
+session of the interview
+`docassemble.demo:data/questions/questions.yml` with the session ID
+`45BrppwmAxQRRhdCYCs4rVJ4iYtfleDm`.
+
+{% highlight yaml %}
+code: |
+  run_action_in_session('docassemble.demo:data/questions/questions.yml',
+                        '45BrppwmAxQRRhdCYCs4rVJ4iYtfleDm',
+                        'do_the_thing')
+  action_has_been_run = True
+{% endhighlight %}
+
+`run_action_in_session()` accepts the following optional keyword
+parameters:
+
+* `arguments`: if the [action] takes arguments, set `arguments` to a
+   dictionary containing the arguments.
+* `secret`: the encryption key to use with the interview, if the
+   interview uses server-side encryption. (See [`get_user_secret()`].)
+   If no `secret` is provided, the encryption key of the current user
+   is used.
+* `persistent`: set this to `True` if you intend the action to show a
+   `question`, as opposed to merely execute some code.  The default
+   behavior is for the [action] to run in a non-persistent fashion.
+* `overwrite`: if set to `True`, then when the interview answers are
+   saved, they will overwrite the previous interview answers instead
+   of creating a new step in the session.  The default behavior is to
+   create a new step in the session.
+
+Here is an example interview that uses `run_action_in_session()`,
+among other functions for manipulating other sessions.
+
+{% include demo-side-by-side.html demo="primary-interview" %}
+
+For an [API] version of this function, see the [POST method of `/api/session/action`].
 
 ## <a name="get_question_data"></a>get_question_data()
 
@@ -4844,27 +4974,33 @@ session is encrypted, you must supply a third parameter (or the
 keyword parameter `secret`) containing the encryption key for
 decrypting the interview answers.
 
+{% highlight yaml %}
+code: |
+  data = get_question_data('docassemble.demo:data/questions/questions.yml', 
+                           'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv',
+                           secret=secret_of_other_user)
+{% endhighlight %}
+
 The function returns a [Python dictionary] containing information
 about the question.  The format of the dictionary varies by question
 type.
 
-You should only use this function to access the question data for an
-interview other than the current interview.  If you try to access the
-current question in a session from within that session, there may be
-an error or a long delay.
+You can only use this function to access the question data for an
+interview other than the current interview.
 
 For an [API] version of this function, see the [`/api/session/question`].
 
 ## <a name="go_back_in_session"></a>go_back_in_session()
 
-The [`go_back_in_session()`] function causes the effect of clicking
-the "back" button in an interview session.  It has two required
-parameters: the interview filename and the session ID.  It also accepts
-an optional keyword parameter `secret`, which is the encryption key to
-use to decrypt the [interview session dictionary], if it is encrypted.
+The [`go_back_in_session()`] function has the effect of clicking the
+Back button in another interview session.  It has two required
+parameters: the interview filename and the session ID of the other
+session.  It also accepts an optional keyword parameter `secret`,
+which is the encryption key to use to decrypt the [interview session
+dictionary], if it is encrypted.
 
 {% highlight python %}
-go_back_in_session(filename, session_id, secret)
+go_back_in_session(filename, session_id, secret=secret)
 {% endhighlight %}
 
 For an [API] version of this function, see the [POST method of `/api/session/back`].
@@ -8151,6 +8287,7 @@ $(document).on('daPageLoad', function(){
 [`/api/secret`]: {{ site.baseurl }}/docs/api.html#secret
 [GET method of `/api/session`]: {{ site.baseurl }}/docs/api.html#session_get
 [POST method of `/api/session`]: {{ site.baseurl }}/docs/api.html#session_post
+[POST method of `/api/session/action`]: {{ site.baseurl }}/docs/api.html#session_action
 [POST method of `/api/session/back`]: {{ site.baseurl }}/docs/api.html#session_back
 [POST method of `/api/user/<user_id>/privileges`]: {{ site.baseurl }}/docs/api.html#user_privilege_add
 [DELETE method of `/api/user/<user_id>/privileges`]: {{ site.baseurl }}/docs/api.html#user_privilege_remove

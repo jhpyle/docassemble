@@ -2347,6 +2347,54 @@ various endpoints of the **docassemble** server and then incorporate
 avoids problems with CORS that might otherwise interfere with
 embedding.
 
+# <a name="custom api"></a>Building a custom API endpoint with Flask
+
+Much as you can create a custom page in the web application using
+Flask, you can create a custom API endpoint.
+
+Here is an example of a Python module that, when installed on a
+**docassemble** server, enables `/create_prepopulate` as a POST
+endpoint. This endpoint creates a session in an interview indicated by
+the URL parameter `i`, and then prepopulates variables in the
+interview answers using the POST data. This might be useful in a
+situation where you want to combine multiple API calls into one.
+
+{% highlight python %}
+# pre-load
+from flask import request, jsonify
+from flask_cors import cross_origin
+from docassemble.base.util import create_session, set_session_variables, interview_url
+from docassemble.webapp.app_object import app, csrf
+from docassemble.webapp.server import api_verify, jsonify_with_status, jsonify
+
+@app.route('/create_prepopulate', methods=['POST'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
+def create_prepopulate():
+    if not api_verify(request):
+        return jsonify_with_status({"success": "False", "error_message": "Access denied."}, 403)
+    post_data = request.get_json(silent=True)
+    if post_data is None:
+        post_data = request.form.copy()
+    if 'i' not in request.args:
+        return jsonify_with_status({"success": False, "error_message": "No 'i' specified in URL parameters."}, 400)
+    session_id = create_session(request.args['i'])
+    if len(post_data):
+        set_session_variables(request.args['i'], session_id, post_data, overwrite=True, process_objects=False)
+    url = interview_url(i=request.args['i'], session=session_id, style='short_package', temporary=90*24*60*60)
+    return jsonify({"success": True, "url": url})
+{% endhighlight %}
+
+The `api_verify()` function handles authentication using
+**docassemble**'s API key system, and it logs in the owner of the API
+key, so that subsequent Python code will run with the permissions of
+that user. Note that the code in an API endpoint does not run in the
+context of a **docassemble** interview session, so there are many
+functions that you cannot call because they depend on that context
+
+The POST data may be in `application/json` or
+`application/x-www-form-urlencoded` format.
+
 # <a name="screen parts"></a>Synchronizing screen parts with interview answers
 
 If you run multiple sessions in the same interview and you want to be
@@ -2396,8 +2444,32 @@ the [`ics`] package.
 
 # <a name="duplicate"></a>Duplicating a session
 
+This example shows to use `create_session()`,
+`set_session_variables()`, and `all_variables()` to create a new
+session pre-populated with variables from the current session.
+
+Note that there are hidden variables (stored in the `_internal`
+variable) that pertain to the session that can be carried
+over. Copying over all of them is usually not a good idea, but some of
+them can be transferred. This example copies `answered` and `answers`,
+which keep track of which `mandatory` blocks have been completed and
+what the answers to [multiple-choice
+questions](https://docassemble.org/docs/fields.html#code%20button)
+are. The `device_local` and `user_local` hidden variables are also
+copied. The `starttime` and `referer` variables are not copied over,
+but they could be. This example does not copy over data about any
+current "actions" in progress (`event_stack`).
 
 {% include demo-side-by-side.html demo="duplicate" %}
+
+# <a name="nested"></a>A table in a DOCX file that uses a list nested in a dictionary
+
+This example illustrates how to use a [`docx template file`] and
+[Jinja2] to construct a table in a DOCX file that contains a list
+nested in a dictionary, with a total and subtotals. The template file
+is [`nested_list_table.docx`].
+
+{% include demo-side-by-side.html demo="nested-list-docx-table" %}
 
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
@@ -2526,3 +2598,5 @@ the [`ics`] package.
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
 [`ics`]: https://icspy.readthedocs.io/en/stable/
 [`calendar.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/calendar.py
+[`nested_list_table.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/nested_list_table.docx
+[Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/

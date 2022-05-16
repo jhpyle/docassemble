@@ -17344,6 +17344,22 @@
     ---\ninitial: True\ncode: |\n  set_language(user.language)\n---\nevent: set_lang\n\
     code: |\n  if action_argument('lang') in ('en', 'es'):\n    user.language = action_argument('lang')\n\
     \    set_save_status('overwrite')"
+"nested-list-docx-table":
+  "height": !!int |-
+    262
+  "width": !!int |-
+    488
+  "yaml": "objects:\n  - fruits: DADict.using(object_type=DAList.using(object_type=Thing,\
+    \ there_are_any=True), keys=['Apple', 'Orange'], gathered=True)\n---\nquestion:\
+    \ |\n  Tell me about the ${ ordinal(j) } variety of ${ i.lower() }.\nfields:\n\
+    \  - Variety: fruits[i][j].name.text\n  - Cost: fruits[i][j].cost\n    datatype:\
+    \ currency\n---\nquestion: |\n  Are there more ${ noun_plural(i).lower() } besides\
+    \ ${ fruits[i] }?\nyesno: fruits[i].there_is_another\n---\n# this would get done\
+    \ implicitly through document assembly, but it is \n# more efficient to trigger\
+    \ the gathering in a code block\nmandatory: True\ncode: |\n  for fruit_type, items_of_type\
+    \ in fruits.items():\n    items_of_type.gather()\n---\nmandatory: True\nquestion:\
+    \ |\n  Here is a summary of the fruit you listed.\nattachment:\n  docx template\
+    \ file: nested_list_table.docx"
 "new-or-existing":
   "height": !!int |-
     226
@@ -17968,6 +17984,78 @@
     [BLANK]\" }.\n  % endif\n  [BR][BR]\n  My favorite part of the meal is dessert,\n\
     \  when I can have a nice big slice of\n  ${ action_argument('favorite_dessert')\
     \ or \"[BLANK]\" }.\ntarget: food_section_text"
+"primary-interview":
+  "height": !!int |-
+    254
+  "width": !!int |-
+    488
+  "yaml": |-
+    code: |
+      interview_filename = 'docassemble.demo:data/questions/examples/secondary-interview.yml'
+    ---
+    mandatory: True
+    question: |
+      Press Continue to start a new session in
+      `${ interview_filename }`.
+    continue button field: first_screen
+    ---
+    code: |
+      session_id = create_session(interview_filename)
+    ---
+    mandatory: True
+    question: |
+      The session ID of the other session is
+      `${ session_id }`.
+    subquestion: |
+      `number_of_fruit` in the other session is
+      currently
+      `${ get_session_variables(interview_filename, session_id)['number_of_fruit'] }`.
+
+      `favorite_fruit` in the other session is
+      currently
+      `${ get_session_variables(interview_filename, session_id)['favorite_fruit'] }`.
+
+      Press Continue to set the variable
+      `favorite_fruit` in the other session
+      to `'apple'`.
+    continue button field: second_screen
+    ---
+    mandatory: True
+    code: |
+      set_session_variables(interview_filename,
+                            session_id,
+                            {'favorite_fruit': 'apple'})
+    ---
+    mandatory: True
+    question: |
+      The favorite fruit in the other session is now
+      `${ get_session_variables(interview_filename, session_id)['favorite_fruit'] }`.
+    subquestion: |
+      Press Continue to run the action
+      `add_to_fruit_count` in the other session
+      with action argument `number` set to `2`.
+    continue button field: third_screen
+    ---
+    mandatory: True
+    code: |
+      run_action_in_session(interview_filename,
+                            session_id,
+                            'add_to_fruit_count',
+                            arguments={'number': 2})
+    ---
+    mandatory: True
+    question: |
+      `number_of_fruit` in the other session
+      is now
+      `${ get_session_variables(interview_filename, session_id)['number_of_fruit'] }`.
+    subquestion: |
+      Note: if you press the Back button
+      and press Continue again, you will see
+      number increase again, since the other
+      session is not affected by the Back
+      button in this session.
+
+      ${ action_button_html(interview_url(i=interview_filename, session=session_id), label='Visit other session', new_window=True) }
 "progressive-disclosure":
   "height": !!int |-
     376
@@ -18546,6 +18634,24 @@
     \ email\n    show if: wants_email\nunder: \"\"\n---\ntemplate: save_resume_template\n\
     subject: |\n  Your interview\ncontent: |\n  To resume your interview, \n  [click\
     \ here](${ interview_url() })."
+"secondary-interview":
+  "height": !!int |-
+    104
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: True
+    question: |
+      There are ${ number_of_fruit } fruit.
+    subquestion: |
+      Your favorite fruit is ${ favorite_fruit }.
+    ---
+    event: add_to_fruit_count
+    code: |
+      number_of_fruit += action_argument('number')
+    ---
+    code: |
+      number_of_fruit = 0
 "setparts":
   "height": !!int |-
     230

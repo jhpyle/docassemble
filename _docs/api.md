@@ -1741,7 +1741,8 @@ Data:
    not need to convert the object to [JSON].)
  - `raw` (optional): if set to `0`, then no attempt will be made to
    identify and convert dates and `DAObject`s that appear in the
-   `variables` (see note below).
+   `variables` (see note below). By default, the endpoint identifies
+   dates and `DAObject`s in the JSON and converts them.
  - `question_name` (optional): if set to the name of a question (which
    you can obtain from the `questionName` attribute of a question), it
    will mark the question as having been answered.  This is necessary
@@ -2098,17 +2099,21 @@ Data:
  - `i`: the filename of the interview.  E.g.,
    `docassemble.demo:data/questions/questions.yml`.
  - `session`: the session ID of the interview.
- - `secret` (optional): the encryption key to use with the interview,
+ - `secret`: the encryption key to use with the interview,
    if the interview uses server-side encryption.
  - `action`: the name of the action you want to run.
  - `persistent` (optional): set this to `1` if you intend the action
    to show a `question`, as opposed to merely execute some code.  The
    default behavior is for the action to run in a non-persistent
    fashion.
- - `arguments` (optional): a [JSON] object in which the keys are
+ - `arguments`: a [JSON] object in which the keys are
    argument names and the values are argument values.  (If your
    request has the `application/json` content type, you do not need to
    convert the object to [JSON].)
+ - `overwrite`: if set to `1`, then when the interview
+   answers are saved, they will overwrite the previous interview
+   answers instead of creating a new step in the session.  The default
+   behavior is to create a new step in the session.
 
 Responses on failure:
 

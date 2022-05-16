@@ -4,6 +4,26 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.44](https://github.com/jhpyle/docassemble/releases/tag/v1.3.44) - 2022-05-16
+
+### Added
+- The `temp_url` variant of `url_of()`, which functions like the
+  `/api/temp_url` API endpoint.
+- The `login_url` variant of `url_of()`, which functions like the
+  `/api/login_url` API endpoint.
+- The `overwrite` parameter for `/api/session/action`.
+- The `run_action_in_session()` function.
+- A Jinja2 filter called `chain` that concatenates lists or other
+  iterables (`itertools.chain`).
+
+### Changed
+- The `/goto` and `/auto_login` endpoints return a blank page if the
+  `User-Agent` header indicates that the HTTP client is a bot.
+
+### Fixed
+- Added a color conversion strategy to Ghostscript for PDF/A
+  compliance.
+
 ## [1.3.43](https://github.com/jhpyle/docassemble/releases/tag/v1.3.43) - 2022-05-11
 
 ### Changed

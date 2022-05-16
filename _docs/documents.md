@@ -1081,6 +1081,7 @@ either discussed above or are the names of [functions].
 * `add_separators`
 * `alpha`
 * `capitalize`
+* `chain`
 * `comma_and_list`
 * `comma_list`
 * `country_name`
