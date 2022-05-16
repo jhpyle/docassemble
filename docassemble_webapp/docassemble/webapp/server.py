@@ -2335,7 +2335,7 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootst
         bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    ' + ('<link rel="shortcut icon" href="' + url_for('favicon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_FAVICON'] else '') + ('<link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_APPLE_TOUCH_ICON'] else '') + ('<link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="32x32">\n    ' if app.config['USE_FAVICON_MD'] else '') + ('<link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="16x16">\n    ' if app.config['USE_FAVICON_SM'] else '') + ('<link rel="manifest" href="' + url_for('favicon_site_webmanifest', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_SITE_WEBMANIFEST'] else '') + ('<link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external, **app.config['FAVICON_PARAMS']) + '" color="' + app.config['FAVICON_MASK_COLOR'] + '">\n    ' if app.config['USE_SAFARI_PINNED_TAB'] else '') + '<meta name="msapplication-TileColor" content="' + app.config['FAVICON_TILE_COLOR'] + '">\n    <meta name="theme-color" content="' + app.config['FAVICON_THEME_COLOR'] + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.min.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/bundle.css', v=da_version, _external=external) + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '" itemscope itemtype="http://schema.org/WebPage">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    ' + ('<link rel="shortcut icon" href="' + url_for('favicon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_FAVICON'] else '') + ('<link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_APPLE_TOUCH_ICON'] else '') + ('<link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="32x32">\n    ' if app.config['USE_FAVICON_MD'] else '') + ('<link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="16x16">\n    ' if app.config['USE_FAVICON_SM'] else '') + ('<link rel="manifest" href="' + url_for('favicon_site_webmanifest', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_SITE_WEBMANIFEST'] else '') + ('<link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external, **app.config['FAVICON_PARAMS']) + '" color="' + app.config['FAVICON_MASK_COLOR'] + '">\n    ' if app.config['USE_SAFARI_PINNED_TAB'] else '') + '<meta name="msapplication-TileColor" content="' + app.config['FAVICON_TILE_COLOR'] + '">\n    <meta name="theme-color" content="' + app.config['FAVICON_THEME_COLOR'] + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.min.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/bundle.css', v=da_version, _external=external) + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     page_title = page_title.replace('\n', ' ').replace('"', '&quot;').strip()
@@ -11437,7 +11437,7 @@ def index(action_argument=None, refer=None):
         if interview.options.get('send question data', False):
             the_js += "\n      daQuestionData = " + json.dumps(interview_status.as_data(user_dict))
         scripts += """
-    <script type="text/javascript" charset="utf-8">
+    <script type="text/javascript">
 """ + the_js + """
     </script>"""
     if interview_status.question.language != '*':
@@ -13880,7 +13880,7 @@ def monitor():
         forwarding_phone_number = twilio_config['name']['default'].get('number', None)
         if forwarding_phone_number is not None:
             call_forwarding_on = 'true'
-    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js', v=da_version) + '"></script>' + "\n" + """    <script type="text/javascript" charset="utf-8">
+    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js', v=da_version) + '"></script>' + "\n" + """    <script type="text/javascript">
       var daAudioContext = null;
       var daSocket;
       var daSoundBuffer = Object();
@@ -15407,7 +15407,7 @@ def get_master_branch(giturl):
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
-#     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
+#     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript">
 #     var daSocket;
 #     $(document).ready(function(){
 #         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
