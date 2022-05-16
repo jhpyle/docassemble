@@ -11437,7 +11437,7 @@ def index(action_argument=None, refer=None):
         if interview.options.get('send question data', False):
             the_js += "\n      daQuestionData = " + json.dumps(interview_status.as_data(user_dict))
         scripts += """
-    <script type="text/javascript" charset="utf-8">
+    <script type="text/javascript">
 """ + the_js + """
     </script>"""
     if interview_status.question.language != '*':
@@ -13880,7 +13880,7 @@ def monitor():
         forwarding_phone_number = twilio_config['name']['default'].get('number', None)
         if forwarding_phone_number is not None:
             call_forwarding_on = 'true'
-    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js', v=da_version) + '"></script>' + "\n" + """    <script type="text/javascript" charset="utf-8">
+    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js', v=da_version) + '"></script>' + "\n" + """    <script type="text/javascript">
       var daAudioContext = null;
       var daSocket;
       var daSoundBuffer = Object();
@@ -15407,7 +15407,7 @@ def get_master_branch(giturl):
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
-#     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
+#     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript">
 #     var daSocket;
 #     $(document).ready(function(){
 #         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
