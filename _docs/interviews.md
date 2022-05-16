@@ -647,7 +647,7 @@ than [using an iframe] because you need to reconcile the [CSS] and
 The [Drupal module] and [WordPress plugin] both support embedding
 interviews into `<div>` elements.
 
-**docassemble** depends on the [CSS] classes of [Bootstrap 4] being
+**docassemble** depends on the [CSS] classes of [Bootstrap 5] being
 defined.  Your site's [CSS] should be loaded after the [CSS] needed by
 **docassemble**, so that it overrides the **docassemble** [CSS] rules.
 (The [Drupal module] and [WordPress plugin] are configured to do
@@ -1127,7 +1127,7 @@ containing `# use jinja` was encountered.
 [jQuery]: http://jquery.com/
 [jQuery Validation Plugin]: http://jqueryvalidation.org/maxlength-method
 [using an iframe]: #iframe
-[Bootstrap 4]: http://getbootstrap.com/
+[Bootstrap 5]: http://getbootstrap.com/
 [Bootstrap]: http://getbootstrap.com/
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
 [favicon]: https://en.wikipedia.org/wiki/Favicon
