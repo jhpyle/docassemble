@@ -141,7 +141,6 @@ install_requires = [
     "packaging==21.3",
     "pandas==1.4.2",
     "passlib==1.7.4",
-    "pathlib==1.0.1",
     "pdfminer.six==20220319",
     "phonenumbers==8.12.46",
     "Pillow==9.1.0",
