@@ -1015,6 +1015,12 @@ your container for the new configuration to take effect.
   support older browsers.  The value is passed directly to the [NGINX]
   directive [`ssl_protocols`].  See the [`nginx ssl protocols`]
   configuration directive.
+* <a name="PIPINDEXURL"></a>`PIPINDEXURL`: This controls the package
+  index that `pip` uses. See the [`pip index url`] configuration
+  directive.
+* <a name="PIPEXTRAINDEXURLS"></a>`PIPEXTRAINDEXURLS`: This controls
+  the extra package index sites that `pip` uses. See the [`pip extra
+  index urls`] configuration directive.
 * <a
   name="ENVIRONMENT_TAKES_PRECEDENCE"></a>`ENVIRONMENT_TAKES_PRECEDENCE`:
   It was noted above that once the [configuration] file is located in
@@ -2687,3 +2693,6 @@ the [docassemble repository].
 [`backup file storage`]: {{ site.baseurl }}/docs/config.html#backup file storage
 [Docker volume]: https://docs.docker.com/storage/volumes/
 [Docker volumes]: https://docs.docker.com/storage/volumes/
+[`pip index url`]: {{ site.baseurl }}/docs/config.html#pip index url
+[`pip extra index urls`]: {{ site.baseurl }}/docs/config.html#pip extra index urls
+[ARM]: https://en.wikipedia.org/wiki/ARM_architecture_family

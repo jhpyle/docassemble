@@ -422,20 +422,30 @@ are including a table that is inserted into an attachment, see
 [tables in attachments].
 
 If you want to have fine-grained control over the formatting of
-tables, [Markdown] will disappoint you.
+tables, [Markdown] will disappoint you. If you want a very specific
+type of table, you can use [raw HTML] for a table that displays in a
+question or [raw LaTeX] for a table that displays in a PDF-only
+[`attachment`].
 
-For example, the [PHP Markdown Extra] format _requires_ that you
-include a header in your table, even if you do not want one.  You can
-try to make the header row blank with the following trick.
+The [PHP Markdown Extra] format _requires_ that you include a header
+in your table, even if you do not want one.  You can try to make the
+header row blank with the following trick.
 
 {% include side-by-side.html demo="table-markdown-noheader" %}
 
 The styling of tables converted from [Markdown] to [HTML] can be
 customized using [`table css class`].
 
-If you want a very specific type of table, you can use [raw HTML] for
-a table that displays in a question or [raw LaTeX] for a table that
-displays in a PDF-only [`attachment`].
+When using [tables in HTML], text in each cell is aligned left by
+default. Although [PHP Markdown Extra] has a feature for changing the
+alignment of columns using the `:` character in the header separation
+line, this feature is not supported when inserting [tables in
+HTML]. Instead, you can change the CSS class of each cell individually
+using the following markup.
+
+{% include side-by-side.html demo="table-markdown-class" %}
+
+The CSS classes `text-center` and `text-end` come from [Bootstrap 5].
 
 If you want a simple two-column table that fills the width of the
 page, note that there are special [document markup] tags for this
@@ -462,7 +472,7 @@ information about this feature, see the section on
 [raw HTML]: https://www.w3schools.com/html/html_tables.asp
 [PHP Markdown Extra]: https://michelf.ca/projects/php-markdown/extra/#table
 [tables in attachments]: http://pandoc.org/MANUAL.html#extension-pipe_tables
-[tables in HTML]: https://pythonhosted.org/Markdown/extensions/tables.html
+[tables in HTML]: https://python-markdown.github.io/extensions/tables/
 [`code`]: {{ site.baseurl }}/docs/code.html
 [Processing interim user input]: {{ site.baseurl }}/docs/background.html#target
 [Embedding fields within a paragraph]: {{ site.baseurl }}/docs/fields.html#embed
@@ -517,3 +527,4 @@ information about this feature, see the section on
 [alt text]: https://moz.com/learn/seo/alt-text
 [`DAStaticFile`]: {{ site.baseurl }}/docs/objects.html#DAStaticFile
 [`table css class`]: {{ site.baseurl }}/docs/questions.html#table css class
+[Bootstrap 5]: https://getbootstrap.com/docs/5.0/utilities/text/#text-alignment

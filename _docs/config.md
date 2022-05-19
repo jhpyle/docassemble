@@ -2226,13 +2226,33 @@ default admin account:
   password: 67Gh_Secret_2jx
 {% endhighlight %}
 
+You can also specify the first and last name of the admin user:
+
+{% highlight yaml %}
+default admin account:
+  email: admin@example.com
+  password: 67Gh_Secret_2jx
+  first_name: Roger
+  last_name: Jones
+{% endhighlight %}
+
 The settings are only used by the [`docassemble.webapp.create_tables`]
 module during the initial setup process.  Using the information
 defined here, that script sets up a single account in the
 [user login system] with "admin" privileges.
 
-After [`create_tables`] runs for the first time, you can delete the
-`default admin account` information from the configuration file.
+You can also use `default admin account` to initialize an API key:
+
+{% highlight yaml %}
+default admin account:
+  email: admin@example.com
+  password: 67Gh_Secret_2jx
+  api key: Dbah81njFzdMLw07hnU2TBYA4eClcRw1
+{% endhighlight %}
+
+After [`create_tables`] runs for the first time, you can (and should)
+delete the `default admin account` information from the configuration
+file.
 
 ## <a name="admin can delete account"></a>Whether the administrator can delete user accounts
 
@@ -4835,6 +4855,24 @@ limit` directive.
 
 {% highlight yaml %}
 pagination limit: 50
+{% endhighlight %}
+
+## <a name="pip index"></a>Python package index
+
+By default, Python packages are installed from [PyPI] using
+`pip`. However, `pip` can be configured to use a different package
+index (`--index-url`). To configure this, set the `pip index url`
+directive.
+
+{% highlight yaml %}
+pip index url: https://myserver.com
+{% endhighlight %}
+
+The `pip` configuration also allows you to configure additional
+package index sites (`--extra-index-url`). You can set this as well.
+
+{% highlight yaml %}
+pip extra index urls: https://myserver.com https://myotherserver.com
 {% endhighlight %}
 
 ## <a name="jinja data"></a>Variables for Jinja2 YAML preprocessor
