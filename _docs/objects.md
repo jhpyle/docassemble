@@ -7150,7 +7150,7 @@ the `_uid` of the table rather than the `id`.
 [actions]: {{ site.baseurl }}/docs/background.html#url_action
 [screen part]: {{ site.baseurl }}/docs/questions.html#screen parts
 [`breadcrumb` modifier]: {{ site.baseurl }}/docs/modifiers.html#breadcrumb
-[Bootstrap format]: https://getbootstrap.com/docs/4.0/components/breadcrumb/
+[Bootstrap format]: https://getbootstrap.com/docs/5.0/components/breadcrumb/
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [`png resolution`]: {{ site.baseurl }}/docs/config.html#png resolution
 [`png screen resolution`]: {{ site.baseurl }}/docs/config.html#png screen resolution

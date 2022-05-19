@@ -621,4 +621,4 @@ For more information about each method, see its documentation.
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [provide CSS]: {{ site.baseurl }}/docs/initial.html#css
 [adjust the CSS]: {{ site.baseurl }}/docs/config.html#bootstrap theme
-[Bootstrap Navbar]: https://getbootstrap.com/docs/4.0/components/navbar/#supported-content
+[Bootstrap Navbar]: https://getbootstrap.com/docs/5.0/components/navbar/#supported-content

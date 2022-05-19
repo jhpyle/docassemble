@@ -880,7 +880,7 @@ bootstrap theme: docassemble.demo:data/static/lumen.min.css
 You can also refer to files on the internet:
 
 {% highlight yaml %}
-bootstrap theme: https://bootswatch.com/4/minty/bootstrap.min.css
+bootstrap theme: https://bootswatch.com/5/minty/bootstrap.min.css
 {% endhighlight %}
 
 There are many alternative [Bootstrap] themes available on
@@ -5667,7 +5667,7 @@ and Facebook API keys.
 [Slack]: {{ site.slackurl }}
 [`geocoder service`]: #geocoder service
 [primary key]: https://docs.microsoft.com/en-us/azure/azure-maps/how-to-manage-authentication#view-authentication-details
-[Bootstrap colors]: https://getbootstrap.com/docs/4.0/components/buttons/#examples
+[Bootstrap colors]: https://getbootstrap.com/docs/5.0/components/buttons/#examples
 [`button colors`]: #button colors
 [Bootstrap theme]: #bootstrap theme
 [`allow embedding`]: #allow embedding
