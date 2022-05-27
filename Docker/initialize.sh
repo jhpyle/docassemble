@@ -917,13 +917,33 @@ echo "initialize: Disabling pip version check" >&2
 
 su -c "source \"${DA_ACTIVATE}\" && pip config set global.disable-pip-version-check true" www-data
 
-if [ "${DAUPDATEONSTART:-true}" = "true" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
+echo "initialize: Checking to see if an alternative pip global index is used" >&2
+
+if [ "${PIPINDEXURL:-null}" != "null" ]; then
+    echo "initialize: Setting the alternative pip global index" >&2
+    su -c "source \"${DA_ACTIVATE}\" && pip config set global.index-url ${PIPINDEXURL}" www-data
+else
+    echo "initialize: Using the standard pip global index" >&2
+    su -c "source \"${DA_ACTIVATE}\" && pip config unset global.index-url" www-data &> /dev/null
+fi
+
+echo "initialize: Checking to see if extra pip index urls are used" >&2
+
+if [ "${PIPEXTRAINDEXURLS:-null}" != "null" ]; then
+    echo "initialize: Setting extra pip index urls" >&2
+    su -c "source \"${DA_ACTIVATE}\" && pip config set global.extra-index-url ${PIPEXTRAINDEXURLS}" www-data
+else
+    echo "initialize: Not using extra pip index urls" >&2
+    su -c "source \"${DA_ACTIVATE}\" && pip config unset global.extra-index-url" www-data &> /dev/null
+fi
+
+if [ "${DAUPDATEONSTART:-true}" == "true" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "initialize: Doing upgrading of packages" >&2
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
     touch "${DA_ROOT}/webapp/initialized"
 fi
 
-if [ "${DAUPDATEONSTART:-true}" = "initial" ] && [ ! -f "${DA_ROOT}/webapp/initialized" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
+if [ "${DAUPDATEONSTART:-true}" == "initial" ] && [ ! -f "${DA_ROOT}/webapp/initialized" ] && [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     echo "initialize: Doing initial upgrading of packages" >&2
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.update \"${DA_CONFIG_FILE}\" initialize" www-data || exit 1
     touch "${DA_ROOT}/webapp/initialized"

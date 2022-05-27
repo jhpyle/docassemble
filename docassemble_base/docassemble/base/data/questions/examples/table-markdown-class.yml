@@ -1,0 +1,16 @@
+metadata:
+  title: Tables in Markdown
+  short title: tables
+  documentation: "https://docassemble.org/docs/markup.html#tables"
+---
+mandatory: true
+question: |
+  Your vegetable inventory
+subquestion: |
+  This describes your vegetable collection.
+
+  Vegetable { .text-center } | How many { .text-center }
+  ---------------------------|--------------------------
+  Potato                     | 4 { .text-end }
+  Brocolli                   | 3 { .text-end }
+  Beet                       | 6 { .text-end }

@@ -232,4 +232,8 @@ if __name__ == "__main__":
         print('export SERVERADMIN="webmaster@localhost"')
     if 'web server timeout' in daconfig and daconfig['web server timeout'] is not None:
         print('export DATIMEOUT="' + str(daconfig['web server timeout']) + '"')
+    if 'pip index url' in daconfig and daconfig['pip index url'] is not None and daconfig['pip index url'] != '':
+        print('export PIPINDEXURL="' + str(daconfig['pip index url']) + '"')
+    if 'pip extra index urls' in daconfig and daconfig['pip extra index urls'] is not None and daconfig['pip extra index urls'] != '':
+        print('export PIPEXTRAINDEXURLS="' + str(daconfig['pip extra index urls']) + '"')
     sys.exit(0)

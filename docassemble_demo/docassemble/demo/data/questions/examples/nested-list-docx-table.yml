@@ -29,5 +29,15 @@ code: |
 mandatory: True
 question: |
   Here is a summary of the fruit you listed.
+subquestion: |
+  S/N { .text-center }            | Fruit Type { .text-center } | Value { .text-center }
+  ------------------------------- | --------------------------- | -----------------------
+  % for fruit_type, items_of_type in fruits.items():
+  ${ loop.index + 1 }.            | **${ fruit_type }**         | **Subtotal: ${ currency(sum(y.cost for y in items_of_type), decimals=False) }**  { .text-end }
+    % for fruit in items_of_type:
+  ${ alpha(loop.index).lower() }. | ${ fruit.name.full() }      | ${ currency(fruit.cost, decimals=False) } { .text-end }
+    % endfor
+  % endfor
+  &nbsp;                          | &nbsp;                      | **Gross Value: ${ currency(sum(y.cost for y in chain(*fruits.values())), decimals=False) }** { .text-end }
 attachment:
   docx template file: nested_list_table.docx

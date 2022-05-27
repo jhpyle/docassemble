@@ -20,6 +20,18 @@ echo "`date` starting docassemble.webapp.restart" >&2
 python -m docassemble.webapp.restart
 echo "`date` finished docassemble.webapp.restart" >&2
 
+if [ "${PIPINDEXURL:-null}" != "null" ]; then
+    pip config set global.index-url "${PIPINDEXURL}"
+else
+    pip config unset global.index-url &> /dev/null
+fi
+
+if [ "${PIPEXTRAINDEXURLS:-null}" != "null" ]; then
+    pip config set global.extra-index-url "${PIPEXTRAINDEXURLS}"
+else
+    pip config unset global.extra-index-url &> /dev/null
+fi
+
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
     echo "`date` stopping celery" >&2
     supervisorctl --serverurl http://localhost:9001 stop celery || exit 1

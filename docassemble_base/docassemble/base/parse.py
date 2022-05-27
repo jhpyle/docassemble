@@ -4241,7 +4241,7 @@ class Question:
                             field_list = field[key]
                         field_info['data'] = []
                         for the_saveas in field_list:
-                            if isinstance(the_saveas, dict) and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas):
+                            if isinstance(the_saveas, dict) and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas or 'follow up' in the_saveas):
                                 if 'set' in the_saveas:
                                     if not isinstance(the_saveas['set'], list):
                                         raise DAError("The set statement must refer to a list." + self.idebug(data))
@@ -4258,7 +4258,19 @@ class Question:
                                             self.find_fields_in(the_var_stripped)
                                             clean_list.append([the_var_stripped, the_val])
                                     field_info['data'].append(dict(action='_da_set', arguments=dict(variables=clean_list)))
-                                for command in ('undefine', 'recompute'):
+                                if 'follow up' in the_saveas:
+                                    if not isinstance(the_saveas['follow up'], list):
+                                        raise DAError("The follow up statement must refer to a list." + self.idebug(data))
+                                    for var in the_saveas['follow up']:
+                                        if not isinstance(var, str):
+                                            raise DAError("Invalid variable name in follow up " + command + "." + self.idebug(data))
+                                        var_saveas = var.strip()
+                                        if invalid_variable_name(var_saveas):
+                                            raise DAError("Missing or invalid variable name " + repr(var_saveas) + " ." + self.idebug(data))
+                                        self.find_fields_in(var_saveas)
+                                        #field_info['data'].append(dict(action="_da_follow_up", arguments=dict(action=var)))
+                                        field_info['data'].append(dict(action=var, arguments={}))
+                                for command in ('undefine', 'invalidate', 'recompute'):
                                     if command not in the_saveas:
                                         continue
                                     if not isinstance(the_saveas[command], list):
@@ -4279,6 +4291,10 @@ class Question:
                                     if command == 'recompute':
                                         field_info['data'].append(dict(action='_da_compute', arguments=dict(variables=clean_list)))
                                 continue
+                            if isinstance(the_saveas, dict) and len(the_saveas) == 2 and 'action' in the_saveas and 'arguments' in the_saveas:
+                                if not isinstance(the_saveas['arguments'], dict):
+                                    raise DAError("An arguments directive must refer to a dictionary.  " + repr(data))
+                                field_info['data'].append(dict(action=the_saveas['action'], arguments=the_saveas['arguments']))
                             if not isinstance(the_saveas, str):
                                 raise DAError("Invalid variable name " + repr(the_saveas) + " in fields." + self.idebug(data))
                             the_saveas = the_saveas.strip()

@@ -3741,7 +3741,7 @@ def process_action():
         if the_list.auto_gather:
             if the_list.ask_number:
                 if hasattr(the_list, 'target_number'):
-                    the_list.target_number += 1
+                    the_list.target_number = int(the_list.target_number) + 1
             else:
                 if the_list.was_gathered:
                     the_list.there_is_another = False
@@ -3776,7 +3776,7 @@ def process_action():
             if the_dict.auto_gather:
                 if the_dict.ask_number:
                     if hasattr(the_dict, 'target_number'):
-                        the_dict.target_number += 1
+                        the_dict.target_number = int(the_dict.target_number) + 1
                 else:
                     the_dict.there_is_another = False
                     if len(the_dict.elements) > 0:

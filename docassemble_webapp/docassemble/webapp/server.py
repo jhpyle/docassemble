@@ -2755,7 +2755,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
             if section_reached and not currently_active and not seen_more:
                 output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(the_title) + '</span>'
             else:
-                if active_class == '' and not (seen_more and not section_reached):
+                if active_class == '' and not section_reached and not seen_more:
                     output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive' + muted_class + '">' + str(the_title) + '</span>'
                 else:
                     output += '<a href="#" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="daclickable ' + a_class + active_class + '">' + str(the_title) + '</a>'
@@ -2763,7 +2763,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
             if section_reached and not currently_active and not seen_more:
                 output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(the_title) + '</span>'
             else:
-                if active_class == '' and not (seen_more and not section_reached):
+                if active_class == '' and not section_reached and not seen_more:
                     output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive' + muted_class + '">' + str(the_title) + '</span>'
                 else:
                     output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + str(the_title) + '</a>'
@@ -6902,19 +6902,22 @@ def index(action_argument=None, refer=None):
                 if data == "True":
                     data = "True"
                     test_data = True
-                else:
+                elif data == "False":
                     data = "False"
                     test_data = False
+                else:
+                    data = "None"
+                    test_data = None
             elif known_datatypes[real_key] == 'threestate':
                 if data == "True":
                     data = "True"
                     test_data = True
-                elif data == "None":
-                    data = "None"
-                    test_data = None
-                else:
+                elif data == "False":
                     data = "False"
                     test_data = False
+                else:
+                    data = "None"
+                    test_data = None
             elif known_datatypes[real_key] in ('date', 'datetime', 'datetime-local'):
                 if isinstance(data, str):
                     data = data.strip()
@@ -7047,19 +7050,22 @@ def index(action_argument=None, refer=None):
                 if data == "True":
                     data = "True"
                     test_data = True
-                else:
+                elif data == "False":
                     data = "False"
                     test_data = False
+                else:
+                    data = "None"
+                    test_data = None
             elif known_datatypes[orig_key] == 'threestate':
                 if data == "True":
                     data = "True"
                     test_data = True
-                elif data == "None":
-                    data = "None"
-                    test_data = None
-                else:
+                elif data == "False":
                     data = "False"
                     test_data = False
+                else:
+                    data = "None"
+                    test_data = None
             elif known_datatypes[orig_key] in ('date', 'datetime'):
                 if isinstance(data, str):
                     data = data.strip()
@@ -21119,6 +21125,10 @@ def server_error(the_error):
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
     if (request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')) and 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata and docassemble.base.functions.interview_path() is not None:
         session['in error'] = True
+        try:
+            release_lock(docassemble.base.functions.this_thread.current_info['session'], docassemble.base.functions.this_thread.current_info['yaml_filename'])
+        except:
+            pass
         #session['action'] = docassemble.base.functions.myb64quote(json.dumps({'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}))
         return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}, refer=['error'])
     show_debug = not bool((not DEBUG) and isinstance(the_error, DAError))
@@ -23844,6 +23854,10 @@ def get_api_key():
         api_key = request.cookies['X-API-Key']
     if api_key is None and 'X-API-Key' in request.headers:
         api_key = request.headers['X-API-Key']
+    if api_key is None and 'Authorization' in request.headers:
+        m = re.search(r'^bearer (.*)', request.headers['Authorization'], flags=re.IGNORECASE)
+        if m:
+            api_key = m.group(1).strip()
     return api_key
 
 def api_verify(req, roles=None, permissions=None):

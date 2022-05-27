@@ -1,5 +1,37 @@
 # Change Log
 
+## [1.3.45] - 2022-05-
+### Added
+- The `pip index url` (`PIPINDEXURL`) and `pip extra index urls`
+  (`PIPEXTRAINDEXURLS`) Configuration directives.
+- The `insertion_order` option for `.true_values()` and
+  `.false_values()`.
+### Changed
+- API keys can now be passed in a header using the format
+  `Authorization: Bearer H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT`.
+- Removed `pathlib` as a dependency.
+### Fixed
+- When a `yesnoradio` or `yesnomaybe` field is not `required` and is
+  not answered, the variable will now be set to `None` instead of
+  `False`. THIS MAY BE A BREAKING CHANGE FOR YOU if you relied on
+  variables being set to `False` when the user did not provide a value
+  for a `yesnoradio` or `yesnomaybe` field. The documentation for
+  `required` has always stated that the variable will be set to `None`
+  if the user does not provide a value, so this change brings the code
+  into line with the documentation.
+- Error when `target_number` is not an `int` and an `.add_action()` is
+  triggered.
+- `docassemble.base.legal` did not import all of
+  `docassemble.base.util`'s names.
+- `set` and `follow up` were not recognized in all valid `review`
+  block syntax forms.
+- The `to` parameter of `send_email()` and `send_sms()` did not
+  process a `DAList` the same way as a `list`.
+- Under some circumstances, the navigation bar showed already-visited
+  sections as not visited.
+- `error action`s resulted in unnecessary contention for access to the
+  interview answers.
+
 ## [1.3.44] - 2022-05-16
 ### Added
 - The `temp_url` variant of `url_of()`, which functions like the

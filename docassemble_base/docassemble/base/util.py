@@ -1892,7 +1892,7 @@ class DAList(DAObject):
             if hasattr(self, 'there_are_any') and not self.there_are_any:
                 number = 0
             else:
-                number = self.target_number
+                number = int(self.target_number)
         if minimum is None:
             minimum = self.minimum_number
         if number is None and (minimum is None or minimum == 0):
@@ -1978,7 +1978,7 @@ class DAList(DAObject):
             return len(self.elements)
         if hasattr(self, 'there_are_any') and not self.there_are_any:
             return 0
-        return self.target_number
+        return int(self.target_number)
     def __len__(self):
         if self.ask_number:
             return self._target_or_actual()
@@ -2397,11 +2397,15 @@ class DADict(DAObject):
                     return False
         self._trigger_gather()
         return True
-    def true_values(self):
+    def true_values(self, insertion_order=False):
         """Returns the keys for which the corresponding value is true."""
+        if insertion_order:
+            return DAList(elements=[key for key, value in self.items() if value])
         return DAList(elements=[key for key, value in self._sorted_items() if value])
-    def false_values(self):
+    def false_values(self, insertion_order=False):
         """Returns the keys for which the corresponding value is false."""
+        if insertion_order:
+            return DAList(elements=[key for key, value in self.items() if not value])
         return DAList(elements=[key for key, value in self._sorted_items() if not value])
     def _sorted_items(self):
         return sorted(self.items())
@@ -2723,7 +2727,7 @@ class DADict(DAObject):
             if hasattr(self, 'there_are_any') and not self.there_are_any:
                 number = 0
             else:
-                number = self.target_number
+                number = int(self.target_number)
         if minimum is None:
             minimum = self.minimum_number
         if number is None and (minimum is None or minimum == 0):
@@ -2899,7 +2903,7 @@ class DADict(DAObject):
             return len(self.elements)
         if hasattr(self, 'there_are_any') and not self.there_are_any:
             return 0
-        return self.target_number
+        return int(self.target_number)
     def __len__(self):
         if self.ask_number:
             return self._target_or_actual()
@@ -3384,7 +3388,7 @@ class DASet(DAObject):
             if hasattr(self, 'there_are_any') and not self.there_are_any:
                 number = 0
             else:
-                number = self.target_number
+                number = int(self.target_number)
         if minimum is None:
             minimum = self.minimum_number
         if number is None and (minimum is None or minimum == 0):
@@ -3428,7 +3432,7 @@ class DASet(DAObject):
             return len(self.elements)
         if hasattr(self, 'there_are_any') and not self.there_are_any:
             return 0
-        return self.target_number
+        return int(self.target_number)
     def __len__(self):
         if self.ask_number:
             return self._target_or_actual()
@@ -7345,7 +7349,7 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
         attachments = []
     elif attachments is not list:
         attachments = [attachments]
-    if not isinstance(to, list):
+    if not isinstance(to, (list, DAList)):
         to = [to]
     if len(to) == 0:
         logmessage("send_sms: no recipients identified")
@@ -7489,7 +7493,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
         attachments = []
     if (not isinstance(attachments, (DAList, DASet, abc.Iterable))) or isinstance(attachments, str):
         attachments = [attachments]
-    if not isinstance(to, list):
+    if not isinstance(to, (list, DAList)):
         to = [to]
     if len(to) == 0:
         return False

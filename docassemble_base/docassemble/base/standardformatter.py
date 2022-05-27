@@ -1304,7 +1304,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                             if rule_name != 'required' and rule_name not in validation_rules['messages'][the_saveas]:
                                 validation_rules['messages'][the_saveas][rule_name] = field.validation_message(rule_name, status, word('You need to enter a valid value.'))
                 if field.datatype == 'boolean':
-                    if field.sign > 0:
+                    if hasattr(field, 'inputtype') and field.inputtype in ('yesnoradio', 'noyesradio'):
+                        checkboxes[field.saveas] = 'None'
+                    elif field.sign > 0:
                         checkboxes[field.saveas] = 'False'
                     else:
                         checkboxes[field.saveas] = 'True'
