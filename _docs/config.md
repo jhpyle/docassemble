@@ -3835,12 +3835,16 @@ If `incoming mail domain` is not specified, the value of
 
 By default, a user with privileges of administrator or developer can
 install Python packages on the server, or update existing Python
-packages.  To disable updating of packages through the user interface,
-set `allow updates` to `false`.
+packages.  To disable updating of packages through the user interface
+and the API, set `allow updates` to `false`.
 
 {% highlight yaml %}
 allow updates: false
 {% endhighlight %}
+
+Note that the [Playground] also allows users to change the code on the
+system, so if you set `allow updates: false`, you will probably also
+want to set [`enable playground`] to `false`.
 
 ## <a name="update on start"></a>Whether software is updated on start
 
@@ -3879,6 +3883,16 @@ Alternatively, if you want the update process to run during the
 
 {% highlight yaml %}
 update on start: initial
+{% endhighlight %}
+
+## <a name="allow configuration editing"></a>Whether the configuration can be edited
+
+If you want to prevent administrators from editing the configuration
+through the web interface or the API, you can set `allow configuration
+editing` to `False`.
+
+{% highlight yaml %}
+allow configuration editing: False
 {% endhighlight %}
 
 ## <a name="log server"></a>Log server hostname
@@ -4916,7 +4930,10 @@ The permissions available are as follows:
 * `edit_user_info` - set information in a user profile
 * `edit_user_api_info` - modify others users' API keys
 * `edit_user_active_status` - set a user account to inactive or active
-* `delete_user` - delete a user account and its data
+* `delete_user` - delete a user account and its data. Since deleting a
+  user also involves deleting sessions, a user must also have
+  `access_sessions` and `edit_sessions` permissions in order to delete
+  users.
 * `edit_user_password` - change another user's password (however, only
   an `admin` can change the password of a user with `admin`,
   `developer`, or `advocate` privileges)
@@ -5682,3 +5699,4 @@ and Facebook API keys.
 [parameters for connecting to Redis with Python]: https://redis-py.readthedocs.io/en/stable/connections.html
 [Ubuntu]: https://ubuntu.com/
 [Debian]: https://www.debian.org
+[`enable playground`]: #enable playground

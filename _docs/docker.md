@@ -943,6 +943,18 @@ your container for the new configuration to take effect.
   the container to update its software during the first `docker run`,
   but not on every `docker start`.  See the [`update on start`]
   configuration directive.
+* <a
+  name="DAALLOWCONFIGURATIONEDITING"></a>`DAALLOWCONFIGURATIONEDITING`:
+  Set this to `false` to prevent the editing of the Configuration.
+  See the [`allow configuration editing`] configuration directive.
+* <a name="DAENABLEPLAYGROUND"></a>`DAENABLEPLAYGROUND`: Set this to
+  `false` to disable the Playground on the server. See the
+  [`enable playground`] directive.
+* <a name="DADEBUG"></a>`DADEBUG`: Set this to `false` if you want the
+  server to be in production mode rather than developer mode. This
+  will also disable access to example and demonstration interviews in
+  the `docassemble.base` and `docassemble.demo` packages. See the
+  [`debug`] and [`allow demo`] configuration directives.
 * <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
   zone of the server.  The value of the variable is stored in
   `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
@@ -2696,3 +2708,7 @@ the [docassemble repository].
 [`pip index url`]: {{ site.baseurl }}/docs/config.html#pip index url
 [`pip extra index urls`]: {{ site.baseurl }}/docs/config.html#pip extra index urls
 [ARM]: https://en.wikipedia.org/wiki/ARM_architecture_family
+[`debug`]: {{ site.baseurl }}/docs/config.html#debug
+[`allow demo`]: {{ site.baseurl }}/docs/config.html#allow demo
+[`enable playground`]: {{ site.baseurl }}/docs/config.html#enable playground
+[`allow configuration editing`]: {{ site.baseurl }}/docs/config.html#allow configuration editing

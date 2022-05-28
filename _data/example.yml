@@ -13304,9 +13304,9 @@
         Hint: 2 + 2 = 4.
 "signature":
   "height": !!int |-
-    853
+    392
   "width": !!int |-
-    488
+    477
   "yaml": |-
     question: |
       Sign your name
@@ -13968,6 +13968,23 @@
   "yaml": "mandatory: true\nquestion: |\n  Your fruit inventory\nsubquestion: |\n\
     \  This describes your fruit\n  collection.\n  \n  Fruit  | How many\n  -------|---------\n\
     \  Apple  | 4\n  Orange | 3\n  Pear   | 6"
+"table-markdown-class":
+  "height": !!int |-
+    290
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: true
+    question: |
+      Your vegetable inventory
+    subquestion: |
+      This describes your vegetable collection.
+
+      Vegetable { .text-center } | How many { .text-center }
+      ---------------------------|--------------------------
+      Potato                     | 4 { .text-end }
+      Brocolli                   | 3 { .text-end }
+      Beet                       | 6 { .text-end }
 "table-markdown-noheader":
   "height": !!int |-
     290
@@ -17358,8 +17375,17 @@
     \ implicitly through document assembly, but it is \n# more efficient to trigger\
     \ the gathering in a code block\nmandatory: True\ncode: |\n  for fruit_type, items_of_type\
     \ in fruits.items():\n    items_of_type.gather()\n---\nmandatory: True\nquestion:\
-    \ |\n  Here is a summary of the fruit you listed.\nattachment:\n  docx template\
-    \ file: nested_list_table.docx"
+    \ |\n  Here is a summary of the fruit you listed.\nsubquestion: |\n  S/N { .text-center\
+    \ }            | Fruit Type { .text-center } | Value { .text-center }\n  -------------------------------\
+    \ | --------------------------- | -----------------------\n  % for fruit_type,\
+    \ items_of_type in fruits.items():\n  ${ loop.index + 1 }.            | **${ fruit_type\
+    \ }**         | **Subtotal: ${ currency(sum(y.cost for y in items_of_type), decimals=False)\
+    \ }**  { .text-end }\n    % for fruit in items_of_type:\n  ${ alpha(loop.index).lower()\
+    \ }. | ${ fruit.name.full() }      | ${ currency(fruit.cost, decimals=False) }\
+    \ { .text-end }\n    % endfor\n  % endfor\n  &nbsp;                          |\
+    \ &nbsp;                      | **Gross Value: ${ currency(sum(y.cost for y in\
+    \ chain(*fruits.values())), decimals=False) }** { .text-end }\nattachment:\n \
+    \ docx template file: nested_list_table.docx"
 "new-or-existing":
   "height": !!int |-
     226

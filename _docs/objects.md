@@ -1205,10 +1205,19 @@ Here is an example that uses `.all_false()`:
 
 {% include side-by-side.html demo="true-values" %}
 
+`.true_values()` accepts an optional keyword parameter
+`insertion_order`. If `insertion_order` is set to `True`, then the
+order of the keys returned by `.true_values()` will be the insertion
+order of the underlying dictionary. Otherwise, the keys are sorted in
+alphabetical order.
+
 <a name="DADict.false_values"></a>Similarly, `.false_values()` will return a
 [list] of keys that are `False`.
 
 {% include side-by-side.html demo="false-values" %}
+
+Like `.true_values()`, `.false_values()` accepts the optional keyword
+parameter `insertion_order`.
 
 For more information about using checkboxes, see the documentation for
 [checkbox groups].

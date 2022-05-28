@@ -1326,7 +1326,7 @@ text-based fields and `None` for multiple-choice and yes/no fields.
 
 Some `datatype`s are never marked with a red asterisk.  For example,
 [`range`](#range) and [`yesno`](#fields yesno) fields are set to real
-values by default, so the user cannot actuall skip the question.
+values by default, so the user cannot actually skip the question.
 
 The value of `required` can be `True` or `False`.  By default, all
 fields are required, so you never need to write `required: True`
