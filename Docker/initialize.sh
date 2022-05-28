@@ -439,6 +439,9 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DASTABLEVERSION}}/'"${DASTABLEVERSION:-false}"'/' \
         -e 's/{{DASQLPING}}/'"${DASQLPING:-false}"'/' \
         -e 's/{{ENABLEUNOCONV}}/'"${ENABLEUNOCONV:-true}"'/' \
+        -e 's/{{DAALLOWCONFIGURATIONEDITING}}/'"${DAALLOWCONFIGURATIONEDITING:-true}"'/' \
+        -e 's/{{DAENABLEPLAYGROUND}}/'"${DAENABLEPLAYGROUND:-true}"'/' \
+        -e 's/{{DADEBUG}}/'"${DADEBUG:-true}"'/g' \
         "$DA_CONFIG_FILE_DIST" > "$DA_CONFIG_FILE" || exit 1
 fi
 chown www-data.www-data "$DA_CONFIG_FILE"

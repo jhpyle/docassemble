@@ -83,3 +83,4 @@ allow non-idempotent questions: False
 new markdown to docx: True
 new template markdown behavior: True
 enable unoconv: True
+allow configuration editing: True

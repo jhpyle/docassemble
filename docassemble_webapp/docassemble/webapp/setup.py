@@ -122,3 +122,7 @@ app.config['SOCIAL'] = daconfig['social']
 app.config['OG_LOCALE'] = re.sub(r'\..*', '', daconfig.get('locale', 'en_US.utf8'))
 app.config['ENABLE_MONITOR'] = daconfig.get('enable monitor', True)
 app.config['INVERSE_NAVBAR'] = bool(daconfig.get('inverse navbar', True))
+app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)
+app.config['ALLOW_UPDATES'] = daconfig.get('allow updates', True)
+app.config['ALLOW_CONFIGURATION_EDITING'] = daconfig.get('allow configuration editing', True)
+app.config['ALLOW_RESTARTING'] = bool(app.config['ENABLE_PLAYGROUND'] or app.config['ALLOW_UPDATES'] or app.config['ALLOW_CONFIGURATION_EDITING'])

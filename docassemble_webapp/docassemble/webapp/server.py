@@ -3068,7 +3068,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                         navbar +='<a class="dropdown-item" href="' + url_for('utilities') + '">' + word('Utilities') + '</a>'
                     if current_user.has_role('admin', 'advocate') or current_user.can_do('access_user_info'):
                         navbar +='<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
-                    if current_user.has_role('admin'):
+                    if current_user.has_role('admin') and app.config['ALLOW_CONFIGURATION_EDITING']:
                         navbar +='<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
                     if app.config['SHOW_DISPATCH']:
                         navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a>'
@@ -5496,6 +5496,8 @@ def checkout():
 @login_required
 @roles_required(['admin', 'developer'])
 def restart_ajax():
+    if not app.config['ALLOW_RESTARTING']:
+        return ('File not found', 404)
     #logmessage("restart_ajax: action is " + str(request.form.get('action', None)))
     #if current_user.has_role('admin', 'developer'):
     #    logmessage("restart_ajax: user has permission")
@@ -16163,6 +16165,8 @@ class Fruit(DAObject):
 @roles_required(['admin', 'developer'])
 def restart_page():
     setup_translation()
+    if not app.config['ALLOW_RESTARTING']:
+        return ('File not found', 404)
     script = """
     <script>
       function daRestartCallback(data){
@@ -17387,6 +17391,8 @@ def od_fix_subdirs(http, the_folder):
 @roles_required(['admin'])
 def config_page():
     setup_translation()
+    if not app.config['ALLOW_CONFIGURATION_EDITING']:
+        return ('File not found', 404)
     form = ConfigForm(request.form)
     content = None
     ok = True
@@ -19935,10 +19941,10 @@ def variables_report():
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_variables():
-    current_project = get_current_project()
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
-    setup_translation()
+    current_project = get_current_project()
     playground = SavedFile(current_user.id, fix=True, section='playground')
     the_directory = directory_for(playground, current_project)
     files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
@@ -20004,9 +20010,9 @@ def assign_opacity(files):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_page_run():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
-    setup_translation()
     current_project = get_current_project()
     the_file = secure_filename_spaces_ok(request.args.get('file'))
     if the_file:
@@ -20057,6 +20063,8 @@ def delete_project(user_id, project_name):
 @roles_required(['developer', 'admin'])
 def playground_project():
     setup_translation()
+    if not app.config['ENABLE_PLAYGROUND']:
+        return ('File not found', 404)
     use_gd = bool(app.config['USE_GOOGLE_DRIVE'] is True and get_gd_folder() is not None)
     use_od = bool(use_gd is False and app.config['USE_ONEDRIVE'] is True and get_od_folder() is not None)
     current_project = get_current_project()
@@ -20203,9 +20211,9 @@ def delete_variable_file(current_project):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_page():
+    setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
-    setup_translation()
     current_project = get_current_project()
     if 'ajax' in request.form and int(request.form['ajax']):
         is_ajax = True
@@ -26155,7 +26163,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
                         menu_items.append({'href': url_for('utilities'), 'anchor': word('Utilities')})
                         if current_user.has_role('admin', 'advocate') or current_user.can_do('access_user_info'):
                             menu_items.append({'href': url_for('user_list'), 'anchor': word('User List')})
-                        if current_user.has_role('admin'):
+                        if current_user.has_role('admin') and app.config['ALLOW_CONFIGURATION_EDITING']:
                             menu_items.append({'href': url_for('config_page'), 'anchor': word('Configuration')})
                     if app.config['SHOW_DISPATCH']:
                         menu_items.append({'href': url_for('interview_start'), 'anchor': word('Available Interviews')})
@@ -26590,6 +26598,8 @@ def api_package():
             packages.append(item)
         return jsonify(packages)
     if request.method == 'DELETE':
+        if not app.config['ALLOW_UPDATES']:
+            return ('File not found', 404)
         target = request.args.get('package', None)
         do_restart = true_or_false(request.args.get('restart', True))
         if target is None:
@@ -26612,6 +26622,8 @@ def api_package():
             result = docassemble.webapp.worker.update_packages.delay(restart=False)
         return jsonify_task(result)
     if request.method == 'POST':
+        if not app.config['ALLOW_UPDATES']:
+            return ('File not found', 404)
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
@@ -26727,6 +26739,8 @@ def api_package():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_package_update_status():
+    if not app.config['ALLOW_UPDATES']:
+        return ('File not found', 404)
     if not api_verify(request, roles=['admin', 'developer'], permissions=['manage_packages']):
         return jsonify_with_status("Access denied.", 403)
     code = request.args.get('task_id', None)
@@ -26841,6 +26855,8 @@ def api_clear_cache():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'PATCH', 'HEAD'], automatic_options=True)
 def api_config():
+    if not app.config['ALLOW_CONFIGURATION_EDITING']:
+        return ('File not found', 404)
     if not api_verify(request, roles=['admin'], permissions=['manage_config']):
         return jsonify_with_status("Access denied.", 403)
     if request.method == 'GET':
@@ -26910,6 +26926,8 @@ def api_config():
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_playground_pull():
+    if not app.config['ENABLE_PLAYGROUND']:
+        return ('File not found', 404)
     if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     post_data = request.get_json(silent=True)
@@ -26977,6 +26995,8 @@ def api_playground_pull():
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_restart():
+    if not app.config['ALLOW_RESTARTING']:
+        return ('File not found', 404)
     if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     return_val = jsonify_restart_task()
@@ -26987,6 +27007,8 @@ def api_restart():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
 def api_restart_status():
+    if not app.config['ALLOW_RESTARTING']:
+        return ('File not found', 404)
     if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     code = request.args.get('task_id', None)
@@ -27006,6 +27028,8 @@ def api_restart_status():
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
 def api_playground_install():
+    if not app.config['ENABLE_PLAYGROUND']:
+        return ('File not found', 404)
     if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     post_data = request.get_json(silent=True)
@@ -27149,6 +27173,8 @@ def api_playground_install():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)
 def api_playground_projects():
+    if not app.config['ENABLE_PLAYGROUND']:
+        return ('File not found', 404)
     if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     if request.method in ('GET', 'DELETE'):
@@ -27198,6 +27224,8 @@ def api_playground_projects():
 @csrf.exempt
 @cross_origin(origins='*', methods=['GET', 'POST', 'DELETE', 'HEAD'], automatic_options=True)
 def api_playground():
+    if not app.config['ENABLE_PLAYGROUND']:
+        return ('File not found', 404)
     if not api_verify(request, roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
     if request.method in ('GET', 'DELETE'):
@@ -29033,7 +29061,11 @@ def retrieve_stashed_data(key, secret, delete=False, refresh=False):
     return data
 
 def make_necessary_dirs():
-    for path in (FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY): #PACKAGE_CACHE
+    paths = []
+    if app.config['ALLOW_UPDATES'] or app.config['ENABLE_PLAYGROUND']:
+        paths.append(FULL_PACKAGE_DIRECTORY)
+    paths.extend([UPLOAD_DIRECTORY, LOG_DIRECTORY])
+    for path in paths:
         if not os.path.isdir(path):
             try:
                 os.makedirs(path, exist_ok=True)
@@ -29041,7 +29073,7 @@ def make_necessary_dirs():
                 sys.exit("Could not create path: " + path)
         if not os.access(path, os.W_OK):
             sys.exit("Unable to create files in directory: " + path)
-    if not os.access(WEBAPP_PATH, os.W_OK):
+    if app.config['ALLOW_RESTARTING'] and not os.access(WEBAPP_PATH, os.W_OK):
         sys.exit("Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH)
 
 make_necessary_dirs()
@@ -29391,8 +29423,6 @@ def initialize():
             app.config['GLOBAL_JS'] = global_js
             app.config['PARTS'] = page_parts
             app.config['ADMIN_INTERVIEWS'] = set_admin_interviews()
-            app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)
-            app.config['ALLOW_UPDATES'] = daconfig.get('allow updates', True)
             try:
                 if 'image' in daconfig['social'] and isinstance(daconfig['social']['image'], str):
                     daconfig['social']['image'] = get_url_from_file_reference(daconfig['social']['image'], _external=True)

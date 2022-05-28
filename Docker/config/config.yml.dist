@@ -1,6 +1,6 @@
-debug: True
-enable playground: True
-allow demo: True
+debug: {{DADEBUG}}
+enable playground: {{DAENABLEPLAYGROUND}}
+allow demo: {{DADEBUG}}
 exitpage: https://docassemble.org
 db:
   prefix: {{DBPREFIX}}
@@ -97,6 +97,7 @@ behind https load balancer: {{BEHINDHTTPSLOADBALANCER}}
 xsendfile: {{XSENDFILE}}
 update on start: {{DAUPDATEONSTART}}
 allow updates: {{DAALLOWUPDATES}}
+allow configuration editing: {{DAALLOWCONFIGURATIONEDITING}}
 url root: {{URLROOT}}
 external hostname: {{DAHOSTNAME}}
 expose websockets: {{DAEXPOSEWEBSOCKETS}}

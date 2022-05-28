@@ -1,15 +1,23 @@
 # Change Log
 
-## [1.3.45] - 2022-05-
+## [1.3.45] - 2022-05-27
 ### Added
 - The `pip index url` (`PIPINDEXURL`) and `pip extra index urls`
   (`PIPEXTRAINDEXURLS`) Configuration directives.
+- The `allow configuration editing` (`DAALLOWCONFIGURATIONEDITING`)
+  Configuration directive.
+- Docker environment variables `DADEBUG` (corresponding to `debug`)
+  and `DAENABLEPLAYGROUND` (corresponding to `enable playground`).
 - The `insertion_order` option for `.true_values()` and
   `.false_values()`.
 ### Changed
 - API keys can now be passed in a header using the format
   `Authorization: Bearer H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT`.
 - Removed `pathlib` as a dependency.
+- If `allow updates` is set to false, the `/api/package` endpoint
+  cannot be used to install or uninstall packages.
+- If `enable playground` is set to false, the Playground-related APIs
+  are disabled.
 ### Fixed
 - When a `yesnoradio` or `yesnomaybe` field is not `required` and is
   not answered, the variable will now be set to `None` instead of

@@ -111,7 +111,7 @@
                 {%- if current_user.has_roles(['admin', 'advocate']) or current_user.can_do('access_user_info') %}
                 <a class="dropdown-item" href="{{ url_for('user_list') }}">{{ word('User List') }}</a>
                 {%- endif %}
-                {%- if current_user.has_roles(['admin']) %}
+                {%- if current_user.has_roles(['admin']) and config['ALLOW_CONFIGURATION_EDITING'] %}
                 <a class="dropdown-item" href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a>
                 {%- endif %}
                 {%- if config['SHOW_DISPATCH'] %}
