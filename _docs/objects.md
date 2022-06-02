@@ -1136,9 +1136,6 @@ methods of the [Python dict].
 * <a name="DADict.copy"></a>`copy()`
 * <a name="DADict.has_key"></a>`has_key()`
 * <a name="DADict.items"></a>`items()`
-* <a name="DADict.iteritems"></a>`iteritems()`
-* <a name="DADict.iterkeys"></a>`iterkeys()`
-* <a name="DADict.itervalues"></a>`itervalues()`
 
 For most purposes, your code can treat a `DADict` object just like a
 [Python dictionary].
@@ -1165,7 +1162,7 @@ code: |
 ---
 code: |
   description = ''
-  for key, value in things.iteritems():
+  for key, value in things.items():
     description += "* " + key + ": " + value + "\n"
 {% endhighlight %}
 
