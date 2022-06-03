@@ -84,7 +84,7 @@ Although "bearer tokens" normally expire after a period of time, and
 **docassemble** API keys do not, using **docassemble** API keys as
 "bearer tokens" is somewhat of a misnomer. However, passing a token as
 a "bearer token" is more of an accepted standard than using
-`X-API-Key` as a header, so you may find it easier to 
+`X-API-Key` as a header, so you may find it easier to
 
 If you prefer, you can include the API key in a cookie called
 `X-API-Key`:
@@ -1509,7 +1509,8 @@ Data:
    or `config` (for the [Configuration] page).  For a list of all
    possible values, see the documentation for [`url_of()`].  If
    `url_args` are supplied, these will be included in the resulting
-   URL.
+   URL. You can also provide a full URL to the `next` parameter
+   (e.g., `https://google.com`).
 
 Required privileges:
 
