@@ -48,7 +48,7 @@ import zipfile
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
-from docassemble.base.config import daconfig, hostname, in_celery
+from docassemble.base.config import daconfig, hostname, in_celery, in_cron
 
 import docassemble.webapp.setup
 from docassemble.webapp.setup import da_version
@@ -865,8 +865,7 @@ def custom_register():
 
 def custom_login():
     """ Prompt for username/email and password and sign the user in."""
-    #sys.stderr.write("In custom_login\n")
-    #logmessage("Doing custom_login")
+    #logmessage("In custom_login\n")
 
     is_json = bool(('json' in request.form and as_int(request.form['json'])) or ('json' in request.args and as_int(request.args['json'])))
     user_manager = current_app.user_manager
@@ -990,15 +989,19 @@ def logout():
     #     secret = str(secret)
     #     set_cookie = False
     user_manager = current_app.user_manager
-    if 'next_arg' in session:
-        next_url = session['next_arg']
-        del session['next_arg']
-    # if 'next' in request.args:
-    #     next_url = request.args['next']
-    elif session.get('language', None) and session['language'] != DEFAULT_LANGUAGE:
-        next_url = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
-    else:
-        next_url = _endpoint_url(user_manager.after_logout_endpoint)
+    next_url = None
+    if 'next' in request.args and request.args['next'] != '':
+        try:
+            next_url = decrypt_phrase(repad(bytearray(request.args['next'], encoding='utf-8')).decode(), app.secret_key)
+        except:
+            pass
+    if next_url is None:
+        next_url = daconfig.get('logoutpage', None)
+    if next_url is None:
+        if session.get('language', None) and session['language'] != DEFAULT_LANGUAGE:
+            next_url = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
+        else:
+            next_url = _endpoint_url(user_manager.after_logout_endpoint)
     if current_user.is_authenticated:
         if current_user.social_id.startswith('auth0$') and 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and 'domain' in daconfig['oauth']['auth0']:
             if next_url.startswith('/'):
@@ -1009,11 +1012,6 @@ def logout():
                 next_url = get_base_url() + next_url
             next_url = ('https://' + daconfig['oauth']['keycloak']['domain'] + '/auth/realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/logout?' + urlencode(dict(post_logout_redirect_uri=next_url))
             )
-    else:
-        if session.get('language', None) and session['language'] != DEFAULT_LANGUAGE:
-            next_url = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
-        else:
-            next_url = _endpoint_url(user_manager.after_logout_endpoint)
     docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
     delete_session_info()
@@ -1139,6 +1137,58 @@ lm.init_app(app)
 lm.login_view = 'custom_login'
 lm.anonymous_user = AnonymousUserModel
 
+def syslog_message(message):
+    message = re.sub(r'\n', ' ', message)
+    if current_user and current_user.is_authenticated and not current_user.is_anonymous:
+        the_user = current_user.email
+    else:
+        the_user = "anonymous"
+    if request_active:
+        try:
+            sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': get_requester_ip(request), 'yamlfile': docassemble.base.functions.this_thread.current_info.get('yaml_filename', 'na'), 'user': the_user, 'session': docassemble.base.functions.this_thread.current_info.get('session', 'na')})
+        except Exception as err:
+            sys.stderr.write("Error writing log message " + str(message) + "\n")
+            try:
+                sys.stderr.write("Error was " + err.__class__.__name__ + ": " + str(err) + "\n")
+            except:
+                pass
+    else:
+        try:
+            sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': 'localhost', 'yamlfile': 'na', 'user': 'na', 'session': 'na'})
+        except Exception as err:
+            sys.stderr.write("Error writing log message " + str(message) + "\n")
+            try:
+                sys.stderr.write("Error was " + err.__class__.__name__ + ": " + str(err) + "\n")
+            except:
+                pass
+
+def syslog_message_with_timestamp(message):
+    syslog_message(time.strftime("%Y-%m-%d %H:%M:%S") + " " + message)
+
+sys_logger = logging.getLogger('docassemble')
+sys_logger.setLevel(logging.DEBUG)
+
+LOGFORMAT = daconfig.get('log format', 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s')
+
+def add_log_handler():
+    tries = 0
+    while tries < 5:
+        try:
+            docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
+        except PermissionError:
+            time.sleep(1)
+            next
+        sys_logger.addHandler(docassemble_log_handler)
+        break
+
+add_log_handler()
+
+if not (in_celery or in_cron):
+    if LOGSERVER is None:
+        docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
+    else:
+        docassemble.base.logger.set_logmessage(syslog_message)
+
 def login_as_admin(url, url_root):
     found = False
     for admin_user in db.session.execute(select(UserModel).filter_by(nickname='admin').order_by(UserModel.id)).scalars():
@@ -1190,7 +1240,7 @@ def import_necessary(url, url_root):
         try:
             importlib.import_module(module_name)
         except Exception as err:
-            sys.stderr.write("Import of " + module_name + " failed.  " + err.__class__.__name__ + ": " + str(err) + "\n")
+            logmessage("Import of " + module_name + " failed.  " + err.__class__.__name__ + ": " + str(err))
     current_app.login_manager._update_request_context_with_user()
 
 fax_provider = daconfig.get('fax provider', None) or 'clicksend'
@@ -1214,13 +1264,13 @@ def get_clicksend_config():
                 if 'name' in the_config:
                     the_clicksend_config['name'][the_config['name']] = the_config
             else:
-                sys.stderr.write("improper setup in clicksend configuration\n")
+                logmessage("improper setup in clicksend configuration")
         if 'default' not in the_clicksend_config['name']:
             the_clicksend_config = None
     else:
         the_clicksend_config = None
     #if fax_provider == 'clicksend' and the_clicksend_config is None:
-    #    sys.stderr.write("improper clicksend configuration; faxing will not be functional\n")
+    #    logmessage("improper clicksend configuration; faxing will not be functional")
     return the_clicksend_config
 
 clicksend_config = get_clicksend_config()
@@ -1244,13 +1294,13 @@ def get_telnyx_config():
                 if 'name' in the_config:
                     the_telnyx_config['name'][the_config['name']] = the_config
             else:
-                sys.stderr.write("improper setup in twilio configuration\n")
+                logmessage("improper setup in twilio configuration")
         if 'default' not in the_telnyx_config['name']:
             the_telnyx_config = None
     else:
         the_telnyx_config = None
     if fax_provider == 'telnyx' and the_telnyx_config is None:
-        sys.stderr.write("improper telnyx configuration; faxing will not be functional\n")
+        logmessage("improper telnyx configuration; faxing will not be functional")
     return the_telnyx_config
 
 telnyx_config = get_telnyx_config()
@@ -1274,7 +1324,7 @@ def get_twilio_config():
                 if 'name' in tconfig:
                     the_twilio_config['name'][tconfig['name']] = tconfig
             else:
-                sys.stderr.write("improper setup in twilio configuration\n")
+                logmessage("improper setup in twilio configuration")
         if 'default' not in the_twilio_config['name']:
             the_twilio_config = None
     else:
@@ -1506,6 +1556,11 @@ def remove_question_package(args):
     if '_package' in args:
         del args['_package']
 
+def encrypt_next(args):
+    if 'next' not in args:
+        return
+    args['next'] = re.sub(r'\s', '', encrypt_phrase(args['next'], app.secret_key)).rstrip('=')
+
 def get_url_from_file_reference(file_reference, **kwargs):
     if 'jsembed' in docassemble.base.functions.this_thread.misc or COOKIELESS_SESSIONS:
         kwargs['_external'] = True
@@ -1565,9 +1620,11 @@ def get_url_from_file_reference(file_reference, **kwargs):
         return url_for('config_page', **kwargs)
     if file_reference == 'leave':
         remove_question_package(kwargs)
+        encrypt_next(kwargs)
         return url_for('leave', **kwargs)
     if file_reference == 'logout':
         remove_question_package(kwargs)
+        encrypt_next(kwargs)
         return url_for('user.logout', **kwargs)
     if file_reference == 'restart':
         remove_question_package(kwargs_with_i)
@@ -1579,6 +1636,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         return 'javascript:daShowHelpTab()'
     if file_reference == 'interview':
         remove_question_package(kwargs)
+        docassemble.base.functions.modify_i_argument(kwargs)
         return url_for('index', **kwargs)
     if file_reference == 'flex_interview':
         remove_question_package(kwargs)
@@ -1622,9 +1680,11 @@ def get_url_from_file_reference(file_reference, **kwargs):
         return url_for('interview_list', **kwargs)
     if file_reference == 'exit':
         remove_question_package(kwargs_with_i)
+        encrypt_next(kwargs)
         return url_for('exit_endpoint', **kwargs_with_i)
     if file_reference == 'exit_logout':
         remove_question_package(kwargs_with_i)
+        encrypt_next(kwargs)
         return url_for('exit_logout', **kwargs_with_i)
     if file_reference == 'dispatch':
         remove_question_package(kwargs)
@@ -1940,34 +2000,6 @@ def set_request_active(value):
     global request_active
     request_active = value
 
-def syslog_message(message):
-    message = re.sub(r'\n', ' ', message)
-    if current_user and current_user.is_authenticated and not current_user.is_anonymous:
-        the_user = current_user.email
-    else:
-        the_user = "anonymous"
-    if request_active:
-        try:
-            sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': get_requester_ip(request), 'yamlfile': docassemble.base.functions.this_thread.current_info.get('yaml_filename', 'na'), 'user': the_user, 'session': docassemble.base.functions.this_thread.current_info.get('session', 'na')})
-        except Exception as err:
-            sys.stderr.write("Error writing log message " + str(message) + "\n")
-            try:
-                sys.stderr.write("Error was " + err.__class__.__name__ + ": " + str(err) + "\n")
-            except:
-                pass
-    else:
-        try:
-            sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': 'localhost', 'yamlfile': 'na', 'user': 'na', 'session': 'na'})
-        except Exception as err:
-            sys.stderr.write("Error writing log message " + str(message) + "\n")
-            try:
-                sys.stderr.write("Error was " + err.__class__.__name__ + ": " + str(err) + "\n")
-            except:
-                pass
-
-def syslog_message_with_timestamp(message):
-    syslog_message(time.strftime("%Y-%m-%d %H:%M:%S") + " " + message)
-
 def copy_playground_modules():
     root_dir = os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble')
     for d in os.listdir(root_dir):
@@ -1975,7 +2007,7 @@ def copy_playground_modules():
             try:
                 shutil.rmtree(os.path.join(root_dir, d))
             except:
-                sys.stderr.write("copy_playground_modules: error deleting " + os.path.join(root_dir, d) + "\n")
+                logmessage("copy_playground_modules: error deleting " + os.path.join(root_dir, d))
     devs = set()
     for user in db.session.execute(select(UserModel.id).join(UserRoles, UserModel.id == UserRoles.user_id).join(Role, UserRoles.role_id == Role.id).where(and_(UserModel.active == True, or_(Role.name == 'admin', Role.name == 'developer')))):
         devs.add(user.id)
@@ -1989,9 +2021,9 @@ def copy_playground_modules():
                 try:
                     shutil.rmtree(local_dir)
                 except:
-                    sys.stderr.write("copy_playground_modules: error deleting " + local_dir + " before replacing it\n")
+                    logmessage("copy_playground_modules: error deleting " + local_dir + " before replacing it")
             os.makedirs(local_dir, exist_ok=True)
-            #sys.stderr.write("Copying " + str(mod_directory) + " to " + str(local_dir) + "\n")
+            #logmessage("Copying " + str(mod_directory) + " to " + str(local_dir))
             for f in [f for f in os.listdir(mod_directory) if re.search(r'^[A-Za-z].*\.py$', f)]:
                 shutil.copyfile(os.path.join(mod_directory, f), os.path.join(local_dir, f))
             #shutil.copytree(mod_dir.directory, local_dir)
@@ -2862,13 +2894,13 @@ def get_unique_name(filename, secret):
 
 def obtain_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
-    #sys.stderr.write("obtain_lock: getting " + key + "\n")
+    #logmessage("obtain_lock: getting " + key)
     found = False
     count = 4
     while count > 0:
         record = r.get(key)
         if record:
-            sys.stderr.write("obtain_lock: waiting for " + key + "\n")
+            logmessage("obtain_lock: waiting for " + key)
             time.sleep(1.0)
         else:
             found = False
@@ -2876,7 +2908,7 @@ def obtain_lock(user_code, filename):
         found = True
         count -= 1
     if found:
-        sys.stderr.write("Request for " + key + " deadlocked\n")
+        logmessage("Request for " + key + " deadlocked")
         release_lock(user_code, filename)
     pipe = r.pipeline()
     pipe.set(key, 1)
@@ -2885,13 +2917,13 @@ def obtain_lock(user_code, filename):
 
 def obtain_lock_patiently(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
-    #sys.stderr.write("obtain_lock: getting " + key + "\n")
+    #logmessage("obtain_lock: getting " + key)
     found = False
     count = 20
     while count > 0:
         record = r.get(key)
         if record:
-            sys.stderr.write("obtain_lock: waiting for " + key + "\n")
+            logmessage("obtain_lock: waiting for " + key)
             time.sleep(3.0)
         else:
             found = False
@@ -2899,7 +2931,7 @@ def obtain_lock_patiently(user_code, filename):
         found = True
         count -= 1
     if found:
-        sys.stderr.write("Request for " + key + " deadlocked\n")
+        logmessage("Request for " + key + " deadlocked")
         release_lock(user_code, filename)
     pipe = r.pipeline()
     pipe.set(key, 1)
@@ -2908,7 +2940,7 @@ def obtain_lock_patiently(user_code, filename):
 
 def release_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
-    #sys.stderr.write("obtain_lock: releasing " + key + "\n")
+    #logmessage("obtain_lock: releasing " + key)
     r.delete(key)
 
 def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, extra_class=None):
@@ -2916,11 +2948,11 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         if status.question.interview.options['inverse navbar']:
             inverse = 'navbar-dark bg-dark '
         else:
-            inverse = 'navbar-light bg-light '
+            inverse = 'bg-light '
     elif daconfig.get('inverse navbar', True):
         inverse = 'navbar-dark bg-dark '
     else:
-        inverse = 'navbar-light bg-light '
+        inverse = 'bg-light '
     if 'jsembed' in docassemble.base.functions.this_thread.misc:
         fixed_top = ''
     else:
@@ -3062,7 +3094,8 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                     if current_user.has_role('admin', 'developer'):
                         if app.config['ALLOW_UPDATES']:
                             navbar +='<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
-                        navbar +='<a class="dropdown-item" href="' + url_for('logs') + '">' + word('Logs') + '</a>'
+                        if app.config['ALLOW_LOG_VIEWING']:
+                            navbar +='<a class="dropdown-item" href="' + url_for('logs') + '">' + word('Logs') + '</a>'
                         if app.config['ENABLE_PLAYGROUND']:
                             navbar +='<a class="dropdown-item" href="' + url_for('playground_page') + '">' + word('Playground') + '</a>'
                         navbar +='<a class="dropdown-item" href="' + url_for('utilities') + '">' + word('Utilities') + '</a>'
@@ -3080,9 +3113,9 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                     if current_user.has_role('admin', 'developer'):
                         navbar += '<a class="dropdown-item" href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a>'
                     else:
-                        if app.config['SHOW_PROFILE'] or current_user.has_role('admin'):
+                        if app.config['SHOW_PROFILE'] or current_user.has_role('admin', 'developer'):
                             navbar += '<a class="dropdown-item" href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a>'
-                        else:
+                        elif current_user.social_id.startswith('local') and app.config['ALLOW_CHANGING_PASSWORD']:
                             navbar += '<a class="dropdown-item" href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a>'
                     navbar += '<a class="dropdown-item" href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a>'
                 navbar += '</div></li>'
@@ -3105,8 +3138,13 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
 """
     return navbar
 
-def exit_href(status):
-    return docassemble.base.functions.url_action('_da_exit')
+def exit_href(status, data=False):
+    url = docassemble.base.functions.url_action('_da_exit')
+    if not data:
+        action_search = re.search(r'[\?\&]action=([^\&]+)', url)
+        if action_search:
+            return url + '" data-embaction="' + action_search.group(1)
+    return url
 
 def delete_session_for_interview(i=None):
     if i is not None:
@@ -4078,22 +4116,22 @@ def wait_for_task(task_id, timeout=None):
 #             raise DAError("Call to pdftoppm failed")
 
 def trigger_update(except_for=None):
-    sys.stderr.write("trigger_update: except_for is " + str(except_for) + " and hostname is " + hostname + "\n")
+    logmessage("trigger_update: except_for is " + str(except_for) + " and hostname is " + hostname)
     if USING_SUPERVISOR:
         to_delete = set()
         for host in db.session.execute(select(Supervisors)).scalars():
             if host.url and not (except_for and host.hostname == except_for):
                 if host.hostname == hostname:
                     the_url = 'http://localhost:9001'
-                    sys.stderr.write("trigger_update: using http://localhost:9001\n")
+                    logmessage("trigger_update: using http://localhost:9001")
                 else:
                     the_url = host.url
                 args = [SUPERVISORCTL, '-s', the_url, 'start', 'update']
                 result = subprocess.run(args, check=False).returncode
                 if result == 0:
-                    sys.stderr.write("trigger_update: sent update to " + str(host.hostname) + " using " + the_url + "\n")
+                    logmessage("trigger_update: sent update to " + str(host.hostname) + " using " + the_url)
                 else:
-                    sys.stderr.write("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful\n")
+                    logmessage("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful")
                     to_delete.add(host.id)
         for id_to_delete in to_delete:
             db.session.execute(delete(Supervisors).filter_by(id=id_to_delete))
@@ -5379,7 +5417,14 @@ def post_sign_in():
 
 @app.route("/leave", methods=['GET'])
 def leave():
-    the_exit_page = exit_page
+    the_exit_page = None
+    if 'next' in request.args and request.args['next'] != '':
+        try:
+            the_exit_page = decrypt_phrase(repad(bytearray(request.args['next'], encoding='utf-8')).decode(), app.secret_key)
+        except:
+            pass
+    if the_exit_page is None:
+        the_exit_page = exit_page
     # if current_user.is_authenticated:
     #     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     #     logout_user()
@@ -5430,7 +5475,14 @@ def new_session():
 
 @app.route("/exit", methods=['GET'])
 def exit_endpoint():
-    the_exit_page = exit_page
+    the_exit_page = None
+    if 'next' in request.args and request.args['next'] != '':
+        try:
+            the_exit_page = decrypt_phrase(repad(bytearray(request.args['next'], encoding='utf-8')).decode(), app.secret_key)
+        except:
+            pass
+    if the_exit_page is None:
+        the_exit_page = exit_page
     yaml_filename = request.args.get('i', None)
     if yaml_filename is not None:
         session_info = get_session(yaml_filename)
@@ -5442,7 +5494,14 @@ def exit_endpoint():
 
 @app.route("/exit_logout", methods=['GET'])
 def exit_logout():
-    the_exit_page = exit_page
+    the_exit_page = None
+    if 'next' in request.args and request.args['next'] != '':
+        try:
+            the_exit_page = decrypt_phrase(repad(bytearray(request.args['next'], encoding='utf-8')).decode(), app.secret_key)
+        except:
+            pass
+    if the_exit_page is None:
+        the_exit_page = exit_page
     yaml_filename = request.args.get('i', guess_yaml_filename())
     if yaml_filename is not None:
         session_info = get_session(yaml_filename)
@@ -5525,7 +5584,7 @@ def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=N
             try:
                 message = decrypt_phrase(record.message, secret)
             except:
-                sys.stderr.write("get_current_chat_log: Could not decrypt phrase with secret " + secret + "\n")
+                logmessage("get_current_chat_log: Could not decrypt phrase with secret " + secret)
                 continue
         else:
             message = unpack_phrase(record.message)
@@ -5538,7 +5597,7 @@ def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=N
         #     owner_last_name = user_cache[record.owner_id].last_name
         #     owner_email = user_cache[record.owner_id].email
         # else:
-        #     sys.stderr.write("get_current_chat_log: Invalid owner ID in chat log\n")
+        #     logmessage("get_current_chat_log: Invalid owner ID in chat log")
         #     continue
         if record.temp_user_id:
             user_first_name = None
@@ -5551,7 +5610,7 @@ def get_current_chat_log(yaml_filename, session_id, secret, utc=True, timezone=N
         else:
             new_user = get_user_object(record.user_id)
             if new_user is None:
-                sys.stderr.write("get_current_chat_log: Invalid user ID in chat log\n")
+                logmessage("get_current_chat_log: Invalid user ID in chat log")
                 continue
             user_cache[record.user_id] = new_user
             user_first_name = user_cache[record.user_id].first_name
@@ -5597,7 +5656,7 @@ def checkin():
     the_current_info = current_info(yaml=yaml_filename, req=request, action=None, session_info=session_info, secret=secret, device_id=request.cookies.get('ds', None))
     docassemble.base.functions.this_thread.current_info = the_current_info
     if request.form.get('action', None) == 'chat_log':
-        #sys.stderr.write("checkin: fetch_user_dict1\n")
+        #logmessage("checkin: fetch_user_dict1")
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         if user_dict is None or user_dict['_internal']['livehelp']['availability'] != 'available':
             return jsonify_with_cache(success=False)
@@ -5616,7 +5675,7 @@ def checkin():
                 parameters = json.loads(form_parameters)
             #logmessage("Action was " + str(do_action) + " and parameters were " + repr(parameters))
             obtain_lock(session_id, yaml_filename)
-            #sys.stderr.write("checkin: fetch_user_dict2\n")
+            #logmessage("checkin: fetch_user_dict2")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             the_current_info['encrypted'] == is_encrypted
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
@@ -5676,11 +5735,11 @@ def checkin():
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = []
         if str(chatstatus) != 'off': #in ('waiting', 'standby', 'ringing', 'ready', 'on', 'hangup', 'observeonly'):
-            #sys.stderr.write("checkin: fetch_user_dict3\n")
+            #logmessage("checkin: fetch_user_dict3")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             the_current_info['encrypted'] == is_encrypted
             if user_dict is None:
-                sys.stderr.write("checkin: error accessing dictionary for %s and %s" % (session_id, yaml_filename))
+                logmessage("checkin: error accessing dictionary for %s and %s" % (session_id, yaml_filename))
                 return jsonify_with_cache(success=False)
             obj['chatstatus'] = chatstatus
             obj['secret'] = secret
@@ -5850,7 +5909,7 @@ def setup_celery():
 
 @app.before_request
 def setup_variables():
-    #sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " for " + request.path + " at " + time.strftime("%Y-%m-%d %H:%M:%S") + "\n")
+    #logmessage("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " for " + request.path + " at " + time.strftime("%Y-%m-%d %H:%M:%S"))
     #g.request_start_time = time.time()
     #docassemble.base.functions.reset_thread_variables()
     docassemble.base.functions.reset_local_variables()
@@ -5873,7 +5932,7 @@ def apply_security_headers(response):
 # @app.after_request
 # def print_time_of_request(response):
 #     time_spent = time.time() - g.request_start_time
-#     sys.stderr.write("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % time_spent) + "\n")
+#     logmessage("Request on " + str(os.getpid()) + " " + str(threading.current_thread().ident) + " complete after " + str("%.5fs" % time_spent))
 #     if time_spent > 3.0:
 #         if hasattr(g, 'start_index'):
 #             logmessage("Duration to beginning: %fs" % (g.start_index - g.request_start_time))
@@ -5923,7 +5982,7 @@ def get_variables():
     #session_cookie_id = request.cookies.get('session', None)
     if session_id is None or yaml_filename is None:
         return jsonify(success=False)
-    #sys.stderr.write("get_variables: fetch_user_dict\n")
+    #logmessage("get_variables: fetch_user_dict")
     docassemble.base.functions.this_thread.current_info = current_info(yaml=yaml_filename, req=request, interface='vars', device_id=request.cookies.get('ds', None))
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
@@ -6160,10 +6219,10 @@ def index(action_argument=None, refer=None):
         yaml_filename = request.args.get('i', guess_yaml_filename())
     if yaml_filename is None:
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
-            sys.stderr.write("Redirecting to login because no YAML filename provided and no anonymous access is allowed.\n")
+            logmessage("Redirecting to login because no YAML filename provided and no anonymous access is allowed.")
             return redirect(url_for('user.login'))
         if len(daconfig['dispatch']) > 0:
-            sys.stderr.write("Redirecting to dispatch page because no YAML filename provided.\n")
+            logmessage("Redirecting to dispatch page because no YAML filename provided.")
             return redirect(url_for('interview_start'))
         yaml_filename = final_default_yaml_filename
     action = None
@@ -6200,7 +6259,7 @@ def index(action_argument=None, refer=None):
         if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not (current_user.has_role('admin', 'developer') or current_user.can_do('demo_interviews'))):
             raise DAError(word("Not authorized"), code=403)
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
-            sys.stderr.write("Redirecting to login because no anonymous access allowed.\n")
+            logmessage("Redirecting to login because no anonymous access allowed.")
             return redirect(url_for('user.login', next=url_for('index', **request.args)))
         if yaml_filename.startswith('docassemble.playground'):
             if not app.config['ENABLE_PLAYGROUND']:
@@ -6228,7 +6287,7 @@ def index(action_argument=None, refer=None):
             if unique_sessions is not False and not current_user.is_authenticated:
                 delete_session_for_interview(yaml_filename)
                 flash(word("You need to be logged in to access this interview."), "info")
-                sys.stderr.write("Redirecting to login because sessions are unique.\n")
+                logmessage("Redirecting to login because sessions are unique.")
                 return redirect(url_for('user.login', next=url_for('index', **request.args)))
             if interview.consolidated_metadata.get('temporary session', False):
                 if session_info is not None:
@@ -6247,7 +6306,7 @@ def index(action_argument=None, refer=None):
                 if (not interview.allowed_to_initiate(is_anonymous=True)) or (not interview.allowed_to_access(is_anonymous=True)):
                     delete_session_for_interview(yaml_filename)
                     flash(word("You need to be logged in to access this interview."), "info")
-                    sys.stderr.write("Redirecting to login because anonymous user not allowed to access this interview.\n")
+                    logmessage("Redirecting to login because anonymous user not allowed to access this interview.")
                     return redirect(url_for('user.login', next=url_for('index', **request.args)))
             elif not interview.allowed_to_initiate(has_roles=[role.name for role in current_user.roles]):
                 delete_session_for_interview(yaml_filename)
@@ -6272,13 +6331,13 @@ def index(action_argument=None, refer=None):
             if unique_sessions is not False and not current_user.is_authenticated:
                 delete_session_for_interview(yaml_filename)
                 flash(word("You need to be logged in to access this interview."), "info")
-                sys.stderr.write("Redirecting to login because sessions are unique.\n")
+                logmessage("Redirecting to login because sessions are unique.")
                 return redirect(url_for('user.login', next=url_for('index', **request.args)))
             if current_user.is_anonymous:
                 if (not interview.allowed_to_initiate(is_anonymous=True)) or (not interview.allowed_to_access(is_anonymous=True)):
                     delete_session_for_interview(yaml_filename)
                     flash(word("You need to be logged in to access this interview."), "info")
-                    sys.stderr.write("Redirecting to login because anonymous user not allowed to access this interview.\n")
+                    logmessage("Redirecting to login because anonymous user not allowed to access this interview.")
                     return redirect(url_for('user.login', next=url_for('index', **request.args)))
             elif not interview.allowed_to_initiate(has_roles=[role.name for role in current_user.roles]):
                 delete_session_for_interview(yaml_filename)
@@ -6322,9 +6381,9 @@ def index(action_argument=None, refer=None):
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     except Exception as the_err:
         try:
-            sys.stderr.write("index: there was an exception " + str(the_err.__class__.__name__) + ": " + str(the_err) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
+            logmessage("index: there was an exception " + str(the_err.__class__.__name__) + ": " + str(the_err) + " after fetch_user_dict with %s and %s, so we need to reset" % (user_code, yaml_filename))
         except:
-            sys.stderr.write("index: there was an exception " + str(the_err.__class__.__name__) + " after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
+            logmessage("index: there was an exception " + str(the_err.__class__.__name__) + " after fetch_user_dict with %s and %s, so we need to reset" % (user_code, yaml_filename))
         release_lock(user_code, yaml_filename)
         logmessage("index: dictionary fetch failed")
         clear_session(yaml_filename)
@@ -6332,24 +6391,24 @@ def index(action_argument=None, refer=None):
             redirect_url = daconfig.get('session error redirect url', None)
             if isinstance(redirect_url, str) and redirect_url:
                 redirect_url = redirect_url.format(i=urllibquote(yaml_filename), error=urllibquote('answers_fetch_fail'))
-                sys.stderr.write("Session error because failure to get user dictionary.\n")
+                logmessage("Session error because failure to get user dictionary.")
                 return do_redirect(redirect_url, is_ajax, is_json, js_target)
-        sys.stderr.write("Redirecting back to index because of failure to get user dictionary.\n")
+        logmessage("Redirecting back to index because of failure to get user dictionary.")
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         if session_parameter is not None:
             flash(word("Unable to retrieve interview session.  Starting a new session instead."), "error")
         return response
     if user_dict is None:
-        sys.stderr.write("index: no user_dict found after fetch_user_dict with %s and %s, so we need to reset\n" % (user_code, yaml_filename))
+        logmessage("index: no user_dict found after fetch_user_dict with %s and %s, so we need to reset" % (user_code, yaml_filename))
         release_lock(user_code, yaml_filename)
         logmessage("index: dictionary fetch returned no results")
         clear_session(yaml_filename)
         redirect_url = daconfig.get('session error redirect url', None)
         if isinstance(redirect_url, str) and redirect_url:
             redirect_url = redirect_url.format(i=urllibquote(yaml_filename), error=urllibquote('answers_missing'))
-            sys.stderr.write("Session error because user dictionary was None.\n")
+            logmessage("Session error because user dictionary was None.")
             return do_redirect(redirect_url, is_ajax, is_json, js_target)
-        sys.stderr.write("Redirecting back to index because user dictionary was None.\n")
+        logmessage("Redirecting back to index because user dictionary was None.")
         response = do_redirect(url_for('index', i=yaml_filename), is_ajax, is_json, js_target)
         flash(word("Unable to locate interview session.  Starting a new session instead."), "error")
         return response
@@ -6703,7 +6762,7 @@ def index(action_argument=None, refer=None):
                 changed = True
             except Exception as errMess:
                 try:
-                    sys.stderr.write(errMess.__class__.__name__ + ": " + str(errMess) + " after running " + the_string)
+                    logmessage(errMess.__class__.__name__ + ": " + str(errMess) + " after running " + the_string)
                 except:
                     pass
                 error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
@@ -7410,7 +7469,7 @@ def index(action_argument=None, refer=None):
                                 changed = True
                             except Exception as errMess:
                                 try:
-                                    sys.stderr.write("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + " after trying to run " + the_string + "\n")
+                                    logmessage("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + " after trying to run " + the_string)
                                 except:
                                     pass
                                 error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
@@ -7432,7 +7491,7 @@ def index(action_argument=None, refer=None):
                             exec(the_string, user_dict)
                             changed = True
                         except Exception as errMess:
-                            sys.stderr.write("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + " after running " + the_string + "\n")
+                            logmessage("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + " after running " + the_string)
                             error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
         if '_files' in post_data or (STRICT_MODE and (not disregard_input) and len(field_info['files']) > 0):
             if STRICT_MODE:
@@ -7547,7 +7606,7 @@ def index(action_argument=None, refer=None):
                                     exec(the_string, user_dict)
                                     changed = True
                                 except Exception as errMess:
-                                    sys.stderr.write("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + "after running " + the_string + "\n")
+                                    logmessage("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + "after running " + the_string)
                                     error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
                     else:
                         try:
@@ -7568,7 +7627,7 @@ def index(action_argument=None, refer=None):
                             exec(the_string, user_dict)
                             changed = True
                         except Exception as errMess:
-                            sys.stderr.write("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + "after running " + the_string + "\n")
+                            logmessage("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + "after running " + the_string)
                             error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
         if validated:
             if 'informed' in request.form:
@@ -7720,7 +7779,7 @@ def index(action_argument=None, refer=None):
         reset_user_dict(user_code, yaml_filename)
         delete_session_for_interview(i=yaml_filename)
         release_lock(user_code, yaml_filename)
-        sys.stderr.write("Redirecting because of an exit.\n")
+        logmessage("Redirecting because of an exit.")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
@@ -7736,7 +7795,7 @@ def index(action_argument=None, refer=None):
             reset_user_dict(user_code, yaml_filename)
         release_lock(user_code, yaml_filename)
         delete_session_info()
-        sys.stderr.write("Redirecting because of a logout.\n")
+        logmessage("Redirecting because of a logout.")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
@@ -7764,7 +7823,7 @@ def index(action_argument=None, refer=None):
         return response
     if interview_status.question.question_type == "signin":
         release_lock(user_code, yaml_filename)
-        sys.stderr.write("Redirecting because of a signin.\n")
+        logmessage("Redirecting because of a signin.")
         response = do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response, current_language)
@@ -7773,7 +7832,7 @@ def index(action_argument=None, refer=None):
         return response
     if interview_status.question.question_type == "register":
         release_lock(user_code, yaml_filename)
-        sys.stderr.write("Redirecting because of a register.\n")
+        logmessage("Redirecting because of a register.")
         response = do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
             fake_up(response, current_language)
@@ -7782,7 +7841,7 @@ def index(action_argument=None, refer=None):
         return response
     if interview_status.question.question_type == "leave":
         release_lock(user_code, yaml_filename)
-        sys.stderr.write("Redirecting because of a leave.\n")
+        logmessage("Redirecting because of a leave.")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
         else:
@@ -7843,7 +7902,7 @@ def index(action_argument=None, refer=None):
         response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     elif interview_status.question.question_type == "redirect":
-        sys.stderr.write("Redirecting because of a redirect.\n")
+        logmessage("Redirecting because of a redirect.")
         response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
     else:
         response_to_send = None
@@ -8465,9 +8524,13 @@ def index(action_argument=None, refer=None):
         return url;
       }
       var da_url_action = url_action;
-      function action_call(action, args, callback){
+      function action_call(action, args, callback, forgetPrior=false){
         if (args == null){
             args = {};
+        }
+        if (forgetPrior){
+          args = {_action: action, _arguments: args};
+          action = '_da_priority_action';
         }
         if (callback == null){
             callback = function(){};
@@ -8497,9 +8560,13 @@ def index(action_argument=None, refer=None):
       }
       var da_action_call = action_call;
       var url_action_call = action_call;
-      function action_perform(action, args){
+      function action_perform(action, args, forgetPrior=false){
         if (args == null){
-            args = {};
+          args = {};
+        }
+        if (forgetPrior){
+          args = {_action: action, _arguments: args};
+          action = '_da_priority_action';
         }
         var data = {action: action, arguments: args};
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
@@ -8526,10 +8593,14 @@ def index(action_argument=None, refer=None):
       }
       var da_action_perform = action_perform;
       var url_action_perform = action_perform;
-      function action_perform_with_next(action, args, next_data){
+      function action_perform_with_next(action, args, next_data, forgetPrior=false){
         //console.log("action_perform_with_next: " + action + " | " + next_data)
         if (args == null){
             args = {};
+        }
+        if (forgetPrior){
+          args = {_action: action, _arguments: args};
+          action = '_da_priority_action';
         }
         var data = {action: action, arguments: args};
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
@@ -11780,7 +11851,7 @@ def index(action_argument=None, refer=None):
         if reload_after and reload_after > 0:
             data['reload_after'] = reload_after
         if 'action' in data and data['action'] == 'redirect' and 'url' in data:
-            sys.stderr.write("Redirecting because of a redirect action.\n")
+            logmessage("Redirecting because of a redirect action.")
             response = redirect(data['url'])
         else:
             response = jsonify(**data)
@@ -13152,10 +13223,14 @@ def observer():
         return url;
       }
       var da_url_action = url_action;
-      function action_call(action, args, callback){
+      function action_call(action, args, callback, forgetPrior=false){
         //redo?
         if (args == null){
             args = {};
+        }
+        if (forgetPrior){
+          args = {_action: action, _arguments: args};
+          action = '_da_priority_action';
         }
         if (callback == null){
             callback = function(){};
@@ -13181,10 +13256,14 @@ def observer():
       }
       var da_action_call = action_call;
       var url_action_call = action_call;
-      function action_perform(action, args){
+      function action_perform(action, args, forgetPrior=false){
         //redo
         if (args == null){
             args = {};
+        }
+        if (forgetPrior){
+          args = {_action: action, _arguments: args};
+          action = '_da_priority_action';
         }
         var data = {action: action, arguments: args};
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
@@ -13207,11 +13286,15 @@ def observer():
       }
       var da_action_perform = action_perform;
       var url_action_perform = action_perform;
-      function action_perform_with_next(action, args, next_data){
+      function action_perform_with_next(action, args, next_data, forgetPrior=false){
         //redo
         //console.log("action_perform_with_next: " + action + " | " + next_data)
         if (args == null){
             args = {};
+        }
+        if (forgetPrior){
+          args = {_action: action, _arguments: args};
+          action = '_da_priority_action';
         }
         var data = {action: action, arguments: args};
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
@@ -21276,6 +21359,8 @@ def logfile(filename):
 @roles_required(['admin', 'developer'])
 def logs():
     setup_translation()
+    if not app.config['ALLOW_LOG_VIEWING']:
+        return ('File not found', 404)
     form = LogForm(request.form)
     use_zip = true_or_false(request.args.get('zip', None))
     if LOGSERVER is None and use_zip:
@@ -25589,7 +25674,7 @@ def api_file(file_number):
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True, use_lock=False):
     if use_lock:
         obtain_lock(session_id, yaml_filename)
-    #sys.stderr.write("get_session_variables: fetch_user_dict\n")
+    #logmessage("get_session_variables: fetch_user_dict")
     if secret is None:
         secret = docassemble.base.functions.this_thread.current_info.get('secret', None)
     tbackup = docassemble.base.functions.backup_thread_variables()
@@ -26157,7 +26242,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
                     if current_user.has_role('admin', 'developer'):
                         if app.config['ALLOW_UPDATES']:
                             menu_items.append({'href': url_for('update_package'), 'anchor': word('Package Management')})
-                        menu_items.append({'href': url_for('logs'), 'anchor': word('Logs')})
+                        if app.config['ALLOW_LOG_VIEWING']:
+                            menu_items.append({'href': url_for('logs'), 'anchor': word('Logs')})
                         if app.config['ENABLE_PLAYGROUND']:
                             menu_items.append({'href': url_for('playground_page'), 'anchor': word('Playground')})
                         menu_items.append({'href': url_for('utilities'), 'anchor': word('Utilities')})
@@ -26184,9 +26270,9 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         if len(menu_items) > 0:
             data['menu']['top'] = {'anchor': word("Menu")}
             if not interview.options.get('hide standard menu', False):
-                menu_items.append({'href': exit_href(interview_status), 'anchor': interview_status.exit_label})
+                menu_items.append({'href': exit_href(interview_status, data=True), 'anchor': interview_status.exit_label})
         else:
-            data['menu']['top'] = {'href': exit_href(interview_status), 'anchor': interview_status.exit_label}
+            data['menu']['top'] = {'href': exit_href(interview_status, data=True), 'anchor': interview_status.exit_label}
     #logmessage("Ok returning")
     return data
 
@@ -28455,19 +28541,19 @@ def get_email_obj(email, short_record, user):
     else:
         email_obj.address_owner = user.email
     for attachment_record in db.session.execute(select(EmailAttachment).filter_by(email_id=email.id).order_by(EmailAttachment.index)).scalars():
-        #sys.stderr.write("Attachment record is " + str(attachment_record.id) + "\n")
+        #logmessage("Attachment record is " + str(attachment_record.id))
         upload = db.session.execute(select(Uploads).filter_by(indexno=attachment_record.upload)).scalar()
         if upload is None:
             continue
-        #sys.stderr.write("Filename is " + upload.filename + "\n")
+        #logmessage("Filename is " + upload.filename)
         saved_file_att = SavedFile(attachment_record.upload, extension=attachment_record.extension, fix=True)
         process_file(saved_file_att, saved_file_att.path, attachment_record.content_type, attachment_record.extension, initial=False)
         extension, mimetype = get_ext_and_mimetype(upload.filename)
         if upload.filename == 'headers.json':
-            #sys.stderr.write("Processing headers\n")
+            #logmessage("Processing headers")
             email_obj.initializeAttribute('headers', DAFile, mimetype=mimetype, extension=extension, number=attachment_record.upload)
         elif upload.filename == 'attachment.txt' and attachment_record.index < 3:
-            #sys.stderr.write("Processing body text\n")
+            #logmessage("Processing body text")
             email_obj.initializeAttribute('body_text', DAFile, mimetype=mimetype, extension=extension, number=attachment_record.upload)
         elif upload.filename == 'attachment.html' and attachment_record.index < 3:
             email_obj.initializeAttribute('body_html', DAFile, mimetype=mimetype, extension=extension, number=attachment_record.upload)
@@ -28899,7 +28985,7 @@ def applock(action, application):
         while count > 0:
             record = r.get(key)
             if record:
-                sys.stderr.write("obtain_applock: waiting for " + key + "\n")
+                logmessage("obtain_applock: waiting for " + key)
                 time.sleep(1.0)
             else:
                 found = False
@@ -28907,7 +28993,7 @@ def applock(action, application):
             found = True
             count -= 1
         if found:
-            sys.stderr.write("Request for applock " + key + " deadlocked\n")
+            logmessage("Request for applock " + key + " deadlocked")
             r.delete(key)
         pipe = r.pipeline()
         pipe.set(key, 1)
@@ -28990,31 +29076,29 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
         pass
     try:
         try:
+            html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n    <p>The error message was:</p>\n<pre>" + err.__class__.__name__ + ": " + str(errmess) + "</pre>\n"
             body = "There was an error in the " + app.config['APP_NAME'] + " application.\n\nThe error message was:\n\n" + err.__class__.__name__ + ": " + str(errmess)
             if trace is not None:
                 body += "\n\n" + str(trace)
+                html += "<pre>" + str(trace) + "</pre>"
             if history is not None:
                 body += "\n\n" + BeautifulSoup(history, "html.parser").get_text('\n')
+                html += history
             if referer is not None and referer != 'None':
                 body += "\n\nThe referer URL was " + str(referer)
-            elif interview_path is not None:
-                body += "\n\nThe interview was " + str(interview_path)
-            if email_address is not None:
-                body += "\n\nThe user was " + str(email_address)
-            html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n    <p>The error message was:</p>\n<pre>" + err.__class__.__name__ + ": " + str(errmess)
-            if trace is not None:
-                html += "\n\n" + str(trace)
-            html += "</pre>\n"
-            if history is not None:
-                html += str(history)
-            if referer is not None and referer != 'None':
                 html += "<p>The referer URL was " + str(referer) + "</p>"
             elif interview_path is not None:
-                body += "<p>The interview was " + str(interview_path) + "</p>"
+                body += "\n\nThe interview was " + str(interview_path)
+                html += "<p>The interview was " + str(interview_path) + "</p>"
             if email_address is not None:
-                body += "<p>The user was " + str(email_address) + "</p>"
+                body += "\n\nThe user was " + str(email_address)
+                html += "<p>The user was " + str(email_address) + "</p>"
+            if trace is not None:
+                body += "\n\n" + str(trace)
+                html += "<pre>" + str(trace) + "</pre>"
             if 'external hostname' in daconfig and daconfig['external hostname'] is not None:
-                body += "<p>The external hostname was " + str(daconfig['external hostname']) + "</p>"
+                body += "\n\nThe external hostname was " + str(daconfig['external hostname'])
+                html += "<p>The external hostname was " + str(daconfig['external hostname']) + "</p>"
             html += "\n  </body>\n</html>"
             msg = Message(app.config['APP_NAME'] + " error: " + err.__class__.__name__, recipients=email_recipients, body=body, html=html)
             if json_filename:
@@ -29158,30 +29242,6 @@ base_name_info = get_name_info()
 
 password_secret_key = daconfig.get('password secretkey', app.secret_key)
 
-sys_logger = logging.getLogger('docassemble')
-sys_logger.setLevel(logging.DEBUG)
-
-LOGFORMAT = daconfig.get('log format', 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s')
-
-def add_log_handler():
-    tries = 0
-    while tries < 5:
-        try:
-            docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
-        except PermissionError:
-            time.sleep(1)
-            next
-        sys_logger.addHandler(docassemble_log_handler)
-        break
-
-add_log_handler()
-
-if not in_celery:
-    if LOGSERVER is None:
-        docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
-    else:
-        docassemble.base.logger.set_logmessage(syslog_message)
-
 def get_base_url():
     return re.sub(r'^(https?://[^/]+).*', r'\1', url_for('rootindex', _external=True))
 
@@ -29256,14 +29316,14 @@ def set_admin_interviews():
                         try:
                             interview = docassemble.base.interview_cache.get_interview(item['interview'])
                         except:
-                            sys.stderr.write("interview " + item['interview'] + " in administrative interviews did not exist" + "\n")
+                            logmessage("interview " + item['interview'] + " in administrative interviews did not exist")
                             continue
                         if 'title' in item:
                             the_title = item['title']
                         else:
                             the_title = interview.consolidated_metadata.get('short title', interview.consolidated_metadata.get('title', None))
                             if the_title is None:
-                                sys.stderr.write("interview in administrative interviews needs to be given a title" + "\n")
+                                logmessage("interview in administrative interviews needs to be given a title")
                                 continue
                         admin_interview = AdminInterview()
                         admin_interview.interview = item['interview']
@@ -29275,11 +29335,11 @@ def set_admin_interviews():
                                         fault = True
                                         break
                                 if fault:
-                                    sys.stderr.write("title of administrative interviews item must be a string or a dictionary with keys and values that are strings" + "\n")
+                                    logmessage("title of administrative interviews item must be a string or a dictionary with keys and values that are strings")
                                     continue
                             admin_interview.title = the_title
                         else:
-                            sys.stderr.write("title of administrative interviews item must be a string or a dictionary" + "\n")
+                            logmessage("title of administrative interviews item must be a string or a dictionary")
                             continue
                         if 'required privileges' not in item:
                             roles = set()
@@ -29314,7 +29374,7 @@ def set_admin_interviews():
                             else:
                                 fault = True
                             if fault:
-                                sys.stderr.write("required privileges in administrative interviews item must be a list of strings" + "\n")
+                                logmessage("required privileges in administrative interviews item must be a list of strings")
                                 admin_interview.roles = None
                             else:
                                 admin_interview.roles = item['required privileges']
@@ -29326,11 +29386,11 @@ def set_admin_interviews():
                                 admin_interview.require_login = bool(metadata['require login'])
                         admin_interviews.append(admin_interview)
                     else:
-                        sys.stderr.write("item in administrative interviews must contain a valid interview name" + "\n")
+                        logmessage("item in administrative interviews must contain a valid interview name")
                 else:
-                    sys.stderr.write("item in administrative interviews is not a dict" + "\n")
+                    logmessage("item in administrative interviews is not a dict")
         else:
-            sys.stderr.write("administrative interviews is not a list" + "\n")
+            logmessage("administrative interviews is not a list")
     return admin_interviews
 
 def fix_api_key(match):
@@ -29396,7 +29456,7 @@ def initialize():
                     assert isinstance(app.config['BOOTSTRAP_THEME'], str)
                 except:
                     app.config['BOOTSTRAP_THEME'] = None
-                    sys.stderr.write("error loading bootstrap theme\n")
+                    logmessage("error loading bootstrap theme")
             else:
                 app.config['BOOTSTRAP_THEME'] = None
             if 'global css' in daconfig:
@@ -29406,7 +29466,7 @@ def initialize():
                         assert isinstance(global_css_url, str)
                         global_css += "\n" + '    <link href="' + global_css_url + '" rel="stylesheet">'
                     except:
-                        sys.stderr.write("error loading global css: " + repr(fileref) + "\n")
+                        logmessage("error loading global css: " + repr(fileref))
             if 'global javascript' in daconfig:
                 for fileref in daconfig['global javascript']:
                     try:
@@ -29414,7 +29474,7 @@ def initialize():
                         assert isinstance(global_js_url, str)
                         global_js += "\n" + '    <script src="' + global_js_url + '"></script>'
                     except:
-                        sys.stderr.write("error loading global js: " + repr(fileref) + "\n")
+                        logmessage("error loading global js: " + repr(fileref))
             if 'raw global css' in daconfig and daconfig['raw global css']:
                 global_css += "\n" + str(daconfig['raw global css'])
             if 'raw global javascript' in daconfig and daconfig['raw global javascript']:
@@ -29434,7 +29494,7 @@ def initialize():
                         if daconfig['social'][key][subkey] is None:
                             del daconfig['social'][key][subkey]
             except:
-                sys.stderr.write("Error converting social image references")
+                logmessage("Error converting social image references")
             interviews_to_load = daconfig.get('preloaded interviews', None)
             if isinstance(interviews_to_load, list):
                 for yaml_filename in daconfig['preloaded interviews']:
@@ -29447,18 +29507,18 @@ def initialize():
                 try:
                     copy_playground_modules()
                 except Exception as err:
-                    sys.stderr.write("There was an error copying the playground modules: " + err.__class__.__name__ + "\n")
+                    logmessage("There was an error copying the playground modules: " + err.__class__.__name__)
                 write_pypirc()
                 release_lock('init' + hostname, 'init')
             try:
                 macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
                 if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7167:
-                    # sys.stderr.write("Removing " + macro_path + " because it is out of date\n")
+                    # logmessage("Removing " + macro_path + " because it is out of date")
                     os.remove(macro_path)
                 # else:
-                #     sys.stderr.write("File " + macro_path + " is missing or has the correct size\n")
+                #     logmessage("File " + macro_path + " is missing or has the correct size")
             except Exception as err:
-                sys.stderr.write("Error was " + err.__class__.__name__ + ' ' + str(err) + "\n")
+                logmessage("Error was " + err.__class__.__name__ + ' ' + str(err))
             fix_api_keys()
             import_necessary(url, url_root)
 

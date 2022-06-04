@@ -6,6 +6,7 @@ import docassemble.base.config
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
+from docassemble.base.logger import logmessage
 
 def read_in(line, target):
     col = line.split('|')
@@ -17,7 +18,7 @@ def main():
     dbconfig = daconfig.get('db', {})
     db_prefix = dbconfig.get('prefix', 'postgresql+psycopg2://')
     if db_prefix != 'postgresql+psycopg2://':
-        sys.stderr.write("fix_postgresql_tables: skipping because configured database is not PostgreSQL.\n")
+        logmessage("fix_postgresql_tables: skipping because configured database is not PostgreSQL.")
         return
     db_name = dbconfig.get('name', None)
     db_host = dbconfig.get('host', None)
@@ -81,7 +82,7 @@ def main():
         existing_columns[col[0]][col[1]] = {'type': col[2], 'size': col[3], 'default': col[4]}
 
     if 'alembic_version' in existing_columns and daconfig.get('use alembic', True):
-        sys.stderr.write("fix_postgresql_tables: skipping because alembic is in use.\n")
+        logmessage("fix_postgresql_tables: skipping because alembic is in use.")
         return
     desired_columns = {}
     with open(schema_file, 'r', encoding='utf-8') as f:

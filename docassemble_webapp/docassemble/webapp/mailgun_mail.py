@@ -4,6 +4,7 @@ import time
 import requests
 from requests.auth import HTTPBasicAuth
 from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
+from docassemble.base.logger import logmessage
 
 class Connection:
     def __init__(self, mail):
@@ -30,10 +31,10 @@ class Connection:
                                  data=data,
                                  files={'message': ('mime_message', message.as_string())})
         if response.status_code >= 400:
-            sys.stderr.write("Mailgun status code: " + str(response.status_code) + "\n")
-            sys.stderr.write("Mailgun response headers: " + repr(response.headers) + "\n")
+            logmessage("Mailgun status code: " + str(response.status_code))
+            logmessage("Mailgun response headers: " + repr(response.headers))
             try:
-                sys.stderr.write(repr(response.body) + "\n")
+                logmessage(repr(response.body))
             except:
                 pass
             raise Exception("Failed to send e-mail message to " + self.mail.api_url)

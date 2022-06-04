@@ -9,6 +9,7 @@ if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig, S3_ENABLED, s3_config, AZURE_ENABLED, azure_config
+from docassemble.base.logger import logmessage
 import docassemble.base.amazon
 import docassemble.base.microsoft
 
@@ -50,12 +51,12 @@ def main():
             for key in cloud.list_keys(prefix=prefix):
                 filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(dest, filename)
-                sys.stderr.write("install_certs: saving " + str(key.name) + " to " + str(fullpath) + "\n")
+                logmessage("install_certs: saving " + str(key.name) + " to " + str(fullpath))
                 key.get_contents_to_filename(fullpath)
                 os.chmod(fullpath, stat.S_IRUSR)
                 success = True
         else:
-            sys.stderr.write("SSL destination directory not known\n")
+            logmessage("SSL destination directory not known")
             sys.exit(1)
         if success:
             return
@@ -65,7 +66,7 @@ def main():
         else:
             return
     if not os.path.isdir(certs_location):
-        sys.stderr.write("certs directory " + str(certs_location) + " does not exist")
+        logmessage("certs directory " + str(certs_location) + " does not exist")
         sys.exit(1)
     dest = daconfig.get('cert install directory', '/etc/ssl/docassemble')
     if dest:
@@ -76,7 +77,7 @@ def main():
             for the_file in files:
                 os.chmod(os.path.join(root, the_file), stat.S_IRUSR)
     else:
-        sys.stderr.write("SSL destination directory not known")
+        logmessage("SSL destination directory not known")
         sys.exit(1)
     www_install = daconfig.get('web server certificate directory', '/var/www/.certs')
     if www_install:

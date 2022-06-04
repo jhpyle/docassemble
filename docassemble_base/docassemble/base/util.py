@@ -576,12 +576,12 @@ class DAObject:
         return self
     def _set_instance_name_for_method(self):
         method_name = inspect.stack()[1][3]
-        #sys.stderr.write("_set_instance_name_for_method: method_name is " + str(method_name) + "\n");
+        #logmessage("_set_instance_name_for_method: method_name is " + str(method_name));
         level = 1
         while level < 10:
             frame = inspect.stack()[level][0]
             the_names = frame.f_code.co_names
-            #sys.stderr.write("_set_instance_name_for_method: level " + str(level) + "; co_name is " + str(frame.f_code.co_names) + "\n")
+            #logmessage("_set_instance_name_for_method: level " + str(level) + "; co_name is " + str(frame.f_code.co_names))
             if len(the_names) == 3 and the_names[1] == method_name:
                 self.instanceName = the_names[2]
                 self.has_nonrandom_instance_name = True
@@ -1183,7 +1183,7 @@ class DACatchAll(DAObject):
 class RelationshipDir(DAObject):
     """A data structure representing a relationships among people."""
     def involves(self, target):
-        #sys.stderr.write("RelationshipDir: involves " + repr(target) + "\n")
+        #logmessage("RelationshipDir: involves " + repr(target))
         if self.parent is target or self.child is target:
             return True
         return False
@@ -1191,7 +1191,7 @@ class RelationshipDir(DAObject):
 class RelationshipPeer(DAObject):
     """A data structure representing a relationships among people."""
     def involves(self, target):
-        #sys.stderr.write("RelationshipPeer: involves " + repr(target) + "\n")
+        #logmessage("RelationshipPeer: involves " + repr(target))
         if target in self.peers:
             return True
         return False
@@ -1231,50 +1231,50 @@ class RelationshipTree(DAObject):
                 filters.append(item)
         for key, val in kwargs.items():
             if key == 'involves':
-                #sys.stderr.write("_func_list: key is involves\n")
+                #logmessage("_func_list: key is involves")
                 if isinstance(val, (list, set, DAList, DASet)):
-                    #sys.stderr.write("_func_list: involves in a list\n")
+                    #logmessage("_func_list: involves in a list")
                     subfilters = []
                     for item in val:
-                        #sys.stderr.write("_func_list: adding a subfilter\n")
+                        #logmessage("_func_list: adding a subfilter")
                         subfilters.append(generator_involves(item))
                     filters.append(self._and(*subfilters))
                 else:
-                    #sys.stderr.write("_func_list: involves without a list\n")
+                    #logmessage("_func_list: involves without a list")
                     filters.append(generator_involves(val))
             elif isinstance(val, DAObject):
-                #sys.stderr.write("_func_list: a DAObject\n")
+                #logmessage("_func_list: a DAObject")
                 filters.append(generator_is(key, val))
             else:
-                #sys.stderr.write("_func_list: key is " + repr(key) + " and val is " + repr(val) + "\n")
+                #logmessage("_func_list: key is " + repr(key) + " and val is " + repr(val) + "")
                 filters.append(generator_equals(key, val))
         return filters
     def _and(self, *pargs, **kwargs):
-        #sys.stderr.write("_and\n")
+        #logmessage("_and")
         filters = self._func_list(*pargs, **kwargs)
         def func(y):
-            #sys.stderr.write("in _and func\n")
+            #logmessage("in _and func")
             for subfunc in filters:
-                #sys.stderr.write("evaluating _and func\n")
+                #logmessage("evaluating _and func")
                 result = subfunc(y)
-                #sys.stderr.write("result is " + repr(result) + "\n")
+                #logmessage("result is " + repr(result))
                 if not result:
                     return False
             return True
         return func
     def _or(self, *pargs, **kwargs):
-        #sys.stderr.write("_or\n")
+        #logmessage("_or")
         filters = self._func_list(*pargs, **kwargs)
         def func(y):
-            #sys.stderr.write("in _or func\n")
+            #logmessage("in _or func")
             for subfunc in filters:
-                #sys.stderr.write("evaluating _or func\n")
+                #logmessage("evaluating _or func")
                 if subfunc(y):
                     return True
             return False
         return func
     def query_peer(self, *pargs, **kwargs):
-        #sys.stderr.write("query_peer\n")
+        #logmessage("query_peer")
         if len(pargs) == 0 and len(kwargs) == 1:
             func = self._func_list(*pargs, **kwargs)[0]
         elif len(pargs) == 1:
@@ -1285,7 +1285,7 @@ class RelationshipTree(DAObject):
             raise DAError("Invalid RelationshipTree query")
         return (y for y in self.relationships_peer if func(y))
     def query_dir(self, *pargs, **kwargs):
-        #sys.stderr.write("query_dir\n")
+        #logmessage("query_dir")
         if len(pargs) == 0 and len(kwargs) == 1:
             func = self._func_list(*pargs, **kwargs)[0]
         elif len(pargs) == 1:
@@ -1318,7 +1318,7 @@ class RelationshipTree(DAObject):
         for item in self.relationships_peer:
             if item.relationship_type == relationship_type and item.peers == the_set:
                 return item
-        #sys.stderr.write("Setting relationship involving " + repr(the_set) + " and reltype " + relationship_type + "\n")
+        #logmessage("Setting relationship involving " + repr(the_set) + " and reltype " + relationship_type)
         return self.relationships_peer.appendObject(peers=the_set, relationship_type=relationship_type)
     def delete_peer(self, *pargs):
         """Deletes the given peer relationship(s)"""
@@ -1628,7 +1628,7 @@ class DAList(DAObject):
         the new object should be.  If no object type is provided,
         the object type given by .object_type is used, and if
         that is not set, DAObject is used."""
-        #sys.stderr.write("Called appendObject where len is " + str(len(self.elements)) + "\n")
+        #logmessage("Called appendObject where len is " + str(len(self.elements)))
         objectFunction = None
         if len(pargs) > 0:
             pargs = list(pargs)
@@ -1871,7 +1871,7 @@ class DAList(DAObject):
             del self._appending_allowed
     def gather(self, number=None, item_object_type=None, minimum=None, complete_attribute=None):
         """Causes the elements of the list to be gathered and named.  Returns True."""
-        #sys.stderr.write("Gather\n")
+        #logmessage("Gather")
         if hasattr(self, 'gathered') and self.gathered:
             if self.auto_gather and len(self.elements) == 0 and hasattr(self, 'there_are_any') and self.there_are_any:
                 del self.gathered
@@ -2033,9 +2033,9 @@ class DAList(DAObject):
                 var_name = object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']'
                 #force_gather(var_name)
                 raise DAIndexError("name '" + var_name + "' is not defined")
-            #sys.stderr.write("Calling fill up to\n")
+            #logmessage("Calling fill up to")
             self._fill_up_to(index)
-            #sys.stderr.write("Assuming it is there!\n")
+            #logmessage("Assuming it is there!")
             return self.elements[index]
     def __str__(self):
         self._trigger_gather()
@@ -7680,15 +7680,15 @@ def ocr_file_in_background(*pargs, **kwargs):
         the_task = server.chord(todo)(collector)
     if ui_notification is not None:
         worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
-        #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key + "\n")
+        #logmessage("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key)
         server.server_redis.rpush(worker_key, the_task.id)
-    #sys.stderr.write("ocr_file_in_background finished\n")
+    #logmessage("ocr_file_in_background finished")
     return the_task
 
 # def ocr_file_in_background(image_file, ui_notification=None, language=None, psm=6, x=None, y=None, W=None, H=None):
 #     """Starts optical character recognition on one or more image files or PDF
 #     files and returns an object representing the background task created."""
-#     sys.stderr.write("ocr_file_in_background: started\n")
+#     logmessage("ocr_file_in_background: started")
 #     return server.async_ocr(image_file, ui_notification=ui_notification, language=language, psm=psm, x=x, y=y, W=W, H=H, user_code=this_thread.current_info.get('session', None))
 
 
@@ -8750,7 +8750,7 @@ def safe_pypdf_reader(filename):
         return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'), overwriteWarnings=False)
 
 def ocr_finalize(*pargs, **kwargs):
-    #sys.stderr.write("ocr_finalize started")
+    #logmessage("ocr_finalize started")
     if kwargs.get('pdf', False):
         target = kwargs['target']
         dafilelist = kwargs['dafilelist']
@@ -8783,19 +8783,19 @@ def ocr_finalize(*pargs, **kwargs):
     output = {}
     #index = 0
     for parg in pargs:
-        #sys.stderr.write("ocr_finalize: index " + str(index) + " is a " + str(type(parg)) + "\n")
+        #logmessage("ocr_finalize: index " + str(index) + " is a " + str(type(parg)))
         if isinstance(parg, list):
             for item in parg:
-                #sys.stderr.write("ocr_finalize: sub item is a " + str(type(item)) + "\n")
+                #logmessage("ocr_finalize: sub item is a " + str(type(item)))
                 if isinstance(item, ReturnValue) and isinstance(item.value, dict):
                     output[int(item.value['page'])] = item.value['text']
         else:
             if isinstance(parg, ReturnValue) and isinstance(parg.value, dict):
                 output[int(parg.value['page'])] = parg.value['text']
         #index += 1
-    #sys.stderr.write("ocr_finalize: assembling output\n")
+    #logmessage("ocr_finalize: assembling output")
     final_output = "\f".join([output[x] for x in sorted(output.keys())])
-    #sys.stderr.write("ocr_finalize: final output has length " + str(len(final_output)) + "\n")
+    #logmessage("ocr_finalize: final output has length " + str(len(final_output)))
     return final_output
 
 def get_ocr_language(language):
@@ -8841,7 +8841,7 @@ def get_available_languages():
         return result
 
 def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None, user_code=None, user=None, pdf=False, preserve_color=False, **kwargs):
-    #sys.stderr.write("ocr_page_tasks running\n")
+    #logmessage("ocr_page_tasks running")
     if isinstance(image_file, set):
         return []
     if not isinstance(image_file, (DAFile, DAFileList, list)):
@@ -8874,13 +8874,13 @@ def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=N
                         lang = 'eng'
                     else:
                         lang = langs[0]
-                    sys.stderr.write("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang) + "\n")
+                    logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
             except Exception as the_error:
                 if 'eng' in langs:
                     lang = 'eng'
                 else:
                     lang = langs[0]
-                sys.stderr.write("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang) + "; error was " + str(the_error) + "\n")
+                logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang) + "; error was " + str(the_error))
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     todo = []
@@ -8906,7 +8906,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=N
                     todo.append(dict(doc=doc_conv, page=i+1, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code, user=user, pdf=pdf, preserve_color=preserve_color))
             else:
                 todo.append(dict(doc=doc, page=None, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code, user=user, pdf=pdf, preserve_color=preserve_color))
-    #sys.stderr.write("ocr_page_tasks finished\n")
+    #logmessage("ocr_page_tasks finished")
     return todo
 
 def make_png_for_pdf(doc, prefix, resolution, pdf_to_ppm, page=None):
@@ -9035,14 +9035,14 @@ def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resoluti
         page = 1
     if psm is None:
         psm = 6
-    sys.stderr.write("ocr_page running on page " + str(page) + "\n")
+    logmessage("ocr_page running on page " + str(page))
     the_file = None
     if not hasattr(doc, 'extension'):
         return None
-    #sys.stderr.write("ocr_page running with extension " + str(doc.extension) + "\n")
+    #logmessage("ocr_page running with extension " + str(doc.extension))
     if doc.extension not in ['pdf', 'png', 'jpg', 'gif']:
         raise Exception("Not a readable image file")
-    #sys.stderr.write("ocr_page calling doc.path()\n")
+    #logmessage("ocr_page calling doc.path()")
     path = doc.path()
     if doc.extension == 'pdf':
         the_file = None
@@ -9086,21 +9086,21 @@ def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resoluti
     if pdf:
         outfile = doc._pdf_page_path(page)
         params = ['tesseract', 'stdin', re.sub(r'\.pdf$', '', outfile), '-l', str(lang), '--psm', str(psm), '--dpi', str(ocr_resolution), 'pdf']
-        sys.stderr.write("ocr_page: piping to command " + " ".join(params) + "\n")
+        logmessage("ocr_page: piping to command " + " ".join(params))
         try:
             text = subprocess.check_output(params, stdin=file_to_read).decode()
         except subprocess.CalledProcessError as err:
             raise Exception("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output.decode()))
-        sys.stderr.write("ocr_page finished with pdf page " + str(page) + "\n")
+        logmessage("ocr_page finished with pdf page " + str(page))
         doc.commit()
         return dict(indexno=indexno, page=page, doc=doc)
     params = ['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm), '--dpi', str(ocr_resolution)]
-    sys.stderr.write("ocr_page: piping to command " + " ".join(params) + "\n")
+    logmessage("ocr_page: piping to command " + " ".join(params))
     try:
         text = subprocess.check_output(params, stdin=file_to_read).decode()
     except subprocess.CalledProcessError as err:
         raise Exception("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output.decode()))
-    sys.stderr.write("ocr_page finished with page " + str(page) + "\n")
+    logmessage("ocr_page finished with page " + str(page))
     return dict(indexno=indexno, page=page, text=text)
 
 def complex_getattr(obj, attr):

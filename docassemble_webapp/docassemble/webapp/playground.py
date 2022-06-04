@@ -266,7 +266,6 @@ class DAQuestion(DAObject):
             for key, value in self.interview.decorations.items():
                 content += "  " + repr_str(key) + ": " + oneline(value.filename) + "\n"
                 self.static_files_used.add(value.filename)
-        #sys.stderr.write(content)
         return content
 
 class DAQuestionDict(DADict):

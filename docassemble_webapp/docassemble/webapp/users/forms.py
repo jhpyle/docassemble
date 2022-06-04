@@ -102,9 +102,9 @@ class MySignInForm(LoginForm):
                 else:
                     self.email.errors.append(word("You cannot log in this way."))
                 return False
-            #sys.stderr.write("Trying super validate\n")
+            #logmessage("Trying super validate")
             result = super().validate()
-            #sys.stderr.write("Super validate response was " + repr(result) + "\n")
+            #logmessage("Super validate response was " + repr(result))
         if result is False:
             r.incr(key)
             r.expire(key, daconfig['ban period'])

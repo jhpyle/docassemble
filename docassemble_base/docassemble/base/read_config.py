@@ -115,6 +115,8 @@ if __name__ == "__main__":
             print('export DAUPDATEONSTART=initial')
     if 'allow updates' in daconfig and daconfig['allow updates'] is False:
         print('export DAALLOWUPDATES=false')
+    if 'allow log viewing' in daconfig and daconfig['allow log viewing'] is False:
+        print('export DAALLOWLOGVIEWING=false')
     if 'expose websockets' in daconfig and daconfig['expose websockets']:
         print('export DAEXPOSEWEBSOCKETS=true')
     if 'websockets ip' in daconfig and daconfig['websockets ip']:

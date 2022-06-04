@@ -200,11 +200,11 @@ class InterviewSource:
     def get_index(self):
         the_index = docassemble.base.functions.server.server_redis.get('da:interviewsource:' + self.path)
         if the_index is None:
-            #sys.stderr.write("Updating index from get_index for " + self.path + "\n")
+            #logmessage("Updating index from get_index for " + self.path)
             the_index = docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
         return the_index
     def update_index(self):
-        #sys.stderr.write("Updating index for " + self.path + "\n")
+        #logmessage("Updating index for " + self.path)
         docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
     def set_filepath(self, filepath):
         self.filepath = filepath
@@ -255,7 +255,7 @@ class InterviewSourceFile(InterviewSource):
                     self.playground_file = os.path.join(self.playground.subdir, self.playground.filename)
                 else:
                     self.playground_file = self.playground.filename
-                #sys.stderr.write("The path is " + repr(self.playground.path) + "\n")
+                #logmessage("The path is " + repr(self.playground.path))
                 if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):
                     self.set_filepath(self.playground.path)
                 else:
@@ -548,7 +548,7 @@ class InterviewStatus:
             try:
                 time.sleep(self.question.sleep)
             except:
-                sys.stderr.write("do_sleep: invalid sleep amount " + repr(self.question.sleep) + "\n")
+                logmessage("do_sleep: invalid sleep amount " + repr(self.question.sleep))
     def get_field_list(self):
         if 'sub_fields' in self.extras:
             field_list = []
@@ -4986,7 +4986,7 @@ class Question:
         except:
             pass
         #logmessage("Asking " + str(question_text))
-        #sys.stderr.write("Asking " + str(question_text) + "\n")
+        #logmessage("Asking " + str(question_text))
         if self.subcontent is not None:
             subquestion = self.subcontent.text(user_dict).rstrip()
         else:
@@ -6388,7 +6388,7 @@ class Question:
                     if hasattr(the_var, 'instanceName'):
                         variable_name = the_var.instanceName + '.' + attrib
                 string = variable_name + " = DAFileCollection(" + repr(variable_name) + ")"
-                # logmessage("Executing " + string + "\n")
+                # logmessage("Executing " + string)
                 exec(string, the_user_dict)
                 the_name = attachment['name'].text(the_user_dict).strip()
                 the_filename = attachment['filename'].text(the_user_dict).strip()
@@ -6416,7 +6416,7 @@ class Question:
                     else:
                         the_ext = '.' + extension_of_doc_format[doc_format]
                     string = variable_string + " = DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + the_ext) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
-                    #logmessage("Executing " + string + "\n")
+                    #logmessage("Executing " + string)
                     exec(string, the_user_dict)
                 for doc_format in result['content']:
                     # logmessage("Considering " + doc_format)
@@ -6958,9 +6958,10 @@ def emoji_matcher_html(obj):
 def interview_source_from_string(path, **kwargs):
     if path is None:
         raise DAError("Passed None to interview_source_from_string")
-    #sys.stderr.write("Trying to find " + path + "\n")
+    #logmessage("Trying to find " + path)
+    path = re.sub(r'(docassemble.playground[0-9]+[^:]*:)data/questions/(.*)', r'\1\2', path)
     for the_filename in [docassemble.base.functions.package_question_filename(path), docassemble.base.functions.standard_question_filename(path), docassemble.base.functions.server.absolute_filename(path)]:
-        #sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
+        #logmessage("Trying " + repr(the_filename) + " with path " + repr(path))
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update(**kwargs):
@@ -7420,7 +7421,7 @@ class Interview:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
                         self.names_used.update(question.fields_used)
                 except Exception as errMess:
-                    #sys.stderr.write(str(source_code) + "\n")
+                    #logmessage(str(source_code))
                     try:
                         logmessage('Interview: error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
                     except:
@@ -7437,7 +7438,7 @@ class Interview:
                     document = yaml.safe_load(source_code)
                 except Exception as errMess:
                     self.success = False
-                    #sys.stderr.write("Error: " + str(source_code) + "\n")
+                    #logmessage("Error: " + str(source_code))
                     #str(source_code)
                     try:
                         raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
@@ -7616,7 +7617,7 @@ class Interview:
                     else:
                         exec('from ' + module_name + ' import *', user_dict_copy)
     def assemble(self, user_dict, interview_status=None, old_user_dict=None, force_question=None):
-        #sys.stderr.write("assemble\n")
+        #logmessage("assemble")
         user_dict['_internal']['tracker'] += 1
         if interview_status is None:
             interview_status = InterviewStatus()
@@ -7887,7 +7888,7 @@ class Interview:
                     #logmessage("UndefinedError")
                     if self.debug and docassemble.base.functions.this_thread.evaluation_context == 'docx':
                         #logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception) + "\n" + traceback.format_exc())
-                        logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception) + "\n")
+                        logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception))
                     docassemble.base.functions.reset_context()
                     missingVariable = extract_missing_name(the_exception)
                     #logmessage("extracted " + missingVariable)
@@ -8113,7 +8114,7 @@ class Interview:
         if recursion_depth > self.recursion_limit:
             raise DAError("There appears to be an infinite loop.  Variables in stack are " + ", ".join(sorted(variable_stack)) + ".")
         #logmessage("askfor: I don't have " + str(missingVariable) + " for language " + str(language))
-        #sys.stderr.write("I don't have " + str(missingVariable) + " for language " + str(language) + "\n")
+        #logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
         origMissingVariable = missingVariable
         docassemble.base.functions.set_current_variable(origMissingVariable)
         # if missingVariable in variable_stack:
@@ -8670,7 +8671,7 @@ class Interview:
                 #logmessage("UndefinedError")
                 if self.debug and docassemble.base.functions.this_thread.evaluation_context == 'docx':
                     #logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception) + "\n" + traceback.format_exc())
-                    logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception) + "\n")
+                    logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception))
                 docassemble.base.functions.reset_context()
                 newMissingVariable = extract_missing_name(the_exception)
                 if newMissingVariable not in questions_tried:

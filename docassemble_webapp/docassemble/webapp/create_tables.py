@@ -8,6 +8,7 @@ if __name__ == "__main__":
 from docassemble.base.config import daconfig
 from docassemble.base.functions import word
 from docassemble.base.generate_key import random_alphanumeric
+from docassemble.base.logger import logmessage
 from docassemble.webapp.app_object import app
 from docassemble.webapp.core.models import Uploads, ObjectStorage, SpeakList, Shortener, MachineLearning, GlobalObjectStorage
 from docassemble.webapp.database import alchemy_connection_string, dbtableprefix
@@ -106,16 +107,16 @@ def test_for_errors(start_time=None):
             last_value = results[0]
         max_value = db.session.execute(select(db.func.max(getattr(tableclass, column)))).scalar()
         if max_value is not None and max_value > last_value:
-            sys.stderr.write('create_tables.test_for_errors: ' + table + " has an error: " + str(last_value) + " " + str(max_value) + " after " + str(time.time() - start_time) + "\n")
+            logmessage('create_tables.test_for_errors: ' + table + " has an error: " + str(last_value) + " " + str(max_value) + " after " + str(time.time() - start_time) + " seconds.")
             db.session.execute(text("alter sequence " + table + "_" + column + "_seq restart with :newval"), {'newval': max_value + 1})
             db.session.commit()
 
 def populate_tables(start_time=None):
     if start_time is None:
         start_time = time.time()
-    sys.stderr.write("create_tables.populate_tables: starting after " + str(time.time() - start_time) + "\n")
+    logmessage("create_tables.populate_tables: starting after " + str(time.time() - start_time) + " seconds.")
     UserManager(SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel), app)
-    sys.stderr.write("create_tables.populate_tables: obtained UserManager after " + str(time.time() - start_time) + "\n")
+    logmessage("create_tables.populate_tables: obtained UserManager after " + str(time.time() - start_time) + " seconds.")
     result = {}
     admin_defaults = daconfig.get('default admin account', {})
     if 'email' not in admin_defaults:
@@ -142,17 +143,17 @@ def populate_tables(start_time=None):
     get_role(db, 'advocate', result=result)
     get_role(db, 'trainer', result=result)
     if daconfig.get('fix user roles', False):
-        sys.stderr.write("create_tables.populate_tables: fixing user roles after " + str(time.time() - start_time) + "\n")
+        logmessage("create_tables.populate_tables: fixing user roles after " + str(time.time() - start_time) + " seconds.")
         to_fix = []
         for user in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles))).scalars():
             if len(user.roles) == 0:
                 to_fix.append(user)
         if len(to_fix) > 0:
-            sys.stderr.write("create_tables.populate_tables: found user roles to fix after " + str(time.time() - start_time) + "\n")
+            logmessage("create_tables.populate_tables: found user roles to fix after " + str(time.time() - start_time) + " seconds.")
             for user in to_fix:
                 user.roles.append(user_role)
             db.session.commit()
-        sys.stderr.write("create_tables.populate_tables: done fixing user roles after " + str(time.time() - start_time) + "\n")
+        logmessage("create_tables.populate_tables: done fixing user roles after " + str(time.time() - start_time) + " seconds.")
     admin = get_user(db, admin_role, admin_defaults, result=result)
     cron = get_user(db, cron_role, cron_defaults, result=result)
     if admin.confirmed_at is None:
@@ -164,10 +165,10 @@ def populate_tables(start_time=None):
     if 'api key' in admin_defaults:
         api_result = add_specific_api_key('default', admin_defaults['api key'], admin.id, daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87'))
         if api_result:
-            sys.stderr.write("create_tables.populate_tables: added API key")
-    sys.stderr.write("create_tables.populate_tables: calling add_dependencies after " + str(time.time() - start_time) + "\n")
+            logmessage("create_tables.populate_tables: added API key")
+    logmessage("create_tables.populate_tables: calling add_dependencies after " + str(time.time() - start_time) + " seconds.")
     add_dependencies(admin.id, start_time=start_time)
-    sys.stderr.write("create_tables.populate_tables: add_dependencies finished after " + str(time.time() - start_time) + "\n")
+    logmessage("create_tables.populate_tables: add_dependencies finished after " + str(time.time() - start_time) + " seconds.")
     git_packages = db.session.execute(select(Package).filter_by(type='git')).scalars().all()
     package_info_changed = False
     for package in git_packages:
@@ -187,19 +188,19 @@ def populate_tables(start_time=None):
                     package_info_changed = True
     if package_info_changed:
         db.session.commit()
-    sys.stderr.write("create_tables.populate_tables: ending after " + str(time.time() - start_time) + "\n")
+    logmessage("create_tables.populate_tables: ending after " + str(time.time() - start_time) + " seconds.")
 
 def main():
-    sys.stderr.write("create_tables.main: starting\n")
+    logmessage("create_tables.main: starting")
     start_time = time.time()
     if dbprefix.startswith('postgresql') and not daconfig.get('force text to varchar upgrade', False):
         do_varchar_upgrade = False
     else:
         do_varchar_upgrade = True
     with app.app_context():
-        sys.stderr.write("create_tables.main: inside app context after " + str(time.time() - start_time) + "\n")
+        logmessage("create_tables.main: inside app context after " + str(time.time() - start_time) + " seconds.")
         if daconfig.get('use alembic', True):
-            sys.stderr.write("create_tables.main: running alembic after " + str(time.time() - start_time) + "\n")
+            logmessage("create_tables.main: running alembic after " + str(time.time() - start_time) + " seconds.")
             insp = inspect(db.engine)
             if do_varchar_upgrade:
                 changed = False
@@ -242,36 +243,36 @@ def main():
             alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())
             alembic_cfg.set_main_option("script_location", os.path.join(packagedir, 'alembic'))
             if not insp.has_table(dbtableprefix + 'alembic_version'):
-                sys.stderr.write("create_tables.main: creating alembic stamp\n")
+                logmessage("create_tables.main: creating alembic stamp")
                 command.stamp(alembic_cfg, "head")
-                sys.stderr.write("create_tables.main: done creating alembic stamp after " + str(time.time() - start_time) + " seconds\n")
+                logmessage("create_tables.main: done creating alembic stamp after " + str(time.time() - start_time) + " seconds")
             if insp.has_table(dbtableprefix + 'user'):
-                sys.stderr.write("create_tables.main: creating alembic stamp\n")
-                sys.stderr.write("create_tables.main: running alembic upgrade\n")
+                logmessage("create_tables.main: creating alembic stamp")
+                logmessage("create_tables.main: running alembic upgrade")
                 command.upgrade(alembic_cfg, "head")
-                sys.stderr.write("create_tables.main: done running alembic upgrade after " + str(time.time() - start_time) + " seconds\n")
+                logmessage("create_tables.main: done running alembic upgrade after " + str(time.time() - start_time) + " seconds")
         #db.drop_all()
         try:
-            sys.stderr.write("create_tables.main: trying to create tables\n")
+            logmessage("create_tables.main: trying to create tables")
             db.create_all()
         except:
-            sys.stderr.write("create_tables.main: error trying to create tables; trying a second time.\n")
+            logmessage("create_tables.main: error trying to create tables; trying a second time.")
             try:
                 db.create_all()
             except:
-                sys.stderr.write("create_tables.main: error trying to create tables; trying a third time.\n")
+                logmessage("create_tables.main: error trying to create tables; trying a third time.")
                 db.create_all()
-        sys.stderr.write("create_tables.main: finished creating tables after " + str(time.time() - start_time) + " seconds.\n")
+        logmessage("create_tables.main: finished creating tables after " + str(time.time() - start_time) + " seconds.")
         if dbprefix.startswith('postgresql'):
             try:
                 test_for_errors(start_time=start_time)
             except:
-                sys.stderr.write("create_tables.main: unable to test for errors after " + str(time.time() - start_time) + " seconds.\n")
-        sys.stderr.write("create_tables.main: populating tables after " + str(time.time() - start_time) + " seconds.\n")
+                logmessage("create_tables.main: unable to test for errors after " + str(time.time() - start_time) + " seconds.")
+        logmessage("create_tables.main: populating tables after " + str(time.time() - start_time) + " seconds.")
         populate_tables(start_time=start_time)
-        sys.stderr.write("create_tables.main: disposing engine after " + str(time.time() - start_time) + " seconds.\n")
+        logmessage("create_tables.main: disposing engine after " + str(time.time() - start_time) + " seconds.")
         db.engine.dispose()
-    sys.stderr.write("create_tables.main: finishing after " + str(time.time() - start_time) + " seconds.\n")
+    logmessage("create_tables.main: finishing after " + str(time.time() - start_time) + " seconds.")
 
 if __name__ == "__main__":
     main()

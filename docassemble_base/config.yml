@@ -1,5 +1,6 @@
 debug: True
 enable playground: True
+allow log viewing: True
 allow demo: True
 exitpage: https://docassemble.org
 db:

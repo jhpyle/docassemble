@@ -71,7 +71,7 @@ body.dacontrolled > div > .navbar-dark {
     margin-top: 15px;
 }
 
-.slider .tooltip-inner {
+.slider .datooltip-inner {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -1565,9 +1565,7 @@ div.daconstraintlist div + div {
 
 #dasigcanvas{
     cursor: crosshair;
-    border-style: solid;
-    border-color: black;
-    border-width: 1px;
+    padding: 0;
 }
 .dasignature > div > .navbar {
     display: none;

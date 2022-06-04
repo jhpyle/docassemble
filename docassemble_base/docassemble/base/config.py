@@ -27,6 +27,7 @@ AZURE_ENABLED = False
 hostname = None
 loaded = False
 in_celery = False
+in_cron = False
 errors = []
 env_messages = []
 allowed = {}
@@ -86,7 +87,7 @@ def cleanup_filename(filename):
     return filename
 
 def delete_environment():
-    for var in ('DBSSLMODE', 'DBSSLCERT', 'DBSSLKEY', 'DBSSLROOTCERT', 'DBTYPE', 'DBPREFIX', 'DBNAME', 'DBUSER', 'DBPASSWORD', 'DBHOST', 'DBPORT', 'DBTABLEPREFIX', 'DBBACKUP', 'DASECRETKEY', 'DABACKUPDAYS', 'ENVIRONMENT_TAKES_PRECEDENCE', 'DASTABLEVERSION', 'DASSLPROTOCOLS', 'SERVERADMIN', 'REDIS', 'REDISCLI', 'RABBITMQ', 'DACELERYWORKERS', 'S3ENABLE', 'S3ACCESSKEY', 'S3SECRETACCESSKEY', 'S3BUCKET', 'S3REGION', 'S3ENDPOINTURL', 'AZUREENABLE', 'AZUREACCOUNTKEY', 'AZUREACCOUNTNAME', 'AZURECONTAINER', 'AZURECONNECTIONSTRING', 'EC2', 'COLLECTSTATISTICS', 'KUBERNETES', 'LOGSERVER', 'USECLOUDURLS', 'USEMINIO', 'USEHTTPS', 'USELETSENCRYPT', 'LETSENCRYPTEMAIL', 'BEHINDHTTPSLOADBALANCER', 'XSENDFILE', 'DAUPDATEONSTART', 'URLROOT', 'DAHOSTNAME', 'DAEXPOSEWEBSOCKETS', 'DAWEBSOCKETSIP', 'DAWEBSOCKETSPORT', 'POSTURLROOT', 'DAWEBSERVER', 'DASQLPING', 'PORT', 'OTHERLOCALES', 'DAMAXCONTENTLENGTH', 'DACELERYWORKERS', 'PACKAGES', 'PYTHONPACKAGES', 'DAALLOWUPDATES', 'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_DEFAULT_REGION', 'S4CMD_OPTS', 'WSGIROOT', 'DATIMEOUT', 'PIPINDEXURL', 'PIPEXTRAINDEXURLS', 'DAALLOWCONFIGURATIONEDITING', 'DADEBUG', 'DAENABLEPLAYGROUND'):
+    for var in ('DBSSLMODE', 'DBSSLCERT', 'DBSSLKEY', 'DBSSLROOTCERT', 'DBTYPE', 'DBPREFIX', 'DBNAME', 'DBUSER', 'DBPASSWORD', 'DBHOST', 'DBPORT', 'DBTABLEPREFIX', 'DBBACKUP', 'DASECRETKEY', 'DABACKUPDAYS', 'ENVIRONMENT_TAKES_PRECEDENCE', 'DASTABLEVERSION', 'DASSLPROTOCOLS', 'SERVERADMIN', 'REDIS', 'REDISCLI', 'RABBITMQ', 'DACELERYWORKERS', 'S3ENABLE', 'S3ACCESSKEY', 'S3SECRETACCESSKEY', 'S3BUCKET', 'S3REGION', 'S3ENDPOINTURL', 'AZUREENABLE', 'AZUREACCOUNTKEY', 'AZUREACCOUNTNAME', 'AZURECONTAINER', 'AZURECONNECTIONSTRING', 'EC2', 'COLLECTSTATISTICS', 'KUBERNETES', 'LOGSERVER', 'USECLOUDURLS', 'USEMINIO', 'USEHTTPS', 'USELETSENCRYPT', 'LETSENCRYPTEMAIL', 'BEHINDHTTPSLOADBALANCER', 'XSENDFILE', 'DAUPDATEONSTART', 'URLROOT', 'DAHOSTNAME', 'DAEXPOSEWEBSOCKETS', 'DAWEBSOCKETSIP', 'DAWEBSOCKETSPORT', 'POSTURLROOT', 'DAWEBSERVER', 'DASQLPING', 'PORT', 'OTHERLOCALES', 'DAMAXCONTENTLENGTH', 'DACELERYWORKERS', 'PACKAGES', 'PYTHONPACKAGES', 'DAALLOWUPDATES', 'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_DEFAULT_REGION', 'S4CMD_OPTS', 'WSGIROOT', 'DATIMEOUT', 'PIPINDEXURL', 'PIPEXTRAINDEXURLS', 'DAALLOWCONFIGURATIONEDITING', 'DADEBUG', 'DAENABLEPLAYGROUND', 'DAALLOWLOGVIEWING'):
         if var in os.environ:
             del os.environ[var]
 
@@ -239,6 +240,7 @@ def load(**kwargs):
     global hostname
     global loaded
     global in_celery
+    global in_cron
     global env_messages
     # changed = False
     filename = None
@@ -252,6 +254,8 @@ def load(**kwargs):
         filename = kwargs.get('filename', os.getenv('DA_CONFIG_FILE', '/usr/share/docassemble/config/config.yml'))
     if 'in_celery' in kwargs and kwargs['in_celery']:
         in_celery = True
+    if 'in_cron' in kwargs and kwargs['in_cron']:
+        in_cron = True
     if not os.path.isfile(filename):
         if not os.access(os.path.dirname(filename), os.W_OK):
             sys.stderr.write("Configuration file " + str(filename) + " does not exist and cannot be created\n")
@@ -836,6 +840,8 @@ def load(**kwargs):
             override_config(daconfig, messages, 'enable playground', 'DAENABLEPLAYGROUND')
         if env_exists('DADEBUG'):
             override_config(daconfig, messages, 'debug', 'DADEBUG')
+        if env_exists('DAALLOWLOGVIEWING'):
+            override_config(daconfig, messages, 'allow log viewing', 'DAALLOWLOGVIEWING')
         env_messages = messages
 
 def default_config():

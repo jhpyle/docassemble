@@ -648,14 +648,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     if status.using_screen_reader and 'question' in status.screen_reader_links:
         audio_text += '<div class="daaudiovideo-control">\n' + audio_control(status.screen_reader_links['question'], preload="none", title_text=word('Read this screen out loud')) + '</div>\n'
     if status.decorations is not None:
-        #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
-            #sys.stderr.write("yoo2\n")
             if 'image' in decoration:
-                #sys.stderr.write("yoo3\n")
                 the_image = status.question.interview.images.get(decoration['image'], None)
                 if the_image is not None:
-                    #sys.stderr.write("yoo4\n")
                     url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
                     width_value = DECORATION_SIZE
                     width_units = DECORATION_UNITS
@@ -667,9 +663,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     else:
                         sizing += 'height:auto;'
                     if url is not None:
-                        #sys.stderr.write("yoo5\n")
                         if the_image.attribution is not None:
-                            #sys.stderr.write("yoo6\n")
                             status.attributions.add(the_image.attribution)
                         decorations.append('<img alt="" class="daiconfloat" style="' + sizing + '" src="' + url + '"/>')
                 elif daconfig.get('default icons', None) == 'font awesome':
@@ -707,7 +701,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += '                <div id="dasigmidpart" class="dasigmidpart da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
         else:
             output += '\n              <div id="dasigmidpart" class="dasigmidpart"></div>'
-        output += '\n              <div id="dasigcontent"' + (' aria-required="true"' if status.extras['required'][0] else '') + '><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n              <div class="dasigbottompart" id="dasigbottompart">\n                '
+        output += '\n              <div id="dasigcontent"' + (' aria-required="true"' if status.extras['required'][0] else '') + '><p class="form-control" style="text-align:center;padding:0;">' + word('Loading.  Please wait . . . ') + '</p></div>\n              <div class="dasigbottompart" id="dasigbottompart">\n                '
         if showUnderText:
             output += '                <div class="d-none d-sm-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-sm-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'
         output += "\n              </div>"
@@ -1105,7 +1099,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     else:
                         validation_rules['messages'][the_saveas]['required'] = field.validation_message('required', status, word("This field is required."))
                     if status.extras['required'][field.number]:
-                        #sys.stderr.write(field.datatype + "\n")
+                        #logmessage(field.datatype)
                         if hasattr(field, 'inputtype') and field.inputtype == 'ajax':
                             validation_rules['rules'][the_saveas]['ajaxrequired'] = True
                             validation_rules['rules'][the_saveas]['required'] = False
@@ -1130,7 +1124,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 if field.datatype not in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                     for key in ('minlength', 'maxlength'):
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:
-                            #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
+                            #logmessage("Adding validation rule for " + str(key))
                             validation_rules['rules'][the_saveas][key] = int(float(status.extras[key][field.number]))
                             if key == 'minlength':
                                 validation_rules['messages'][the_saveas][key] = field.validation_message(key, status, word("You must type at least %s characters."), parameters=tuple([status.extras[key][field.number]]))
@@ -1226,7 +1220,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         for key in ['min', 'max']:
                             if hasattr(field, 'extras') and key in field.extras and key in status.extras and field.number in status.extras[key]:
                                 was_defined[key] = True
-                                #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
+                                #logmessage("Adding validation rule for " + str(key))
                                 validation_rules['rules'][the_saveas][key + 'date'] = format_date(status.extras[key][field.number], format='yyyy-MM-dd')
                                 if key == 'min':
                                     validation_rules['messages'][the_saveas]['mindate'] = field.validation_message('date min', status, word("You need to enter a date on or after %s."), parameters=tuple([format_date(status.extras[key][field.number], format='medium')]))
@@ -1260,10 +1254,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         validation_rules['messages'][the_saveas]['step'] = field.validation_message('integer', status, word("Please enter a whole number."))
                     elif 'step' in status.extras and field.number in status.extras['step']:
                         validation_rules['messages'][the_saveas]['step'] = field.validation_message('step', status, word("Please enter a multiple of {0}."))
-                    #sys.stderr.write("Considering adding validation rule\n")
+                    #logmessage("Considering adding validation rule")
                     for key in ['min', 'max']:
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras and field.number in status.extras[key]:
-                            #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
+                            #logmessage("Adding validation rule for " + str(key))
                             validation_rules['rules'][the_saveas][key] = float(status.extras[key][field.number])
                             if key == 'min':
                                 validation_rules['messages'][the_saveas][key] = field.validation_message('min', status, word("You need to enter a number that is at least %s."), parameters=tuple([status.extras[key][field.number]]))
@@ -2326,7 +2320,7 @@ def input_for(status, field, wide=False, embedded=False):
                     inner_field = safeid(from_safeid(saveas_string) + "[B" + myb64quote(pair['key']) + "]")
                 else:
                     inner_field = safeid(from_safeid(saveas_string) + "[R" + myb64quote(repr(pair['key'])) + "]")
-                #sys.stderr.write("I've got a " + repr(pair['label']) + "\n")
+                #logmessage("I've got a " + repr(pair['label']))
                 formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                 def_key = from_safeid(saveas_string) + "[" + repr(pair['key']) + "]"
                 if def_key in status.other_defaults and status.other_defaults[def_key]:
@@ -2425,7 +2419,7 @@ def input_for(status, field, wide=False, embedded=False):
                     else:
                         the_icon = ''
                     helptext = pair.get('help', None)
-                    #sys.stderr.write(str(saveas_string) + "\n")
+                    #logmessage(str(saveas_string))
                     formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                     if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == defaultvalue_printable) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and defaultvalue_is_printable and str(pair['label']) == defaultvalue_printable) or (hasattr(field, 'datatype') and field.datatype in ('object_radio', 'object') and defaultvalue is not None and hasattr(defaultvalue, 'instanceName') and safeid(defaultvalue.instanceName) == pair['key']) or (defaultvalue_set and defaultvalue is None and str(pair['key']) == 'None'):
                         ischecked = ' checked="checked"'

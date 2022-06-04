@@ -7,6 +7,7 @@ import subprocess
 from os.path import expanduser
 from docassemble.base.functions import get_config
 from docassemble.base.util import DAFile
+from docassemble.base.logger import logmessage
 
 __all__ = ['mmdc']
 
@@ -19,7 +20,7 @@ def mmdc(input_text, file_format='svg', flags=None):
         raise Exception("mmdc: invalid file format")
     if not isinstance(input_text, str):
         input_text = str(input_text)
-    sys.stderr.write("Writing:\n" + input_text + "\n")
+    logmessage("Writing:\n" + input_text)
     input_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="w", suffix=".mmd", delete=False)
     input_file.write(input_text)
     input_file.close()
@@ -29,7 +30,7 @@ def mmdc(input_text, file_format='svg', flags=None):
     for key, val in flags.items():
         commands.append('-' + str(key))
         commands.append(repr(str(val)))
-    sys.stderr.write("Commands are: " + " ".join(commands) + "\n")
+    logmessage("Commands are: " + " ".join(commands))
     try:
         output = subprocess.check_output(commands, stderr=subprocess.STDOUT).decode()
     except subprocess.CalledProcessError as err:

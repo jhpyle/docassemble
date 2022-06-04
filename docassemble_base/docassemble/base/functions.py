@@ -831,6 +831,21 @@ def get_emails(key=None, index=None):
     """Returns a data structure representing existing e-mail addresses for the interview and any e-mails sent to those e-mail addresses"""
     return server.retrieve_emails(key=key, index=index)
 
+def modify_i_argument(args):
+    if 'i' not in args:
+        return
+    if not isinstance(args['i'], str):
+        args['i'] = str(args['i'])
+    if args['i'].startswith('docassemble.'):
+        return
+    args['i'] = re.sub(r'^data/questions/', '', args['i'])
+    try:
+        args['i'] = get_current_question().package + ':data/questions/' + args['i']
+    except:
+        try:
+            args['i'] = this_thread.current_package + ':data/questions/' + args['i']
+        except: pass
+    
 def interview_url(**kwargs):
     """Returns a URL that is direct link to the interview and the current
     variable store.  This is used in multi-user interviews to invite
@@ -846,10 +861,13 @@ def interview_url(**kwargs):
     if 'i' in args:
         if 'session' not in args:
             args['from_list'] = 1
+        if not isinstance(args['i'], str):
+            args['i'] = str(args['i'])
     else:
         args['i'] = this_thread.current_info['yaml_filename']
         if not args.get('session', None):
             args['session'] = this_thread.current_info['session']
+    modify_i_argument(args)
     if not do_local:
         args['_external'] = True
     try:
@@ -1065,6 +1083,7 @@ def interview_url_action(action, **kwargs):
         del kwargs['i']
     else:
         args['i'] = this_thread.current_info['yaml_filename']
+    modify_i_argument(args)
     if 'new_session' in kwargs:
         if kwargs['new_session']:
             args['new_session'] = '1'
@@ -1084,6 +1103,12 @@ def interview_url_action(action, **kwargs):
     if 'style' in kwargs and kwargs['style'] in ('short', 'short_package'):
         args['style'] = kwargs['style']
         del kwargs['style']
+    if '_forget_prior' in kwargs:
+        is_priority = bool(kwargs['_forget_prior'])
+        del kwargs['_forget_prior']
+        if is_priority:
+            kwargs = {'_action': action, '_arguments': kwargs}
+            action = '_da_priority_action'
     args['action'] = myb64quote(json.dumps({'action': action, 'arguments': kwargs}))
     if not do_local:
         args['_external'] = True
@@ -1660,7 +1685,7 @@ def server_capabilities():
 
 def update_server(**kwargs):
     for arg, func in kwargs.items():
-        #sys.stderr.write("Setting " + str(arg) + "\n")
+        #logmessage("Setting " + str(arg))
         if arg == 'bg_action':
             the_func = func
             def worker_wrapper(action, ui_notification, **kwargs):
@@ -1730,7 +1755,7 @@ def update_server(**kwargs):
 #     the_generate_csrf = func
 
 # def null_worker(*pargs, **kwargs):
-#     #sys.stderr.write("Got to null worker\n")
+#     #logmessage("Got to null worker")
 #     return None
 
 # bg_action = null_worker
@@ -1877,14 +1902,14 @@ class MyAsyncResult:
         return self._cached_result.value
 
 def worker_caller(func, ui_notification, action):
-    #sys.stderr.write("Got to worker_caller in functions\n")
+    #logmessage("Got to worker_caller in functions")
     result = MyAsyncResult()
     result.obj = func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], this_thread.current_info['url_root'], action, extra=ui_notification)
     if ui_notification is not None:
         worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
-        #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key + "\n")
+        #logmessage("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key)
         server.server_redis.rpush(worker_key, result.obj.id)
-    #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + "\n")
+    #logmessage("worker_caller: id is " + str(result.obj.id))
     return result
 
 # def null_chat_partners(*pargs, **kwargs):
@@ -3317,20 +3342,32 @@ def force_ask(*pargs, **kwargs):
 
     """
     the_pargs = unpack_pargs(pargs)
+    if kwargs.get('forget_prior', False):
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack']:
+            this_thread.internal['event_stack'][unique_id] = []
     if kwargs.get('persistent', True):
         raise ForcedNameError(*the_pargs, user_dict=get_user_dict())
     else:
         force_ask_nameerror(the_pargs[0])
 
-def force_ask_nameerror(variable_name):
+def force_ask_nameerror(variable_name, priority=False):
     raise NameError("name '" + str(variable_name) + "' is not defined")
 
-def force_gather(*pargs):
-    """Like force_ask(), except more insistent.  In addition to making a
-    single attempt to ask a question that offers to define the variable,
-    it enlists the process_action() function to seek the definition of
-    the variable.  The process_action() function will keep trying to define
-    the variable until it is defined."""
+def force_gather(*pargs, forget_prior=False):
+    """Similar to force_ask(), except it works globally across all users
+    and sessions and it does not seek definitions of already-defined
+    variables. In addition to making a single attempt to ask a
+    question that offers to define the variable, it enlists the
+    process_action() function to seek the definition of the variable.
+    The process_action() function will keep trying to define the
+    variable until it is defined.
+
+    """
+    if forget_prior:
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack']:
+            this_thread.internal['event_stack'][unique_id] = []
     the_user_dict = get_user_dict()
     the_context = {}
     for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
@@ -3414,7 +3451,7 @@ def standard_template_filename(the_file):
     try:
         return pkg_resources_resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/templates/" + str(the_file))
     except:
-        #logmessage("Error retrieving data file\n")
+        #logmessage("Error retrieving data file")
         return None
 
 def package_template_filename(the_file, **kwargs):
@@ -3522,7 +3559,7 @@ def list_list_same(a, b):
 
 def process_action():
     """If an action is waiting to be processed, it processes the action."""
-    #sys.stderr.write("process_action() started")
+    #logmessage("process_action() started")
     #logmessage("process_action: starting")
     if 'action' not in this_thread.current_info:
         to_be_gathered = [(dict(var=variable_dict, context={}) if isinstance(variable_dict, str) else variable_dict) for variable_dict in this_thread.internal['gather']] # change this later
@@ -3839,6 +3876,12 @@ def url_action(action, **kwargs):
     """Returns a URL to run an action in the interview."""
     if contains_volatile.search(action):
         raise DAError("url_action cannot be used with a generic object or a variable iterator")
+    if '_forget_prior' in kwargs:
+        is_priority = bool(kwargs['_forget_prior'])
+        del kwargs['_forget_prior']
+        if is_priority:
+            kwargs = {'_action': action, '_arguments': kwargs}
+            action = '_da_priority_action'
     return url_of('flex_interview', action=myb64quote(json.dumps({'action': action, 'arguments': kwargs})), i=this_thread.current_info['yaml_filename'])
 
 def myb64quote(text):
@@ -4459,7 +4502,7 @@ def italic(text, default=None):
 # def inspector():
 #     frame = inspect.stack()[1][0]
 #     for key in frame.__dict__.keys():
-#         sys.stderr.write(str(key) + "\n")
+#         logmessage(str(key))
 
 def indent(text, by=None):
     """Indents multi-line text by four spaces.  To indent by a different

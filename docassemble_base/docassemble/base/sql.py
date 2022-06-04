@@ -50,7 +50,7 @@ class SQLObject:
         try:
             self.db_save()
         except Exception as err:
-            sys.stderr.write("On SQLObject write, " + err.__class__.__name__ + ": " + str(err) + "\n")
+            logmessage("On SQLObject write, " + err.__class__.__name__ + ": " + str(err))
         dict_to_save = copy.copy(self.__dict__)
         if '_orig' in dict_to_save:
             del dict_to_save['_orig']
@@ -60,7 +60,7 @@ class SQLObject:
         try:
             self.db_read()
         except Exception as err:
-            sys.stderr.write("On SQLObject read, " + err.__class__.__name__ + ": " + str(err) + "\n")
+            logmessage("On SQLObject read, " + err.__class__.__name__ + ": " + str(err))
     @classmethod
     def filter(cls, instance_name, **kwargs):
         if 'dbcache' not in this_thread.misc:

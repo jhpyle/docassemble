@@ -3,6 +3,7 @@ import base64
 import sys
 import time
 from docassemble.base.functions import word
+from docassemble.base.logger import logmessage
 from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail as SGMail, Attachment, FileContent, FileName, FileType, Disposition, Email, To, ReplyTo
@@ -50,10 +51,10 @@ class Connection:
         sg = SendGridAPIClient(self.mail.api_key)
         response = sg.send(sgmessage)
         if response.status_code >= 400:
-            sys.stderr.write("SendGrid status code: " + str(response.status_code) + "\n")
-            sys.stderr.write("SendGrid response headers: " + repr(response.headers) + "\n")
+            logmessage("SendGrid status code: " + str(response.status_code))
+            logmessage("SendGrid response headers: " + repr(response.headers))
             try:
-                sys.stderr.write(repr(response.body) + "\n")
+                logmessage(repr(response.body))
             except:
                 pass
             raise Exception("Failed to send e-mail message to SendGrid")

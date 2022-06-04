@@ -7,9 +7,10 @@ if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig, parse_redis_uri
 from docassemble.webapp.cloud import get_cloud
+from docassemble.base.logger import logmessage
 
 def errlog(text):
-    sys.stderr.write(str(datetime.datetime.now()) + " " + text + "\n")
+    logmessage(str(datetime.datetime.now()) + " " + text)
 
 def main():
     container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
@@ -18,7 +19,7 @@ def main():
         (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts) = parse_redis_uri()
         r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password, username=redis_username, **ssl_opts)
         if r.get('da:skip_create_tables'):
-            sys.stderr.write("restart: skipping create_tables\n")
+            logmessage("restart: skipping create_tables")
             r.delete('da:skip_create_tables')
         else:
             errlog("running create_tables")
@@ -34,7 +35,7 @@ def main():
         key = cloud.get_key('config.yml')
         if key.does_exist:
             key.get_contents_to_filename(daconfig['config file'])
-            sys.stderr.write("Wrote config file based on copy on cloud\n")
+            logmessage("Wrote config file based on copy on cloud")
     wsgi_file = webapp_path
     if os.path.isfile(wsgi_file):
         errlog("touching wsgi file")

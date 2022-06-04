@@ -57,7 +57,7 @@ class SavedFile:
         if section not in docassemble.base.functions.this_thread.saved_files:
             docassemble.base.functions.this_thread.saved_files[section] = {}
         if file_number in docassemble.base.functions.this_thread.saved_files[section]:
-            # sys.stderr.write("SavedFile: using cache for " + section + '/' + str(file_number) + "\n")
+            # logmessage("SavedFile: using cache for " + section + '/' + str(file_number))
             sf = docassemble.base.functions.this_thread.saved_files[section][file_number]
             for attribute in ['file_number', 'fixed', 'section', 'filename', 'extension', 'directory', 'path', 'modtimes', 'keydict', 'subdir']:
                 if hasattr(sf, attribute):
@@ -66,7 +66,7 @@ class SavedFile:
             self.filename = filename
             self.subdir = subdir
         else:
-            # sys.stderr.write("SavedFile: not using cache for " + section + '/' + str(file_number) + "\n")
+            # logmessage("SavedFile: not using cache for " + section + '/' + str(file_number))
             self.fixed = False
             self.file_number = file_number
             self.section = section
@@ -110,7 +110,7 @@ class SavedFile:
     def fix(self):
         if self.fixed:
             return
-        # sys.stderr.write("fix: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
+        # logmessage("fix: starting " + str(self.section) + '/' + str(self.file_number))
         if cloud is not None:
             dirs_in_use = set()
             self.modtimes = {}
@@ -118,7 +118,7 @@ class SavedFile:
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
-            # sys.stderr.write("fix: prefix is " + prefix + "\n")
+            # logmessage("fix: prefix is " + prefix)
             for key in cloud.list_keys(prefix):
                 filename = os.path.join(*key.name[len(prefix):].split('/'))
                 fullpath = os.path.join(self.directory, filename)
@@ -139,7 +139,7 @@ class SavedFile:
                         if local_time != server_time:
                             key.get_contents_to_filename(fullpath)
                 self.modtimes[filename] = server_time
-                # sys.stderr.write("cloud modtime for file " + filename + " is " + str(key.last_modified) + "\n")
+                # logmessage("cloud modtime for file " + filename + " is " + str(key.last_modified))
                 self.keydict[filename] = key
             if self.subdir and self.subdir != '' and self.subdir != 'default':
                 self.path = os.path.join(self.directory, self.subdir, self.filename)
@@ -155,7 +155,7 @@ class SavedFile:
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)
         self.fixed = True
-        # sys.stderr.write("fix: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
+        # logmessage("fix: ending " + str(self.section) + '/' + str(self.file_number))
     def delete_file(self, filename):
         if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename)
@@ -320,7 +320,7 @@ class SavedFile:
             inline = not bool(kwargs.get('_attachment', False))
             if key.does_exist:
                 return key.generate_url(seconds, display_filename=kwargs.get('display_filename', None), inline=inline, content_type=kwargs.get('content_type', None))
-            sys.stderr.write("key " + str(keyname) + " did not exist\n")
+            logmessage("key " + str(keyname) + " did not exist")
             return 'about:blank'
         r = docassemble.base.functions.server.server_redis
         while True:
@@ -363,7 +363,7 @@ class SavedFile:
             if key.does_exist:
                 return key.generate_url(3600, display_filename=kwargs.get('display_filename', None), inline=inline, content_type=kwargs.get('content_type', None))
             # why not serve right from uploadedpage in this case?
-            sys.stderr.write("key " + str(keyname) + " did not exist\n")
+            logmessage("key " + str(keyname) + " did not exist")
             return 'about:blank'
         if kwargs.get('_attachment', False):
             suffix = 'download'
@@ -393,11 +393,11 @@ class SavedFile:
                 else:
                     url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number)
         else:
-            sys.stderr.write("section " + self.section + " was wrong\n")
+            logmessage("section " + self.section + " was wrong")
             url = 'about:blank'
         return url
     def finalize(self):
-        # sys.stderr.write("finalize: starting " + str(self.section) + '/' + str(self.file_number) + "\n")
+        # logmessage("finalize: starting " + str(self.section) + '/' + str(self.file_number))
         if cloud is None:
             return
         if not self.fixed:
@@ -419,22 +419,22 @@ class SavedFile:
                     else:
                         extension, mimetype = get_ext_and_mimetype(filename)
                     key.content_type = mimetype
-                    # sys.stderr.write("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "\n")
+                    # logmessage("finalize: saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
                     if not os.path.isfile(fullpath):
                         continue
                     try:
                         key.set_contents_from_filename(fullpath)
                         self.modtimes[filename] = key.get_epoch_modtime()
                     except FileNotFoundError:
-                        sys.stderr.write("finalize: error while saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "; path " + str(fullpath) + " disappeared\n")
+                        logmessage("finalize: error while saving " + str(self.section) + '/' + str(self.file_number) + '/' + str(filename) + "; path " + str(fullpath) + " disappeared")
         for filename, key in self.keydict.items():
             if not os.path.isfile(os.path.join(self.directory, filename)):
-                sys.stderr.write("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename) + "\n")
+                logmessage("finalize: deleting " + str(self.section) + '/' + str(self.file_number) + '/' + path_to_key(filename))
                 try:
                     key.delete()
                 except:
                     pass
-        # sys.stderr.write("finalize: ending " + str(self.section) + '/' + str(self.file_number) + "\n")
+        # logmessage("finalize: ending " + str(self.section) + '/' + str(self.file_number))
 
 def get_ext_and_mimetype(filename):
     mimetype, encoding = mimetypes.guess_type(filename)

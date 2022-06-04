@@ -1,5 +1,6 @@
 debug: {{DADEBUG}}
 enable playground: {{DAENABLEPLAYGROUND}}
+allow log viewing: {{DAALLOWLOGVIEWING}}
 allow demo: {{DADEBUG}}
 exitpage: https://docassemble.org
 db:

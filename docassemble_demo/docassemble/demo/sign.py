@@ -1,6 +1,6 @@
 import random
 import string
-from docassemble.base.util import DAObject, DAList, DAFileCollection, interview_url_action, DADict, word, today, current_datetime, Person, DAEmailRecipient, comma_and_list, interface, value, send_email, background_action, reconsider, force_ask, background_response, device
+from docassemble.base.util import DAObject, DAList, DAFileCollection, interview_url_action, DADict, word, today, current_datetime, Person, DAEmailRecipient, comma_and_list, interface, value, send_email, background_action, reconsider, force_ask, background_response, device, prevent_going_back
 
 __all__ = ['SigningProcess']
 
@@ -46,6 +46,7 @@ class SigningProcess(DAObject):
         for person in self.additional_people_to_notify:
             send_email(to=person, template=self.final_notification_email_to_others, dry_run=True)
         background_action(self.attr_name('background_initial_notification'))
+        prevent_going_back()
         self.initial_notification_triggered = True
     def initial_notify(self):
         if self.initial_notification_sent:
@@ -71,7 +72,7 @@ class SigningProcess(DAObject):
         self.signature[code] = signature
         self.validate_signature(code)
     def refresh_documents(self):
-        reconsider(self.documents)
+        reconsider(*self.documents)
     def final_notify(self):
         if self.final_notification_sent:
             return
@@ -149,6 +150,7 @@ class SigningProcess(DAObject):
             return
         if self.all_signatures_in():
             background_action(self.attr_name('background_final_notification'))
+            prevent_going_back()
             self.final_notification_triggered = True
     def signer(self, code):
         if code is None:

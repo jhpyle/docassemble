@@ -5,13 +5,9 @@ import random
 import re
 import sys
 import time
-sys.stderr.write("1\n")
 import eventlet
-sys.stderr.write("2\n")
 eventlet.sleep()
-sys.stderr.write("3\n")
 eventlet.monkey_patch()
-sys.stderr.write("4\n")
 import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
@@ -19,6 +15,7 @@ import docassemble.base.functions
 import docassemble.base.util
 docassemble.base.functions.server_context.context = 'websockets'
 from docassemble.base.functions import get_default_timezone, word
+from docassemble.base.logger import logmessage
 import docassemble.webapp.daredis
 from docassemble.webapp.app_socket import app, db, socketio
 from docassemble.webapp.backend import nice_utc_date, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj, get_session
@@ -60,7 +57,7 @@ def obtain_lock(user_code, filename):
     while count > 0:
         record = rr.get(key)
         if record:
-            sys.stderr.write("obtain_lock: waiting for " + key + "\n")
+            logmessage("obtain_lock: waiting for " + key)
             time.sleep(1.0)
         else:
             found = False
@@ -68,7 +65,7 @@ def obtain_lock(user_code, filename):
         found = True
         count -= 1
     if found:
-        sys.stderr.write("Request for " + key + " deadlocked\n")
+        logmessage("Request for " + key + " deadlocked")
         release_lock(user_code, filename)
     pipe = rr.pipeline()
     pipe.set(key, 1)
@@ -81,9 +78,9 @@ def release_lock(user_code, filename):
 
 # @app.teardown_appcontext
 # def close_db(error):
-#     # sys.stderr.write("Teardown of app context\n")
+#     # logmessage("Teardown of app context")
 #     if hasattr(db, 'engine'):
-#         # sys.stderr.write("Tearing down\n")
+#         # logmessage("Tearing down")
 #         db.engine.dispose()
 
 def background_thread(sid=None, user_id=None, temp_user_id=None):
@@ -91,7 +88,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
         user_id = int(user_id)
     if temp_user_id is not None:
         temp_user_id = int(temp_user_id)
-    sys.stderr.write("Started client thread for " + str(sid) + " who is " + str(user_id) + " or " + str(temp_user_id) + "\n")
+    logmessage("Started client thread for " + str(sid) + " who is " + str(user_id) + " or " + str(temp_user_id))
     if user_id is None:
         person = None
         user_is_temp = True
@@ -107,30 +104,30 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
     pubsub.subscribe([sid])
     for item in pubsub.listen():
         with session_scope() as dbsession:
-            sys.stderr.write("0\n" + repr(item) + "\n")
+            logmessage("0\n" + repr(item))
             if item['type'] != 'message':
                 continue
-            #sys.stderr.write("sid: " + str(sid) + ":\n")
+            #logmessage("sid: " + str(sid) + ":")
             data = None
             try:
                 data = json.loads(item['data'].decode())
             except:
-                sys.stderr.write("  JSON parse error: " + str(item['data'].decode()) + "\n")
+                logmessage("  JSON parse error: " + str(item['data'].decode()))
                 continue
             if data.get('message', None) == "KILL" and (('sid' in data and data['sid'] == sid) or 'sid' not in data):
                 pubsub.unsubscribe(sid)
-                sys.stderr.write("  interview unsubscribed and finished for " + str(sid) + "\n")
+                logmessage("  interview unsubscribed and finished for " + str(sid))
                 break
-            sys.stderr.write("  Got something for sid " + str(sid) + " from " + data.get('origin', "Unknown origin") + "\n")
+            logmessage("  Got something for sid " + str(sid) + " from " + data.get('origin', "Unknown origin"))
             if 'messagetype' in data:
                 if data['messagetype'] == 'chat':
-                    #sys.stderr.write("  Emitting interview chat message: " + str(data['message']['message']) + "\n")
+                    #logmessage("  Emitting interview chat message: " + str(data['message']['message']))
                     data['message']['is_self'] = bool((user_is_temp is True and str(temp_user_id) == str(data['message'].get('temp_user_id', None))) or (user_is_temp is False and str(user_id) == str(data['message'].get('user_id', None))))
                     socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/wsinterview', room=sid)
                 elif data['messagetype'] == 'chatready':
                     pubsub.subscribe(data['sid'])
                     partners.add(data['sid'])
-                    sys.stderr.write("chatready 2")
+                    logmessage("chatready 2")
                     socketio.emit('chatready', {}, namespace='/wsinterview', room=sid)
                 elif data['messagetype'] == 'departure':
                     if data['sid'] in partners:
@@ -149,18 +146,18 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
                 elif data['messagetype'] == 'controllerexit':
                     socketio.emit('controllerexit', {}, namespace='/wsinterview', room=sid)
                 # elif data['messagetype'] == "newpage":
-                #     sys.stderr.write("  Got new page for interview\n")
+                #     logmessage("  Got new page for interview")
                 #     try:
                 #         obj = json.loads(r.get(data['key']))
                 #     except:
-                #         sys.stderr.write("  newpage JSON parse error\n")
+                #         logmessage("  newpage JSON parse error")
                 #         continue
                 #     socketio.emit('newpage', {'obj': obj}, namespace='/wsinterview', room=sid)
-            sys.stderr.write('  exiting interview thread for sid ' + str(sid) + '\n')
+            logmessage('  exiting interview thread for sid ' + str(sid))
 
 @socketio.on('start_being_controlled', namespace='/wsinterview')
 def interview_start_being_controlled(data):
-    #sys.stderr.write("received start_being_controlled\n")
+    #logmessage("received start_being_controlled")
     yaml_filename = data['i']
     session_info = get_session(yaml_filename)
     if session_info is not None:
@@ -192,10 +189,10 @@ def chat_log(data):
             secret = request.cookies.get('secret', None)
             if secret is not None:
                 secret = str(secret)
-            #sys.stderr.write("chat_log: " + str(repr(user_id)) + " " + str(repr(temp_user_id)) + "\n")
+            #logmessage("chat_log: " + str(repr(user_id)) + " " + str(repr(temp_user_id)))
             messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, user_id, temp_user_id)
             socketio.emit('chat_log', {'data': messages}, namespace='/wsinterview', room=request.sid)
-    #sys.stderr.write("Interview: sending back " + str(len(messages)) + " messages\n")
+    #logmessage("Interview: sending back " + str(len(messages)) + " messages")
 
 @socketio.on('transmit', namespace='/wsinterview')
 def handle_message(message):
@@ -205,7 +202,7 @@ def handle_message(message):
 
 @socketio.on('terminate', namespace='/wsinterview')
 def terminate_interview_connection():
-    sys.stderr.write("terminate_interview_connection\n")
+    logmessage("terminate_interview_connection")
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
@@ -258,7 +255,7 @@ def chat_message(data):
             if len(role_list) == 0:
                 role_list = ['user']
             rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=role_list, mode=chat_mode))))
-    #sys.stderr.write('received chat message from sid ' + str(request.sid) + ': ' + data['data'] + "\n")
+    #logmessage('received chat message from sid ' + str(request.sid) + ': ' + data['data'])
 
 def wait_for_channel(the_rr, channel):
     times = 0
@@ -272,7 +269,7 @@ def wait_for_channel(the_rr, channel):
 @socketio.on('connect', namespace='/wsinterview')
 def on_interview_connect():
     with session_scope():
-        sys.stderr.write("Client connected on interview\n")
+        logmessage("Client connected on interview")
         join_room(request.sid)
         interview_connect(request.args['i'])
         rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
@@ -280,7 +277,7 @@ def on_interview_connect():
 @socketio.on('connectagain', namespace='/wsinterview')
 def on_interview_reconnect(data):
     with session_scope():
-        sys.stderr.write("Client reconnected on interview\n")
+        logmessage("Client reconnected on interview")
         interview_connect(data['i'])
         rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
         socketio.emit('reconnected', {}, namespace='/wsinterview', room=request.sid)
@@ -297,56 +294,56 @@ def interview_connect(yaml_filename):
         if secret is not None:
             secret = str(secret)
         if user_dict is None:
-            sys.stderr.write("user_dict did not exist.\n")
+            logmessage("user_dict did not exist.")
             socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             return
 
         chat_info = user_dict['_internal']['livehelp']
         if chat_info['availability'] == 'unavailable':
-            sys.stderr.write("Socket started but chat is unavailable.\n")
+            logmessage("Socket started but chat is unavailable.")
             socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             return
-        #sys.stderr.write('chat info is ' + str(chat_info) + "\n")
+        #logmessage('chat info is ' + str(chat_info))
         peer_ok = bool(user_dict['_internal']['livehelp']['mode'] in ['peer', 'peerhelp'])
         the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
 
         if request.sid not in threads:
-            #sys.stderr.write('Starting thread for sid ' + str(request.sid) + "\n")
+            #logmessage('Starting thread for sid ' + str(request.sid))
             threads[request.sid] = socketio.start_background_task(target=background_thread, sid=request.sid, user_id=session.get('user_id', None), temp_user_id=session.get('tempuser', None))
         channel_up = wait_for_channel(rr, request.sid)
         if not channel_up:
-            sys.stderr.write("Channel did not come up.\n")
+            logmessage("Channel did not come up.")
             socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             return
         lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-        #sys.stderr.write("Searching: " + lkey + "\n")
+        #logmessage("Searching: " + lkey)
         lkey_exists = bool(rr.exists(lkey))
         if lkey_exists is False and peer_ok is False:
-            sys.stderr.write("Key does not exist: " + lkey + ".\n")
+            logmessage("Key does not exist: " + lkey + ".")
             #socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             #return
         failed_to_find_partner = True
         found_help = False
         if lkey_exists:
             partner_keys = rr.lrange(lkey, 0, -1)
-            #sys.stderr.write("partner_keys is: " + str(type(partner_keys)) + " " + str(partner_keys) + "\n")
+            #logmessage("partner_keys is: " + str(type(partner_keys)) + " " + str(partner_keys))
             if partner_keys is None and not peer_ok:
-                sys.stderr.write("No partner keys: " + lkey + ".\n")
+                logmessage("No partner keys: " + lkey + ".")
                 socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
                 return
             rr.delete(lkey)
             for pkey in partner_keys:
                 pkey = pkey.decode()
-                #sys.stderr.write("Considering: " + pkey + "\n")
+                #logmessage("Considering: " + pkey)
                 partner_sid = rr.get(pkey)
                 if partner_sid is not None:
                     partner_sid = partner_sid.decode()
                     is_help = bool(re.match(r'^da:monitor:available:.*', pkey))
                     if is_help and found_help:
                         continue
-                    #sys.stderr.write("Trying to pub to " + str(partner_sid) + " from " + str(pkey) + "\n")
+                    #logmessage("Trying to pub to " + str(partner_sid) + " from " + str(pkey))
                     listeners = rr.publish(partner_sid, json.dumps(dict(messagetype='chatready', uid=session_id, i=yaml_filename, userid=the_user_id, secret=secret, sid=request.sid)))
-                    #sys.stderr.write("Listeners: " + str(listeners) + "\n")
+                    #logmessage("Listeners: " + str(listeners))
                     if re.match(r'^da:interviewsession.*', pkey):
                         rr.publish(request.sid, json.dumps(dict(messagetype='chatready', sid=partner_sid)))
                     else:
@@ -356,7 +353,7 @@ def interview_connect(yaml_filename):
                             found_help = True
                         failed_to_find_partner = False
         if failed_to_find_partner and peer_ok is False:
-            sys.stderr.write("Unable to reach any potential chat partners.\n")
+            logmessage("Unable to reach any potential chat partners.")
             #socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             #return
         key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
@@ -364,7 +361,7 @@ def interview_connect(yaml_filename):
 
 @socketio.on('manual_disconnect', namespace='/wsinterview')
 def on_interview_manual_disconnect(data):
-    sys.stderr.write("Client manual disconnect\n")
+    logmessage("Client manual disconnect")
     yaml_filename = data['i']
     session_info = get_session(yaml_filename)
     session_id = session_info['uid']
@@ -379,7 +376,7 @@ def on_interview_manual_disconnect(data):
 
 @socketio.on('disconnect', namespace='/wsinterview')
 def on_interview_disconnect():
-    sys.stderr.write('Client disconnected from interview\n')
+    logmessage('Client disconnected from interview')
 
 def get_current_info(yaml_filename, session_id, secret):
     url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
@@ -396,7 +393,7 @@ def get_dict(yaml_filename):
     if secret is not None:
         secret = str(secret)
     if session_id is None or yaml_filename is None:
-        sys.stderr.write('Attempt to get dictionary where session not defined\n')
+        logmessage('Attempt to get dictionary where session not defined')
         return None
     #obtain_lock(session_id, yaml_filename)
     docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
@@ -404,7 +401,7 @@ def get_dict(yaml_filename):
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         #release_lock(session_id, yaml_filename)
-        sys.stderr.write('get_dict: attempt to get dictionary failed: ' + str(err) + '\n')
+        logmessage('get_dict: attempt to get dictionary failed: ' + str(err))
         return None
     docassemble.base.functions.this_thread.current_info['encrypted'] = is_encrypted
     #release_lock(session_id, yaml_filename)
@@ -420,7 +417,7 @@ def get_dict_encrypt(yaml_filename):
     if secret is not None:
         secret = str(secret)
     if session_id is None or yaml_filename is None:
-        sys.stderr.write('Attempt to get dictionary where session not defined\n')
+        logmessage('Attempt to get dictionary where session not defined')
         return None, None
     #obtain_lock(session_id, yaml_filename)
     docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
@@ -428,7 +425,7 @@ def get_dict_encrypt(yaml_filename):
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except Exception as err:
         #release_lock(session_id, yaml_filename)
-        sys.stderr.write('get_dict_encrypt: attempt to get dictionary failed: ' + str(err) + '\n')
+        logmessage('get_dict_encrypt: attempt to get dictionary failed: ' + str(err))
         return None, None
     docassemble.base.functions.this_thread.current_info['encrypted'] = is_encrypted
     #release_lock(session_id, yaml_filename)
@@ -437,7 +434,7 @@ def get_dict_encrypt(yaml_filename):
 #monitor
 
 def monitor_thread(sid=None, user_id=None):
-    sys.stderr.write("Started monitor thread for " + str(sid) + " who is " + str(user_id) + "\n")
+    logmessage("Started monitor thread for " + str(sid) + " who is " + str(user_id))
     with session_scope() as dbsession:
         if user_id is not None:
             person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
@@ -449,19 +446,19 @@ def monitor_thread(sid=None, user_id=None):
     pubsub.subscribe(['da:monitor', sid])
     for item in pubsub.listen():
         with session_scope() as dbsession:
-            sys.stderr.write("1\n" + repr(item) + "\n")
+            logmessage("1\n" + repr(item))
             if item['type'] != 'message':
                 continue
-            #sys.stderr.write("monitor sid: " + str(sid) + ":\n")
+            #logmessage("monitor sid: " + str(sid) + ":")
             data = None
             try:
                 data = json.loads(item['data'].decode())
             except:
-                sys.stderr.write("  monitor JSON parse error: " + item['data'].decode() + "\n")
+                logmessage("  monitor JSON parse error: " + item['data'].decode())
                 continue
             if 'message' in data and data['message'] == "KILL":
                 if item['channel'].decode() == str(sid):
-                    sys.stderr.write("  monitor unsubscribed from all\n")
+                    logmessage("  monitor unsubscribed from all")
                     pubsub.unsubscribe()
                     for interview_sid in listening_sids:
                         r.publish(interview_sid, json.dumps(dict(messagetype='departure', sid=sid)))
@@ -470,15 +467,15 @@ def monitor_thread(sid=None, user_id=None):
                     pubsub.unsubscribe(item['channel'].decode())
                     if data['sid'] in listening_sids:
                         listening_sids.remove(data['sid'])
-                    sys.stderr.write("  monitor unsubscribed from " + item['channel'].decode() + "\n")
+                    logmessage("  monitor unsubscribed from " + item['channel'].decode())
                 continue
-            sys.stderr.write("  Got something for monitor\n")
+            logmessage("  Got something for monitor")
             if 'messagetype' in data:
                 #if data['messagetype'] == 'abortcontroller':
                 #    socketio.emit('abortcontroller', {'key': data['key']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'sessionupdate':
-                    #sys.stderr.write("  Got a session update: " + str(data['session']) + "\n")
-                    #sys.stderr.write("  Got a session update\n")
+                    #logmessage("  Got a session update: " + str(data['session']))
+                    #logmessage("  Got a session update")
                     socketio.emit('sessionupdate', {'key': data['key'], 'session': data['session']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'chatready':
                     pubsub.subscribe(data['sid'])
@@ -493,34 +490,34 @@ def monitor_thread(sid=None, user_id=None):
                             name = str(person.first_name) + ' ' + str(person.last_name)
                         else:
                             name = str(person.email)
-                    sys.stderr.write("chatready 1")
+                    logmessage("chatready 1")
                     socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid'], 'name': name}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'block':
                     pubsub.unsubscribe(item['channel'].decode())
                     if item['channel'].decode() in listening_sids:
                         listening_sids.remove(item['channel'].decode())
-                    sys.stderr.write("  monitor unsubscribed from " + item['channel'].decode() + "\n")
+                    logmessage("  monitor unsubscribed from " + item['channel'].decode())
                 if data['messagetype'] == 'refreshsessions':
                     socketio.emit('refreshsessions', {}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'chat':
-                    #sys.stderr.write("  Emitting monitor chat message: " + str(data['message']['message']) + "\n")
+                    #logmessage("  Emitting monitor chat message: " + str(data['message']['message']))
                     data['message']['is_self'] = bool(str(user_id) == str(data['message'].get('user_id', None)))
                     socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'chatstop':
-                    sys.stderr.write("  Chat termination for sid " + data['sid'] + "\n")
+                    logmessage("  Chat termination for sid " + data['sid'])
                     pubsub.unsubscribe(data['sid'])
                     if data['sid'] in secrets:
                         del secrets[data['sid']]
                     r.hdel('da:monitor:chatpartners:' + str(user_id), 'da:interviewsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + data['userid'])
                     socketio.emit('chatstop', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
-            sys.stderr.write('  exiting monitor thread for sid ' + str(sid) + '\n')
+            logmessage('  exiting monitor thread for sid ' + str(sid))
 
 @socketio.on('connect', namespace='/monitor')
 def on_monitor_connect():
     if 'monitor' not in session:
         socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
-    sys.stderr.write('Client connected on monitor and will join room monitor\n')
+    logmessage('Client connected on monitor and will join room monitor')
     key = 'da:monitor:' + str(request.sid)
     pipe = rr.pipeline()
     pipe.set(key, 1)
@@ -535,7 +532,7 @@ def on_monitor_connect():
 @socketio.on('disconnect', namespace='/monitor')
 def on_monitor_disconnect():
     user_id = session.get('user_id', None)
-    sys.stderr.write('Client disconnected from monitor\n')
+    logmessage('Client disconnected from monitor')
     rr.delete('da:monitor:' + str(request.sid))
     rr.expire('da:monitor:available:' + str(user_id), 5)
     for key in rr.keys('da:monitor:role:*:userid:' + str(user_id)):
@@ -553,7 +550,7 @@ def on_monitor_disconnect():
 
 @socketio.on('terminate', namespace='/monitor')
 def terminate_monitor_connection():
-    sys.stderr.write("terminate_monitor_connection\n")
+    logmessage("terminate_monitor_connection")
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
@@ -567,16 +564,16 @@ def monitor_block(data):
         return
     key = data.get('key', None)
     if key is None:
-        sys.stderr.write("No key provided\n")
+        logmessage("No key provided")
         return
     rr.set(re.sub(r'^da:session:', 'da:block:', key), 1)
     sid = rr.get(re.sub(r'^da:session:', 'da:interviewsession:', key))
     if sid is not None:
         sid = sid.decode()
         rr.publish(sid, json.dumps(dict(messagetype='block', sid=request.sid)))
-        sys.stderr.write("Blocking\n")
+        logmessage("Blocking")
     else:
-        sys.stderr.write("Could not block because could not get sid\n")
+        logmessage("Could not block because could not get sid")
     socketio.emit('block', {'key': key}, namespace='/monitor', room=request.sid)
 
 @socketio.on('unblock', namespace='/monitor')
@@ -586,9 +583,9 @@ def monitor_unblock(data):
         return
     key = data.get('key', None)
     if key is None:
-        sys.stderr.write("No key provided\n")
+        logmessage("No key provided")
         return
-    sys.stderr.write("Unblocking\n")
+    logmessage("Unblocking")
     rr.delete(re.sub(r'^da:session:', 'da:block:', key))
     sid = rr.get(re.sub(r'^da:session:', 'da:interviewsession:', key))
     if sid is not None:
@@ -607,7 +604,7 @@ def update_monitor(message):
     if 'monitor' not in session:
         socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
-    #sys.stderr.write('received message from ' + str(request.sid) + "\n")
+    #logmessage('received message from ' + str(request.sid))
     available_for_chat = message['available_for_chat']
     new_subscribed_roles = message['subscribed_roles']
     new_phone_partners = message['phone_partners_to_add']
@@ -668,8 +665,8 @@ def update_monitor(message):
                 phone_partners[key] = 1
                 break
             if times >= 1000:
-                sys.stderr.write("update_monitor: could not get a random integer\n")
-    #sys.stderr.write('subscribed roles are type ' + str(type(new_subscribed_roles)) + " which is "  + str(new_subscribed_roles) + "\n")
+                logmessage("update_monitor: could not get a random integer")
+    #logmessage('subscribed roles are type ' + str(type(new_subscribed_roles)) + " which is "  + str(new_subscribed_roles))
     monitor_key = 'da:monitor:' + str(request.sid)
     pipe = rr.pipeline()
     pipe.set(monitor_key, 1)
@@ -684,14 +681,14 @@ def update_monitor(message):
             rr.hdel('da:monitor:chatpartners:' + str(session['user_id']), cp_key)
         else:
             chat_partners[re.sub('^da:interviewsession:uid:', r'da:session:uid:', cp_key)] = 1
-    #sys.stderr.write('daAvailableForChat is ' + str(available_for_chat) + " for key " + key + "\n")
+    #logmessage('daAvailableForChat is ' + str(available_for_chat) + " for key " + key)
     if available_for_chat:
         pipe = rr.pipeline()
         pipe.set(key, request.sid)
         pipe.expire(key, 60)
         pipe.execute()
     elif key_exists:
-        #sys.stderr.write("Not available to chat; deleting da:monitor:role\n")
+        #logmessage("Not available to chat; deleting da:monitor:role")
         pipe = rr.pipeline()
         pipe.delete(key)
         for avail_key in rr.keys('da:monitor:role:*:userid:' + str(session['user_id'])):
@@ -708,7 +705,7 @@ def update_monitor(message):
     del_mon_role_keys = []
     for role_key in list(new_subscribed_roles.keys()):
         if role_key not in avail_roles:
-            #sys.stderr.write("role_key is " + str(role_key) + " which is " + str(type(role_key)) + "\n")
+            #logmessage("role_key is " + str(role_key) + " which is " + str(type(role_key)))
             del new_subscribed_roles[role_key]
     for role_key in list(subscribed_roles.keys()):
         if role_key not in avail_roles:
@@ -746,7 +743,7 @@ def update_monitor(message):
         try:
             sessobj = fix_pickle_obj(rr.get(key))
         except:
-            sys.stderr.write('error parsing value of ' + str(key) + " which was " + repr(rr.get(key)) + "\n")
+            logmessage('error parsing value of ' + str(key) + " which was " + repr(rr.get(key)))
             continue
         if sessobj.get('chatstatus', None) != 'off':
             html = rr.get(re.sub(r'^da:session:', 'da:html:', key))
@@ -764,13 +761,13 @@ def monitor_chat_message(data):
         socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
     key = data.get('key', None)
-    #sys.stderr.write("Key is " + str(key) + "\n")
+    #logmessage("Key is " + str(key))
     if key is None:
-        sys.stderr.write("No key provided\n")
+        logmessage("No key provided")
         return
     m = re.match(r'da:session:uid:(.*):i:(.*):userid:(.*)', key)
     if not m:
-        sys.stderr.write("Invalid key provided\n")
+        logmessage("Invalid key provided")
         return
     session_id = m.group(1)
     yaml_filename = m.group(2)
@@ -778,7 +775,7 @@ def monitor_chat_message(data):
     key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(chat_user_id)
     sid = rr.get(key)
     if sid is None:
-        sys.stderr.write("No sid for monitor chat message with key " + str(key) + "\n")
+        logmessage("No sid for monitor chat message with key " + str(key))
         return
     sid = sid.decode()
     secret = secrets.get(sid, None)
@@ -791,7 +788,7 @@ def monitor_chat_message(data):
             steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         except Exception as err:
             #release_lock(session_id, yaml_filename)
-            sys.stderr.write("monitor_chat_message: could not get dictionary: " + str(err) + "\n")
+            logmessage("monitor_chat_message: could not get dictionary: " + str(err))
             return
         #release_lock(session_id, yaml_filename)
         docassemble.base.functions.this_thread.current_info['encrypted'] = encrypted
@@ -821,7 +818,7 @@ def monitor_chat_message(data):
         if len(role_list) == 0:
             role_list = ['user']
         rr.publish(sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=chat_user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=role_list, mode=chat_mode))))
-    #sys.stderr.write('received chat message on monitor from sid ' + str(request.sid) + ': ' + data['data'] + "\n")
+    #logmessage('received chat message on monitor from sid ' + str(request.sid) + ': ' + data['data'])
 
 @socketio.on('chat_log', namespace='/monitor')
 def monitor_chat_log(data):
@@ -831,14 +828,14 @@ def monitor_chat_log(data):
             return
         key = data.get('key', None)
         scroll = data.get('scroll', True)
-        #sys.stderr.write("Key is " + str(key) + "\n")
-        #sys.stderr.write("scroll is " + repr(scroll) + "\n")
+        #logmessage("Key is " + str(key))
+        #logmessage("scroll is " + repr(scroll))
         if key is None:
-            sys.stderr.write("No key provided\n")
+            logmessage("No key provided")
             return
         m = re.match(r'da:session:uid:(.*):i:(.*):userid:(.*)', key)
         if not m:
-            sys.stderr.write("Invalid key provided\n")
+            logmessage("Invalid key provided")
             return
         session_id = m.group(1)
         yaml_filename = m.group(2)
@@ -846,7 +843,7 @@ def monitor_chat_log(data):
         key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(chat_user_id)
         sid = rr.get(key)
         if sid is None:
-            sys.stderr.write("No sid for monitor chat message with key " + str(key) + "\n")
+            logmessage("No sid for monitor chat message with key " + str(key))
             return
         sid = sid.decode()
         secret = secrets.get(sid, None)
@@ -858,7 +855,7 @@ def monitor_chat_log(data):
             steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
         except Exception as err:
             #release_lock(session_id, yaml_filename)
-            sys.stderr.write("monitor_chat_log: could not get dictionary: " + str(err) + "\n")
+            logmessage("monitor_chat_log: could not get dictionary: " + str(err))
             return
         docassemble.base.functions.this_thread.current_info['encrypted'] = encrypted
         #release_lock(session_id, yaml_filename)
@@ -879,46 +876,46 @@ def monitor_chat_log(data):
             self_user_id = int(self_user_id)
         messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, None)
         socketio.emit('chat_log', {'uid': session_id, 'i': yaml_filename, 'userid': chat_user_id, 'mode': chat_mode, 'data': messages, 'scroll': scroll}, namespace='/monitor', room=request.sid)
-        #sys.stderr.write("Monitor: sending back " + str(len(messages)) + " messages")
+        #logmessage("Monitor: sending back " + str(len(messages)) + " messages")
 
 #observer
 
 def observer_thread(sid=None, key=None):
-    sys.stderr.write("Started observer thread for " + str(sid) + "\n")
+    logmessage("Started observer thread for " + str(sid))
     r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
     pubsub = r.pubsub()
     pubsub.subscribe([key, sid])
     for item in pubsub.listen():
-        sys.stderr.write("2\n" + repr(item) + "\n")
+        logmessage("2\n" + repr(item))
         if item['type'] != 'message':
             continue
-        #sys.stderr.write("observer sid: " + str(sid) + ":\n")
+        #logmessage("observer sid: " + str(sid) + ":")
         data = None
         try:
             data = json.loads(item['data'].decode())
         except:
-            sys.stderr.write("  observer JSON parse error: " + item['data'].decode() + "\n")
+            logmessage("  observer JSON parse error: " + item['data'].decode())
             continue
         if 'message' in data and data['message'] == "KILL" and (('sid' in data and data['sid'] == sid) or 'sid' not in data):
             pubsub.unsubscribe()
-            sys.stderr.write("  observer unsubscribed and finished for " + str(sid) + "\n")
+            logmessage("  observer unsubscribed and finished for " + str(sid))
             break
         if 'message' in data:
             if data['message'] == "newpage":
-                #sys.stderr.write("  Got new page for observer\n")
+                #logmessage("  Got new page for observer")
                 try:
                     obj = json.loads(r.get(data['key']).decode())
                 except:
-                    sys.stderr.write("  newpage JSON parse error\n")
+                    logmessage("  newpage JSON parse error")
                     continue
                 socketio.emit('newpage', {'obj': obj}, namespace='/observer', room=sid)
             elif data['message'] == "start_being_controlled":
-                #sys.stderr.write("  got start_being_controlled message with key " + str(data['key']) + "\n")
+                #logmessage("  got start_being_controlled message with key " + str(data['key']))
                 socketio.emit('start_being_controlled', {'key': data['key']}, namespace='/observer', room=sid)
         else:
-            #sys.stderr.write("  Got parameters for observer\n")
+            #logmessage("  Got parameters for observer")
             socketio.emit('pushchanges', {'parameters': data}, namespace='/observer', room=sid)
-        sys.stderr.write('  exiting observer thread for sid ' + str(sid) + '\n')
+        logmessage('  exiting observer thread for sid ' + str(sid))
 
 @socketio.on('connect', namespace='/observer')
 def on_observer_connect():
@@ -934,7 +931,7 @@ def on_observe(message):
         return
     if request.sid not in threads:
         key = 'da:input:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
-        #sys.stderr.write('Observing ' + key + '\n')
+        #logmessage('Observing ' + key)
         threads[request.sid] = socketio.start_background_task(target=observer_thread, sid=request.sid, key=key)
 
 @socketio.on('observerStartControl', namespace='/observer')
@@ -946,7 +943,7 @@ def start_control(message):
     key = 'da:control:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
     existing_sid = rr.get(key)
     if existing_sid is None or existing_sid.decode() == request.sid:
-        #sys.stderr.write('Controlling ' + key + '\n')
+        #logmessage('Controlling ' + key)
         pipe = rr.pipeline()
         pipe.set(self_key, key)
         pipe.expire(self_key, 12)
@@ -959,7 +956,7 @@ def start_control(message):
             int_sid = int_sid.decode()
             rr.publish(int_sid, json.dumps(dict(messagetype='controllerstart')))
     else:
-        sys.stderr.write('That key ' + key + ' is already taken\n')
+        logmessage('That key ' + key + ' is already taken')
         key = 'da:session:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
         #rr.publish('da:monitor', json.dumps(dict(messagetype='abortcontroller', key=key)))
         socketio.emit('abortcontrolling', {'key': key}, namespace='/observer', room=request.sid)
@@ -971,7 +968,7 @@ def stop_control(message):
         return
     self_key = 'da:control:sid:' + str(request.sid)
     key = 'da:control:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
-    sys.stderr.write('Stop controlling ' + key + '\n')
+    logmessage('Stop controlling ' + key)
     existing_sid = rr.get(key)
     pipe = rr.pipeline()
     pipe.delete(self_key)
@@ -981,34 +978,34 @@ def stop_control(message):
         sid = rr.get('da:interviewsession:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid']))
         if sid is not None:
             sid = sid.decode()
-            sys.stderr.write("Calling controllerexit 1")
+            logmessage("Calling controllerexit 1")
             rr.publish(sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
     else:
         pipe.execute()
 
 @socketio.on('observerChanges', namespace='/observer')
 def observer_changes(message):
-    sys.stderr.write('observerChanges\n')
+    logmessage('observerChanges')
     if 'observer' not in session:
         socketio.emit('terminate', {}, namespace='/observer', room=request.sid)
         return
     sid = rr.get('da:interviewsession:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid']))
     if sid is None:
         key = 'da:session:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
-        sys.stderr.write('observerChanges: sid is none.\n')
+        logmessage('observerChanges: sid is none.')
         if rr.get(key) is None:
-            sys.stderr.write('observerChanges: session has gone away for good.  Sending stopcontrolling.\n')
+            logmessage('observerChanges: session has gone away for good.  Sending stopcontrolling.')
             socketio.emit('stopcontrolling', {'key': key}, namespace='/observer', room=request.sid)
         else:
             socketio.emit('noconnection', {'key': key}, namespace='/observer', room=request.sid)
     else:
         sid = sid.decode()
-        sys.stderr.write('observerChanges: sid exists at ' + time.strftime("%Y-%m-%d %H:%M:%S") + '\n')
+        logmessage('observerChanges: sid exists at ' + time.strftime("%Y-%m-%d %H:%M:%S"))
         rr.publish(sid, json.dumps(dict(messagetype='controllerchanges', sid=request.sid, clicked=message.get('clicked', None), parameters=message['parameters'])))
         # sid=request.sid, yaml_filename=str(message['i']), uid=str(message['uid']), user_id=str(message['userid'])
         self_key = 'da:control:sid:' + str(request.sid)
         key = 'da:control:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
-        #sys.stderr.write('Controlling ' + key + '\n')
+        #logmessage('Controlling ' + key)
         pipe = rr.pipeline()
         pipe.set(self_key, key)
         pipe.expire(key, 12)
@@ -1018,7 +1015,7 @@ def observer_changes(message):
 
 @socketio.on('disconnect', namespace='/observer')
 def on_observer_disconnect():
-    sys.stderr.write('Client disconnected from observer\n')
+    logmessage('Client disconnected from observer')
     self_key = 'da:control:sid:' + str(request.sid)
     int_key = rr.get(self_key)
     if int_key is not None:
@@ -1030,13 +1027,13 @@ def on_observer_disconnect():
     rr.delete(self_key)
     if other_sid is not None:
         other_sid = other_sid.decode()
-        sys.stderr.write("Calling controllerexit 2")
+        logmessage("Calling controllerexit 2")
         rr.publish(other_sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
     rr.publish(request.sid, json.dumps(dict(message='KILL', sid=request.sid)))
 
 @socketio.on('terminate', namespace='/observer')
 def terminate_observer_connection():
-    sys.stderr.write("terminate_observer_connection\n")
+    logmessage("terminate_observer_connection")
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
@@ -1044,7 +1041,6 @@ def terminate_observer_connection():
     #disconnect()
 
 if __name__ == '__main__':
-    sys.stderr.write("5\n")
     if daconfig.get('expose websockets', False):
         try:
             if 'websockets ip' in daconfig and daconfig['websockets ip']:
@@ -1054,7 +1050,7 @@ if __name__ == '__main__':
                 host = ni.ifaddresses(ifaces[0])[ni.AF_INET][0]['addr']
             socketio.run(app, host=host, port=daconfig.get('websockets port', 5000))
         except:
-            sys.stderr.write("Could not find the external IP address\n")
+            logmessage("Could not find the external IP address")
             if 'websockets ip' in daconfig and daconfig['websockets ip']:
                 socketio.run(app, host=daconfig['websockets ip'], port=daconfig.get('websockets port', 5000))
             elif 'websockets port' in daconfig and daconfig['websockets port']:
@@ -1062,7 +1058,6 @@ if __name__ == '__main__':
             else:
                 socketio.run(app)
     else:
-        sys.stderr.write("6\n")
         if 'websockets ip' in daconfig and daconfig['websockets ip']:
             socketio.run(app, host=daconfig['websockets ip'], port=daconfig.get('websockets port', daconfig.get('websockets port', 5000)))
         elif 'websockets port' in daconfig and daconfig['websockets port']:

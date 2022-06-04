@@ -93,7 +93,7 @@ def get_max_width_points():
 
 # def set_file_finder(func):
 #     global file_finder
-#     #sys.stderr.write("set the file finder to " + str(func) + "\n")
+#     #logmessage("set the file finder to " + str(func))
 #     file_finder = func
 #     return
 
@@ -149,7 +149,7 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
         metadata = {}
     if styles is None:
         styles = {}
-    #sys.stderr.write(text + "\n")
+    #logmessage(text)
     if 'fontsize' in metadata:
         text = re.sub(r'{\\pard', r'\\fs' + str(convert_length(metadata['fontsize'], 'hp')) + r' {\\pard', text, count=1)
         after_space_multiplier = convert_length(metadata['fontsize'], 'twips')
@@ -819,10 +819,10 @@ def image_as_rtf(match, question=None):
     elif file_info['extension'] in ('pdf', 'docx', 'rtf', 'doc', 'odt'):
         output = ''
         if not width_supplied:
-            #logmessage("image_as_rtf: Adding page break\n")
+            #logmessage("image_as_rtf: Adding page break")
             width = DEFAULT_PAGE_WIDTH
             #output += '\\page '
-        #logmessage("image_as_rtf: maxpage is " + str(int(file_info['pages'])) + "\n")
+        #logmessage("image_as_rtf: maxpage is " + str(int(file_info['pages'])))
         if not os.path.isfile(file_info['path'] + '.pdf'):
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt') and not os.path.isfile(file_info['path'] + '.pdf'):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
@@ -874,7 +874,7 @@ def qr_as_rtf(match):
     string = match.group(1)
     output = ''
     if not width_supplied:
-        #logmessage("Adding page break\n")
+        #logmessage("Adding page break")
         width = DEFAULT_PAGE_WIDTH
         output += '\\page '
     try:
@@ -890,28 +890,28 @@ def qr_as_rtf(match):
         logmessage("Could not insert QR code into RTF file: " + err.__class__.__name__ + ": " + str(err))
         return '[QR code could not be inserted]'
     if not width_supplied:
-        #logmessage("Adding page break\n")
+        #logmessage("Adding page break")
         output += '\\page '
     else:
         output += ' '
-    #logmessage("Returning output\n")
+    #logmessage("Returning output")
     return output
 
 def rtf_image(file_info, width, insert_page_breaks):
     pixels = pixels_in(width)
     if pixels > 0 and file_info['width'] > 0:
         scale = float(pixels)/float(file_info['width'])
-        #logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + str(scale))
         if scale*float(file_info['height']) > float(MAX_HEIGHT_POINTS):
             scale = float(MAX_HEIGHT_POINTS)/float(file_info['height'])
-        #logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + str(scale))
         if scale*float(file_info['width']) > float(MAX_WIDTH_POINTS):
             scale = float(MAX_WIDTH_POINTS)/float(file_info['width'])
-        #logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + str(scale))
         #scale *= 100.0
-        #logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + str(scale))
         #scale = int(scale)
-        #logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + str(scale))
         wtwips = int(scale*float(file_info['width'])*20.0)
         htwips = int(scale*float(file_info['height'])*20.0)
         image = Image( file_info['fullpath'] )
@@ -933,7 +933,7 @@ def convert_length(length, unit):
     if unit in unit_multipliers:
         size = float(value)/float(unit_multipliers[unit])
         return int(size)
-    logmessage("Unit " + str(unit) + " is not a valid unit\n")
+    logmessage("Unit " + str(unit) + " is not a valid unit")
     return 300
 
 def pixels_in(length):
@@ -941,12 +941,12 @@ def pixels_in(length):
     if m:
         value = float(m.group(1))
         unit = m.group(2)
-        #logmessage("value is " + str(value) + " and unit is " + unit + "\n")
+        #logmessage("value is " + str(value) + " and unit is " + unit)
         if unit in unit_multipliers:
             size = float(unit_multipliers[unit]) * value
-            #logmessage("size is " + str(size) + "\n")
+            #logmessage("size is " + str(size))
             return int(size)
-    logmessage("Could not read " + str(length) + "\n")
+    logmessage("Could not read " + str(length))
     return 300
 
 def image_url_string(match, emoji=False, question=None, default_image_width=None, external=False, status=None):
@@ -1346,26 +1346,26 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                 lang = docassemble.base.functions.get_language()
                 if lang in interview_terms and len(interview_terms[lang]) > 0:
                     for term in interview_terms[lang]:
-                        #logmessage("Searching for term " + term + " in " + a + "\n")
+                        #logmessage("Searching for term " + term + " in " + a)
                         a = interview_terms[lang][term]['re'].sub(sub_term, a)
-                        #logmessage("string is now " + str(a) + "\n")
+                        #logmessage("string is now " + str(a))
                 elif question.language in interview_terms and len(interview_terms[question.language]) > 0:
                     for term in interview_terms[question.language]:
-                        #logmessage("Searching for term " + term + " in " + a + "\n")
+                        #logmessage("Searching for term " + term + " in " + a)
                         a = interview_terms[question.language][term]['re'].sub(sub_term, a)
-                        #logmessage("string is now " + str(a) + "\n")
+                        #logmessage("string is now " + str(a))
             if len(interview_autoterms) > 0:
                 lang = docassemble.base.functions.get_language()
                 if lang in interview_autoterms and len(interview_autoterms[lang]) > 0:
                     for term in interview_autoterms[lang]:
-                        #logmessage("Searching for term " + term + " in " + a + "\n")
+                        #logmessage("Searching for term " + term + " in " + a)
                         a = interview_autoterms[lang][term]['re'].sub(r'[[\1]]', a)
-                        #logmessage("string is now " + str(a) + "\n")
+                        #logmessage("string is now " + str(a))
                 elif question.language in interview_autoterms and len(interview_autoterms[question.language]) > 0:
                     for term in interview_autoterms[question.language]:
-                        #logmessage("Searching for term " + term + " in " + a + "\n")
+                        #logmessage("Searching for term " + term + " in " + a)
                         a = interview_autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
-                        #logmessage("string is now " + str(a) + "\n")
+                        #logmessage("string is now " + str(a))
     a = html_filter(str(a), status=status, question=question, embedder=embedder, default_image_width=default_image_width, external=external)
     #logmessage("before: " + a)
     if status and status.extras.get('tableCssClass', None):
@@ -1473,7 +1473,7 @@ def add_terms_mako(termname, terms, status=None, question=None):
             noquote(markdown_to_html(terms[lower_termname]['definition'].text({}),
                 trim=True, default_image_width='100%', do_terms=False, status=status, question=question
             )) + '>' + str(termname) + '</a>'
-    #logmessage(lower_termname + " is not in terms dictionary\n")
+    #logmessage(lower_termname + " is not in terms dictionary")
     return '[[' + termname + ']]'
 
 def add_terms(termname, terms, label=None, status=None, question=None):

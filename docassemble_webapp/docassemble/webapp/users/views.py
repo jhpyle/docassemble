@@ -283,6 +283,8 @@ def add_privilege():
 @login_required
 def user_profile_page():
     setup_translation()
+    if not (config['SHOW_PROFILE'] or current_user.has_roles(['admin'])):
+        return ('File not found', 404)
     the_tz = current_user.timezone if current_user.timezone else get_default_timezone()
     if current_user.social_id and current_user.social_id.startswith('phone$'):
         form = PhoneUserProfileForm(request.form, obj=current_user)

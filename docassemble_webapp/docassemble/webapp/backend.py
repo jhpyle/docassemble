@@ -57,7 +57,7 @@ DEBUG = daconfig.get('debug', False)
 #         def time_func(*pargs, **kwargs):
 #             time_start = time.time()
 #             result = func(*pargs, **kwargs)
-#             sys.stderr.write(name_of_function + ': ' + str(time.time() - time_start) + "\n")
+#             logmessage(name_of_function + ': ' + str(time.time() - time_start))
 #             return result
 #         return time_func
 #     return elapse_decorator
@@ -325,13 +325,13 @@ def fix_words():
     if not isinstance(word_file_list, list):
         word_file_list = [word_file_list]
     for word_file in word_file_list:
-        #sys.stderr.write("Reading from " + str(word_file) + "\n")
+        #logmessage("Reading from " + str(word_file))
         if not isinstance(word_file, str):
-            sys.stderr.write("Error reading words: file references must be plain text.\n")
+            logmessage("Error reading words: file references must be plain text.")
             continue
         filename = docassemble.base.functions.static_filename_path(word_file)
         if filename is None:
-            sys.stderr.write("Error reading " + str(word_file) + ": file not found.\n")
+            logmessage("Error reading " + str(word_file) + ": file not found.")
             continue
         if os.path.isfile(filename):
             if filename.lower().endswith('.yaml') or filename.lower().endswith('.yml'):
@@ -343,11 +343,11 @@ def fix_words():
                                     if isinstance(words, dict):
                                         docassemble.base.functions.update_word_collection(lang, words)
                                     else:
-                                        sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
+                                        logmessage("Error reading " + str(word_file) + ": words not in dictionary form.")
                             else:
-                                sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
+                                logmessage("Error reading " + str(word_file) + ": yaml file not in dictionary form.")
                     except:
-                        sys.stderr.write("Error reading " + str(word_file) + ": yaml could not be processed.\n")
+                        logmessage("Error reading " + str(word_file) + ": yaml could not be processed.")
             elif filename.lower().endswith('.xlsx'):
                 try:
                     df = pandas.read_excel(filename, na_values=['#NA', '#N/A'], keep_default_na=False)
@@ -357,7 +357,7 @@ def fix_words():
                             invalid = True
                             break
                     if invalid:
-                        sys.stderr.write("Error reading " + str(word_file) + ": xlsx did not have the correct columns.\n")
+                        logmessage("Error reading " + str(word_file) + ": xlsx did not have the correct columns.")
                         continue
                     translations = {}
                     problems = []
@@ -381,11 +381,11 @@ def fix_words():
                         try:
                             docassemble.base.functions.update_word_collection(lang, the_dict)
                         except:
-                            sys.stderr.write("Error reading " + str(word_file) + ": xlsx for language " + lang + " could not be processed.\n")
+                            logmessage("Error reading " + str(word_file) + ": xlsx for language " + lang + " could not be processed.")
                     if len(problems) > 0:
-                        sys.stderr.write("Error reading " + str(word_file) + ": could not read lines " + ", ".join(problems) + ".\n")
+                        logmessage("Error reading " + str(word_file) + ": could not read lines " + ", ".join(problems) + ".")
                 except Exception as err:
-                    sys.stderr.write("Error reading " + str(word_file) + ": xlsx processing raised exception " + err.__class__.__name__ + ": " + str(err) + "\n")
+                    logmessage("Error reading " + str(word_file) + ": xlsx processing raised exception " + err.__class__.__name__ + ": " + str(err))
             elif filename.lower().endswith('.xlf') or filename.lower().endswith('.xliff'):
                 try:
                     tree = ET.parse(filename)
@@ -441,18 +441,18 @@ def fix_words():
                                 continue
                             translations[target_lang][orig_text] = tr_text
                     else:
-                        sys.stderr.write("Error reading " + str(word_file) + ": invalid XLIFF version.\n")
+                        logmessage("Error reading " + str(word_file) + ": invalid XLIFF version.")
                     for lang, the_dict in translations.items():
                         try:
                             docassemble.base.functions.update_word_collection(lang, the_dict)
                         except:
-                            sys.stderr.write("Error reading " + str(word_file) + ": xlf for language " + lang + " could not be processed.\n")
+                            logmessage("Error reading " + str(word_file) + ": xlf for language " + lang + " could not be processed.")
                 except Exception as err:
-                    sys.stderr.write("Error reading " + str(word_file) + ": xlf processing raised exception " + err.__class__.__name__ + ": " + str(err) + "\n")
+                    logmessage("Error reading " + str(word_file) + ": xlf processing raised exception " + err.__class__.__name__ + ": " + str(err))
             else:
-                sys.stderr.write("filename " + filename + " had an unknown type\n")
+                logmessage("filename " + filename + " had an unknown type")
         else:
-            sys.stderr.write("filename " + filename + " did not exist\n")
+            logmessage("filename " + filename + " did not exist")
 
 fix_words()
 
@@ -522,24 +522,24 @@ def can_access_file_number(file_number, uids=None):
             return True
     return False
 
-if in_celery:
-    LOGFILE = daconfig.get('celery flask log', '/tmp/celery-flask.log')
-else:
-    LOGFILE = daconfig.get('flask log', '/tmp/flask.log')
+# if in_celery:
+#     LOGFILE = daconfig.get('celery flask log', '/tmp/celery-flask.log')
+# else:
+#     LOGFILE = daconfig.get('flask log', '/tmp/flask.log')
 
-if not os.path.exists(LOGFILE):
-    with open(LOGFILE, 'a', encoding='utf-8'):
-        os.utime(LOGFILE, None)
+# if not os.path.exists(LOGFILE):
+#     with open(LOGFILE, 'a', encoding='utf-8'):
+#         os.utime(LOGFILE, None)
 
-error_file_handler = logging.FileHandler(filename=LOGFILE)
-error_file_handler.setLevel(logging.DEBUG)
-app.logger.addHandler(error_file_handler)
+# error_file_handler = logging.FileHandler(filename=LOGFILE)
+# error_file_handler.setLevel(logging.DEBUG)
+# app.logger.addHandler(error_file_handler)
 
 #sys.stderr.write("__name__ is " + str(__name__) + " and __package__ is " + str(__package__) + "\n")
 
-def flask_logger(message):
-    #app.logger.warning(message)
-    sys.stderr.write(str(message) + "\n")
+# def flask_logger(message):
+#     #app.logger.warning(message)
+#     sys.stderr.write(str(message) + "\n")
 
 def pad(the_string):
     return the_string + bytearray((16 - len(the_string) % 16) * chr(16 - len(the_string) % 16), encoding='utf-8')
@@ -917,7 +917,7 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 try:
                     message = decrypt_phrase(record.message, secret)
                 except:
-                    sys.stderr.write("Could not decrypt phrase with secret " + secret + "\n")
+                    logmessage("Could not decrypt phrase with secret " + secret)
                     continue
             else:
                 message = unpack_phrase(record.message)
@@ -929,7 +929,7 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
             if record.user_id is not None:
                 person = get_person(record.user_id, people)
                 if person is None:
-                    sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
+                    logmessage("Person " + str(record.user_id) + " did not exist")
                     continue
                 role_list = [role.name for role in person.roles]
                 if len(role_list) == 0:
@@ -947,7 +947,7 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 try:
                     message = decrypt_phrase(record.message, secret)
                 except:
-                    sys.stderr.write("Could not decrypt phrase with secret " + secret + "\n")
+                    logmessage("Could not decrypt phrase with secret " + secret)
                     continue
             else:
                 message = unpack_phrase(record.message)
@@ -960,7 +960,7 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
             if record.user_id is not None:
                 person = get_person(record.user_id, people)
                 if person is None:
-                    sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
+                    logmessage("Person " + str(record.user_id) + " did not exist")
                     continue
                 role_list = [role.name for role in person.roles]
                 if len(role_list) == 0:

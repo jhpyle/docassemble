@@ -96,7 +96,6 @@ def reference_exists(file_reference):
     return True
 
 def get_info_from_file_reference(file_reference, **kwargs):
-    #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
     #logmessage('file reference is ' + str(file_reference))
     convert = kwargs.get('convert', None)
     privileged = kwargs.get('privileged', None)
@@ -189,7 +188,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
         elif len(parts) == 2:
             result['package'] = parts[0]
         result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference)
-    # sys.stderr.write("path is " + str(result['fullpath']) + "\n")
+    # logmessage("path is " + str(result['fullpath']))
     if result['fullpath'] is not None: #os.path.isfile(result['fullpath'])
         if not has_info:
             result['filename'] = os.path.basename(result['fullpath'])
@@ -207,13 +206,13 @@ def get_info_from_file_reference(file_reference, **kwargs):
                 result['fullpath'] = result['path'] + '.' + result['extension']
                 ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
             else:
-                sys.stderr.write("Did not find file " + result['path'] + '.' + convert[result['extension']] + "\n")
+                logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
                 return {}
         #logmessage("Full path is " + result['fullpath'])
         if os.path.isfile(result['fullpath']) and not has_info:
             add_info_about_file(result['fullpath'], result['path'], result)
     else:
-        sys.stderr.write("File reference " + str(file_reference) + " DID NOT EXIST.\n")
+        logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
     return result
 
 def safe_pypdf_reader(filename):

@@ -19,17 +19,17 @@ function cmd_retry() {
     local -i attempt_num=1
     until $cmd
     do
-        if ((attempt_num==max_attempts))
-        then
-            echo "Attempt $attempt_num failed.  Not trying again"
-            return 1
-        else
-            if ((attempt_num==1)); then
-                echo $cmd
-            fi
-            echo "Attempt $attempt_num failed."
-            sleep $(((attempt_num++)**2))
-        fi
+	if ((attempt_num==max_attempts))
+	then
+	    echo "Attempt $attempt_num failed.  Not trying again"
+	    return 1
+	else
+	    if ((attempt_num==1)); then
+		echo $cmd
+	    fi
+	    echo "Attempt $attempt_num failed."
+	    sleep $(((attempt_num++)**2))
+	fi
     done
 }
 
@@ -130,94 +130,94 @@ if [ "${DABACKUPDAYS}" != "0" ]; then
 	    rsync -auq "${DA_ROOT}/files" "${BACKUPDIR}/"
 	fi
 	rsync -auq "${DA_ROOT}/config" "${BACKUPDIR}/"
-        if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
-            if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
-               rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
-               if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-		   mkdir -p "${DA_ROOT}/backup/apachelogs"
-		   rsync -auq --delete /var/log/apache2/ "${DA_ROOT}/backup/apachelogs/"
-	       fi
-            fi
-            if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
-               rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
-               if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-		   mkdir -p "${DA_ROOT}/backup/nginxlogs"
-		   rsync -auq /var/log/nginx/ "${DA_ROOT}/backup/nginxlogs/"
-	       fi
-            fi
-        fi
-        rsync -auq "${LOGDIRECTORY}" "${BACKUPDIR}/"
-        rsync -auq --delete "${LOGDIRECTORY}" "${DA_ROOT}/backup/"
+	if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+	    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
+		rsync -auq /var/log/apache2/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+		if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+		     mkdir -p "${DA_ROOT}/backup/apachelogs"
+		    rsync -auq --delete /var/log/apache2/ "${DA_ROOT}/backup/apachelogs/"
+		fi
+	    fi
+	    if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
+		rsync -auq /var/log/nginx/ "${LOGDIRECTORY}/" && chown -R www-data.www-data "${LOGDIRECTORY}"
+		if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+		    mkdir -p "${DA_ROOT}/backup/nginxlogs"
+		    rsync -auq /var/log/nginx/ "${DA_ROOT}/backup/nginxlogs/"
+		fi
+	    fi
+	fi
+	rsync -auq "${LOGDIRECTORY}" "${BACKUPDIR}/"
+	rsync -auq --delete "${LOGDIRECTORY}" "${DA_ROOT}/backup/"
     fi
 
     if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]]; then
-        if [ -f /var/lib/redis/dump.rdb ]; then
-            cp /var/lib/redis/dump.rdb "${BACKUPDIR}/redis.rdb"
-            cp /var/lib/redis/dump.rdb "${DA_ROOT}/backup/redis.rdb"
-        fi
+	if [ -f /var/lib/redis/dump.rdb ]; then
+	    cp /var/lib/redis/dump.rdb "${BACKUPDIR}/redis.rdb"
+	    cp /var/lib/redis/dump.rdb "${DA_ROOT}/backup/redis.rdb"
+	fi
     elif [[ $CONTAINERROLE =~ .*:cron:.* ]] && [ "${REDIS:-redis://localhost}" != "redis://localhost" ]; then
-        $REDISCLI --rdb "${BACKUPDIR}/redis.rdb" &> /dev/null
+	$REDISCLI --rdb "${BACKUPDIR}/redis.rdb" &> /dev/null
     fi
 
     if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
-        PGBACKUPDIR=`mktemp -d`
-        chown postgres.postgres "${PGBACKUPDIR}"
-        su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
-        rsync -auq "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
-        if [ "${S3ENABLE:-false}" == "true" ]; then
-            s4cmd dsync "$PGBACKUPDIR" "s3://${S3BUCKET}/postgres"
-        elif [ "${AZUREENABLE:-false}" == "true" ]; then
-            for the_file in $( find "$PGBACKUPDIR/" -type f ); do
-                target_file=`basename ${the_file}`
-                cmd_retry blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
-            done
-        else
-            rsync -auq "$PGBACKUPDIR/" "${DA_ROOT}/backup/postgres"
-        fi
-        rm -rf "${PGBACKUPDIR}"
+	PGBACKUPDIR=`mktemp -d`
+	chown postgres.postgres "${PGBACKUPDIR}"
+	su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
+	rsync -auq "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
+	if [ "${S3ENABLE:-false}" == "true" ]; then
+	    s4cmd dsync "$PGBACKUPDIR" "s3://${S3BUCKET}/postgres"
+	elif [ "${AZUREENABLE:-false}" == "true" ]; then
+	    for the_file in $( find "$PGBACKUPDIR/" -type f ); do
+		target_file=`basename ${the_file}`
+		cmd_retry blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
+	    done
+	else
+	    rsync -auq "$PGBACKUPDIR/" "${DA_ROOT}/backup/postgres"
+	fi
+	rm -rf "${PGBACKUPDIR}"
     elif [[ $CONTAINERROLE =~ .*:cron:.* ]] && [ "${DBHOST:-localhost}" != "localhost" ] && [ "${DBBACKUP:-true}" == "true" ]; then
-        PGBACKUPDIR=`mktemp -d`
-        export PGPASSWORD="${DBPASSWORD:-abc123}"
-        pg_dump -F c -f "${PGBACKUPDIR}/${DBNAME}" -h "${DBHOST}" -U "${DBUSER:-docassemble}" -w -p "${DBPORT:-5432}" "${DBNAME}"
-        unset PGPASSWORD
-        rsync -auq "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
-        rm -rf "${PGBACKUPDIR}"
+	PGBACKUPDIR=`mktemp -d`
+	export PGPASSWORD="${DBPASSWORD:-abc123}"
+	pg_dump -F c -f "${PGBACKUPDIR}/${DBNAME}" -h "${DBHOST}" -U "${DBUSER:-docassemble}" -w -p "${DBPORT:-5432}" "${DBNAME}"
+	unset PGPASSWORD
+	rsync -auq "$PGBACKUPDIR/" "${BACKUPDIR}/postgres"
+	rm -rf "${PGBACKUPDIR}"
     fi
     if [ "${AZUREENABLE:-false}" == "false" ]; then
-        rm -rf `find "${DA_ROOT}/backup" -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS:-14} -print`
+	rm -rf `find "${DA_ROOT}/backup" -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS:-14} -print`
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
-        if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-            BACKUPTARGET="s3://${S3BUCKET}/backup"
-        else
-            if [ "${EC2:-false}" == "true" ]; then
-                export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
-            else
-                export LOCAL_HOSTNAME=`hostname --fqdn`
-            fi
-            BACKUPTARGET="s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}"
-        fi
-        s4cmd --delete-removed dsync "${DA_ROOT}/backup" "${BACKUPTARGET}"
+	if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+	    BACKUPTARGET="s3://${S3BUCKET}/backup"
+	else
+	    if [ "${EC2:-false}" == "true" ]; then
+		export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
+	    else
+		export LOCAL_HOSTNAME=`hostname --fqdn`
+	    fi
+	    BACKUPTARGET="s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}"
+	fi
+	s4cmd --delete-removed dsync "${DA_ROOT}/backup" "${BACKUPTARGET}"
     fi
     if [ "${AZUREENABLE:-false}" == "true" ]; then
-        if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
-            BACKUPTARGET="blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup"
-        else
-            if [ "${EC2:-false}" == "true" ]; then
-                export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
-            else
-                export LOCAL_HOSTNAME=`hostname --fqdn`
-            fi
-            BACKUPTARGET="blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}"
-        fi
-        for the_file in $( find "${DA_ROOT}/backup/" -type f | cut -c 31- ); do
-            cmd_retry blob-cmd -f cp "${DA_ROOT}/backup/${the_file}" "${BACKUPTARGET}/${the_file}"
-        done
-        for the_dir in $( find "${DA_ROOT}/backup" -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS:-14} -print | cut -c 31- ); do
-            for the_file in $( find "${DA_ROOT}/backup/${the_dir}" -type f | cut -c 31- ); do
-                cmd_retry blob-cmd -f rm "${BACKUPTARGET}/${the_file}"
-            done
-            rm -rf "${DA_ROOT}/backup/$the_dir"
-        done
+	if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
+	    BACKUPTARGET="blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup"
+	else
+	    if [ "${EC2:-false}" == "true" ]; then
+		export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
+	    else
+		export LOCAL_HOSTNAME=`hostname --fqdn`
+	    fi
+	    BACKUPTARGET="blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/backup/${LOCAL_HOSTNAME}"
+	fi
+	for the_file in $( find "${DA_ROOT}/backup/" -type f | cut -c 31- ); do
+	    cmd_retry blob-cmd -f cp "${DA_ROOT}/backup/${the_file}" "${BACKUPTARGET}/${the_file}"
+	done
+	for the_dir in $( find "${DA_ROOT}/backup" -maxdepth 1 -path '*[0-9][0-9]-[0-9][0-9]' -a -type 'd' -a -mtime +${DABACKUPDAYS:-14} -print | cut -c 31- ); do
+	    for the_file in $( find "${DA_ROOT}/backup/${the_dir}" -type f | cut -c 31- ); do
+		cmd_retry blob-cmd -f rm "${BACKUPTARGET}/${the_file}"
+	    done
+	    rm -rf "${DA_ROOT}/backup/$the_dir"
+	done
     fi
 fi

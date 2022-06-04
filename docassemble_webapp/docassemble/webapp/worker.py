@@ -19,6 +19,7 @@ if not docassemble.base.config.loaded:
     in_celery = True
 else:
     in_celery = False
+from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig, hostname
 from docassemble.base.error import DAError
 from docassemble.webapp.files import SavedFile
@@ -116,7 +117,7 @@ class RedisCredStorage(oauth2client.client.Storage):
             try:
                 creds = oauth2client.client.Credentials.new_from_json(json_creds)
             except:
-                sys.stderr.write("RedisCredStorage: could not read credentials from " + str(json_creds) + "\n")
+                logmessage("RedisCredStorage: could not read credentials from " + str(json_creds))
         return creds
     def locked_put(self, credentials):
         self.r.set(self.key, credentials.to_json())
@@ -129,14 +130,14 @@ def ensure_directories(the_path):
 
 @workerapp.task
 def sync_with_google_drive(user_id):
-    sys.stderr.write("sync_with_google_drive: starting\n")
+    logmessage("sync_with_google_drive: starting")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    sys.stderr.write("sync_with_google_drive: continuing\n")
+    logmessage("sync_with_google_drive: continuing")
     storage = RedisCredStorage(worker_controller.r, user_id, app='googledrive')
     credentials = storage.get()
     if not credentials or credentials.invalid:
-        sys.stderr.write("sync_with_google_drive: credentials failed\n")
+        logmessage("sync_with_google_drive: credentials failed")
         return worker_controller.functions.ReturnValue(ok=False, error="credentials expired", restart=False)
     try:
         with worker_controller.flaskapp.app_context():
@@ -204,9 +205,9 @@ def sync_with_google_drive(user_id):
                         param['pageToken'] = page_token
                     response = service.files().list(**param).execute()
                     for the_file in response.get('files', []):
-                        sys.stderr.write("GD found " + the_file['name'] + "\n")
+                        logmessage("GD found " + the_file['name'])
                         if the_file['mimeType'] == 'application/vnd.google-apps.folder':
-                            #sys.stderr.write("sync_with_google_drive: found a folder " + repr(the_file) + "\n")
+                            #logmessage("sync_with_google_drive: found a folder " + repr(the_file))
                             gd_dirlist[section][the_file['name']] = the_file['id']
                             continue
                         if re.search(r'(\.tmp|\.gdoc|\#)$', the_file['name']):
@@ -219,7 +220,7 @@ def sync_with_google_drive(user_id):
                         gd_modtimes[section][the_file['name']] = epoch_from_iso(the_file['modifiedTime'])
                         if int(the_file['size']) == 0:
                             gd_zero[section].add(the_file['name'])
-                        sys.stderr.write("Google says modtime on " + str(the_file['name']) + " is " + str(the_file['modifiedTime']) + ", which is " + str(gd_modtimes[section][the_file['name']]) + "\n")
+                        logmessage("Google says modtime on " + str(the_file['name']) + " is " + str(the_file['modifiedTime']) + ", which is " + str(gd_modtimes[section][the_file['name']]))
                         if the_file['trashed']:
                             gd_deleted[section].add(the_file['name'])
                             continue
@@ -235,7 +236,7 @@ def sync_with_google_drive(user_id):
                             param['pageToken'] = page_token
                         response = service.files().list(**param).execute()
                         for the_file in response.get('files', []):
-                            sys.stderr.write("GD found " + the_file['name'] + " in subdir " + subdir_name + "\n")
+                            logmessage("GD found " + the_file['name'] + " in subdir " + subdir_name)
                             if re.search(r'(\.tmp|\.gdoc|\#)$', the_file['name']):
                                 continue
                             if re.search(r'^(\~)', the_file['name']):
@@ -247,7 +248,7 @@ def sync_with_google_drive(user_id):
                             gd_modtimes[section][path_name] = epoch_from_iso(the_file['modifiedTime'])
                             if int(the_file['size']) == 0:
                                 gd_zero[section].add(path_name)
-                            sys.stderr.write("Google says modtime on " + str(path_name) + " is " + str(the_file['modifiedTime']) + ", which is " + str(gd_modtimes[section][path_name]) + "\n")
+                            logmessage("Google says modtime on " + str(path_name) + " is " + str(the_file['modifiedTime']) + ", which is " + str(gd_modtimes[section][path_name]))
                             if the_file['trashed']:
                                 gd_deleted[section].add(path_name)
                                 continue
@@ -257,11 +258,11 @@ def sync_with_google_drive(user_id):
                             break
                 gd_deleted[section] = gd_deleted[section] - gd_files[section]
                 for f in gd_files[section]:
-                    sys.stderr.write("Considering " + str(f) + " on GD\n")
+                    logmessage("Considering " + str(f) + " on GD")
                     if f in local_files[section]:
-                        sys.stderr.write("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on Google Drive was " + str(gd_modtimes[section][f]) + "\n")
+                        logmessage("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on Google Drive was " + str(gd_modtimes[section][f]))
                     if f not in local_files[section] or gd_modtimes[section][f] - local_modtimes[section][f] > 3:
-                        sys.stderr.write("Going to copy " + str(f) + " from Google Drive to local\n")
+                        logmessage("Going to copy " + str(f) + " from Google Drive to local")
                         sections_modified.add(section)
                         commentary += "Copied " + str(f) + " from Google Drive.\n"
                         the_path = os.path.join(area.directory, f)
@@ -276,26 +277,26 @@ def sync_with_google_drive(user_id):
                                 done = False
                                 while done is False:
                                     status, done = downloader.next_chunk()
-                                    #sys.stderr.write("Download %d%%." % int(status.progress() * 100) + "\n")
+                                    #logmessage("Download %d%%." % int(status.progress() * 100))
                             os.utime(the_path, (gd_modtimes[section][f], gd_modtimes[section][f]))
                 for f in local_files[section]:
-                    sys.stderr.write("Considering " + str(f) + ", which is a local file\n")
+                    logmessage("Considering " + str(f) + ", which is a local file")
                     if f in gd_files[section]:
-                        sys.stderr.write("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on Google Drive was " + str(gd_modtimes[section][f]) + "\n")
+                        logmessage("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on Google Drive was " + str(gd_modtimes[section][f]))
                     if f not in gd_deleted[section]:
-                        sys.stderr.write("Considering " + str(f) + " is not in Google Drive deleted\n")
+                        logmessage("Considering " + str(f) + " is not in Google Drive deleted")
                         if f not in gd_files[section]:
-                            sys.stderr.write("Considering " + str(f) + " is not in Google Drive\n")
+                            logmessage("Considering " + str(f) + " is not in Google Drive")
                             the_path = os.path.join(area.directory, f)
                             if os.path.getsize(the_path) == 0 and not the_path.endswith('.placeholder'):
-                                sys.stderr.write("Found zero byte file: " + str(the_path) + "\n")
+                                logmessage("Found zero byte file: " + str(the_path))
                                 continue
-                            sys.stderr.write("Copying " + str(f) + " to Google Drive.\n")
+                            logmessage("Copying " + str(f) + " to Google Drive.")
                             if not the_path.endswith('.placeholder'):
                                 commentary += "Copied " + str(f) + " to Google Drive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = iso_from_epoch(local_modtimes[section][f])
-                            sys.stderr.write("Setting GD modtime on new file " + str(f) + " to " + str(the_modtime) + "\n")
+                            logmessage("Setting GD modtime on new file " + str(f) + " to " + str(the_modtime))
                             dir_part, file_part = os.path.split(f)
                             if dir_part != '':
                                 if dir_part not in gd_dirlist[section]:
@@ -317,15 +318,15 @@ def sync_with_google_drive(user_id):
                                                                   fields='id').execute()
                             the_new_file.get('id')
                         elif local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-                            sys.stderr.write("Considering " + str(f) + " is in Google Drive but local is more recent\n")
+                            logmessage("Considering " + str(f) + " is in Google Drive but local is more recent")
                             the_path = os.path.join(area.directory, f)
                             if os.path.getsize(the_path) == 0 and not the_path.endswith('.placeholder'):
-                                sys.stderr.write("Found zero byte file during update: " + str(the_path) + "\n")
+                                logmessage("Found zero byte file during update: " + str(the_path))
                                 continue
                             commentary += "Updated " + str(f) + " on Google Drive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = iso_from_epoch(local_modtimes[section][f])
-                            sys.stderr.write("Updating on Google Drive and setting GD modtime on modified " + str(f) + " to " + str(the_modtime) + "\n")
+                            logmessage("Updating on Google Drive and setting GD modtime on modified " + str(f) + " to " + str(the_modtime))
                             file_metadata = { 'modifiedTime': the_modtime }
                             media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
                             updated_file = service.files().update(fileId=gd_ids[section][f],
@@ -333,20 +334,20 @@ def sync_with_google_drive(user_id):
                                                                   media_body=media,
                                                                   fields='modifiedTime').execute()
                             gd_modtimes[section][f] = epoch_from_iso(updated_file['modifiedTime'])
-                            sys.stderr.write("After update, timestamp on Google Drive is " + str(gd_modtimes[section][f]) + "\n")
-                            sys.stderr.write("After update, timestamp on local system is " + str(os.path.getmtime(the_path)) + "\n")
+                            logmessage("After update, timestamp on Google Drive is " + str(gd_modtimes[section][f]))
+                            logmessage("After update, timestamp on local system is " + str(os.path.getmtime(the_path)))
                 for f in gd_deleted[section]:
-                    sys.stderr.write("Considering " + str(f) + " is deleted on Google Drive\n")
+                    logmessage("Considering " + str(f) + " is deleted on Google Drive")
                     if f in local_files[section]:
-                        sys.stderr.write("Considering " + str(f) + " is deleted on Google Drive but exists locally\n")
-                        sys.stderr.write("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on Google Drive was " + str(gd_modtimes[section][f]) + "\n")
+                        logmessage("Considering " + str(f) + " is deleted on Google Drive but exists locally")
+                        logmessage("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on Google Drive was " + str(gd_modtimes[section][f]))
                         if local_modtimes[section][f] - gd_modtimes[section][f] > 3:
-                            sys.stderr.write("Considering " + str(f) + " is deleted on Google Drive but exists locally and needs to be undeleted on GD\n")
+                            logmessage("Considering " + str(f) + " is deleted on Google Drive but exists locally and needs to be undeleted on GD")
                             commentary += "Undeleted and updated " + str(f) + " on Google Drive.\n"
                             the_path = os.path.join(area.directory, f)
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = iso_from_epoch(local_modtimes[section][f])
-                            sys.stderr.write("Setting GD modtime on undeleted file " + str(f) + " to " + str(the_modtime) + "\n")
+                            logmessage("Setting GD modtime on undeleted file " + str(f) + " to " + str(the_modtime))
                             file_metadata = { 'modifiedTime': the_modtime, 'trashed': False }
                             media = worker_controller.apiclient.http.MediaFileUpload(the_path, mimetype=mimetype)
                             updated_file = service.files().update(fileId=gd_ids[section][f],
@@ -355,7 +356,7 @@ def sync_with_google_drive(user_id):
                                                                   fields='modifiedTime').execute()
                             gd_modtimes[section][f] = epoch_from_iso(updated_file['modifiedTime'])
                         else:
-                            sys.stderr.write("Considering " + str(f) + " is deleted on Google Drive but exists locally and needs to deleted locally\n")
+                            logmessage("Considering " + str(f) + " is deleted on Google Drive but exists locally and needs to deleted locally")
                             sections_modified.add(section)
                             commentary += "Deleted " + str(f) + " from Playground.\n"
                             the_path = os.path.join(area.directory, f)
@@ -363,7 +364,7 @@ def sync_with_google_drive(user_id):
                                 area.delete_file(f)
                 for f in os.listdir(area.directory):
                     the_path = os.path.join(area.directory, f)
-                    sys.stderr.write("Before finalizing, " + str(f) + " has a modtime of " + str(os.path.getmtime(the_path)) + "\n")
+                    logmessage("Before finalizing, " + str(f) + " has a modtime of " + str(os.path.getmtime(the_path)))
                 area.finalize()
                 for f in os.listdir(area.directory):
                     if f not in gd_files[section]:
@@ -371,10 +372,10 @@ def sync_with_google_drive(user_id):
                     local_files[section].add(f)
                     the_path = os.path.join(area.directory, f)
                     local_modtimes[section][f] = os.path.getmtime(the_path)
-                    sys.stderr.write("After finalizing, " + str(f) + " has a modtime of " + str(local_modtimes[section][f]) + "\n")
+                    logmessage("After finalizing, " + str(f) + " has a modtime of " + str(local_modtimes[section][f]))
                     if abs(local_modtimes[section][f] - gd_modtimes[section][f]) > 3:
                         the_modtime = iso_from_epoch(local_modtimes[section][f])
-                        sys.stderr.write("post-finalize: updating GD modtime on file " + str(f) + " to " + str(the_modtime) + "\n")
+                        logmessage("post-finalize: updating GD modtime on file " + str(f) + " to " + str(the_modtime))
                         file_metadata = { 'modifiedTime': the_modtime }
                         updated_file = service.files().update(fileId=gd_ids[section][f],
                                                               body=file_metadata,
@@ -383,7 +384,7 @@ def sync_with_google_drive(user_id):
             for key in worker_controller.r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
                 worker_controller.r.incr(key)
             if commentary != '':
-                sys.stderr.write(commentary + "\n")
+                logmessage(commentary)
         do_restart = bool('modules' in sections_modified)
         return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
     except DAError as e:
@@ -400,10 +401,10 @@ def try_request(*pargs, **kwargs):
         r, content = http.request(*args, **kwargs)
         if int(r['status']) != 504:
             break
-        sys.stderr.write("Got a 504 after try " + str(tries) + "\n")
+        logmessage("Got a 504 after try " + str(tries))
         time.sleep(2*tries)
         tries += 1
-    sys.stderr.write("try_request: duration was %.2f seconds\n" % (time.time() - start_time, ))
+    logmessage("try_request: duration was %.2f seconds" % (time.time() - start_time, ))
     return r, content
 
 def epoch_from_iso(datestring):
@@ -414,14 +415,14 @@ def iso_from_epoch(seconds):
 
 @workerapp.task
 def sync_with_onedrive(user_id):
-    sys.stderr.write("sync_with_onedrive: starting\n")
+    logmessage("sync_with_onedrive: starting")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    sys.stderr.write("sync_with_onedrive: continuing\n")
+    logmessage("sync_with_onedrive: continuing")
     storage = RedisCredStorage(worker_controller.r, user_id, app='onedrive')
     credentials = storage.get()
     if not credentials or credentials.invalid:
-        sys.stderr.write("sync_with_onedrive: credentials failed\n")
+        logmessage("sync_with_onedrive: credentials failed")
         return worker_controller.functions.ReturnValue(ok=False, error="credentials expired", restart=False)
     try:
         with worker_controller.flaskapp.app_context():
@@ -443,7 +444,7 @@ def sync_with_onedrive(user_id):
                 info = json.loads(content.decode())
                 trashed = bool('deleted' in info)
             if trashed is True:
-                sys.stderr.write('trash_gd_file: folder did not exist' + "\n")
+                logmessage('trash_gd_file: folder did not exist')
                 return False
             if trashed is True or 'folder' not in info:
                 return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive", restart=False)
@@ -475,7 +476,7 @@ def sync_with_onedrive(user_id):
                     break
                 r, content = try_request(http, info["@odata.nextLink"], "GET")
             for section in ['static', 'templates', 'questions', 'modules', 'sources']:
-                sys.stderr.write("sync_with_onedrive: processing " + section + "\n")
+                logmessage("sync_with_onedrive: processing " + section)
                 if section not in subdirs:
                     worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in OneDrive", restart=False)
                 local_files[section] = set()
@@ -498,21 +499,21 @@ def sync_with_onedrive(user_id):
                 od_zero[section] = set()
                 od_dirlist[section] = {}
                 if subdir_count[section] == 0:
-                    sys.stderr.write("sync_with_onedrive: skipping " + section + " because empty on remote\n")
+                    logmessage("sync_with_onedrive: skipping " + section + " because empty on remote")
                 else:
                     r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(subdirs[section]) + "/children?$select=id,name,deleted,fileSystemInfo,folder,size", "GET")
-                    sys.stderr.write("sync_with_onedrive: processing " + section + ", which is " + str(subdirs[section]) + "\n")
+                    logmessage("sync_with_onedrive: processing " + section + ", which is " + str(subdirs[section]))
                     while True:
                         if int(r['status']) != 200:
                             return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolder " + section + " " + str(r['status']) + ": " + content.decode() + " looking for " + str(subdirs[section]), restart=False)
                         info = json.loads(content.decode())
-                        #sys.stderr.write("sync_with_onedrive: result was " + repr(info) + "\n")
+                        #logmessage("sync_with_onedrive: result was " + repr(info))
                         for the_file in info['value']:
                             if 'folder' in the_file:
-                                #sys.stderr.write("sync_with_onedrive: found a folder " + repr(the_file) + "\n")
+                                #logmessage("sync_with_onedrive: found a folder " + repr(the_file))
                                 od_dirlist[section][the_file['name']] = the_file['id']
                                 continue
-                            #sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
+                            #logmessage("sync_with_onedrive: found a file " + repr(the_file))
                             if re.search(r'^(\~)', the_file['name']):
                                 continue
                             od_ids[section][the_file['name']] = the_file['id']
@@ -520,7 +521,7 @@ def sync_with_onedrive(user_id):
                             od_createtimes[section][the_file['name']] = epoch_from_iso(the_file['fileSystemInfo']['createdDateTime'])
                             if the_file['size'] == 0:
                                 od_zero[section].add(the_file['name'])
-                            sys.stderr.write("OneDrive says modtime on " + str(the_file['name']) + " in " + section + " is " + str(the_file['fileSystemInfo']['lastModifiedDateTime']) + ", which is " + str(od_modtimes[section][the_file['name']]) + "\n")
+                            logmessage("OneDrive says modtime on " + str(the_file['name']) + " in " + section + " is " + str(the_file['fileSystemInfo']['lastModifiedDateTime']) + ", which is " + str(od_modtimes[section][the_file['name']]))
                             if the_file.get('deleted', None):
                                 od_deleted[section].add(the_file['name'])
                                 continue
@@ -530,7 +531,7 @@ def sync_with_onedrive(user_id):
                         r, content = try_request(http, info["@odata.nextLink"], "GET")
                     for subdir_name, subdir_id in od_dirlist[section].items():
                         r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(subdir_id) + "/children?$select=id,name,deleted,fileSystemInfo,folder,size", "GET")
-                        sys.stderr.write("sync_with_onedrive: processing " + section + " subdir " + subdir_name + ", which is " + str(subdir_id) + "\n")
+                        logmessage("sync_with_onedrive: processing " + section + " subdir " + subdir_name + ", which is " + str(subdir_id))
                         while True:
                             if int(r['status']) != 200:
                                 return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolder " + section + " subdir " + subdir_name + " " + str(r['status']) + ": " + content.decode() + " looking for " + str(subdir_id), restart=False)
@@ -538,7 +539,7 @@ def sync_with_onedrive(user_id):
                             for the_file in info['value']:
                                 if 'folder' in the_file:
                                     continue
-                                #sys.stderr.write("sync_with_onedrive: found a file " + repr(the_file) + "\n")
+                                #logmessage("sync_with_onedrive: found a file " + repr(the_file))
                                 if re.search(r'^(\~)', the_file['name']):
                                     continue
                                 path_name = os.path.join(subdir_name, the_file['name'])
@@ -547,7 +548,7 @@ def sync_with_onedrive(user_id):
                                 od_createtimes[section][path_name] = epoch_from_iso(the_file['fileSystemInfo']['createdDateTime'])
                                 if the_file['size'] == 0:
                                     od_zero[section].add(path_name)
-                                sys.stderr.write("OneDrive says modtime on " + str(path_name) + " in " + section + " is " + str(the_file['fileSystemInfo']['lastModifiedDateTime']) + ", which is " + str(od_modtimes[section][path_name]) + "\n")
+                                logmessage("OneDrive says modtime on " + str(path_name) + " in " + section + " is " + str(the_file['fileSystemInfo']['lastModifiedDateTime']) + ", which is " + str(od_modtimes[section][path_name]))
                                 if the_file.get('deleted', None):
                                     od_deleted[section].add(path_name)
                                     continue
@@ -557,11 +558,11 @@ def sync_with_onedrive(user_id):
                             r, content = try_request(http, info["@odata.nextLink"], "GET")
                 od_deleted[section] = od_deleted[section] - od_files[section]
                 for f in od_files[section]:
-                    sys.stderr.write("Considering " + str(f) + " on OD\n")
+                    logmessage("Considering " + str(f) + " on OD")
                     if f in local_files[section]:
-                        sys.stderr.write("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on OneDrive was " + str(od_modtimes[section][f]) + "\n")
+                        logmessage("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on OneDrive was " + str(od_modtimes[section][f]))
                     if f not in local_files[section] or od_modtimes[section][f] - local_modtimes[section][f] > 3:
-                        sys.stderr.write("Going to copy " + str(f) + " from OneDrive to local\n")
+                        logmessage("Going to copy " + str(f) + " from OneDrive to local")
                         sections_modified.add(section)
                         commentary += "Copied " + str(f) + " from OneDrive.\n"
                         the_path = os.path.join(area.directory, f)
@@ -575,25 +576,25 @@ def sync_with_onedrive(user_id):
                                 fh.write(content)
                             os.utime(the_path, (od_modtimes[section][f], od_modtimes[section][f]))
                 for f in local_files[section]:
-                    sys.stderr.write("Considering " + str(f) + ", which is a local file\n")
+                    logmessage("Considering " + str(f) + ", which is a local file")
                     if f in od_files[section]:
-                        sys.stderr.write("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on OneDrive was " + str(od_modtimes[section][f]) + "\n")
+                        logmessage("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on OneDrive was " + str(od_modtimes[section][f]))
                     if f not in od_deleted[section]:
-                        sys.stderr.write("Considering " + str(f) + " is not in OneDrive deleted\n")
+                        logmessage("Considering " + str(f) + " is not in OneDrive deleted")
                         if f not in od_files[section]:
-                            sys.stderr.write("Considering " + str(f) + " is not in OneDrive\n")
+                            logmessage("Considering " + str(f) + " is not in OneDrive")
                             the_path = os.path.join(area.directory, f)
                             dir_name = os.path.dirname(f)
                             base_name = os.path.basename(f)
                             if os.path.getsize(the_path) == 0 and not the_path.endswith('.placeholder'):
-                                sys.stderr.write("Found zero byte file: " + str(the_path) + "\n")
+                                logmessage("Found zero byte file: " + str(the_path))
                                 continue
-                            sys.stderr.write("Copying " + str(f) + " to OneDrive.\n")
+                            logmessage("Copying " + str(f) + " to OneDrive.")
                             if not the_path.endswith('.placeholder'):
                                 commentary += "Copied " + str(f) + " to OneDrive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = iso_from_epoch(local_modtimes[section][f])
-                            sys.stderr.write("Setting OD modtime on new file " + str(f) + " to " + str(the_modtime) + " which is " + str(local_modtimes[section][f]) + "\n")
+                            logmessage("Setting OD modtime on new file " + str(f) + " to " + str(the_modtime) + " which is " + str(local_modtimes[section][f]))
                             data = {}
                             data['name'] = base_name
                             data['description'] = ''
@@ -622,15 +623,15 @@ def sync_with_onedrive(user_id):
                             od_modtimes[section][f] = local_modtimes[section][f]
                             od_createtimes[section][f] = local_modtimes[section][f]
                         elif local_modtimes[section][f] - od_modtimes[section][f] > 3:
-                            sys.stderr.write("Considering " + str(f) + " is in OneDrive but local is more recent\n")
+                            logmessage("Considering " + str(f) + " is in OneDrive but local is more recent")
                             the_path = os.path.join(area.directory, f)
                             if os.path.getsize(the_path) == 0 and not the_path.endswith('.placeholder'):
-                                sys.stderr.write("Found zero byte file during update: " + str(the_path) + "\n")
+                                logmessage("Found zero byte file during update: " + str(the_path))
                                 continue
                             commentary += "Updated " + str(f) + " on OneDrive.\n"
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = iso_from_epoch(local_modtimes[section][f])
-                            sys.stderr.write("Updating on OneDrive and setting OD modtime on modified " + str(f) + " to " + str(the_modtime) + "\n")
+                            logmessage("Updating on OneDrive and setting OD modtime on modified " + str(f) + " to " + str(the_modtime))
                             data = {}
                             data['name'] = f
                             data['description'] = ''
@@ -641,20 +642,20 @@ def sync_with_onedrive(user_id):
                             if isinstance(result, worker_controller.functions.ReturnValue):
                                 return result
                             od_modtimes[section][f] = local_modtimes[section][f]
-                            sys.stderr.write("After update, timestamp on OneDrive is " + str(od_modtimes[section][f]) + "\n")
-                            sys.stderr.write("After update, timestamp on local system is " + str(os.path.getmtime(the_path)) + "\n")
+                            logmessage("After update, timestamp on OneDrive is " + str(od_modtimes[section][f]))
+                            logmessage("After update, timestamp on local system is " + str(os.path.getmtime(the_path)))
                 for f in od_deleted[section]:
-                    sys.stderr.write("Considering " + str(f) + " is deleted on OneDrive\n")
+                    logmessage("Considering " + str(f) + " is deleted on OneDrive")
                     if f in local_files[section]:
-                        sys.stderr.write("Considering " + str(f) + " is deleted on OneDrive but exists locally\n")
-                        sys.stderr.write("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on OneDrive was " + str(od_modtimes[section][f]) + "\n")
+                        logmessage("Considering " + str(f) + " is deleted on OneDrive but exists locally")
+                        logmessage("Local timestamp was " + str(local_modtimes[section][f]) + " while timestamp on OneDrive was " + str(od_modtimes[section][f]))
                         if local_modtimes[section][f] - od_modtimes[section][f] > 3:
-                            sys.stderr.write("Considering " + str(f) + " is deleted on OneDrive but exists locally and needs to be undeleted on OD\n")
+                            logmessage("Considering " + str(f) + " is deleted on OneDrive but exists locally and needs to be undeleted on OD")
                             commentary += "Undeleted and updated " + str(f) + " on OneDrive.\n"
                             the_path = os.path.join(area.directory, f)
                             extension, mimetype = worker_controller.get_ext_and_mimetype(the_path)
                             the_modtime = iso_from_epoch(local_modtimes[section][f])
-                            sys.stderr.write("Setting OD modtime on undeleted file " + str(f) + " to " + str(the_modtime) + "\n")
+                            logmessage("Setting OD modtime on undeleted file " + str(f) + " to " + str(the_modtime))
                             data = {}
                             data['name'] = f
                             data['description'] = ''
@@ -666,7 +667,7 @@ def sync_with_onedrive(user_id):
                                 return result
                             od_modtimes[section][f] = local_modtimes[section][f]
                         else:
-                            sys.stderr.write("Considering " + str(f) + " is deleted on OneDrive but exists locally and needs to deleted locally\n")
+                            logmessage("Considering " + str(f) + " is deleted on OneDrive but exists locally and needs to deleted locally")
                             sections_modified.add(section)
                             commentary += "Deleted " + str(f) + " from Playground.\n"
                             the_path = os.path.join(area.directory, f)
@@ -674,7 +675,7 @@ def sync_with_onedrive(user_id):
                                 area.delete_file(f)
                 for f in os.listdir(area.directory):
                     the_path = os.path.join(area.directory, f)
-                    sys.stderr.write("Before finalizing, " + str(f) + " has a modtime of " + str(os.path.getmtime(the_path)) + "\n")
+                    logmessage("Before finalizing, " + str(f) + " has a modtime of " + str(os.path.getmtime(the_path)))
                 area.finalize()
                 for f in os.listdir(area.directory):
                     if f not in od_files[section]:
@@ -682,10 +683,10 @@ def sync_with_onedrive(user_id):
                     local_files[section].add(f)
                     the_path = os.path.join(area.directory, f)
                     local_modtimes[section][f] = os.path.getmtime(the_path)
-                    sys.stderr.write("After finalizing, " + str(f) + " has a modtime of " + str(local_modtimes[section][f]) + "\n")
+                    logmessage("After finalizing, " + str(f) + " has a modtime of " + str(local_modtimes[section][f]))
                     if abs(local_modtimes[section][f] - od_modtimes[section][f]) > 3:
                         the_modtime = iso_from_epoch(local_modtimes[section][f])
-                        sys.stderr.write("post-finalize: updating OD modtime on file " + str(f) + " to " + str(the_modtime) + "\n")
+                        logmessage("post-finalize: updating OD modtime on file " + str(f) + " to " + str(the_modtime))
                         headers = { 'Content-Type': 'application/json' }
                         r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps(dict(fileSystemInfo = { "createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime }), sort_keys=True))
                         if int(r['status']) != 200:
@@ -694,7 +695,7 @@ def sync_with_onedrive(user_id):
             for key in worker_controller.r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
                 worker_controller.r.incr(key)
             if commentary != '':
-                sys.stderr.write(commentary + "\n")
+                logmessage(commentary)
         do_restart = bool('modules' in sections_modified)
         return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
     except DAError as e:
@@ -709,9 +710,9 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
     if total_bytes == 0:
         r, content = try_request(http, 'https://graph.microsoft.com/v1.0/me/drive/items/' + quote(folder_id) + ':/' + quote(data['name']) + ':/content', 'PUT', headers={ 'Content-Type': 'text/plain' }, body=bytes())
         if int(r['status']) not in (200, 201):
-            sys.stderr.write("Error0\n")
-            sys.stderr.write(str(r['status']) + "\n")
-            sys.stderr.write(content.decode())
+            logmessage("Error0")
+            logmessage(str(r['status']))
+            logmessage(content.decode())
             return worker_controller.functions.ReturnValue(ok=False, error="error uploading zero-byte file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
         if new_item_id is None:
             new_item_id = json.loads(content.decode())['id']
@@ -721,59 +722,59 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
         r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(body_data, sort_keys=True))
         if int(r['status']) != 200:
             return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode() + " and url was " + the_url + " and folder name was " + folder_name + " and path was " + the_path + " and data was " + json.dumps(body_data, sort_keys=True) + " and is_new is " + repr(is_new), restart=False)
-        sys.stderr.write("Upload session created.\n")
+        logmessage("Upload session created.")
         upload_url = json.loads(content.decode())["uploadUrl"]
-        sys.stderr.write("Upload url obtained.\n")
+        logmessage("Upload url obtained.")
         start_byte = 0
         with open(the_path, 'rb') as fh:
             while start_byte < total_bytes:
                 num_bytes = min(ONEDRIVE_CHUNK_SIZE, total_bytes - start_byte)
                 custom_headers = { 'Content-Length': str(num_bytes), 'Content-Range': 'bytes ' + str(start_byte) + '-' + str(start_byte + num_bytes - 1) + '/' + str(total_bytes), 'Content-Type': 'application/octet-stream' }
-                #sys.stderr.write("url is " + repr(upload_url) + " and headers are " + repr(custom_headers) + "\n")
+                #logmessage("url is " + repr(upload_url) + " and headers are " + repr(custom_headers))
                 r, content = try_request(http, upload_url, 'PUT', headers=custom_headers, body=bytes(fh.read(num_bytes)))
-                sys.stderr.write("Sent request\n")
+                logmessage("Sent request")
                 start_byte += num_bytes
                 if start_byte == total_bytes:
-                    sys.stderr.write("Reached end\n")
+                    logmessage("Reached end")
                     if int(r['status']) not in (200, 201):
-                        sys.stderr.write("Error1\n")
-                        sys.stderr.write(str(r['status']) + "\n")
-                        sys.stderr.write(content.decode())
+                        logmessage("Error1")
+                        logmessage(str(r['status']))
+                        logmessage(content.decode())
                         return worker_controller.functions.ReturnValue(ok=False, error="error uploading file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
                     if new_item_id is None:
                         new_item_id = json.loads(content.decode())['id']
                 else:
                     if int(r['status']) != 202:
-                        sys.stderr.write("Error2\n")
-                        sys.stderr.write(str(r['status']) + "\n")
-                        sys.stderr.write(content.decode())
+                        logmessage("Error2")
+                        logmessage(str(r['status']))
+                        logmessage(content.decode())
                         return worker_controller.functions.ReturnValue(ok=False, error="error during upload of file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
-                    sys.stderr.write("Got 202\n")
+                    logmessage("Got 202")
     item_data = copy.deepcopy(data)
     if 'fileSystemInfo' in item_data and 'createdDateTime' in item_data['fileSystemInfo']:
         del item_data['fileSystemInfo']['createdDateTime']
     item_data['name'] = re.sub(r'.*/', '', item_data['name'])
-    sys.stderr.write("Patching with " + repr(item_data) + " to " + "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id) + " and headers " + repr(headers) + "\n")
+    logmessage("Patching with " + repr(item_data) + " to " + "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id) + " and headers " + repr(headers))
     r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id), "PATCH", headers=headers, body=json.dumps(item_data, sort_keys=True))
-    sys.stderr.write("PATCH request sent\n")
+    logmessage("PATCH request sent")
     if int(r['status']) != 200:
         return worker_controller.functions.ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
     # tries = 1
     # start_time = time.time()
     # while tries < 3:
-    #     sys.stderr.write("Checking in on results " + "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id) + " at " + str(time.time() - start_time) + "\n")
+    #     logmessage("Checking in on results " + "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id) + " at " + str(time.time() - start_time))
     #     r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id), "GET")
     #     if int(r['status']) != 200:
     #         return worker_controller.functions.ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + str(content), restart=False)
-    #     sys.stderr.write("Metadata is now " + str(content) + "\n")
+    #     logmessage("Metadata is now " + str(content))
     #     time.sleep(5)
     #     tries += 1
-    sys.stderr.write("Returning " + str(new_item_id) + "\n")
+    logmessage("Returning " + str(new_item_id))
     return new_item_id
 
 @workerapp.task
 def ocr_dummy(doc, indexno, **kwargs):
-    sys.stderr.write("ocr_dummy started in worker\n")
+    logmessage("ocr_dummy started in worker")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     url_root = kwargs.get('url_root', daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/'))
@@ -793,7 +794,7 @@ def ocr_dummy(doc, indexno, **kwargs):
 
 @workerapp.task
 def ocr_page(indexno, **kwargs):
-    sys.stderr.write("ocr_page started in worker\n")
+    logmessage("ocr_page started in worker")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     url_root = kwargs.get('url_root', daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/'))
@@ -810,7 +811,7 @@ def ocr_page(indexno, **kwargs):
             return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.util.ocr_page(indexno, **kwargs))
 
 def error_object(err):
-    sys.stderr.write("Error: " + str(err.__class__.__name__) + ": " + str(err))
+    logmessage("Error: " + str(err.__class__.__name__) + ": " + str(err))
     error_type = err.__class__.__name__
     error_message = str(err)
     error_trace = None
@@ -819,7 +820,7 @@ def error_object(err):
 
 @workerapp.task
 def ocr_finalize(*pargs, **kwargs):
-    sys.stderr.write("ocr_finalize started in worker\n")
+    logmessage("ocr_finalize started in worker")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     url_root = kwargs.get('url_root', daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/'))
@@ -849,7 +850,7 @@ def ocr_finalize(*pargs, **kwargs):
                     if not str(user_info['the_user_id']).startswith('t'):
                         user_object = worker_controller.get_user_object(user_info['theid'])
                         worker_controller.login_user(user_object, remember=False)
-                    #sys.stderr.write("ocr_finalize: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
+                    #logmessage("ocr_finalize: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code))
                     the_current_info = dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, interface='worker')
                     docassemble.base.functions.this_thread.current_info = the_current_info
                     worker_controller.set_request_active(False)
@@ -859,12 +860,12 @@ def ocr_finalize(*pargs, **kwargs):
                     except Exception as the_err:
                         worker_controller.release_lock(session_code, yaml_filename)
                         error_message = "ocr_finalize: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err)
-                        sys.stderr.write(error_message + "\n")
+                        logmessage(error_message)
                         return worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=DAError)
                     if user_dict is None:
                         worker_controller.release_lock(session_code, yaml_filename)
                         error_message = "ocr_finalize: dictionary could not be found"
-                        sys.stderr.write(error_message + "\n")
+                        logmessage(error_message)
                         return worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=DAError)
                     user_dict['__PDF_OCR_OBJECT'] = target
                     try:
@@ -880,7 +881,7 @@ def ocr_finalize(*pargs, **kwargs):
                     except Exception as the_err:
                         worker_controller.release_lock(session_code, yaml_filename)
                         error_message = "ocr_pdf: could not save file object: " + str(the_err.__class__.__name__) + ": " + str(the_err)
-                        sys.stderr.write(error_message + "\n")
+                        logmessage(error_message)
                         return worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=DAError)
                     del user_dict['__PDF_OCR_OBJECT']
                     if str(user_info.get('the_user_id', None)).startswith('t'):
@@ -891,12 +892,12 @@ def ocr_finalize(*pargs, **kwargs):
                     return worker_controller.functions.ReturnValue(ok=True, value=True)
                 return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.util.ocr_finalize(*pargs, **kwargs), extra=kwargs.get('extra', None))
             except Exception as the_error:
-                sys.stderr.write("Error in ocr_finalize: " + the_error.__class__.__name__ + ': ' + str(the_error) + "\n")
+                logmessage("Error in ocr_finalize: " + the_error.__class__.__name__ + ': ' + str(the_error))
                 return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
 
 @workerapp.task
 def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
-    sys.stderr.write("make_png_for_pdf started in worker for size " + prefix + "\n")
+    logmessage("make_png_for_pdf started in worker for size " + prefix)
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
@@ -909,9 +910,9 @@ def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png, page=None):
 
 @workerapp.task
 def reset_server(result, run_create=None):
-    sys.stderr.write("reset_server in worker: starting with run_create " + repr(run_create) +  "\n")
+    logmessage("reset_server in worker: starting with run_create " + repr(run_create))
     if hasattr(result, 'ok') and not result.ok:
-        sys.stderr.write("reset_server in worker: not resetting because result did not succeed.\n")
+        logmessage("reset_server in worker: not resetting because result did not succeed.")
         return result
     if not run_create:
         if not hasattr(worker_controller, 'loaded'):
@@ -919,7 +920,7 @@ def reset_server(result, run_create=None):
         pipe = worker_controller.r.pipeline()
         pipe.set('da:skip_create_tables', 1)
         pipe.expire('da:skip_create_tables', 10)
-        sys.stderr.write("reset_server in worker: setting da:skip_create_tables.\n")
+        logmessage("reset_server in worker: setting da:skip_create_tables.")
         pipe.execute()
     if USING_SUPERVISOR:
         if re.search(r':(web|celery|all):', container_role):
@@ -929,41 +930,41 @@ def reset_server(result, run_create=None):
                 hostname_to_use = result.hostname
             args = [SUPERVISORCTL, '-s', 'http://' + hostname_to_use + ':9001', 'start', 'reset']
             result = subprocess.run(args, check=False).returncode
-            sys.stderr.write("reset_server in worker: called " + ' '.join(args) + "\n")
+            logmessage("reset_server in worker: called " + ' '.join(args))
         else:
-            sys.stderr.write("reset_server in worker: did not reset due to container role\n")
+            logmessage("reset_server in worker: did not reset due to container role")
     else:
-        sys.stderr.write("reset_server in worker: supervisor not active, touching WSGI file\n")
+        logmessage("reset_server in worker: supervisor not active, touching WSGI file")
         wsgi_file = WEBAPP_PATH
         if os.path.isfile(wsgi_file):
             with open(wsgi_file, 'a', encoding='utf-8'):
                 os.utime(wsgi_file, None)
-    sys.stderr.write("reset_server in worker: finishing\n")
+    logmessage("reset_server in worker: finishing")
     return result
 
 @workerapp.task
 def update_packages(restart=True):
     start_time = time.time()
-    sys.stderr.write("update_packages in worker: starting\n")
+    logmessage("update_packages in worker: starting")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
-    sys.stderr.write("update_packages in worker: continuing after " + str(time.time() - start_time) + " seconds\n")
+    logmessage("update_packages in worker: continuing after " + str(time.time() - start_time) + " seconds")
     try:
         with worker_controller.flaskapp.app_context():
             worker_controller.set_request_active(False)
-            sys.stderr.write("update_packages in worker: starting update after " + str(time.time() - start_time) + " seconds\n")
+            logmessage("update_packages in worker: starting update after " + str(time.time() - start_time) + " seconds")
             ok, logmessages, results = worker_controller.update.check_for_updates(start_time=start_time, full=restart)
-            sys.stderr.write("update_packages in worker: update completed after " + str(time.time() - start_time) + " seconds\n")
+            logmessage("update_packages in worker: update completed after " + str(time.time() - start_time) + " seconds")
             if restart:
                 worker_controller.trigger_update(except_for=hostname)
-                sys.stderr.write("update_packages in worker: trigger completed after " + str(time.time() - start_time) + " seconds\n")
+                logmessage("update_packages in worker: trigger completed after " + str(time.time() - start_time) + " seconds")
             return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results, hostname=hostname, restart=restart)
     except:
         e = sys.exc_info()[0]
         error_mess = sys.exc_info()[1]
-        sys.stderr.write("update_packages in worker: error was " + str(e) + " with message " + str(error_mess) + "\n")
+        logmessage("update_packages in worker: error was " + str(e) + " with message " + str(error_mess))
         return worker_controller.functions.ReturnValue(ok=False, error_message=str(e), restart=False)
-    sys.stderr.write("update_packages in worker: all done\n")
+    logmessage("update_packages in worker: all done")
     return worker_controller.functions.ReturnValue(ok=False, error_message="Reached end", restart=False)
 
 @workerapp.task
@@ -1004,15 +1005,15 @@ def email_attachments(user_code, email_address, attachment_info, language, subje
                     success_attach = False
             if success_attach:
                 try:
-                    sys.stderr.write("Starting to send\n")
+                    logmessage("Starting to send")
                     worker_controller.da_send_mail(msg)
-                    sys.stderr.write("Finished sending\n")
+                    logmessage("Finished sending")
                     success = True
                 except Exception as errmess:
                     try:
-                        sys.stderr.write(str(errmess.__class__.__name__) + ": " + str(errmess) + "\n")
+                        logmessage(str(errmess.__class__.__name__) + ": " + str(errmess))
                     except:
-                        sys.stderr.write("Error of type" + str(errmess.__class__.__name__) + " that could not be displayed\n")
+                        logmessage("Error of type" + str(errmess.__class__.__name__) + " that could not be displayed")
                     success = False
             if success:
                 return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')
@@ -1053,7 +1054,7 @@ def email_attachments(user_code, email_address, attachment_info, language, subje
 #                         elif the_format == "docx":
 #                             mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 #                         attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'path': str(the_filename), 'mimetype': str(mime_type), 'attachment': the_attachment})
-#                         #sys.stderr.write("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type) + "\n")
+#                         #logmessage("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type))
 #                         attached_file_count += 1
 #                 if attached_file_count > 0:
 #                     doc_names = []
@@ -1066,18 +1067,18 @@ def email_attachments(user_code, email_address, attachment_info, language, subje
 #                     else:
 #                         body = worker_controller.functions.word("Your document, ") + " " + subject + worker_controller.functions.word(", is attached") + "."
 #                     html = "<p>" + body + "</p>"
-#                     #sys.stderr.write("Need to send an e-mail with subject " + subject + " to " + str(email_address) + " with " + str(attached_file_count) + " attachment(s)\n")
+#                     #logmessage("Need to send an e-mail with subject " + subject + " to " + str(email_address) + " with " + str(attached_file_count) + " attachment(s)")
 #                     msg = worker_controller.Message(subject, recipients=[email_address], body=body, html=html)
 #                     for attach_info in attachment_info:
 #                         with open(attach_info['path'], 'rb') as fp:
 #                             msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
 #                     try:
-#                         sys.stderr.write("Starting to send\n")
+#                         logmessage("Starting to send")
 #                         worker_controller.da_send_mail(msg)
-#                         sys.stderr.write("Finished sending\n")
+#                         logmessage("Finished sending")
 #                         success = True
 #                     except Exception as errmess:
-#                         sys.stderr.write(str(errmess) + "\n")
+#                         logmessage(str(errmess))
 #                         success = False
 
 #     if success:
@@ -1102,7 +1103,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 user_object = worker_controller.get_user_object(user_info['theid'])
                 worker_controller.login_user(user_object, remember=False)
                 worker_controller.update_last_login(user_object)
-            sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + " and action is " + repr(action) + "\n")
+            logmessage("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + " and action is " + repr(action))
             worker_controller.set_request_active(False)
             if action['action'] == 'incoming_email':
                 if 'id' in action['arguments']:
@@ -1115,12 +1116,12 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
             except Exception as the_err:
                 worker_controller.release_lock(session_code, yaml_filename)
-                sys.stderr.write("background_action: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err) + "\n")
+                logmessage("background_action: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err))
                 return worker_controller.functions.ReturnValue(extra=extra)
             the_current_info['encrypted'] = is_encrypted
             worker_controller.release_lock(session_code, yaml_filename)
             if user_dict is None:
-                sys.stderr.write("background_action: dictionary could not be found\n")
+                logmessage("background_action: dictionary could not be found")
                 return worker_controller.functions.ReturnValue(extra=extra)
             start_time = time.time()
             interview_status = worker_controller.parse.InterviewStatus(current_info=the_current_info)
@@ -1129,9 +1130,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 interview.assemble(user_dict, interview_status)
             except Exception as e:
                 if hasattr(e, '__traceback__'):
-                    sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(traceback.format_tb(e.__traceback__)))
+                    logmessage("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(traceback.format_tb(e.__traceback__)))
                 else:
-                    sys.stderr.write("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e))
+                    logmessage("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e))
                 error_type = e.__class__.__name__
                 error_message = str(e)
                 if hasattr(e, '__traceback__'):
@@ -1144,16 +1145,16 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 worker_controller.error_notification(e, message=error_message, trace=error_trace)
                 if 'on_error' not in worker_controller.functions.this_thread.current_info:
                     return worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, variables=variables)
-                sys.stderr.write("Time in background action before error callback was " + str(time.time() - start_time) + "\n")
+                logmessage("Time in background action before error callback was " + str(time.time() - start_time))
                 worker_controller.functions.set_language(old_language)
                 return process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra)
             worker_controller.functions.set_language(old_language)
-            sys.stderr.write("Time in background action was " + str(time.time() - start_time) + "\n")
+            logmessage("Time in background action was " + str(time.time() - start_time))
             if not hasattr(interview_status, 'question'):
-                #sys.stderr.write("background_action: status had no question\n")
+                #logmessage("background_action: status had no question")
                 return worker_controller.functions.ReturnValue(extra=extra)
             if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
-                #sys.stderr.write("background_action: status was restart or exit\n")
+                #logmessage("background_action: status was restart or exit")
                 worker_controller.obtain_lock_patiently(session_code, yaml_filename)
                 if str(user_info.get('the_user_id', None)).startswith('t'):
                     worker_controller.reset_user_dict(session_code, yaml_filename, temp_user_id=user_info.get('theid', None))
@@ -1165,19 +1166,19 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             #     #worker_controller.release_lock(session_code, yaml_filename)
             #     pass
             if interview_status.question.question_type == "response":
-                #sys.stderr.write("background_action: status was response\n")
+                #logmessage("background_action: status was response")
                 if hasattr(interview_status.question, 'all_variables'):
                     pass
                 elif not hasattr(interview_status.question, 'binaryresponse'):
                     sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
             if interview_status.question.question_type == "backgroundresponse":
-                #sys.stderr.write("background_action: status was backgroundresponse\n")
+                #logmessage("background_action: status was backgroundresponse")
                 return worker_controller.functions.ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
             if interview_status.question.question_type == "backgroundresponseaction":
-                #sys.stderr.write("background_action: status was backgroundresponseaction\n")
+                #logmessage("background_action: status was backgroundresponseaction")
                 start_time = time.time()
                 new_action = interview_status.question.action
-                #sys.stderr.write("new action is " + repr(new_action) + "\n")
+                #logmessage("new action is " + repr(new_action))
                 the_current_info = dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=True, interface='worker', action=new_action['action'], arguments=new_action['arguments'])
                 docassemble.base.functions.this_thread.current_info = the_current_info
                 worker_controller.obtain_lock_patiently(session_code, yaml_filename)
@@ -1190,9 +1191,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     has_error = False
                 except Exception as e:
                     if hasattr(e, 'traceback'):
-                        sys.stderr.write("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
+                        logmessage("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
                     else:
-                        sys.stderr.write("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e))
+                        logmessage("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e))
                     error_type = e.__class__.__name__
                     error_message = str(e)
                     if hasattr(e, 'traceback'):
@@ -1217,24 +1218,24 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
                 if hasattr(interview_status, 'question'):
                     if interview_status.question.question_type == "response":
-                        #sys.stderr.write("background_action: status was response\n")
+                        #logmessage("background_action: status was response")
                         if hasattr(interview_status.question, 'all_variables'):
                             pass
                         elif not hasattr(interview_status.question, 'binaryresponse'):
                             sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
                     elif interview_status.question.question_type == "backgroundresponse":
-                        sys.stderr.write("Time in background response action was " + str(time.time() - start_time) + "\n")
+                        logmessage("Time in background response action was " + str(time.time() - start_time))
                         return worker_controller.functions.ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
-                sys.stderr.write("Time in background response action was " + str(time.time() - start_time) + "\n")
+                logmessage("Time in background response action was " + str(time.time() - start_time))
                 return worker_controller.functions.ReturnValue(value=new_action, extra=extra)
             if hasattr(interview_status, 'questionText') and interview_status.questionText:
                 if interview_status.orig_sought != interview_status.sought:
                     sought_message = str(interview_status.orig_sought) + " (" + interview_status.sought + ")"
                 else:
                     sought_message = str(interview_status.orig_sought)
-                sys.stderr.write("background_action: The end result of the background action was the seeking of the variable " + sought_message + ", which resulted in asking this question: " + repr(str(interview_status.questionText).strip()) + "\n")
-                sys.stderr.write("background_action: Perhaps your interview did not ask all of the questions needed for the background action to do its work.")
-                sys.stderr.write("background_action: Or perhaps your background action did its job, but you did not end it with a call to background_response().")
+                logmessage("background_action: The end result of the background action was the seeking of the variable " + sought_message + ", which resulted in asking this question: " + repr(str(interview_status.questionText).strip()))
+                logmessage("background_action: Perhaps your interview did not ask all of the questions needed for the background action to do its work.")
+                logmessage("background_action: Or perhaps your background action did its job, but you did not end it with a call to background_response().")
                 error_type = 'QuestionError'
                 error_trace = None
                 error_message = interview_status.questionText
@@ -1243,7 +1244,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 if 'on_error' not in worker_controller.functions.this_thread.current_info:
                     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
                 return process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra)
-            sys.stderr.write("background_action: finished\n")
+            logmessage("background_action: finished")
             return worker_controller.functions.ReturnValue(extra=extra)
 
 def process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra):
@@ -1263,9 +1264,9 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
         interview.assemble(user_dict, interview_status)
     except Exception as e:
         if hasattr(e, 'traceback'):
-            sys.stderr.write("Error in assembly during error callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
+            logmessage("Error in assembly during error callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
         else:
-            sys.stderr.write("Error in assembly during error callback: " + str(e.__class__.__name__) + ": " + str(e))
+            logmessage("Error in assembly during error callback: " + str(e.__class__.__name__) + ": " + str(e))
         error_type = e.__class__.__name__
         error_message = str(e)
         if hasattr(e, 'traceback'):
@@ -1286,21 +1287,21 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
     worker_controller.release_lock(session_code, yaml_filename)
     if hasattr(interview_status, 'question'):
         if interview_status.question.question_type == "response":
-            sys.stderr.write("Time in error callback was " + str(time.time() - start_time) + "\n")
-            #sys.stderr.write("background_action: status in error callback was response\n")
+            logmessage("Time in error callback was " + str(time.time() - start_time))
+            #logmessage("background_action: status in error callback was response")
             if hasattr(interview_status.question, 'all_variables'):
                 pass
             elif not hasattr(interview_status.question, 'binaryresponse'):
                 sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
         elif interview_status.question.question_type == "backgroundresponse":
-            sys.stderr.write("Time in error callback was " + str(time.time() - start_time) + "\n")
+            logmessage("Time in error callback was " + str(time.time() - start_time))
             return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, value=interview_status.question.backgroundresponse, extra=extra)
-    sys.stderr.write("Time in error callback was " + str(time.time() - start_time) + "\n")
+    logmessage("Time in error callback was " + str(time.time() - start_time))
     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
 
 @workerapp.task
 def ocr_google(image_file, raw_result, user_code):
-    sys.stderr.write("ocr_google started in worker\n")
+    logmessage("ocr_google started in worker")
     if not hasattr(worker_controller, 'loaded'):
         initialize_db()
     url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')

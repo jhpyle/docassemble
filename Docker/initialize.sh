@@ -441,6 +441,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{ENABLEUNOCONV}}/'"${ENABLEUNOCONV:-true}"'/' \
         -e 's/{{DAALLOWCONFIGURATIONEDITING}}/'"${DAALLOWCONFIGURATIONEDITING:-true}"'/' \
         -e 's/{{DAENABLEPLAYGROUND}}/'"${DAENABLEPLAYGROUND:-true}"'/' \
+        -e 's/{{DAALLOWLOGVIEWING}}/'"${DAALLOWLOGVIEWING:-true}"'/' \
         -e 's/{{DADEBUG}}/'"${DADEBUG:-true}"'/g' \
         "$DA_CONFIG_FILE_DIST" > "$DA_CONFIG_FILE" || exit 1
 fi

@@ -125,7 +125,7 @@ function daNewCanvas() {
   }
   $("#dasigcontent").height(cheight);
   var canvas =
-    '<canvas id="dasigcanvas" width="' +
+    '<canvas class="form-control" id="dasigcanvas" width="' +
     cwidth +
     'px" height="' +
     cheight +
