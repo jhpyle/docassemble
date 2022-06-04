@@ -4,6 +4,32 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.46](https://github.com/jhpyle/docassemble/releases/tag/v1.3.46) - 2022-05-03
+
+### Added
+- The `allow log viewing` (`DAALLOWLOGVIEWING`) Configuration
+  directive.
+- The `forget_prior` keyword parameter for `force_ask()` and
+  `force_gather()`.
+- The `_forget_prior` keyword parameter for `url_action()` and
+  `interview_url_action()`.
+- The `forgetPrior` parameter for the JavaScript functions
+  `url_action()`, `action_call()`, and `action_perform()`.
+- The `logoutpage` Configuration directive.
+- The `allow changing password` directive.
+
+### Changed
+- Upgraded to Bootstrap 5.2.
+- The `interview_url()` and `url_of('interview')` functions now accept
+  unqualified `i` parameters, which will be interpreted as references
+  to interview files in the current package.
+
+### Fixed
+- The HTML version of the error notification e-mail lacked some of the
+  information in the plain text version.
+- The `next` parameter of `url_of()` was not functional for `leave`,
+  `logout`, `exit`, and `exit_logout`.
+
 ## [1.3.45](https://github.com/jhpyle/docassemble/releases/tag/v1.3.45) - 2022-05-27
 
 ### Added

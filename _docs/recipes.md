@@ -1987,7 +1987,7 @@ The [`fruit_database` module] uses the [`pandas`] module to read an
 XLSX spreadsheet file into memory.  The `get_fruit_names()` function
 returns a list of fruits (from the "Name" column) and the
 `fruit_info()` function returns a dictionary of information about a
-given fruit.`
+given fruit.
 
 {% include demo-side-by-side.html demo="fruits-database" %}
 

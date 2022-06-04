@@ -96,6 +96,75 @@
       What is your favorite color?
     fields:
       - Favorite Color: color
+"actions-demo":
+  "height": !!int |-
+    413
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: True
+    question: Actions
+    subquestion: |
+      Each of the links below calls a particular action. Try clicking
+      these links and note that the way they work the first time they are
+      clicked may be different from the way they work the next time they
+      are clicked.
+
+      [Variable defined by `question`](${ url_action('favorite_fruit') })
+
+      [`event` question](${ url_action('fruit_info') })
+
+      [Variable defined by `code`](${ url_action('vegetable_asked_about') })
+
+      [`event` code](${ url_action('increment_counter') })
+
+      [`event` code that calls `force_ask()`](${ url_action('review_preferences') })
+
+      The value of the counter is ${ counter }.
+    ---
+    question: |
+      What is your favorite fruit?
+    fields:
+      - Favorite fruit: favorite_fruit
+    ---
+    event: fruit_info
+    question: |
+      Information about fruit
+    subquestion: |
+      Fruits have seeds. Some fruits are edible.
+    buttons:
+      - Continue: continue
+    ---
+    code: |
+      vegetable_intro
+      favorite_vegetable
+      log("The favorite vegetable question has been asked.", "success")
+      vegetable_asked_about = True
+    ---
+    question: |
+      Introduction to vegetables
+    subquestion: |
+      Note that the `code` block action we are in right now will not be
+      over unless `vegetable_intro` and `favorite_vegetable` are defined.
+      You can refresh the screen now and this screen will appear again.
+      Note that `code` blocks with `event` do not behave this way.
+    continue button field: vegetable_intro
+    ---
+    question: |
+      What is your favorite vegetable?
+    fields:
+      - Favorite vegetable: favorite_vegetable
+    ---
+    event: increment_counter
+    code: |
+      counter += 1
+    ---
+    code: |
+      counter = 0
+    ---
+    event: review_preferences
+    code: |
+      force_ask('favorite_fruit', 'favorite_vegetable')
 "actions-parameters":
   "height": !!int |-
     202
@@ -6141,6 +6210,49 @@
       if user_is_communist and user_reconsidering_communism:
         user_reconsidering_communism = False
         force_ask('user_is_communist')
+"force-ask-forget-prior":
+  "height": !!int |-
+    104
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: True
+    question: First page
+    subquestion: |
+      [Go to second page](${ url_action('second_page') })
+    ---
+    question: Second page
+    subquestion: |
+      [Go to third page](${ url_action('third_page') })
+    continue button field: second_page
+    ---
+    question: Third page
+    subquestion: |
+      [Ask about food](${ url_action('food_preferences') })
+
+      [Ask about food with forget prior](${ url_action('food_preferences_forget_prior') })
+    continue button field: third_page
+    ---
+    #event: food_preferences
+    code: |
+      favorite_fruit
+      favorite_vegetable
+      food_preferences = True
+      #force_ask('favorite_fruit', 'favorite_vegetable')
+    ---
+    event: food_preferences_forget_prior
+    code: |
+      force_ask('favorite_fruit', 'favorite_vegetable', forget_prior=True)
+    ---
+    question: |
+      What is your favorite fruit?
+    fields:
+      - Favorite fruit: favorite_fruit
+    ---
+    question: |
+      What is your favorite vegetable?
+    fields:
+      - Favorite vegetable: favorite_vegetable
 "force-ask-full":
   "height": !!int |-
     122
@@ -6236,6 +6348,31 @@
     event: gather_it
     code: |
       force_gather('favorite_food')
+"forget-prior":
+  "height": !!int |-
+    104
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: True
+    question: First page
+    subquestion: |
+      [Go to second page](${ url_action('second_page') })
+    ---
+    question: Second page
+    subquestion: |
+      [Go to third page](${ url_action('third_page') })
+    continue button field: second_page
+    ---
+    question: Third page
+    subquestion: |
+      [Go to fourth page](${ url_action('fourth_page') })
+
+      [Go to fourth page with forget prior](${ url_action('fourth_page', _forget_prior=True) })
+    continue button field: third_page
+    ---
+    question: Fourth page
+    continue button field: fourth_page
 "forget-result-of":
   "height": !!int |-
     254
@@ -13304,9 +13441,9 @@
         Hint: 2 + 2 = 4.
 "signature":
   "height": !!int |-
-    392
+    394
   "width": !!int |-
-    477
+    478
   "yaml": |-
     question: |
       Sign your name

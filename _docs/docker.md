@@ -950,6 +950,10 @@ your container for the new configuration to take effect.
 * <a name="DAENABLEPLAYGROUND"></a>`DAENABLEPLAYGROUND`: Set this to
   `false` to disable the Playground on the server. See the
   [`enable playground`] directive.
+* <a name="DAALLOWLOGVIEWING"></a>`DAALLOWLOGVIEWING`: Set this to
+  `false` to prevent administrators and developers from viewing the
+  system logs by going to Logs on the menu. By default, administrators
+  and developers can access Logs.
 * <a name="DADEBUG"></a>`DADEBUG`: Set this to `false` if you want the
   server to be in production mode rather than developer mode. This
   will also disable access to example and demonstration interviews in

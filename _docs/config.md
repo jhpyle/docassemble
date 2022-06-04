@@ -150,6 +150,16 @@ When `enable playground` is false, administrators and developers will
 not be able to access the [Playground] or its associated features, and
 users will not be able to use [Playground] interviews.
 
+## <a name="allow log viewing"></a>Allowing the viewing of logs
+
+By default, a user with `admin` or `developer` privileges can view log
+files by going to Logs from the menu. To disable this feature, set
+`allow log viewing` to `False`.
+
+{% highlight yaml %}
+allow log viewing: False
+{% endhighlight %}
+
 ## <a name="package protection"></a>Allowing developers to install the same package
 
 By default, users with `developer` [privileges] have ownership over
@@ -1446,7 +1456,17 @@ should be directed after clicking a button that runs an [`exit`] or
 For example:
 
 {% highlight yaml %}
-exitpage: http://example.com/pages/thankyou.html
+exitpage: https://example.com/pages/thankyou.html
+{% endhighlight %}
+
+## <a name="logoutpage"></a>Page after logout
+
+The `logoutpage` directive contains the default URL to which a
+logged-in user should be directed after logging out. By default, the
+user is redirected to the login page after logging out.
+
+{% highlight yaml %}
+logoutpage: https://example.com/pages/comeagain.html
 {% endhighlight %}
 
 ## <a name="db"></a>SQL database
@@ -2250,6 +2270,9 @@ default admin account:
   api key: Dbah81njFzdMLw07hnU2TBYA4eClcRw1
 {% endhighlight %}
 
+The API key will be owned by the default admin user and will have no
+constraints on IP address or `Referer`.
+
 After [`create_tables`] runs for the first time, you can (and should)
 delete the `default admin account` information from the configuration
 file.
@@ -2498,14 +2521,25 @@ directive] that contols this feature on a per-interview basis.
 
 If the `show profile link` directive is set to `False`, logged-in
 users will not see a "Profile" link in the web app menu.  Instead,
-they will see a "Change Password" link.
+they will see a "Change Password" link (unless [`allow changing
+password`] is false).
 
 {% highlight yaml %}
 show profile link: False
 {% endhighlight %}
 
-Note that users with `admin` privileges will always see the "Profile"
-link.
+Note that users with `admin` or `developer` privileges will always see
+the "Profile" link.
+
+## <a name="allow changing password"></a>Allowing users to change their passwords
+
+If `allow changing password` is set to `False`, then only users with
+`admin` or `developer` privileges will be able to change their
+passwords.
+
+{% highlight yaml %}
+allow changing password: False
+{% endhighlight %}
 
 ## <a name="show interviews link"></a>Hiding the "my interviews" link
 
@@ -5700,3 +5734,4 @@ and Facebook API keys.
 [Ubuntu]: https://ubuntu.com/
 [Debian]: https://www.debian.org
 [`enable playground`]: #enable playground
+[`allow changing password`]: #allow changing password

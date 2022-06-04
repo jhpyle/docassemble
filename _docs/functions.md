@@ -381,15 +381,20 @@ your variable is `favorite_fruit`, you need to write
 `force_ask(favorite_fruit)`, **docassemble** will assume that, for
 example, `apples` is a variable in your interview.
 
+`force_ask()` works by triggering the [actions] mechanism. This means
+that in a multi-user interview, `force_ask()` only changes the current
+`question` for the current user; each user has their own active
+action, or list of active actions.
+
 Note also that no code that comes after `force_ask()` will ever be
 executed.  Once the `force_ask()` function is called, the code stops
 running, and the question indicated by the variable name will be
 shown.  That is why, in the example above, we set
-`user_reconsidering_communism` to False _before_ calling `force_ask`.
-The variable `user_reconsidering_communism`, which had been set to
-`True` by the "I suggest you reconsider your answer" question, is set
-to `False` before the call to `force_ask` so that the [`mandatory`]
-code block does not get stuck in an infinite loop.
+`user_reconsidering_communism` to `False` _before_ calling
+`force_ask()`.  The variable `user_reconsidering_communism`, which had
+been set to `True` by the "I suggest you reconsider your answer"
+question, is set to `False` before the call to `force_ask` so that the
+[`mandatory`] code block does not get stuck in an infinite loop.
 
 A different way to reask a question is to use the built-in Python
 operator `del`.  This makes the variable undefined.  Instead of
@@ -437,6 +442,16 @@ give it a dictionary containing a special command.
 
 For more information on how these data structures work, see the
 subsection on [customizing the display of `review` options].
+
+`force_ask()` accepts the optional keyword parameter
+`forget_prior`. If `forget_prior` is set to a true value, then any
+pending actions will be forgotten. If `forget_prior` is not provided,
+then `force_ask()` will simply add one or more actions to the "stack"
+of pending actions.
+
+Here is an example that demonstrates the effect of `forget_prior`.
+
+{% include side-by-side.html demo="force-ask-forget-prior" %}
 
 A function that is related to `force_ask()` is [`force_gather()`].
 [`force_gather()`] cannot force the-reasking of a question to define a
@@ -1017,7 +1032,7 @@ assembling a document with the `redact` option set to `False`, then
 your "unredacted" document will contain a redacted Social Security
 number.
 
-# <a name="actions"></a>Functions for interacting with the interview using URLs
+# <a name="actions"></a>Functions related to actions
 
 Normally, when **docassemble** figures out what [`question`] to ask,
 it simply evaluates the [interview logic]: it goes through the [YAML]
@@ -1098,6 +1113,22 @@ continue running the Python code.  The `final_screen` [`question`] is
 different, though, because it is a dead end; `final_screen` is a
 variable name that will never actually get defined.
 
+Likewise, a `code` block with `event: cancel_application` will not
+actually define the variable `cancel_application`, but it will be
+executed if **docassemble** seeks the variable `cancel_application`.
+
+"Actions" are used in a variety of contexts in **docassemble**,
+including the [`url_action()`] function, [`review`] screens, [action
+buttons], [editable tables], the [`force_ask()`] function, the
+[`url_action()` JavaScript function], the [`action_perform()`
+JavaScript function], the [`action_call()` JavaScript function], the
+[`run_action_in_session()`] function, the [POST method of
+`/api/session/action`].
+
+Regardless of how actions are called, they are always processed by the
+[`process_action()`] function. The next section explains how actions
+work when called with the [`url_action()`] function.
+
 ## <a name="url_action"></a><a name="process_action"></a>url_action() and process_action()
 
 The `url_action()` function allows users to interact with
@@ -1109,12 +1140,11 @@ question.  Typically the URL will be part of a [Markdown] link inside
 of a [question], in a `note` within a set of [fields], or it might be
 the URL of an [`action_button_html()`].
 
-The [`process_action()`] function triggers the processing of the
-"action."  The [`process_action()`] function is typically called for
-you, behind-the-scenes, but you can call it explicitly if you want to
-control exactly when (and if) it is called.  For more information
-about calling [`process_action()`] explicitly, see the section on the
-[interaction of user roles and actions].
+The [`process_action()`] function processes "actions."  The
+[`process_action()`] function is typically called for you,
+behind-the-scenes, right before the interview logic is
+evaluated. However, you can call it explicitly if you want to control
+exactly when (and if) it is called.
 
 Here is an example:
 
@@ -1147,11 +1177,20 @@ Note how the [Python] code within that block knows the value of
 `increment` which had been specified in the `url_action` function: it
 retrieves it with [`action_argument()`].
 
-The `process_action()` function runs every time the screen loads, but
-it will do nothing if the user did not click on a link generated by
-`url_action`.  (Note that `url_action()` is used internally by various
-**docassemble** features, including [editable tables] and [`review`]
-screens.)
+By default, the `process_action()` function runs right before
+**docassemble** starts processing your [`initial`] and [`mandatory`]
+blocks. However, if you have a `code` block in your YAML that calls
+`process_action()`, **docassemble** will refrain from running
+`process_action()` prior to processing your [`initial`] and
+[`mandatory`] blocks, and will instead rely on your interview logic to
+call `process_action()`. A common reason to do this is when you have a
+multi-lingual interview and you have an `initial` block that calls
+[`set_language()`]; `process_action()` would otherwise run before the
+language was initialized, and as a result [`question`]s might appear in
+the wrong language.
+
+If there is no action waiting to execute, `process_action()` returns
+quickly without doing anything.
 
 You can pass as many named parameters as you like to an "action."  For
 example:
@@ -1187,11 +1226,57 @@ code: |
     process_action()
 {% endhighlight %}
 
-Note that these links will only work for the current user, whose
-access credentials are stored in a cookie in his or her browser.  It
-is possible for actions to be run by a "third party."  For information
-on how to do this, see [`interview_url_action()`] and [scheduled
-tasks].
+You can think of "actions" as temporary diversions from the regular
+interview logic. When the action is over, the regular interview logic
+resumes. When the action is considered to be over depends on what the
+action refers to.
+
+* If the action refers to a variable defined by a `question`, the
+  action will be over when the user answers the `question`. The
+  `question` will be asked even if the variable is already defined.
+* If the action refers to the `event` name of a `question` block, the
+  action will be over when the user clicks a `continue` button on the
+  `question`. If the `question` does not have a `continue` button, the
+  `question` will be a dead end and the action will never be over.
+* If the action refers to a variable defined by a `code` block, the
+  action will be considered "over" only when the `code` block runs
+  through to completion without raising any exceptions.
+* If the action refers to the `event` name of a `code` block,
+  **docassemble** will run the `code` and it will consider the action
+  to be over no matter what the `code` block does. From within such a
+  `code` block, you can call `force_ask()` to cause additional actions
+  to run.
+
+You can test this out in the following interview:
+
+{% include side-by-side.html demo="actions-demo" %}
+
+Actions are "stackable." If an action is launched while another action
+is still active, then when the second action is complete, the user
+will be returned to the first action.
+
+You can test this out in the following interview:
+
+{% include side-by-side.html demo="forget-prior" %}
+
+Note that when you press a Continue button, you are taken back to
+where you were when you clicked on the action link; you complete the
+current action and "fall back" to the previous incomplete action.
+
+The `url_action()` function accepts an optional keyword parameter
+`_forget_prior`. If set to `True`, then when the action is run, any
+actions that were already pending are "forgotten." The above example
+interview demonstrates this; note that when you click the "Go to
+fourth page with forget prior" link, you go to the fourth page, but
+then when you click Continue, you go back to the first page of the
+interview; launching the action to go to the fourth page wipes out all
+of the prior actions.
+
+Note that `url_action()` links will only work for the current user,
+whose access credentials are stored in a cookie in his or her browser.
+It is possible for actions to be run by a "third party," though; for
+information on how to do this, see [`interview_url_action()`] and
+[scheduled tasks].
 
 ## <a name="action_menu_item"></a>action_menu_item()
 
@@ -1256,7 +1341,9 @@ The keyword argument `i` is special: you can set this to the name of
 an interview (e.g., `docassemble.demo:data/questions/questions.yml`)
 and this interview will be used instead of the current interview.  In
 this case, the `session` parameter is omitted and the URL functions as
-a referral to a different interview, with a fresh variable store.
+a referral to a different interview, with a fresh variable
+store. Interview filenames relative to the current package are valid
+(e.g., `questions.yml`).
 
 The keyword argument `session` is also special: you can set this to
 the known session ID of an interview (e.g., obtained from
@@ -1374,6 +1461,12 @@ special meaning:
   providing an `i` parameter and you want the user of the URL to
   restart any existing session they may be using in the interview
   indicated by `i`.
+* `_forget_prior`: if you set the `_forget_prior` parameter to a true
+  value, then the action, when run, will cause any prior pending
+  actions to be forgotten, and the only pending action will be the one
+  indicated by `interview_url_action()`. For more information about
+  the meaning of `_forget_prior`, see the documentation for the
+  [`url_action()`] function.
 
 ## <a name="interview_url_action_as_qr"></a>interview_url_action_as_qr()
 
@@ -1477,8 +1570,11 @@ The `url_of()` function also has a few special uses.
   the current interview, preserving the existing session.
 * `url_of('exit')` returns a URL that deletes the interview session
   and redirects to the [`exitpage`].
-* `url_of('interview')` returns a URL to the interview page.  (See
-  also [`interview_url()`].)
+* `url_of('interview')` returns a URL to the interview page. This
+  should be used with an `i` parameter. If your `i` parameter does not
+  begin with a package name, the current package will be
+  substituted. (See also [`interview_url()`], which does something
+  similar but with more features.)
 * `url_of('logout')` returns a URL that logs the user out.  It accepts
   a `next` parameter.
 * `url_of('exit_logout')` returns a URL that deletes the interview session,
@@ -7828,7 +7924,10 @@ The `url_action()` function, like its [Python namesake](#url_action),
 returns a URL that will run a particular action in the interview.  The
 first parameter is the [action] to run, and the second
 parameter is an object containing the arguments to provide to the
-action (to be read with [`action_argument()`]).
+action (to be read with [`action_argument()`]), and the third
+(optional) parameter is a boolean value representing whether the
+action should cause any pending actions to be terminated (the
+default is `false`).
 
 {% include side-by-side.html demo="js_url_action" %}
 
@@ -7843,13 +7942,15 @@ The `action_perform()` function is like
 URL that would run the action if accessed, it actually causes the
 user's web browser to run the action.
 
-The [JavaScript] function takes two arguments:
+The [JavaScript] function takes three arguments:
 
 1. The [action] to take.  This corresponds with the name of an
    [`event`] in your interview.
 2. An object containing arguments to pass to the [action].  In your
    interview, you can use the [`action_argument()`] function to read
    these values.
+3. (optional) A boolean value representing whether the action should
+   cause any pending actions to be terminated. The default is `false`.
 
 You can also access this function under the name
 `da_action_perform()`, which can be useful if you are embedding
@@ -7857,11 +7958,11 @@ You can also access this function under the name
 
 ## <a name="js_url_action_call"></a><a name="js_action_call"></a>action_call() JavaScript function
 
-The `action_call()` function is like
-[`url_action()`](#js_url_action), except it makes an [Ajax] call to
-the URL and runs a callback function when the server responds to the
-request.  In combination with [`json_response()`], this can allow you
-to write [JavaScript] code that interacts with "APIs" with your interview.
+The `action_call()` function is like [`url_action()`](#js_url_action),
+except it makes an [Ajax] call to the URL and runs a callback function
+when the server responds to the request.  In combination with
+[`json_response()`], this can allow you to write [JavaScript] code
+that interacts with "APIs" within your interview.
 
 The [JavaScript] function takes three arguments:
 
@@ -7873,6 +7974,8 @@ The [JavaScript] function takes three arguments:
 3. A callback function that will be run when the [Ajax] call returns.
    This function takes a single argument (`data` in this example),
    which is the return value of `json_response()`.
+4. (optional) A boolean value representing whether the action should
+   cause any pending actions to be terminated. The default is `false`.
 
 {% include side-by-side.html demo="js_action_call" %}
 
@@ -8427,3 +8530,9 @@ $(document).on('daPageLoad', function(){
 [Google Cloud Storage]: https://cloud.google.com/storage/
 [`new_session`]: {{ site.baseurl }}/docs/interviews.html#new_session
 [`reset`]: {{ site.baseurl }}/docs/interviews.html#reset
+[`table`]: {{ site.baseurl }}/docs/initial.html#table
+[action buttons]: {{ site.baseurl }}/docs/questions.html#action buttons
+[`run_action_in_session()`]: #run_action_in_session
+[`url_action()` JavaScript function]: #js_url_action
+[`action_perform()` JavaScript function]: #js_action_perform
+[`action_call()` JavaScript function]: js_action_call
