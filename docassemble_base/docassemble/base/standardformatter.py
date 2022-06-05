@@ -990,7 +990,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 if field.datatype == 'html':
                     if hasattr(field, 'collect_type'):
                         if not seen_first:
-                            if len(status.extras['list_collect'].elements) <= 1:
+                            if status.extras['list_collect_length'] <= 1:
                                 class_of_first = ' dainvisible da-first-delete'
                             else:
                                 class_of_first = ''

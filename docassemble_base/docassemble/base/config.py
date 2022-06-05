@@ -884,6 +884,7 @@ def parse_redis_uri():
 
     redis_host = re.sub(r'\?.*', '', redis_url)
     redis_host = re.sub(r'^rediss?://', r'', redis_host)
+    redis_host = re.sub(r'^.*@', r'', redis_host)
     m = re.search(r'/([0-9]+)', redis_host)
     if m:
         redis_db = int(m.group(1))

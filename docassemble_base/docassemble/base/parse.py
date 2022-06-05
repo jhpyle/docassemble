@@ -373,7 +373,7 @@ class InterviewStatus:
             all_fields = set()
             allow_append = self.extras['list_collect_allow_append']
             iterator_re = re.compile(r"\[%s\]" % (self.extras['list_iterator'],))
-            list_len = len(self.extras['list_collect'].elements)
+            list_len = self.extras['list_collect_length']
             if hasattr(self.extras['list_collect'], 'minimum_number') and self.extras['list_collect'].minimum_number is not None and self.extras['list_collect'].minimum_number > list_len:
                 list_len = self.extras['list_collect'].minimum_number
             if list_len == 0:
@@ -401,7 +401,7 @@ class InterviewStatus:
                         field_list.append(field)
             else:
                 field_list = self.question.fields
-            list_len = len(self.extras['list_collect'].elements)
+            list_len = self.extras['list_collect_length']
             if hasattr(self.extras['list_collect'], 'minimum_number') and self.extras['list_collect'].minimum_number is not None and self.extras['list_collect'].minimum_number > list_len:
                 list_len = self.extras['list_collect'].minimum_number
             if list_len == 0:
@@ -563,7 +563,7 @@ class InterviewStatus:
             full_field_list = []
             allow_append = self.extras['list_collect_allow_append']
             iterator_re = re.compile(r"\[%s\]" % (self.extras['list_iterator'],))
-            list_len = len(self.extras['list_collect'].elements)
+            list_len = self.extras['list_collect_length']
             if hasattr(self.extras['list_collect'], 'minimum_number') and self.extras['list_collect'].minimum_number is not None and self.extras['list_collect'].minimum_number > list_len:
                 list_len = self.extras['list_collect'].minimum_number
             if list_len == 0:
@@ -5488,6 +5488,18 @@ class Question:
                 if not m:
                     raise DAError("Cannot use list collect on these fields.  " + common_var)
                 the_list_varname = m.group(1)
+                if old_user_dict is not None:
+                    for varname in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+                        if varname in user_dict:
+                            old_user_dict[varname] = user_dict[varname]
+                        elif varname in old_user_dict:
+                            del old_user_dict[varname]
+                    try:
+                        old_list = eval(the_list_varname + '.elements', old_user_dict)
+                    except:
+                        old_list = []
+                else:
+                    old_list = []
                 if hasattr(self, 'list_collect_is_final'):
                     extras['list_collect_is_final'] = eval(self.list_collect_is_final, user_dict)
                 else:
@@ -5513,11 +5525,12 @@ class Question:
                 if hasattr(the_list, 'minimum_number') and the_list.minimum_number:
                     extras['list_minimum'] = the_list.minimum_number
                 iterator_index = list_of_indices.index(extras['list_iterator'])
-                length_to_use = len(the_list.elements)
+                length_to_use = max(len(the_list.elements), len(old_list))
                 if hasattr(the_list, 'minimum_number') and the_list.minimum_number is not None and the_list.minimum_number > length_to_use:
                     length_to_use = the_list.minimum_number
                 if length_to_use == 0:
                     length_to_use = 1
+                extras['list_collect_length'] = length_to_use
                 if the_list.ask_object_type or not extras['list_collect_allow_append']:
                     extra_amount = 0
                 else:
