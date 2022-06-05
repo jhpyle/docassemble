@@ -4,19 +4,19 @@ title: Change Log
 short_title: Change Log
 ---
 
-## [1.3.48](https://github.com/jhpyle/docassemble/releases/tag/v1.3.48) - 2022-05-05
+## [1.3.48](https://github.com/jhpyle/docassemble/releases/tag/v1.3.48) - 2022-06-05
 
 ### Fixed
 - Error with user profile screen.
 
-## [1.3.47](https://github.com/jhpyle/docassemble/releases/tag/v1.3.47) - 2022-05-04
+## [1.3.47](https://github.com/jhpyle/docassemble/releases/tag/v1.3.47) - 2022-06-04
 
 ### Fixed
 - Error parsing hostname from Redis URL.
 - Number of items not preserved when pressing Back button and arriving
   at a `list collect` question.
 
-## [1.3.46](https://github.com/jhpyle/docassemble/releases/tag/v1.3.46) - 2022-05-03
+## [1.3.46](https://github.com/jhpyle/docassemble/releases/tag/v1.3.46) - 2022-06-03
 
 ### Added
 - The `allow log viewing` (`DAALLOWLOGVIEWING`) Configuration
