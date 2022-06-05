@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.3.47] - 2022-05-05
+### Fixed
+- Error with user profile screen.
+
 ## [1.3.47] - 2022-05-04
 ### Fixed
 - Error parsing hostname from Redis URL.
