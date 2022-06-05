@@ -915,8 +915,9 @@ to the browser all at once.
 
 To use `input type: ajax`, you also need to supply an `action`
 specifier.  The browser will use the [JavaScript] function
-[`url_action_call()`] to call the given action.  In return, it expects
-a [JSON] list of items.
+[`url_action_call()`] to call the given action. The text that the user
+types into the field will be passed to the [action] as the `wordstart`
+argument. The [action] needs to return a [JSON] list of items.
 
 The following example uses the [words file] (from the [wamerican]
 package) as a data source for the combobox options.
@@ -926,21 +927,38 @@ package) as a data source for the combobox options.
 The [`code`] block that carries out the `action` should always begin
 with `set_save_status('ignore')`.  If you leave this out, then a step
 will be added to the interview each time the results are fetched.  The
-[`code`] block should always end with a call [`json_response()`].
+[`code`] block should always end by calling [`json_response()`] that
+returns the relevant choice or choices.
 
 The data that you pass to [`json_response()`] can be in one of three
 forms:
 
-1. A list of pieces of text;
-2. A dictionary in which the keys are the underlying values (what the
+1. A `list` of pieces of text;
+2. A `dict` in which the keys are the underlying values (what the
    variable will be set to) and the values are labels (what the user
    sees and types); or
-3. A list of lists, where the first item in each sub-list is the
+3. A `list` of `list`s, where the first item in each sub-list is the
    underlying value and the second item is the label.
 
-In order to avoid sending too many requests to the
-system, the requests are throttled so that they happen no more than
-once every two seconds.
+If you use the second or third option, note that **docassemble** will
+only store the underlying value in the variable, even though the user
+typed the label. In order for your `datatype: ajax` field to function
+properly if the `question` is revisited during a review process or the
+use of the Back button, your `action` needs to be able to accept as
+input either the underlying value or the label. In the following
+example, note the special return value if the `wordstart` argument
+matches a key in the dictionary.
+
+{% include side-by-side.html demo="fields-ajax-2" %}
+
+If you press the Back button to return to the `datatype: ajax` field,
+the initial value of the field will be `'x234'`, `'y432'`, or
+`'h293'`. This value will be sent to the `action` to be looked up, and
+then the screen will show the label rather than the value.
+
+In order to avoid sending too many requests to the system, the
+requests are throttled so that they happen no more than once every two
+seconds.
 
 The list will not start showing results until the user types at least
 four characters.  If you want to use a different number of characters

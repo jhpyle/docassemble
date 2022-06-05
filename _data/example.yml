@@ -5173,6 +5173,31 @@
           if lower_line.startswith(wordstart):
             results.append(line.rstrip())
       json_response(results)
+"fields-ajax-2":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      What is your favorite fruit?
+    fields:
+      - Word: favorite_fruit
+        input type: ajax
+        action: fruitlist
+    ---
+    event: fruitlist
+    code: |
+      set_save_status('ignore')
+      original = action_argument('wordstart')
+      wordstart = original.lower()
+      results = list()
+      for key, val in {'x234': 'Apple', 'y432': 'Orange', 'h293': 'Peach'}.items():
+        if key == original:
+          json_response([[key, val]])
+        if val.lower().startswith(wordstart):
+          results.append([key, val])
+      json_response(results)
 "fields-ajax-list-collect":
   "yaml": |-
     objects:
