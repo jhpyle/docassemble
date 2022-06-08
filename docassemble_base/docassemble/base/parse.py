@@ -4165,7 +4165,7 @@ class Question:
                             field_list = field[key]
                         field_info['data'] = []
                         for the_saveas in field_list:
-                            if isinstance(the_saveas, dict) and len(the_saveas) == 1 and ('undefine' in the_saveas or 'recompute' in the_saveas or 'set' in the_saveas or 'follow up' in the_saveas):
+                            if isinstance(the_saveas, dict) and len(the_saveas) == 1 and (next(iter(the_saveas)) in ('undefine', 'recompute', 'set', 'follow up', 'invalidate')):
                                 if 'set' in the_saveas:
                                     if not isinstance(the_saveas['set'], list):
                                         raise DAError("The set statement must refer to a list." + self.idebug(data))
