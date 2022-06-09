@@ -136,6 +136,7 @@ system_packages = [
     "mdx-smartypants",
     "minio",
     "mod_wsgi",
+    "mod-wsgi",
     "monotonic",
     "msal",
     "msal-extensions",

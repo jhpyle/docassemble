@@ -140,9 +140,9 @@ if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
 fi
 
 if [ "${S3ENABLE:-null}" == "true" ]; then
-    echo "initialize: Creating S3 bucket" >&2
+    echo "initialize: Creating S3 bucket, which may already exist" >&2
     if [ "${USEMINIO:-false}" == "true" ]; then
-        python -m docassemble.webapp.createminio "${S3ENDPOINTURL}" "${S3ACCESSKEY}" "${S3SECRETACCESSKEY}" "${S3BUCKET}"
+        python -m docassemble.webapp.createminio "${S3ENDPOINTURL}" "${S3ACCESSKEY}" "${S3SECRETACCESSKEY}" "${S3BUCKET}" &> /dev/null
     else
         s4cmd mb "s3://${S3BUCKET}" &> /dev/null
     fi
@@ -205,6 +205,7 @@ fi
 if [ "${RESTOREFROMBACKUP}" == "true" ]; then
     echo "initialize: Restoring from backup" >&2
     if [ "${S3ENABLE:-false}" == "true" ]; then
+        echo "initialize: Restoring from S3" >&2
 	if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/letsencrypt.tar.gz") ]]; then
 	    echo "initialize: Restoring Let's Encrypt information from S3" >&2
             rm -f /tmp/letsencrypt.tar.gz
@@ -254,6 +255,7 @@ if [ "${RESTOREFROMBACKUP}" == "true" ]; then
 	    chown redis.redis "/var/lib/redis/dump.rdb"
 	fi
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
+        echo "initialize: Restoring from Azure" >&2
 	if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud letsencrypt.tar.gz) ]]; then
 	    echo "initialize: Restoring Let's Encrypt information from Azure Blob Storage" >&2
 	    rm -f /tmp/letsencrypt.tar.gz
@@ -711,7 +713,7 @@ if [ "${TIMEZONE:-undefined}" != "undefined" ] && [ -f /usr/share/zoneinfo/$TIME
 fi
 
 if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
-    echo "initialize: Registering this machine in the " >&2
+    echo "initialize: Registering this machine in the cloud" >&2
     su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.cloud_register \"${DA_CONFIG_FILE}\"" www-data
 fi
 

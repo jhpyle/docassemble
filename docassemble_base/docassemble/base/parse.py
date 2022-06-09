@@ -805,9 +805,10 @@ class InterviewStatus:
                 result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, status=self, verbatim=(not encode))
                 if debug:
                     output['question'] += result[param]
-        if hasattr(self, 'breadcrumb') and self.breadcrumb is not None:
-            output['breadcrumb label'] = self.breadcrumb
-        output['breadcrumbs'] = docassemble.base.functions.get_action_stack()
+        if debug:
+            if hasattr(self, 'breadcrumb') and self.breadcrumb is not None:
+                output['breadcrumb label'] = self.breadcrumb
+            output['breadcrumbs'] = docassemble.base.functions.get_action_stack()
         if hasattr(self, 'subquestionText') and self.subquestionText is not None:
             if self.question.question_type == "fields":
                 embedder = dummy_embed_input

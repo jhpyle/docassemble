@@ -308,7 +308,7 @@ __all__ = [
     'DAStore',
     'explain',
     'clear_explanations',
-    'explanation',
+    'logic_explanation',
     'set_status',
     'get_status',
     'verbatim',
@@ -8318,7 +8318,7 @@ def clear_explanations(category='default'):
         return
     this_thread.internal['explanations'][category] = []
 
-def explanation(category='default'):
+def logic_explanation(category='default'):
     """Returns the list of explanations."""
     if 'explanations' not in this_thread.internal:
         return []
