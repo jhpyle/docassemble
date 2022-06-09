@@ -3616,9 +3616,9 @@ explanations list.  Clearing the history and running through all of
 the logic every time the screen loads will help make sure that the
 explanations are corrected.
 
-## <a name="explanation"></a>explanation()
+## <a name="logic_explanation"></a>logic_explanation()
 
-The `explanation()` function returns the explanation list as a [Python
+The `logic_explanation()` function returns the explanation list as a [Python
 list].  If the list does not exist, an empty list is returned.  This
 function takes an optional keyword argument `category`, which
 indicates the category of explanation list you would like to be
@@ -4561,21 +4561,21 @@ When writing `query` expressions, you can indicate "and" and "or" in
 two different ways.
 
 * `DA.Sessions.modtime >= '4/1/2022' & DA.Sessions.modtime < '5/1/2022'`
-* `DA.And(Sessions.modtime >= '4/1/2022', DA.Sessions.modtime < '5/1/2022')`
+* `DA.And(DA.Sessions.modtime >= '4/1/2022', DA.Sessions.modtime < '5/1/2022')`
 
 Likewise, the following are equivalent:
 
 * `DA.Sessions.first_name == 'Joseph' | DA.Sessions.first_name == 'Joe'`
-* `DA.Or(Sessions.first_name == 'Joseph', DA.Sessions.first_name == 'Joe')`
+* `DA.Or(DA.Sessions.first_name == 'Joseph', DA.Sessions.first_name == 'Joe')`
 
 The operators `==`, `!=`, `>=`, `>`, `<=`, and `<` are available. In
 addition, the `~` operator can be used to negate conditions. For
 example, to exclude sessions owned by users named Joseph, you would
 write something like:
 
-* `~DA.Or(Sessions.first_name == 'Joseph', DA.Sessions.first_name == 'Joe')`
-* `~Sessions.first_name.like('Jo%')`
-* `~(Sessions.first_name == 'Joseph')`
+* `~DA.Or(DA.Sessions.first_name == 'Joseph', DA.Sessions.first_name == 'Joe')`
+* `~DA.Sessions.first_name.like('Jo%')`
+* `~(DA.Sessions.first_name == 'Joseph')`
 
 There are two methods available, `Like` and `In`:
 
