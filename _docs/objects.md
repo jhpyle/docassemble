@@ -2979,7 +2979,8 @@ handles it is fairly simple.  There are two main things that the
 trigger a browser redirect to the third-party [OAuth2] process if the
 user has missing or invalid credientials; second, the [OAuth2] site
 redirects the user back to the interview (at `/interview` on the
-**docassemble** site) and the `url_args` dictionary is used to
+**docassemble** site, or whatever the base URL returned by
+`interview_url()` is) and the `url_args` dictionary is used to
 retrieve the access token obtained during the [OAuth2] process.
 
 In the above example, the user needs to be logged in because the
@@ -2994,9 +2995,10 @@ Credentials, create an "OAuth client ID" for a "web application."
 Assuming your server is at https://interview.example.com, add
 `https://interview.example.com` to the "Authorized JavaScript
 origins."  Then, under "Authorized redirect URIs," add
-`https://interview.example.com/interview`.  Make a note of the "Client
-ID" and the "Client secret" because you will need to plug those values
-into the [Configuration]
+`https://interview.example.com/interview` (or
+`https://interview.example.com/run/yourshortcut` if you are using a
+shortcut).  Make a note of the "Client ID" and the "Client secret"
+because you will need to plug those values into the [Configuration]
 
 The module `oauthsheets.py` contains the following:
 
@@ -7156,7 +7158,7 @@ the `_uid` of the table rather than the `id`.
 [actions]: {{ site.baseurl }}/docs/background.html#url_action
 [screen part]: {{ site.baseurl }}/docs/questions.html#screen parts
 [`breadcrumb` modifier]: {{ site.baseurl }}/docs/modifiers.html#breadcrumb
-[Bootstrap format]: https://getbootstrap.com/docs/5.0/components/breadcrumb/
+[Bootstrap format]: https://getbootstrap.com/docs/5.2/components/breadcrumb/
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [`png resolution`]: {{ site.baseurl }}/docs/config.html#png resolution
 [`png screen resolution`]: {{ site.baseurl }}/docs/config.html#png screen resolution

@@ -43,6 +43,27 @@ write raw HTML like this instead of a [Markdown] hyperlink:
 Check out <a target="_self" href="https://docassemble.org">the web site</a>
 {% endhighlight %}
 
+## <a name="markdownhtml"></a>Mixing Markdown with HTML
+
+Markdown is not a syntax for formatting; it is a deliberately
+simplified format that supports only a few formatting features. If you
+want to customize the details of how the web interface works, you can
+mix HTML with Markdown.
+
+**docassemble**'s Markdown-to-HTML converter uses the [Markdown in
+HTML extension]. This means that by default, anything inside of an
+HTML tag, like `<span style="color: red;">**Hello, world!**</span>`
+will not be treated as [Markdown].
+
+However, if you want text that is inside of HTML tags to be processed
+as Markdown, you can add attributes to your HTML tags to tell the
+Markdown-to-HTML converter to treat the content as [Markdown]. If you
+write `<span style="color: red;" markdown="1">**Hello, world!**</span>`
+then the content of the paragraph will be translated as [Markdown].
+
+For more information about how this works, see the documentation for
+the [Markdown in HTML extension].
+
 # <a name="mako"></a>Using Mako for logic and generated text
 
 **docassemble** uses a templating system called [Mako] to allow
@@ -527,4 +548,5 @@ information about this feature, see the section on
 [alt text]: https://moz.com/learn/seo/alt-text
 [`DAStaticFile`]: {{ site.baseurl }}/docs/objects.html#DAStaticFile
 [`table css class`]: {{ site.baseurl }}/docs/questions.html#table css class
-[Bootstrap 5]: https://getbootstrap.com/docs/5.0/utilities/text/#text-alignment
+[Bootstrap 5]: https://getbootstrap.com/docs/5.2/utilities/text/#text-alignment
+[Markdown in HTML extension]: https://python-markdown.github.io/extensions/md_in_html/

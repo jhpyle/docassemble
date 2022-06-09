@@ -5718,7 +5718,7 @@ and Facebook API keys.
 [Slack]: {{ site.slackurl }}
 [`geocoder service`]: #geocoder service
 [primary key]: https://docs.microsoft.com/en-us/azure/azure-maps/how-to-manage-authentication#view-authentication-details
-[Bootstrap colors]: https://getbootstrap.com/docs/5.0/components/buttons/#examples
+[Bootstrap colors]: https://getbootstrap.com/docs/5.2/components/buttons/#examples
 [`button colors`]: #button colors
 [Bootstrap theme]: #bootstrap theme
 [`allow embedding`]: #allow embedding

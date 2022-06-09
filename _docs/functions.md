@@ -8271,7 +8271,7 @@ $(document).on('daPageLoad', function(){
 [User-Agent header]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
 [Accept-Language header]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
-[Bootstrap documentation]: https://getbootstrap.com/docs/5.0/getting-started/introduction/
+[Bootstrap documentation]: https://getbootstrap.com/docs/5.2/getting-started/introduction/
 [`check in` feature]: {{ site.baseurl }}/docs/background.html#check in
 [Amazon S3]: https://aws.amazon.com/s3/
 [e-mail to interview]: {{ site.baseurl }}/docs/background.html#email
@@ -8347,7 +8347,7 @@ $(document).on('daPageLoad', function(){
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 [`console.log` JavaScript function]: https://developer.mozilla.org/en-US/docs/Web/API/Console/log
 [`eval` JavaScript function]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval
-[Bootstrap alert]: https://getbootstrap.com/docs/5.0/components/alerts/
+[Bootstrap alert]: https://getbootstrap.com/docs/5.2/components/alerts/
 [`flash()`]: #flash
 [Google API key]: {{ site.baseurl }}/docs/config.html#google
 [`google`]: {{ site.baseurl }}/docs/config.html#google

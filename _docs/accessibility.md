@@ -25,7 +25,7 @@ for persons with disabilities, including:
   tag that includes [alt text].  The [Markdown] syntax for including
   images supports [alt text].
 
-The **docassemble** user interface is built on [Bootstrap 5.0], which
+The **docassemble** user interface is built on [Bootstrap 5.2], which
 has [accessibility features and limitations].  The default Bootstrap
 color scheme does not have sufficient contrast to meet the [WCAG]
 guidelines.  You may want to create your own [Bootstrap theme] with
@@ -64,8 +64,8 @@ identify any, create a [GitHub issue].
 [GitHub issue]: https://github.com/jhpyle/docassemble/issues
 [Bootstrap theme]: https://bootstrap.build/app 
 [WCAG]: https://www.w3.org/WAI/standards-guidelines/wcag/
-[Bootstrap 5.0]: https://getbootstrap.com/docs/5.0/getting-started/introduction/
-[accessibility features and limitations]: https://getbootstrap.com/docs/5.0/getting-started/accessibility/
+[Bootstrap 5.2]: https://getbootstrap.com/docs/5.2/getting-started/introduction/
+[accessibility features and limitations]: https://getbootstrap.com/docs/5.2/getting-started/accessibility/
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [label tags]: https://www.w3schools.com/tags/tag_label.asp
 [title attributes]: https://www.w3schools.com/tags/att_title.asp

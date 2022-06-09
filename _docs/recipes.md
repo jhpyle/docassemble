@@ -228,6 +228,77 @@ def prog_disclose(template, classname=None):
 
 This uses the [collapse feature] of [Bootstrap].
 
+# <a name="cards"></a>Displaying cards
+
+[Bootstrap] has a component called a [Card] that puts text in a box
+with rounded corners. Here is an example of an add-on utility that
+facilitates the use of the [Card].
+
+{% include demo-side-by-side.html demo="testcards" %}
+
+The YAML file [`cards.yml`] consists of:
+
+{% highlight yaml %}
+modules:
+  - .cards
+{% endhighlight %}
+
+The Python module [`cards.py`] consists of:
+
+{% highlight python %}
+import re
+
+__all__ = ['card_start', 'card_end']
+
+def card_start(label, color=None, icon=None):
+    if color not in ('primary',
+                     'secondary',
+                     'success',
+                     'danger',
+                     'warning',
+                     'info',
+                     'light',
+                     'dark',
+                     'link'):
+        color_text = ''
+    else:
+        color_text = ' text-bg-' + color
+    if icon is None:
+        icon_text = ''
+    else:
+        icon_text = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', str(icon))
+        if not re.search(r'^fa[a-z] fa-', icon_text):
+            icon_text = 'fas fa-' + icon
+        icon_text = '<i class="' + icon_text + '"></i> '
+    return f'<div class="card{color_text} mb-3" markdown="span"><div class="card-body" markdown="1"><h2 class="card-title h4" markdown="span">{icon_text}{label}</h2>'
+
+def card_end():
+    return '</div></div>'
+{% endhighlight %}
+
+The module defines two functions, `card_start()` and `card_end()`,
+which are used to mark the beginning and end of a [Card]. The two
+functions return HTML. The text that you want to appear in the [Card]
+is written in Markdown format in between the call to `card_start()`
+and the call to `card_end()`. If you forget to include `card_end()`,
+there will be an HTML error on the screen.
+
+Note that the `card_start()` function makes use of the [Markdown in
+HTML extension]. Using `markdown="span"` enables the parsing of
+Markdown in the interior of the `<div>`. Otherwise, any Markdown
+formatting in the body of the [Card] would be presented literally on
+the screen.
+
+To use this module in your own interviews, save [`cards.yml`] and
+[`cards.py`] to your package and modify them as you wish. Since
+[`cards.yml`] only has a single `modules` block, so you might be
+tempted to do away with it and simply include [`cards.py`] directly in
+interviews that need to use the [Card] UI. However, using a YAML file
+makes sense because you may wish to format [Card] elements with custom
+CSS classes. In that case, you can add a `features` block to your
+[`cards.yml`] file, and any interviews that include `cards.yml` will
+not need to be modified.
+
 # <a name="new or existing"></a>New object or existing object
 
 The [`object` datatype] combined with the [`disable others`] can be
@@ -2471,6 +2542,39 @@ is [`nested_list_table.docx`].
 
 {% include demo-side-by-side.html demo="nested-list-docx-table" %}
 
+# <a name="graph"></a>Generating a graph and inserting it into a document
+
+This interview uses the [`matplotlib`] library (which is not installed
+by default on a **docassemble** server) to generate a pie chart based
+on user-supplied input.
+
+{% include demo-side-by-side.html demo="graph" %}
+
+The bulk of the work is done in the [`graph.py`] module, the contents
+of which are as follows.
+
+{% highlight python %}
+__all__ = ['make_pie']
+
+import matplotlib.pyplot as plt
+
+def make_pie(data, the_file):
+    the_file.initialize(filename='graph.svg')
+    fig = plt.figure(figsize=(6, 6))
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+
+    labels = list(data.keys())
+    fracs = list(data.values())
+
+    pies = ax.pie(fracs, labels=labels, autopct='%1.1f%%')
+    with open(the_file.path(), 'wb') as f:
+        plt.savefig(f, format="svg")
+    the_file.commit()
+    the_file.retrieve()
+{% endhighlight %}
+
+The document template, [`graph.docx`], inserts the `DAFile` object `graph`.
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml
@@ -2532,7 +2636,7 @@ is [`nested_list_table.docx`].
 [`pdf template file`]: {{ site.baseurl }}/docs/documents.html#pdf template file
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`signature-diversion.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/signature-diversion.yml
-[collapse feature]: https://getbootstrap.com/docs/5.0/components/collapse/
+[collapse feature]: https://getbootstrap.com/docs/5.2/components/collapse/
 [Bootstrap]: https://getbootstrap.com/
 [`disable others`]: {{ site.baseurl }}/docs/fields.html#disable others
 [`object` datatype]: {{ site.baseurl }}/docs/fields.html#object
@@ -2600,3 +2704,10 @@ is [`nested_list_table.docx`].
 [`calendar.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/calendar.py
 [`nested_list_table.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/nested_list_table.docx
 [Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
+[`cards.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/cards.yml
+[`cards.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/cards.py
+[Card]: https://getbootstrap.com/docs/5.2/components/card/
+[Markdown in HTML extension]: https://python-markdown.github.io/extensions/md_in_html/
+[`matplotlib`]: https://matplotlib.org/
+[`graph.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/graph.py
+[`graph.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/graph.docx

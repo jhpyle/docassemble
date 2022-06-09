@@ -2410,7 +2410,7 @@ features:
 This will cause the web application to run the JavaScript for the
 `ssn` and `iso639language` custom data types.
 
-[Bootstrap popover feature]: https://getbootstrap.com/docs/5.0/components/popovers/
+[Bootstrap popover feature]: https://getbootstrap.com/docs/5.2/components/popovers/
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [infinite loop protection]: {{ site.baseurl }}/docs/config.html#loop limit
 [ending screen]: {{ site.baseurl }}/docs/questions.html#ending screens
@@ -2604,8 +2604,8 @@ This will cause the web application to run the JavaScript for the
 [`session_tags()`]: {{ site.baseurl }}/docs/functions.html#session_tags
 [interview]: {{ site.baseurl }}/docs/interviews.html
 [section on questions]: {{ site.baseurl }}/docs/questions.html
-[standard]: https://getbootstrap.com/docs/5.0/forms/layout/#utilities/
-[horizontal form]: https://getbootstrap.com/docs/5.0/forms/layout/#horizontal-form
+[standard]: https://getbootstrap.com/docs/5.2/forms/layout/#utilities/
+[horizontal form]: https://getbootstrap.com/docs/5.2/forms/layout/#horizontal-form
 [`exitpage`]: {{ site.baseurl }}/docs/config.html#exitpage
 [special pages]: {{ site.baseurl }}/docs/questions.html#special buttons
 [`command()`]: {{ site.baseurl }}/docs/functions.html#command
@@ -2639,7 +2639,7 @@ This will cause the web application to run the JavaScript for the
 [`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
 [provide CSS]: #css
 [adjust the CSS]: {{ site.baseurl }}/docs/config.html#bootstrap theme
-[Bootstrap Navbar]: https://getbootstrap.com/docs/5.0/components/navbar/#supported-content
+[Bootstrap Navbar]: https://getbootstrap.com/docs/5.2/components/navbar/#supported-content
 [`__all__`]: https://docs.python.org/3/tutorial/modules.html#importing-from-a-package
 [translation files]: #translations
 [`language`]: {{ site.baseurl }}/docs/config.html#language

@@ -4,6 +4,22 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.49](https://github.com/jhpyle/docassemble/releases/tag/v1.3.49) - 2022-06-09
+
+
+### Added
+- Example interviews relating to inserting graphs and cards.
+
+### Changed
+- Changed the name of the `explanation()` function to
+  `logic_explanation()`. NOTE THAT THIS IS A BREAKING CHANGE. However,
+  you are most likely not using the `explanation()` function, so this
+  probably will not matter.
+
+### Fixed
+- Cleared spurious syslog-ng error message.
+- Error getting the data format of a question when `debug` is false.
+
 ## [1.3.48](https://github.com/jhpyle/docassemble/releases/tag/v1.3.48) - 2022-06-05
 
 ### Fixed
