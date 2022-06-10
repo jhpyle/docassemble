@@ -2319,11 +2319,11 @@ class DADict(DAObject):
         """Invalidate items."""
         for item in pargs:
             if item in self.elements.keys():
-                invalidate(self.instanceName + '[' + repr(item) + ']')
+                invalidate(self.item_name(item))
     def getitem_fresh(self, item):
         """Compute a fresh value of the given item and return it."""
         if item in self.elements:
-            docassemble.base.functions.reconsider(self.instanceName + '[' + repr(item) + ']')
+            docassemble.base.functions.reconsider(self.item_name(item))
         return self[item]
     def all_false(self, *pargs, **kwargs):
         """Returns True if the values of all keys are false.  If one or more
