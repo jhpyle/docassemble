@@ -2288,9 +2288,10 @@ Parameters:
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    header or cookie or as a bearer token).
  - `user_id` (optional): the user ID of the user whose [Playground]
-   should be read.  Only users with `admin` privileges can read from a
-   different user's [Playground].  The default is the user ID of the
-   owner of the API key.
+   should be read.  Unless [`enable sharing playgrounds`] is true,
+   only users with `admin` privileges can read from a different user's
+   [Playground].  The default is the user ID of the owner of the API
+   key.
  - `folder` (optional): the folder in the [Playground] from which to
    obtain the list of files.  Must be one of `questions`, `sources`,
    `static`, `templates`, or `modules`.  The default is `static`.
@@ -2335,9 +2336,10 @@ Parameters:
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    header or cookie or as a bearer token).
  - `user_id` (optional): the user ID of the user whose [Playground]
-   should be used.  Only users with `admin` privileges can delete from
-   a different user's [Playground].  The default is the user ID of the
-   owner of the API key.
+   should be used.  Unless [`enable sharing playgrounds`] is true,
+   only users with `admin` privileges can delete from a different
+   user's [Playground].  The default is the user ID of the owner of
+   the API key.
  - `folder` (optional): the folder in the [Playground] from which to
    delete the file.  Must be one of `questions`, `sources`, `static`,
    `templates`, or `modules`.  The default is `static`.
@@ -2392,9 +2394,10 @@ Data:
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    header or cookie or as a bearer token).
  - `user_id` (optional): the user ID of the user whose [Playground]
-   should be written to.  Only users with `admin` privileges can write
-   to a different user's [Playground].  The default is the user ID of the
-   owner of the API key.
+   should be written to.  Unless [`enable sharing playgrounds`] is
+   true, only users with `admin` privileges can write to a different
+   user's [Playground].  The default is the user ID of the owner of
+   the API key.
  - `folder` (optional): the folder in the [Playground] to which the
    uploaded file(s) should be written.  Must be one of `questions`,
    `sources`, `static`, `templates`, or `modules`.
@@ -2453,7 +2456,8 @@ Data:
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    header or cookie or as a bearer token).
  - `user_id` (optional): the user ID of the user whose [Playground]
-   should be written to.  Only users with `admin` privileges or the
+   should be written to.  Unless [`enable sharing playgrounds`] is
+   true, only users with `admin` privileges or the
    `playground_control` [permission] can write to a different user's
    [Playground].  The default is the user ID of the owner of the API
    key.
@@ -2514,9 +2518,10 @@ Parameters:
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    header or cookie or as a bearer token).
  - `user_id` (optional): the user ID of the user whose [Playground]
-   should be read.  Only users with `admin` privileges can read from a
-   different user's [Playground].  The default is the user ID of the
-   owner of the API key.
+   should be read.  Unless [`enable sharing playgrounds`] is true,
+   only users with `admin` privileges can read from a different user's
+   [Playground].  The default is the user ID of the owner of the API
+   key.
 
 Required privileges:
 
@@ -2548,7 +2553,8 @@ Parameters:
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    header or cookie or as a bearer token).
  - `user_id` (optional): the user ID of the user whose [Playground]
-   should be used.  Only users with `admin` privileges can delete from
+   should be used.  Unless [`enable sharing playgrounds`] is
+   true, only users with `admin` privileges can delete from
    a different user's [Playground].  The default is the user ID of the
    owner of the API key.
  - `project`: the project in the [Playground] to delete.
@@ -2587,9 +2593,10 @@ Data:
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    header or cookie or as a bearer token).
  - `user_id` (optional): the user ID of the user whose [Playground]
-   should be used.  Only users with `admin` privileges can delete from
-   a different user's [Playground].  The default is the user ID of the
-   owner of the API key.
+   should be used.  Unless [`enable sharing playgrounds`] is true,
+   only users with `admin` privileges can delete from a different
+   user's [Playground].  The default is the user ID of the owner of
+   the API key.
  - `project`: the project in the [Playground] to create.
 
 Required privileges:
@@ -2630,10 +2637,11 @@ Data:
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    header or cookie or as a bearer token).
  - `user_id` (optional): the user ID of the user whose [Playground]
-   should be used.  Only users with `admin` privileges or the
-   `playground_control` [permission] can pull a package into a
-   different user's [Playground].  The default is the user ID of the
-   owner of the API key.
+   should be used.  Unless [`enable sharing playgrounds`] is true,
+   only users with `admin` privileges or the `playground_control`
+   [permission] can pull a package into a different user's
+   [Playground].  The default is the user ID of the owner of the API
+   key.
  - `project` (optional): the project in the [Playground] into which
    the package should be pulled.  The default is `default`, which is
    the "Default Playground" project.
@@ -3710,3 +3718,4 @@ function.
 [`/api/playground_pull`]: #playground_pull
 [`/api/config`]: #config_read
 [`/api/playground`]: #playground_get
+[`enable sharing playgrounds`]: {{ site.baseurl }}/docs/config.html#enable sharing playgrounds

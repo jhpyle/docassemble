@@ -489,6 +489,18 @@ delete existing projects, or choose a new active project.
 When adding or renaming a project, note that project names can only
 consist of alphanumeric characters, and cannot begin with a digit.
 
+## <a name="other users"></a>Viewing other users' Playgrounds
+
+If [`enable sharing playgrounds`] is set to true in the
+[Configuration], then any user with `admin` or `developer` privileges
+can enter the Playground of any other user with `admin` or `developer`
+privileges.
+
+![Browse Other Playgrounds]({{ site.baseurl }}/img/playground-browse.png)
+
+By default, [`enable sharing playgrounds`] is set to false and this
+feature is not available.
+
 # <a name="wizard"></a>The Wizard
 
 If you are new to **docassemble**, a good way to learn is by using the
@@ -887,3 +899,4 @@ Then the editing screen will load.
 [`office addin url`]: {{ site.baseurl }}/docs/config.html#office addin url
 [uWSGI]: https://uwsgi-docs.readthedocs.io/en/latest/
 [Publishing on GitHub]: {{ site.baseurl }}/docs/packages.html#github
+[`enable sharing playgrounds`]: {{ site.baseurl }}/docs/config.html#enable sharing playgrounds

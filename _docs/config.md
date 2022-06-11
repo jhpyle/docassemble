@@ -150,6 +150,29 @@ When `enable playground` is false, administrators and developers will
 not be able to access the [Playground] or its associated features, and
 users will not be able to use [Playground] interviews.
 
+## <a name="enable sharing playgrounds"></a>Enable users to use each others' Playgrounds
+
+By default, administrators and developers have a private [Playground]
+that only they can access. If you want to enable administrators and
+developers to access each other's playgrounds, you can set `enable
+sharing playgrounds` to true:
+
+{% highlight yaml %}
+enable sharing playgrounds: True
+{% endhighlight %}
+
+The default is false.
+
+When enabled, the dropdown menu on the Playground page that is used to
+access Playground "projects" will have an additional menu item [Browse
+Other Playgrounds] which can be used to enter the Playgrounds of other
+users who have `admin` or `developer` privileges.
+
+When `enable sharing playgrounds` is true, all users with `admin` or
+`developer` privileges will have read and write access to other users'
+Playgrounds. Therefore, this feature should only be used if the
+developers using the server trust each other.
+
 ## <a name="allow log viewing"></a>Allowing the viewing of logs
 
 By default, a user with `admin` or `developer` privileges can view log
@@ -5735,3 +5758,4 @@ and Facebook API keys.
 [Debian]: https://www.debian.org
 [`enable playground`]: #enable playground
 [`allow changing password`]: #allow changing password
+[Browse Other Playgrounds]: {{ site.baseurl }}/docs/playground.html#other users
