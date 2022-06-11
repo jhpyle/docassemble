@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.3.50] - 2022-06-11
+
+### Added
+- The `enable shared playgrounds` Configuration directive.
+### Changed
+- Upgraded to Font Awesome 6.1.1.
+### Fixed
+- In a list of fields in a `review` screen item, the `invalidate`
+  command was not available.
+
 ## [1.3.49] - 2022-06-09
 
 ### Added

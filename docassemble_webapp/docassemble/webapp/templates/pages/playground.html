@@ -5,9 +5,11 @@
   <li class="nav-item">
     <a class="nav-link" tabindex="1" title="{{ word('Create a new interview') }}" href="{{ url_for('playground_page', new='1', project=current_project) }}"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
   </li>
+  {%- if own_playground %}
   <li class="nav-item">
     <a class="nav-link" tabindex="2" title="{{ word('Create an interview with the wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml', project=current_project) }}"><i class="fas fa-magic" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Wizard') }}</a>
   </li>
+  {%- endif %}
   <li class="nav-item dropdown">
     <a tabindex="3" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">
       <i class="fas fa-folder-open" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Folders') }}
@@ -50,14 +52,14 @@
       </form>
     </a>
   </li>
-  {%- if use_gd %}
+  {%- if use_gd and own_playground %}
   <li class="nav-item" role="presentation">
     <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_google_drive', project=current_project, next=url_for('playground_page', project=current_project)) }}" title="{{ word('Sync with Google Drive') }}">
       <i class="fab fa-google-drive" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Sync') }}
     </a>
   </li>
   {%- endif %}
-  {%- if use_od %}
+  {%- if use_od and own_playground %}
   <li class="nav-item" role="presentation">
     <a class="nav-link" tabindex="7" href="{{ url_for('sync_with_onedrive', project=current_project, next=url_for('playground_page', project=current_project)) }}" title="{{ word('Sync with OneDrive') }}">
       <i class="fab fa-windows" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Sync') }}
@@ -85,10 +87,10 @@
   <div class="form-actions mt-2 ml-1">
     {{ render_submit_field(form.submit, class="ms-1 btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'] + " dasubmitbutton", tabindex="90") }}
     {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_CLASS'] }} dasubmitbutton" >{{ word("Save and Run") }}</a>
-    {%- if use_gd %}
+    {%- if use_gd and own_playground %}
     <a tabindex="101" id="daRunSyncGD" target="_blank" href="{{ url_for('playground_poll') }}" class="btn {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_CLASS'] }} dasubmitbutton" ><i class="fab fa-google-drive" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Sync and Run") }}</a>
     {%- endif %}
-    {%- if use_od %}
+    {%- if use_od and own_playground %}
     <a tabindex="101" id="daRunSyncOD" target="_blank" href="{{ url_for('playground_poll') }}" class="btn {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_CLASS'] }} dasubmitbutton" ><i class="fab fa-windows" aria-hidden="true"></i>&nbsp;&nbsp;{{ word("Sync and Run") }}</a>
     {%- endif %}
 
