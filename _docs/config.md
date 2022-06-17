@@ -164,9 +164,9 @@ enable sharing playgrounds: True
 The default is false.
 
 When enabled, the dropdown menu on the Playground page that is used to
-access Playground "projects" will have an additional menu item [Browse
-Other Playgrounds] which can be used to enter the Playgrounds of other
-users who have `admin` or `developer` privileges.
+access Playground "projects" will have an additional menu item,
+[Browse Other Playgrounds], which can be used to enter the Playgrounds
+of other users who have `admin` or `developer` privileges.
 
 When `enable sharing playgrounds` is true, all users with `admin` or
 `developer` privileges will have read and write access to other users'
@@ -182,6 +182,11 @@ files by going to Logs from the menu. To disable this feature, set
 {% highlight yaml %}
 allow log viewing: False
 {% endhighlight %}
+
+## <a name="root owned"></a>Whether files on the server are owned by root
+
+
+
 
 ## <a name="package protection"></a>Allowing developers to install the same package
 

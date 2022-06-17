@@ -943,6 +943,11 @@ your container for the new configuration to take effect.
   the container to update its software during the first `docker run`,
   but not on every `docker start`.  See the [`update on start`]
   configuration directive.
+* <a name="DAROOTOWNED"></a>`DAROOTOWNED`: Set this
+  to `true` if you are setting `DAALLOWUPDATES=false` and
+  `DAENABLEPLAYGROUND=false` you also want to take the extra step of
+  making the directories containing code owned by `root` so that the
+  web browser user cannot access them.
 * <a
   name="DAALLOWCONFIGURATIONEDITING"></a>`DAALLOWCONFIGURATIONEDITING`:
   Set this to `false` to prevent the editing of the Configuration.
@@ -2294,7 +2299,7 @@ did `docker stop` did not exhaust your disk space. If you have
 voluminous generated and uploaded files, you will need disk space to
 support multiple copies of the files. If the process of backing up the
 files exhausts disk space, then your [data storage] will not contain
-all of your files. 
+all of your files.
 
 You can `docker exec` into your container and do:
 

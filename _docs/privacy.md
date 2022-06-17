@@ -25,17 +25,13 @@ this information to anyone.
 We will use your information to respond to you, regarding the reason
 you contacted us. We will not share your information with any third
 party outside of our organization, other than as necessary to fulfill
-your request, e.g. to ship an order.
-
-Unless you ask us not to, we may contact you via e-mail in the future
-to tell you about specials, new products or services, or changes to
-this privacy policy.
+your request.
 
 # Your Access to and Control Over Information
 
 You may opt out of any future contacts from us at any time. You can do
-the following at any time by contacting us via the email address or
-phone number given on our website:
+the following at any time by contacting us via the email address given
+on our website:
 
 1. See what data we have about you, if any.
 2. Change/correct any data we have about you.
@@ -55,10 +51,8 @@ at the beginning of the address of the Web page.
 
 While we use encryption to protect sensitive information transmitted
 online, we also protect your information offline. Only people who need
-the information to perform a specific job (e.g., customer service) are
-granted access to personally identifiable information. The
-computers/servers in which we store personally identifiable
-information are kept in a secure environment.
+the information to perform a specific job are granted access to
+personally identifiable information.
 
 If you feel that we are not abiding by this privacy policy, you should
 contact us immediately via email to jhpyle@gmail.com.

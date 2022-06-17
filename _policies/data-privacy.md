@@ -56,7 +56,7 @@ a user to delete their information will be effective, subject to the
 following considerations:
 
 * User information may continue to exist in logs and rotating backups,
-  which can persist for a few weeks after the user has deleting their data.
+  which can persist for a few weeks after the user has deleted their data.
 * User information may exist in temporary files, which by default are
   culled after a few hours.
 * A record will persist in a table indicating that a user with a given
