@@ -4,6 +4,15 @@ title: Change Log
 short_title: Change Log
 ---
 
+## [1.3.51](https://github.com/jhpyle/docassemble/releases/tag/v1.3.51) - 2022-06-18
+
+
+### Changed
+- Upgraded jQuery to 3.6.0.
+
+### Fixed
+- Fixed issue with comboboxes introduced in 1.3.50.
+
 ## [1.3.50](https://github.com/jhpyle/docassemble/releases/tag/v1.3.50) - 2022-06-11
 
 
