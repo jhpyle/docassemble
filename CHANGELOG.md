@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.3.51] - 2022-06-
+
+### Added
+- The `floating labels` feature and the `floating label` field
+  modifier.
+- The `root owned` Configuration directive.
+- Support in the Kubernetes implementation for using a read-only file
+  system where all Configuration changes and package updates take
+  place using Docker images and the only directories on the server
+  that are writable are directories for storing runtime information
+  (e.g. PID files) or log files.
+### Changed
+- Switched to the Azure CLI for managing files in Azure Blob Storage
+  from shell scripts.
+
 ## [1.3.51] - 2022-06-18
 
 ### Changed

@@ -1,12 +1,12 @@
 metadata:
-  title: Label above field
-  documentation: "https://docassemble.org/docs/fields.html#label above field"
+  title: Floating label
+  documentation: "https://docassemble.org/docs/fields.html#floating label"
 ---
 question: |
   Your sign
 fields:
   - "What is your Zodiac sign?": target_variable
-    label above field: True
+    floating label: True
 ---
 question: Result of question
 subquestion: |

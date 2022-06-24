@@ -1116,7 +1116,7 @@ class InterviewStatus:
                     if get_config('maximum content length') is not None:
                         the_field['max'] = get_config('maximum content length')
                         the_field['validation_messages']['max'] = field.validation_message('maxuploadsize', self, word("Your file upload is larger than the server can accept. Please reduce the size of your file upload."))
-            for param in ('datatype', 'fieldtype', 'sign', 'inputtype', 'address_autocomplete', 'label_above_field'):
+            for param in ('datatype', 'fieldtype', 'sign', 'inputtype', 'address_autocomplete', 'label_above_field', 'floating_label'):
                 if hasattr(field, param):
                     the_field[param] = getattr(field, param)
             if hasattr(field, 'shuffle') and field.shuffle is not False:
@@ -1482,6 +1482,8 @@ class Field:
             self.address_autocomplete = data['address_autocomplete']
         if 'label_above_field' in data:
             self.label_above_field = data['label_above_field']
+        if 'floating_label' in data:
+            self.floating_label = data['floating_label']
         if 'max_image_size' in data:
             self.max_image_size = data['max_image_size']
         if 'image_type' in data:
@@ -1950,6 +1952,8 @@ class Question:
                 self.interview.options['hide standard menu'] = data['features']['hide standard menu']
             if 'labels above fields' in data['features']:
                 self.interview.options['labels above'] = bool(data['features']['labels above fields'])
+            if 'floating labels' in data['features']:
+                self.interview.options['floating labels'] = bool(data['features']['floating labels'])
             if 'send question data' in data['features']:
                 self.interview.options['send question data'] = bool(data['features']['send question data'])
             if 'custom datatypes to load' in data['features']:
@@ -3910,6 +3914,8 @@ class Question:
                         field_info['address_autocomplete'] = True
                     elif key == 'label above field':
                         field_info['label_above_field'] = True
+                    elif key == 'floating label':
+                        field_info['floating_label'] = True
                     elif key == 'action' and 'input type' in field and field['input type'] == 'ajax':
                         if not isinstance(field[key], str):
                             raise DAError("An action must be plain text" + self.idebug(data))

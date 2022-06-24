@@ -319,12 +319,6 @@ a.dabackbuttoncolor:focus {
     }
 }
 
-#daform input[type="text"],
-#daform input[type="email"],
-#daform input[type="date"] {
-	height: 2.375rem;
-}
-
 @media (min-width: 768px) {
     .datext-right {
 	text-align: right !important;

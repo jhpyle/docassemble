@@ -567,6 +567,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         else:
             grid_class = "offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8"
     labels_above = status.question.interview.options.get('labels above', False)
+    floating_labels = status.question.interview.options.get('floating labels', False)
     if 'script' in status.extras and status.extras['script'] is not None:
         status.extra_scripts.append(status.extras['script'])
     if 'css' in status.extras and status.extras['css'] is not None:
@@ -1332,6 +1333,14 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '' + side_note_parent + req_tag + field_class + ' da-field-container-nolabel">\n                  <span class="visually-hidden">' + word("Answer here") + '</span>\n                  <div class="col dawidecol dafieldpart">' + input_for(status, field, wide=True) + '</div>' + side_note + '\n                </div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
                     fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row dayesnospacing ' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="col dawidecol dafieldpart">' + input_for(status, field) + '</div>' + side_note + '\n                </div>\n')
+                elif floating_labels or (hasattr(field, 'floating_label') and field.floating_label):
+                    if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
+                        fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
+                    elif status.labels[field.number] == '':
+                        fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Answer here") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
+                    else:
+                        floating_label = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True)
+                        fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group-floating form-floating mb-3' + side_note_parent + req_tag + field_class + class_def + '">\n                  ' + input_for(status, field, floating_label=strip_quote(to_text(floating_label, {}, []).strip())) + side_note + '\n                  <label ' + label_for + '>' + floating_label + '</label>\n                </div>\n')
                 elif labels_above or (hasattr(field, 'label_above_field') and field.label_above_field):
                     if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
                         fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
@@ -2118,7 +2127,7 @@ def add_validation(extra_scripts, validation_rules, field_error):
   }
 </script>""")
 
-def input_for(status, field, wide=False, embedded=False):
+def input_for(status, field, wide=False, embedded=False, floating_label=None):
     output = str()
     if field.number in status.defaults:
         defaultvalue_set = True
@@ -2143,7 +2152,9 @@ def input_for(status, field, wide=False, embedded=False):
         defaultvalue_set = False
         defaultvalue = None
     if field.number in status.hints:
-        placeholdertext = ' placeholder=' + fix_double_quote(str(status.hints[field.number].replace('\n', ' ')))
+        placeholdertext = ' placeholder=' + fix_double_quote(status.hints[field.number].replace('\n', ' '))
+    elif floating_label is not None:
+        placeholdertext = ' placeholder=' + fix_double_quote(floating_label.replace('\n', ' '))
     else:
         placeholdertext = ''
     if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or ('show_if_js' in field.extras)) and hasattr(field, 'saveas')) or (hasattr(field, 'disableothers') and field.disableothers):
