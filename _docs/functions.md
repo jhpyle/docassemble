@@ -1725,7 +1725,8 @@ result in the asking of certain [`question`]s when the user visits it.
 
 * `url_ask('favorite_fruit')` - Ask the [`question`] that defines `favorite_fruit`.
 * `url_ask(['favorite_fruit', 'favorite_vegetable'])` - Ask the
-  [`question`] that defines `favorite_fruit`, then ask the [`question`] that defines `favorite_vegetable`.
+  [`question`] that defines `favorite_fruit`, then ask the
+  [`question`] that defines `favorite_vegetable`.
 * `url_ask(['favorite_fruit', {'follow up': ['favorite_apple']},
   'favorite_vegetable'])` - Ask the
   [`question`] that defines `favorite_fruit`; then ask the [`question`]
@@ -1736,7 +1737,11 @@ result in the asking of certain [`question`]s when the user visits it.
   `favorite_fruit`; then undefine the variable `fruit_to_offer` if it
   is defined; then compute the value of `fruit_to_offer`; then ask the
   [`question`] that defines `favorite_vegetable`.
-* `url_ask([{'action': 'increment_counter', arguments={'amount': 2}},
+* `url_ask(['favorite_fruit', {'set': [{'fruit_to_offer': 'apple'}]},
+  'favorite_vegetable'])` - Ask the [`question`] that defines
+  `favorite_fruit`; then set `fruit_to_offer` to `'apple'`; then ask the
+  [`question`] that defines `favorite_vegetable`.
+* `url_ask([{'action': 'increment_counter', 'arguments': {'amount': 2}},
   'follow_up_screen'])` - Run the action `increment_counter` with the
   argument `amount` set to `2`, and when that is done, ask the
   question that defines `follow_up_screen`.
