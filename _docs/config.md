@@ -185,8 +185,18 @@ allow log viewing: False
 
 ## <a name="root owned"></a>Whether files on the server are owned by root
 
+By default, the **docassemble** Configuration and packages can be
+updated through the web interface. Accordingly, the Configuration
+file and the Python packages are owned by the `www-data` user.
 
+However, if you set `root owned` to `True`, and you also set `allow
+upgrading`, `enable playground`, and `allow configuration editing` ,
+then as extra security, files that no longer need to be editable by
+`www-data` will be owned by `root` instead of `www-data`.
 
+{% highlight yaml %}
+root owned: True
+{% endhighlight %}
 
 ## <a name="package protection"></a>Allowing developers to install the same package
 
@@ -1931,9 +1941,16 @@ dialect: us
 {% endhighlight %}
 
 The `language` needs to be a lowercase [ISO-639-1] or [ISO-639-3]
-code.  This will serve as the default language for the server.  You
-can override this in a session by calling the [`set_language()`]
-function in an [`initial`] block.
+code.  This will serve as the default language for the server. This is
+the language that will be used for translation of system phrases. In
+addition to setting `language`, you need to load a system phrase
+translation file using the [`words`] configuration. The default
+language of the server will also set the initial language of
+interviews.  You can [override
+this](https://docassemble.org/docs/language.html#bpmulti) in an
+interview session by calling the [`set_language()`] function in an
+[`initial`] block. For more information, see the the [language
+support] section of the documentation.
 
 The `locale` needs to be a locale name that will be accepted by
 the [locale] library.  The locale is primarily used for determining
@@ -3026,21 +3043,17 @@ will be `¡Ayuda!`.
 
 When you are logged in as a developer or administrator, you can go to
 the "Utilities" page from the main menu, where you will find a utility
-for generating a draft [YAML] file for translating all of the words
-and phrases that **docassemble** uses and that might be presented to
-the user.  If you have set up a [Google API key](#google), it will use
-the [Google Cloud Translation API] to prepare "first draft"
-translations for any [ISO-639-1] language you designate.
-
-The "Utilities" page will also allow you to download an [XLSX] or
-[XLIFF] file in the appropriate format.  If you provide an [XLSX] that
-is not in exactly the right format, **docassemble** will not be able
-to read your file.
+for generating a draft [YAML], [XLSX], or [XLIFF] file for translating
+all of the words and phrases that **docassemble** uses and that might
+be presented to the user.  If you have set up a [Google API
+key](#google), it will use the [Google Cloud Translation API] to
+prepare "first draft" translations for any [ISO-639-1] language you
+designate.
 
 If **docassemble** is not able to read any of the files listed under
-`words`, errors will be written to the `uwsgi.log` file, which you can
-find in [Logs].  If you find that your translations are not being
-used, make sure to check `uwsgi.log` for errors.
+`words`, errors will be written to the `uwsgi.log` file, which
+you can find in [Logs].  If you find that your translations are not
+being used, make sure to check `uwsgi.log` for errors.
 
 Users of **docassemble** have contributed translations of built-in
 system phrases.  These are available in the `docassemble.base`
@@ -5764,3 +5777,5 @@ and Facebook API keys.
 [`enable playground`]: #enable playground
 [`allow changing password`]: #allow changing password
 [Browse Other Playgrounds]: {{ site.baseurl }}/docs/playground.html#other users
+[`words`]: #words
+[language support]: https://docassemble.org/docs/language.html
