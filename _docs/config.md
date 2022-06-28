@@ -1932,7 +1932,7 @@ The default locates for the [Flask] log files are `/tmp/flask.log` and
 ## <a name="language"></a><a name="dialect"></a><a name="locale"></a>Default language, locale, and dialect
 
 These directives set the default [language and locale settings] for
-**docassemble** interviews.
+the **docassemble** server.
 
 {% highlight yaml %}
 language: en
@@ -1941,16 +1941,30 @@ dialect: us
 {% endhighlight %}
 
 The `language` needs to be a lowercase [ISO-639-1] or [ISO-639-3]
-code.  This will serve as the default language for the server. This is
-the language that will be used for translation of system phrases. In
-addition to setting `language`, you need to load a system phrase
-translation file using the [`words`] configuration. The default
-language of the server will also set the initial language of
-interviews.  You can [override
-this](https://docassemble.org/docs/language.html#bpmulti) in an
-interview session by calling the [`set_language()`] function in an
-[`initial`] block. For more information, see the the [language
-support] section of the documentation.
+code.
+
+`language` controls the default language, which is the language that
+will be used when:
+
+* the user's browser requests a language that the **docassemble**
+  server does not support, or
+* **docassemble** code is running in a context where it has not been
+  told what language to use.
+
+The languages that **docassemble** supports are determined by the
+[`words`] configuration. **docassemble** always supports English;
+whether other languages are supported depends on whether [`words`]
+files are included that provide translations for system phrases. So if
+you change the `language` to `es`, you will also need to edit your
+[`words`] configuration so that it includes a translation file for
+Spanish words.
+
+You can [control the
+language](https://docassemble.org/docs/language.html#bpmulti) used in
+an interview session by calling the [`set_language()`] function in an
+[`initial`] block. You can write interviews in such a way that they
+support multiple languages. For more information, see the the
+[language support] section of the documentation.
 
 The `locale` needs to be a locale name that will be accepted by
 the [locale] library.  The locale is primarily used for determining
@@ -3010,17 +3024,17 @@ subquestion: |
 
 ## <a name="words"></a>Translations of words and phrases
 
-If your server will offer interviews in languages other than English,
-you will want to make sure that built-in words and phrases used within
-**docassemble**, such as "Continue" and "Sign in," are translated into
-the user's language.
+If your server will be used by people who speak languages other than
+English, you will want to make sure that built-in words and phrases
+used within **docassemble**, such as "Continue" and "Sign in," are
+translated into the user's language.
 
 The `words` directive loads one or more [YAML], [XLSX], or [XLIFF]
 files in order:
 
 {% highlight yaml %}
 words:
-  - docassemble.base:data/sources/us-words.yml
+  - docassemble.base:data/sources/es-words.yml
 {% endhighlight %}
 
 Each [YAML] file listed under `words` must be in the form of a
@@ -3029,7 +3043,7 @@ codes) and the values are dictionaries with the translations of words
 or phrases.
 
 Assuming the following is the content of the
-`data/sources/words.yml` file in [`docassemble.base`]:
+`data/sources/es-words.yml` file in [`docassemble.base`]:
 
 {% highlight yaml %}
 es:
@@ -3037,9 +3051,20 @@ es:
   Help: ¡Ayuda!
 {% endhighlight %}
 
-then if the interview calls `set_language('es')` (Spanish) and
+then if interview calls `set_language('es')` (Spanish) and
 **docassemble** code subsequently calls `word('Help')`, the result
 will be `¡Ayuda!`.
+
+When a user visits a page on the **docassemble** server, the user's
+browser tells **docassemble** the user's preferred language. This
+language is in the browser settings. If the user's preferred language
+is Spanish (`es`), then **docassemble** will try to provide Spanish
+translations if they are available in any of the files listed under
+`words`. If a translation of a given phrase is not available,
+**docassemble** will try to provide a translation of the phrase for
+whatever language is specified in [`language`] in the
+Configuration. If no translation is available for that language,
+**docassemble** will use an English version of the phrase.
 
 When you are logged in as a developer or administrator, you can go to
 the "Utilities" page from the main menu, where you will find a utility
@@ -3050,11 +3075,6 @@ key](#google), it will use the [Google Cloud Translation API] to
 prepare "first draft" translations for any [ISO-639-1] language you
 designate.
 
-If **docassemble** is not able to read any of the files listed under
-`words`, errors will be written to the `uwsgi.log` file, which
-you can find in [Logs].  If you find that your translations are not
-being used, make sure to check `uwsgi.log` for errors.
-
 Users of **docassemble** have contributed translations of built-in
 system phrases.  These are available in the `docassemble.base`
 package, which is part of the core **docassemble** code.  To see a
@@ -3062,16 +3082,24 @@ list of translation [YAML] files that are available, see the [list of
 files on GitHub].  For example, you can use the Italian translation
 file by including `docassemble.base:data/sources/it-words.yml` in your
 `words` directive.  Note that these user-contributed files have been
-added at various times and may not be 100% complete.
+added at various times and may not be 100% complete; the
+`words-es.yml` file, for example, contains minimal translations, while
+the `words-es.xlf` file contains translations for most phrases used by
+the system.
+
+The `words` feature with language `en` can be used to translate the
+default English phrases into alternative phrases, if you want to
+change the default phrases that are used in **docassemble**.
+
+If **docassemble** is not able to read any of the files listed under
+`words`, errors will be written to the `uwsgi.log` file, which
+you can find in [Logs].  If you find that your translations are not
+being used, make sure to check `uwsgi.log` for errors.
 
 For more information about how **docassemble** handles different
 languages, see the [language and locale settings] section and the
 [functions] section (specifically the functions [`set_language()`] and
 [`word()`]).
-
-The `words` feature with language `en` can be used to translate the
-default English phrases into alternative phrases, if you want to
-change the default phrases that are used in **docassemble**.
 
 ## <a name="currency symbol"></a>Currency symbol
 
@@ -5779,3 +5807,4 @@ and Facebook API keys.
 [Browse Other Playgrounds]: {{ site.baseurl }}/docs/playground.html#other users
 [`words`]: #words
 [language support]: https://docassemble.org/docs/language.html
+[`language`]: {{ site.baseurl }}/docs/config.html#language

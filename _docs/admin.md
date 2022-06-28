@@ -231,10 +231,9 @@ interviews].
 There are many words and phrases that appear to the user on various
 screens and in various circumstances.  By default, **docassemble**
 only provides these words and phrases in English.  However,
-**docassemble** allows you to provide a [YAML] dictionary that maps
-each English word or phrase to a word or phrase in another language.
-For more information about how this feature works, see the [`words`]
-directive.
+**docassemble** allows you to map each English word or phrase to a
+word or phrase in another language.  For more information about how
+this feature works, see the [`words`] directive.
 
 This utility will produce a draft [YAML], [XLSX], or [XLIFF] file that
 you can then edit, store within a [package], and reference from the
