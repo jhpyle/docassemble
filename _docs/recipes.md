@@ -1472,7 +1472,7 @@ This interview uses [`include`] to bring in the contents of
 [`docassemble.demo:data/questions/sign.yml`].  This [YAML] file
 disabled server-side encryption by setting [`multi_user`] to `True`,
 and loads the `SigningProcess` class from the
-[`docassemble.demo.sign`] module.  The object `sign`, and instance of
+[`docassemble.demo.sign`] module.  The object `sign`, an instance of
 `SigningProcess`, controls the gathering and display of signatures.
 Note the way signatures and the dates of signatures are included in
 the DOCX template file, [declaration_of_favorite_fruit.docx]:
