@@ -1,12 +1,12 @@
-from docassemble.base.error import DAError
+import os
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
+from docassemble.base.error import DAError
 from docassemble.base.config import daconfig
-from six import string_types, text_type
 
 if 'db' not in daconfig:
-    daconfig['db'] = dict()
+    daconfig['db'] = {}
 dbuser = daconfig['db'].get('user', None)
 dbpassword = daconfig['db'].get('password', None)
 dbhost = daconfig['db'].get('host', None)
@@ -29,6 +29,8 @@ if dbuser is not None:
 if dbpassword is not None:
     connect_string += " password=" + dbpassword
 
+pool_pre_ping = daconfig.get('sql ping', False)
+
 alchemy_connect_string = ""
 if dbprefix is not None:
     alchemy_connect_string += dbprefix
@@ -41,7 +43,7 @@ else:
 if dbhost is not None:
     alchemy_connect_string += '@' + dbhost
     if dbport is not None:
-        alchemy_connect_string += ':' + text_type(dbport)
+        alchemy_connect_string += ':' + str(dbport)
 else:
     alchemy_connect_string += '@'
 if not dbprefix.startswith('oracle'):
@@ -50,8 +52,23 @@ if not dbprefix.startswith('oracle'):
     else:
         raise DAError("No database name provided")
 
+alchemy_connect_args = {}
+if alchemy_connect_string.startswith('postgres'):
+    ssl_mode = daconfig['db'].get('ssl mode', None)
+    if ssl_mode in ('disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full'):
+        alchemy_connect_args['sslmode'] = ssl_mode
+    for local_parameter, postgres_parameter in (('ssl cert', 'sslcert'), ('ssl key', 'sslkey'), ('ssl root cert', 'sslrootcert')):
+        filename = daconfig['db'].get(local_parameter, None)
+        if isinstance(filename, str):
+            cert_file = os.path.join(daconfig.get('web server certificate directory', '/var/www/.certs'), filename)
+            if os.path.isfile(cert_file):
+                alchemy_connect_args[postgres_parameter] = cert_file
+
 def connection_string():
     return connect_string
 
 def alchemy_connection_string():
     return alchemy_connect_string
+
+def connect_args():
+    return alchemy_connect_args

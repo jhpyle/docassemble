@@ -1,0 +1,97 @@
+metadata:
+  title: Globally stored object
+  short: DAGlobal
+  documentation: "https://docassemble.org/docs/objects.html#DAGlobal"
+  example start: 1
+  example end: 7
+---
+objects:
+  - g: DAGlobal.using(base=the_base, key=the_key)
+  - g.fruits: DAList.using(object_type=Thing)
+---
+question: |
+  In what scope should the object `g` be global?
+field: the_base
+choices:
+  - User: user
+  - Interview: interview
+  - Global: global
+---
+question: |
+  Under what key in the `${ the_base }` scope should the object `g` be
+  saved?
+subquestion: |
+  Note: you can see what keys already exist by calling
+  `DAGlobal.keys(${ repr(the_base) })`.
+
+  You can test to see if a key is defined by calling
+  `DAGlobal.defined(${ repr(the_base) }, some_key)`. It will return
+  `True` if the key is defined and `False` otherwise.
+
+  The result of `DAGlobal.keys(${ repr(the_base) })` is:
+  `${ repr(DAGlobal.keys(the_base)) }`.
+fields:
+  - Key: the_key
+    maxlength: 50
+---
+question: |
+  Now we will gather a list of fruit into `g.fruits`.
+continue button field: g.fruits.there_are_any
+---
+question: |
+  What is the name of the ${ ordinal(i) } fruit?
+fields:
+  - Fruit: g.fruits[i].name.text
+---
+question: |
+  Besides ${ g.fruits }, are there any more fruits in the list?
+yesno: g.fruits.there_is_another
+---
+mandatory: True
+question: |
+  The list of fruits from `g.fruits`
+subquestion: |
+  `g` is an object of class `DAGlobal` with `g.base` set to
+  `${ repr(g.base) }` and `g.key` set to `${ repr(g.key) }`.
+  
+  This list of fruits, known as `g.fruits` in the interview answers,
+  is stored as the `fruits` attribute of an object in global object
+  storage on the SQL server, separate from the interview answers.
+
+  The fruits are:
+
+  % for fruit in g.fruits:
+  * ${ fruit }
+  % endfor
+  
+  Because you set `g.base` to `${ repr(g.base) }`,
+  % if g.base == 'user':
+  `g.fruits` will be the same for the current user, regardless of the
+  interview and regardless of the session, any time `g.key` is set to
+  `${ repr(g.key) }`. The data will only be deleted if someone runs
+  `g.delete()` or the user deletes their account.
+  % elif g.base == 'interview':
+  `g.fruits` will be the same in this interview,
+  `${ user_info().filename }`, regardless of the user and regardless
+  of the session, any time `g.key` is set to `${ repr(g.key) }`.
+  The data will not be deleted unless someone runs `g.delete()`.
+  % else:
+  `g.fruits` will be the same on this server, regardless of the user,
+  session, or interview, any time `g.key` is set to
+  `${ repr(g.key) }`.  The data will not be deleted unless someone
+  runs `g.delete()`.
+  % endif
+
+  The attributes of `g` do not live in the interview answers; they
+  live in a separate, global area. Every time the interview answers
+  load, the attributes of `g` are fetched from the separate area of
+  the database, and every time the interview answers are saved, the
+  attributes of `g` are saved to that separate area of the database.
+
+  Unlike the interview answers, this separate area of the database
+  does not use versioning. Thus, your use of `DAGlobal` objects may
+  interfere with the way that the "Back" button works. You may wish to
+  use `prevent going back: True` strategically throughout your
+  interview so that the user is not confused.
+buttons:
+  - Restart: restart  

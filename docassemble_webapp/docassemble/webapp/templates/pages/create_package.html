@@ -7,13 +7,8 @@
 
 <form action="" method="POST" role="form">
   {{ form.hidden_tag() }}
-  <div class="form-group">
-    {{ render_field(form.name) }}
-  </div>
-  <div class="form-actions">
-    {{ render_submit_field(form.submit, data={'disable-button': 0}) }}
-  </div>
-
+  {{ render_field(form.name) }}
+  {{ render_submit_field(form.submit, data={'disable-button': 0}) }}
 </form>
 
 {% endblock %}

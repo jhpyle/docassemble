@@ -1,0 +1,46 @@
+{%- extends 'base_templates/page_base_half_wider.html' %}
+{%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_select_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
+{%- block top %}
+{%- endblock %}
+{%- block content %}
+        <div class="row">
+            <div class="col-sm-9 col-md-7 col-lg-7 col-xl-7">
+                {%- if description %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        {{ description }}
+                    </div>
+                </div>
+                {%- endif %}
+                <table class="table table-striped mt-2">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">{{ word('E-mail') }}</th>
+                            <th scope="col">{{ word('Name') }}</th>
+                            <th scope="col" style="text-align:right;">{{ word('Actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {%- for playground in playgrounds %}
+                        <tr>
+                            <td>{{ playground['id'] }}</td>
+                            <td>{{ playground['email'] }}</td>
+                            <td>{{ playground['name'] }}</td>
+                            <td style="text-align:right;"><a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}primary btn-sm" href="{{ url_for('playground_select', select=playground['id']) }}">{{ word('Enter') }}</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {%- if after_text %}
+                <p>{{ after_text }}</p>
+                {%- endif %}
+            </div>
+        </div>
+{%- endblock %}
+{%- block bottom %}
+      {%- if mode == 'standard' %}
+      <div class="mt-2"><p><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}info btn-md"><i class="fas fa-chevron-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
+      {%- endif %}
+{%- endblock %}
+

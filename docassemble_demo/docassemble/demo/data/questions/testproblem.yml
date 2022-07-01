@@ -36,7 +36,7 @@ sets:
   - x.country
   - x.neighborhood
 code: |
-  x.geolocate()
+  x.geocode()
 ---
 generic object: Individual
 question: |
@@ -50,7 +50,7 @@ sets:
   - x.address.country
   - x.address.neighborhood
 code: |
-  x.address.geolocate()
+  x.address.geocode()
 ---
 generic object: Individual
 question: |

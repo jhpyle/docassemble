@@ -1,39 +1,39 @@
+import re
 from bs4 import BeautifulSoup
 from docassemble.base.functions import word
-import re
-from six import string_types, text_type
 
 __all__ = ['to_text']
 
 def to_text(html_doc):
     #logmessage("Starting to_text")
-    output = text_type()
+    output = ''
     soup = BeautifulSoup(html_doc, 'html.parser')
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
     [s.extract() for s in soup.find_all(hidden)]
     [s.extract() for s in soup.find_all('div', {'class': 'dainvisible'})]
-    previous = text_type()
+    [s.extract() for s in soup.select('.sr-exclude')]
+    previous = ''
     for s in soup.find_all(do_show):
         if s.name in ['input', 'textarea', 'img'] and s.has_attr('alt'):
             words = s.attrs['alt']
             if s.has_attr('placeholder'):
-                words += text_type(", ") + s.attrs['placeholder']
+                words += str(", ") + s.attrs['placeholder']
         else:
             words = s.get_text()
         words = re.sub(r'\n\s*', ' ', words, flags=re.DOTALL)
         if len(words) and re.search(r'\w *$', words, re.UNICODE):
-            words = words + text_type('.')
+            words = words + str('.')
         if words != previous:
-            output += text_type(words) + "\n"
+            output += str(words) + "\n"
         previous = words
-    terms = dict()
+    terms = {}
     for s in soup.find_all('a'):
-        if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-content') and s.string is not None:
-            terms[s.string] = s.attrs['data-content']
+        if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-bs-content') and s.string is not None:
+            terms[s.string] = s.attrs['data-bs-content']
     if len(terms):
         output += word("Terms used in this question:") + "\n"
         for term, definition in terms.items():
-            output += text_type(term) + '.  ' + text_type(definition) + '\n'
+            output += str(term) + '.  ' + str(definition) + '\n'
     output = re.sub(r'&amp;gt;', '>', output)
     output = re.sub(r'&amp;lt;', '<', output)
     output = re.sub(r'&gt;', '>', output)
@@ -46,17 +46,19 @@ def hidden(element):
         if element.has_attr('type'):
             if element.attrs['type'] == 'hidden':
                 return True
+    elif element.has_attr('aria-hidden') and element.attrs['aria-hidden'] != 'false':
+        return True
     return False
 
 bad_list = ['div', 'option']
 
-good_list = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'button', 'textarea', 'note']
+good_list = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'button', 'textarea', 'note', 'label', 'li']
 
 def do_show(element):
     if re.match('<!--.*-->', str(element), re.DOTALL):
         return False
     if element.name in ['option'] and element.has_attr('selected'):
-        return True    
+        return True
     if element.name in bad_list:
         return False
     if element.name in ['img', 'input'] and element.has_attr('alt'):
@@ -70,4 +72,3 @@ def do_show(element):
     if re.match(r'\s+', element.get_text()):
         return False
     return False
-

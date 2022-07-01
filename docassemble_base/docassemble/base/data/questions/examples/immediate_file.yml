@@ -13,4 +13,4 @@ attachment:
 ---
 mandatory: True
 code: |
-  response(file=the_file.pdf)
+  response(file=the_file.pdf, content_type='application/pdf')

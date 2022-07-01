@@ -1,13 +1,13 @@
 {% macro render_field(field, label=None, label_visible=true, right_url=None, right_label=None) -%}
-    <div class="form-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+    <div class="da-form-group {% if field.errors %}da-group-has-error{% endif %}{{ kwargs.pop('class_', '') }}">
         {% if field.type != 'HiddenField' and label_visible %}
             {% if not label %}{% set label=field.label.text %}{% endif %}
-            <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
+        <label for="{{ field.id }}" class="form-label">{{ label|safe }}</label>
         {% endif %}
         {{ field(class_='form-control', **kwargs) }}
         {% if field.errors %}
             {% for e in field.errors %}
-                <p class="da-has-error text-danger">{{ e }}</p>
+        <div class="invalid-feedback d-block">{{ e }}</div>
             {% endfor %}
         {% endif %}
     </div>
@@ -15,21 +15,22 @@
  
 {% macro render_checkbox_field(field, label=None) -%}
     {% if not label %}{% set label=field.label.text %}{% endif %}
-    <div class="checkbox">
-        <label>
-            {{ field(type='checkbox', **kwargs) }} {{ label }}
+    <div class="form-check">
+        {{ field(type='checkbox', class_='form-check-input', **kwargs) }}
+        <label class="form-check-label" for="{{ field.id }}">
+            {{ label }}
         </label>
     </div>
 {%- endmacro %}
  
 {% macro render_radio_field(field) -%}
     {% for value, label, checked in field.iter_choices() %}
-        <div class="radio">
-            <label>
-                <input type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}"{% if checked %} checked{% endif %}>
-                {{ label }}
-            </label>
-        </div>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}"{% if checked %} checked{% endif %}>
+        <label class="form-check-label" for="{{ field.id }}">
+            {{ label }}
+        </label>
+    </div>
     {% endfor %}
 {%- endmacro %}
 

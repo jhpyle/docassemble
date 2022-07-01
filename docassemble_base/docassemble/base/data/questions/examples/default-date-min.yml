@@ -1,0 +1,20 @@
+metadata:
+  title: Default date limits
+  short: Default
+  documentation: "https://docassemble.org/docs/initial.html#default date min"
+  example start: 1
+  example end: 2
+---
+features:
+  default date min: "1950-01-01"
+  default date max: "2029-12-31"
+---
+question: |
+  What is the date?
+fields:
+  - Date: the_date
+    datatype: date
+---
+mandatory: True
+question: |
+  The date is ${ the_date }.

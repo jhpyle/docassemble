@@ -1,12 +1,8 @@
 #!/bin/bash
 
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
-export DAPYTHONVERSION="${DAPYTHONVERSION:-2}"
-if [ "${DAPYTHONVERSION}" == "2" ]; then
-    export DA_DEFAULT_LOCAL="local"
-else
-    export DA_DEFAULT_LOCAL="local3.6"
-fi
+export DA_DEFAULT_LOCAL="local3.8"
+
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
 source /dev/stdin < <(su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.base.read_config \"${DA_CONFIG_FILE}\"" www-data)
@@ -16,6 +12,26 @@ source "${DA_ACTIVATE}"
 set -- $LOCALE
 export LANG=$1
 
+function cmd_retry() {
+    local -r cmd="$@"
+    local -r -i max_attempts=4
+    local -i attempt_num=1
+    until $cmd
+    do
+        if ((attempt_num==max_attempts))
+        then
+            echo "Attempt $attempt_num failed.  Not trying again"
+            return 1
+        else
+            if ((attempt_num==1)); then
+                echo $cmd
+            fi
+            echo "Attempt $attempt_num failed."
+            sleep $(((attempt_num++)**2))
+        fi
+    done
+}
+
 PGVERSION=`pg_config --version | sed 's/PostgreSQL \([0-9][0-9]*\.[0-9][0-9]*\).*/\1/'`
 
 if [[ $PGVERSION == 10* ]]; then
@@ -24,6 +40,14 @@ fi
 
 if [[ $PGVERSION == 11* ]]; then
     PGVERSION=11
+fi
+
+if [[ $PGVERSION == 12* ]]; then
+    PGVERSION=12
+fi
+
+if [[ $PGVERSION == 13* ]]; then
+    PGVERSION=13
 fi
 
 chown -R postgres.postgres /etc/postgresql
@@ -38,6 +62,9 @@ fi
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
     export S3_ACCESS_KEY="$S3ACCESSKEY"
     export S3_SECRET_KEY="$S3SECRETACCESSKEY"
+    export AWS_ACCESS_KEY_ID="$S3ACCESSKEY"
+    export AWS_SECRET_ACCESS_KEY="$S3SECRETACCESSKEY"
+    export AWS_DEFAULT_REGION="$S3REGION"
 fi
 
 if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
@@ -49,7 +76,7 @@ if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "nul
 fi
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
-    blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+    cmd_retry blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
 function stopfunc {
@@ -69,7 +96,7 @@ function stopfunc {
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	for the_file in $(find "$PGBACKUPDIR" -type f); do
 	    target_file=`basename $the_file`
-	    blob-cmd -f cp "$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
+	    cmd_retry blob-cmd -f cp "$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
 	done
 	rm -rf "$PGBACKUPDIR"
     fi

@@ -1,0 +1,18 @@
+metadata:
+  title: Text before the question
+  documentation: "https://docassemble.org/docs/questions.html#pre"
+--- 
+question: |
+  What is the airspeed velocity of an
+  unladen swallow?
+fields:
+  - Velocity: swallow_velocity
+pre: |
+  Note: if you do not catch the
+  movie reference in this question,
+  you need to improve your cultural
+  literacy.
+---
+question: |
+  The velocity is ${ swallow_velocity }.
+mandatory: True

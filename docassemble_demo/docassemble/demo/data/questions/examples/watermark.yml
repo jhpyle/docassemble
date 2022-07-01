@@ -1,0 +1,24 @@
+metadata:
+  title: Watermark
+  example start: 1
+  example end: 3
+  documentation: "https://docassemble.org/docs/recipes.html#watermark"
+---
+objects:
+  - watermark_image: DAStaticFile.using(filename='draft.eps')
+---
+mandatory: True
+question: |
+  Document
+attachment:
+  content: |
+    Hello, ${ planet }!
+  metadata:
+    header-includes:
+      - \usepackage{draftwatermark}
+      - \SetWatermarkText{\includegraphics{${ watermark_image.path() }}}
+---
+question: |
+  What is the name of the planet you wish to greet?
+fields:
+  - Planet: planet

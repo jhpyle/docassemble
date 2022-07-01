@@ -1,0 +1,35 @@
+metadata:
+  title: Catchall
+  documentation: "https://docassemble.org/docs/fields.html#catchall"
+  example start: 3
+  example end: 3
+---
+features:
+  use catchall: True
+---
+generic object: DACatchAll
+question: |
+  What is ${ x.object_name() }?
+fields:
+  - no label: x.value
+validation code: |
+  define(x.instanceName, x.value)
+---
+if: |
+  x.data_type_guess() in ('float', 'int')
+generic object: DACatchAll
+question: |
+  How much is ${ x.object_name() }?
+fields:
+  - Amount: x.value
+    datatype: currency
+validation code: |
+  define(x.instanceName, x.value)
+---
+mandatory: True
+question: Summary
+subquestion: |
+  Your name is ${ user_name }.
+  
+  You earn ${ currency(salary) } each year.
+  

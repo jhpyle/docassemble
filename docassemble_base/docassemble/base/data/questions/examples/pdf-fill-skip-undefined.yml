@@ -1,0 +1,77 @@
+metadata:
+  title: Skip undefined
+  short title: Skip
+  documentation: "https://docassemble.org/docs/documents.html#skip undefined"
+  example start: 9
+---
+objects:
+  - user: Individual
+---
+question: |
+  Please fill in the following information.
+fields:
+  - Your First Name: user.name.first
+  - Your Last Name: user.name.last
+---
+question: |
+  Do you like toast?
+yesno: likes_toast
+---
+question: |
+  Do you like apples?
+yesno: likes_apples
+---
+question: |
+  Do you like pears?
+yesno: likes_pears
+---
+mandatory: true
+code: |
+  introduction_shown
+---
+question: |
+  Assembling a document from a PDF
+  template
+subquestion: |
+  This interview will fill fields in
+  a .pdf template while skipping any
+  fields that are not defined.  You can
+  [download the template] to see what
+  it looks like.
+
+  [download the template]: ${ url_of('sample-form.pdf') }
+field: introduction_shown
+---
+mandatory: True
+code: |
+  user.name.first
+  likes_apples
+  likes_pears
+  likes_toast
+---
+question: |
+  Here is your PDF form
+subquestion: |
+  Note that the `user.organization`
+  and `likes_oranges` variables are
+  not defined, but the document was
+  assembled anyway.
+attachment:
+  name: A filled-in form
+  filename: filled-form
+  pdf template file: sample-form.pdf
+  skip undefined: True
+  fields:
+    - Your Name: |
+        ${ user }
+    - Your Organization: |
+        ${ user.organization }
+    - Apple Checkbox: |
+        ${ likes_apples }
+    - Orange Checkbox: |
+        ${ likes_oranges }
+    - Pear Checkbox: |
+        ${ likes_pears }
+    - Toast Checkbox: |
+        ${ likes_toast }
+mandatory: True

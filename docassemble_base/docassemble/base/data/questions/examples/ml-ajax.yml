@@ -14,7 +14,7 @@ question: |
   Describe your legal problem.
 fields:
   - no label: phrase
-    datatype: area
+    input type: area
   - html: '<div id="fromserver"></div>'
 ---
 mandatory: True
@@ -41,7 +41,7 @@ event: predict
 code: |
   ml = SimpleTextMachineLearner(group_id='sug')
   if len(action_argument('inputstring')) > 3:
-    predictions = ' '.join(map(lambda x: '<a class="btn btn-info btn-md">' + text_type(x) + '</a>', ml.predict(action_argument('inputstring'))))
+    predictions = ' '.join(map(lambda x: '<a class="btn btn-info btn-md">' + str(x) + '</a>', ml.predict(action_argument('inputstring'))))
     if predictions:
       predictions = "<p>Possible legal topics:</p><p>" + predictions + "</p>"
   else:

@@ -3,48 +3,44 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_select_field, render_submit_field, render_checkbox_field with context %}
 
-{%- if allowed_to_upgrade %}
-<h2>{{ word('Upgrade docassemble') }}</h2>
 
+{%- if allowed_to_upgrade %}
+<h1 class="h2">{{ word('Upgrade docassemble') }}</h1>
 <p class="h6">{{ version }}</p>
 
 <div>
-  <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', action='update', base='1') }}">{{ word('Upgrade') }}</a>
+  <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('update_package', package='docassemble.webapp', limitation=limitation, action='update') }}">{{ word('Upgrade') }}</a>
 </div>
 {%- endif %}
 
-<h2>{{ word('Install or update a package') }}</h2>
+<h1 class="h2">{{ word('Install or update a package') }}</h1>
 
 <form action="{{ url_for('update_package') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
-  <div class="form-group">
-    <h4>{{ word('You can provide a:') }}</h4>
-    {{ render_field(form.giturl, placeholder='https://github.com/username/packagename') }}
-    {{ render_select_field(form.gitbranch) }}
-    <h4>{{ word('Or you can upload a:') }}</h4>
-    {{ render_file_field(form.zipfile) }}
-    <h4>{{ word('Or you can specify a:') }}</h4>
-    {{ render_field(form.pippackage) }}
-  </div>
-  <div class="form-actions">
-    {{ render_submit_field(form.submit) }}
-  </div>
+  <h2 class="h4">{{ word('You can provide a:') }}</h2>
+  {{ render_field(form.giturl, placeholder='https://github.com/username/packagename') }}
+  {{ render_select_field(form.gitbranch) }}
+  <h2 class="h4">{{ word('Or you can upload a:') }}</h2>
+  {{ render_file_field(form.zipfile) }}
+  <h2 class="h4">{{ word('Or you can specify a:') }}</h2>
+  {{ render_field(form.pippackage) }}
+  {{ render_submit_field(form.submit) }}
 </form>
 
-<h2>{{ word('Update or uninstall an existing package') }}</h2>
+<h1 class="h2">{{ word('Update or uninstall an existing package') }}</h1>
 
 <table class="table table-striped">
   <thead>
     <tr>
       <th>Package name</th>
-      <th style="text-align:right;">Actions</th>
+      <th class="text-end">Actions</th>
     </tr>
   </thead>
   <tbody>
   {% for package in package_list %}
     <tr>
       <td>{{ package.package.name }}{% if package.package.packageversion %} <span class="text-muted">{{ package.package.packageversion }}</span>{% endif %}{% if package.package.gitbranch %} ({{ package.package.gitbranch }}){% endif %}</td>
-      <td style="text-align:right;">{% if package.can_update %}<a class="btn {{ config['BUTTON_STYLE'] }}secondary btn-sm" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn {{ config['BUTTON_STYLE'] }}warning btn-sm" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
+      <td class="text-end">{% if package.can_uninstall and package.package.type == 'zip' %}<a class="btn {{ config['BUTTON_STYLE'] }}primary btn-sm" title="{{ word('Download installed package') }}" href="{{ url_for('download_zip_package', package=package.package.name) }}"><i class="fas fa-download"></i></a>{% endif %} {% if package.can_update %}<a class="btn {{ config['BUTTON_STYLE'] }}secondary btn-sm" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn {{ config['BUTTON_STYLE'] }}warning btn-sm" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
     </tr>
 {% endfor %}
   </tbody>

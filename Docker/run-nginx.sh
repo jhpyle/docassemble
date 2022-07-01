@@ -3,14 +3,11 @@
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 export DEBIAN_FRONTEND=noninteractive
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
-if [ "${DAPYTHONVERSION}" == "2" ]; then
-    export DA_DEFAULT_LOCAL="local"
-else
-    export DA_DEFAULT_LOCAL="local3.6"
-fi
+export DA_DEFAULT_LOCAL="local3.8"
+
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
-source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.base.read_config \"$DA_CONFIG_FILE\"" www-data)
+source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.base.read_config \"$DA_CONFIG_FILE\"" www-data | grep -e '^export LOCALE=' -e '^export DAHOSTNAME=' -e '^export EC2=' -e '^export BEHINDHTTPSLOADBALANCER=' -e '^export USELETSENCRYPT=' -e '^export DALOCATIONREWRITE=' -e '^export WSGIROOT=' -e '^export POSTURLROOT=' -e '^export DAMAXCONTENTLENGTH=' -e '^export DASSLPROTOCOLS=' -e '^export DAWEBSOCKETSIP=' -e '^export DAWEBSOCKETSPORT=' -e '^export PORT=' -e '^export USEHTTPS=')
 
 set -- $LOCALE
 export LANG=$1
@@ -42,6 +39,8 @@ else
     DASSLCERTIFICATEKEY="/etc/ssl/docassemble/nginx.key;"
 fi
 
+DASSLPROTOCOLS=${DASSLPROTOCOLS:-TLSv1.2}
+
 if [ "${POSTURLROOT}" == "/" ]; then
     DALOCATIONREWRITE=" "
 else
@@ -56,8 +55,10 @@ sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
 -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
 -e 's@{{DASSLCERTIFICATE}}@'"${DASSLCERTIFICATE}"'@' \
 -e 's@{{DASSLCERTIFICATEKEY}}@'"${DASSLCERTIFICATEKEY}"'@' \
+-e 's@{{DASSLPROTOCOLS}}@'"${DASSLPROTOCOLS}"'@' \
 -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
 -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+-e 's@{{DALISTENPORT}}@'"${PORT:-80}"'@' \
 "${DA_ROOT}/config/nginx-ssl.dist" > "/etc/nginx/sites-available/docassemblessl"
 
 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
@@ -68,6 +69,7 @@ sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
 -e 's@{{DAMAXCONTENTLENGTH}}@'"${DAMAXCONTENTLENGTH}"'@' \
 -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
 -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
+-e 's@{{DALISTENPORT}}@'"${PORT:-80}"'@' \
 "${DA_ROOT}/config/nginx-http.dist" > "/etc/nginx/sites-available/docassemblehttp"
 
 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
@@ -75,10 +77,12 @@ sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
 "${DA_ROOT}/config/nginx-log.dist" > "/etc/nginx/sites-available/docassemblelog"
 
 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
+    -e 's@{{DALISTENPORT}}@'"${PORT:-80}"'@' \
 "${DA_ROOT}/config/nginx-redirect.dist" > "/etc/nginx/sites-available/docassembleredirect"
 
 sed -e 's@{{DAHOSTNAME}}@'"${DAHOSTNAME:-localhost}"'@' \
-"${DA_ROOT}/config/nginx-ssl-redirect.dist" > "/etc/nginx/sites-available/docassemblesslredirect"
+    -e 's@{{DALISTENPORT}}@'"${PORT:-80}"'@' \
+    "${DA_ROOT}/config/nginx-ssl-redirect.dist" > "/etc/nginx/sites-available/docassemblesslredirect"
 
 if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
     ln -sf /etc/nginx/sites-available/docassemblelog /etc/nginx/sites-enabled/docassemblelog

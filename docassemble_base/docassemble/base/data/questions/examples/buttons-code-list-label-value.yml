@@ -1,0 +1,20 @@
+metadata:
+  title: Buttons defined with code using label and value
+  short title: Buttons code
+  documentation: "https://docassemble.org/docs/fields.html#code button"
+---
+field: target_variable
+question: |
+  Your use of this system does not
+  mean that you have a lawyer.  Do
+  you understand this?
+buttons:
+  code: |
+    [{'label': "I understand", 'value': 'understands'},
+     {'label': "I do not understand", 'value': 'does not understand'},
+     {'label': "I'm not sure", 'value': 'unsure'}]
+---
+question: Result of question
+subquestion: |
+  target_variable is: "${ target_variable }"
+mandatory: True

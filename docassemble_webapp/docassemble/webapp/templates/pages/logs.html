@@ -3,7 +3,7 @@
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field with context %}
 <ul class="nav nav-pills danavpillssmaller">
   <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Open another log file')}}">
+    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Open another log file')}}">
       <span class="fas fa-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ current_file }}
     </a>
     <div class="dropdown-menu daheightlim">
@@ -26,17 +26,17 @@
   {%- endif %}
 </ul>
 <form action="{{ url_for('logs') }}" method="POST" role="form" id="form">
-  <div class="form-row">
-    <div class="col-auto my-1">
+  <div class="d-flex">
+    <div class="my-1 align-self-start">
       <input type="text" class="form-control" name="filter_string" id="filter_string" value="{{ default_filter_string }}" placeholder="{{ word('Filter for') }}">
     </div>
-    <div class="col-auto my-1">
+    <div class="my-1 ms-1 align-self-start">
       <button type="submit" name="{{ form.submit.id }}" class="btn {{ config['BUTTON_STYLE'] }}primary" value="{{ form.submit.label.text }}">{{ form.submit.label.text }}</button>
     </div>
-    <div class="col-auto my-1">
+    <div class="my-1 ms-1 align-self-start">
       <button type="submit" name="{{ form.clear.id }}" class="btn {{ config['BUTTON_STYLE'] }}secondary" value="{{ form.clear.label.text }}">{{ form.clear.label.text }}</button>
     </div>
-    <div class="col-auto ml-auto my-1 h3">
+    <div class="ms-auto my-1 h3">
       {%- if default_filter_string == '' %}
       <a title="{{ word('Refresh') }}" href="{{ url_for('logs', file=current_file) }}"><i class="fas fa-sync-alt"></i></a>
       {%- else %}
@@ -47,8 +47,8 @@
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.file_name, value=current_file) }}
 </form>
-<div>
-  <pre class="dawrappre davspace">{{ content }}</pre>
+<div class="form-group">
+  <textarea class="form-control mt-2 dalogs" rows="24" readonly>{{ content }}</textarea>
 </div>
 <div>
   <p>{{ word("Only the last 30 lines are shown.  Download the file to see the previous lines.") }}</p>

@@ -1,71 +1,66 @@
-from six import string_types, text_type, PY2
-from docassemble.webapp.app_object import app
-from docassemble.webapp.db_object import db
-from docassemble.base.config import daconfig, hostname, in_celery
-from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
-from docassemble.base.logger import logmessage
-from docassemble.webapp.users.models import UserModel, Role, ChatLog, UserDict, UserDictKeys, UserAuthModel, UserRoles
-from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage
-from docassemble.webapp.packages.models import PackageAuth
-from docassemble.base.generate_key import random_string, random_bytes, random_alphanumeric
-from sqlalchemy import or_, and_
-import docassemble.webapp.database
-import logging
-if PY2:
-    import cPickle as pickle
-    FileType = file
-else:
-    import pickle
-    from io import IOBase as FileType
+from io import IOBase as FileType
 import codecs
-#import string
-#import random
-import pprint
-import datetime
 import json
-import types
-from Cryptodome.Cipher import AES
-from Cryptodome import Random
-from dateutil import tz
-import tzlocal
-import ruamel.yaml
-TypeType = type(type(None))
-NoneType = type(None)
-
-from io import open
-import docassemble.base.parse
-import re
+import logging
+import math
 import os
+import pickle
+import platform
+import re
 import sys
-from flask import session, current_app, has_request_context, url_for as base_url_for
+#import time
+import types
+import xml.etree.ElementTree as ET
+import pandas
+from Cryptodome.Cipher import AES
+from dateutil import tz
+from flask import session, url_for as base_url_for
+from flask_login import current_user
 from flask_mail import Mail as FlaskMail, Message
 from flask_wtf.csrf import generate_csrf
-from flask_login import current_user
-import docassemble.webapp.worker
-from docassemble.webapp.mailgun_mail import Mail as MailgunMail
-from docassemble.webapp.fixpickle import fix_pickle_obj, fix_pickle_dict
-
-#sys.stderr.write("I am in backend\n")
-
-import docassemble.webapp.setup
-
-DEBUG = daconfig.get('debug', False)
-#docassemble.base.parse.debug = DEBUG
-
+from sqlalchemy import or_, and_, select, delete
+import ruamel.yaml
+import tzlocal
+from docassemble.base.functions import pickleable_objects
+from docassemble.base.config import daconfig, hostname, in_celery
+from docassemble.base.generate_key import random_bytes, random_alphanumeric
+from docassemble.base.logger import logmessage
+import docassemble.base.functions
+import docassemble.base.parse
+from docassemble.webapp.app_object import app
+from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage, Email, EmailAttachment
+from docassemble.webapp.db_object import db
 from docassemble.webapp.file_access import get_info_from_file_number, get_info_from_file_reference, reference_exists, url_if_exists
 from docassemble.webapp.file_number import get_new_file_number
+from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
+from docassemble.webapp.fixpickle import fix_pickle_obj, fix_pickle_dict
+from docassemble.webapp.mailgun_mail import Mail as MailgunMail
+from docassemble.webapp.packages.models import PackageAuth
+from docassemble.webapp.screenreader import to_text
+from docassemble.webapp.sendgrid_mail import Mail as SendgridMail
+from docassemble.webapp.users.models import UserModel, Role, ChatLog, UserDict, UserDictKeys, UserAuthModel, UserRoles
+import docassemble.webapp.cloud
+import docassemble.webapp.database
+import docassemble.webapp.machinelearning
+import docassemble.webapp.setup
+import docassemble.webapp.user_database
+import docassemble.webapp.worker
+if platform.machine() == 'x86_64':
+    import docassemble.webapp.google_api
 
-import time
+TypeType = type(type(None))
+NoneType = type(None)
+DEBUG = daconfig.get('debug', False)
 
-def elapsed(name_of_function):
-    def elapse_decorator(func):
-        def time_func(*pargs, **kwargs):
-            time_start = time.time()
-            result = func(*pargs, **kwargs)
-            sys.stderr.write(name_of_function + ': ' + text_type(time.time() - time_start) + "\n")
-            return result
-        return time_func
-    return elapse_decorator
+# def elapsed(name_of_function):
+#     def elapse_decorator(func):
+#         def time_func(*pargs, **kwargs):
+#             time_start = time.time()
+#             result = func(*pargs, **kwargs)
+#             logmessage(name_of_function + ': ' + str(time.time() - time_start))
+#             return result
+#         return time_func
+#     return elapse_decorator
 
 def write_record(key, data):
     new_record = ObjectStorage(key=key, value=pack_object(data))
@@ -74,13 +69,13 @@ def write_record(key, data):
     return new_record.id
 
 def read_records(key):
-    results = dict()
-    for record in ObjectStorage.query.filter_by(key=key).order_by(ObjectStorage.id):
+    results = {}
+    for record in db.session.execute(select(ObjectStorage).filter_by(key=key).order_by(ObjectStorage.id)).scalars():
         results[record.id] = unpack_object(record.value)
     return results
 
-def delete_record(key, id):
-    ObjectStorage.query.filter_by(key=key, id=id).delete()
+def delete_record(key, the_id):
+    db.session.execute(delete(ObjectStorage).filter_by(key=key, id=the_id))
     db.session.commit()
 
 #@elapsed('save_numbered_file')
@@ -95,10 +90,10 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
         raise Exception("save_numbered_file: uid not defined")
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
-    new_file = SavedFile(file_number, extension=extension, fix=True)
+    new_file = SavedFile(file_number, extension=extension, fix=True, should_not_exist=True)
     new_file.copy_from(orig_path)
     new_file.save(finalize=True)
-    return(file_number, extension, mimetype)
+    return (file_number, extension, mimetype)
 
 def fix_ml_files(playground_number, current_project):
     playground = SavedFile(playground_number, section='playgroundsources', fix=False)
@@ -125,25 +120,23 @@ def project_name(name):
 def add_project(filename, current_project):
     if current_project == 'default':
         return filename
-    else:
-        return os.path.join(current_project, filename)
+    return os.path.join(current_project, filename)
 
 def directory_for(area, current_project):
     if current_project == 'default':
         return area.directory
-    else:
-        return os.path.join(area.directory, current_project)
+    return os.path.join(area.directory, current_project)
 
 def write_ml_source(playground, playground_number, current_project, filename, finalize=True):
     if re.match(r'ml-.*\.json', filename):
-        output = dict()
+        output = {}
         prefix = 'docassemble.playground' + str(playground_number) + project_name(current_project) + ':data/sources/' + str(filename)
-        for record in [record for record in db.session.query(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).filter(MachineLearning.group_id.like(prefix + ':%'))]:
+        for record in db.session.execute(select(MachineLearning.group_id, MachineLearning.independent, MachineLearning.dependent, MachineLearning.key).where(MachineLearning.group_id.like(prefix + ':%'))).all():
             parts = record.group_id.split(':')
             if not is_package_ml(parts):
                 continue
             if parts[2] not in output:
-                output[parts[2]] = list()
+                output[parts[2]] = []
             the_independent = record.independent
             if the_independent is not None:
                 the_independent = fix_pickle_obj(codecs.decode(bytearray(the_independent, encoding='utf-8'), 'base64'))
@@ -154,7 +147,7 @@ def write_ml_source(playground, playground_number, current_project, filename, fi
             if record.key is not None:
                 the_entry['key'] = record.key
             output[parts[2]].append(the_entry)
-        if len(output):
+        if len(output) > 0:
             playground.write_as_json(output, filename=os.path.join(directory_for(playground, current_project), filename))
             if finalize:
                 playground.finalize()
@@ -185,20 +178,18 @@ def absolute_filename(the_file):
         playground = SavedFile(match.group(1), section='playgroundsources', fix=True, filename=filename, subdir=match.group(2))
         write_ml_source(playground, match.group(1), match.group(2), filename)
         return playground
-    return(None)
+    return None
 
 if 'mailgun domain' in daconfig['mail'] and 'mailgun api key' in daconfig['mail']:
     mail = MailgunMail(app)
+elif 'sendgrid api key' in daconfig['mail'] and daconfig['mail']['sendgrid api key']:
+    mail = SendgridMail(app)
 else:
     mail = FlaskMail(app)
 
 def da_send_mail(the_message):
     mail.send(the_message)
 
-import docassemble.webapp.machinelearning
-import docassemble.base.functions
-import docassemble.webapp.user_database
-from docassemble.base.functions import dict_as_json
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
@@ -206,19 +197,26 @@ if 'timezone' in daconfig and daconfig['timezone'] is not None:
     DEFAULT_TIMEZONE = daconfig['timezone']
 else:
     try:
-        DEFAULT_TIMEZONE = tzlocal.get_localzone().zone
+        DEFAULT_TIMEZONE = tzlocal.get_localzone_name()
     except:
         DEFAULT_TIMEZONE = 'America/New_York'
+
+COOKIELESS_SESSIONS = daconfig.get('cookieless sessions', False)
 
 def url_for(*pargs, **kwargs):
     if 'jsembed' in docassemble.base.functions.this_thread.misc:
         kwargs['_external'] = True
         if pargs[0] == 'index':
             kwargs['js_target'] = docassemble.base.functions.this_thread.misc['jsembed']
+    if COOKIELESS_SESSIONS:
+        if pargs[0] == 'index':
+            pargs = list(pargs)
+            pargs[0] = 'html_index'
+        kwargs['_external'] = True
     return base_url_for(*pargs, **kwargs)
 
 def sql_get(key, secret=None):
-    for record in GlobalObjectStorage.query.filter_by(key=key):
+    for record in db.session.execute(select(GlobalObjectStorage).filter_by(key=key)).scalars():
         if record.encrypted:
             try:
                 result = decrypt_object(record.value, secret)
@@ -233,7 +231,7 @@ def sql_get(key, secret=None):
     return None
 
 def sql_defined(key):
-    record = GlobalObjectStorage.query.filter_by(key=key).with_entities(GlobalObjectStorage.id).first()
+    record = db.session.execute(select(GlobalObjectStorage.id).filter_by(key=key)).first()
     if record is None:
         return False
     return True
@@ -241,7 +239,7 @@ def sql_defined(key):
 def sql_set(key, val, encrypted=True, secret=None, the_user_id=None):
     user_id, temp_user_id = parse_the_user_id(the_user_id)
     updated = False
-    for record in GlobalObjectStorage.query.filter_by(key=key).with_for_update():
+    for record in db.session.execute(select(GlobalObjectStorage).filter_by(key=key).with_for_update()).scalars():
         record.user_id = user_id
         record.temp_user_id = temp_user_id
         record.encrypted = encrypted
@@ -259,8 +257,13 @@ def sql_set(key, val, encrypted=True, secret=None, the_user_id=None):
     db.session.commit()
 
 def sql_delete(key):
-    GlobalObjectStorage.query.filter_by(key=key).delete()
+    db.session.execute(delete(GlobalObjectStorage).filter_by(key=key))
     db.session.commit()
+
+def sql_keys(prefix):
+    n = len(prefix)
+    stmt = select(GlobalObjectStorage.key).where(GlobalObjectStorage.key.like(prefix + '%'))
+    return list(set(y.key[n:] for y in db.session.execute(stmt)))
 
 def get_info_from_file_reference_with_uids(*pargs, **kwargs):
     if 'uids' not in kwargs:
@@ -272,11 +275,22 @@ def get_info_from_file_number_with_uids(*pargs, **kwargs):
         kwargs['uids'] = get_session_uids()
     return get_info_from_file_number(*pargs, **kwargs)
 
+classes = daconfig['table css class'].split(',')
+DEFAULT_TABLE_CLASS = json.dumps(classes[0].strip())
+if len(classes) > 1:
+    DEFAULT_THEAD_CLASS = json.dumps(classes[1].strip())
+else:
+    DEFAULT_THEAD_CLASS = None
+del classes
+
+DEFAULT_COUNTRY = daconfig.get('country', None) or re.sub(r'^.*_', '', re.sub(r'\..*', r'', DEFAULT_LOCALE))
+
+
 docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
                                          default_dialect=DEFAULT_DIALECT,
                                          default_timezone=DEFAULT_TIMEZONE,
-                                         default_country=daconfig.get('country', re.sub(r'^.*_', '', re.sub(r'\..*', r'', DEFAULT_LOCALE))),
+                                         default_country=DEFAULT_COUNTRY,
                                          daconfig=daconfig,
                                          hostname=hostname,
                                          debug_status=DEBUG,
@@ -296,70 +310,182 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          server_sql_defined=sql_defined,
                                          server_sql_set=sql_set,
                                          server_sql_delete=sql_delete,
-                                         alchemy_url=docassemble.webapp.user_database.alchemy_url)
+                                         server_sql_keys=sql_keys,
+                                         alchemy_url=docassemble.webapp.user_database.alchemy_url,
+                                         connect_args=docassemble.webapp.user_database.connect_args,
+                                         default_table_class=DEFAULT_TABLE_CLASS,
+                                         default_thead_class=DEFAULT_THEAD_CLASS,
+                                         to_text=to_text)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()
 
-word_file_list = daconfig.get('words', list())
-if type(word_file_list) is not list:
-    word_file_list = [word_file_list]
-for word_file in word_file_list:
-    #sys.stderr.write("Reading from " + str(word_file) + "\n")
-    if not isinstance(word_file, string_types):
-        sys.stderr.write("Error reading words: file references must be plain text.\n")
-        continue
-    filename = docassemble.base.functions.static_filename_path(word_file)
-    if filename is None:
-        sys.stderr.write("Error reading " + str(word_file) + ": file not found.\n")
-        continue
-    if os.path.isfile(filename):
-        with open(filename, 'rU', encoding='utf-8') as stream:
-            try:
-                for document in ruamel.yaml.safe_load_all(stream):
-                    if document and type(document) is dict:
-                        for lang, words in document.items():
-                            if type(words) is dict:
-                                docassemble.base.functions.update_word_collection(lang, words)
+def fix_words():
+    word_file_list = daconfig.get('words', [])
+    if not isinstance(word_file_list, list):
+        word_file_list = [word_file_list]
+    for word_file in word_file_list:
+        #logmessage("Reading from " + str(word_file))
+        if not isinstance(word_file, str):
+            logmessage("Error reading words: file references must be plain text.")
+            continue
+        filename = docassemble.base.functions.static_filename_path(word_file)
+        if filename is None:
+            logmessage("Error reading " + str(word_file) + ": file not found.")
+            continue
+        if os.path.isfile(filename):
+            if filename.lower().endswith('.yaml') or filename.lower().endswith('.yml'):
+                with open(filename, 'r', encoding='utf-8') as stream:
+                    try:
+                        for document in ruamel.yaml.safe_load_all(stream):
+                            if document and isinstance(document, dict):
+                                for lang, words in document.items():
+                                    if isinstance(words, dict):
+                                        docassemble.base.functions.update_word_collection(lang, words)
+                                    else:
+                                        logmessage("Error reading " + str(word_file) + ": words not in dictionary form.")
                             else:
-                                sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
+                                logmessage("Error reading " + str(word_file) + ": yaml file not in dictionary form.")
+                    except:
+                        logmessage("Error reading " + str(word_file) + ": yaml could not be processed.")
+            elif filename.lower().endswith('.xlsx'):
+                try:
+                    df = pandas.read_excel(filename, na_values=['#NA', '#N/A'], keep_default_na=False)
+                    invalid = False
+                    for column_name in ('orig_lang', 'tr_lang', 'orig_text', 'tr_text'):
+                        if column_name not in df.columns:
+                            invalid = True
+                            break
+                    if invalid:
+                        logmessage("Error reading " + str(word_file) + ": xlsx did not have the correct columns.")
+                        continue
+                    translations = {}
+                    problems = []
+                    for indexno in df.index:
+                        try:
+                            assert df['orig_lang'][indexno]
+                            assert df['tr_lang'][indexno]
+                            assert df['orig_text'][indexno] != ''
+                            assert df['tr_text'][indexno] != ''
+                            if isinstance(df['orig_text'][indexno], float):
+                                assert not math.isnan(df['orig_text'][indexno])
+                            if isinstance(df['tr_text'][indexno], float):
+                                assert not math.isnan(df['tr_text'][indexno])
+                        except:
+                            problems.append(str(indexno + 2))
+                            continue
+                        if df['tr_lang'][indexno] not in translations:
+                            translations[df['tr_lang'][indexno]] = {}
+                        translations[df['tr_lang'][indexno]][str(df['orig_text'][indexno])] = str(df['tr_text'][indexno])
+                    for lang, the_dict in translations.items():
+                        try:
+                            docassemble.base.functions.update_word_collection(lang, the_dict)
+                        except:
+                            logmessage("Error reading " + str(word_file) + ": xlsx for language " + lang + " could not be processed.")
+                    if len(problems) > 0:
+                        logmessage("Error reading " + str(word_file) + ": could not read lines " + ", ".join(problems) + ".")
+                except Exception as err:
+                    logmessage("Error reading " + str(word_file) + ": xlsx processing raised exception " + err.__class__.__name__ + ": " + str(err))
+            elif filename.lower().endswith('.xlf') or filename.lower().endswith('.xliff'):
+                try:
+                    tree = ET.parse(filename)
+                    root = tree.getroot()
+                    translations = {}
+                    if root.attrib['version'] == "1.2":
+                        for the_file in root.iter('{urn:oasis:names:tc:xliff:document:1.2}file'):
+                            target_lang = the_file.attrib.get('target-language', 'en')
+                            if target_lang not in translations:
+                                translations[target_lang] = {}
+                            for transunit in the_file.iter('{urn:oasis:names:tc:xliff:document:1.2}trans-unit'):
+                                orig_text = ''
+                                tr_text = ''
+                                for source in transunit.iter('{urn:oasis:names:tc:xliff:document:1.2}source'):
+                                    if source.text:
+                                        orig_text += source.text
+                                    for mrk in source:
+                                        orig_text += mrk.text
+                                        if mrk.tail:
+                                            orig_text += mrk.tail
+                                for target in transunit.iter('{urn:oasis:names:tc:xliff:document:1.2}target'):
+                                    if target.text:
+                                        tr_text += target.text
+                                    for mrk in target:
+                                        tr_text += mrk.text
+                                        if mrk.tail:
+                                            tr_text += mrk.tail
+                                if orig_text == '' or tr_text == '':
+                                    continue
+                                translations[target_lang][orig_text] = tr_text
+                    elif root.attrib['version'] == "2.0":
+                        target_lang = root.attrib['trgLang']
+                        if target_lang not in translations:
+                            translations[target_lang] = {}
+                        for segment in root.iter('{urn:oasis:names:tc:xliff:document:2.0}segment'):
+                            orig_text = ''
+                            tr_text = ''
+                            for source in segment.iter('{urn:oasis:names:tc:xliff:document:2.0}source'):
+                                if source.text:
+                                    orig_text += source.text
+                                for mrk in source:
+                                    orig_text += mrk.text
+                                    if mrk.tail:
+                                        orig_text += mrk.tail
+                            for target in segment.iter('{urn:oasis:names:tc:xliff:document:2.0}target'):
+                                if target.text:
+                                    tr_text += target.text
+                                for mrk in target:
+                                    tr_text += mrk.text
+                                    if mrk.tail:
+                                        tr_text += mrk.tail
+                            if orig_text == '' or tr_text == '':
+                                continue
+                            translations[target_lang][orig_text] = tr_text
                     else:
-                        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
-            except:
-                sys.stderr.write("Error reading " + str(word_file) + ": yaml could not be processed.\n")
+                        logmessage("Error reading " + str(word_file) + ": invalid XLIFF version.")
+                    for lang, the_dict in translations.items():
+                        try:
+                            docassemble.base.functions.update_word_collection(lang, the_dict)
+                        except:
+                            logmessage("Error reading " + str(word_file) + ": xlf for language " + lang + " could not be processed.")
+                except Exception as err:
+                    logmessage("Error reading " + str(word_file) + ": xlf processing raised exception " + err.__class__.__name__ + ": " + str(err))
+            else:
+                logmessage("filename " + filename + " had an unknown type")
+        else:
+            logmessage("filename " + filename + " did not exist")
+
+fix_words()
 
 if 'currency symbol' in daconfig:
     docassemble.base.functions.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 
-import docassemble.webapp.cloud
 cloud = docassemble.webapp.cloud.get_cloud()
 
-import docassemble.webapp.google_api
-
-cloud_cache = dict()
+cloud_cache = {}
 
 def cloud_custom(provider, config):
     config_id = str(provider) + str(config)
     if config_id in cloud_cache:
         return cloud_cache[config_id]
     the_config = daconfig.get(config, None)
-    if the_config is None or type(the_config) is not dict:
+    if the_config is None or not isinstance(the_config, dict):
         logmessage("cloud_custom: invalid cloud configuration")
         return None
     cloud_cache[config_id] = docassemble.webapp.cloud.get_custom_cloud(provider, the_config)
     return cloud_cache[config_id]
 
 docassemble.base.functions.update_server(cloud=cloud,
-                                         cloud_custom=cloud_custom,
-                                         google_api=docassemble.webapp.google_api)
+                                         cloud_custom=cloud_custom)
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, docvar=dict(), doc_cache=dict(), steps=1, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list(), event_stack=dict(), misc=dict()), url_args=dict(), nav=docassemble.base.functions.DANav())
+if platform.machine() == 'x86_64':
+    docassemble.base.functions.update_server(google_api=docassemble.webapp.google_api)
+
+initial_dict = dict(_internal=dict(session_local={}, device_local={}, user_local={}, dirty={}, progress=0, tracker=0, docvar={}, doc_cache={}, steps=1, steps_offset=0, secret=None, informed={}, livehelp=dict(availability='unavailable', mode='help', roles=[], partner_roles=[]), answered=set(), answers={}, objselections={}, starttime=None, modtime=None, accesstime={}, tasks={}, gather=[], event_stack={}, misc={}), url_args={}, nav=docassemble.base.functions.DANav())
 #else:
-#    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
+#    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers={}, objselections={}), url_args={})
 if 'initial_dict' in daconfig:
     initial_dict.update(daconfig['initial dict'])
 docassemble.base.parse.set_initial_dict(initial_dict)
-from docassemble.base.functions import pickleable_objects
 
 # def absolute_validator(the_file):
 #     #logmessage("Running my validator")
@@ -372,7 +498,7 @@ from docassemble.base.functions import pickleable_objects
 
 #@elapsed('can_access_file_number')
 def can_access_file_number(file_number, uids=None):
-    upload = Uploads.query.filter(Uploads.indexno == file_number).first()
+    upload = db.session.execute(select(Uploads).where(Uploads.indexno == file_number)).scalar()
     if upload is None:
         return False
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
@@ -388,33 +514,32 @@ def can_access_file_number(file_number, uids=None):
     if upload.key in uids:
         return True
     if current_user and current_user.is_authenticated:
-        if UserDictKeys.query.filter_by(key=upload.key, user_id=current_user.id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=current_user.id).first() or db.session.query(UploadsRoleAuth.id).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).first():
+        if db.session.execute(select(UserDictKeys).filter_by(key=upload.key, user_id=current_user.id)).first() or db.session.execute(select(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=current_user.id)).first() or db.session.execute(select(UploadsRoleAuth).join(UserRoles, and_(UserRoles.user_id == current_user.id, UploadsRoleAuth.role_id == UserRoles.role_id)).where(UploadsRoleAuth.uploads_indexno == file_number)).first():
             return True
     elif session and 'tempuser' in session:
         temp_user_id = int(session['tempuser'])
-        if UserDictKeys.query.filter_by(key=upload.key, temp_user_id=temp_user_id).first() or UploadsUserAuth.query.filter_by(uploads_indexno=file_number, temp_user_id=temp_user.id).first():
+        if db.session.execute(select(UserDictKeys).filter_by(key=upload.key, temp_user_id=temp_user_id)).first() or db.session.execute(select(UploadsUserAuth).filter_by(uploads_indexno=file_number, temp_user_id=temp_user_id)).first():
             return True
     return False
 
-if in_celery:
-    LOGFILE = daconfig.get('celery flask log', '/tmp/celery-flask.log')
-else:
-    LOGFILE = daconfig.get('flask log', '/tmp/flask.log')
+# if in_celery:
+#     LOGFILE = daconfig.get('celery flask log', '/tmp/celery-flask.log')
+# else:
+#     LOGFILE = daconfig.get('flask log', '/tmp/flask.log')
 
-if not os.path.exists(LOGFILE):
-    with open(LOGFILE, 'a'):
-        os.utime(LOGFILE, None)
+# if not os.path.exists(LOGFILE):
+#     with open(LOGFILE, 'a', encoding='utf-8'):
+#         os.utime(LOGFILE, None)
 
-error_file_handler = logging.FileHandler(filename=LOGFILE)
-error_file_handler.setLevel(logging.DEBUG)
-app.logger.addHandler(error_file_handler)
+# error_file_handler = logging.FileHandler(filename=LOGFILE)
+# error_file_handler.setLevel(logging.DEBUG)
+# app.logger.addHandler(error_file_handler)
 
 #sys.stderr.write("__name__ is " + str(__name__) + " and __package__ is " + str(__package__) + "\n")
 
-def flask_logger(message):
-    #app.logger.warning(message)
-    sys.stderr.write(text_type(message) + "\n")
-    return
+# def flask_logger(message):
+#     #app.logger.warning(message)
+#     sys.stderr.write(str(message) + "\n")
 
 def pad(the_string):
     return the_string + bytearray((16 - len(the_string) % 16) * chr(16 - len(the_string) % 16), encoding='utf-8')
@@ -422,18 +547,13 @@ def pad(the_string):
 def unpad(the_string):
     if isinstance(the_string[-1], int):
         return the_string[0:-the_string[-1]]
-    else:
-        return the_string[0:-ord(the_string[-1])]
+    return the_string[0:-ord(the_string[-1])]
 
 def encrypt_phrase(phrase, secret):
     iv = random_bytes(16)
     encrypter = AES.new(bytearray(secret, encoding='utf-8'), AES.MODE_CBC, iv)
-    if PY2:
-        if isinstance(phrase, unicode):
-            phrase = phrase.encode('utf-8')
-    else:
-        if isinstance(phrase, text_type):
-            phrase = bytearray(phrase, 'utf-8')
+    if isinstance(phrase, str):
+        phrase = bytearray(phrase, 'utf-8')
     return (iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64')).decode('utf-8')
 
 def pack_phrase(phrase):
@@ -471,28 +591,29 @@ def decrypt_object(obj_string, secret):
     return fix_pickle_obj(unpad(decrypter.decrypt(codecs.decode(obj_string[16:], 'base64'))))
 
 def parse_the_user_id(the_user_id):
-    m = re.match(r'(t?)([0-9]+)', text_type(the_user_id))
+    if the_user_id is None:
+        return (None, None)
+    m = re.match(r'(t?)([0-9]+)', str(the_user_id))
     if m:
         if m.group(1) == 't':
             return None, int(m.group(2))
-        else:
-            return int(m.group(2)), None
+        return int(m.group(2)), None
     raise Exception("Invalid user ID")
 
 def safe_pickle(the_object):
-    if type(the_object) is list:
+    if isinstance(the_object, list):
         return [safe_pickle(x) for x in the_object]
-    if type(the_object) is dict:
-        new_dict = dict()
+    if isinstance(the_object, dict):
+        new_dict = {}
         for key, value in the_object.items():
             new_dict[key] = safe_pickle(value)
         return new_dict
-    if type(the_object) is set:
+    if isinstance(the_object, set):
         new_set = set()
         for sub_object in the_object:
             new_set.add(safe_pickle(sub_object))
         return new_set
-    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
+    if isinstance(the_object, (types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, FileType)):
         return None
     return the_object
 
@@ -509,58 +630,10 @@ def unpack_dictionary(dict_string):
     dict_string = codecs.decode(bytearray(dict_string, encoding='utf-8'), 'base64')
     return fix_pickle_dict(dict_string)
 
-def safe_json(the_object, level=0):
-    if level > 20:
-        return None
-    if isinstance(the_object, (string_types, bool, int, float)):
-        return the_object
-    if isinstance(the_object, list):
-        return [safe_json(x, level=level+1) for x in the_object]
-    if isinstance(the_object, dict):
-        new_dict = dict()
-        for key, value in the_object.items():
-            new_dict[key] = safe_json(value, level=level+1)
-        return new_dict
-    if isinstance(the_object, set):
-        new_list = list()
-        for sub_object in the_object:
-            new_list.append(safe_json(sub_object, level=level+1))
-        return new_list
-    if type(the_object) in [types.ModuleType, types.FunctionType, TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, FileType]:
-        return None
-    if isinstance(the_object, datetime.datetime):
-        serial = the_object.isoformat()
-        return serial
-    if isinstance(the_object, datetime.time):
-        serial = the_object.isoformat()
-        return serial
-    if isinstance(the_object, decimal.Decimal):
-        return float(the_object)
-    if isinstance(the_object, DANav):
-        return dict(past=list(the_object.past), current=the_object.current, hidden=(the_object.hidden if hasattr(the_object, 'hidden') else False), progressive=(the_object.progressive if hasattr(the_object, 'progressive') else True))
-    from docassemble.base.core import DAObject
-    if isinstance(the_object, DAObject):
-        new_dict = dict()
-        new_dict['_class'] = type_name(the_object)
-        if the_object.__class__.__name__ == 'DALazyTemplate' or the_object.__class__.__name__ == 'DALazyTableTemplate':
-            if hasattr(the_object, 'instanceName'):
-                new_dict['instanceName'] = the_object.instanceName
-            return new_dict
-        for key, data in the_object.__dict__.items():
-            if key in ['has_nonrandom_instance_name', 'attrList']:
-                continue
-            new_dict[key] = safe_json(data, level=level+1)
-        return new_dict
-    try:
-        json.dumps(the_object)
-    except:
-        return None
-    return the_object
-
 def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
     return timestamp.replace(tzinfo=tz.tzutc()).astimezone(timezone).strftime('%x %X')
 
-def nice_utc_date(timestamp, timezone=tz.tzlocal()):
+def nice_utc_date(timestamp):
     return timestamp.strftime('%F %T')
 
 #@elapsed('fetch_user_dict')
@@ -569,10 +642,10 @@ def fetch_user_dict(user_code, filename, secret=None):
     user_dict = None
     steps = 1
     encrypted = True
-    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()
-    results = [d for d in db.session.query(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)]
-    #logmessage("fetch_user_dict: 01 query is " + str(results))
-    for d in results:
+    subq = select(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('cnt')).where(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()
+    stmt = select(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.cnt).join(subq, subq.c.indexno == UserDict.indexno)
+    result = db.session.execute(stmt)
+    for d in list(result):
         #logmessage("fetch_user_dict: indexno is " + str(d.indexno))
         if d.dictionary:
             if d.encrypted:
@@ -584,28 +657,29 @@ def fetch_user_dict(user_code, filename, secret=None):
                 user_dict = unpack_dictionary(d.dictionary)
                 #logmessage("fetch_user_dict: unpacked dictionary")
                 encrypted = False
-        if d.count:
-            steps = d.count
+        if d.cnt:
+            steps = d.cnt
         break
     return steps, user_dict, encrypted
 
 #@elapsed('user_dict_exists')
 def user_dict_exists(user_code, filename):
-    result = UserDict.query.filter(and_(UserDict.key == user_code, UserDict.filename == filename)).first()
+    result = db.session.execute(select(UserDict).where(and_(UserDict.key == user_code, UserDict.filename == filename))).first()
     if result:
         return True
     return False
 
 #@elapsed('fetch_previous_user_dict')
 def fetch_previous_user_dict(user_code, filename, secret):
-    user_dict = None
-    max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(and_(UserDict.key == user_code, UserDict.filename == filename)).scalar()
+    max_indexno = db.session.execute(select(db.func.max(UserDict.indexno)).where(and_(UserDict.key == user_code, UserDict.filename == filename))).scalar()
     if max_indexno is not None:
-        UserDict.query.filter_by(indexno=max_indexno).delete()
+        db.session.execute(delete(UserDict).where(UserDict.indexno == max_indexno))
         db.session.commit()
     return fetch_user_dict(user_code, filename, secret=secret)
 
 def advance_progress(user_dict, interview):
+    if user_dict['_internal']['progress'] is None:
+        return
     if hasattr(interview, 'progress_bar_multiplier'):
         multiplier = interview.progress_bar_multiplier
     else:
@@ -619,66 +693,69 @@ def advance_progress(user_dict, interview):
         user_dict['_internal']['progress'] += multiplier*(next_part-user_dict['_internal']['progress'])
     else:
         user_dict['_internal']['progress'] += multiplier*(100-user_dict['_internal']['progress'])
-    return
 
 def delete_temp_user_data(temp_user_id, r):
-    UserDictKeys.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.execute(delete(UserDictKeys).where(UserDictKeys.temp_user_id == temp_user_id))
     db.session.commit()
-    UploadsUserAuth.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.execute(delete(UploadsUserAuth).where(UploadsUserAuth.temp_user_id == temp_user_id))
     db.session.commit()
-    ChatLog.query.filter_by(temp_owner_id=temp_user_id).delete()
+    db.session.execute(delete(ChatLog).where(ChatLog.temp_owner_id == temp_user_id))
     db.session.commit()
-    ChatLog.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.execute(delete(ChatLog).where(ChatLog.temp_user_id == temp_user_id))
     db.session.commit()
-    GlobalObjectStorage.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.execute(delete(GlobalObjectStorage).where(GlobalObjectStorage.temp_user_id == temp_user_id))
     db.session.commit()
-    files_to_delete = list()
-    for short_code_item in Shortener.query.filter_by(temp_user_id=temp_user_id).all():
-        for email in Email.query.filter_by(short=short_code_item.short).all():
-            for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+    db.session.execute(delete(GlobalObjectStorage).where(or_(GlobalObjectStorage.key.like('da:userid:t' + str(temp_user_id) + ':%'), GlobalObjectStorage.key.like('da:daglobal:userid:t' + str(temp_user_id) + ':%'))).execution_options(synchronize_session=False))
+    db.session.commit()
+    files_to_delete = []
+    for short_code_item in db.session.execute(select(Shortener).filter_by(temp_user_id=temp_user_id)).scalars():
+        for email in db.session.execute(select(Email).filter_by(short=short_code_item.short)).scalars():
+            for attachment in db.session.execute(select(EmailAttachment).filter_by(email_id=email.id)).scalars():
                 files_to_delete.append(attachment.upload)
     for file_number in files_to_delete:
         the_file = SavedFile(file_number)
         the_file.delete()
-    Shortener.query.filter_by(temp_user_id=temp_user_id).delete()
+    db.session.execute(delete(Shortener).where(Shortener.temp_user_id == temp_user_id))
     db.session.commit()
     keys_to_delete = set()
-    for key in r.keys('*userid:t' + text_type(temp_user_id)):
+    for key in r.keys('*userid:t' + str(temp_user_id)):
         keys_to_delete.add(key)
-    for key in r.keys('*userid:t' + text_type(temp_user_id) + ':*'):
+    for key in r.keys('*userid:t' + str(temp_user_id) + ':*'):
         keys_to_delete.add(key)
     for key in keys_to_delete:
         r.delete(key)
 
 def delete_user_data(user_id, r, r_user):
-    UserDict.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(UserDict).where(UserDict.user_id == user_id))
     db.session.commit()
-    UserDictKeys.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(UserDictKeys).where(UserDictKeys.user_id == user_id))
     db.session.commit()
-    UploadsUserAuth.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(UploadsUserAuth).where(UploadsUserAuth.user_id == user_id))
     db.session.commit()
-    ChatLog.query.filter_by(owner_id=user_id).delete()
+    db.session.execute(delete(ChatLog).where(ChatLog.owner_id == user_id))
     db.session.commit()
-    ChatLog.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(ChatLog).where(ChatLog.user_id == user_id))
     db.session.commit()
-    GlobalObjectStorage.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(GlobalObjectStorage).where(GlobalObjectStorage.user_id == user_id))
     db.session.commit()
-    for package_auth in PackageAuth.query.filter_by(user_id=user_id).all():
+    db.session.execute(delete(GlobalObjectStorage).where(or_(GlobalObjectStorage.key.like('da:userid:' + str(user_id) + ':%'), GlobalObjectStorage.key.like('da:daglobal:userid:' + str(user_id) + ':%'))).execution_options(synchronize_session=False))
+    db.session.commit()
+    for package_auth in db.session.execute(select(PackageAuth).filter_by(user_id=user_id)).scalars():
         package_auth.user_id = 1
     db.session.commit()
-    files_to_delete = list()
-    for short_code_item in Shortener.query.filter_by(user_id=user_id).all():
-        for email in Email.query.filter_by(short=short_code_item.short).all():
-            for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+    files_to_delete = []
+    for short_code_item in db.session.execute(select(Shortener).filter_by(user_id=user_id)).scalars():
+        for email in db.session.execute(select(Email).filter_by(short=short_code_item.short)).scalars():
+            for attachment in db.session.execute(select(EmailAttachment).filter_by(email_id=email.id)).scalars():
                 files_to_delete.append(attachment.upload)
     for file_number in files_to_delete:
         the_file = SavedFile(file_number)
         the_file.delete()
-    Shortener.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(Shortener).where(Shortener.user_id == user_id))
     db.session.commit()
-    UserRoles.query.filter_by(user_id=user_id).delete()
+    db.session.execute(delete(UserRoles).where(UserRoles.user_id == user_id))
     db.session.commit()
-    for user_auth in UserAuthModel.query.filter_by(user_id=user_id):
+    for user_auth in db.session.execute(select(UserAuthModel).filter_by(user_id=user_id).with_for_update()).scalars():
         user_auth.password = ''
         user_auth.reset_password_token = ''
     db.session.commit()
@@ -686,7 +763,7 @@ def delete_user_data(user_id, r, r_user):
         the_section = SavedFile(user_id, section=section)
         the_section.delete()
     old_email = None
-    for user_object in UserModel.query.filter_by(id=user_id):
+    for user_object in db.session.execute(select(UserModel).filter_by(id=user_id)).scalars():
         old_email = user_object.email
         user_object.active = False
         user_object.first_name = ''
@@ -703,24 +780,26 @@ def delete_user_data(user_id, r, r_user):
         user_object.pypi_username = None
         user_object.pypi_password = None
         user_object.otp_secret = None
-        user_object.social_id = 'disabled$' + text_type(user_id)
+        user_object.confirmed_at = None
+        user_object.last_login = None
+        user_object.social_id = 'disabled$' + str(user_id)
     db.session.commit()
     keys_to_delete = set()
-    for key in r.keys('*userid:' + text_type(user_id)):
+    for key in r.keys('*userid:' + str(user_id)):
         keys_to_delete.add(key)
-    for key in r.keys('*userid:' + text_type(user_id) + ':*'):
+    for key in r.keys('*userid:' + str(user_id) + ':*'):
         keys_to_delete.add(key)
     for key in keys_to_delete:
         r.delete(key)
     keys_to_delete = set()
-    for key in r_user.keys('*:user:' + text_type(old_email)):
+    for key in r_user.keys('*:user:' + str(old_email)):
         keys_to_delete.add(key)
     for key in keys_to_delete:
         r_user.delete(key)
 
 #@elapsed('reset_user_dict')
 def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=False):
-    #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename))
+    #logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename) + " and " + str(user_id) + " and " + str(temp_user_id) + " and " + str(force))
     if force:
         the_user_id = None
     else:
@@ -738,83 +817,83 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
             user_type = 'tempuser'
             the_user_id = temp_user_id
     if the_user_id is None:
-        UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.execute(delete(UserDictKeys).filter_by(key=user_code, filename=filename))
         db.session.commit()
         do_delete = True
     else:
         if user_type == 'user':
-            UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=the_user_id).delete()
+            db.session.execute(delete(UserDictKeys).filter_by(key=user_code, filename=filename, user_id=the_user_id))
         else:
-            UserDictKeys.query.filter_by(key=user_code, filename=filename, temp_user_id=the_user_id).delete()
+            db.session.execute(delete(UserDictKeys).filter_by(key=user_code, filename=filename, temp_user_id=the_user_id))
         db.session.commit()
-        existing_user_dict_key = UserDictKeys.query.filter_by(key=user_code, filename=filename).first()
-        if not existing_user_dict_key:
-            do_delete = True
-        else:
-            do_delete = False
-    files_to_save = list()
-    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=True).all():
-        files_to_save.append(upload.indexno)
-    if len(files_to_save):
-        something_added = False
-        if user_type == 'user':
-            for uploads_indexno in files_to_save:
-                existing_auth = UploadsUserAuth.query.filter_by(user_id=the_user_id, uploads_indexno=uploads_indexno).first()
-                if not existing_auth:
-                    new_auth_record = UploadsUserAuth(user_id=the_user_id, uploads_indexno=uploads_indexno)
-                    db.session.add(new_auth_record)
-                    something_added = True
-        else:
-            for uploads_indexno in files_to_save:
-                existing_auth = UploadsUserAuth.query.filter_by(temp_user_id=the_user_id, uploads_indexno=uploads_indexno).first()
-                if not existing_auth:
-                    new_auth_record = UploadsUserAuth(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)
-                    db.session.add(new_auth_record)
-                    something_added = True
-        if something_added:
-            db.session.commit()
+        existing_user_dict_key = db.session.execute(select(UserDictKeys).filter_by(key=user_code, filename=filename)).scalar()
+        do_delete = not bool(existing_user_dict_key)
+    if not force:
+        files_to_save = []
+        for upload in db.session.execute(select(Uploads).filter_by(key=user_code, yamlfile=filename, persistent=True)).scalars():
+            files_to_save.append(upload.indexno)
+        if len(files_to_save) > 0:
+            something_added = False
+            if user_type == 'user':
+                for uploads_indexno in files_to_save:
+                    existing_auth = db.session.execute(select(UploadsUserAuth).filter_by(user_id=the_user_id, uploads_indexno=uploads_indexno)).scalar()
+                    if not existing_auth:
+                        new_auth_record = UploadsUserAuth(user_id=the_user_id, uploads_indexno=uploads_indexno)
+                        db.session.add(new_auth_record)
+                        something_added = True
+            else:
+                for uploads_indexno in files_to_save:
+                    existing_auth = db.session.execute(select(UploadsUserAuth).filter_by(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)).scalar()
+                    if not existing_auth:
+                        new_auth_record = UploadsUserAuth(temp_user_id=the_user_id, uploads_indexno=uploads_indexno)
+                        db.session.add(new_auth_record)
+                        something_added = True
+            if something_added:
+                db.session.commit()
     if do_delete:
-        UserDict.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.execute(delete(UserDict).filter_by(key=user_code, filename=filename))
         db.session.commit()
-        files_to_delete = list()
-        for speaklist in SpeakList.query.filter_by(key=user_code, filename=filename).all():
+        files_to_delete = []
+        for speaklist in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename)).scalars():
             if speaklist.upload is not None:
                 files_to_delete.append(speaklist.upload)
-        SpeakList.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.execute(delete(SpeakList).filter_by(key=user_code, filename=filename))
         db.session.commit()
-        for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).all():
+        for upload in db.session.execute(select(Uploads).filter_by(key=user_code, yamlfile=filename, persistent=False)).scalars():
             files_to_delete.append(upload.indexno)
-        Uploads.query.filter_by(key=user_code, yamlfile=filename, persistent=False).delete()
+        db.session.execute(delete(Uploads).filter_by(key=user_code, yamlfile=filename, persistent=False))
         db.session.commit()
-        ChatLog.query.filter_by(key=user_code, filename=filename).delete()
+        db.session.execute(delete(GlobalObjectStorage).where(or_(GlobalObjectStorage.key.like('da:uid:' + user_code + ':i:' + filename + ':%'), GlobalObjectStorage.key.like('da:daglobal:uid:' + user_code + ':i:' + filename + ':%'))).execution_options(synchronize_session=False))
         db.session.commit()
-        for short_code_item in Shortener.query.filter_by(uid=user_code, filename=filename).all():
-            for email in Email.query.filter_by(short=short_code_item.short).all():
-                for attachment in EmailAttachment.query.filter_by(email_id=email.id).all():
+        db.session.execute(delete(ChatLog).filter_by(key=user_code, filename=filename))
+        db.session.commit()
+        for short_code_item in db.session.execute(select(Shortener).filter_by(uid=user_code, filename=filename)).scalars():
+            for email in db.session.execute(select(Email).filter_by(short=short_code_item.short)).scalars():
+                for attachment in db.session.execute(select(EmailAttachment).filter_by(email_id=email.id)).scalars():
                     files_to_delete.append(attachment.upload)
-        Shortener.query.filter_by(uid=user_code, filename=filename).delete()
+        db.session.execute(delete(Shortener).filter_by(uid=user_code, filename=filename))
         db.session.commit()
+        # docassemble.base.functions.server.delete_answer_json(user_code, filename, delete_all=True)
         for file_number in files_to_delete:
             the_file = SavedFile(file_number)
             the_file.delete()
-    return
 
 #@elapsed('get_person')
 def get_person(user_id, cache):
     if user_id in cache:
         return cache[user_id]
-    for record in UserModel.query.options(db.joinedload('roles')).filter_by(id=user_id):
+    for record in db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=user_id)).unique().scalars():
         cache[record.id] = record
         return record
     return None
 
 #@elapsed('get_chat_log')
 def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, self_temp_id):
-    messages = list()
-    people = dict()
+    messages = []
+    people = {}
     if user_id is not None:
         if get_person(user_id, people) is None:
-            return list()
+            return []
         chat_person_type = 'auth'
         chat_person_id = user_id
     else:
@@ -822,88 +901,78 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
         chat_person_id = temp_user_id
     if self_user_id is not None:
         if get_person(self_user_id, people) is None:
-            return list()
+            return []
         self_person_type = 'auth'
         self_person_id = self_user_id
     else:
         self_person_type = 'anon'
         self_person_id = self_temp_id
-    if chat_mode in ['peer', 'peerhelp']:
-        open_to_peer = True
-    else:
-        open_to_peer = False
     if chat_person_type == 'auth':
-        if chat_mode in ['peer', 'peerhelp']:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.owner_id == chat_person_id))).order_by(ChatLog.id).all()
+        if chat_mode in ('peer', 'peerhelp'):
+            records = db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.owner_id == chat_person_id))).order_by(ChatLog.id)).scalars().all()
         else:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.owner_id == chat_person_id)).order_by(ChatLog.id).all()
+            records = db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.owner_id == chat_person_id)).order_by(ChatLog.id)).scalars().all()
         for record in records:
             if record.encrypted:
                 try:
                     message = decrypt_phrase(record.message, secret)
                 except:
-                    sys.stderr.write("Could not decrypt phrase with secret " + secret + "\n")
+                    logmessage("Could not decrypt phrase with secret " + secret)
                     continue
             else:
                 message = unpack_phrase(record.message)
             modtime = nice_utc_date(record.modtime)
             if self_person_type == 'auth':
-                if self_person_id == record.user_id:
-                    is_self = True
-                else:
-                    is_self = False
+                is_self = bool(self_person_id == record.user_id)
             else:
-                if self_person_id == record.temp_user_id:
-                    is_self = True
-                else:
-                    is_self = False
+                is_self = bool(self_person_id == record.temp_user_id)
             if record.user_id is not None:
                 person = get_person(record.user_id, people)
                 if person is None:
-                    sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
+                    logmessage("Person " + str(record.user_id) + " did not exist")
                     continue
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
+                role_list = [role.name for role in person.roles]
+                if len(role_list) == 0:
+                    role_list = ['user']
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=role_list))
             else:
                 messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
     else:
         if chat_mode in ['peer', 'peerhelp']:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.temp_owner_id == chat_person_id))).order_by(ChatLog.id).all()
+            records = db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.temp_owner_id == chat_person_id))).order_by(ChatLog.id)).scalars().all()
         else:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.temp_owner_id == chat_person_id)).order_by(ChatLog.id).all()
+            records = db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.temp_owner_id == chat_person_id)).order_by(ChatLog.id)).scalars().all()
         for record in records:
             if record.encrypted:
                 try:
                     message = decrypt_phrase(record.message, secret)
                 except:
-                    sys.stderr.write("Could not decrypt phrase with secret " + secret + "\n")
+                    logmessage("Could not decrypt phrase with secret " + secret)
                     continue
             else:
                 message = unpack_phrase(record.message)
             modtime = nice_utc_date(record.modtime)
             if self_person_type == 'auth':
-                if self_person_id == record.user_id:
-                    is_self = True
-                else:
-                    is_self = False
+                is_self = bool(self_person_id == record.user_id)
             else:
                 #logmessage("self person id is " + str(self_person_id) + " and record user id is " + str(record.temp_user_id))
-                if self_person_id == record.temp_user_id:
-                    is_self = True
-                else:
-                    is_self = False
+                is_self = bool(self_person_id == record.temp_user_id)
             if record.user_id is not None:
                 person = get_person(record.user_id, people)
                 if person is None:
-                    sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
+                    logmessage("Person " + str(record.user_id) + " did not exist")
                     continue
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
+                role_list = [role.name for role in person.roles]
+                if len(role_list) == 0:
+                    role_list = ['user']
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=role_list))
             else:
                 messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
     return messages
 
 #@elapsed('file_set_attributes')
 def file_set_attributes(file_number, **kwargs):
-    upload = Uploads.query.filter_by(indexno=file_number).with_for_update().first()
+    upload = db.session.execute(select(Uploads).filter_by(indexno=file_number).with_for_update()).scalar()
     if upload is None:
         db.session.commit()
         raise Exception("file_set_attributes: file number " + str(file_number) + " not found.")
@@ -911,9 +980,9 @@ def file_set_attributes(file_number, **kwargs):
         upload.private = kwargs['private']
     if 'persistent' in kwargs and kwargs['persistent'] in [True, False] and upload.persistent != kwargs['persistent']:
         upload.persistent = kwargs['persistent']
-    if 'session' in kwargs and isinstance(kwargs['session'], string_types):
+    if 'session' in kwargs and isinstance(kwargs['session'], str):
         upload.key = kwargs['session']
-    if 'filename' in kwargs and isinstance(kwargs['filename'], string_types):
+    if 'filename' in kwargs and isinstance(kwargs['filename'], str):
         upload.filename = kwargs['filename']
     db.session.commit()
 
@@ -921,11 +990,11 @@ def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow
     something_added = False
     if allow_user_id:
         for user_id in set(allow_user_id):
-            existing_user = UserModel.query.filter_by(id=user_id).first()
+            existing_user = db.session.execute(select(UserModel).filter_by(id=user_id)).first()
             if not existing_user:
                 logmessage("file_user_access: invalid user ID " + repr(user_id))
                 continue
-            if UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=user_id).first():
+            if db.session.execute(select(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=user_id)).first():
                 continue
             new_auth_record = UploadsUserAuth(uploads_indexno=file_number, user_id=user_id)
             db.session.add(new_auth_record)
@@ -935,11 +1004,11 @@ def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow
     something_added = False
     if allow_email:
         for email in set(allow_email):
-            existing_user = UserModel.query.filter_by(email=email).first()
+            existing_user = db.session.execute(select(UserModel).filter_by(email=email)).first()
             if not existing_user:
                 logmessage("file_user_access: invalid email " + repr(email))
                 continue
-            if UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=existing_user.id).first():
+            if db.session.execute(select(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=existing_user.id)).first():
                 continue
             new_auth_record = UploadsUserAuth(uploads_indexno=file_number, user_id=existing_user.id)
             db.session.add(new_auth_record)
@@ -948,21 +1017,21 @@ def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow
         db.session.commit()
     if disallow_user_id:
         for user_id in set(disallow_user_id):
-            UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=user_id).delete()
+            db.session.execute(delete(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=user_id))
         db.session.commit()
     if disallow_email:
         for email in set(disallow_email):
-            existing_user = UserModel.query.filter_by(email=email).first()
+            existing_user = db.session.execute(select(UserModel).filter_by(email=email)).scalar()
             if not existing_user:
                 logmessage("file_user_access: invalid email " + repr(email))
                 continue
-            UploadsUserAuth.query.filter_by(uploads_indexno=file_number, user_id=existing_user.id).delete()
+            db.session.execute(delete(UploadsUserAuth).filter_by(uploads_indexno=file_number, user_id=existing_user.id))
         db.session.commit()
     if disallow_all:
-        UploadsUserAuth.query.filter_by(uploads_indexno=file_number).delete()
+        db.session.execute(delete(UploadsUserAuth).filter_by(uploads_indexno=file_number))
     if not (allow_user_id or allow_email or disallow_user_id or disallow_email or disallow_all):
-        result = dict(user_ids=list(), emails=list(), temp_user_ids=list())
-        for auth in db.session.query(UploadsUserAuth.user_id, UploadsUserAuth.temp_user_id, UserModel.email).outerjoin(UserModel, UploadsUserAuth.user_id == UserModel.id).filter(UploadsUserAuth.uploads_indexno == file_number).all():
+        result = dict(user_ids=[], emails=[], temp_user_ids=[])
+        for auth in db.session.execute(select(UploadsUserAuth.user_id, UploadsUserAuth.temp_user_id, UserModel.email).outerjoin(UserModel, UploadsUserAuth.user_id == UserModel.id).where(UploadsUserAuth.uploads_indexno == file_number)).scalars().all():
             if auth.user_id is not None:
                 result['user_ids'].append(auth.user_id)
             if auth.temp_user_id is not None:
@@ -970,16 +1039,17 @@ def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow
             if auth.email:
                 result['emails'].append(auth.email)
         return result
+    return None
 
 def file_privilege_access(file_number, allow=None, disallow=None, disallow_all=False):
     something_added = False
     if allow:
         for privilege in set(allow):
-            existing_role = Role.query.filter_by(name=privilege).first()
+            existing_role = db.session.execute(select(Role).filter_by(name=privilege)).scalar_one()
             if not existing_role:
                 logmessage("file_privilege_access: invalid privilege " + repr(privilege))
                 continue
-            if UploadsRoleAuth.query.filter_by(uploads_indexno=file_number, role_id=existing_role.id).first():
+            if db.session.execute(select(UploadsRoleAuth).filter_by(uploads_indexno=file_number, role_id=existing_role.id)).first():
                 continue
             new_auth_record = UploadsRoleAuth(uploads_indexno=file_number, role_id=existing_role.id)
             db.session.add(new_auth_record)
@@ -988,28 +1058,31 @@ def file_privilege_access(file_number, allow=None, disallow=None, disallow_all=F
         db.session.commit()
     if disallow:
         for privilege in set(disallow):
-            existing_role = Role.query.filter_by(name=privilege).first()
+            existing_role = db.session.execute(select(Role).filter_by(name=privilege)).scalar_one()
             if not existing_role:
                 logmessage("file_privilege_access: invalid privilege " + repr(privilege))
                 continue
-            UploadsRoleAuth.query.filter_by(uploads_indexno=file_number, role_id=existing_role.id).delete()
+            db.session.execute(delete(UploadsRoleAuth).filter_by(uploads_indexno=file_number, role_id=existing_role.id))
         db.session.commit()
     if disallow_all:
-        UploadsRoleAuth.query.filter_by(uploads_indexno=file_number).delete()
+        db.session.execute(delete(UploadsRoleAuth).filter_by(uploads_indexno=file_number))
     if not (allow or disallow or disallow_all):
-        result = list()
-        for auth in db.session.query(UploadsRoleAuth.id, Role.name).join(Role, UploadsRoleAuth.role_id == Role.id).filter(UploadsRoleAuth.uploads_indexno == file_number).all():
+        result = []
+        for auth in db.session.execute(select(UploadsRoleAuth.id, Role.name).join(Role, UploadsRoleAuth.role_id == Role.id).where(UploadsRoleAuth.uploads_indexno == file_number)).scalars():
             result.append(auth.name)
         return result
+    return None
 
 def clear_session(i):
     if 'sessions' in session and i in session['sessions']:
         del session['sessions'][i]
+    session.modified = True
 
 def clear_specific_session(i, uid):
     if 'sessions' in session and i in session['sessions']:
         if session['sessions'][i]['uid'] == uid:
             del session['sessions'][i]
+    session.modified = True
 
 def guess_yaml_filename():
     yaml_filename = None
@@ -1025,10 +1098,11 @@ def delete_obsolete():
     for name in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus'):
         if name in session:
             del session[name]
+    session.modified = True
 
 def get_session(i):
     if 'sessions' not in session:
-        session['sessions'] = dict()
+        session['sessions'] = {}
     if i in session['sessions']:
         return session['sessions'][i]
     if 'i' in session and 'uid' in session: #TEMPORARY
@@ -1042,21 +1116,21 @@ def get_session(i):
 def unattached_uid():
     while True:
         newname = random_alphanumeric(32)
-        existing_key = UserDict.query.filter_by(key=newname).first()
+        existing_key = db.session.execute(select(UserDict).filter_by(key=newname)).first()
         if existing_key:
             continue
         return newname
 
 def get_uid_for_filename(i):
     if 'sessions' not in session:
-        session['sessions'] = dict()
+        session['sessions'] = {}
     if i not in session['sessions']:
         return None
     return session['sessions'][i]['uid']
 
 def update_session(i, uid=None, encrypted=None, key_logged=None, chatstatus=None):
     if 'sessions' not in session:
-        session['sessions'] = dict()
+        session['sessions'] = {}
     if i not in session['sessions'] or uid is not None:
         if uid is None:
             raise Exception("update_session: cannot create new session without a uid")

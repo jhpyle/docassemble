@@ -1,0 +1,17 @@
+metadata:
+  title: SSN
+  example start: 1
+  example end: 3
+---
+modules:
+  - .ssn
+---
+mandatory: True
+question: |
+  Your SSN is ${ user_ssn }.
+---
+question: |
+  What is your SSN?
+fields:
+  - SSN: user_ssn
+    datatype: ssn

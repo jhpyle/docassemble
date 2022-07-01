@@ -33,7 +33,7 @@ question: |
 subquestion: |
   Reasoning:
 
-  % for reason in explanation():
+  % for reason in logic_explanation():
   * ${ reason }
   % endfor
 ---

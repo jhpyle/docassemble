@@ -1,0 +1,148 @@
+metadata:
+  title: Customizing common blocks
+  short: Custom
+  documentation: https://docassemble.org/docs/recipes.html#basic
+  example start: 1
+  example end: 14
+---
+include:
+  - docassemble.demo:data/questions/demo-basic-questions.yml
+comment: |
+  The "basic questions" loaded by this include
+  block allow interview to gather information
+  about names, e-mail addresses, and addresses
+  in a variety of ways without specifying any
+  question blocks.  The "basic questions" are
+  configurable using object attributes.
+---
+objects:
+  - client: Individual
+  - advocate: Individual
+  - antagonist: Individual
+---
+initial: True
+code: |
+  set_info(user=client)
+comment: |
+  Since this isn't a multi-user interview,
+  setting up the user is just a single call to
+  set_info().  The generic "basic questions"
+  use the first person when the generic object
+  instance is the user.
+---
+code: |
+  client.ask_email_with_name = True
+comment: |
+  By default, the question that asks for an
+  individual's name does not also ask for the
+  individual's e-mail address, but if you set
+  the ask_email_with_name attribute to True, an
+  additional field will be included.
+---
+code: |
+  client.ask_about_homelessness = True
+comment: |
+  There are multiple variations of the question
+  that asks for an individual's address.  One
+  variation allows the user to check a box
+  stating that the individual is homeless, and
+  if so, only the city and state are gathered.
+  We want to ask the question this way when we
+  ask for the client's address.
+---
+code: |
+  client.email_required = False
+comment: |
+  When we ask for the client's e-mail address,
+  we want to let the user leave the field
+  blank.
+---
+code: |
+  advocate.ask_email_with_name = True
+comment: |
+  When we ask for the advocate's name, we also
+  want to ask for the advocate's e-mail
+  address.
+---
+code: |
+  antagonist.name.default_first = "Brutus"
+  antagonist.name.default_last = "Morpheus"
+comment: |
+  By default, when the name of a user is asked,
+  the field is blank if the name has not been
+  defined yet.  The "basic questions" allow us
+  to specify a default value.
+---
+comment: |
+  It is not strictly necessary in this
+  interview to specify the above rules as
+  separate code blocks, but it is good practice
+  to do so because in interviews where such
+  values may be pre-set or change as a result
+  of user input, cramming the rules into a
+  single rule may cause unintended side
+  effects, such as overwriting the value of
+  client.email_required just because the
+  definition of advocate.ask_email_with_name
+  was needed.
+---
+mandatory: True
+code: |
+  client.name.uses_parts = False
+comment: |
+  We want to ask for the client's name in a
+  single field.  This is useful because the
+  client might have a name that does not fit
+  the standard "first name, last name"
+  structure.
+
+  This block is mandatory because
+  .name.uses_parts is defined automatically by
+  the class definition; thus to override it we
+  need to force this code to run.  The other
+  settings in the previous block are undefined
+  by default and their definitions will be
+  sought out, so we can use non-mandatory
+  blocks to provide their definitions.
+---
+template: client.description
+content: petitioner
+comment: |
+  This is a very small template, but it is
+  useful to use a template because template
+  content can be translated using the
+  spreadsheet translation feature.
+---
+template: advocate.description
+content: the lawyer
+---
+template: advocate.ask_address_template
+subject: |
+  How can we send mail to the lawyer's office?
+content: |
+  Make sure you get this right.
+comment: |
+  We want to ask the address question a little
+  differently when when the object is the
+  advocate.  The subject of the template
+  corresponds to the "question" and the content
+  corresponds to the "subquestion."
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  % for person in (client, advocate, antagonist):
+  ${ person.description } is:
+
+  ${ person.name.full() } [BR]
+  % if person.ask_about_homelessness and person.address.homeless:
+  ${ person.address.city }, ${ person.address.state }
+  % else:
+  ${ person.address.block() }
+  % endif
+  % if person.email:
+  [BR] ${ person.email }
+  % endif
+
+  % endfor

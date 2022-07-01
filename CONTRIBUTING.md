@@ -5,6 +5,17 @@ you wish to make via issue, email, or any other method with the owner
 of this repository before making a change.  The best way to contribute
 a change is through a pull request.
 
+If you want to add an additional feature, first consider if the
+feature could be made available through an [add-on
+package](https://docassemble.org/docs/packages.html).  If the feature
+turns out to be universally useful, it can be incorporated later into
+the core code.
+
+## How to modify and test the core docassemble code
+
+For instructions on how to test modificiations to the core code, see the
+[workflow for making changes to the core docassemble code](https://docassemble.org/docs/development.html#core).
+
 ## How to contribute to the documentation
 
 The documentation is written in GitHub Pages.  It is available in the
@@ -50,4 +61,3 @@ To add a code example to a page of the documentation, include a line
 like the following:
 
     {% include side-by-side.html demo="user-logged-in" %}
-

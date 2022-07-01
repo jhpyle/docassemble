@@ -1,0 +1,85 @@
+metadata:
+  title: Show incomplete
+  short title: Incomplete
+  documentation: "https://docassemble.org/docs/initial.html#show incomplete"
+  example start: 7
+  example end: 7
+---
+objects:
+  - fruit: DAList.using(object_type=Thing, complete_attribute='complete')
+---
+question: |
+  Do you have any fruit?
+yesno: fruit.there_are_any
+---
+code: |
+  fruit[i].name.text
+  fruit[i].seeds
+  fruit[i].last_eaten
+  fruit[i].complete = True
+---
+question: |
+  What fruit should be added to the list?
+fields:
+  - Fruit: fruit[i].name.text
+  - Number of seeds: fruit[i].seeds
+    datatype: integer
+    min: 0
+action buttons:
+  - label: Edit past answers
+    action: review_answers
+    color: info
+---
+question: |  
+  When did you last eat a ${ fruit[i] }?
+fields:
+  - Date: fruit[i].last_eaten
+    datatype: date
+action buttons:
+  - label: Edit past answers
+    action: review_answers
+    color: info
+---
+question: |
+  So far, the fruits include ${ fruit }.
+  Are there any others?
+yesno: fruit.there_is_another
+action buttons:
+  - label: Edit past answers
+    action: review_answers
+    color: info
+---
+table: fruit.table
+rows: fruit
+columns:
+  - Fruit Name: row_item
+  - Number of Seeds: row_item.seeds
+  - Last eaten: row_item.last_eaten
+show incomplete: True
+show if empty: You do not have any fruit.
+edit:
+  - name.text
+  - last_eaten
+---
+event: review_answers
+question: |
+  Review your answers
+review:
+  - note: |
+      ${ fruit.table }
+
+      ${ fruit.add_action() }
+---
+mandatory: True
+code: |
+  fruit.table
+  fruit.gather()
+  final_screen
+---
+event: final_screen
+question: |
+  Information about fruit
+subquestion: |
+  Here is a fruity summary.
+
+  ${ fruit.table }

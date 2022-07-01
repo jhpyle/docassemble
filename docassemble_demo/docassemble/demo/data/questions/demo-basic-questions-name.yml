@@ -1,0 +1,115 @@
+generic object: Individual
+question: |
+  ${ x.ask_name_template.subject }
+subquestion: |
+  ${ x.ask_name_template.content }
+fields:
+  - First name: x.name.first
+    required: x.first_name_required
+    show if:
+      code: x.name.uses_parts
+    default: ${ x.name.default_first }
+  - Middle name: x.name.middle
+    required: x.middle_name_required
+    show if:
+      code: x.name.uses_parts and x.ask_middle_name
+    default: ${ x.name.default_middle }
+  - Last name: x.name.last
+    required: x.last_name_required
+    show if:
+      code: x.name.uses_parts
+    default: ${ x.name.default_last }
+  - Name: x.name.text
+    show if:
+      code: not x.name.uses_parts
+  - E-mail: x.email
+    datatype: email
+    required: x.email_required
+    show if:
+      code: x.ask_email_with_name
+---
+generic object: Individual
+question: |
+  ${ x.ask_email_template.subject }
+subquestion: |
+  ${ x.ask_email_template.content }
+fields:
+  - E-mail: x.email
+    datatype: email
+---
+generic object: Individual
+template: x.ask_name_template
+subject: |
+  % if get_info('user') is x:
+  What is your name?
+  % else:
+  What is the name of ${ x.description }?
+  % endif
+content: ""
+---
+generic object: Individual
+if: x.ask_email_with_name
+template: x.ask_name_template
+subject: |
+  % if x is get_info('user'):
+  What is your name and e-mail address?
+  % else:
+  What is the name and e-mail address of ${ x.description }?
+  % endif
+content: ""
+---
+generic object: Individual
+template: x.ask_email_template
+subject: |
+  % if x is get_info('user'):
+  What is your e-mail address?
+  % else:
+  What is the e-mail address of ${ x.description }?
+  % endif
+content: ""
+---
+generic object: Individual
+code: |
+  x.description = x.object_name()
+---
+generic object: Individual
+code: |
+  if user_logged_in() and user_info().first_name:
+    x.name.default_first = user_info().first_name
+  else:
+    x.name.default_first = ''
+---
+generic object: Individual
+code: |
+  if user_logged_in() and user_info().last_name:
+    x.name.default_last = user_info().last_name
+  else:
+    x.name.default_last = ''
+---
+generic object: Individual
+code: |
+  x.name.default_middle = ''
+---
+generic object: Individual
+code: |
+  x.first_name_required = True
+---
+generic object: Individual
+code: |
+  x.last_name_required = True
+---
+generic object: Individual
+code: |
+  x.email_required = True
+---
+generic object: Individual
+code: |
+  x.ask_middle_name = False
+---
+generic object: Individual
+code: |
+  x.middle_name_required = False
+---
+generic object: Individual
+code: |
+  x.ask_email_with_name = False

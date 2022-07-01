@@ -13,7 +13,7 @@ es:
   "Your documents will be e-mailed to": "Sus documentos serán enviados por correo electrónico a"
   "E-mail was sent to": "Se envió un correo electrónico a"
   "The following documents have been created for you.": "Los siguientes documentos han sido creados para usted."
-  "attachment_message_singular": "El siguiente documento ha sido creado para usted."
+  "The following document has been created for you.": "El siguiente documento ha sido creado para usted."
   ", is attached": ", se adjunta"
   ", are attached": ", se adjuntan"
   "Your document, ": "Su documento, "
@@ -24,3 +24,4 @@ es:
   "Loading.  Please wait . . . ": "Cargando.  Espere, por favor."
   "You must sign your name to continue.": "Tiene que firmar antes de continuar."
   "None of the above": "Ninguno"
+  "This field is required.": "Esta pregunta es requerida."

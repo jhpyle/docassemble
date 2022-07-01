@@ -8,6 +8,7 @@
 <script src="../../lib/codemirror.js"></script>
 <script src="../../addon/edit/continuelist.js"></script>
 <script src="../xml/xml.js"></script>
+<script src="../javascript/javascript.js"></script>
 <script src="markdown.js"></script>
 <style>
       .CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}
@@ -16,7 +17,7 @@
       .cm-s-default .cm-trailing-space-new-line:before {position: absolute; content: "\21B5"; color: #777;}
     </style>
 <div id=nav>
-  <a href="https://codemirror.net"><h1>CodeMirror</h1><img id=logo src="../../doc/logo.png"></a>
+  <a href="https://codemirror.net"><h1>CodeMirror</h1><img id=logo src="../../doc/logo.png" alt=""></a>
 
   <ul>
     <li><a href="../../index.html">Home</a>
@@ -158,7 +159,7 @@ Output:
 
 Unordered (bulleted) lists use asterisks, pluses, and hyphens (`*`,
 `+`, and `-`) as list markers. These three markers are
-interchangable; this:
+interchangeable; this:
 
     *   Candy.
     *   Gum.
@@ -305,7 +306,7 @@ it easy to use Markdown to write about HTML example code:
     I strongly recommend against using any `&lt;blink&gt;` tags.
 
     I wish SmartyPants used named entities like `&amp;mdash;`
-    instead of decimal-encoded entites like `&amp;#8212;`.
+    instead of decimal-encoded entities like `&amp;#8212;`.
 
 Output:
 
@@ -314,7 +315,7 @@ Output:
 
     &lt;p&gt;I wish SmartyPants used named entities like
     &lt;code&gt;&amp;amp;mdash;&lt;/code&gt; instead of decimal-encoded
-    entites like &lt;code&gt;&amp;amp;#8212;&lt;/code&gt;.&lt;/p&gt;
+    entities like &lt;code&gt;&amp;amp;#8212;&lt;/code&gt;.&lt;/p&gt;
 
 
 To specify an entire block of pre-formatted code, indent every line of
@@ -359,7 +360,7 @@ for (var i = 0; i < items.length; i++) {
       });
     </script>
 
-    <p>If you also want support <code>strikethrough</code>, <code>emoji</code> and few other goodies, check out <a href="../gfm/index.html">Github-Flavored Markdown mode</a>.</p>
+    <p>If you also want support <code>strikethrough</code>, <code>emoji</code> and few other goodies, check out <a href="../gfm/index.html">GitHub-Flavored Markdown mode</a>.</p>
 
     <p>Optionally depends on other modes for properly highlighted code blocks,
       and XML mode for properly highlighted inline XML blocks.</p>
@@ -369,7 +370,7 @@ for (var i = 0; i < items.length; i++) {
       <li>
         <d1>
           <dt><code>highlightFormatting: boolean</code></dt>
-          <dd>Whether to separately highlight markdown meta characterts (<code>*[]()</code>etc.) (default: <code>false</code>).</dd>
+          <dd>Whether to separately highlight markdown meta characters (<code>*[]()</code>etc.) (default: <code>false</code>).</dd>
         </d1>
       </li>
       <li>
@@ -387,13 +388,19 @@ for (var i = 0; i < items.length; i++) {
       <li>
         <d1>
           <dt><code>fencedCodeBlockHighlighting: boolean</code></dt>
-          <dd>Whether to syntax-highlight fenced code blocks, if given mode is included (default: <code>true</code>).</dd>
+          <dd>Whether to syntax-highlight fenced code blocks, if given mode is included, or fencedCodeBlockDefaultMode is set (default: <code>true</code>).</dd>
+        </d1>
+      </li>
+      <li>
+        <d1>
+          <dt><code>fencedCodeBlockDefaultMode: string</code></dt>
+          <dd>Mode to use for fencedCodeBlockHighlighting, if given mode is not included.</dd>
         </d1>
       </li>
       <li>
         <d1>
           <dt><code>tokenTypeOverrides: Object</code></dt>
-          <dd>When you want ot override default token type names (e.g. <code>{code: "code"}</code>).</dd>
+          <dd>When you want to override default token type names (e.g. <code>{code: "code"}</code>).</dd>
         </d1>
       </li>
       <li>

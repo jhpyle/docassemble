@@ -1,0 +1,30 @@
+metadata:
+  title: OCR PDF
+  documentation: "https://docassemble.org/docs/objects.html#DAFile.make_ocr_pdf_in_background"
+---
+objects:
+  - final_file: DAFile
+---
+mandatory: True
+code: |
+  if not bg_task.ready():
+    waiting_screen
+---
+code: |
+  bg_task = final_file.make_ocr_pdf_in_background(uploaded_files)
+---
+question: |
+  Upload some files and I will OCR them for you.
+fields:
+  - Files: uploaded_files
+    datatype: files
+---
+reload: True
+event: waiting_screen
+question: Please wait
+---
+mandatory: True
+question: |
+  All done.
+subquestion: |
+  [Download your file](${ final_file.url_for() })

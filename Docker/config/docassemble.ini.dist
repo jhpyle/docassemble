@@ -11,3 +11,4 @@ venv = {{DA_PYTHON}}
 pidfile = /var/run/uwsgi/uwsgi.pid
 buffer-size = 32768
 touch-reload = {{DA_ROOT}}/webapp/docassemble.wsgi
+py-executable = {{DA_PYTHON}}/bin/python

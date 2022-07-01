@@ -1,0 +1,89 @@
+metadata:
+  title: Read before signing
+  short: Signature
+  documentation: https://docassemble.org/docs/recipes.html#read before signing
+  example start: 1
+  example end: 11
+---
+objects:
+  - user: Individual
+  - friend: Individual
+---
+mandatory: True
+code: |
+  user.name.first
+  friend.name.first
+  prized_collection
+  draft_screen_shown
+  user.signature
+  document_finalized
+  final_screen
+---
+attachment:
+  variable name: instrument
+  name: Transfer of Ownership
+  filename: Transfer-of-Ownership
+  pdf template file: |
+    Transfer-of-Ownership.pdf
+  fields:
+    - "grantor": ${ user }
+    - "grantee": ${ friend }
+    - "collection": ${ prized_collection }
+    - "signature": ${ user.signature if final else "[FILE sign-here.png]" }
+# If the variable "final" changes,
+# the document needs to be reassembled
+depends on: final
+---
+# What it means for the document
+# to be finalized
+code: |
+  # Put the document into final mode
+  final = True
+  # Submit the document somewhere
+  # send_email(...)
+  # Prevent duplicate submissions
+  prevent_going_back()
+  document_finalized = True
+---
+# Set an initial value for final
+code: |
+  final = False
+---
+question: |
+  What is your name?
+fields:
+  - First Name: user.name.first
+  - Last Name: user.name.last
+---
+question: |
+  What is your best friend's name?
+fields:
+  - First Name: friend.name.first
+  - Last Name: friend.name.last
+---
+question: What objects do you collect?
+fields:
+  - Collection: prized_collection
+    hint: baseball cards, fine china
+---
+question: |
+  Please sign your name below.
+signature: user.signature
+under: |
+  ${ user }
+---
+question: Your draft document
+subquestion: |
+  Please review the attached document and
+  press Continue if you agree to sign it.
+continue button field: draft_screen_shown
+attachment code: instrument
+---
+event: final_screen
+question: Congratulations!
+subquestion: |
+  You have now transferred everything
+  you own to ${ friend }.
+
+  Here is your signed document.
+attachment code: instrument

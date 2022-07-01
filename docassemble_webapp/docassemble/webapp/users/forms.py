@@ -1,31 +1,45 @@
-import sys
 import re
-from flask_user.forms import RegisterForm, LoginForm, password_validator, unique_email_validator
+import email.utils
+from docassemble_flask_user.forms import RegisterForm, LoginForm, password_validator, unique_email_validator
 from flask_wtf import FlaskForm
-from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, PasswordField, validators, TextAreaField
+from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, validators, TextAreaField
 from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
-from docassemble.base.functions import word
+from docassemble.base.functions import LazyWord as word, LazyArray
 from docassemble.base.config import daconfig
+from docassemble.base.generate_key import random_alphanumeric
+from docassemble.base.logger import logmessage
+from docassemble.webapp.daredis import r
+from docassemble.webapp.db_object import db
+from docassemble.webapp.users.models import UserModel, Role
+from flask import flash, current_app, request, abort
 from flask_login import current_user
-import email.utils
-
+from sqlalchemy import select
 try:
     import ldap
 except ImportError:
     if 'ldap login' not in daconfig:
-        daconfig['ldap login'] = dict()
+        daconfig['ldap login'] = {}
     daconfig['ldap login']['enable'] = False
 
+HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
+
+def get_requester_ip(req):
+    if not req:
+        return '127.0.0.1'
+    if HTTP_TO_HTTPS:
+        if 'X-Real-Ip' in req.headers:
+            return req.headers['X-Real-Ip']
+        if 'X-Forwarded-For' in req.headers:
+            return req.headers['X-Forwarded-For']
+    return req.remote_addr
+
 def fix_nickname(form, field):
-    field.data = form.first_name.data + ' ' + form.last_name.data
-    return
+    field.data = str(form.first_name.data) + ' ' + str(form.last_name.data)
 
 class MySignInForm(LoginForm):
     def validate(self):
-        from docassemble.webapp.daredis import r
-        from flask import request, abort
-        key = 'da:failedlogin:ip:' + str(request.remote_addr)
+        key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
         failed_attempts = r.get(key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
             abort(404)
@@ -37,42 +51,37 @@ class MySignInForm(LoginForm):
             connect.set_option(ldap.OPT_REFERRALS, 0)
             try:
                 connect.simple_bind_s(username, password)
-                if not (connect.whoami_s() is None):
+                if connect.whoami_s() is not None:
                     connect.unbind_s()
-                    from flask import current_app
                     user_manager = current_app.user_manager
                     user, user_email = user_manager.find_user_by_email(self.email.data)
                     if not user:
-                        from docassemble.base.generate_key import random_alphanumeric
-                        from docassemble.webapp.db_object import db
-                        from docassemble.webapp.users.models import UserModel, Role
                         while True:
                             new_social = 'ldap$' + random_alphanumeric(32)
-                            existing_user = UserModel.query.filter_by(social_id=new_social).first()
+                            existing_user = db.session.execute(select(UserModel).filter_by(social_id=new_social)).scalar()
                             if existing_user:
                                 continue
                             break
                         user = UserModel(social_id=new_social, email=self.email.data, nickname='', active=True)
-                        user_role = Role.query.filter_by(name='user').first()
+                        user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
                         user.roles.append(user_role)
                         db.session.add(user)
                         db.session.commit()
                     result = True
                 else:
                     connect.unbind_s()
-                    result = super(MySignInForm, self).validate()
+                    result = super().validate()
             except (ldap.LDAPError, ldap.INVALID_CREDENTIALS):
                 connect.unbind_s()
-                result = super(MySignInForm, self).validate()
+                result = super().validate()
         else:
-            from flask import current_app
             user_manager = current_app.user_manager
             user, user_email = user_manager.find_user_by_email(self.email.data)
             if user is None:
                 if daconfig.get('confirm registration', False):
-                    self.email.errors = list()
+                    self.email.errors = []
                     self.email.errors.append(word("Incorrect Email and/or Password"))
-                    self.password.errors = list()
+                    self.password.errors = []
                     self.password.errors.append(word("Incorrect Email and/or Password"))
                 else:
                     self.email.errors = list(self.email.errors)
@@ -93,9 +102,9 @@ class MySignInForm(LoginForm):
                 else:
                     self.email.errors.append(word("You cannot log in this way."))
                 return False
-            #sys.stderr.write("Trying super validate\n")
-            result = super(MySignInForm, self).validate()
-            #sys.stderr.write("Super validate response was " + repr(result) + "\n")
+            #logmessage("Trying super validate")
+            result = super().validate()
+            #logmessage("Super validate response was " + repr(result))
         if result is False:
             r.incr(key)
             r.expire(key, daconfig['ban period'])
@@ -119,15 +128,27 @@ def da_unique_email_validator(form, field):
         return True
     return unique_email_validator(form, field)
 
+def da_registration_restrict_validator(form, field):
+    if len(daconfig['authorized registration domains']) == 0:
+        return True
+    user_email = str(form.email.data).lower().strip()
+    for domain in daconfig['authorized registration domains']:
+        if user_email.endswith(domain):
+            return True
+    errors = list(form.email.errors)
+    errors.append(word('E-mail addresses with this domain are not authorized to register for accounts on this system.'))
+    form.email.errors = tuple(errors)
+    return False
+
 class MyRegisterForm(RegisterForm):
     first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
     last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
-    social_id = StringField(word('Social ID'))
     nickname = StringField(word('Nickname'), [fix_nickname])
     email = StringField(word('Email'), validators=[
         validators.DataRequired(word('Email is required')),
         validators.Email(word('Invalid Email')),
-        da_unique_email_validator])
+        da_unique_email_validator,
+        da_registration_restrict_validator])
 
 def length_two(form, field):
     if len(field.data) != 2:
@@ -160,10 +181,15 @@ class EditUserProfileForm(UserProfileForm):
     active = BooleanField(word('Active'))
     uses_mfa = BooleanField(word('Uses two-factor authentication'))
     def validate(self, user_id, admin_id):
+        user_manager = current_app.user_manager
         rv = UserProfileForm.validate(self)
         if not rv:
             return False
-        if current_user.id == user_id:
+        user, user_email = user_manager.find_user_by_email(self.email.data)
+        if user is not None and user.id != user_id:
+            self.email.errors.append(word('That e-mail address is already taken.'))
+            return False
+        if current_user.id == user_id and current_user.has_roles('admin'):
             if admin_id not in self.role_id.data:
                 self.role_id.errors.append(word('You cannot take away your own admin privilege.'))
                 return False
@@ -173,15 +199,12 @@ class EditUserProfileForm(UserProfileForm):
 class PhoneUserProfileForm(UserProfileForm):
     def validate(self):
         if self.email.data:
-            from flask_login import current_user
             if current_user.social_id.startswith('phone$'):
-                from docassemble.webapp.users.models import UserModel
-                from flask import flash
-                existing_user = UserModel.query.filter_by(email=self.email.data, active=True).first()
+                existing_user = db.session.execute(select(UserModel).filter_by(email=self.email.data, active=True)).scalar()
                 if existing_user is not None and existing_user.id != current_user.id:
                     flash(word("Please choose a different e-mail address."), 'error')
                     return False
-        return super(PhoneUserProfileForm, self).validate()
+        return super().validate()
     email = StringField(word('E-mail'), validators=[Optional(), Email(word('Must be a valid e-mail address'))])
 
 class RequestDeveloperForm(FlaskForm):
@@ -191,7 +214,6 @@ class RequestDeveloperForm(FlaskForm):
 class MyInviteForm(FlaskForm):
     def validate(self):
         has_error = False
-        from flask import flash
         if self.email.data:
             for email_address in re.split(r'[\n\r]+', self.email.data.strip()):
                 (part_one, part_two) = email.utils.parseaddr(email_address)
@@ -202,9 +224,9 @@ class MyInviteForm(FlaskForm):
                     has_error = True
         if has_error:
             return False
-        return super(MyInviteForm, self).validate()
+        return super().validate()
     email = TextAreaField(word('One or more e-mail addresses (separated by newlines)'), validators=[
-        validators.Required(word('At least one e-mail address must be listed'))
+        validators.InputRequired(word('At least one e-mail address must be listed'))
     ])
     role_id = SelectField(word('Role'))
     next = HiddenField()
@@ -212,14 +234,14 @@ class MyInviteForm(FlaskForm):
 
 class UserAddForm(FlaskForm):
     email = StringField(word('E-mail'), validators=[
-        validators.Required(word('E-mail is required')),
+        validators.InputRequired(word('E-mail is required')),
         validators.Email(word('Invalid E-mail'))])
     first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
     last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     password = StringField(word('Password'), widget=PasswordInput(hide_value=False), validators=[password_validator])
     submit = SubmitField(word('Add'))
-    
+
 class PhoneLoginForm(FlaskForm):
     phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255)])
     submit = SubmitField(word('Go'))
@@ -229,11 +251,8 @@ class PhoneLoginVerifyForm(FlaskForm):
     verification_code = StringField(word('Verification code'), [validators.Length(min=daconfig['verification code digits'], max=daconfig['verification code digits'])])
     submit = SubmitField(word('Verify'))
     def validate(self):
-        from docassemble.webapp.daredis import r
-        from docassemble.base.logger import logmessage
-        from flask import request, abort
         result = True
-        key = 'da:failedlogin:ip:' + str(request.remote_addr)
+        key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
         failed_attempts = r.get(key)
         if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
             abort(404)
@@ -293,5 +312,12 @@ class MyResendConfirmEmailForm(FlaskForm):
     submit = SubmitField(word('Send confirmation email'))
 
 class ManageAccountForm(FlaskForm):
-    confirm = StringField(word('Type \"delete my account\" here to confirm that you want to delete your account.'), [validators.AnyOf([word("delete my account")], message=word('Since you did not type \"delete my account\" I did not delete your account.'))])
+    confirm = StringField(word('Type \"delete my account\" here to confirm that you want to delete your account.'), [validators.AnyOf(LazyArray([word("delete my account")]), message=word('Since you did not type \"delete my account\" I did not delete your account.'))])
     delete = SubmitField(word('Delete Account'))
+
+class InterviewsListForm(FlaskForm):
+    i = StringField()
+    session = StringField()
+    tags = StringField()
+    delete = SubmitField()
+    delete_all = SubmitField()

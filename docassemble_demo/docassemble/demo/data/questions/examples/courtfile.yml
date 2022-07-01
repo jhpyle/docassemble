@@ -1,0 +1,160 @@
+metadata:
+  title: Court filing
+  short: Court
+  documentation: https://docassemble.org/docs/recipes.html#courtfile
+  example start: 1
+  example end: 12
+---
+objects:
+  - user: Individual
+  - court_filing_unit: DAEmailRecipient.using(name='Prothonotary of the Court', address='jpyle@docassemble.org')
+---
+question: |
+  Please provide your name and
+  e-mail address.
+fields:
+  - First Name: user.name.first
+  - Last Name: user.name.last
+  - E-mail address: user.email
+    datatype: email
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: user.favorite_fruit
+---
+attachment:
+  name: |
+    Praecipe to Declare Favorite Fruit
+  filename: Praecipe_Favorite_Fruit_${ space_to_underscore(user) }
+  content: |
+    [BOLDCENTER] Praecipe to Declare
+    Favorite Fruit
+
+    I, ${ user }, on ${ today() }, hereby
+    inform all interested parties that my
+    favorite fruit is
+    ${ user.favorite_fruit }.
+  variable name: court_document
+---
+mandatory: True
+question: |
+  Your Praecipe to Declare Favorite Fruit
+subquestion: |
+  % if task_performed('filed_in_court'):
+  You have filed your **Praecipe to Declare
+  Favorite Fruit** in court.
+  
+  Follow up with the court if you have
+  any questions about the legal process.
+  % else:
+  When you are ready to file your Praecipe
+  to Declare Favorite Fruit in court, press
+  this button.
+  
+  ${ action_button_html(url_action('filing_process'),
+                        label='Submit this to the court',
+                        size='md',
+                        color='warning') }
+
+  Until then, take your time and look
+  over the document to make sure you
+  really want to file it.
+  % endif
+attachment code: court_document
+---
+event: filing_process
+code: |
+  if task_performed('filed_in_court'):
+    # This is unlikely to happen but
+    # still worth protecting against.
+    log('You have already filed the document.', 'danger')
+  else:
+    force_ask('wants_to_file',
+              'email_address_confirmed',
+              'really_wants_to_file',
+              {'recompute': ['document_filed']},
+              'end_of_filing_process')
+---
+question: |
+  Are you completely and totally
+  sure you want to file your Praecipe
+  to Declare Favorite Fruit?
+subquestion: |
+  Once you file your Praecipe, you
+  can't take it back.
+field: wants_to_file
+buttons:
+  - "Yes, I am sure I want to file.": True
+  - "On second thought, I am not ready": False
+---
+if: wants_to_file
+question: |
+  What is your e-mail address?
+subquestion: |
+  I am going to e-mail your document
+  to the court.  I need to cc you on
+  the e-mail so you have it for your
+  records.
+
+  Please confirm that this is your
+  e-mail address.
+fields:
+  - E-mail: user.email
+continue button field: email_address_confirmed
+---
+if: wants_to_file
+question: |
+  Are you completely and totally sure
+  beyond a shadow of a doubt that you
+  wish to file your Praecipe in court?
+subquestion: |
+  You can [take one last look at it]
+  before submitting.
+
+  [take one last look at it]: ${ court_document.pdf.url_for() }
+field: really_wants_to_file
+buttons:
+  - "Submit the document now": True
+  - "Get me out of here!": False
+---
+template: filing_template
+subject: |
+  E-filing: Praecipe to Declare
+  Favorite Fruit on behalf of
+  ${ user }
+content: |
+  To the Prothonotary:
+
+  Please accept the attached
+  Praecipe to Declare Favorite Fruit,
+  which I am filing on behalf of
+  ${ user }.
+
+  Thank you,
+
+  A local docassemble server
+
+  Cc: ${ user } via e-mail at ${ user.email }
+---
+code: |
+  if wants_to_file and really_wants_to_file:
+    document_filed = send_email(to=court_filing_unit,
+                                cc=user,
+                                template=filing_template,
+                                attachments=court_document,
+                                task='filed_in_court')
+    if document_filed:
+      prevent_going_back()
+    else:
+      log('There was a problem with the e-mail system.  Your document was not filed.', 'danger')
+  else:
+    document_filed = False
+---
+if: wants_to_file and really_wants_to_file and document_filed
+question: |
+  Congratulations!
+subquestion: |
+  Your document is now on its way to the
+  court.
+continue button field: end_of_filing_process

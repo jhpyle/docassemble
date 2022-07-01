@@ -1,0 +1,21 @@
+metadata:
+  title: Secondary interview
+  example start: 1
+  example end: 3
+---
+mandatory: True
+question: |
+  There are ${ number_of_fruit } fruit.
+subquestion: |
+  Your favorite fruit is ${ favorite_fruit }.
+---
+event: add_to_fruit_count
+code: |
+  number_of_fruit += action_argument('number')
+---
+code: |
+  number_of_fruit = 0
+---
+code: |
+  favorite_fruit = 'pineapple'
+

@@ -21,7 +21,7 @@
     $.fn.fileinputLocales['ja'] = {
         fileSingle: 'ファイル',
         filePlural: 'ファイル',
-        browseLabel: 'ファイルを選択&hellip;',
+        browseLabel: 'ファイルを選択 &hellip;',
         removeLabel: '削除',
         removeTitle: '選択したファイルを削除',
         cancelLabel: 'キャンセル',
@@ -34,13 +34,14 @@
         msgNoFilesSelected: 'ファイルが選択されていません',
         msgPaused: 'Paused',
         msgCancelled: 'キャンセル',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'プレビュー',
         msgFileRequired: 'ファイルを選択してください',
         msgSizeTooSmall: 'ファイル"{name}" (<b>{size} KB</b>)はアップロード可能な下限容量<b>{minSize} KB</b>より小さいです',
         msgSizeTooLarge: 'ファイル"{name}" (<b>{size} KB</b>)はアップロード可能な上限容量<b>{maxSize} KB</b>を超えています',
         msgFilesTooLess: '最低<b>{n}</b>個の{files}を選択してください',
         msgFilesTooMany: '選択したファイルの数<b>({n}個)</b>はアップロード可能な上限数<b>({m}個)</b>を超えています',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'ファイル"{name}"はありませんでした',
         msgFileSecured: 'ファイル"{name}"は読み取り権限がないため取得できません',
         msgFileNotReadable: 'ファイル"{name}"は読み込めません',
@@ -60,16 +61,16 @@
             'object': 'object'
         },
         msgUploadAborted: 'ファイルのアップロードが中止されました',
-        msgUploadThreshold: '処理中...',
-        msgUploadBegin: '初期化中...',
+        msgUploadThreshold: '処理中 &hellip;',
+        msgUploadBegin: '初期化中 &hellip;',
         msgUploadEnd: '完了',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'アップロードに有効なデータがありません',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
         msgProgressError: 'エラー',
         msgValidationError: '検証エラー',
-        msgLoading: '{files}個中{index}個目のファイルを読み込み中&hellip;',
+        msgLoading: '{files}個中{index}個目のファイルを読み込み中 &hellip;',
         msgProgress: '{files}個中{index}個のファイルを読み込み中 - {name} - {percent}% 完了',
         msgSelected: '{n}個の{files}を選択',
         msgFoldersNotAllowed: 'ドラッグ&ドロップが可能なのはファイルのみです。{n}個のフォルダ－は無視されました',
@@ -91,7 +92,7 @@
             uploadBatch: '一括ファイルアップロード',
             uploadExtra: 'フォームデータアップロード'
         },
-        dropZoneTitle: 'ファイルをドラッグ&ドロップ&hellip;',
+        dropZoneTitle: 'ファイルをドラッグ&ドロップ &hellip;',
         dropZoneClickTitle: '<br>(または クリックして{files}を選択 )',
         slugCallback: function(text) {
             return text ? text.split(/(\\|\/)/g).pop().replace(/[^\w\u4e00-\u9fa5\u3040-\u309f\u30a0-\u30ff\u31f0-\u31ff\u3200-\u32ff\uff00-\uffef\-.\\\/ ]+/g, '') : '';
@@ -106,7 +107,7 @@
             indicatorSuccessTitle: 'アップロード済み',
             indicatorErrorTitle: 'アップロード失敗',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'アップロード中...'
+            indicatorLoadingTitle:  'アップロード中 &hellip;'
         },
         previewZoomButtonTitles: {
             prev: '前のファイルを表示',

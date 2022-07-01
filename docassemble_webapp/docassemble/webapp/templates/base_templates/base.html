@@ -9,49 +9,112 @@
     <meta name="google-signin-client_id" content="{{ config['OAUTH_CREDENTIALS']['google']['id'] }}">
 {%- endif %}{{ extra_meta }}
     <title>{% if tab_title %}{{ tab_title }}{% else %}{{ config['APP_NAME'] }}{% endif %}</title>
-    <link rel="shortcut icon" href="{{ url_for('favicon') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon') }}">
-    <link rel="icon" type="image/png" href="{{ url_for('favicon_md') }}" sizes="32x32">
-    <link rel="icon" type="image/png" href="{{ url_for('favicon_sm') }}" sizes="16x16">
-    <link rel="manifest" href="{{ url_for('favicon_manifest_json') }}">
-    <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab') }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
+{%- for key in config['SOCIAL'] %}
+{%- if key not in ('og', 'twitter', 'fb') %}
+    <meta name="{{ key }}" content="{{ config['SOCIAL'][key] }}">
+{%- endif %}
+{%- endfor %}
+    <meta itemprop="name" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
+{%- if 'description' in config['SOCIAL'] %}
+    <meta itemprop="description" content="{{ config['SOCIAL']['description'] }}">
+{%- endif %}
+{%- if 'image' in config['SOCIAL'] %}
+    <meta itemprop="image" content="{{ config['SOCIAL']['image'] }}">
+{%- endif %}
+{%- if 'card' not in config['SOCIAL']['twitter'] %}
+    <meta name="twitter:card" content="summary">
+{%- endif %}
+{%- for key in config['SOCIAL']['twitter'] %}
+{%- if key != 'title' %}
+    <meta name="twitter:{{ key }}" content="{{ config['SOCIAL']['twitter'][key] }}">
+{%- endif %}
+{%- endfor %}
+    <meta name="twitter:title" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
+{%- if 'image' in config['SOCIAL']['og'] %}
+    <meta name="og:title" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
+{%- for key in config['SOCIAL']['og'] %}
+{%- if key not in ('locale', 'url') %}
+    <meta name="og:{{ key }}" content="{{ config['SOCIAL']['og'][key] }}">
+{%- endif %}
+{%- endfor %}
+    <meta name="og:url" content="{{ request.base_url }}">
+{%- if 'locale' in config['SOCIAL']['og'] %}
+    <meta name="og:locale" content="{{ config['SOCIAL']['og']['locale'] }}">
+{%- else %}
+    <meta name="og:locale" content="{{ config['OG_LOCALE'] }}">
+{%- endif %}
+{%- if 'site_name' not in config['SOCIAL']['og'] %}
+    <meta name="og:site_name" content="{{ config['BRAND_NAME'] }}">
+{%- endif %}
+{%- if 'type' not in config['SOCIAL']['og'] %}
+    <meta name="og:type" content="website">
+{%- endif %}
+{%- endif %}
+{%- for key in config['SOCIAL']['fb'] %}
+    <meta name="fb:{{ key }}" content="{{ config['SOCIAL']['fb'][key] }}">
+{%- endfor %}
+{%- if config['USE_FAVICON'] %}
+    <link rel="shortcut icon" href="{{ url_for('favicon') }}{{ config['FAVICON_VERSION'] }}">
+{%- endif %}
+{%- if config['USE_APPLE_TOUCH_ICON'] %}
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon') }}{{ config['FAVICON_VERSION'] }}">
+{%- endif %}
+{%- if config['USE_FAVICON_MD'] %}
+    <link rel="icon" type="image/png" href="{{ url_for('favicon_md') }}{{ config['FAVICON_VERSION'] }}" sizes="32x32">
+{%- endif %}
+{%- if config['USE_FAVICON_SM'] %}
+    <link rel="icon" type="image/png" href="{{ url_for('favicon_sm') }}{{ config['FAVICON_VERSION'] }}" sizes="16x16">
+{%- endif %}
+{%- if config['USE_SITE_WEBMANIFEST'] %}
+    <link rel="manifest" href="{{ url_for('favicon_site_webmanifest') }}{{ config['FAVICON_VERSION'] }}">
+{%- endif %}
+{%- if config['USE_SAFARI_PINNED_TAB'] %}
+    <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab') }}{{ config['FAVICON_VERSION'] }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
+{%- endif %}
+    <meta name="msapplication-TileColor" content="{{ config['FAVICON_TILE_COLOR'] }}">
     <meta name="theme-color" content="{{ config['FAVICON_THEME_COLOR'] }}">
-    <script defer src="{{ url_for('static', filename='fontawesome/js/all.js', v=config['DA_VERSION']) }}"></script>
+    <script defer src="{{ url_for('static', filename='fontawesome/js/all.min.js', v=config['DA_VERSION']) }}"></script>
     <link href="{% if config['BOOTSTRAP_THEME'] %}{{ config['BOOTSTRAP_THEME'] }}{% else %}{{ url_for('static', filename='bootstrap/css/bootstrap.min.css', v=config['DA_VERSION']) }}{% endif %}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='app/app.css', v=config['DA_VERSION']) }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
+    <link href="{{ url_for('static', filename='app/app.min.css', v=config['DA_VERSION']) }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
   </head>
-  <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar">
-    <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark">
-      <div class="{% if userclass %}container danavcontainer{% else %}container{% endif %}">
-        {% if back_button %}{{ back_button }}{% endif %}{% if request.path == "/playground" %}<div class="dropdown"><div class="navbar-brand dropdown-toggle" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ page_title }}</div><div class="dropdown-menu" aria-labelledby="dropdownMenuButton">{% if current_project != 'default' %}<a class="dropdown-item" href="?project=default"><i class="fas fa-archive"></i> {{ word("Default Playground") }}</a>{% endif %}{% for project in projects %}{% if project != current_project %}<a class="dropdown-item" href="?project={{ project }}"><i class="fas fa-archive"></i> {{ project }}</a>{% endif %}{% endfor %}<a class="dropdown-item" href="{{ url_for('playground_project', project=current_project) }}"><i class="fas fa-tasks"></i> {{ word('Manage Projects') }}</a></div></div>{% else %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>{% endif %}
+  <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar{% if footer_content %} da-pad-for-footer{% endif %}">
+    <nav class="navbar fixed-top navbar-expand-md {% if config['INVERSE_NAVBAR'] %}navbar-dark bg-dark{% else %}bg-light{% endif %}">
+      <div class="{% if userclass %}{{ config['CONTAINER_CLASS'] }} danavcontainer{% else %}{{ config['CONTAINER_CLASS'] }}{% endif %}">
+        {% if back_button %}{{ back_button }}{% endif %}{% if request.path == "/playground" %}<div class="dropdown"><div class="navbar-brand dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ page_title }}</div><ul class="dropdown-menu daheightlim" aria-labelledby="dropdownMenuButton">{% if current_project != 'default' %}<li><a class="dropdown-item" href="?project=default"><i class="fas fa-archive"></i> {{ word("Default Playground") }}</a></li>{% endif %}{% for project in projects %}{% if project != current_project %}<li><a class="dropdown-item" href="?project={{ project }}"><i class="fas fa-archive"></i> {{ project }}</a></li>{% endif %}{% endfor %}<li><a class="dropdown-item" href="{{ url_for('playground_project', project=current_project) }}"><i class="fas fa-tasks"></i> {{ word('Manage Projects') }}</a></li>{% if config['ENABLE_SHARING_PLAYGROUNDS'] %}<li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{{ url_for('playground_select') }}"><i class="fas fa-eye"></i> {{ word("Browse Other Playgrounds") }}</a></li>{% endif %}</ul></div>{% else %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>{% endif %}
         {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}
-        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#danavbar-collapse">
-          <span class="navbar-toggler-icon"></span>
+        <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#danavbar-collapse">
+          <span class="navbar-toggler-icon"><span class="visually-hidden">{{ word("Display the menu") }}</span></span>
         </button>
         {%- endif %}
         <div class="collapse navbar-collapse" id="danavbar-collapse">
-          <ul class="navbar-nav ml-auto">
+          <ul class="navbar-nav ms-auto">
             {%- if not current_user.is_anonymous %}
             <li class="nav-item dropdown show">
-              <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}</a>
+              <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}</a>
               <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                {%- if current_user.has_roles(['admin', 'advocate']) %}
+                {%- if current_user.has_roles(['admin', 'advocate']) and config['ENABLE_MONITOR'] %}
                 <a class="dropdown-item" href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a>
                 {%- endif %}
                 {%- if current_user.has_roles(['admin', 'developer', 'trainer']) %}
                 <a class="dropdown-item" href="{{ url_for('train') }}">{{ word('Train') }}</a>
                 {%- endif %}
                 {%- if current_user.has_roles(['admin', 'developer']) %}
+                  {%- if config['ALLOW_UPDATES'] %}
                 <a class="dropdown-item" href="{{ url_for('update_package') }}">{{ word('Package Management') }}</a>
-                <a class="dropdown-item" href="{{ url_for('logs') }}">{{ word('Logs') }}</a>
-                {%- if config['ENABLE_PLAYGROUND'] %}
-                <a class="dropdown-item" href="{{ url_for('playground_page') }}">{{ word('Playground') }}</a>
-                {%- endif %}
-                <a class="dropdown-item" href="{{ url_for('utilities') }}">{{ word('Utilities') }}</a>
-                  {%- if current_user.has_roles(['admin']) %}
-                <a class="dropdown-item" href="{{ url_for('user_list') }}">{{ word('User List') }}</a>
-                <a class="dropdown-item" href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a>
                   {%- endif %}
+                  {%- if config['ALLOW_LOG_VIEWING'] %}
+                <a class="dropdown-item" href="{{ url_for('logs') }}">{{ word('Logs') }}</a>
+                  {%- endif %}
+                  {%- if config['ENABLE_PLAYGROUND'] %}
+                <a class="dropdown-item" href="{{ url_for('playground_page') }}">{{ word('Playground') }}</a>
+                  {%- endif %}
+                <a class="dropdown-item" href="{{ url_for('utilities') }}">{{ word('Utilities') }}</a>
+                {%- endif %}
+                {%- if current_user.has_roles(['admin', 'advocate']) or current_user.can_do('access_user_info') %}
+                <a class="dropdown-item" href="{{ url_for('user_list') }}">{{ word('User List') }}</a>
+                {%- endif %}
+                {%- if current_user.has_roles(['admin']) and config['ALLOW_CONFIGURATION_EDITING'] %}
+                <a class="dropdown-item" href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a>
                 {%- endif %}
                 {%- if config['SHOW_DISPATCH'] %}
                 <a class="dropdown-item" href="{{ url_for('interview_start') }}">{{ word('Available Interviews') }}</a>
@@ -64,9 +127,9 @@
                 {%- if config['SHOW_MY_INTERVIEWS'] or current_user.has_roles(['admin']) %}
                 <a class="dropdown-item" href="{{ url_for('interview_list') }}">{{ word('My Interviews') }}</a>
                 {%- endif %}
-                {%- if config['SHOW_PROFILE'] or current_user.has_roles(['admin']) %}
+                {%- if config['SHOW_PROFILE'] or current_user.has_roles(['admin', 'developer']) %}
                 <a class="dropdown-item" href="{{ url_for('user_profile_page') }}">{{ word('Profile') }}</a>
-                {%- else %}
+                {%- elif current_user.social_id.startswith('local') and config['ALLOW_CHANGING_PASSWORD'] %}
                 <a class="dropdown-item" href="{{ url_for('user.change_password') }}">{{ word('Change Password') }}</a>
                 {%- endif %}
                 <a class="dropdown-item" href="{{ url_for('user.logout') }}">{{ word('Sign Out') }}</a>
@@ -83,17 +146,20 @@
         </div>
       </div>
     </nav>
-    <div class="container" id="damain">
+    <div class="{{ config['CONTAINER_CLASS'] }}" id="damain">
     {%- block top %}{% endblock %}
     {%- block flash_messages %}
       {%- with messages = get_flashed_messages(with_categories=true) -%}
         {%- if messages %}
-      <div class="datopcenter col-sm-7 col-md-6 col-lg-5 dacol-centered" id="daflash">
+      <div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">
           {%- for category, message in messages %}
             {%- if category=='error' %}
               {%- set category='danger' %}
             {%- endif %}
-            <div class="alert alert-{{category}}"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ message|safe }}</div>
+        <div class="da-alert alert alert-{{category}} alert-dismissible fade show">
+            {{ message|safe }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ word('Close') }}"></button>
+        </div>
           {%- endfor %}
       </div>
         {%- endif %}
@@ -102,6 +168,14 @@
     {%- block main %}{% endblock %}
     {%- block bottom %}{% endblock %}
     </div>
+    {%- if footer_content %}
+    <footer class="{{ config['FOOTER_CLASS'] }}">
+      <div class="container">
+        {{ footer_content }}
+      </div>
+    </footer>
+    {% endif %}
+
     <script src="{{ url_for('static', filename='app/adminbundle.js', v=config['DA_VERSION']) }}"></script>
     <script>
       var daWhichButton = null;
@@ -143,6 +217,6 @@
           });
         });
       });
-    </script>{{ extra_js }}{{ config['GLOBAL_JS']|safe }}
+    </script>{{ page_js }}{{ extra_js }}{{ config['GLOBAL_JS']|safe }}
   </body>
 </html>

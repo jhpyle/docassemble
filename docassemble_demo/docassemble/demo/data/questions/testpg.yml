@@ -117,9 +117,9 @@ help: |
   [FILE docassemble.base:sample-titles.png]
 fields:
   - Title: x.question_text
-    datatype: area
+    input type: area
   - Body: x.subquestion_text
-    datatype: area
+    input type: area
     required: False
 ---
 generic object: DAQuestion
@@ -139,7 +139,7 @@ subquestion: |
   You can use any valid Python source code to define the variable.
 fields:
   - no label: x.code
-    datatype: area
+    input type: area
     default: "${ x.field_list[0].variable } = "
 ---
 generic object: DAQuestion

@@ -127,6 +127,9 @@
      "[keyword let] [def f] [operator =] ([[ [def a], [def b] ]], [def c]) [operator =>] [variable-2 a] [operator +] [variable-2 c];",
      "[variable c];");
 
+  MT("fatArrow_stringDefault",
+     "([def a], [def b] [operator =] [string 'x\\'y']) [operator =>] [variable-2 a] [operator +] [variable-2 b]")
+
   MT("spread",
      "[keyword function] [def f]([def a], [meta ...][def b]) {",
      "  [variable something]([variable-2 a], [meta ...][variable-2 b]);",
@@ -161,9 +164,9 @@
 
   MT("indent_for",
      "[keyword for] ([keyword var] [def i] [operator =] [number 0];",
-     "     [variable i] [operator <] [number 100];",
-     "     [variable i][operator ++])",
-     "  [variable doSomething]([variable i]);",
+     "     [variable-2 i] [operator <] [number 100];",
+     "     [variable-2 i][operator ++])",
+     "  [variable doSomething]([variable-2 i]);",
      "[keyword debugger];");
 
   MT("indent_c_style",
@@ -249,7 +252,7 @@
   MT("async_object",
      "[keyword let] [def obj] [operator =] { [property async]: [atom false] };");
 
-  // async be highlighet as keyword and foo as def, but it requires potentially expensive look-ahead. See #4173
+  // async be highlighted as keyword and foo as def, but it requires potentially expensive look-ahead. See #4173
   MT("async_object_function",
      "[keyword let] [def obj] [operator =] { [property async] [property foo]([def args]) { [keyword return] [atom true]; } };");
 
@@ -297,6 +300,30 @@
   MT("return_eol",
      "[keyword return]",
      "{} [string-2 /5/]")
+
+  MT("numeric separator",
+     "[number 123_456];",
+     "[number 0xdead_c0de];",
+     "[number 0o123_456];",
+     "[number 0b1101_1101];",
+     "[number .123_456e0_1];",
+     "[number 1E+123_456];",
+     "[number 12_34_56n];")
+
+  MT("underscore property",
+     "[variable something].[property _property];",
+     "[variable something].[property _123];",
+     "[variable something].[property _for];",
+     "[variable _for];",
+     "[variable _123];")
+
+  MT("private properties",
+     "[keyword class] [def C] {",
+     "  [property #x] [operator =] [number 2];",
+     "  [property #read]() {",
+     "    [keyword return] [keyword this].[property #x]",
+     "  }",
+     "}")
 
   var ts_mode = CodeMirror.getMode({indentUnit: 2}, "application/typescript")
   function TS(name) {

@@ -8,17 +8,15 @@
 {%- if package_names.__len__() %}
 <form action="{{ url_for('create_playground_package', project=current_project) }}" method="POST" role="form">
   {{ form.hidden_tag() }}
-  <div class="form-group">
-    <label for="{{ form.name.id }}">{{ word("Select a package") }}</label>
-    <select class="form-control" name="{{ form.name.id }}" id="{{ form.name.id }}">
+  <div class="da-form-group">
+    <label class="form-label" for="{{ form.name.id }}">{{ word("Select a package") }}</label>
+    <select class="form-select" name="{{ form.name.id }}" id="{{ form.name.id }}">
       {%- for package in package_names %}
       <option value="{{ package }}"{% if package == current_package %} selected{% endif %}>{{ package }}</option>
       {%- endfor %}
     </select>
   </div>
-  <div class="form-actions">
-    {{ render_submit_field(form.submit) }}
-  </div>
+  {{ render_submit_field(form.submit) }}
 </form>
 {%- else %}
 <p>You have not yet created any packages.  Create a package in the <a href="{{ url_for('playground_packages', package=current_package) }}">Playground package area</a> first.</p>

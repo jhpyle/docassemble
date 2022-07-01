@@ -33,4 +33,4 @@ subquestion: |
 mandatory: True
 ---
 code: |
-  variable_as_code = text_type(likes_fruit.elements)
+  variable_as_code = str(likes_fruit.elements)

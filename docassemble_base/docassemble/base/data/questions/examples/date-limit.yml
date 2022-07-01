@@ -1,0 +1,14 @@
+metadata:
+  title: Date Maximum
+  short title: Maximum
+  documentation: "https://docassemble.org/docs/fields.html#date"
+---
+question: What is your date of birth?
+fields:
+  - Your birthday: birthdate
+    datatype: date
+    max: ${ today() }
+---
+mandatory: True
+question: |
+  You were born on ${ birthdate }.

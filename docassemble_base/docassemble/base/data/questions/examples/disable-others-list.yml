@@ -23,7 +23,7 @@ fields:
   - Other: favorite_color
   - Second favorite color: second_favorite_color
   - Explain your reasoning: reason
-    datatype: area
+    input type: area
 ---
 question: |
   Your favorite color is

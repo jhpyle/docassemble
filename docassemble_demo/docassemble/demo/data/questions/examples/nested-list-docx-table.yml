@@ -1,0 +1,43 @@
+metadata:
+  title: Nested list in template
+  short title: Nested
+  documentation: "https://docassemble.org/docs/recipes.html#nested"
+  example start: 1
+  example end: 5
+---
+objects:
+  - fruits: DADict.using(object_type=DAList.using(object_type=Thing, there_are_any=True), keys=['Apple', 'Orange'], gathered=True)
+---
+question: |
+  Tell me about the ${ ordinal(j) } variety of ${ i.lower() }.
+fields:
+  - Variety: fruits[i][j].name.text
+  - Cost: fruits[i][j].cost
+    datatype: currency
+---
+question: |
+  Are there more ${ noun_plural(i).lower() } besides ${ fruits[i] }?
+yesno: fruits[i].there_is_another
+---
+# this would get done implicitly through document assembly, but it is 
+# more efficient to trigger the gathering in a code block
+mandatory: True
+code: |
+  for fruit_type, items_of_type in fruits.items():
+    items_of_type.gather()
+---
+mandatory: True
+question: |
+  Here is a summary of the fruit you listed.
+subquestion: |
+  S/N { .text-center }            | Fruit Type { .text-center } | Value { .text-center }
+  ------------------------------- | --------------------------- | -----------------------
+  % for fruit_type, items_of_type in fruits.items():
+  ${ loop.index + 1 }.            | **${ fruit_type }**         | **Subtotal: ${ currency(sum(y.cost for y in items_of_type), decimals=False) }**  { .text-end }
+    % for fruit in items_of_type:
+  ${ alpha(loop.index).lower() }. | ${ fruit.name.full() }      | ${ currency(fruit.cost, decimals=False) } { .text-end }
+    % endfor
+  % endfor
+  &nbsp;                          | &nbsp;                      | **Gross Value: ${ currency(sum(y.cost for y in chain(*fruits.values())), decimals=False) }** { .text-end }
+attachment:
+  docx template file: nested_list_table.docx

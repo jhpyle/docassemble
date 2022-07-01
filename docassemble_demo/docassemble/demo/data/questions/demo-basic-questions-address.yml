@@ -1,0 +1,66 @@
+generic object: Individual
+question: |
+  ${ x.ask_address_template.subject }
+subquestion: |
+  ${ x.ask_address_template.content }
+fields:
+  - "Street address": x.address.address
+    address autocomplete: True
+  - 'Unit': x.address.unit
+    required: x.address_unit_required
+  - 'City': x.address.city
+  - 'State': x.address.state
+    code: states_list()
+  - 'Zip code': x.address.zip
+    required: x.address_zip_code_required
+---
+if: x.ask_about_homelessness
+generic object: Individual
+question: |
+  ${ x.ask_address_template.subject }
+subquestion: |
+  ${ x.ask_address_template.content }
+fields:
+  - label: |
+      % if get_info('user') is x:
+      I am
+      % else:
+      ${ x } is
+      % endif
+      experiencing homelessness.
+    field: x.address.homeless
+    datatype: yesno
+  - "Street address": x.address.address
+    address autocomplete: True
+    hide if: x.address.homeless
+  - 'Unit': x.address.unit
+    required: x.address_unit_required
+    hide if: x.address.homeless
+  - 'City': x.address.city
+  - 'State': x.address.state
+    code: states_list()
+  - 'Zip code': x.address.zip
+    required: x.address_zip_code_required
+    hide if: x.address.homeless
+---
+generic object: Individual
+template: x.ask_address_template
+subject: |
+  % if get_info('user') is x:
+  Where do you live?
+  % else:
+  What is the address of ${ x }?
+  % endif
+content: ""
+---
+generic object: Individual
+code: |
+  x.address_zip_code_required = True
+---
+generic object: Individual
+code: |
+  x.address_unit_required = False
+---
+generic object: Individual
+code: |
+  x.ask_about_homelessness = False

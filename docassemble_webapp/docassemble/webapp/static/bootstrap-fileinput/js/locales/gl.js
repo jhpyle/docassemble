@@ -27,13 +27,14 @@
         msgNoFilesSelected: 'Non hay arquivos seleccionados',
         msgPaused: 'Paused',
         msgCancelled: 'Cancelado',
-        msgPlaceholder: 'Seleccinar {files}...',
+        msgPlaceholder: 'Seleccinar {files} ...',
         msgZoomModalHeading: 'Vista previa detallada',
         msgFileRequired: 'Debes seleccionar un arquivo para subir.',
         msgSizeTooSmall: 'O arquivo "{name}" (<b>{size} KB</b>) é demasiado pequeno e debe ser maior de <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'O arquivo "{name}" (<b>{size} KB</b>) excede o tamaño máximo permitido de <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Debe seleccionar ao menos <b>{n}</b> {files} a cargar.',
         msgFilesTooMany: 'O número de arquivos seleccionados a cargar <b>({n})</b> excede do límite máximo permitido de <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Arquivo "{name}" non encontrado.',
         msgFileSecured: 'Non é posible acceder ao arquivo "{name}" porque estará sendo usado por outra aplicación ou non teñamos permisos de lectura.',
         msgFileNotReadable: 'Non é posible acceder ao arquivo "{name}".',
@@ -53,10 +54,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'A carga de arquivos cancelouse',
-        msgUploadThreshold: 'Procesando...',
-        msgUploadBegin: 'Inicializando...',
+        msgUploadThreshold: 'Procesando &hellip;',
+        msgUploadBegin: 'Inicializando &hellip;',
         msgUploadEnd: 'Feito',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'Non existen datos válidos para o envío.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -97,7 +98,7 @@
             indicatorSuccessTitle: 'Subido',
             indicatorErrorTitle: 'Erro ao subir',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Subindo...'
+            indicatorLoadingTitle:  'Subindo &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Ver arquivo anterior',

@@ -1,0 +1,63 @@
+metadata:
+  documentation: "https://docassemble.org/docs/recipes.html#language selector"
+  example start: 1
+  example end: 5
+---
+metadata:
+  title:
+    en: Fruit
+    es: Fruta
+---
+default screen parts:
+  navigation bar html: |
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" href="#" id="languageSelector" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <img src="${ url_of('docassemble.demo:data/static/united-kingdom.svg') }" style="width:20px;" /><img src="${ url_of('docassemble.demo:data/static/mexico.svg') }" style="margin-left:-5px;width:20px;" />
+      </a>
+      <div class="dropdown-menu" aria-labelledby="languageSelector">
+        <a class="dropdown-item" href="${ url_action('set_lang', lang='en') }">[FILE docassemble.demo:data/static/united-kingdom.svg, 20px] English</a>
+        <a class="dropdown-item" href="${ url_action('set_lang', lang='es') }">[FILE docassemble.demo:data/static/mexico.svg, 20px] Español</a>
+      </div>
+    </li>
+---
+objects:
+  - user: Individual.using(language='en')
+---
+initial: True
+code: |
+  set_language(user.language)
+---
+event: set_lang
+code: |
+  if action_argument('lang') in ('en', 'es'):
+    user.language = action_argument('lang')
+    set_save_status('overwrite')
+---
+interview help: |
+  This is an interview about fruit.
+---
+language: es
+interview help: |
+  Esta es una entrevista sobre frutas. 
+---
+question: What is your favorite fruit?
+fields:
+  - Fruit: user.favorite_fruit
+---
+language: es
+question: ¿Cuál es tu fruta favorita?
+fields:
+  - Fruta: user.favorite_fruit
+---
+event: final_screen
+question: |
+  Your favorite fruit is ${ user.favorite_fruit }.
+---
+language: es
+event: final_screen
+question: |
+  Tu fruta favorita es ${ user.favorite_fruit }. 
+---
+mandatory: True
+code: |
+  final_screen

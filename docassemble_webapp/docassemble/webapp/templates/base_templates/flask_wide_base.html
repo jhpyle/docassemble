@@ -1,7 +1,7 @@
 {% extends "base_templates/base.html" %}
 {% block main %}
       <div class="row">
-        <div class="col-sm-8 col-md-8 col-lg-8">
+        <div class="col-sm-8">
           {%- if version_warning and current_user.has_roles(['admin', 'developer']) %}
           <div class="alert alert-danger">
             {{ version_warning }}

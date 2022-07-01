@@ -1,0 +1,72 @@
+metadata:
+  title: On change
+  documentation: "https://docassemble.org/docs/initial.html#on change"
+  example start: 2
+  example end: 4
+---
+objects:
+  income: DAList.using(object_type=Thing, there_are_any=True, complete_attribute='complete')
+---
+on change:
+  married: |
+    for item in income.complete_elements():
+      item.invalidate_attr('amount')
+    income.reset_gathered(mark_incomplete=True)
+---
+question: |
+  Are you married?
+yesno: married
+---
+question: |
+  % if married:
+  What is the ${ ordinal(i) } income item
+  that you and your spouse earn?
+  % else:
+  What is your ${ ordinal(i) } income source?
+  % endif
+fields:
+  - Name: income[i].name.text
+  - Amount per year: income[i].amount
+    datatype: currency
+---
+question: |
+  % if married:
+  Do you or your spouse have any other income items?
+  % else:
+  Do you have any other income items?
+  % endif
+yesno: income.there_is_another
+---
+code: |
+  income[i].name.text
+  income[i].amount
+  income[i].complete = True
+---
+event: review_screen
+question: |
+  Review your answers.
+subquestion: |
+  % if married:
+  You said you are married.
+  % else:
+  You said you are not married.
+  % endif
+  [Change this](${ url_action('married') })
+
+  ${ income.table }
+
+  ${ income.add_action() }
+---
+table: income.table
+rows: income
+columns:
+  - Source: row_item.name.text
+  - Amount: currency(row_item.amount)
+edit:
+  - row_item.amount
+---
+mandatory: True
+code: |
+  income.gather()
+  income.table
+  review_screen

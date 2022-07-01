@@ -2,12 +2,11 @@
 # Import any DAObject classes that you will need
 from docassemble.base.util import Individual, Person, DAObject
 # Import the SQLObject and some associated utility functions
-from docassemble.base.sql import alchemy_url, upgrade_db, SQLObject, SQLObjectRelationship
+from docassemble.base.sql import alchemy_url, connect_args, upgrade_db, SQLObject, SQLObjectRelationship
 # Import SQLAlchemy names
-from sqlalchemy import Column, ForeignKey, Integer, String, create_engine, or_, and_
+from sqlalchemy import Column, ForeignKey, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
-import sys
+from sqlalchemy.orm import sessionmaker
 
 # Only allow these names (DAObject classes) to be imported with a modules block
 __all__ = ['Bank', 'Customer', 'BankCustomer']
@@ -46,9 +45,13 @@ class BankCustomerModel(Base):
 url = alchemy_url('demo db')
 
 # Build the "engine" for connecting to the SQL server, using the URL for the database.
-engine = create_engine(url)
+conn_args = connect_args('demo db')
+if url.startswith('postgres'):
+    engine = create_engine(url, connect_args=conn_args, pool_pre_ping=False)
+else:
+    engine = create_engine(url, pool_pre_ping=False)
 
-# Create the tables 
+# Create the tables
 Base.metadata.create_all(engine)
 
 # Get SQLAlchemy ready
@@ -57,7 +60,7 @@ DBSession = sessionmaker(bind=engine)()
 
 # Perform any necessary database schema updates using alembic, if there is an alembic
 # directory and alembic.ini file in the package.
-upgrade_db(url, __file__, engine)
+upgrade_db(url, __file__, engine, conn_args=conn_args)
 
 # Define Bank as both a DAObject and SQLObject
 class Bank(Person, SQLObject):
@@ -70,27 +73,32 @@ class Bank(Person, SQLObject):
     # This indicates that the human-readable unique identifier for the table is the column "routing"
     _uid = 'routing'
     def init(self, *pargs, **kwargs):
-        super(Bank, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         # This runs necessary SQLObject initialization code for the instance
         self.sql_init()
     # The db_get function specifies how to get attributes from the DAObject for purposes of setting SQL column values
     def db_get(self, column):
         if column == 'name':
             return self.name.text
-        elif column == 'routing':
+        if column == 'routing':
             return self.routing
+        raise Exception("Invalid column " + column)
     # The db_set function specifies how to set attributes of the DAObject on the basis of non-null SQL column values
     def db_set(self, column, value):
         if column == 'name':
             self.name.text = value
         elif column == 'routing':
             self.routing = value
+        else:
+            raise Exception("Invalid column " + column)
     # The db_null function specifies how to delete attributes of the DAObject when the SQL column value becomes null
     def db_null(self, column):
         if column == 'name':
             del self.name.text
         elif column == 'routing':
             del self.routing
+        else:
+            raise Exception("Invalid column " + column)
     # This is an example of a method that uses SQLAlchemy to return True or False
     def has_customer(self, customer):
         if not (self.ready() and customer.ready()):
@@ -113,10 +121,10 @@ class Bank(Person, SQLObject):
     def get_customers(self):
         if not self.ready():
             raise Exception("get_customers: cannot retrieve data")
-        results = list()
+        results = []
         for db_entry in self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id).all():
             results.append(Customer.by_id(db_entry.customer_id))
-        return results                
+        return results
     # This is an example of a method that uses SQLAlchemy to delete a bank-customer relationship
     def del_customer(self, customer):
         if not (self.ready() and customer.ready()):
@@ -130,25 +138,26 @@ class Customer(Individual, SQLObject):
     _required = ['first_name']
     _uid = 'ssn'
     def init(self, *pargs, **kwargs):
-        super(Customer, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.sql_init()
     def db_get(self, column):
         if column == 'ssn':
             return self.ssn
-        elif column == 'first_name':
+        if column == 'first_name':
             return self.name.first
-        elif column == 'last_name':
+        if column == 'last_name':
             return self.name.last
-        elif column == 'address':
+        if column == 'address':
             return self.address.address
-        elif column == 'unit':
+        if column == 'unit':
             return self.address.unit
-        elif column == 'city':
+        if column == 'city':
             return self.address.city
-        elif column == 'state':
+        if column == 'state':
             return self.address.state
-        elif column == 'zip':
+        if column == 'zip':
             return self.address.zip
+        raise Exception("Invalid column " + column)
     def db_set(self, column, value):
         if column == 'ssn':
             self.ssn = value
@@ -190,18 +199,21 @@ class BankCustomer(DAObject, SQLObjectRelationship):
     _parent = [Bank, 'bank', 'bank_id']
     _child = [Customer, 'customer', 'customer_id']
     def init(self, *pargs, **kwargs):
-        super(BankCustomer, self).init(*pargs, **kwargs)
+        super().init(*pargs, **kwargs)
         self.rel_init(*pargs, **kwargs)
     def db_get(self, column):
         if column == 'bank_id':
             return self.bank.id
-        elif column == 'customer_id':
+        if column == 'customer_id':
             return self.customer.id
+        raise Exception("Invalid column " + column)
     def db_set(self, column, value):
         if column == 'bank_id':
             self.bank = Bank.by_id(value)
         elif column == 'customer_id':
             self.customer = Customer.by_id(value)
+        else:
+            raise Exception("Invalid column " + column)
     # A db_find_existing method is defined here because the default db_find_existing() method for
     # the SQLObject class tries to find existing records based on a unique identifier column indicated
     # by the _uid attribute.  Since the unique identifier for a bank-customer relationship record is

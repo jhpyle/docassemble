@@ -1,0 +1,40 @@
+metadata:
+  title: Stage one
+  documentation: "https://docassemble.org/docs/recipes.html#passing"
+  example start: 1
+  example end: 7
+---
+objects:
+  - user: Individual
+---
+question: |
+  What is your name?
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+code: |
+  part_two = user_info().package + ':data/questions/examples/stage-two.yml'
+---
+code: |
+  user.name.first
+  favorite_fruit
+  session_id = create_session(part_two)
+  set_session_variables(part_two, session_id, dict(user=user, favorite_fruit=favorite_fruit), overwrite=True)
+  new_session_created = True
+---
+event: final_screen
+question: |
+  All done
+subquestion: |
+  [Proceed to the next part](${ interview_url(i=part_two, session=session_id) })
+---
+mandatory: True
+code: |
+  new_session_created
+  final_screen

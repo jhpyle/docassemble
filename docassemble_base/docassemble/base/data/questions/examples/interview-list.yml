@@ -6,7 +6,7 @@ metadata:
 question: |
   My interviews
 subquestion: |
-  % for interview in interview_list():
+  % for interview in interview_list()[0]:
   * ${ interview['title'] }
     started at
     ${ interview['starttime'] }.
@@ -16,7 +16,7 @@ field: my_interviews
 question: |
   My demo interviews
 subquestion: |
-  % for interview in interview_list(filename='docassemble.demo:data/questions/questions.yml'):
+  % for interview in interview_list(filename='docassemble.demo:data/questions/questions.yml')[0]:
   * ${ interview['title'] }
     started at
     ${ interview['starttime'] }.
@@ -26,7 +26,7 @@ field: my_demo_interviews
 question: |
   All interviews by another user
 subquestion: |
-  % for interview in interview_list(user_id=3, exclude_invalid=False):
+  % for interview in interview_list(user_id=3, exclude_invalid=False)[0]:
   * ${ interview['title'] }
     started at
     ${ interview['starttime'] }
@@ -38,7 +38,7 @@ field: other_person_interviews
 question: |
   Demo interviews by another user
 subquestion: |
-  % for interview in interview_list(user_id=3, filename='docassemble.demo:data/questions/questions.yml', exclude_invalid=False):
+  % for interview in interview_list(user_id=3, filename='docassemble.demo:data/questions/questions.yml', exclude_invalid=False)[0]:
   * ${ interview['title'] }
     started at
     ${ interview['starttime'] }
@@ -50,7 +50,7 @@ field: other_person_demo_interviews
 question: |
   All interviews on server
 subquestion: |
-  % for interview in interview_list(user_id='all', exclude_invalid=False):
+  % for interview in interview_list(user_id='all', exclude_invalid=False)[0]:
   * ${ interview['title'] }
     started at
     ${ interview['starttime'] }
@@ -62,7 +62,7 @@ field: all_interviews
 question: |
   Demo interviews on server
 subquestion: |
-  % for interview in interview_list(user_id='all', filename='docassemble.demo:data/questions/questions.yml', exclude_invalid=False):
+  % for interview in interview_list(user_id='all', filename='docassemble.demo:data/questions/questions.yml', exclude_invalid=False)[0]:
   * ${ interview['title'] }
     started at
     ${ interview['starttime'] }

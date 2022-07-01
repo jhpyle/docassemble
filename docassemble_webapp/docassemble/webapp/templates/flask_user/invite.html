@@ -1,22 +1,22 @@
 {% extends 'base_templates/page_base_half.html' %}
 
 {% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_submit_field %}
+{% from "base_templates/form_macros.html" import render_field, render_submit_field, render_select_field %}
 
 <form action="" method="POST" class="form" role="form">
     {{ form.hidden_tag() }}
-    <div class="form-group">
-        <label for="{{ form.email.id }}">{{ form.email.label.text }}</label>
+    <div class="da-form-group">
+        <label class="form-label" for="{{ form.email.id }}">{{ form.email.label.text }}</label>
         <textarea class="form-control" rows="5" id="{{ form.email.id }}" name="{{ form.email.id }}">{% if form.email.data %}{{ form.email.data }}{% endif %}</textarea>
     </div>
     {%- if form.email.errors %}
     {%- for e in form.email.errors %}
-    <p class="da-has-error text-danger">{{ e }}</p>
+    <div class="invalid-feedback dablock">{{ e }}</p>
     {%- endfor %}
     {%- endif %}
-    {{ render_field(form.role_id) }}
+    {{ render_select_field(form.role_id) }}
     {{ render_submit_field(form.submit) }}
-    <a role="button" class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Back') }}</a>
+    <a role="button" class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Cancel') }}</a>
 </form>
 
 {% endblock %}

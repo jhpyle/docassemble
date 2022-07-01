@@ -16,8 +16,8 @@
         <div id="daServerDiv" class="container" style="display:none;">
             <div class="row">
                 <div class="col">
-                    <div class="form-group">
-                        <label for="daServer">{{ word("Your docassemble server") }}</label>
+                    <div class="da-form-group">
+                        <label class="form-label" for="daServer">{{ word("Your docassemble server") }}</label>
                         <input id="daServer" class="form-control" type="text" value="{{ defaultDaServer }}">
                     </div>
                     <button id="serverConnect" class="btn {{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_CLASS'] }}">{{ word("Connect") }}</button>
@@ -34,8 +34,8 @@
                     <span class="select-wrapper">
                         <select id="daVariables" class="playground-select"></select>
                     </span>
-                    <a id="uploadbutton" href="#" class="btn btn-sm {{ config['BUTTON_STYLE'] }}primary float-right dauploadbutton" title="{{ word('Upload this .docx file to the Templates folder') }}"><i class="fas fa-upload"></i></a>
-                    <a id="uploadspinner" style="display:none;" class="btn btn-sm {{ config['BUTTON_STYLE'] }}primary float-right dauploadbutton" title="{{ word('Please wait.  File is being uploaded') }}"><i class="fas fa-spinner fa-spin"></i></a>
+                    <a id="uploadbutton" href="#" class="btn btn-sm {{ config['BUTTON_STYLE'] }}primary float-end dauploadbutton" title="{{ word('Upload this .docx file to the Templates folder') }}"><i class="fas fa-upload"></i></a>
+                    <a id="uploadspinner" style="display:none;" class="btn btn-sm {{ config['BUTTON_STYLE'] }}primary float-end dauploadbutton" title="{{ word('Please wait.  File is being uploaded') }}"><i class="fas fa-spinner fa-spin"></i></a>
                     <div id="autocompletediv" style="display:none">
                         <select title="{{ word('When you type inside Jinja2 brackets, auto-complete options will appear here.') }}" class="form-control form-control-sm mt-1" id="autocomplete" multiple="" size="2">
                             <option value="" title="{{ word('When you type inside Jinja2 brackets, auto-complete options will appear here.') }}" disabled>{{ word("Autocomplete") }}</option>
@@ -52,9 +52,8 @@
           <button id="serverChange" class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}">{{ word("Use a different server") }}</button>
         </div>
         <script src="{{ url_for('static', filename='app/jquery.min.js', v=config['DA_VERSION']) }}"></script>
-        <script src="{{ url_for('static', filename='app/js.cookie.js', v=config['DA_VERSION']) }}"></script>
+        <script src="{{ url_for('static', filename='app/js.cookie.min.js', v=config['DA_VERSION']) }}"></script>
         <script src="{{ url_for('static', filename='popper/umd/popper.min.js', v=config['DA_VERSION']) }}"></script>
-        <script src="{{ url_for('static', filename='popper/umd/tooltip.min.js', v=config['DA_VERSION']) }}"></script>
         <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js', v=config['DA_VERSION']) }}"></script>
         <script src="{{ url_for('static', filename='office/polyfill.js', v=config['DA_VERSION']) }}"></script>
         <script>

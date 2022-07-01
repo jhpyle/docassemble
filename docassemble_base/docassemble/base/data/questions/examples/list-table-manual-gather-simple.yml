@@ -6,8 +6,9 @@ metadata:
   example end: 2
 ---
 objects:
-  - person: DAList.using(auto_gather=False)
+  - person: DAList
 ---
+mandatory: True
 code: |
   person[0]
   person[1]

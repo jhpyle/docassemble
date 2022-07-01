@@ -1,0 +1,22 @@
+metadata:
+  title: Bates numbering
+  short: Bates
+  documentation: "https://docassemble.org/docs/objects.html#DAFile.bates_number"
+  example start: 1
+  example end: 3
+---
+question: |
+  Upload a file
+fields:
+  - File: the_file
+    datatype: file
+---
+mandatory: True
+code: |
+  the_file.bates_number(prefix='FRUIT')
+---
+mandatory: True
+question: |
+  Your file
+subquestion: |
+  ${ the_file }

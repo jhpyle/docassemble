@@ -1,0 +1,70 @@
+metadata:
+  title: Actions demonstration
+  short title: Actions
+  documentation: "https://docassemble.org/docs/functions.html#url_action"
+  example start: 1
+  example end: 9
+---
+mandatory: True
+question: Actions
+subquestion: |
+  Each of the links below calls a particular action. Try clicking
+  these links and note that the way they work the first time they are
+  clicked may be different from the way they work the next time they
+  are clicked.
+
+  [Variable defined by `question`](${ url_action('favorite_fruit') })
+
+  [`event` question](${ url_action('fruit_info') })
+
+  [Variable defined by `code`](${ url_action('vegetable_asked_about') })
+
+  [`event` code](${ url_action('increment_counter') })
+
+  [`event` code that calls `force_ask()`](${ url_action('review_preferences') })
+
+  The value of the counter is ${ counter }.
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+event: fruit_info
+question: |
+  Information about fruit
+subquestion: |
+  Fruits have seeds. Some fruits are edible.
+buttons:
+  - Continue: continue
+---
+code: |
+  vegetable_intro
+  favorite_vegetable
+  log("The favorite vegetable question has been asked.", "success")
+  vegetable_asked_about = True
+---
+question: |
+  Introduction to vegetables
+subquestion: |
+  Note that the `code` block action we are in right now will not be
+  over unless `vegetable_intro` and `favorite_vegetable` are defined.
+  You can refresh the screen now and this screen will appear again.
+  Note that `code` blocks with `event` do not behave this way.
+continue button field: vegetable_intro
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+---
+event: increment_counter
+code: |
+  counter += 1
+---
+code: |
+  counter = 0
+---
+event: review_preferences
+code: |
+  force_ask('favorite_fruit', 'favorite_vegetable')

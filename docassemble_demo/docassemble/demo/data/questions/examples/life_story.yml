@@ -12,7 +12,7 @@ subquestion: |
   and write several paragraphs.
 fields:
   - no label: life_story_text
-    datatype: area
+    input type: area
 ---
 template: life_story
 content: |

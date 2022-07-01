@@ -2,6 +2,7 @@ metadata:
   title: Billing and shipping 2
   example start: 1
   example end: 5
+  documentation: "https://docassemble.org/docs/fields.html#object labeler"
 ---
 objects:
   - billing: Address.using(name_on_billing_choices_list='Your billing address')

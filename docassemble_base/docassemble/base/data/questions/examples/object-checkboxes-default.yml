@@ -12,7 +12,7 @@ mandatory: True
 objects:
   protagonist: Individual
   antagonist: Individual
-  villain: PartyList
+  villain: PartyList.using(auto_gather=False)
 ---
 mandatory: True
 code: |
@@ -20,7 +20,6 @@ code: |
   protagonist.name.last = "Potter"
   antagonist.name.first = "Tom"
   antagonist.name.last = "Riddle"
-  villain.auto_gather = False
   villain.append(antagonist)
 ---
 mandatory: True

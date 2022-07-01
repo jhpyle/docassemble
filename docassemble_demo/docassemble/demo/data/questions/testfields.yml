@@ -14,7 +14,7 @@ subquestion: |
 question: Tell me more about yourself
 fields:
   - Description: user_description
-    datatype: area
+    input type: area
     hint: |
       E.g., you can describe your hair color, eye color, 
       favorite movies, etc.

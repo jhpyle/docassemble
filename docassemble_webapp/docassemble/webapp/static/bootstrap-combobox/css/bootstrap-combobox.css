@@ -13,7 +13,7 @@
 .combobox-selected .fa-caret-down {
   display: none;
 }
-.combobox-container:not(.combobox-selected) .fa-times {
+.combobox-container:not(.combobox-selected) .fa-xmark {
   display: none;
 }
 .typeahead-long {

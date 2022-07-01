@@ -1,9 +1,11 @@
-from flask_wtf import FlaskForm
-from docassemble.base.functions import word
-from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField, BooleanField
 import re
-import sys
-from six import string_types
+from flask_wtf import FlaskForm
+from docassemble.base.functions import LazyWord as word
+from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField, BooleanField
+
+class NonValidatingSelectField(SelectField):
+    def pre_validate(self, form):
+        pass
 
 def validate_project_name(form, field):
     if re.search('^[0-9]', field.data):
@@ -21,12 +23,12 @@ def validate_package_name(form, field):
 
 class CreatePackageForm(FlaskForm):
     name = StringField(word('Package name'), validators=[
-        validators.Required(word('Package name is required')), validate_name])
+        validators.DataRequired(word('Package name is required')), validate_name])
     submit = SubmitField(word('Get template'))
 
 class CreatePlaygroundPackageForm(FlaskForm):
     name = SelectField(word('Package'), validators=[
-        validators.Required(word('Package name is required')), validate_name])
+        validators.DataRequired(word('Package name is required')), validate_name])
     submit = SubmitField(word('Get package'))
 
 class UpdatePackageForm(FlaskForm):
@@ -66,10 +68,13 @@ class Utilities(FlaskForm):
     interview = StringField(word('Interview'))
     interview_submit = SubmitField(word('Download'))
     language = StringField(word('Language'))
+    tr_language = StringField(word('Language'))
+    systemfiletype = SelectField(word('Output Format'))
+    filetype = SelectField(word('Output Format'))
     language_submit = SubmitField(word('Translate'))
     officeaddin_version = StringField(word('Version'), default='0.0.0.1')
     officeaddin_submit = SubmitField(word('Download'))
-    
+
 class PlaygroundFilesForm(FlaskForm):
     purpose = StringField('Purpose')
     section = StringField(word('Section'))
@@ -89,7 +94,7 @@ class PlaygroundFilesEditForm(FlaskForm):
 
 class RenameProject(FlaskForm):
     name = StringField(word('New Name'), validators=[
-        validators.Required(word('Project name is required')), validate_project_name])
+        validators.DataRequired(word('Project name is required')), validate_project_name])
     submit = SubmitField(word('Rename'))
 
 class DeleteProject(FlaskForm):
@@ -97,7 +102,7 @@ class DeleteProject(FlaskForm):
 
 class NewProject(FlaskForm):
     name = StringField(word('Name'), validators=[
-        validators.Required(word('Project name is required')), validate_project_name])
+        validators.DataRequired(word('Project name is required')), validate_project_name])
     submit = SubmitField(word('Save'))
 
 class PullPlaygroundPackage(FlaskForm):
@@ -110,7 +115,7 @@ class PullPlaygroundPackage(FlaskForm):
 class PlaygroundPackagesForm(FlaskForm):
     original_file_name = StringField(word('Original Name'))
     file_name = StringField(word('Package Name'), validators=[validators.Length(min=1, max=50),
-        validators.Required(word('Package Name is required')), validate_package_name])
+        validators.DataRequired(word('Package Name is required')), validate_package_name])
     license = StringField(word('License'), default='The MIT License (MIT)', validators=[validators.Length(min=0, max=255)])
     author_name = StringField(word('Author Name'), validators=[validators.Length(min=0, max=255)])
     author_email = StringField(word('Author E-mail'), validators=[validators.Length(min=0, max=255)])
@@ -124,7 +129,7 @@ class PlaygroundPackagesForm(FlaskForm):
     static_files = SelectMultipleField(word('Static files'))
     sources_files = SelectMultipleField(word('Source files'))
     readme = TextAreaField(word('README file'), default='')
-    github_branch = SelectField(word('Branch'))
+    github_branch = NonValidatingSelectField(word('Branch'))
     github_branch_new = StringField(word('Name of new branch'))
     commit_message = StringField(word('Commit message'), default="")
     pypi_also = BooleanField(word('Publish on PyPI also'))
@@ -173,26 +178,30 @@ class AddinUploadForm(FlaskForm):
     content = HiddenField()
     filename = HiddenField()
 
+class FunctionFileForm(FlaskForm):
+    pass
+
 class APIKey(FlaskForm):
     action = HiddenField()
     key = HiddenField()
     security = HiddenField()
     name = StringField(word('Name'), validators=[validators.Length(min=1, max=255)])
     method = SelectField(word('Security Method'))
+    permissions = SelectMultipleField(word('Limited Permissions'))
     submit = SubmitField(word('Create'))
     delete = SubmitField(word('Delete'))
-    def validate(self):
-        rv = FlaskForm.validate(self)
+    def validate(self, extra_validators=None):
+        rv = FlaskForm.validate(self, extra_validators=extra_validators)
         if not rv:
             return False
         if self.action.data not in ('edit', 'new'):
             return False
         has_error = False
         if self.action.data in ('edit', 'new'):
-            if (not isinstance(self.name.data, string_types)) or not re.search(r'[A-Za-z0-9]', self.name.data):
+            if (not isinstance(self.name.data, str)) or not re.search(r'[A-Za-z0-9]', self.name.data):
                 self.name.errors.append(word("The name must be filled in."))
                 has_error = True
-            if (not isinstance(self.method.data, string_types)) or self.method.data not in ('referer', 'ip', 'none'):
+            if (not isinstance(self.method.data, str)) or self.method.data not in ('referer', 'ip', 'none'):
                 self.name.errors.append(word("You must select an option."))
                 has_error = True
         if has_error:

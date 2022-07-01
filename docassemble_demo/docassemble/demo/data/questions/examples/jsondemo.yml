@@ -1,0 +1,47 @@
+metadata:
+  title: Object in JSON form
+  documentation: https://docassemble.org/docs/api.html#session_post
+  example start: 1
+  example end: 6
+---
+objects:
+  - user: Individual
+  - user.favorite_fruit: DAList.using(object_type=Thing)
+---
+mandatory: True
+code: |
+  user.favorite_fruit.gather()
+  final_screen
+---
+question: |
+  Do you have any favorite fruit?
+yesno: user.favorite_fruit.there_are_any
+---
+question: |
+  Tell me about your 
+  ${ ordinal(i) } favorite fruit.
+fields:
+  - Name: user.favorite_fruit[i].name.text
+  - Sweetness: user.favorite_fruit[i].sweetness
+    datatype: range
+    min: 1
+    max: 10
+---
+question: |
+  Do you have any other favorite fruit 
+  besides ${ user.favorite_fruit }?
+yesno: user.favorite_fruit.there_is_another
+---
+event: final_screen
+question: |
+  You can use this to set the value 
+  of `user.favorite_fruit` using the POST
+  `/api/session` API endpoint.
+subquestion: |
+  #### JSON format
+  
+  `${ json.dumps(user.favorite_fruit.as_serializable()) }`
+  
+  #### Python format
+  
+  `${ repr(user.favorite_fruit.as_serializable()) }`

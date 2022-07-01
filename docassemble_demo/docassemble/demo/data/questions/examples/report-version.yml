@@ -1,0 +1,11 @@
+metadata:
+  title: Version API
+  example start: 1
+  example end: 2
+---
+imports:
+  - docassemble.demo
+---
+mandatory: True
+code: |
+  json_response({'version': docassemble.demo.__version__})

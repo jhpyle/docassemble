@@ -5,11 +5,11 @@
 
 <h1>{{ word('Edit User Profile') }}</h1>
 
-{%- if form.uses_mfa.data or ((not is_self) and form.confirmed_at.data is not none) or ((not is_self) and config['ENABLE_DELETE_ACCOUNT']) %}
+{%- if form.uses_mfa.data or ((not is_self) and form.confirmed_at.data is not none) or ((not is_self) and config['ENABLE_DELETE_ACCOUNT'] and can_delete) %}
 <div class="row">
-    <div class="col text-right">
+    <div class="col text-end">
         <div class="dropdown">
-            <button class="btn {{ config['BUTTON_STYLE'] }}secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cogs"></i> {{ word('Other settings') }}</button>
+            <button class="btn {{ config['BUTTON_STYLE'] }}secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cogs"></i> {{ word('Other settings') }}</button>
             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
 {%- if form.uses_mfa.data %}
                 <a class="dropdown-item" href="?disable_mfa=1">{{ word('Disable two-factor authentication') }}</a>
@@ -17,7 +17,7 @@
 {%- if (not is_self) and form.confirmed_at.data is not none %}
                 <a class="dropdown-item" href="?reset_email_confirmation=1">{{ word('Reset e-mail confirmation') }}</a>
 {%- endif %}
-{%- if (not is_self) and config['ENABLE_DELETE_ACCOUNT'] %}
+{%- if (not is_self) and config['ENABLE_DELETE_ACCOUNT'] and can_delete %}
                 <a class="dropdown-item dadeleteaccount" href="?delete_account=1">{{ word('Delete account but keep shared sessions') }}</a>
                 <a class="dropdown-item dadeleteaccount" href="?delete_account_complete=1">{{ word('Delete account and shared sessions') }}</a>
 {%- endif %}
@@ -29,37 +29,24 @@
 
 <form action="" method="POST" role="form">
     {{ form.hidden_tag() }}
-    
-{%- if not is_self %}
+{%- if can_edit_user_active_status and not is_self %}
     {{ render_checkbox_field(form.active) }}
 {%- endif %}
-
+{%- if can_edit_privileges %}
     {{ render_multiselect_field(form.role_id, undernote=privileges_note) }}
-
+{%- endif %}
     {{ render_field(form.email) }}
-
     {{ render_field(form.first_name) }}
-
     {{ render_field(form.last_name) }}
-
     {{ render_field(form.country, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }}
-
     {{ render_field(form.subdivisionfirst) }}
-
     {{ render_field(form.subdivisionsecond) }}
-
     {{ render_field(form.subdivisionthird) }}
-
     {{ render_field(form.organization) }}
-    
     {{ render_field(form.language) }}
-    
     {{ render_field(form.timezone) }}
-
-    <br>
-    <div class="form-actions">
-      {{ render_submit_field(form.submit) }}
-      {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS']) }}
+    {{ render_submit_field(form.submit) }}
+    {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
     </div>
 </form>
 

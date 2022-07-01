@@ -1,0 +1,47 @@
+metadata:
+  title: Phone number
+  short: Phone
+  documentation: "https://docassemble.org/docs/recipes.html#phonenumber"
+  example start: 1
+  example end: 6
+---
+objects:
+  - user: Individual
+---
+question: |
+  Is your mobile phone number
+  based in the United States
+  or Canada?
+field: user.phone_international
+buttons:
+  - U.S. or Canada: False
+  - Another country: True
+---
+question: |
+  What country is associated
+  with your mobile phone number?
+field: user.phone_country
+dropdown:
+  code: countries_list()
+---
+code: |
+  if not user.phone_international:
+    user.phone_country = 'US'
+---
+question: |
+  What is your phone number?
+subquestion: |
+  % if user.phone_international:
+  Enter your phone number as you
+  would dial it in
+  ${ country_name(user.phone_country) }.
+  % endif
+fields:
+  - Phone number: user.phone_number
+    validate: |
+      lambda y: phone_number_is_valid(y, country=user.phone_country) or validation_error("Please enter a valid " + country_name(user.phone_country) + " phone number." )
+---
+mandatory: True
+question: |
+  I will text you at
+  `${ user.sms_number(country=user.phone_country) }`.

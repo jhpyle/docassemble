@@ -2,6 +2,8 @@ metadata:
   title: "Yes/no/maybe"
   short title: "Yes/no/maybe"
   documentation: "https://docassemble.org/docs/fields.html#yesnomaybe"
+  example start: 1
+  example end: 2
 ---
 question: |
   Is Topeka the capital of Kansas?

@@ -1,7 +1,7 @@
-from docassemble.webapp.db_object import db
 import docassemble.webapp.users.models
 import docassemble.webapp.core.models
-from docassemble.base.config import daconfig, dbtableprefix
+from docassemble.webapp.db_object import db
+from docassemble.base.config import dbtableprefix
 
 class Package(db.Model):
     __tablename__ = dbtableprefix + 'package'

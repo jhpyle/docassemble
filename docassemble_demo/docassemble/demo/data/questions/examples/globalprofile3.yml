@@ -1,0 +1,81 @@
+metadata:
+  title: Profile
+  documentation: "https://docassemble.org/docs/objects.html#DAGlobal"
+  example start: 1
+  example end: 7
+---
+objects:
+  - profile: DAGlobal.using(key='profile')
+  - profile.user: Individual
+  - profile.preferences: DADict
+---
+mandatory: True
+code: |
+  multi_user = True
+---
+mandatory: True
+question: |
+  This is interview A.
+subquestion: |
+  Go to your [Profile](${ url_action('profile_page') }).
+buttons:
+  - Restart: restart
+---
+event: profile_page
+question: |
+  Your profile
+review:
+  - label: Edit
+    field: profile.user.name.first
+    button: |
+      #### Name
+
+      ${ profile.user }
+  - label: Edit
+    field: profile.user.address.address
+    button: |
+      #### Address
+
+      ${ profile.user.address.block() }
+  - label: Edit
+    fields: profile.preferences.favorite_fruit
+    button: |
+      #### Preferences
+
+      Favorite fruit: ${ profile.preferences.favorite_fruit }.
+
+      Favorite vegetable: ${ profile.preferences.favorite_vegetable }.
+
+      Screen mode: ${ profile.preferences.screen_mode }.
+skip undefined: False
+---
+question: |
+  Your name
+fields:
+  - First name: profile.user.name.first
+  - Middle name: profile.user.name.middle
+    required: False
+  - Last name: profile.user.name.last
+---
+question: |
+  Your address
+fields:
+  - Address: profile.user.address.address
+    address autocomplete: True
+  - Unit: profile.user.address.unit
+    required: False
+  - City: profile.user.address.city
+  - State: profile.user.address.state
+    code: |
+      states_list()
+  - Zip: profile.user.address.zip
+---
+question: |
+  Preferences
+fields:
+  - Favorite fruit: profile.preferences.favorite_fruit
+  - Favorite vegetable: profile.preferences.favorite_vegetable
+  - Screen mode: profile.preferences.screen_mode
+    choices:
+      - Dark
+      - Light

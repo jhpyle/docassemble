@@ -1,0 +1,12 @@
+metadata:
+  default language: de
+---
+translations:
+  - testtr_en.xlsx
+  - testtr_es.xlsx
+---
+mandatory: True
+question: |
+  What is your favorite German fruit?
+subquestion: |
+  ${ get_language() }

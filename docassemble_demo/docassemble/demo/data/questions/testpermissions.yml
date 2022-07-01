@@ -1,0 +1,31 @@
+modules:
+  - .user_permissions
+---
+question: |
+  What is the secret code?
+fields:
+  - Secret code: secret_code
+---
+event: kick_out
+question: |
+  You did not input the correct code.
+---
+event: show_permissions
+question: |
+  Your permissions
+subquestion: |
+  % for item, result in get_permissions().items():
+    % if result is True:
+  * ${ item }
+    % else:
+  * ${ item } is `${ result }`      
+    % endif
+  % endfor
+---
+mandatory: True
+code: |
+  if secret_code == 'A52C272F32D8232C9035A':
+    json_response(get_permissions())
+  elif secret_code == 'C83F2DE3D97382C32836B':
+    show_permissions
+  kick_out

@@ -2,7 +2,7 @@ metadata:
   title: Review answers
   short title: Review
   example start: 1
-  example end: 6
+  example end: 7
   documentation: "https://docassemble.org/docs/fields.html#review"
 ---
 objects:
@@ -15,9 +15,8 @@ review:
   - label: Edit
     fields:
       - address.address
-      - set:
-          - address.geolocated: False
       - recompute:
+          - address.geocoding_reset
           - address.county
     button: |
       Your address is:
@@ -48,7 +47,11 @@ fields:
 ---
 sets: address.county
 code: |
-  address.geolocate()
+  address.geocode()
+---
+code: |
+  address.reset_geocoding()
+  address.geocoding_reset = True
 ---
 mandatory: True
 question: All done

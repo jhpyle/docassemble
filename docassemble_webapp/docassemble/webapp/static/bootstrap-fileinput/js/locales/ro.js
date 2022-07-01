@@ -28,13 +28,14 @@
         msgNoFilesSelected: '',
         msgPaused: 'Paused',
         msgCancelled: 'Anulat',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'Previzualizare detaliată',
         msgFileRequired: 'You must select a file to upload.',
         msgSizeTooSmall: 'File "{name}" (<b>{size} KB</b>) is too small and must be larger than <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'Fișierul "{name}" (<b>{size} KB</b>) depășește limita maximă de încărcare de <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Trebuie să selectezi cel puțin <b>{n}</b> {files} pentru a încărca.',
         msgFilesTooMany: 'Numărul fișierelor pentru încărcare <b>({n})</b> depășește limita maximă de <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Fișierul "{name}" nu a fost găsit!',
         msgFileSecured: 'Restricții de securitate previn citirea fișierului "{name}".',
         msgFileNotReadable: 'Fișierul "{name}" nu se poate citi.',
@@ -54,10 +55,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'Fișierul Încărcarea a fost întrerupt',
-        msgUploadThreshold: 'Processing...',
-        msgUploadBegin: 'Initializing...',
+        msgUploadThreshold: 'Processing &hellip;',
+        msgUploadBegin: 'Initializing &hellip;',
         msgUploadEnd: 'Done',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'No valid data available for upload.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -98,7 +99,7 @@
             indicatorSuccessTitle: 'încărcat',
             indicatorErrorTitle: 'Încărcați eroare',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Se încarcă ...'
+            indicatorLoadingTitle:  'Se încarcă &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'View previous file',

@@ -25,12 +25,12 @@
             </div>
           </form>
           <div class="mt-3">
-            {%- if use_gd %}
+            {%- if use_gd and own_playground %}
             <div class="daonright">
               <a tabindex="15" title="{{ word('Sync with Google Drive') }}" class="btn {{ config['BUTTON_STYLE'] }}success mb-2" href="{{ url_for('sync_with_google_drive', project=current_project, next=url_for('playground_files', project=current_project, section=section)) }}"><i class="fab fa-google-drive"></i>&nbsp;{{ word('Sync') }}</a>
             </div>
             {%- endif %}
-            {%- if use_od %}
+            {%- if use_od and own_playground %}
             <div class="daonright">
               <a tabindex="15" title="{{ word('Sync with OneDrive') }}" class="btn {{ config['BUTTON_STYLE'] }}success mb-2" href="{{ url_for('sync_with_onedrive', project=current_project, next=url_for('playground_files', project=current_project, section=section)) }}"><i class="fab fa-windows"></i>&nbsp;{{ word('Sync') }}</a>
             </div>
@@ -49,7 +49,7 @@
             {%- for file in files %}
               <tr>
                 <td><a tabindex="20" target="_blank" href="{{ url_for('playground_' + section, userid=userid, filename=file, current_project=current_project) }}">{{ file }}</a></td>
-                <td style="text-align:right;">{% if file in editable_file_listing %}<a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}success btn-sm" href="{{ url_for('playground_files', section=section, file=file, project=current_project) }}">{{ word('Edit') }}</a>&nbsp;{% endif %}{% if file in trainable_files %}<a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}success btn-sm" href="{{ url_for('train', package=playground_package, file=trainable_files[file]) }}">{{ word('Train') }}</a>&nbsp;{% endif %}{% if file in convertible_files %}<a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}info btn-sm" href="{{ url_for('playground_files', section=section, convert=file, project=current_project) }}">{{ word('Convert to .md') }}</a>&nbsp;{% endif %}<a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}danger btn-sm" href="{{ url_for('playground_files', section=section, delete=file, project=current_project) }}">{{ word('Delete') }}</a></td>
+                <td style="text-align: right; white-space: nowrap">{% if file in editable_file_listing %}<a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}success btn-sm mb-1" href="{{ url_for('playground_files', section=section, file=file, project=current_project) }}">{{ word('Edit') }}</a> {% endif %}{% if file in trainable_files %}<a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}success btn-sm mb-1" href="{{ url_for('train', package=playground_package, file=trainable_files[file]) }}">{{ word('Train') }}</a> {% endif %}{% if file in convertible_files %}<a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}info btn-sm mb-1" href="{{ url_for('playground_files', section=section, convert=file, project=current_project) }}">{{ word('Convert to .md') }}</a> {% endif %}<a tabindex="20" class="btn {{ config['BUTTON_STYLE'] }}danger btn-sm mb-1" href="{{ url_for('playground_files', section=section, delete=file, project=current_project) }}">{{ word('Delete') }}</a></td>
               </tr>
             {% endfor %}
             </tbody>
@@ -80,7 +80,7 @@
                 <a tabindex="571" class="nav-link" title="{{ word('Create a new file') }}" href="{{ url_for('playground_files', section=section, new='1', project=current_project) }}"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
               </li>
               <li class="nav-item dropdown">
-                <a tabindex="572" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another file')}}">
+                <a tabindex="572" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another file')}}">
                   <i class="fas fa-file" aria-hidden="true"></i>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
                 </a>
                 <div class="dropdown-menu daheightlim">
@@ -109,13 +109,13 @@
                   {{ render_addon_field(formtwo.file_name, tabindex=579) }}
                 </div>
                 <div class="col-lg-6">
-                  {{ render_addon_field(formtwo.search_term, tabindex=590, autocomplete="off", extra='<div class="input-group-append"><button title="' + word('Previous result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></button></div>', extra_class='pull-right') }}
+                  {{ render_addon_field(formtwo.search_term, tabindex=590, autocomplete="off", extra='<button title="' + word('Previous result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchPrevious"><i class="fas fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchNext"><i class="fas fa-chevron-right"></i></button>') }}
                 </div>
               </div>
               <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
               <div class="form-actions mt-2 ml-1">
-                {{ render_submit_field(formtwo.submit, tabindex=600, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], data={'disable-button': 0}) }}
-                {% if is_new == 'False' %}<a tabindex="610" class="btn {{ config['BUTTON_STYLE'] }}danger {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_files', section=section, delete=current_file, project=current_project) }}">{{ word('Delete') }}</a>{% endif %}
+                {{ render_submit_field(formtwo.submit, tabindex=600, class="ms-1 btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], data={'disable-button': 0}) }}
+                {% if is_new == 'False' %}<a tabindex="605" class="btn {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_' + section, userid=userid, filename=current_file, current_project=current_project, attach='1') }}" data-disable-button="0">{{ word("Download") }}</a> <a tabindex="610" class="btn {{ config['BUTTON_STYLE'] }}danger {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_files', section=section, delete=current_file, project=current_project) }}" data-disable-button="0">{{ word('Delete') }}</a>{% endif %}
               </div>
             </form>
             {%- if after_text %}
@@ -125,7 +125,7 @@
 {%- if active_file %}
           <div class="col-md-4 pgright">
             <div id="playgroundbox" class="card bg-light playgroundbox">
-              <div class="card-header">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="badge badge-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
+              <div class="card-header">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="dabadge btn btn-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
               </div>
               <div class="card-body" id="daplaygroundcard">
                 <table id="daplaygroundtable" class="daplaygroundtable">
@@ -136,5 +136,5 @@
 {%- endif %}
 {%- endblock %}
 {%- block bottom %}
-      <div class="mt-2"><p><a tabindex="620" href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}info"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
+      <div class="mt-2"><a tabindex="620" href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}secondary"><i class="fas fa-chevron-left"></i>&nbsp;{{ word("Back to Playground") }}</a></div>
 {%- endblock %}

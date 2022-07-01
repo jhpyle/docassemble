@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from flask import Flask, make_response, render_template, request
+from flask import Flask, abort, make_response, render_template, request
 app = Flask(__name__)
 
 LOG_DIRECTORY = '/var/www/html/log'
@@ -10,11 +10,10 @@ ready_file = '/usr/share/docassemble/webapp/ready'
 
 @app.route('/listlog')
 def list_log_files():
-    result = subprocess.call("supervisorctl --serverurl http://localhost:9001 start sync > /dev/null && while supervisorctl --serverurl http://localhost:9001 status sync | grep -q RUNNING; do sleep 1; done", shell=True)
+    result = subprocess.run("supervisorctl --serverurl http://localhost:9001 start sync > /dev/null && while supervisorctl --serverurl http://localhost:9001 status sync | grep -q RUNNING; do sleep 1; done", shell=True, check=False).returncode
     if result == 0:
         return "\n".join(sorted([f for f in os.listdir(LOG_DIRECTORY) if os.path.isfile(os.path.join(LOG_DIRECTORY, f))]))
-    else:
-        return "There was an error."
+    return "There was an error."
 
 @app.route("/listlog/health_check", methods=['GET'])
 def health_check():

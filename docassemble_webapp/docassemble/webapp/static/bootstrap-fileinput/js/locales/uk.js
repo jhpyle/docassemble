@@ -28,13 +28,14 @@
         msgNoFilesSelected: '',
         msgPaused: 'Paused',
         msgCancelled: 'Cкасовано',
-        msgPlaceholder: 'Оберіть {files}...',
+        msgPlaceholder: 'Оберіть {files} ...',
         msgZoomModalHeading: 'Детальний превью',
         msgFileRequired: 'Ви повинні обрати файл для завантаження.',
         msgSizeTooSmall: 'Файл "{name}" (<b>{size} KB</b>) занадто малий і повинен бути більший, ніж <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'Файл "{name}" (<b>{size} KB</b>) перевищує максимальний розмір <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Ви повинні обрати як мінімум <b>{n}</b> {files} для відвантаження.',
         msgFilesTooMany: 'Кількість обраних файлів <b>({n})</b> перевищує максимально допустиму кількість <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Файл "{name}" не знайдено!',
         msgFileSecured: 'Обмеження безпеки перешкоджають читанню файла "{name}".',
         msgFileNotReadable: 'Файл "{name}" неможливо прочитати.',
@@ -54,10 +55,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'Вивантаження файлу перервана',
-        msgUploadThreshold: 'Обробка...',
-        msgUploadBegin: 'Ініціалізація...',
+        msgUploadThreshold: 'Обробка &hellip;',
+        msgUploadBegin: 'Ініціалізація &hellip;',
         msgUploadEnd: 'Готово',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'Немає доступних даних для відвантаження.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -98,7 +99,7 @@
             indicatorSuccessTitle: 'Відвантажено',
             indicatorErrorTitle: 'Помилка при відвантаженні',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Завантаження ...'
+            indicatorLoadingTitle:  'Завантаження &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Переглянути попередній файл',

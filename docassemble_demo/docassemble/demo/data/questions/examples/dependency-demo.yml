@@ -1,0 +1,24 @@
+metadata:
+  title: Dependency Satisfaction
+  short title: Dependency
+  documentation: "https://docassemble.org/docs/logic.html#intro_dependency"
+  example start: 1
+  example end: 3
+---
+mandatory: True
+question: |
+  Your favorite fruit is ${ favorite_fruit }.
+subquestion: |
+  % if favorite_fruit == 'grapes':
+  Your favorite vineyard is ${ favorite_vineyard }.
+  % endif
+---
+question: |
+  Which vineyard do you think produces the best grapes?
+fields:
+  - Vineyard: favorite_vineyard
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit

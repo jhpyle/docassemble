@@ -1,3 +1,4 @@
+{%- set footer_content = get_part('global footer') %}
 {%- set page_title = get_part('register page title', word('Register')) %}
 {%- set tab_title = get_part('register page tab title', word('Register')) %}
 {%- set extra_css = get_part('register page extra css') %}
@@ -14,11 +15,12 @@
 <p>{{ word("Already registered?") }} <a href="{{ url_for('user.login') }}">{{ word("Sign in.") }}</a></p>
           {%- endif %}
           {%- endif %}
+          {%- if config['USE_PASSWORD_LOGIN'] or ('admin' in request.args and request.args['admin'] == '1') %}
           <form action="" method="POST" novalidate formnovalidate class="form" role="form">
             {{ form.hidden_tag() }}
             {%- set field = form.username if user_manager.enable_username else form.email %}
-            <div class="form-group">
-              <label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
+            <div class="da-form-group">
+              <label for="{{ field.id }}" class="form-label">{{ field.label.text }}</label>
               {{ field(class_="form-control", type="email") }}
               {%- if field.errors %}
                 {%- for e in field.errors %}
@@ -33,14 +35,14 @@
             {%- if user_manager.enable_retype_password %}
             {{ render_field(form.retype_password) }}
             {%- endif %}
-            {{ myrender_hidden_field(form.social_id, value=user_manager.random_social()) }}
             <br>
             {{ get_part('register page submit') }}<div class="form-actions">
               {{ render_submit_field(form.submit) }}
             </div>
           </form>
           {%- if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_TWITTER_LOGIN'] or config['USE_AUTH0_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
-          <p style="padding: 15px 15px 5px 15px;"><strong>or</strong></p>
+          <p style="padding: 15px 15px 5px 15px;"><strong>{{ word('or') }}</strong></p>
+          {%- endif %}
           {%- endif %}
           {%- if config['USE_PHONE_LOGIN'] %}
           <div class="row danomargin">

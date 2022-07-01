@@ -32,6 +32,8 @@ metadata:
     Resume button label
   back button label: |
     Back button label
+  footer: |
+    This is the footer part.
 ---
 features:
   question back button: True

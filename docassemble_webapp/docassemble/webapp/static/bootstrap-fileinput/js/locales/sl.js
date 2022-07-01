@@ -28,11 +28,12 @@
         msgNoFilesSelected: 'Nobena datoteka ni izbrana',
         msgPaused: 'Paused',
         msgCancelled: 'Preklicano',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'Podroben predogled',
         msgSizeTooLarge: 'Datoteka "{name}" (<b>{size} KB</b>) presega največjo dovoljeno velikost za nalaganje <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Za nalaganje morate izbrati vsaj <b>{n}</b> {files}.',
         msgFilesTooMany: 'Število datotek, izbranih za nalaganje <b>({n})</b> je prekoračilo največjo dovoljeno število <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Datoteka "{name}" ni bila najdena!',
         msgFileSecured: 'Zaradi varnostnih omejitev nisem mogel prebrati datoteko "{name}".',
         msgFileNotReadable: 'Datoteka "{name}" ni berljiva.',
@@ -51,10 +52,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'Nalaganje datoteke je bilo preklicano',
-        msgUploadThreshold: 'Procesiram...',
-        msgUploadBegin: 'Initializing...',
+        msgUploadThreshold: 'Procesiram &hellip;',
+        msgUploadBegin: 'Initializing &hellip;',
         msgUploadEnd: 'Done',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'No valid data available for upload.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -95,7 +96,7 @@
             indicatorSuccessTitle: 'Naloženo',
             indicatorErrorTitle: 'Napaka pri nalaganju',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Nalagam ...'
+            indicatorLoadingTitle:  'Nalagam &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Poglej prejšno datoteko',

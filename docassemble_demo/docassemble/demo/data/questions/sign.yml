@@ -1,0 +1,184 @@
+mandatory: True
+code: |
+  multi_user = True
+---
+modules:
+  - docassemble.demo.sign
+---
+generic object: SigningProcess
+event: x.background_initial_notification
+code: |
+  if interface() == 'worker':
+    x.initial_notify()
+---
+generic object: SigningProcess
+event: x.background_final_notification
+code: |
+  if interface() == 'worker':
+    x.final_notify()
+---
+generic object: SigningProcess
+event: x.request_signature
+code: |
+  x.collect_signature(action_argument('code'))
+---
+generic object: SigningProcess
+template: x.initial_notification_email[i]
+subject: |
+  Your signature needed on
+  ${ x.singular_or_plural('a document', 'documents') }:
+  ${ x.documents_name() }
+content: |
+  ${ x.signer(i) },
+
+  Your signature is requested on
+  % if x.number_of_documents() == 1:
+  a document called
+  ${ x.documents_name() }.
+  % else:
+  the following
+  ${ x.singular_or_plural('document', 'documents') }:
+
+  % for document in x.list_of_documents():
+  * ${ document.info['name'] }
+  % endfor
+  % endif
+
+  To sign, [click here].
+
+  If you are willing to sign
+  ${ x.singular_or_plural('this document', 'these documents') },
+  please do so in the next ${ nice_number(x.deadline_days) } days.
+  If you do not sign by
+  ${ today().plus(days=x.deadline_days) }, the above link
+  will expire.
+
+  [click here]: ${ x.url(i) }
+---
+generic object: SigningProcess
+template: x.final_notification_email[i]
+subject: |
+  Signed
+  ${ x.singular_or_plural('copy', 'copies') }
+  of
+  ${ x.documents_name() }
+content: |
+  ${ x.signer(i) },
+
+  The
+  ${ x.singular_or_plural('document', 'documents') }
+  you signed
+  ${ x.singular_or_plural('has', 'have') }
+  now been signed by all parties.
+
+  Your
+  ${ x.singular_or_plural('copy of the document is', 'copies of the documents are') }
+  attached.
+---
+generic object: SigningProcess
+template: x.final_notification_email_to_others
+subject: |
+  Signed
+  ${ x.singular_or_plural('copy', 'copies') }
+  of
+  ${ x.documents_name() }
+content: |
+  The
+  ${ x.documents_name() }
+  ${ x.singular_or_plural('document', 'documents') }
+  have now been signed by all parties.
+
+  ${ x.singular_or_plural('A copy of the document is', 'Copies of the documents are') }
+  attached.
+---
+generic object: SigningProcess
+question: |
+  Welcome, ${ x.signer(i) }.
+subquestion: |
+  Your signature is requested on
+  the following
+  ${ x.singular_or_plural('document', 'documents') }:
+
+  % for document in x.list_of_documents():
+  [:file-pdf: ${ document.info['name'] }](${ document.pdf.url_for() })
+  
+  % endfor
+
+  To review the
+  ${ x.singular_or_plural('document', 'documents') },
+  click the
+  ${ x.singular_or_plural('link', 'links') }
+  above.
+
+  % if device() and device().is_mobile:
+  On the next screen, you will provide your signature
+  using your touchscreen.
+  % else:
+  On the next screen, you will provide your signature
+  using your mouse, pointing device, or touchscreen.
+  If your device does not have a touchscreen, you may
+  want to open the link from that device instead of
+  this one. If you use a mouse to sign, make sure to
+  draw your signature slowly.
+  % endif
+continue button field: x.willing_to_sign[i]
+continue button label: I am ready to sign
+---
+generic object: SigningProcess
+question: |
+  Sign your name
+signature: x.signature[i]
+under: |
+  ${ x.signer(i) }
+validation code: |
+  x.validate_signature(i)
+---
+generic object: SigningProcess
+code: |
+  x.blank_signature_date[i] = DAEmpty(str='___________________')
+---
+generic object: SigningProcess
+code: |
+  x.blank_signature_datetime[i] = DAEmpty(str='___________________')
+---
+generic object: SigningProcess
+code: |
+  x.blank_ip_address[i] = DAEmpty()
+---
+generic object: SigningProcess
+code: |
+  x.blank_signature[i] = DAEmpty()
+---
+generic object: SigningProcess
+question: |
+  Thank you for signing
+  ${ x.singular_or_plural('the document', 'the documents') }
+subquestion: |
+  % if x.all_signatures_in():
+    % if x.number_of_signers() > 1:
+  All of the signers have signed the document.
+    % endif
+  You can download the signed
+  ${ x.singular_or_plural('document', 'documents') }
+  below.
+  % else:
+  The
+  ${ x.singular_or_plural('document', 'documents') }
+  you signed
+  ${ x.singular_or_plural('is available here.', 'are available here.') }
+  % endif
+
+  % for document in x.list_of_documents(refresh=True):
+  [:file-pdf: ${ document.info['name'] }](${ document.pdf.url_for() })
+  
+  % endfor
+  
+  % if not x.all_signatures_in():
+  You will receive an e-mail when all parties have signed the
+  ${ x.singular_or_plural('document', 'documents') }.
+  % endif
+event: x.thank_you_screen[i]
+---
+event: x.unauthorized_screen
+question: |
+  You are not authorized.

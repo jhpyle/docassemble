@@ -3,7 +3,6 @@ Feature: Demonstration interview
   to run the example interviews.
 
   Scenario: Test whole interview
-    Given I am using the server "http://localhost"
     And I start the interview "docassemble.demo:data/questions/questions.yml"
     Then I should see the phrase "What language do you speak?"
     And I click the "English" option
@@ -23,7 +22,7 @@ Feature: Demonstration interview
     Then I should see the phrase "I understand that you live in Springfield. Were you injured in Pennsylvania?"
     And I click the button "Yes"
     Then I should see the phrase "When did your injury take place?"
-    And I set "Date of Injury" to "05/05/2015"
+    And I set "Date of Injury" to "05/05/2018"
     And I click the button "Continue"
     Then I should see the phrase "What is your name?"
     And I set "First Name" to "Ğŕëáť"
@@ -88,7 +87,7 @@ Feature: Demonstration interview
     And I set the text area to "¿Because I am so cutë?"
     And I click the button "Continue"
     Then I should see the phrase "Please upload a picture of yourself."
-    And I upload the file "testfile.png"
+    And I upload the file "/home/jpyle/da/tests/testfile.png"
     And I click the button "Continue"
     And I wait 1 second
     Then I should see the phrase "Is this the picture you uploaded?"

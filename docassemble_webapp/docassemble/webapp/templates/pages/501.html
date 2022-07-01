@@ -1,4 +1,5 @@
-{% extends "base_templates/page_base.html" %}
+{%- set footer_content = get_part('global footer') %}
+{% extends "base_templates/base.html" %}
 
 {% block main %}
 
@@ -8,6 +9,10 @@
 <h1>{{ word('Error') }}</h1>
 {%- endif %}
 
+{%- if show_retry %}
+<p><a href="#" id="da-retry">{{ word('Retry') }}</a></p>
+
+{%- endif %}
 {%- if verbose %}
 {{ error|safe }}
 

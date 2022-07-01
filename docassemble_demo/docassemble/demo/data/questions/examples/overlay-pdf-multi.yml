@@ -1,0 +1,22 @@
+metadata:
+  title: Overlay Multi
+  example start: 1
+  example end: 3
+---
+question: |
+  Upload a PDF file.
+subquestion: |
+  Page numbers will be overlayed on your PDF.
+fields:
+  - File: the_doc
+    datatype: file
+---
+attachment:
+  variable name: overlay_doc
+  docx template file: numbering_template.docx
+---
+mandatory: True
+question: |
+  Here is your document.
+subquestion: |
+  ${ overlay_pdf(the_doc, overlay_doc.pdf, multi=True) }

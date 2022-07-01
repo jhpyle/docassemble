@@ -6,7 +6,7 @@ question: Tell me about yourself
 fields:
   - Favorite color: user_favorite_color
   - Description of your ideal vacation: user_ideal_vacation
-    datatype: area
+    input type: area
     required: False
 ---
 question: Result of question

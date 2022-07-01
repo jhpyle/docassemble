@@ -6,14 +6,16 @@ metadata:
 ---
 objects:
   - userdata: DAStore
+  - preferences: DAObject
+---
+code: |
+  if userdata.defined("prefs"):
+    preferences = userdata.get("prefs")
 ---
 question: |
   What is your favorite fruit?
 fields:
   - Fruit: preferences.favorite_fruit
----
-code: |
-  preferences = userdata.get("prefs") or DAObject('preferences')
 ---
 mandatory: True
 code: |
@@ -28,4 +30,5 @@ code: |
 event: final_screen
 question: All done
 subquestion: |
-  ${ userdata.get("prefs").favorite_fruit }
+  Your favorite fruit is
+  ${ userdata.get("prefs").favorite_fruit }.

@@ -1,0 +1,36 @@
+metadata:
+  title: Rows in multiselect
+  short title: Rows
+  documentation: "https://docassemble.org/docs/fields.html#fields multiselect"
+  example start: 1
+  example end: 1
+---
+question: |
+  Please tell me what you think.
+fields:
+  - "Select the fruits you like": likes_fruit
+    datatype: multiselect
+    choices:
+      - apple
+      - peach
+      - pear
+    rows: 2
+  - "What is your favorite fruit overall?": favorite_fruit
+---
+question: |
+  Thank you for your thoughts.
+subquestion: |
+  % if likes_fruit['apple']:
+  You like apples.
+  % endif
+  % if likes_fruit['peach']:
+  You like peaches.
+  % endif
+  % if likes_fruit['pear']:
+  You like pears.
+  % endif
+  Your favorite, though, is ${ favorite_fruit }.
+
+  In Python, `likes_fruit` is
+  `${ repr(likes_fruit) }`.
+mandatory: True

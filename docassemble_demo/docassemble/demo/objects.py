@@ -1,4 +1,4 @@
-from docassemble.base.core import DAObject
+from docassemble.base.util import DAObject
 
 class Recipe(DAObject):
     def summary(self):

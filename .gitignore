@@ -12,7 +12,6 @@ docassemble_webapp/build
 *.egg-info
 docassemble/dist
 docassemble_base/dist
-docassemble_base/docassemble/base/markdown_docx.py
 docassemble_demo/dist
 docassemble_webapp/dist
 make_session_store.py
@@ -28,13 +27,10 @@ compile2.sh
 www-compile2.sh
 requirements.txt
 requirements3.txt
-requirements3.txt
 full-requirements.txt
 taskdefinition.json
 TODO.md
 testpubsub.py
-docassemble_webapp/docassemble/webapp/templates/pages/twiliotest.html
-docassemble_demo/docassemble/demo/data/questions/testfillsig.yml
 send
 save-db-schema-html.sh
 audit.py
@@ -54,3 +50,11 @@ fix-seq.sql
 rtftest.py
 tests/.noseids
 Docker/config/extract_words_flask.sh
+cleanup.sh
+docassemble_webapp/docassemble/webapp/static/index.html
+docassemble_webapp/docassemble/webapp/static/css
+docassemble_webapp/docassemble/webapp/static/js
+.history/
+settings.json
+*/.mypy_cache
+.idea

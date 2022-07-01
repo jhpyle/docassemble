@@ -17,4 +17,4 @@ subquestion: |
   Be verbose.
 fields:
   - Allegations: allegations
-    datatype: area
+    input type: area

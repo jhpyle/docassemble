@@ -6,10 +6,13 @@ metadata:
   example end: 4
 ---
 objects:
-  - web: DAWeb.using(base_url='https://api.spacexdata.com/v3')
+  - web: DAWeb.using(base_url='https://api.spacexdata.com/latest')
 ---
 code: |
   launch_info = web.get('launches/latest')
+---
+code: |
+  rocket_info = web.get('rockets/' + launch_info['rocket'])
 ---
 code: |
   ship_info = web.get('ships',
@@ -20,12 +23,14 @@ question: |
   SpaceX information
 subquestion: |
   The latest SpaceX launch involved a
-  ${ launch_info['rocket']['rocket_name'] }.
+  ${ rocket_info['name'] }.
 
-  [FILE ${ launch_info['links']['flickr_images'][0] }]
+  % if len(rocket_info['flickr_images']):
+  [FILE ${ rocket_info['flickr_images'][0] }]
   
+  % endif
   SpaceX operates the following tug boats:
-  
+
   % for item in ship_info:
-  * ${ item['ship_name'] }
+  * ${ item['name'] }
   % endfor

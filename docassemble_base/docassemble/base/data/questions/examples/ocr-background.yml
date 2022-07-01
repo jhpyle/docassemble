@@ -36,7 +36,7 @@ question: |
   How do you describe what happened?
 fields:
   - no label: user_testimonial
-    datatype: area
+    input type: area
 ---
 event: waiting_screen
 reload: 5

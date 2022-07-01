@@ -26,8 +26,8 @@ fields:
     max: 5
 ---
 code: |
+  discussion = "Here are citations to lots of cases.  " * 80 * int(verbosity)
   intro = "Hello and welcome to the document.  " * 55
   jurisdiction = "Jurisdiction is proper.  " * 60
-  discussion = "Here are citations to lots of cases.  " * 80 * int(verbosity)
   conclusion = "You are persuaded now.  " * 30
   

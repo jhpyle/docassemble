@@ -1,0 +1,36 @@
+metadata:
+  title: Graph in document
+  short title: Graph
+  documentation: "https://docassemble.org/docs/recipes.html#graph"
+  example start: 1
+  example end: 6
+---
+modules:
+  - .graph
+---
+objects:
+  - graph: DAFile
+  - pets: DADict.using(there_are_any=True)
+---
+question: |
+  Tell me about an animal in your house.
+fields:
+  - Species of animal: pets.new_item_name
+  - Number of pets of this type: pets.new_item_value
+    datatype: integer
+    min: 1
+---
+question: |
+  Do you have any more animals in your house?
+yesno: pets.there_is_another
+---
+code: |
+  make_pie(pets, graph)  
+  graph.loaded = True
+---
+need: graph.loaded
+mandatory: True
+question: |
+  Here is your document with a graph.
+attachment:
+  docx template file: graph.docx

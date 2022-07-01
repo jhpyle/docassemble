@@ -27,13 +27,14 @@
         msgNoFilesSelected: '',
         msgPaused: 'Paused',
         msgCancelled: 'İptal edildi',
-        msgPlaceholder: 'Seçilen {files}...',
+        msgPlaceholder: 'Seçilen {files} ...',
         msgZoomModalHeading: 'Detaylı Önizleme',
         msgFileRequired: 'Yüklemek için bir dosya seçmelisiniz.',
         msgSizeTooSmall: '"{name}"(<b>{size} KB</b>) dosyası çok küçük  ve <b>{minSize} KB</b> boyutundan büyük olmalıdır.',
         msgSizeTooLarge: '"{name}" dosyasının boyutu (<b>{size} KB</b>) izin verilen azami dosya boyutu olan <b>{maxSize} KB</b>\'tan büyük.',
         msgFilesTooLess: 'Yüklemek için en az <b>{n}</b> {files} dosya seçmelisiniz.',
         msgFilesTooMany: 'Yüklemek için seçtiğiniz dosya sayısı <b>({n})</b> azami limitin <b>({m})</b> altında olmalıdır.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: '"{name}" dosyası bulunamadı!',
         msgFileSecured: 'Güvenlik kısıtlamaları "{name}" dosyasının okunmasını engelliyor.',
         msgFileNotReadable: '"{name}" dosyası okunabilir değil.',
@@ -53,10 +54,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'Dosya yükleme iptal edildi',
-        msgUploadThreshold: 'İşlem yapılıyor...',
-        msgUploadBegin: 'Başlıyor...',
+        msgUploadThreshold: 'İşlem yapılıyor &hellip;',
+        msgUploadBegin: 'Başlıyor &hellip;',
         msgUploadEnd: 'Başarılı',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'Yüklemek için geçerli veri mevcut değil.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -96,7 +97,7 @@
             indicatorSuccessTitle: 'Yüklendi',
             indicatorErrorTitle: 'Yükleme Hatası',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Yükleniyor ...'
+            indicatorLoadingTitle:  'Yükleniyor &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Önceki dosyayı göster',

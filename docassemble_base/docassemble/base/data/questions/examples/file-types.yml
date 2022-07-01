@@ -57,20 +57,48 @@ subquestion: |
   ${ the_file }
 
   ### As path
-  
+
   `${ the_file.path() }`
 
   ### As url
-  
+
   `${ the_file.url_for() }`
+  [open](${ the_file.url_for() })
 
   ### As external url
-  
-  `${ the_file.url_for(_external=True) }`
+
+  `${ the_file.url_for(external=True) }`
+  [open](${ the_file.url_for(external=True) })
+
+  ### As downloadable url
+
+  `${ the_file.url_for(attachment=True) }`
+  [open](${ the_file.url_for(attachment=True) })
+
+  ### As temporary url
+
+  `${ the_file.url_for(temporary=True, seconds=500) }`
+  [open](${ the_file.url_for(temporary=True, seconds=500) })
+
+  ### As temporary downloadable url
+
+  `${ the_file.url_for(temporary=True, seconds=500, attachment=True) }`
+  [open](${ the_file.url_for(temporary=True, seconds=500, attachment=True) })
 
   ### From url_of()
 
   `${ url_of(the_file) }`
+  [open](${ url_of(the_file) })
+
+  ### From url_of(), external
+
+  `${ url_of(the_file, _external=True) }`
+  [open](${ url_of(the_file, _external=True) })
+
+  ### From url_of(), downloadable
+
+  `${ url_of(the_file, _attachment=True) }`
+  [open](${ url_of(the_file, _attachment=True) })
 
   ### From path_and_mimetype()
 

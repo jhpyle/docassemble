@@ -1,0 +1,48 @@
+metadata:
+  title: Cards
+  short title: Cards
+  documentation: "https://docassemble.org/docs/recipes.html#cards"
+  example start: 1
+  example end: 2
+---
+include:
+  - docassemble.demo:data/questions/examples/cards.yml
+---
+question: |
+  What is your favorite fruit?
+subquestion: |
+  ${ card_start("Why this is important", color="info", icon="comment") }
+  We need to know your favorite fruit
+  because if your favorite fruit is not
+  a fruit that we think is tasty, then
+  behind your back we will report you to
+  the [police](https://www.interpol.int/).
+  ${ card_end() }
+fields:
+  - Fruit: favorite_fruit
+    choices:
+      - Apple: apples
+      - Orange: oranges
+      - Peach: peaches
+      - Pear: pears
+      - Grapes: grapes
+  - note: |
+      ${ card_start("The real truth about apples", color="danger", icon="apple-alt") }
+      We would advise you to stop eating
+      apples immediately. Apples are produced
+      by a [conglomerate] that is secretly
+      owned by the teachers union, and they
+      are trying to brainwash your kids
+      into buying apples in order to enrich
+      themselves.
+      ${ card_end() }
+
+      [conglomerate]: https://usapple.org/
+    show if:
+      variable: favorite_fruit
+      is: apples
+---
+mandatory: True
+question: |
+  Your favorite fruit is ${ favorite_fruit }.
+      

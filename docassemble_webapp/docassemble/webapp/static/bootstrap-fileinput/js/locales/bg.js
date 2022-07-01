@@ -27,13 +27,14 @@
         msgNoFilesSelected: '',
         msgPaused: 'Paused',
         msgCancelled: 'Отменен',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'Детайлен преглед',
         msgFileRequired: 'You must select a file to upload.',
         msgSizeTooSmall: 'File "{name}" (<b>{size} KB</b>) is too small and must be larger than <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'Файла "{name}" (<b>{size} KB</b>) надвишава максималните разрешени <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Трябва да изберете поне <b>{n}</b> {files} файла.',
         msgFilesTooMany: 'Броя файлове избрани за качване <b>({n})</b> надвишава ограниченито от максимум <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'Файлът "{name}" не може да бъде намерен!',
         msgFileSecured: 'От съображения за сигурност не може да прочетем файла "{name}".',
         msgFileNotReadable: 'Файлът "{name}" не е четим.',
@@ -53,10 +54,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'Качите файла, бе прекратена',
-        msgUploadThreshold: 'Processing...',
-        msgUploadBegin: 'Initializing...',
+        msgUploadThreshold: 'Processing &hellip;',
+        msgUploadBegin: 'Initializing &hellip;',
         msgUploadEnd: 'Done',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'No valid data available for upload.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -97,7 +98,7 @@
             indicatorSuccessTitle: 'Качено',
             indicatorErrorTitle: 'Качи Error',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'Качва се ...'
+            indicatorLoadingTitle:  'Качва се &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'View previous file',

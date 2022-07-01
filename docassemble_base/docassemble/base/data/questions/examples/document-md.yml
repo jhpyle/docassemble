@@ -1,0 +1,20 @@
+metadata:
+  title: Markdown format
+  documentation: "https://docassemble.org/docs/documents.html#md"
+---
+question: Here is your document.
+attachments:
+  - name: Summary of Benefits
+    filename: benefits_summary
+    valid formats:
+      - md
+    content: |
+      [BOLDCENTER] Summary of Benefits
+
+      ${ client } is entitled to
+      benefits plan ${ benefits }.
+mandatory: True
+---
+code: |
+  client = "Jane Doe"
+  benefits = "G-432"

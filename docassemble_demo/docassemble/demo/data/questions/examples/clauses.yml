@@ -1,0 +1,71 @@
+metadata:
+  title: Contract with clauses
+  short: Contract
+  documentation: "https://docassemble.org/docs/functions.html#assemble_docx"
+  example start: 1
+  example end: 7
+---
+objects:
+  - markdown_clause: DADict
+  - edited_clause: DADict
+---
+code: |
+  markdown_clause[i] = assemble_docx('data/templates/contract.docx', fields={'clause': i}, output_format='md', return_content=True)
+---
+code: |
+  # This variable is set to None 
+  # so that the .docx file does 
+  # not assemble a single clause
+  # when it is assembled at the
+  # end.
+  clause = None
+---
+question: |
+  A contract
+subquestion: |
+  You are agreeing to a contract 
+  with me.  Please continue.
+continue button field: welcome_screen
+---
+question: The clauses
+subquestion: |
+  The firstborn clause is:
+  
+  ${ quote_paragraphs(markdown_clause['firstborn']) }
+
+  The counterparts clause is:
+  
+  ${ quote_paragraphs(markdown_clause['counterparts']) }
+continue button field: clauses_shown
+---
+question: |
+  Make any necessary changes to the ${ i } clause.
+fields:
+  - no label: edited_clause[i]
+    default: ${ markdown_clause[i] }
+    input type: area
+---
+event: final_screen
+question: |
+  Here is the contract.
+attachment:
+  name: Contract
+  docx template file: contract.docx
+---
+question: |
+  Is it necessary that we sign on the same sheets of paper?
+noyes: use_counterparts
+---
+question: |
+  Do you promise to give me your firstborn child?
+yesno: use_firstborn
+---
+question: Sign your name
+signature: signature
+under: You
+---
+mandatory: True
+code: |
+  welcome_screen
+  clauses_shown
+  final_screen

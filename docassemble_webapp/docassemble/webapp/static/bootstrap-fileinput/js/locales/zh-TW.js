@@ -29,13 +29,14 @@
         msgPaused: 'Paused',
         msgCancelled: '取消',
         zoomTitle: '詳細資料',
-        msgPlaceholder: '選擇 {files}...',
+        msgPlaceholder: '選擇 {files} ...',
         msgZoomModalHeading: '內容預覽',
         msgFileRequired: '必須選擇壹個文件上傳.',
         msgSizeTooSmall: '檔案 "{name}" (<b>{size} KB</b>) 必須大於限定大小 <b>{minSize} KB</b>.',
         msgSizeTooLarge: '檔案 "{name}" (<b>{size} KB</b>) 大小超過上限 <b>{maxSize} KB</b>.',
         msgFilesTooLess: '最少必須選擇 <b>{n}</b> {files} 來上傳. ',
         msgFilesTooMany: '上傳的檔案數量 <b>({n})</b> 超過最大檔案上傳限制 <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: '檔案 "{name}" 未發現!',
         msgFileSecured: '安全限制，禁止讀取檔案 "{name}".',
         msgFileNotReadable: '文件 "{name}" 不可讀取.',
@@ -55,10 +56,10 @@
             'object': 'object'
         },
         msgUploadAborted: '該文件上傳被中止',
-        msgUploadThreshold: '處理中...',
-        msgUploadBegin: '正在初始化...',
+        msgUploadThreshold: '處理中 &hellip;',
+        msgUploadBegin: '正在初始化 &hellip;',
         msgUploadEnd: '完成',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: '無效的文件上傳.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -99,7 +100,7 @@
             indicatorSuccessTitle: '上傳成功',
             indicatorErrorTitle: '上傳失敗',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  '上傳中 ...'
+            indicatorLoadingTitle:  '上傳中 &hellip;'
         },
         previewZoomButtonTitles: {
             prev: '預覽上壹個文件',

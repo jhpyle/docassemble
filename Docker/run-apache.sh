@@ -3,31 +3,17 @@
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 export DEBIAN_FRONTEND=noninteractive
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
-export DAPYTHONVERSION="${DAPYTHONVERSION:-2}"
-if [ "${DAPYTHONVERSION}" == "2" ]; then
-    export DA_DEFAULT_LOCAL="local"
-    if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
-	WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi | grep '^  Installed:' | awk '{print $2}'`
-	if [ "${WSGI_VERSION}" != '4.3.0-1' ]; then
-	    cd /tmp && wget http://http.us.debian.org/debian/pool/main/m/mod-wsgi/libapache2-mod-wsgi_4.3.0-1_amd64.deb && dpkg -i libapache2-mod-wsgi_4.3.0-1_amd64.deb && rm libapache2-mod-wsgi_4.3.0-1_amd64.deb
-	fi
-    else
-	apt-get remove -y libapache2-mod-wsgi-py3 &> /dev/null
-	apt-get remove -y libapache2-mod-wsgi &> /dev/null
+export DA_DEFAULT_LOCAL="local3.8"
+
+if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
+    WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
+    if [ "${WSGI_VERSION}" != '4.6.5-1' ]; then
+	apt-get -q -y install libapache2-mod-wsgi-py3 &> /dev/null
+	ln -sf /usr/lib/apache2/modules/mod_wsgi.so-3.6 /usr/lib/apache2/modules/mod_wsgi.so
     fi
 else
-    export DA_DEFAULT_LOCAL="local3.6"
-
-    if [ "${DAPYTHONMANUAL:-0}" == "0" ]; then
-	WSGI_VERSION=`apt-cache policy libapache2-mod-wsgi-py3 | grep '^  Installed:' | awk '{print $2}'`
-	if [ "${WSGI_VERSION}" != '4.6.5-1' ]; then
-	    apt-get -q -y install libapache2-mod-wsgi-py3 &> /dev/null
-	    ln -sf /usr/lib/apache2/modules/mod_wsgi.so-3.6 /usr/lib/apache2/modules/mod_wsgi.so
-	fi
-    else
-	apt-get remove -y libapache2-mod-wsgi-py3 &> /dev/null
-	apt-get remove -y libapache2-mod-wsgi &> /dev/null
-    fi
+    apt-get remove -y libapache2-mod-wsgi-py3 &> /dev/null
+    apt-get remove -y libapache2-mod-wsgi &> /dev/null
 fi
 
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
@@ -62,8 +48,8 @@ if [ "${DAPYTHONMANUAL:-0}" == "3" ]; then
     echo -e "LoadModule wsgi_module ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/lib/python3.5/site-packages/mod_wsgi/server/mod_wsgi-py35.cpython-35m-x86_64-linux-gnu.so" >> /etc/apache2/conf-available/docassemble.conf
 fi
 echo -e "WSGIPythonHome ${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}" >> /etc/apache2/conf-available/docassemble.conf
-echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}\nDefine DAWEBSOCKETSIP ${DAWEBSOCKETSIP}\nDefine DAWEBSOCKETSPORT ${DAWEBSOCKETSPORT}\nDefine DACROSSSITEDOMAINVALUE *" >> /etc/apache2/conf-available/docassemble.conf
-echo "Listen 80" > /etc/apache2/ports.conf
+echo -e "Timeout ${DATIMEOUT:-60}\nDefine DAHOSTNAME ${DAHOSTNAME}\nDefine DAPOSTURLROOT ${POSTURLROOT}\nDefine DAWSGIROOT ${WSGIROOT}\nDefine DASERVERADMIN ${SERVERADMIN}\nDefine DAWEBSOCKETSIP ${DAWEBSOCKETSIP}\nDefine DAWEBSOCKETSPORT ${DAWEBSOCKETSPORT}\nDefine DACROSSSITEDOMAINVALUE *\nDefine DALISTENPORT ${PORT:-80}" >> /etc/apache2/conf-available/docassemble.conf
+echo "Listen ${PORT:-80}" > /etc/apache2/ports.conf
 if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
     echo "Listen 8081" >> /etc/apache2/ports.conf
     a2ensite docassemble-redirect

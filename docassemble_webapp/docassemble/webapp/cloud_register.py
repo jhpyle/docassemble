@@ -2,17 +2,16 @@ import os
 import sys
 import re
 import socket
-
 if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
+from docassemble.base.config import hostname
+import docassemble.webapp.cloud
 
 def main():
-    from docassemble.base.config import hostname
     roles = os.environ.get('CONTAINERROLE', None)
     if roles is None:
         return
-    import docassemble.webapp.cloud
     cloud = docassemble.webapp.cloud.get_cloud()
     if cloud is not None:
         roles = re.sub(r'^:+|:+$', r'', roles)

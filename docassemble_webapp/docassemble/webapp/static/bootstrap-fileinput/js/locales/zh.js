@@ -28,13 +28,14 @@
         msgNoFilesSelected: '未选择文件',
         msgPaused: 'Paused',
         msgCancelled: '取消',
-        msgPlaceholder: '选择 {files}...',
+        msgPlaceholder: '选择 {files} ...',
         msgZoomModalHeading: '详细预览',
         msgFileRequired: '必须选择一个文件上传.',
         msgSizeTooSmall: '文件 "{name}" (<b>{size} KB</b>) 必须大于限定大小 <b>{minSize} KB</b>.',
         msgSizeTooLarge: '文件 "{name}" (<b>{size} KB</b>) 超过了允许大小 <b>{maxSize} KB</b>.',
         msgFilesTooLess: '你必须选择最少 <b>{n}</b> {files} 来上传. ',
         msgFilesTooMany: '选择的上传文件个数 <b>({n})</b> 超出最大文件的限制个数 <b>{m}</b>.',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: '文件 "{name}" 未找到!',
         msgFileSecured: '安全限制，为了防止读取文件 "{name}".',
         msgFileNotReadable: '文件 "{name}" 不可读.',
@@ -54,10 +55,10 @@
             'object': 'object'
         },
         msgUploadAborted: '该文件上传被中止',
-        msgUploadThreshold: '处理中...',
-        msgUploadBegin: '正在初始化...',
+        msgUploadThreshold: '处理中 &hellip;',
+        msgUploadBegin: '正在初始化 &hellip;',
         msgUploadEnd: '完成',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: '无效的文件上传.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -98,7 +99,7 @@
             indicatorSuccessTitle: '上传',
             indicatorErrorTitle: '上传错误',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  '上传 ...'
+            indicatorLoadingTitle:  '上传 &hellip;'
         },
         previewZoomButtonTitles: {
             prev: '预览上一个文件',

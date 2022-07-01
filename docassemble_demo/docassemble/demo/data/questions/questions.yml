@@ -456,7 +456,7 @@ css: |
   </style>
 script: |
   <script>
-    $("#today_time").html(Date());
+    document.getElementById("today_time").innerHTML = Date();
   </script>
 comment: |
   You can embed raw HTML into a list of fields using the 'html' key.
@@ -472,7 +472,7 @@ question: |
   Why do you think you deserve to win this case?
 fields:
   - no label: explanation_of_merits
-    datatype: area
+    input type: area
     hint: |
       I should win because . . .
 ---
@@ -543,10 +543,11 @@ fields:
   - Amenities: x.address.amenities
     datatype: checkboxes
     code: |
-      {u'chimney': u'Chimney', 'stove': 'Stove'}
-  - note: |
+      {'chimney': 'Chimney', 'stove': 'Stove'}
+  - label: |
       How would you describe the general *milieu* of ${ x.possessive('abode') }?
-  - no label: x.address.milieu
+    field: x.address.milieu
+    label above field: True
     required: False
 comment: |
   In this question, the type of home uses a "radio" selector.  The

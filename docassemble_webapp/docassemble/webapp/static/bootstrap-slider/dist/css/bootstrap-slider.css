@@ -94,7 +94,7 @@
   display: inline-block;
   text-align: center;
 }
-.slider.slider-horizontal .tooltip {
+.slider.slider-horizontal .datooltip {
   -ms-transform: translateX(-50%);
   transform: translateX(-50%);
 }
@@ -111,7 +111,7 @@
   left: initial;
   right: 0;
 }
-.slider.slider-horizontal.slider-rtl .tooltip {
+.slider.slider-horizontal.slider-rtl .datooltip {
   -ms-transform: translateX(50%);
   transform: translateX(50%);
 }
@@ -157,7 +157,7 @@
 .slider.slider-vertical .slider-tick-label-container .slider-tick-label {
   padding-left: 4px;
 }
-.slider.slider-vertical .tooltip {
+.slider.slider-vertical .datooltip {
   -ms-transform: translateY(-50%);
   transform: translateY(-50%);
 }
@@ -195,13 +195,13 @@
 .slider input {
   display: none;
 }
-.slider .tooltip {
+.slider .datooltip {
   pointer-events: none;
 }
-.slider .tooltip.top {
-  margin-top: -28px;
+.slider .datooltip.top {
+  margin-top: -34px;
 }
-.slider .tooltip-inner {
+.slider .datooltip-inner {
   white-space: nowrap;
   max-width: none;
 }
@@ -325,4 +325,50 @@
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff8ac1ef', endColorstr='#ff82b3de', GradientType=0);
   background-repeat: repeat-x;
   opacity: 1;
+}
+.datooltip {
+  position: absolute;
+  z-index: 1080;
+  display: block;
+  margin: 0;
+  font-family: var(--bs-font-sans-serif);
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+  text-align: start;
+  text-decoration: none;
+  text-shadow: none;
+  text-transform: none;
+  letter-spacing: normal;
+  word-break: normal;
+  word-spacing: normal;
+  white-space: normal;
+  line-break: auto;
+  font-size: 0.875rem;
+  word-wrap: break-word;
+  opacity: 0;
+}
+.datooltip.show {
+  opacity: 0.9;
+}
+.datooltip .datooltip-arrow {
+  position: absolute;
+  display: block;
+  width: 0.8rem;
+  height: 0.4rem;
+}
+.datooltip .datooltip-arrow::before {
+  position: absolute;
+  content: "";
+  border-color: transparent;
+  border-style: solid;
+}
+.datooltip-inner {
+  max-width: 200px;
+  padding: 0.25rem 0.5rem;
+  color: #fff;
+  text-align: center;
+  background-color: #000;
+  border-radius: 0.25rem;
 }

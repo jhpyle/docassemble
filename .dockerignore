@@ -2,10 +2,10 @@
 *.pyc
 en
 */auto
-foobar.pickle
 */build
 *.egg-info
 */dist
+**/.git
 make_session_store.py
 da.wsgi
 oauth.wsgi

@@ -2,7 +2,7 @@ metadata:
   title: Progressive disclosure
   short: Prog
   example start: 1
-  example end: 4
+  example end: 5
 ---
 modules:
   - .progressivedisclosure

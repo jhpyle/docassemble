@@ -5,22 +5,13 @@
 
 <form action="" method="POST" role="form">
     {{ form.hidden_tag() }}
-    
     {{ render_field(form.first_name) }}
-
     {{ render_field(form.last_name) }}
-
     {{ render_field(form.email) }}
-
     {{ render_field(form.password) }}
-
     {{ render_multiselect_field(form.role_id) }}
-
-    <br>
-    <div class="form-actions">
-      {{ render_submit_field(form.submit) }}
-      <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Back') }}</a>
-    </div>
+    {{ render_submit_field(form.submit) }}
+    <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Cancel') }}</a>
 </form>
 
 {% endblock %}

@@ -22,7 +22,7 @@ fields:
 ---
 event: bg_task
 code: |
-  the_answer = text_type(553 + action_argument('additional'))
+  the_answer = str(553 + action_argument('additional'))
   background_response("The answer is " + the_answer + ".")
 ---
 event: waiting_screen

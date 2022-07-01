@@ -1,0 +1,46 @@
+metadata:
+  title: Dependencies
+  documentation: "https://docassemble.org/docs/logic.html#depends on"
+  example start: 1
+  example end: 5
+---
+question: |
+  What is A?
+fields:
+  - A: a
+    datatype: number
+---
+question: |
+  What is the square of ${ a }?
+fields:
+  - B: b
+    datatype: number
+depends on:
+  - a
+---
+code: |
+  c = a + b
+depends on:
+  - a
+  - b
+---
+event: review_screen
+skip undefined: False
+question: |
+  Review your answers.
+review:
+  - label: Edit A
+    field: a
+    button: |
+      A is ${ a }.
+  - label: Edit B
+    field: b
+    button: |
+      B is ${ b }.
+  - note: |
+      C is ${ c }.
+---
+mandatory: True
+code: |
+  need(a, b, c)
+  review_screen

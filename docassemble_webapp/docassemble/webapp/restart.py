@@ -1,34 +1,47 @@
+import datetime
 import sys
 import os
-import re
+import redis
 import docassemble.base.config
-from io import open
-
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
+from docassemble.base.config import daconfig, parse_redis_uri
+from docassemble.webapp.cloud import get_cloud
+from docassemble.base.logger import logmessage
+
+def errlog(text):
+    logmessage(str(datetime.datetime.now()) + " " + text)
 
 def main():
-    from docassemble.base.config import daconfig
     container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
-    if re.search(r':(all|cron):', container_role):
-        import docassemble.webapp.fix_postgresql_tables
-        docassemble.webapp.fix_postgresql_tables.main()
-        import docassemble.webapp.create_tables
-        docassemble.webapp.create_tables.main()
+    errlog("checking to see if running create_tables if necessary")
+    if ':all:' in container_role or ':cron:' in container_role:
+        (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts) = parse_redis_uri()
+        r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password, username=redis_username, **ssl_opts)
+        if r.get('da:skip_create_tables'):
+            logmessage("restart: skipping create_tables")
+            r.delete('da:skip_create_tables')
+        else:
+            errlog("running create_tables")
+            import docassemble.webapp.create_tables
+            docassemble.webapp.create_tables.main()
+            errlog("finished create_tables")
+        if ':cron:' in container_role:
+            r.delete('da:cron_restart')
 
     webapp_path = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
-    import docassemble.webapp.cloud
-    cloud = docassemble.webapp.cloud.get_cloud()
+    cloud = get_cloud()
     if cloud is not None:
         key = cloud.get_key('config.yml')
         if key.does_exist:
             key.get_contents_to_filename(daconfig['config file'])
-            sys.stderr.write("Wrote config file based on copy on cloud\n")
+            logmessage("Wrote config file based on copy on cloud")
     wsgi_file = webapp_path
     if os.path.isfile(wsgi_file):
-        with open(wsgi_file, 'a'):
+        errlog("touching wsgi file")
+        with open(wsgi_file, 'a', encoding='utf-8'):
             os.utime(wsgi_file, None)
-            sys.stderr.write("Restarted.\n")
+        errlog("Restarted.")
     sys.exit(0)
 
 if __name__ == "__main__":

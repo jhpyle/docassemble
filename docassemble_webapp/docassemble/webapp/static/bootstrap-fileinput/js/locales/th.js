@@ -27,13 +27,14 @@
         msgNoFilesSelected: '',
         msgPaused: 'Paused',
         msgCancelled: 'ยกเลิก',
-        msgPlaceholder: 'Select {files}...',
+        msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'ตัวอย่างละเอียด',
         msgFileRequired: 'You must select a file to upload.',
         msgSizeTooSmall: 'File "{name}" (<b>{size} KB</b>) is too small and must be larger than <b>{minSize} KB</b>.',
         msgSizeTooLarge: 'ไฟล์ "{name}" (<b>{size} KB</b>) มีขนาดเกินที่ระบบอนุญาตที่ <b>{maxSize} KB</b>, กรุณาลองใหม่อีกครั้ง!',
         msgFilesTooLess: 'คุณต้องเลือกไฟล์จำนวนอย่างน้อย <b>{n}</b> {files} เพื่ออัพโหลด, กรุณาลองใหม่อีกครั้ง!',
         msgFilesTooMany: 'ไฟล์ที่คุณเลือกมีจำนวน <b>({n})</b> ซึ่งเกินกว่าที่ระบบอนุญาตที่ <b>{m}</b>, กรุณาลองใหม่อีกครั้ง!',
+        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
         msgFileNotFound: 'ไม่พบไฟล์ "{name}" !',
         msgFileSecured: 'ระบบความปลอดภัยไม่อนุญาตให้อ่านไฟล์ "{name}".',
         msgFileNotReadable: 'ไม่สามารถอ่านไฟล์ "{name}" ได้',
@@ -53,10 +54,10 @@
             'object': 'object'
         },
         msgUploadAborted: 'อัปโหลดไฟล์ถูกยกเลิก',
-        msgUploadThreshold: 'Processing...',
-        msgUploadBegin: 'Initializing...',
+        msgUploadThreshold: 'Processing &hellip;',
+        msgUploadBegin: 'Initializing &hellip;',
         msgUploadEnd: 'Done',
-        msgUploadResume: 'Resuming upload...',
+        msgUploadResume: 'Resuming upload &hellip;',
         msgUploadEmpty: 'No valid data available for upload.',
         msgUploadError: 'Upload Error',
         msgDeleteError: 'Delete Error',
@@ -97,7 +98,7 @@
             indicatorSuccessTitle: 'อัพโหลด',
             indicatorErrorTitle: 'อัปโหลดข้อผิดพลาด',
             indicatorPausedTitle: 'Upload Paused',
-            indicatorLoadingTitle:  'อัพโหลด ...'
+            indicatorLoadingTitle:  'อัพโหลด &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'View previous file',

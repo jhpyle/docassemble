@@ -1,0 +1,10 @@
+metadata:
+  title: Basic questions
+  short title: Basic
+  documentation: "https://docassemble.org/docs/recipes.html#basic"
+  example start: 1
+  example end: 1
+---
+include:
+  - demo-basic-questions-name.yml
+  - demo-basic-questions-address.yml

@@ -14,7 +14,7 @@ code: |
   fruit_summary = ''
   records = read_records('fruit')
   for id in records:
-    fruit_summary += "* " + text_type(records[id]) + "\n"
+    fruit_summary += "* " + str(records[id]) + "\n"
 ---
 mandatory: True
 question: |

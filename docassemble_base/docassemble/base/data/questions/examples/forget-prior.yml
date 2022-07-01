@@ -1,0 +1,26 @@
+metadata:
+  title: Actions demonstration
+  short title: Actions
+  documentation: "https://docassemble.org/docs/functions.html#url_action"
+  example start: 1
+  example end: 4
+---
+mandatory: True
+question: First page
+subquestion: |
+  [Go to second page](${ url_action('second_page') })
+---
+question: Second page
+subquestion: |
+  [Go to third page](${ url_action('third_page') })
+continue button field: second_page
+---
+question: Third page
+subquestion: |
+  [Go to fourth page](${ url_action('fourth_page') })
+
+  [Go to fourth page with forget prior](${ url_action('fourth_page', _forget_prior=True) })
+continue button field: third_page
+---
+question: Fourth page
+continue button field: fourth_page

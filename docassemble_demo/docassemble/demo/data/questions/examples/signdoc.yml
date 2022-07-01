@@ -1,0 +1,823 @@
+metadata:
+  title:
+    en: Sign
+    es: Firma
+  required privileges:
+    - admin
+    - developer
+---
+translations:
+  - signdoc_es.xlsx
+---
+modules:
+  - docassemble.demo.progressivedisclosure
+---
+features:
+  css: docassemble.demo:data/static/progressivedisclosure.css
+---
+objects:
+  - signer: Person
+  - advocate: Individual
+  - session_local.draft_documents: DAList.using(auto_gather=False)
+  - document_templates: DAList.using(object_type=DAObject, auto_gather=False)
+  - store: DAStore.using(base='user')
+---
+mandatory: True
+code: |
+  multi_user = True
+---
+mandatory: True
+code: |
+  processed_url_args
+  if session_local.role == 'initiator':
+    if not user_logged_in():
+      response(url=url_of('login', next=interview_url()))
+    intro_seen
+    advocate.name.first
+    signer.name.text
+    default_signatures_set
+    for item in document_templates:
+      if not item.template_ok:
+        item.template_not_valid
+    advocate_signature_reset
+    session_local.draft_documents.gathered
+    advocate_signature_saved_if_necessary
+    advocate.email
+    signer.info_checked
+    if signer.notification_method == 'diy':
+      screen_with_link
+    signer_notified
+    initiator_final_screen
+  elif session_local.role == 'signer':
+    set_language(signer.language)
+    default_signature_updated_for_language
+    agrees_to_sign
+    signature_reset
+    signature
+    documents_emailed
+    signer_final_screen
+  elif session_local.role == 'initiator_signer':
+    advocate_signature
+    advocate_thanked_for_signature
+---
+event: document_templates[i].template_not_valid
+question: |
+  Sorry, there was a problem with the template.
+subquestion: |
+  % if document_templates[i].file.mimetype == 'application/pdf':
+  Your template did not contain any digital signature fields.
+  % else:
+  Your template contained an error.
+
+  It might be missing the signer's signature.  Where the signature
+  goes, you need to write this:
+
+  > {{ signature }}
+  % endif
+---
+code: |
+  if get_language() == 'es':
+    signature = '(Aquí aparecerá su firma)'
+  else:
+    signature = '(Your signature will go here)'
+  signature_date = ''
+  advocate_signature = "(Advocate's signature will go here)"
+  advocate_signature_date = ''
+  default_signatures_set = True
+---
+question: |
+  Tell me about the signer.
+subquestion: |
+  If you provide a Legal Server ID, the document will be e-mailed to
+  Legal Server as well as to you when it is signed.
+fields:
+  - Name: signer.name.text
+  - E-mail: signer.email
+    datatype: email
+    show if:
+      code: |
+        signer.notification_method == 'email'
+  - Mobile number: signer.phone_number
+    show if:
+      code: |
+        signer.notification_method == 'sms'
+  - Language: signer.language
+    choices:
+      - English: en
+      - Spanish: es
+    default: en
+  - Legal Server case ID: legal_server_id
+    required: False
+continue button field: signer.info_checked
+validation code: |
+  legal_server_id = re.sub(r'@.*', '', legal_server_id)
+---
+question: |
+  What is your name and e-mail address?
+subquestion: |
+  % if len(document_templates) == 1:
+  The signed document
+  % else:
+  The signed documents
+  % endif
+  will be e-mailed to this address.
+fields:
+  - First name: advocate.name.first
+    default: ${ user_info().first_name }
+  - Last name: advocate.name.last
+    default: ${ user_info().last_name }
+  - E-mail: advocate.email
+    default: ${ user_info().email }
+    datatype: email
+---
+question: |
+  Please approve the subject and body of the e-mail.
+fields:
+  - no label: subject_of_signer_email
+    default: "Your signature needed"
+  - no label: body_of_signer_email
+    input type: area
+    rows: 12
+    default: |
+      ${ signer },
+
+      % if signer.language == 'es':
+      Necesito que firmes un documento. Puedes firmarlo usando una pantalla táctil o con un mouse. Para ver el documento y empezar el proceso de firma, visite este enlace:
+
+      ${ url_for_signer }
+
+      Gracias,
+      % else:
+      I need you to sign a document. You can sign it using a touchscreen or with a mouse. To see the document and start the signing process, visit this link:
+
+      ${ url_for_signer }
+
+      Thank you,
+      % endif
+
+      ${ advocate }
+under: |
+  % if legal_server_id:
+  This e-mail will be bcc'd to you and the Legal Server case.
+  % endif
+---
+template: signer_email
+subject: |
+  ${ subject_of_signer_email }
+content: |
+  ${ body_of_signer_email }
+---
+question: |
+  What should the text message to the signer say?
+fields:
+  - no label: body_of_signer_sms
+    input type: area
+    rows: 7
+    default: |
+      ${ signer.name },
+      I need you to sign a document for me.
+      You can sign the document by clicking this link:
+      ${ url_for_signer }
+      Thank you,
+      ${ advocate }
+under: |
+  % if legal_server_id:
+  A copy of this message will be e-mailed to the Legal Server case.
+  % endif
+---
+code: |
+  url_for_signer = interview_url_action('sign', temporary=24*90)
+---
+question: |
+  Should I notify the signer by e-mail or text message?
+field: signer.notification_method
+choices:
+  - E-mail: email
+  - Text message: sms
+  - "I will contact the signer myself": diy
+---
+code: |
+  signer.info_checked
+  if signer.notification_method == 'email':
+    bcc = [advocate]
+    if legal_server_id:
+      bcc.append(legal_server_id + '@' + get_config('legal server domain'))
+    send_email(to=signer, sender=advocate, bcc=bcc, template=signer_email)
+    del bcc
+  elif signer.notification_method == 'sms':
+    if legal_server_id:
+      send_email(to=legal_server_id + '@' + get_config('legal server domain'), sender=advocate, subject="Text message to " + signer.phone_number, body=body_of_signer_sms)
+    send_sms(to=signer, body=body_of_signer_sms)
+  signer_notified = True
+---
+event: initiator_final_screen
+prevent going back: True
+question: |
+  The signer has been asked to sign.
+subquestion: |
+  You will receive an e-mail when the signer has signed the document.
+---
+event: screen_with_link
+prevent going back: True
+question: |
+  Share this link with the signer.
+subquestion: |
+  The link below will take the user to a screen
+  where the user can sign the document you just
+  uploaded.  After the document is signed, it
+  will be e-mailed to you.
+
+  It is *very important* that you give the
+  user the *exact* link as it appears below.  Do
+  not click the link yourself and then copy the URL
+  from the location bar in your browser.
+
+  <div class="card mb-3">
+  <h5 class="card-header">Suggested content for e-mailing to the signer</h5>
+  <div class="card-body">
+  % if signer.language == 'es':
+  <p class="card-text">Necesito que firmes un documento. Puedes firmarlo
+  usando una pantalla táctil o con un mouse. Para ver el documento y empezar
+  el proceso de firma, visite este enlace:</p>
+
+  <p class="card-text"><a href="${ url_for_signer }">${ url_for_signer }</a></p>
+
+  <p class="card-text">Gracias,</p>
+  % else:
+  <p class="card-text">I need you to sign a document.  You can sign it
+  using a touchscreen or with a mouse.  To see the document and start
+  the signing process, visit this link:</p>
+
+  <p class="card-text"><a href="${ url_for_signer }">${ url_for_signer }</a></p>
+
+  <p class="card-text">Thank you,</p>
+  % endif
+
+  <p class="card-text">${ advocate }</p>
+  </div>
+  </div>
+---
+event: restart_this
+code: |
+  command('new_session')
+---
+signature: signature
+question: Sign your name
+under: |
+  ${ signer }
+---
+prevent going back: True
+question: |
+  % if len(document_templates) == 1:
+  Do you agree to sign this document?
+  % else:
+  Do you agree to sign these documents?
+  % endif
+subquestion: |
+  % if len(document_templates) == 1:
+  Click the document image below to read the document
+  before signing it.
+  % else:
+  Click the document images below to read the documents
+  before signing them.
+  % endif
+
+  % for draft_document in session_local.draft_documents:
+  ${ draft_document.pdf }
+
+  % endfor
+field: agrees_to_sign
+continue button label: I agree to sign
+---
+code: |
+  document_templates[i].document_filename = re.sub(r'\.[^\.]+$', '', document_templates[i].file.filename)
+---
+attachment:
+  name: |
+    % if len(document_templates) == 1:
+    Document
+    % else:
+    ${ ordinal(i, capitalize=True) } document
+    % endif
+  filename: |
+    ${ document_templates[i].document_filename }
+  variable name: session_local.draft_documents[i]
+  docx template file:
+    code: document_templates[i].file
+---
+if: document_templates[i].file.mimetype == 'application/pdf'
+reconsider: document_templates[i].pdf_fields
+attachment:
+  name: |
+    % if len(document_templates) == 1:
+    Document
+    % else:
+    ${ ordinal(i, capitalize=True) } document
+    % endif
+  filename: |
+    ${ document_templates[i].document_filename }
+  variable name: session_local.draft_documents[i]
+  pdf template file:
+    code: document_templates[i].file
+  code: document_templates[i].pdf_fields
+---
+code: |
+  document_templates[i].signature_fields = list()
+  document_templates[i].date_fields = list()
+  if document_templates[i].file.mimetype == 'application/pdf':
+    for field in document_templates[i].file.get_pdf_fields():
+      if field[4] == '/Sig':
+        document_templates[i].signature_fields.append(field[0])
+      if 'date' in field[0].lower():
+        document_templates[i].date_fields.append(field[0])
+      del field
+    if len(document_templates[i].signature_fields) > 0:
+      document_templates[i].template_ok = True
+    else:
+      document_templates[i].template_ok = False
+  else:
+    try:
+      assemble_docx(document_templates[i].file)
+      md_file = DAFile('md_file')
+      md_file.initialize(extension='docx')
+      md_file.copy_into(document_templates[i].file.path())
+      md_file.convert_to('md')
+      if re.search(r'\{\{ *signature *\}\}', md_file.slurp()):
+        document_templates[i].template_ok = True
+      else:
+        document_templates[i].template_ok = False
+    except Exception as err:
+      log("Error with template: " + err.__class__.__name__ + ": " + str(err))
+      document_templates[i].template_ok = False
+      del err
+    undefine('md_file')
+---
+question: |
+  Collect an electronic signature
+subquestion: |
+  This app lets you collect an electronic signature from a signer and
+  insert it into one or more documents.  It will ask you to upload a
+  document template and will ask you information about the signer.
+
+  #### Instructions
+
+  ${ prog_disclose(word_file_instructions) }
+
+  ${ prog_disclose(pdf_file_instructions) }
+continue button field: intro_seen
+---
+template: word_file_instructions
+subject: If your template is a .docx file
+content: |
+  In the place where you want the signature to be, you need to
+  include the word "signature" surrounded by double curly brackets.
+  For example:
+
+  > I swear that the above is true and correct.
+  >
+  > {{ signature }}
+  >
+  > Angela Washington
+
+  If you do not include "{{ signature }}" in exactly this way,
+  a signature will not be inserted.
+
+  To include the date when the signer signs, you can write
+  "{{ signature_date }}" in the place where you want the date to
+  appear.  The format of the date will be "August 2, 2021."
+  If you want the date to appear in numeric format, write
+  "{{ signature_date.format('MM/dd/yyyy') }}".
+
+  To include your signature as well, you can include
+  "{{ advocate_signature}}" and "{{ advocate_signature_date }}" in
+  the same way.  You will sign first before the document is sent
+  to the signer.
+
+  To include the signer's name, or your name, write "{{ signer }}" or
+  "{{ advocate }}".
+---
+template: pdf_file_instructions
+subject: If your template is a .pdf file
+content: |
+  You will need to insert a "digital signature" field into the
+  PDF file in the appropriate place, with the appropriate
+  size.
+
+  There are two ways to do this:
+
+  1. You can use Adobe Acrobat Pro or other commercial software capable of
+     editing fields in PDF fields.
+  2. You can use
+     [Documate's PDF Unlocker and Field Renamer](https://www.documate.org/pdf)
+     tool.
+
+  The name of the signature field can be "Signature" or whatever you choose.
+
+  If the signer's name needs to appear in multiple places, add
+  multiple "digital signature" fields, but make sure to give each
+  field a different name.
+
+  If you want the date of the signature to be plugged into a text
+  field, give the field a name that contains the word "date."
+
+  If you want to sign the document as well, include an additional
+  "digital signature" field (and an additional date field if you want
+  your signature to be dated).  Later, you will be asked which
+  signature field is yours.
+---
+question: |
+  Please upload the document(s) you want to be signed.
+fields:
+  - no label: template_uploads
+    datatype: files
+validation code: |
+  for template_file in template_uploads:
+    if template_file.mimetype == 'application/rtf':
+      try:
+        template_file.convert_to('docx')
+      except:
+        raise DAValidationError("Sorry, that RTF file could not be converted to a DOCX file.")
+    elif template_file.mimetype not in ('application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'):
+      raise DAValidationError("Sorry, you need to upload an RTF, DOCX, or PDF file.")
+---
+code: |
+  del signature
+  del signature_date
+  signature_reset = True
+---
+code: |
+  del advocate_signature
+  del advocate_signature_date
+  advocate_signature_reset = True
+---
+attachment:
+  name: |
+    % if len(document_templates) == 1:
+    Document
+    % else:
+    ${ ordinal(i, capitalize=True) } document
+    % endif
+  filename: |
+    ${ document_templates[i].document_filename }
+  variable name: document_templates[i].signed_document
+  valid formats:
+    - pdf
+    - docx
+  docx template file:
+    code: document_templates[i].file
+---
+if: document_templates[i].file.mimetype == 'application/pdf'
+reconsider: document_templates[i].pdf_fields
+attachment:
+  name: |
+    % if len(document_templates) == 1:
+    Document
+    % else:
+    ${ ordinal(i, capitalize=True) } document
+    % endif
+  filename: |
+    ${ document_templates[i].document_filename }
+  variable name: document_templates[i].signed_document
+  pdf template file:
+    code: document_templates[i].file
+  code: document_templates[i].pdf_fields
+---
+question: |
+  Into which signature fields should the signer's signature be inserted?
+subquestion: |
+  % if len(document_templates) > 1:
+  (in the file ${ document_templates[i].file.filename })
+  % endif
+fields:
+  - Fields: document_templates[i].signature_fields_to_use
+    datatype: checkboxes
+    code: document_templates[i].signature_fields
+    none of the above: False
+    minlength: 1
+---
+question: |
+  Into which signature fields should your signature be inserted, if any?
+subquestion: |
+  % if len(document_templates) > 1:
+  (in the file ${ document_templates[i].file.filename })
+  % endif
+fields:
+  - Fields: document_templates[i].advocate_signature_fields_to_use
+    datatype: checkboxes
+    code: document_templates[i].advocate_signature_fields
+---
+code: |
+  if len(document_templates[i].advocate_signature_fields) == 0:
+    document_templates[i].advocate_signature_fields_to_use = DADict(document_templates[i].attr_name('advocate_signature_fields_to_use'), gathered=True)
+---
+code: |
+  document_templates[i].advocate_signature_fields = [item for item in document_templates[i].signature_fields if not document_templates[i].signature_fields_to_use[item]]
+---
+code: |
+  if len(document_templates[i].signature_fields) < 2:
+    document_templates[i].signature_fields_to_use = DADict(document_templates[i].attr_name('signature_fields_to_use'))
+    for item in document_templates[i].signature_fields:
+      document_templates[i].signature_fields_to_use[item] = True
+    document_templates[i].signature_fields_to_use.gathered = True
+---
+question: |
+  Into which fields should the date of the signer's signature be inserted?
+subquestion: |
+  % if len(document_templates) > 1:
+  (in the file ${ document_templates[i].file.filename })
+  % endif
+fields:
+  - Fields: document_templates[i].date_fields_to_use
+    datatype: checkboxes
+    code: document_templates[i].date_fields
+---
+code: |
+  if len(document_templates[i].date_fields) < 2:
+    document_templates[i].date_fields_to_use = DADict(document_templates[i].attr_name('date_fields_to_use'))
+    for item in document_templates[i].date_fields:
+      document_templates[i].date_fields_to_use[item] = True
+    document_templates[i].date_fields_to_use.gathered = True
+---
+question: |
+  Into which fields should the date of your signature (today's date) be inserted, if any?
+subquestion: |
+  % if len(document_templates) > 1:
+  (in the file ${ document_templates[i].file.filename })
+  % endif
+fields:
+  - Fields: document_templates[i].advocate_date_fields_to_use
+    datatype: checkboxes
+    code: document_templates[i].advocate_date_fields
+---
+code: |
+  if len(document_templates[i].advocate_date_fields) == 0:
+    document_templates[i].advocate_date_fields_to_use = DADict(document_templates[i].attr_name('advocate_date_fields_to_use'), gathered=True)
+---
+code: |
+  document_templates[i].advocate_date_fields = [item for item in document_templates[i].date_fields if not document_templates[i].date_fields_to_use[item]]
+---
+code: |
+  fields = dict()
+  for field_name in document_templates[i].signature_fields_to_use.true_values():
+    fields[field_name] = signature
+  for field_name in document_templates[i].advocate_signature_fields_to_use.true_values():
+    fields[field_name] = advocate_signature
+  if document_templates[i].advocate_signature_fields_to_use.any_true():
+    for field_name in document_templates[i].advocate_date_fields_to_use.true_values():
+      fields[field_name] = pdf_advocate_signature_date
+  if session_local.role == 'signer':
+    for field_name in document_templates[i].date_fields_to_use.true_values():
+      fields[field_name] = pdf_signature_date
+  document_templates[i].pdf_fields = fields
+  del fields
+---
+attachment:
+  name: |
+    % if len(document_templates) == 1:
+    Document
+    % else:
+    ${ ordinal(i, capitalize=True) } document
+    % endif
+  filename: |
+    ${ document_templates[i].document_filename }
+  variable name: document_templates[i].signed_document_pdf_only
+  valid formats:
+    - pdf
+  docx template file:
+    code: document_templates[i].file
+---
+if: document_templates[i].file.mimetype == 'application/pdf'
+reconsider: document_templates[i].pdf_fields
+attachment:
+  name: |
+    % if len(document_templates) == 1:
+    Document
+    % else:
+    ${ ordinal(i, capitalize=True) } document
+    % endif
+  filename: |
+    ${ document_templates[i].document_filename }
+  variable name: document_templates[i].signed_document_pdf_only
+  pdf template file:
+    code: document_templates[i].file
+  code: document_templates[i].pdf_fields
+---
+event: signer_final_screen
+prevent going back: True
+question: |
+  % if len(document_templates) == 1:
+  Here is your signed document.
+  % else:
+  Here are your signed documents.
+  % endif
+subquestion: |
+  % if len(document_templates) == 1:
+  The signed document has been e-mailed to your
+  advocate.
+  % else:
+  The signed documents have been e-mailed to your
+  advocate.
+  % endif
+
+  Thank you!
+attachment code: |
+  [y.signed_document_pdf_only for y in document_templates]
+include attachment notice: False
+---
+template: email_template
+subject: Signed document
+content: |
+  % if len(document_templates) == 1:
+  The attached document has been signed.
+  % else:
+  The attached document have been signed.
+  % endif
+---
+code: |
+  attachment_list = []
+  for item in document_templates:
+    attachment_list = [item.signed_document.pdf]
+    if item.file.mimetype != 'application/pdf':
+      attachment_list.append(item.signed_document.docx)
+  params = dict(to=advocate, template=email_template, attachments=attachment_list)
+  if legal_server_id:
+    params['cc'] = legal_server_id + '@' + get_config('legal server domain')
+  send_email(**params)
+  del attachment_list
+  del params
+  documents_emailed = True
+---
+code: |
+  session_local.role = 'initiator'
+---
+event: sign
+code: |
+  if hasattr(session_local, 'role') and session_local.role == 'initiator':
+    advocate_told_not_to_click_this_link
+  session_local.role = 'signer'
+---
+only sets: processed_url_args
+code: |
+  if url_args.get('l', ''):
+    legal_server_id = url_args['l']
+  if url_args.get('n', ''):
+    signer.name.text = url_args['n']
+  if url_args.get('e', ''):
+    signer.email = url_args['e']
+  if url_args.get('p', ''):
+    signer.phone_number = url_args['p']
+  processed_url_args = True
+---
+need:
+  - advocate_wants_to_keep_signature
+question: Sign your name
+signature: advocate_signature
+under: ${ advocate }
+---
+question: |
+  Please upload your signature.
+fields:
+  - File: uploaded_signature
+    datatype: file
+  - "Save this signature so I can use it again": advocate_wants_to_keep_signature
+    datatype: yesno
+validation code: |
+  if uploaded_signature[0].mimetype == 'application/pdf':
+    raise DAValidationError("You need to upload a .jpg or .png file.")
+  try:
+    uploaded_signature[0].convert_to('png')
+  except:
+    raise DAValidationError("Sorry, I could not process that file.")
+---
+question: |
+  Do you want the system to remember your signature
+  so that you can use it later?
+yesno: advocate_wants_to_keep_signature
+---
+code: |
+  if session_local.role == 'initiator' and advocate_signature_preference == 'upload':
+    advocate_signature = uploaded_signature[0]
+    if advocate_wants_to_keep_signature:
+      store.set('signature', advocate_signature.slurp(auto_decode=False))
+---
+sets: advocate_signature
+code: |
+  if session_local.role == 'initiator' and advocate_signature_preference == 'stored':
+    advocate_signature = DAFile('advocate_signature')
+    advocate_signature.initialize(filename='signature.png')
+    advocate_signature.write(store.get('signature'), binary=True)
+    advocate_signature.commit()
+---
+sets: advocate_signature
+code: |
+  if session_local.role == 'initiator' and advocate_signature_preference == 'link':
+    signature_email_sent_to_advocate
+    advocate_signature_waiting_screen
+---
+code: |
+  send_email(to=advocate, template=advocate_signature_email)
+  signature_email_sent_to_advocate = True
+---
+template: advocate_signature_email
+subject: Link for providing your signature
+content: |
+  Using a touchscreen device, open this link and sign your name:
+
+  [${ advocate_signature_url }](${ advocate_signature_url })
+---
+code: |
+  advocate_signature_url = interview_url_action('advocate_sign', temporary=24*90)
+---
+event: advocate_signature_waiting_screen
+question: |
+  Please open your e-mail on your touchscreen device and click
+  the link to provide your signature.
+reload: 5
+---
+event: advocate_sign
+code: |
+  if hasattr(session_local, 'role'):
+    advocate_told_to_use_different_device
+  session_local.role = 'initiator_signer'
+---
+event: advocate_told_to_use_different_device
+question: |
+  You need to use a different device to sign your name.
+---
+code: |
+  signature_date = today()
+---
+code: |
+  advocate_signature_date = today()
+---
+code: |
+  pdf_signature_date = today(format='MM/dd/yyyy')
+---
+code: |
+  pdf_advocate_signature_date = today(format='MM/dd/yyyy')
+---
+question: |
+  How would you like to sign?
+field: advocate_signature_preference
+choices:
+  code: advocate_preference_list
+---
+code: |
+  need(store)
+  advocate_preference_list = []
+  if store.get('signature'):
+    advocate_preference_list.append({'stored': 'Use my saved signature', 'default': True})
+    advocate_preference_list.append({'now': 'I will sign right now'})
+  else:
+    advocate_preference_list.append({'now': 'I will sign right now', 'default': True})
+  advocate_preference_list.append({'link': 'E-mail me a link so I can sign on my other device'})
+  advocate_preference_list.append({'upload': 'Let me upload my signature as a PNG or JPEG file'})
+---
+prevent going back: True
+event: advocate_thanked_for_signature
+question: |
+  Thank you for providing your signature.
+subquestion: |
+  % if advocate_wants_to_keep_signature:
+  Your signature has been saved.
+  % endif
+
+  If you want to download your signature image, you can do so here:
+
+  [:file: signature.png](${ advocate_signature.url_for(attachment=True) })
+
+  You can now go back to your other computer to finish the process.
+---
+event: advocate_told_not_to_click_this_link
+question: |
+  That link was for the signer to click on, not for you to click on.
+subquestion: |
+  You need to share the original link with the signer.  It has
+  a code embedded in it.  A URL other than the original URL will
+  not work.
+
+  If you want to test the link to see what the client sees, you can
+  copy the original URL and then paste it into another browser, or
+  open an incognito window and open it from there.  
+---
+code: |
+  for indexno in range(len(document_templates)):
+    session_local.draft_documents[indexno]
+  session_local.draft_documents.gathered = True
+---
+code: |
+  document_templates.clear()
+  for indexno in range(len(template_uploads)):
+    document_templates[indexno].file = template_uploads[indexno]
+  document_templates.gathered = True
+---
+only sets: default_signature_updated_for_language
+code: |
+  if get_language() == 'es':
+    signature = '(Aquí aparecerá su firma)'
+  default_signature_updated_for_language = True
+---
+code: |
+  if defined('advocate_wants_to_keep_signature') and advocate_wants_to_keep_signature:
+    store.set('signature', advocate_signature.slurp(auto_decode=False))
+  advocate_signature_saved_if_necessary = True

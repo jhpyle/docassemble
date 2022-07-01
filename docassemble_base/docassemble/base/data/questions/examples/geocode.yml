@@ -1,0 +1,78 @@
+metadata:
+  title: Geocode address
+  short title: Geocode
+  documentation: "https://docassemble.org/docs/objects.html#Address.geocode"
+  example start: 2
+  example end: 5
+---
+objects:
+  - the_address: Address
+---
+question: |
+  Enter an address
+fields:
+  - Address: the_address.address
+  - Unit: the_address.unit
+    required: False
+  - City: the_address.city
+  - State: the_address.state
+    code: states_list()
+  - Zip: the_address.zip
+    required: False
+---
+mandatory: True
+code: |
+  the_address.geocode()
+---
+mandatory: True
+question: |
+  Information about your address
+subquestion: |
+  The address you provided is:
+    
+  ${ the_address }
+
+  As JSON, this is:
+
+  ${ indent(json.dumps(the_address.as_serializable(), indent=2)) }
+
+  % if the_address.was_geocoded_successfully():
+  The normalized version is:
+
+  ${ the_address.norm }
+
+  As JSON, this is:
+
+  ${ indent(json.dumps(the_address.norm.as_serializable(), indent=2)) }
+  
+  The long-form normalized
+  version is:
+
+  ${ the_address.norm_long }
+
+  As JSON, this is:
+
+  ${ indent(json.dumps(the_address.norm_long.as_serializable(), indent=2)) }
+
+  The latitude and longitude are
+  ${ the_address.location.latitude }
+  and
+  ${ the_address.location.longitude }.
+
+  % if hasattr(the_address, 'neighborhood'):
+  The address is located in the
+  ${ the_address.neighborhood }
+  neighborhood.
+  % endif
+
+  % if hasattr(the_address, 'county'):
+  The address is located in
+  ${ the_address.county }.
+  % endif
+
+  ${ map_of(the_address) }
+
+  % else:
+  The address could not be
+  geocoded.
+  % endif

@@ -1,0 +1,44 @@
+metadata:
+  title: Actions demonstration
+  short title: Actions
+  documentation: "https://docassemble.org/docs/functions.html#force_ask"
+  example start: 1
+  example end: 7
+---
+mandatory: True
+question: First page
+subquestion: |
+  [Go to second page](${ url_action('second_page') })
+---
+question: Second page
+subquestion: |
+  [Go to third page](${ url_action('third_page') })
+continue button field: second_page
+---
+question: Third page
+subquestion: |
+  [Ask about food](${ url_action('food_preferences') })
+
+  [Ask about food with forget prior](${ url_action('food_preferences_forget_prior') })
+continue button field: third_page
+---
+#event: food_preferences
+code: |
+  favorite_fruit
+  favorite_vegetable
+  food_preferences = True
+  #force_ask('favorite_fruit', 'favorite_vegetable')
+---
+event: food_preferences_forget_prior
+code: |
+  force_ask('favorite_fruit', 'favorite_vegetable', forget_prior=True)
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable

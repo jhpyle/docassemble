@@ -1,0 +1,19 @@
+metadata:
+  title: Country code
+  documentation: "https://docassemble.org/docs/functions.html#iso_country"
+  example start: 1
+  example end: 2
+---
+question: |
+  In what country do you live?
+fields:
+  - Country: country
+validation code: |
+  try:
+    country = iso_country(country)
+  except:
+    validation_error("That country does not exist.  Please try again.")
+---
+mandatory: True
+question: |
+  You live in ${ country_name(country) }.

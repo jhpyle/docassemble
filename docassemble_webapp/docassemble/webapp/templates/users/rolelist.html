@@ -2,13 +2,19 @@
 
 {% block content %}
 
-<div class="row">
+{%- if can_edit %}
+<ul class="nav nav-pills">
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('add_privilege') }}"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add a new privilege') }}</a>
+  </li>
+</ul>
+{%- endif %}
+
+<div class="row mb-3">
   <div class="col-lg-8">
 {{ privilegelist|safe }}
   </div>
 </div>
 
-<a class="btn {{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('add_privilege') }}">{{ word('Add a new privilege') }}</a>
-<a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Back') }}</a>
-
+<a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Back to user list') }}</a>
 {% endblock %}

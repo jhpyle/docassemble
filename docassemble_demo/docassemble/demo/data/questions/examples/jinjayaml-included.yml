@@ -1,0 +1,5 @@
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---

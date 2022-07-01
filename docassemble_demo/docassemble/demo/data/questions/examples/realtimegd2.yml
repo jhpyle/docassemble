@@ -1,0 +1,42 @@
+metadata:
+  title: Template from Google Drive
+  short title: Google Drive
+  documentation: "https://docassemble.org/docs/recipes.html#docxongd"
+  example start: 1
+  example end: 6
+---
+modules:
+  - .gd_fetch
+---
+objects:
+  template_file: DAFile
+---
+code: |
+  template_file.initialize(filename='fruit_info.docx')
+  fetch_file('1IGvzA-oOB_bVTmDB7TPW9UgQT-6MGtSe', template_file.path())
+  template_file.commit()
+  template_file.fetched = True
+---
+attachment:
+  name: Information about fruit
+  filename: fruit_info_sheet
+  variable name: assembled_document
+  docx template file:
+    code: template_file
+need: template_file.fetched
+---
+question: |
+  Which fruits do you like?
+fields:
+  - Fruit: likes_fruit
+    datatype: checkboxes
+    choices:
+      - Apple: apple
+      - Banana: banana
+      - Peach: peach
+      - Grapes: grapes
+---
+mandatory: True
+question: |
+  Here is a customized information sheet about the fruits you like.
+attachment code: assembled_document

@@ -245,6 +245,7 @@ subquestion: |
   [Templates section]: ${ url_of('playgroundtemplate', project=current_project) }
 buttons:
   - Exit: exit
+    url: ${ url_of('playground', project=current_project, file=yaml_file) }
 ---
 generic object: DAQuestion
 question: |
@@ -322,7 +323,7 @@ fields:
       code: |
         'Your document is ready.' if x.field_list[0].field_type == 'end_attachment' else ''
   - Body: x.subquestion_text
-    datatype: area
+    input type: area
     required: False
     default:
       code: |
@@ -367,7 +368,7 @@ subquestion: |
   You can use any valid Python source code to define the variable.
 fields:
   - no label: x.code
-    datatype: area
+    input type: area
     default: "${ x.field_list[0].variable } = "
 ---
 generic object: DAQuestion
@@ -383,7 +384,7 @@ fields:
       - From text: text
       - From a file: file
   - Body: x.template_body
-    datatype: area
+    input type: area
     show if:
       variable: x.template_type
       is: text
@@ -542,9 +543,10 @@ subquestion: |
   Once your interview has been created, it will be available in the
   [Playground], where you can edit it.
 
-  This wizard is primarily a tool to help new interview authors learn
-  how to write **docassemble** interviews.  There are many features in
-  **docassemble** that are not available with this wizard.
+  This wizard is primarily an educational tool to help new interview
+  authors learn how to write very basic **docassemble** interviews.
+  There are many features in **docassemble** that are not available
+  with this wizard.
 
   [Jinja2 syntax]: http://jinja.pocoo.org/docs
   [Mako syntax]: https://docassemble.org/docs/markup.html#mako

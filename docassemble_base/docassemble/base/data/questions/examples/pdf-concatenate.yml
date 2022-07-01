@@ -6,7 +6,6 @@ metadata:
 ---
 objects:
   - static_file: DAStaticFile.using(filename='star.pdf')
-  - output_file: DAFileCollection
 ---
 attachment:
   variable name: assembled_file

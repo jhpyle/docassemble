@@ -8,7 +8,7 @@ attachments:
     filename: benefits_summary
     valid formats:
       - docx
-      - pdf    
+      - pdf
     content: |
       [BOLDCENTER] Summary of Benefits
 

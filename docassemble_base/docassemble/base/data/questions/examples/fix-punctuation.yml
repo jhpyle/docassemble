@@ -19,7 +19,7 @@ subquestion: |
   Please be brief.
 fields:
   - no label: rationale
-    datatype: area
+    input type: area
     hint: |
       The teapot was not broken
       and it was broken before he

@@ -1,63 +1,74 @@
 {% extends 'flask_user/public_base.html' %}
 
 {% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_select_field, render_submit_field, myrender_hidden_field %}
+{% from "base_templates/form_macros.html" import render_field, render_select_field, render_multiselect_field, render_submit_field, myrender_hidden_field %}
 <h1>{{ title }}</h1>
 
 <p>{{ description }}</p>
 
 {%- if mode == 'new' %}
 <form action="{{ url_for('manage_api') }}" method="POST" role="form" class="form">
-{{ form.csrf_token }}
-{{ myrender_hidden_field(form.action, value='new') }}
-{{ myrender_hidden_field(form.security, value="") }}
-{{ render_field(form.name) }}
-{{ render_select_field(form.method) }}
-<div class="form-group daconstraintlist">
-  <label class="control-label">{{ word("Allowed sites") }}</label>
-</div>
-<div class="form-actions">
-  {{ render_submit_field(form.submit, id='submit') }}
-</div>
+  {{ form.csrf_token }}
+  {{ myrender_hidden_field(form.action, value='new') }}
+  {{ myrender_hidden_field(form.security, value="") }}
+  {{ render_field(form.name) }}
+  {{ render_select_field(form.method) }}
+  <div class="da-form-group daconstraintlist">
+    <label class="form-label">{{ word("Allowed sites") }}</label>
+  </div>
+  {%- if is_admin %}
+  {{ render_multiselect_field(form.permissions, undernote=word("If no items are selected, user privileges will determine permissions of the API key.")) }}
+  {%- endif %}
+  <div class="form-actions">
+    {{ render_submit_field(form.submit, id='submit') }}
+  </div>
 </form>
 {%- elif mode == 'edit' %}
 <form action="{{ url_for('manage_api') }}" method="POST" role="form" class="form">
-{{ form.csrf_token }}
-{{ myrender_hidden_field(form.action, value='edit') }}
-{{ myrender_hidden_field(form.key, value=api_key) }}
-{{ myrender_hidden_field(form.security, value="") }}
-{{ render_field(form.name) }}
-<div class="form-group">
-  <label class="control-label">{{ word("API key") }}</label>
-  <p><code>{{ api_key }}</code></p>
-</div>
-{{ render_select_field(form.method) }}
-<div class="form-group daconstraintlist">
-  <label class="control-label">{{ word("Allowed sites") }}</label>
-  {%- for constraint in constraints %}
-  <div class="input-group"><input type="text" class="form-control" value="{{ constraint }}" placeholder="{% if method == 'ip' %}{{ word('e.g., 56.33.114.49') }}{% else %}{{ word('e.g., *example.com') }}{% endif %}"></div>
-  {%- endfor %}
-</div>
-<div class="form-actions">
+  {{ form.csrf_token }}
+  {{ myrender_hidden_field(form.action, value='edit') }}
+  {{ myrender_hidden_field(form.key, value=api_key) }}
+  {{ myrender_hidden_field(form.security, value="") }}
+  {{ render_field(form.name) }}
+  <div class="da-form-group">
+    <label class="form-label">{{ word("API key") }}</label>
+    <p><code>{{ display_key }}</code></p>
+  </div>
+  {{ render_select_field(form.method) }}
+  <div class="da-form-group daconstraintlist">
+    <label class="form-label">{{ word("Allowed sites") }}</label>
+    {%- for constraint in constraints %}
+    <div class="input-group">
+      <input type="text" class="form-control" value="{{ constraint }}" placeholder="{% if method == 'ip' %}{{ word('e.g., 56.33.114.49') }}{% else %}{{ word('e.g., *example.com') }}{% endif %}">
+    </div>
+    {%- endfor %}
+  </div>
+  {%- if is_admin %}
+  {{ render_multiselect_field(form.permissions, undernote=word("If no items are selected, user privileges will determine permissions of the API key.")) }}
+  {%- endif %}
   {{ render_submit_field(form.submit, id='submit', label=word("Save"), class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
   {{ render_submit_field(form.delete, id='delete', class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS']) }}
   <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('manage_api') }}">Cancel</a>
-</div>
 </form>
 {%- endif %}
 
 {%- if mode == 'list' %}
+<ul class="nav nav-pills">
+  <li class="nav-item">
+    <a class="nav-link" href="?action=new"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add a New API Key') }}</a>
+  </li>
+</ul>
+
 {%- if has_any_keys %}
 <ul class="list-group">
-{%- for key_info in avail_keys %}
-<li class="list-group-item"><a href="?action=edit&key={{ key_info['api_key'] }}">{{ key_info['name'] }}</a></li>
-{%- endfor %}
+  {%- for key_info in avail_keys %}
+  <li class="list-group-item"><a href="?action=edit&key={{ key_info['encoded_api_key'] }}">{{ key_info['name'] }}</a></li>
+  {%- endfor %}
 </ul>
 {%- else %}
 <p>{{ word("You do not have any API keys yet.") }}</p>
 {%- endif %}
-<div class="form-actions mt-2">
-  <a class="btn {{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_CLASS'] }}" href="?action=new">New</a>
+<div class="mt-3">
   <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_profile_page') }}">Back to Profile</a>
 </div>
 {%- endif %}

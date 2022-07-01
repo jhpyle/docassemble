@@ -1,0 +1,33 @@
+metadata:
+  title: Background OCR PDF
+  short: OCR
+  documentation: "https://docassemble.org/docs/objects/DAFile.make_ocr_pdf"
+  example start: 1
+  example end: 5
+---
+mandatory: True
+code: |
+  if not ocr_task.ready():
+    waiting_screen
+  final_screen
+---
+code: |
+  ocr_task = uploaded_file.make_ocr_pdf_in_background()
+---
+question: |
+  Upload a PDF file or image.
+subquestion: |
+  I will convert it to a searchable PDF.
+fields:
+  - File: uploaded_file
+    datatype: files
+---
+event: waiting_screen
+question: Please wait . . .
+reload: True
+---
+event: final_screen
+question: |
+  Your OCR PDF
+subquestion: |
+  ${ uploaded_file }

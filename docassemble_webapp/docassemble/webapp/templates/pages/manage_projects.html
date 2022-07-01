@@ -7,7 +7,7 @@
             <div class="col-sm-9 col-md-7 col-lg-7 col-xl-7">
                 {%- if mode == 'standard' %}
                 {%- if description %}
-                <div class="card">
+                <div class="card mb-3">
                     <div class="card-body">
                         {{ description }}
                     </div>
@@ -36,7 +36,7 @@
                 </table>
                 {%- elif mode == 'new' %}
                 {%- if description %}
-                <div class="card">
+                <div class="card mb-3">
                     <div class="card-body">
                         {{ description }}
                     </div>
@@ -45,14 +45,12 @@
                 <form action="{{ url_for('playground_project', new='1', project=current_project) }}" method="POST" role="form" class="form">
                     {{ form.csrf_token }}
                     {{ render_field(form.name) }}
-                    <div class="form-actions">
-                        {{ render_submit_field(form.submit) }}
-                        <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
-                    </div>
+                    {{ render_submit_field(form.submit) }}
+                    <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
                 </form>
                 {%- elif mode == 'rename' %}
                 {%- if description %}
-                <div class="card">
+                <div class="card mb-3">
                     <div class="card-body">
                         {{ description }}
                     </div>
@@ -61,10 +59,8 @@
                 <form action="{{ url_for('playground_project', rename='1', project=current_project) }}" method="POST" role="form" class="form">
                     {{ form.csrf_token }}
                     {{ render_field(form.name) }}
-                    <div class="form-actions">
-                        {{ render_submit_field(form.submit) }}
-                        <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
-                    </div>
+                    {{ render_submit_field(form.submit) }}
+                    <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
                 </form>
                 {%- elif mode == 'delete' %}
                 {%- if description %}
@@ -76,10 +72,8 @@
                 {%- endif %}
                 <form action="{{ url_for('playground_project', delete='1', project=current_project) }}" method="POST" role="form" class="form">
                     {{ form.csrf_token }}
-                    <div class="form-actions">
-                        {{ render_submit_field(form.submit) }}
-                        <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
-                    </div>
+                    {{ render_submit_field(form.submit) }}
+                    <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_project', project=current_project) }}">Cancel</a>
                 </form>
                 {%- endif %}
                 {%- if after_text %}
@@ -90,7 +84,7 @@
 {%- endblock %}
 {%- block bottom %}
       {%- if mode == 'standard' %}
-      <div class="mt-2"><p><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}info btn-md"><i class="fas fa-caret-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
+      <div class="mt-2"><p><a href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}info btn-md"><i class="fas fa-chevron-left"></i>&nbsp;{{ word("Back to Playground") }}</a></p></div>
       {%- endif %}
 {%- endblock %}
 

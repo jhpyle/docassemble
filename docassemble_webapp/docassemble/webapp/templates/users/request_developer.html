@@ -10,7 +10,7 @@ privileges of a developer, submit this form.</p>
 
 <form action="" method="POST" role="form">
     {{ form.hidden_tag() }}
-    <div class="form-group"><label for="{{ form.reason.id }}" class="control-label">{{ form.reason.label.text }}</label><textarea class="form-control" rows="4" name="{{ form.reason.id }}" id="{{ form.reason.id }}"></textarea></div>
+    <div class="da-form-group"><label for="{{ form.reason.id }}" class="form-label">{{ form.reason.label.text }}</label><textarea class="form-control" rows="4" name="{{ form.reason.id }}" id="{{ form.reason.id }}"></textarea></div>
     <div class="form-actions">
       {{ render_submit_field(form.submit) }}
     </div>

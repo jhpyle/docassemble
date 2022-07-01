@@ -5,8 +5,8 @@ metadata:
 question: |
   What are your favorite things to eat?
 subquestion: |
-  If you don't know what a vegetable
-  or fruit is, click the green text.
+  If you don't know what a vegetable or
+  fruit is, click the question mark icons.
 fields:
   - Vegetable: target_variable
     help: |

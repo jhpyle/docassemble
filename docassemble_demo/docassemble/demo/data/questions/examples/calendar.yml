@@ -1,0 +1,111 @@
+metadata:
+  title: Sending a calendar invite
+  short title: Invite
+  documentation: "https://docassemble.org/docs/recipes.html#calendar"
+  example start: 1
+  example end: 12
+---
+modules:
+  - .calendar
+---
+objects:
+  - event: Thing
+  - user: Person
+  - attendees: DAList.using(object_type=Person)
+---
+question: |
+  Tell me about yourself.
+fields:
+  - Name: user.name.text
+  - E-mail: user.email
+    datatype: email
+---
+question: |
+  Would you like to invite any attendees?
+yesno: attendees.there_are_any
+---
+question: |
+  Tell me about the ${ ordinal(i) } attendee.
+fields:
+  - Name: attendees[i].name.text
+  - E-mail: attendees[i].email
+    datatype: email
+---
+question: |
+  Are there any more attendees besides ${ attendees }?
+yesno: attendees.there_is_another
+---
+question: |
+  Tell me about the event.
+fields:
+  - Title: event.title
+  - Location: event.location
+    required: False
+  - Start date: event.begin_date
+    datatype: date
+  - Start time: event.begin_time
+    datatype: time
+  - End date: event.end_date
+    datatype: date
+  - End time: event.end_time
+    datatype: time
+  - Description: event.description
+    input type: area
+    required: False
+validation code: |
+  if event.end_date < event.begin_date:
+    raise DAValidationError('The end date must be on or after the start date.', field='event.end_date')
+  if event.end_date.replace_time(event.end_time) < event.begin_date.replace_time(event.begin_time):
+    raise DAValidationError('The end time must be after the start time.', field='event.end_time')
+---
+template: email_template
+subject: |
+  ${ event.title }
+content: |
+  You are invited to ${ event.title } \
+  % if event.location:
+  at ${ event.location } \
+  % endif
+  from \
+  % if event.begin_date == event.end_date:
+  ${ format_time(event.begin_time, 'hh:mm a') } to \
+  ${ format_time(event.end_time, 'hh:mm a') } \
+  on ${ event.begin_date }.
+  % else:
+  ${ format_time(event.begin_time, 'hh:mm a') } \
+  on ${ event.begin_date } to \
+  ${ format_time(event.end_time, 'hh:mm a') } \
+  on ${ event.end_date }.
+  % endif
+  % if event.description:
+
+  ${ event.description }
+  % endif
+---
+code: |
+  ics_file = make_event(title=event.title,
+                        location=event.location,
+                        description=event.description,
+                        begin_date=event.begin_date,
+                        begin_time=event.begin_time,
+                        end_date=event.end_date,
+                        end_time=event.end_time,
+                        organizer=user,
+                        attendees=attendees)
+---
+code: |
+  email_sent = send_email(to=[user] + attendees,
+                          template=email_template,
+                          attachments=ics_file)
+---
+event: final_screen
+prevent going back: True
+question: |
+  The invitation was sent.
+---
+mandatory: True
+code: |
+  user.name.text
+  attendees.gather()
+  email_sent
+  final_screen

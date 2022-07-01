@@ -28,7 +28,7 @@ question: |
   ${ x.name }?
 fields:
   - no label: x.ingredients
-    datatype: area
+    input type: area
 ---
 generic object: Recipe
 question: |
@@ -36,5 +36,5 @@ question: |
   for cooking ${ x.name }?
 fields:
   - no label: x.instructions
-    datatype: area
+    input type: area
 

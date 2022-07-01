@@ -2,7 +2,7 @@ metadata:
   title: Continue button
   documentation: "https://docassemble.org/docs/fields.html#field"
 ---
-field: target_variable
+continue button field: target_variable
 question: |
   Welcome to the interview.
 subquestion: |

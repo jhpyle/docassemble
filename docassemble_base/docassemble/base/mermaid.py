@@ -3,22 +3,24 @@ import sys
 import tempfile
 import re
 import subprocess
-from six import string_types, text_type
 
 from os.path import expanduser
 from docassemble.base.functions import get_config
 from docassemble.base.util import DAFile
+from docassemble.base.logger import logmessage
 
 __all__ = ['mmdc']
 
-def mmdc(input_text, file_format='svg', flags=dict()):
+def mmdc(input_text, file_format='svg', flags=None):
+    if flags is None:
+        flags = {}
     if not isinstance(flags, dict):
         raise Exception("mmdc: flags not a dictionary")
-    if not isinstance(file_format, string_types) or re.search(r'[^a-z]', file_format) or len(file_format) == 0:
+    if not isinstance(file_format, str) or re.search(r'[^a-z]', file_format) or len(file_format) == 0:
         raise Exception("mmdc: invalid file format")
-    if not isinstance(input_text, string_types):
-        input_text = text_type(input_text)
-    sys.stderr.write("Writing:\n" + input_text + "\n")
+    if not isinstance(input_text, str):
+        input_text = str(input_text)
+    logmessage("Writing:\n" + input_text)
     input_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="w", suffix=".mmd", delete=False)
     input_file.write(input_text)
     input_file.close()
@@ -28,7 +30,7 @@ def mmdc(input_text, file_format='svg', flags=dict()):
     for key, val in flags.items():
         commands.append('-' + str(key))
         commands.append(repr(str(val)))
-    sys.stderr.write("Commands are: " + " ".join(commands) + "\n")
+    logmessage("Commands are: " + " ".join(commands))
     try:
         output = subprocess.check_output(commands, stderr=subprocess.STDOUT).decode()
     except subprocess.CalledProcessError as err:
@@ -42,4 +44,3 @@ def mmdc(input_text, file_format='svg', flags=dict()):
     obj.copy_into(output_file.name)
     obj.commit()
     return obj
-

@@ -31,7 +31,7 @@ question: |
   education, family life and community life.
 fields:
   no label: factor_four
-  datatype: area
+  input type: area
 ---
 question:
   Factor four

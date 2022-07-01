@@ -1,3 +1,4 @@
+{%- set footer_content = get_part('global footer') %}
 {% extends 'flask_user/public_base.html' %}
 
 {% block content %}
@@ -8,12 +9,8 @@
 
 <form action="" method="POST" role="form" class="form">
   {{ form.hidden_tag() }}
-  <div class="form-group">
-    {{ render_field(form.phone_number) }}
-  </div>
-  <div class="form-actions">
-    {{ render_submit_field(form.submit) }}
-  </div>
+  {{ render_field(form.phone_number) }}
+  {{ render_submit_field(form.submit) }}
 </form>
 
 {% endblock %}

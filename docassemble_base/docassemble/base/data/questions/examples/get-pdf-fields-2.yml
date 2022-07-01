@@ -1,0 +1,18 @@
+metadata:
+  title: Get PDF fields
+  short: PDF
+  documentation: "https://docassemble.org/docs/objects.html#DAFile.get_pdf_fields"
+  example start: 1
+  example end: 2
+---
+objects:
+  - pdf_file: DAStaticFile.using(filename="data/templates/sample-form-different-export-values.pdf")
+---
+mandatory: True
+question: The field names in the PDF file
+subquestion: |
+  The field names in the PDF file [sample-form-different-export-values.pdf] are:
+
+  `${ repr(pdf_file.get_pdf_fields()) }`
+
+  [sample-form-different-export-values.pdf]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/sample-form-different-export-values.pdf

@@ -1,0 +1,27 @@
+metadata:
+  title: Yes/no checkbox help
+  short title: Yes/no
+  documentation: "https://docassemble.org/docs/fields.html#fields yesnohelp"
+---
+question: |
+  Please provide the following information.
+fields:
+  - "What is your favorite food?": favorite_food
+  - note: Check which foods you like.
+  - Apples: likes_apples
+    datatype: yesno
+    help: Round fruit of a tree of the rose family
+  - Turnips: dislikes_turnips
+    datatype: noyes
+    help: Round root with white flesh
+---
+question: |
+  Thank you for that information.
+subquestion: |
+  % if likes_apples:
+  You like apples.
+  % endif
+  % if dislikes_turnips:
+  You do not like turnips.
+  % endif
+mandatory: True

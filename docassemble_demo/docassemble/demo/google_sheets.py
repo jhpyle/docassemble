@@ -1,13 +1,13 @@
-import gspread
 import json
+import gspread
 from docassemble.base.util import get_config
 from oauth2client.service_account import ServiceAccountCredentials
-credential_json = get_config('google', dict()).get('service account credentials', None)
+credential_json = get_config('google', {}).get('service account credentials', None)
 if credential_json is None:
     credential_info = None
 else:
     credential_info = json.loads(credential_json, strict=False)
-    
+
 scope = ['https://spreadsheets.google.com/feeds',
          'https://www.googleapis.com/auth/drive']
 
@@ -24,5 +24,3 @@ def append_to_sheet(sheet_name, vals, worksheet_index=0):
     client = gspread.authorize(creds)
     sheet = client.open(sheet_name).get_worksheet(worksheet_index)
     sheet.append_row(vals)
-
-    

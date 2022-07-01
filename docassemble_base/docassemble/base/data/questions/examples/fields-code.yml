@@ -28,11 +28,11 @@ code: |
   for index in range(people.number()):
     name_list.append(
       {"label": ordinal(index, capitalize=True) + " person's given name",
-       "field": "people[" + text_type(index) + "].name.first"
+       "field": "people[" + str(index) + "].name.first"
       })
     name_list.append(
       {"label": ordinal(index, capitalize=True) + " person's surname",
-       "field": "people[" + text_type(index) + "].name.last"
+       "field": "people[" + str(index) + "].name.last"
       })
 ---
 mandatory: True

@@ -1,10 +1,12 @@
 # Adapted from flask_mail
+import sys
 import time
 import requests
 from requests.auth import HTTPBasicAuth
 from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
+from docassemble.base.logger import logmessage
 
-class Connection(object):
+class Connection:
     def __init__(self, mail):
         self.mail = mail
     def __enter__(self):
@@ -20,17 +22,27 @@ class Connection(object):
             raise BadHeaderError
         if message.date is None:
             message.date = time.time()
+        data = {'to': ', '.join(list(sanitize_addresses(message.send_to)))}
+        if hasattr(message, 'mailgun_variables') and isinstance(message.mailgun_variables, dict):
+            for key, val in message.mailgun_variables.items():
+                data['v:' + str(key)] = val
         response = requests.post(self.mail.api_url,
                                  auth=HTTPBasicAuth('api', self.mail.api_key),
-                                 data={'to': ', '.join(list(sanitize_addresses(message.send_to)))},
+                                 data=data,
                                  files={'message': ('mime_message', message.as_string())})
         if response.status_code >= 400:
+            logmessage("Mailgun status code: " + str(response.status_code))
+            logmessage("Mailgun response headers: " + repr(response.headers))
+            try:
+                logmessage(repr(response.body))
+            except:
+                pass
             raise Exception("Failed to send e-mail message to " + self.mail.api_url)
         email_dispatched.send(message, app=current_app._get_current_object())
     def send_message(self, *args, **kwargs):
         self.send(Message(*args, **kwargs))
 
-class _MailMixin(object):
+class _MailMixin:
 
     @contextmanager
     def record_messages(self):
@@ -62,7 +74,7 @@ class _MailMixin(object):
             return Connection(app.extensions['mail'])
         except KeyError:
             raise RuntimeError("The curent application was not configured with Flask-Mail")
-        
+
 class _Mail(_MailMixin):
     def __init__(self, api_url, api_key,
                  default_sender, debug, suppress,
