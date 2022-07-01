@@ -172,9 +172,17 @@ if __name__ == "__main__":
         if 'region' in daconfig['s3'] and daconfig['s3']['region'] is not None:
             print('export S3REGION="' + str(daconfig['s3']['region']) + '"')
             print('export AWS_DEFAULT_REGION="' + str(daconfig['s3']['region']) + '"')
+            
         if 'endpoint url' in daconfig['s3'] and daconfig['s3']['endpoint url'] is not None:
             print('export S3ENDPOINTURL="' + str(daconfig['s3']['endpoint url']) + '"')
-            print('export S4CMD_OPTS="--endpoint-url=\\"' + str(daconfig['s3']['endpoint url']) + '\\""')
+            if not ('server side encryption' in daconfig['s3'] and daconfig['s3']['server side encryption'] is not None):    
+                print('export S4CMD_OPTS="--endpoint-url=\\"' + str(daconfig['s3']['endpoint url']) + '\\" --ServerSideEncryption=\\"' + str(daconfig['s3']['server side encryption']) + '\\""')
+            else:
+                print('export S4CMD_OPTS="--endpoint-url=\\"' + str(daconfig['s3']['endpoint url']) + '\\""')
+        if 'server side encryption' in daconfig['s3'] and daconfig['s3']['server side encryption'] is not None:
+            print('export S3SERVERSIDEENCRYPTION="' + str(daconfig['s3']p['server side encryption']) + '"')
+            print('export S4CMD_OPTS="--ServerSideEncryption=\\"' + str(daconfig['s3']['server side encryption']) + '\\""')
+    
     if 'azure' in daconfig:
         if 'enable' in daconfig['azure'] and daconfig['azure']['enable']:
             print('export AZUREENABLE=true')
