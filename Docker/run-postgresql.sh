@@ -67,8 +67,15 @@ if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "
     export AWS_DEFAULT_REGION="$S3REGION"
 fi
 
-if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
-    export S4CMD_OPTS="--endpoint-url=\"${S3ENDPOINTURL}\""
+if [ "${S3ENDPOINTURL:-null}" != "null" ] && [ "${S3SERVERSIDEENCRYPTION:-null}" != "null" ]; then
+    export S4CMD_OPTS="--endpoint-url=\"${S3ENDPOINTURL}\" --ServerSideEncrption=\"${S3SERVERSIDEENCRYPTION}\""
+else 
+    if [ "${S3SERVERSIDEENCRYPTION:-null}" != "null" ]; then
+        export S4CMD_OPTS="--ServerSideEncrption=\"${S3SERVERSIDEENCRYPTION}\""
+    fi
+    if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
+        export S4CMD_OPTS="--endpoint-url=\"${S3ENDPOINTURL}\""
+    fi
 fi
 
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
