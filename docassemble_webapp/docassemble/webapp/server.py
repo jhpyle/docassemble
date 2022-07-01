@@ -169,6 +169,7 @@ STATS = daconfig.get('collect statistics', False)
 DEBUG = daconfig.get('debug', False)
 ERROR_TYPES_NO_EMAIL = daconfig.get('suppress error notificiations', [])
 COOKIELESS_SESSIONS = daconfig.get('cookieless sessions', False)
+BAN_IP_ADDRESSES = daconfig.get('ip address ban enabled', True)
 
 if DEBUG:
     PREVENT_DEMO = False
@@ -981,6 +982,7 @@ def add_secret_to(response):
     return response
 
 def logout():
+    setup_translation()
     # secret = request.cookies.get('secret', None)
     # if secret is None:
     #     secret = random_string(16)
@@ -5094,10 +5096,11 @@ def mfa_login():
             del session['next']
         else:
             safe_next = form.next.data
-        fail_key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
-        failed_attempts = r.get(fail_key)
-        if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
-            return ('File not found', 404)
+        if BAN_IP_ADDRESSES:
+            fail_key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
+            failed_attempts = r.get(fail_key)
+            if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
+                return ('File not found', 404)
         supplied_verification_code = re.sub(r'[^0-9]', '', form.verification_code.data)
         if user.otp_secret.startswith(':phone:'):
             phone_number = re.sub(r'^:phone:', '', user.otp_secret)
@@ -5998,6 +6001,7 @@ def get_variables():
 
 @app.route("/", methods=['GET'])
 def rootindex():
+    # setup_translation()
     if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
         return redirect(url_for('user.login'))
     url = daconfig.get('root redirect url', None)
@@ -6049,6 +6053,7 @@ def test_embed():
 
 @app.route("/launch", methods=['GET'])
 def launch():
+    # setup_translation()
     if COOKIELESS_SESSIONS:
         return html_index()
     code = request.args.get('c', None)
@@ -6154,6 +6159,8 @@ def update_current_info_with_session_info(the_current_info, session_info):
 
 @app.route(index_path, methods=['POST', 'GET'])
 def index(action_argument=None, refer=None):
+    #if refer is None and request.method == 'GET':
+    #    setup_translation()
     is_ajax = bool(request.method == 'POST' and 'ajax' in request.form and int(request.form['ajax']))
     docassemble.base.functions.this_thread.misc['call'] = refer
     return_fake_html = False
@@ -11642,7 +11649,7 @@ def index(action_argument=None, refer=None):
             current_dict = {}
             dropdown_nav_bar = navigation_bar(user_dict['nav'], interview, wrapper=False, a_class='dropdown-item', hide_inactive_subs=False, always_open=True, return_dict=current_dict)
             if dropdown_nav_bar != '':
-                dropdown_nav_bar = '        <div class="col d-md-none text-end">\n          <div class="dropdown">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + current_dict.get('title', word("Sections")) + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections">' + dropdown_nav_bar + '\n          </div>\n          </div>\n        </div>\n'
+                dropdown_nav_bar = '        <div class="col d-md-none text-end">\n          <div class="dropdown danavlinks">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + current_dict.get('title', word("Sections")) + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections">' + dropdown_nav_bar + '\n          </div>\n          </div>\n        </div>\n'
         else:
             dropdown_nav_bar = ''
         if interview.use_navigation == 'horizontal':
@@ -12257,6 +12264,7 @@ def interview_start():
 
 @app.route('/start/<package>/<directory>/<filename>/', methods=['GET'])
 def redirect_to_interview_in_package_directory(package, directory, filename):
+    # setup_translation()
     if COOKIELESS_SESSIONS:
         return html_index()
     arguments = {}
@@ -12270,6 +12278,7 @@ def redirect_to_interview_in_package_directory(package, directory, filename):
 
 @app.route('/start/<package>/<filename>/', methods=['GET'])
 def redirect_to_interview_in_package(package, filename):
+    # setup_translation()
     if COOKIELESS_SESSIONS:
         return html_index()
     arguments = {}
@@ -12286,6 +12295,7 @@ def redirect_to_interview_in_package(package, filename):
 
 @app.route('/start/<dispatch>/', methods=['GET'])
 def redirect_to_interview(dispatch):
+    # setup_translation()
     #logmessage("redirect_to_interview: the dispatch is " + str(dispatch))
     if COOKIELESS_SESSIONS:
         return html_index()
@@ -12303,6 +12313,7 @@ def redirect_to_interview(dispatch):
 
 @app.route('/run/<package>/<directory>/<filename>/', methods=['GET'])
 def run_interview_in_package_directory(package, directory, filename):
+    # setup_translation()
     if COOKIELESS_SESSIONS:
         return html_index()
     arguments = {}
@@ -12314,6 +12325,7 @@ def run_interview_in_package_directory(package, directory, filename):
 
 @app.route('/run/<package>/<filename>/', methods=['GET'])
 def run_interview_in_package(package, filename):
+    # setup_translation()
     if COOKIELESS_SESSIONS:
         return html_index()
     arguments = {}
@@ -12328,6 +12340,7 @@ def run_interview_in_package(package, filename):
 
 @app.route('/run/<dispatch>/', methods=['GET'])
 def run_interview(dispatch):
+    # setup_translation()
     if COOKIELESS_SESSIONS:
         return html_index()
     yaml_filename = daconfig['dispatch'].get(dispatch, None)
@@ -22493,20 +22506,21 @@ def user_interviews_filter(obj):
         raise Exception("Column " + repr(obj.name) + " not available")
     return obj
 
-def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True, delete_shared=False, admin=False, start_id=None, temp_user_id=None, query=None):
+def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None, filename=None, session=None, tag=None, include_dict=True, delete_shared=False, admin=False, start_id=None, temp_user_id=None, query=None, minimal=False):
     # logmessage("user_interviews: user_id is " + str(user_id) + " and secret is " + str(secret))
-    if session is not None and user_id is None and temp_user_id is None and current_user.is_authenticated and not current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions']):
-        user_id = current_user.id
-    elif user_id is None and (current_user.is_anonymous or not current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions'])):
-        raise Exception('user_interviews: you do not have sufficient privileges to access information about other users')
-    if user_id is not None and admin is False and not (current_user.is_authenticated and (current_user.same_as(user_id) or current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions']))):
-        raise Exception('user_interviews: you do not have sufficient privileges to access information about other users')
-    if action is not None and admin is False and not current_user.has_role_or_permission('admin', 'advocate', permissions=['edit_sessions']):
-        if user_id is None:
-            raise Exception("user_interviews: no user_id provided")
-        the_user = get_person(int(user_id), {})
-        if the_user is None:
-            raise Exception("user_interviews: user_id " + str(user_id) + " not valid")
+    if minimal is False:
+        if session is not None and user_id is None and temp_user_id is None and current_user.is_authenticated and not current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions']):
+            user_id = current_user.id
+        elif user_id is None and (current_user.is_anonymous or not current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions'])):
+            raise Exception('user_interviews: you do not have sufficient privileges to access information about other users')
+        if user_id is not None and admin is False and not (current_user.is_authenticated and (current_user.same_as(user_id) or current_user.has_role_or_permission('admin', 'advocate', permissions=['access_sessions']))):
+            raise Exception('user_interviews: you do not have sufficient privileges to access information about other users')
+        if action is not None and admin is False and not current_user.has_role_or_permission('admin', 'advocate', permissions=['edit_sessions']):
+            if user_id is None:
+                raise Exception("user_interviews: no user_id provided")
+            the_user = get_person(int(user_id), {})
+            if the_user is None:
+                raise Exception("user_interviews: user_id " + str(user_id) + " not valid")
     if query is not None:
         the_query = user_interviews_filter(query)
     if action == 'delete_all':
@@ -22514,7 +22528,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         if tag or query is not None:
             start_id = None
             while True:
-                (the_list, start_id) = user_interviews(user_id=user_id, secret=secret, filename=filename, session=session, tag=tag, include_dict=False, start_id=start_id, temp_user_id=temp_user_id, query=query)
+                (the_list, start_id) = user_interviews(user_id=user_id, secret=secret, filename=filename, session=session, tag=tag, include_dict=False, exclude_invalid=False, start_id=start_id, temp_user_id=temp_user_id, query=query, minimal=True)
                 for interview_info in the_list:
                     sessions_to_delete.add((interview_info['session'], interview_info['filename'], interview_info['user_id'], interview_info['temp_user_id']))
                 if start_id is None:
@@ -22558,7 +22572,9 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
         reset_user_dict(session, filename, user_id=user_id, temp_user_id=temp_user_id, force=delete_shared)
         #release_lock(session, filename)
         return True
-    if admin is False and current_user and current_user.is_authenticated and current_user.timezone:
+    if minimal:
+        the_timezone = None
+    elif admin is False and current_user and current_user.is_authenticated and current_user.timezone:
         the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
     else:
         the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
@@ -22666,6 +22682,10 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 there_are_more = True
                 break
             start_id = interview_info['indexno']
+            if minimal:
+                interviews.append({'filename': interview_info['filename'], 'session': interview_info['key'], 'user_id': interview_info['user_id'], 'temp_user_id': interview_info['temp_user_id']})
+                interviews_length += 1
+                continue
             interview_title = {}
             is_valid = True
             interview_valid = True
@@ -26973,7 +26993,7 @@ def api_resume_url():
     filename = post_data.get('i', None)
     if filename is None:
         return jsonify_with_status("No filename supplied.", 400)
-    session_id = post_data.get('session_id', None)
+    session_id = post_data.get('session', post_data.get('session_id', None))
     if 'url_args' in post_data:
         if isinstance(post_data['url_args'], dict):
             url_args = post_data['url_args']

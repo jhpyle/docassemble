@@ -18,6 +18,13 @@ def main():
     if ':all:' in container_role or ':cron:' in container_role:
         (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts) = parse_redis_uri()
         r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password, username=redis_username, **ssl_opts)
+        if daconfig.get('ip address ban enabled', True):
+            keys_to_delete = r.keys('da:failedlogin:ip:*')
+            for key_to_delete in keys_to_delete:
+                try:
+                    r.delete(key_to_delete.decode())
+                except:
+                    pass
         if r.get('da:skip_create_tables'):
             logmessage("restart: skipping create_tables")
             r.delete('da:skip_create_tables')

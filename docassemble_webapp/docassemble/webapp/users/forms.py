@@ -23,6 +23,7 @@ except ImportError:
     daconfig['ldap login']['enable'] = False
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
+BAN_IP_ADDRESSES = daconfig.get('ip address ban enabled', True)
 
 def get_requester_ip(req):
     if not req:
@@ -39,10 +40,11 @@ def fix_nickname(form, field):
 
 class MySignInForm(LoginForm):
     def validate(self):
-        key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
-        failed_attempts = r.get(key)
-        if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
-            abort(404)
+        if BAN_IP_ADDRESSES:
+            key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
+            failed_attempts = r.get(key)
+            if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
+                abort(404)
         if daconfig['ldap login'].get('enable', False):
             ldap_server = daconfig['ldap login'].get('server', 'localhost').strip()
             username = self.email.data
@@ -252,10 +254,11 @@ class PhoneLoginVerifyForm(FlaskForm):
     submit = SubmitField(word('Verify'))
     def validate(self):
         result = True
-        key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
-        failed_attempts = r.get(key)
-        if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
-            abort(404)
+        if BAN_IP_ADDRESSES:
+            key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
+            failed_attempts = r.get(key)
+            if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
+                abort(404)
         verification_key = 'da:phonelogin:' + str(self.phone_number.data) + ':code'
         verification_code = r.get(verification_key)
         #r.delete(verification_key)

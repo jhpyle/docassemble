@@ -110,22 +110,25 @@ else
 fi
 
 function stopfunc {
-    if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
-	UWSGILOG_PID=$(</var/run/uwsgi/uwsgilog.pid) || exit 0
-	echo "Sending stop command to uwsgi log" >&2
-	kill -INT $UWSGILOG_PID
-	echo "Waiting for uwsgi log to stop" >&2
-	wait $UWSGILOG_PID
-	echo "uwsgi log stopped" >&2
-	exit 0
+    if [[ $CONTAINERROLE =~ .*:(log):.* ]] && [ -f /var/run/uwsgi/uwsgilog.pid ]; then
+	UWSGILOG_PID=$(</var/run/uwsgi/uwsgilog.pid)
+	if [ $? -eq 0 ]; then
+	    echo "Sending stop command to uwsgi log" >&2
+	    kill -INT $UWSGILOG_PID
+	    echo "Waiting for uwsgi log to stop" >&2
+	    wait $UWSGILOG_PID
+	    echo "uwsgi log stopped" >&2
+	fi
     fi
     if [ -f /var/run/nginx.pid ]; then
 	NGINX_PID=$(</var/run/nginx.pid)
-	echo "Sending stop command" >&2
-	kill -QUIT $NGINX_PID
-	echo "Waiting for nginx to stop" >&2
-	wait $NGINX_PID
-	echo "nginx stopped" >&2
+	if [ $? -eq 0 ]; then
+	    echo "Sending stop command" >&2
+	    kill -QUIT $NGINX_PID
+	    echo "Waiting for nginx to stop" >&2
+	    wait $NGINX_PID
+	    echo "nginx stopped" >&2
+	fi
     fi
     exit 0
 }

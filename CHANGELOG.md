@@ -11,9 +11,19 @@
   place using Docker images and the only directories on the server
   that are writable are directories for storing runtime information
   (e.g. PID files) or log files.
+- The `ip address ban enabled` Configuration directive
 ### Changed
 - Switched to the Azure CLI for managing files in Azure Blob Storage
   from shell scripts.
+- A restart (e.g., saving the Configuration, installing a package)
+  will erase any IP address bans caused by failed login attempts.
+### Fixed
+- Links in dropdown navigation menu for mobile devices were not
+  clickable.
+- The `session` parameter of `/api/resume_url` was not working (it was
+  expecting `session_id`.
+- Optimized `interview_list` for cases where `action='delete_all'` and
+  `query` are used together.
 
 ## [1.3.51] - 2022-06-18
 
