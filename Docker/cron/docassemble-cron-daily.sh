@@ -71,33 +71,28 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 		    nginx -s stop &> /dev/null
 		    supervisorctl --serverurl http://localhost:9001 start nginx
 		fi
+		cd /
+		rm -f /tmp/letsencrypt.tar.gz
+		tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
 		if [ "${S3ENABLE:-false}" == "true" ]; then
-		    cd /
-		    if [ "${USELETSENCRYPT:-none}" != "none" ]; then
-			rm -f /tmp/letsencrypt.tar.gz
-			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-			s4cmd -f put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
-		    fi
+		    s4cmd -f put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
 		    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 			s4cmd dsync "/etc/apache2/sites-available" "s3://${S3BUCKET}/apache"
 		    fi
-		fi
-		if [ "${AZUREENABLE:-false}" == "true" ]; then
+		elif [ "${AZUREENABLE:-false}" == "true" ]; then
 		    cmd_retry blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
-		    cd /
-		    if [ "${USELETSENCRYPT:-none}" != "none" ]; then
-			rm -f /tmp/letsencrypt.tar.gz
-			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-			cmd_retry blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
-		    fi
+		    cmd_retry blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
 		    if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 			for the_file in $( find /etc/apache2/sites-available/ -type f ); do
 			    target_file=`basename ${the_file}`
 			    cmd_retry blob-cmd -f cp "${the_file}" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/${target_file}"
 			done
 		    fi
+		else
+		    cp /tmp/letsencrypt.tar.gz "${DA_ROOT}/backup/letsencrypt.tar.gz"
 		fi
-		if [ ! -f /etc/ssl/docassemble/exim.crt ] && [ ! -f /etc/ssl/docassemble/exim.key ]; then
+		rm -f /tmp/letsencrypt.tar.gz
+		if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [ ! -f /etc/ssl/docassemble/exim.crt ] && [ ! -f /etc/ssl/docassemble/exim.key ]; then
 		    cp "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" /etc/exim4/exim.crt
 		    cp "/etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem" /etc/exim4/exim.key
 		    chown root.Debian-exim /etc/exim4/exim.crt
