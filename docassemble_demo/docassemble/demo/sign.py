@@ -15,6 +15,7 @@ class SigningProcess(DAObject):
         self.initializeAttribute('signature', DADict)
         self.initializeAttribute('blank_signature_date', DADict)
         self.initializeAttribute('blank_signature_datetime', DADict)
+        self.initializeAttribute('blank_ip_address', DADict)
         self.initializeAttribute('blank_signature', DADict)
         self.initializeAttribute('thank_you_screen', DADict)
         self.info_by_code = {}
