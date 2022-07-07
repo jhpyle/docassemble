@@ -1618,19 +1618,38 @@ function [`val()`] is used to obtain the values of fields.  Given the
 name of an on-screen field as a string, the [`val()`] function
 returns the current value of that field.
 
+JavaScript is its own complete language with [different
+syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference) than
+Python, but with some similarities.
+
+- Instead of `and`, use `&&`
+- Instead of `or`, use `||`
+- Instead of `==`, use `===` (`==` will often work as well but may have [subtle
+  differences](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness))
+- Just like in Python, you can group expressions with parentheses `()`
+
 {% include side-by-side.html demo="jsshowif" %}
 
 The string that is passed to [`val()`] must perfectly match the
 variable name that is used in the underlying [`question`].
 
-The field will be shown or hidden whenever any of the variables
-referenced with [`val()`] change.  Thus, if your [JavaScript]
-expression does not use [`val()`], it will not be triggered except at
-the time the screen loads.  Your expression is parsed, but is not
-evaluated, when determining what fields your expression references
-with [`val()`].  Thus, if you pass something other than a literal
-string to [`val()`], you may find that the showing or hiding is not
-triggered, even though [`val()`] would return the appropriate value.
+You can use any JavaScript expression that evaluates to `true` or `false` with
+the `js show if` feature, but your expression **must** mention the variable that
+you want to watch with the `val()` function at least once. Docassemble scans
+your expression for the use of `val("some_variable")` in order to know which
+variables on-screen need to be monitored for changes. 
+
+The variable mentioned inside `val()` must be a literal string to tell
+Docassemble to monitor it. Your expression is parsed, but is not evaluated, when
+determining what fields your expression references with [`val()`].  Thus, if you
+pass something other than a literal string to [`val()`], you may find that the
+showing or hiding is not triggered, even though [`val()`] would return the
+appropriate value.
+
+If you do not actually want to get the value of the variable in your expression,
+you can get around this by adding `& (val("variable") || !val("variable))`
+to the expression (replacing "variable" with the name of the relevant
+variable that is on the screen).
 
 ## <a name="js hide if"></a>`js hide if`
 
