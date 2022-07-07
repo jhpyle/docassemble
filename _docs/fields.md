@@ -1627,6 +1627,8 @@ Python, but with some similarities.
 - Instead of `==`, use `===` (`==` will often work as well but may have [subtle
   differences](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness))
 - Just like in Python, you can group expressions with parentheses `()`
+- Instead of `True`, `False` and `None`, JavaScript has `true`, `false`, and
+  `null` as well as `undefined`
 
 {% include side-by-side.html demo="jsshowif" %}
 
