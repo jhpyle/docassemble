@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.3.52] - 2022-07-08
+
+### Changed
+- Upgraded `atomicwrites`.
+
 ## [1.3.51] - 2022-06-18
 
 ### Changed

@@ -49,7 +49,7 @@ install_requires = [
     "3to2==1.1.1",
     "alembic==1.7.7",
     "astunparse==1.6.3",
-    "atomicwrites==1.4.0",
+    "atomicwrites==1.4.1",
     "attrs==21.4.0",
     "azure-common==1.1.28",
     "azure-core==1.23.1",
