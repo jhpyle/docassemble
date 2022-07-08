@@ -4761,11 +4761,35 @@ user agent: Mozilla/5.0 (X11; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0
 ## <a name="brute force"></a>Protecting against multiple login attempts
 
 By default, users who unsuccessfully log in are blocked after 10
-failed attempts.  This threshold can be configured with `attempt
-limit`.
+failed attempts. This is a form of security protection against bots
+that try to guess passwords by repeatedly logging in.
+
+The block is based on IP address, so if users share an outgoing WAN IP
+address, all of those users are blocked.
+
+The threshold of 10 failed attempts can be configured with `attempt limit`.
 
 The time period for blocking defaults to 86,400 seconds (one day).
 The number of seconds of blocking can be configured with `ban period`.
+
+{% highlight yaml %}
+attempt limit: 5
+ban period: 3600
+{% endhighlight %}
+
+Restarting the server will clear out all IP address bans. The server
+can be restarted [through the API]({{ site.baseurl
+}}/docs/api.html#restart) or by going to the Configuration and
+pressing Save (without making any changes).
+
+This feature can be turned off by setting `ip address ban enabled` to
+false.
+
+{% highlight yaml %}
+ip address ban enabled: False
+{% endhighlight %}
+
+## <a name="phone login"></a>Phone login verification codes
 
 When you use the [phone login] feature, the user needs to enter a 5
 digit code that they receive via SMS.  The number of digits in this
@@ -4774,8 +4798,6 @@ only valid for a limited period of time.  This period of time defaults
 to 180 seconds and is configurable with `verification code timeout`.
 
 {% highlight yaml %}
-attempt limit: 5
-ban period: 3600
 verification code digits: 6
 verification code timeout: 360
 {% endhighlight %}
@@ -5070,6 +5092,21 @@ permissions:
 
 However, please be aware of the security implications of giving
 elevated privileges to non-logged in users.
+
+## <a name="supervisor"></a>Username and password for the supervisord daemon
+
+For increased security when using a [multi-server arrangement],
+**docassemble** has the option of using a username and password when
+**docassemble** containers need to send [supervisor] commands to
+themselves or to others. The username and password are set through the
+[Docker] environment variables `DASUPERVISORUSERNAME` and
+`DASUPERVISORPASSWORD`. The values of these variables are stored in
+the `supervisor` directive of the Configuration, which is a dictionary
+with keys `user` and `password`. This directive should be considered
+read-only; it will be set from environment variables when the server
+starts and never be changed. Although the `supervisor` directive will
+be visible when calling [`get_config()`], it should not appear in your
+Configuration YAML.
 
 ## <a name="config from"></a>Importing configuration directives
 

@@ -683,9 +683,10 @@ to server).
 
 * <a name="CONTAINERROLE"></a>`CONTAINERROLE`: either `all` or a
   colon-separated list of services (e.g. `web:celery`,
-  `sql:log:redis`, etc.) that should be started by the server.  It is
-  only necessary to set a `CONTAINERROLE` if you are using a
-  [multi-server arrangement].  The available options are:
+  `sql:log:redis`, etc.) that should be started by the server.  Only
+  set the `CONTAINERROLE` if you are using a [multi-server
+  arrangement]; the default is `all`.  The available options
+  are:
   * `all`: the [Docker] container will run all of the services of
     **docassemble** on a single container.
   * `web`: The [Docker] container will serve as a web server.
@@ -697,7 +698,6 @@ to server).
   * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
   * `log`: The [Docker] container will run the central log aggregation service.
   * `mail`: The [Docker] container will run [Exim] in order to accept [e-mails].
-
 * <a name="SERVERHOSTNAME"></a>`SERVERHOSTNAME`: In a
   [multi-server arrangement], all **docassemble** application servers
   need to be able to communicate with each other using port 9001 (the
@@ -722,6 +722,22 @@ to server).
 The other options you can set in `env.list` are global for your entire
 **docassemble** installation, rather than specific to the server being
 started.
+
+The following options, if you choose to set them, need to be set using
+Docker environment variables at the time of the initial `docker
+run`. The values are needed immediately when the container first
+starts, so they cannot be set through a `config.yml` file. Setting
+these options is not required; these options are used to provide
+increased security within a [multi-server arrangement], in which
+servers send each other commands over port 9001.
+
+* `DASUPERVISORUSERNAME`: the username that should be used when
+  communicating with [supervisor] over port 9001.
+* `DASUPERVISORPASSWORD`: the password that should be used when
+  communicating with [supervisor] over port 9001.
+  
+These variables will be populated in the [Configuartion] under the
+[`supervisor`] directive.
 
 The following eight options indicate where an existing configuration
 file can be found on [S3](#persistent s3) or
@@ -1683,6 +1699,12 @@ To change the [Redis] server that **docassemble** uses, edit the
 
 To change the [RabbitMQ] server that **docassemble** uses, edit the
 [`RABBITMQ`]<span></span> [configuration option].
+
+If you are only using a single Docker container to run the
+**docassemble** web application and [Celery], then even if you are
+using an external SQL server, external [Redis] server, and external
+[RabbitMQ] server, you can keep the `CONTAINERROLE` as `all` (or
+undefined).
 
 ## <a name="ports"></a>Port opening
 
@@ -2721,3 +2743,4 @@ the [docassemble repository].
 [`allow demo`]: {{ site.baseurl }}/docs/config.html#allow demo
 [`enable playground`]: {{ site.baseurl }}/docs/config.html#enable playground
 [`allow configuration editing`]: {{ site.baseurl }}/docs/config.html#allow configuration editing
+[`supervisor`]: {{ site.baseurl }}/docs/config.html#supervisor

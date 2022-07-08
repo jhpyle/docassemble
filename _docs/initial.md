@@ -1983,6 +1983,20 @@ features:
   labels above fields: True
 {% endhighlight %}
 
+## <a name="floating labels"></a>Floating labels
+
+By default, the **docassemble** user interface uses [Bootstrap]'s
+[horizontal form] style.  If you want your interview to use the
+[Bootstrap]'s [floating labels] style, set `floating labels` to `True`:
+
+{% highlight yaml %}
+features:
+  floating labels: True
+{% endhighlight %}
+
+If floating labels are used, then the [`hint` field modifier] and the
+[`help` field modifier] are unavailable.
+
 ## <a name="hide standard menu"></a>Hiding the standard menu items
 
 By default, the menu in the corner provides logged-in users with the
@@ -2645,3 +2659,6 @@ This will cause the web application to run the JavaScript for the
 [`language`]: {{ site.baseurl }}/docs/config.html#language
 [`showifdef()`]: {{ site.baseurl }}/docs/functions.html#showifdef
 [`translations`]: #translations
+[`hint` field modifier]: {{ site.baseurl }}/docs/fields.html#hint
+[`help` field modifier]: {{ site.baseurl }}/docs/fields.html#help
+[floating labels]: https://getbootstrap.com/docs/5.2/forms/floating-labels/

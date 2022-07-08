@@ -12,13 +12,65 @@ usable in languages other than English.
 
 # <a name="configuration"></a>Configuration
 
-By default, the active language and locale are determined by the
-[`language`] and [`locale`] settings in the **docassemble**
-[configuration].
+There are two different areas of **docassemble** where language
+translation can happen:
 
-The value of [`language`] must be a two-character lowercase
-[ISO-639-1] or [ISO-639-3] code.  For example, English is `en`,
-Spanish is `es`, French is `fr`, and Arabic is `ar`.
+1. In interviews, the active language can be set by the [interview
+   logic]. An interview can operate in different languages depend on
+   the user's answer to a question. To support a multi-lingual
+   interview, you can write separate YAML for blocks
+   containing user-facing text. Or, your YAML can reference a
+   translation table in XLSX or XLIFF format that translates phrases
+   from a base language into another language.
+2. In addition to the interview interface, **docassemble** has various
+   administrative pages, such as the login screen, the user profile
+   screen, and others. Each phrase that the **docassemble** system
+   uses on these screens is translatable through a system phrase
+   translation file, which can be in YAML, XLSX, or XLIFF format.
+
+In order for your **docassemble** server to be able support a
+language, you must edit the [`words`] directive in the Configuration
+to point to a system phrase translation file. Without this, your
+interviews will not be able to translate phrases like "Continue,"
+"Back," or "Sign in or sign up to save answers," and the system will
+fall back to using English.
+
+When a user arrives at an administrative page, **docassemble** will
+try to set the active language to what the user expects.
+
+1. If the user is logged in and a language is configured in the user's
+   Profile, this language will be used. Note that by default, an end
+   user cannot configure their own language; usually you would do this
+   on their behalf.
+2. If the user has already visited the **docassemble** server already
+   in the same browser session, **docassemble** will use whatever
+   language has been stored to the session. For example, if the user
+   uses an interview that calls `set_language()`, that language will
+   be stored in the session, and the user will see that language if
+   they subsequently navigate to other pages of the server.
+3. If the user's browser is configured to request a particular
+   language, and that language is a language for which **docassemble**
+   has translations through the [`words`] directive in the
+   [configuration], this language will be used.
+4. If none of the above methods can provide a language, the default
+   language specified in the [`language`] directive of the
+   [configuration] is used.
+
+When a user arrives at an interview, however, **docassemble** does not
+follow the same rules because the interview might not support all
+languages, even if there is a system phrase translation file for the
+user's language. Instead, the language is set to the [`language`] in
+the [configuration] by default, and the interview logic in your
+interview should call `set_language()` in an `initial` block in order
+to set it to a different language, if using a different language is
+necessary.
+
+The value of [`language`] in the [configuration] must be a
+two-character lowercase [ISO-639-1] or [ISO-639-3] code.  For example,
+English is `en`, Spanish is `es`, French is `fr`, and Arabic is `ar`.
+
+Another [configuration] setting is [`locale`], which primarily
+controls the default formatting of currency and numeric values.
 
 The value of [`locale`] must be a locale name without the language
 prefix, such as `US.utf8` or `DE.utf8`.  Any locale you use must be

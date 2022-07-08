@@ -1,3 +1,21 @@
+----
+layout: docs
+title: Change Log
+short_title: Change Log
+----
+
+## [1.3.52](https://github.com/jhpyle/docassemble/releases/tag/v1.3.52) - 2022-07-08
+
+
+### Changed
+- Upgraded `atomicwrites`.
+
+## [1.3.52](https://github.com/jhpyle/docassemble/releases/tag/v1.3.52) - 2022-07-08
+
+
+### Changed
+- Upgraded `atomicwrites`.
+
 ## [1.3.52](https://github.com/jhpyle/docassemble/releases/tag/v1.3.52) - 2022-07-08
 
 

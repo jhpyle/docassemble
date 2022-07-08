@@ -4775,7 +4775,10 @@ are optional:
  - `subdivisionsecond`: user's county.
  - `subdivisionthird`: user's municipality.
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
- - `password`: user's password.
+ - `password`: user's new password.
+ - `old_password`: user's old password. If this is supplied when
+   `password` is supplied, the user's encrypted information will be
+   converted from the old encryption key to the new encryption key.
  - `account_type`: the type of login the user used.  This is `local`
    for the username/password system, `auth0` for Auth0, `google` for
    Google, etc.

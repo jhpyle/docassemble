@@ -1891,6 +1891,16 @@ larger screens, the label is positioned to the left of the field.)
 You can use the [`labels above fields`] feature to make this the
 default setting for all fields in your interview.
 
+## <a name="floating label"></a>`floating label`
+
+If you set `floating label` to `True`, then the label will be
+formatted using [Bootstrap]'s [floating labels] style.
+
+{% include side-by-side.html demo="floating-label" %}
+
+You can use the [`floating labels`] feature to make this the default
+setting for all fields in your interview.
+
 ## <a name="label"></a>`label` and `field`
 
 Instead of expressing your labels and variable names in the form of `-
@@ -3284,6 +3294,8 @@ why this needs to be done manually as opposed to automatically:
 [Python special methods]: https://docs.python.org/3.8/reference/datamodel.html#special-method-names
 [`depends on`]: {{ site.baseurl }}/docs/logic.html#depends on
 [`labels above fields`]: {{ site.baseurl }}/docs/initial.html#labels above fields
+[`floating labels`]: {{ site.baseurl }}/docs/initial.html#floating labels
 [`label above field`]: #label above field
 [Social Security number]: https://en.wikipedia.org/wiki/Social_Security_number
 [`custom datatypes to load`]: {{ site.baseurl }}/docs/initial.html#custom datatypes to load
+[floating labels]: https://getbootstrap.com/docs/5.2/forms/floating-labels/

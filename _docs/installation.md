@@ -1183,6 +1183,41 @@ Then tell [systemd] to notice your changes:
 systemctl daemon-reload
 {% endhighlight %}
 
+The [supervisor] configuration depends on two environment variables
+being defined. Even if they are set to the empty string, they need to
+exist. To make sure that [supervisor] sees the values of these
+environment variables, edit the `supervisor.service` (which you may
+have done already):
+
+{% highlight bash %}
+sudo systemctl edit supervisor.service
+{% endhighlight %}
+
+Enter the following into the editor:
+
+{% highlight text %}
+[Service]
+Environment="DASUPERVISORUSERNAME="
+Environment="DASUPERVISORPASSWORD="
+{% endhighlight %}
+
+This will set `DASUPERVISORUSERNAME` and `DASUPERVISORPASSWORD` to the
+empty string. If you want to have password protection on [supervisor],
+set an actual username and password. For example:
+
+{% highlight text %}
+[Service]
+Environment="DASUPERVISORUSERNAME=user"
+Environment="DASUPERVISORPASSWORD=7a49bc63d89a8f8d9"
+{% endhighlight %}
+
+Then tell [systemd] to notice your changes:
+
+{% highlight bash %}
+systemctl daemon-reload
+{% endhighlight %}
+
+
 Before starting [supervisor], you need to edit
 `/etc/supervisor/supervisord.conf`:
 

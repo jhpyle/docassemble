@@ -2575,6 +2575,16 @@ def make_pie(data, the_file):
 
 The document template, [`graph.docx`], inserts the `DAFile` object `graph`.
 
+# <a name="button checkboxes"></a>Restyling checkboxes as buttons
+
+CSS is a very powerful tool for customizing the user interface. Here
+is an example that replaces **docassemble**'s standard checkboxes with
+buttons that are grey when unselected and red when selected
+
+{% include demo-side-by-side.html demo="button-checkboxes" %}
+
+The transformation is done by the [`button-checkboxes.css`] file.
+
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml
@@ -2711,3 +2721,4 @@ The document template, [`graph.docx`], inserts the `DAFile` object `graph`.
 [`matplotlib`]: https://matplotlib.org/
 [`graph.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/graph.py
 [`graph.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/graph.docx
+[`button-checkboxes.css`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/static/button-checkboxes.css

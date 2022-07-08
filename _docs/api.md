@@ -609,14 +609,14 @@ the API owner:
  - `subdivisionthird`: user's municipality.
  - `timezone`: user's time zone (e.g. `'America/New_York'`).
 
-## <a name="user_post"></a>Set information about the user
+## <a name="user_post"></a><a name="user_patch"></a>Set information about the user
 
 Description: Sets information the user who is the owner of
 the API key.
 
 Path: `/api/user`
 
-Method: [POST]
+Method: [PATCH]
 
 Data:
 
@@ -631,7 +631,11 @@ Data:
  - `organization` (optional): the user's organization
  - `timezone` (optional): the user's time zone (e.g. `'America/New_York'`).
  - `language` (optional): the user's language code (e.g., `en`).
- - `password` (optional): the user's password.
+ - `password` (optional): the user's new password.
+ - `old_password` (optional): the user's old password. If this is
+   supplied when `password` is supplied, the user's encrypted
+   information will be converted from the old encryption key to the
+   new encryption key.
 
 Required privileges: None, except that API keys with restricted
 [permissions] must have `edit_user_info` to edit user information and
@@ -646,6 +650,9 @@ Responses on failure:
  - [403] "You do not have sufficient privileges to change a user's
    password" if the API key has limited [permissions] that do not
    include `edit_user_password`.
+ - [400] "The old_password is incorrect" if you supplied `password`
+   and `old_password` but the user's current password is not the same
+   as the `old_password` you supplied.
 
 Response on success: [204]
 
@@ -757,7 +764,7 @@ Response on success: [204]
 
 Body of response: empty.
 
-## <a name="user_user_id_post"></a>Set information about a user
+## <a name="user_user_id_post"></a><a name="user_user_id_patch"></a>Set information about a user
 
 Description: Sets information about a user.
 
@@ -765,7 +772,7 @@ Path: `/api/user/<user_id>`
 
 Example: `/api/user/22`
 
-Method: [POST]
+Method: [PATCH]
 
 Data:
 
@@ -781,7 +788,11 @@ Data:
  - `subdivisionthird` (optional): user's municipality.
  - `timezone` (optional): user's time zone
    (e.g. `'America/New_York'`).
- - `password` (optional): the user's password.
+ - `password` (optional): the user's new password.
+ - `old_password` (optional): the user's old password. If this is
+   supplied when `password` is supplied, the user's encrypted
+   information will be converted from the old encryption key to the
+   new encryption key.
 
 Required privileges:
 
@@ -803,6 +814,9 @@ Responses on failure:
    password" if the `password` parameter is included but the owner of
    the API does not have the `admin` privilege or the permissions of
    `edit_user_password`.
+ - [400] "The old_password is incorrect" if you supplied `password`
+   and `old_password` but the user's current password is not the same
+   as the `old_password` you supplied.
  - [400] "You do not have sufficient privileges to edit this user's
    information" if the user has privileges of `admin`, `developer`, or
    `advocate` but the owner of the API key does not have `admin` privileges.
