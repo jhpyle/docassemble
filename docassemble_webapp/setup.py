@@ -21,7 +21,7 @@ install_requires = [
     "astunparse==1.6.3",
     "async-generator==1.10",
     "async-timeout==4.0.2",
-    "atomicwrites==1.4.0",
+    "atomicwrites==1.4.1",
     "attrs==21.4.0",
     "azure-common==1.1.28",
     "azure-core==1.23.1",
