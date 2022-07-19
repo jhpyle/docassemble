@@ -122,7 +122,7 @@ install_requires = [
     "jmespath==1.0.0",
     "joblib==1.1.0",
     "keyring==23.5.0",
-    "lxml==4.8.0",
+    "lxml==4.9.1",
     "Mako==1.2.0",
     "Markdown==3.3.6",
     "MarkupSafe==2.1.1",
