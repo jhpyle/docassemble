@@ -1506,7 +1506,7 @@ If you include `code` within the same block as your `default role`
 specifier, that code will be executed every time the interview logic
 is processed, as if it was marked as `initial`.  For this reason, any
 `default role` specifier that contains code should be placed earlier
-in the interview file than and `mandatory` questions or [`code` blocks].
+in the interview file than any `mandatory` questions or [`code` blocks].
 
 In the example above, the interview has two roles: "client" and
 "advocate".  The special variable `role` is set in the `code` block,
