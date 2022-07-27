@@ -2979,6 +2979,15 @@ If you want to undo the effect of `set_locale()` with a
 `currency_symbol`, call `set_locale(currency_symbol=None)` and the
 default behavior will be used instead.
 
+Other [locale conventions] can be overridden by passing keyword
+parameters to `set_locale()`. The conventions that **docassemble**
+uses are `currency_symbol`, `n_cs_precedes`, `p_cs_precedes`,
+`n_sep_by_space`, `p_sep_by_space`, `thousands_sep`,
+`mon_thousands_sep`, `decimal_point`, and `mon_decimal_point`. Any
+locale convention you set with `set_locale()` can be retrieved with
+`get_locale()`. Note that these overrides do not affect the behavior
+of the `locale` Python package.
+
 Another way to change the currency symbol that users see is to set the
 [`currency symbol` field specifier] on the [`datatype: currency`]
 fields you use to collect currency values.  You can also provide a
@@ -2988,6 +2997,8 @@ fields you use to collect currency values.  You can also provide a
 
 If the locale is set to `US.utf8`, `get_locale()` returns `US.utf8`.
 
+Given an argument, `get_locale()` returns a characteristic of the
+current locale
 To obtain the currency symbol, call `get_locale('currency_symbol')`.
 This will return `None` if there is no currency symbol set.
 
@@ -3886,10 +3897,15 @@ locale-specific currency formatting function is not used.
 
 The `currency()` function accepts an optional keyword parameter
 `symbol`.  If this is set, then the [`locale`]-specific currency formatter
-function is not used, and instead the provided symbol is used,
-followed by the number.
+function is not used, and instead the provided symbol is used.
 
 {% include side-by-side.html demo="money-field-euro" %}
+
+If the optional keyword argument `symbol_precedes` is set to true,
+then the symbol will come before the number. If `symbol_precedes` is
+set to false, the symbol will come after the number. If it is unset,
+the position of the symbol will be determined by the current
+[`locale`].
 
 ## <a name="currency_symbol"></a>currency_symbol()
 
@@ -6368,6 +6384,14 @@ by setting the `mmdc path` directive in the [Configuration].
 mmdc path: /var/www/node_modules/.bin/mmdc
 {% endhighlight %}
 
+## <a name="transform_json_variables"></a>transform_json_variables()
+
+`transform_json_variables()` is a function that is used by
+[`set_session_variables()`] when `process_objects` is
+enabled. `transform_json_variables()` recursively traverses whatever
+data structure it is given and transforms dictionaries into `DAObject`
+instances or strings into datetime objects. 
+
 # <a name="sms"></a>Functions for working with SMS messages
 
 ## <a name="send_sms"></a>send_sms()
@@ -8544,3 +8568,4 @@ $(document).on('daPageLoad', function(){
 [`url_action()` JavaScript function]: #js_url_action
 [`action_perform()` JavaScript function]: #js_action_perform
 [`action_call()` JavaScript function]: js_action_call
+[locale conventions]: https://docs.python.org/3/library/locale.html#locale.localeconv

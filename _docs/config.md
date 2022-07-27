@@ -3511,6 +3511,22 @@ used.  If you are using an [S3]-compatible object storage service, the
 You will need to create the [bucket] before using it; **docassemble**
 will not create it for you.
 
+If your S3 bucket uses encryption, you can specify your server-side
+encryption information under `server side encryption`. E.g.,
+
+{% highlight yaml %}
+s3:
+  enable: True
+  access key id: FWIEJFIJIDGISEJFWOEF
+  secret access key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
+  bucket: yourbucketname
+  region: us-west-1
+  server side encryption:
+    algorithm: AES256
+    customer key: abcdefgabcdefgabcdefgabcdefg
+    KMS key ID: abcdefgabcdefgabcdefgabcdefg
+{% endhighlight %}
+
 If you are using [Docker], you should not define an `s3` directive in
 the Configuration using the web application when you already have a
 server running.  The [S3] configuration is used throughout the boot
@@ -5025,6 +5041,84 @@ jinja data:
   region: Delaware
 {% endhighlight %}
 
+## <a name="locktimeout"></a>Concurrency lock timeout
+
+Python code that runs inside a **docassemble** session needs to have
+exclusive access to the interview answers between the time it reads
+the interview answers from the database and the time it writes the
+interview answers to the database. It would be a problem if, for
+example, a [scheduled task] tried to make changes to the interview
+answers of a session at the same time that the web application was
+assembling a document.
+
+**docassemble** uses a [Redis]-based locking mechanism to ensure that
+when one Python process is using the interview answers of a session,
+other processes that want to use those interview answers must wait for
+the first process to finish before retrieving the interview answers
+from the database.
+
+For example, suppose your interview logic, upon receiving input from
+the user's web browser, launches a background task, but then the
+interview logic performs a computation task that takes two seconds to
+complete. The background task will start running inside of a [Celery]
+worker while the web application is still performing its computation
+task. Before retrieving the interview answers, the background task
+will check [Redis] to see whether the interview answers are in use by
+another process, and it will wait until the interview answers are
+free.
+
+However, what would happen if there is a bug in the computation code
+that causes it to run forever? At some point the web browser will give
+up on the process and it will be terminated in 90 seconds or
+so. How long should a process be able to maintain exclusive access to
+the interview answers? If a process can lock up the interview answers for
+a long period of time, the user could perceive that the server has
+"crashed."
+
+To avoid this problem, there is a limit on how long a process can keep
+the interview answers locked. This is set to four seconds by default.
+
+You can change this period to something else by setting `concurrency
+lock timeout`:
+
+{% highlight yaml %}
+concurrency lock timeout: 10
+{% endhighlight %}
+
+This means that the lock on the interview answers will automatically
+expire after 10 seconds, after which a waiting Python process (such as a
+[scheduled task] or [background task]) can step in and seize control.
+
+Whatever the `concurrency lock timeout` period is, you should consider
+it to be a threshold for when you decide to move a computation to a
+background task. If `concurrency lock timeout` is `4` (the default),
+then any computation that takes more than four seconds should be moved
+to a background task. For example, if you have a complicated document
+that takes six seconds to assemble, your user will see a spinner in
+the web application because it will take at least six seconds for the
+server to respond to the HTTP request from the browser. This is a
+dangerous situation for the integrity of your interview answers,
+because after four seconds have elapsed, your document assembly task
+will still be proceeding, but its exclusive lock on the
+interview answers will have expired, and another web application
+process, a [background task], or a [scheduled task] could start
+using the interview answers.
+
+The [background task] enables computations to run for a long time
+without tying up the interview answers. Although the [background task]
+waits for the interview answers to be available before reading them,
+it does not put a hold on the interview answers while the background
+task is proceeding. If the background task needs to save changes to
+the interview answers, it does so through a separate
+[`background_response_action()`] process, which waits for the
+interview answers to be available and then takes control of the
+interview answers so that it can save information to them.
+
+Changing `concurrency lock timeout` is generally not recommended. An
+HTTP request to a server should return quickly, and if you need to
+perform long-running computations, the [background tasks] system is
+the best way to run those computations.
+
 ## <a name="permissions"></a>Permissions
 
 You can customize **docassemble**'s [privileges] system using the
@@ -5676,6 +5770,7 @@ and Facebook API keys.
 [`interview_menu()`]: {{ site.baseurl }}/docs/functions.html#interview_menu
 [Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [`ServerAdmin`]: https://httpd.apache.org/docs/2.4/mod/core.html#ServerAdmin
+[background task]: {{ site.baseurl }}/docs/background.html#background
 [background tasks]: {{ site.baseurl }}/docs/background.html#background
 [`worker_concurrency`]: http://docs.celeryproject.org/en/latest/userguide/configuration.html#worker-concurrency
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
@@ -5845,3 +5940,4 @@ and Facebook API keys.
 [`words`]: #words
 [language support]: https://docassemble.org/docs/language.html
 [`language`]: {{ site.baseurl }}/docs/config.html#language
+[`background_response_action()`]: {{ site.baseurl }}/docs/background.html#background_response_action

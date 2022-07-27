@@ -545,8 +545,7 @@ should be a valid numeric value.
 {% include side-by-side.html demo="number-field" %}
 
 You can use the optional field modifier `step` to limit the number to a
-certain number of decimal places and to control the way the browser
-widget controls work:
+certain number of decimal places:
 
 {% include side-by-side.html demo="number-field-step" %}
 
@@ -561,6 +560,10 @@ based the [`locale`] defined in the [configuration].
 The variable will be set to a number, just as if `datatype: number`
 was used.  For information about how to display currency values, see
 the [`currency()`] function.
+
+If the locale convention places the currency symbol after the number,
+the currency symbol will be placed before the field; otherwise it will
+be placed after the field.
 
 If the currency symbol defined by the locale is not the currency you
 want to use, you can include an [`initial`] block that calls

@@ -32,7 +32,7 @@ The following techniques are used to to mitigate this risk:
   Flask plugins.  Bootstrap is used for the user interface.  While
   **docassemble** itself may not be widely tested, these libraries are
   much more widely used, and defects are thus more likely to surface.
-* Before a new version is pushed, a comprehensive suite of `aloe` tests
+* Before a new version is pushed, a comprehensive suite of `behave` tests
   is performed to ensure that the software works as expected.
 
 # Open-source infrastructure attacks

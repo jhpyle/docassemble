@@ -1041,14 +1041,14 @@ should behave, you can detect not only obvious bugs and also the
 stealthy bugs that most people won't notice or report.
 
 **docassemble** comes with scripts and examples for running automated
-acceptance tests using [Aloe], which is a Python version of the
+acceptance tests using [Behave], which is a Python version of the
 [Cucumber] system for [Behavior-Driven Development].
 
 The idea behind "[Behavior-Driven Development]" is for development and
 management teams to work together write acceptance tests in a
 human-readable domain-specific language that can also be interpreted
 by the computer in order to test the software.  In [Cucumber] and
-[Aloe], this human-readable language is a plain text file written
+[Behave], this human-readable language is a plain text file written
 in the [Gherkin] format.  **docassemble** allows interview developers
 to write [Gherkin] scripts that look like this:
 
@@ -1069,7 +1069,7 @@ language appears.  This ensures that testing is thorough because it
 tests the software from the user's perspective.  Everything the
 technology does, from the JavaScript running in the user's browser to
 the background processes running on **docassemble**, is tested.  More
-information about deploying [Aloe] is available [below](#aloe).
+information about deploying [Behave] is available [below](#behave).
 
 Technology for web browser automation exists that allows you to
 "record" keystrokes and button clicks and then "play" it back at a
@@ -1184,7 +1184,7 @@ could seek the definition of `scenario_user_has_employer` and
 `scenario_high_tax_bracket`.  This will allow you to avoid having to
 copy and paste code.
 
-You could then have a [Aloe] script that starts with:
+You could then have a [Behave] script that starts with:
 
 {% highlight text %}
 Scenario: Test the interview "Debt collection advice"
@@ -1197,7 +1197,7 @@ Scenario: Test the interview "Debt collection advice"
 
 These few lines effectively "stand in" for many lines of [Gherkin]
 sentences you would otherwise have to write to simulate the user typing in
-information.  A [Aloe] script like this is easier to maintain than
+information.  A [Behave] script like this is easier to maintain than
 one that you have to modify every time you make a change to the
 language or order of your information-gathering screens.
 
@@ -1307,7 +1307,7 @@ for testing purposes.  These test interviews could be operated by
 subject matter experts manually, who could manually try out various
 possibilities in to make sure the algorithm produces the legally
 correct response.  These same interviews could also be tested in an
-automated fashion with [Aloe] scripts.  For example, a test
+automated fashion with [Behave] scripts.  For example, a test
 interview, `test-jurisdiction.yml`, might look like this:
 
 {% highlight yaml %}
@@ -1346,7 +1346,7 @@ question: |
 ---
 {% endhighlight %}
 
-The corresponding [Aloe] script would look like this:
+The corresponding [Behave] script would look like this:
 
 {% highlight text %}
 Feature: Determination of jurisdiction
@@ -1373,7 +1373,7 @@ Feature: Determination of jurisdiction
 
 You could have a number of testing scripts like these, which you could
 run to ensure that the legal logic of your interview is proper.
-Unlike [Aloe] scripts that test your actual interview, these
+Unlike [Behave] scripts that test your actual interview, these
 scripts will not need to be changed whenever you make stylistic
 modifications to your interview.  In that way, they are much easier to
 maintain.
@@ -1390,40 +1390,36 @@ You do not need to develop a rigid habit of writing test scripts for
 every piece of code you write.  If you have a `code` block that
 capitalizes a word, for example, it is reasonable to "test" it by
 "eyeballing" it or testing it incidentally as part of a
-whole-interview [Aloe] script.  But if you have mission-critical
+whole-interview [Behave] script.  But if you have mission-critical
 algorithms that do somewhat tricky things, spending a lot of time on
 test code will yield a good return on investment.
 
 The next section provides a practical explanation of how to use
-[Aloe] to test **docassemble** interviews.
+[Behave] to test **docassemble** interviews.
 
-## <a name="aloe"></a>Using Aloe
+## <a name="behave"></a>Using Behave
 
-[Aloe] is a Python program that runs on your local computer.  It
+[Behave] is a Python program that runs on your local computer.  It
 uses [selenium] to automate the behavior of a web browser such as
 Firefox or Chrome.
 
-The way that [Aloe] works is beyond the scope of this
+The way that [Behave] works is beyond the scope of this
 documentation.  This section describes only a broad outline of how
-[Aloe] can be used to test **docassemble** interviews.
+[Behave] can be used to test **docassemble** interviews.
 
-To install [Aloe], do:
+Before installing [Behave], install Google Chrome. To install
+[Behave], do:
 
 {% highlight bash %}
-pip install aloe selenium
+pip install behave selenium webdriver-manager
 {% endhighlight %}
-
-You will then need a "driver" that will control your web browser.  If
-you use Chrome, you need to [install chromedriver] first.  Then you
-will need to edit `terrain.py` so that it contains the appropriate
-reference to the location where the `chromedriver` file can be found.
 
 If your docassemble extension package is in the directory
 `/home/jsmith/docassemble-lt`, then you would do:
 
 {% highlight bash %}
 $ cd /home/jsmith/docassemble-lt/tests
-$ aloe
+$ behave
 {% endhighlight %}
 
 Of course, you first need to create a `tests` directory and create the
@@ -1441,26 +1437,25 @@ docassemble-lt
         |-- steps
             `-- __init__.py
             |-- docassemble.py
-        |-- terrain.py
+        |-- environment.py
         `-- MyTest.feature
 {% endhighlight %}
 
 The `__init__.py` files are empty placeholder files.  The file
 `MyTest.feature` can be called anything, and you can have more than
-one `.feature` file.  When you run `aloe`, all of the feature files
+one `.feature` file.  When you run `behave`, all of the feature files
 will be used.
 
-The `terrain.py` and `docassemble.py` files are the [Python] modules
+The `environment.py` and `docassemble.py` files are the [Python] modules
 that perform the web browser automation.  Versions of these files are
 available in the **docassemble** [GitHub repository], but you may need
 to edit these modules to get your tests to work.
 
-A starting point for the `terrain.py` module is available here:
+A starting point for the `environment.py` module is available here:
 
-* [`terrain.py`](https://github.com/jhpyle/docassemble/blob/master/tests/features/terrain.py)
+* [`environment.py`](https://github.com/jhpyle/docassemble/blob/master/tests/features/environment.py)
 
-A starting point for the `docassemble.py` module (which is imported
-into `terrain.py`) is available here:
+A starting point for the `docassemble.py` module is available here:
 
 * [`docassemble.py`](https://github.com/jhpyle/docassemble/blob/master/tests/features/steps/docassemble.py)
   
@@ -1483,14 +1478,14 @@ Feature: Interview that works with actions
 
 One useful feature is the "step" invoked by "I wait forever."  If you
 run this step, the browser will stay open and you can use it.  This
-can be helpful if you want to use [Aloe] to bring you to a
+can be helpful if you want to use [Behave] to bring you to a
 particular step in your interview, without you having to re-do all of
 the steps by hand.
 
 For more information about how automated testing works, read the
-documentation for [Aloe].  You may also wish to read about
+documentation for [Behave].  You may also wish to read about
 the [Behavior-Driven Development] concept in general before starting
-to use [Aloe].
+to use [Behave].
 
 ## <a name="nontechnical"></a>Improving quality with non-technical staff
 
@@ -1561,7 +1556,7 @@ writing and editing [Gherkin] scripts, which the developers can clean
 up for syntax and use as a basis for implementing changes.
 Non-technical people can review [Gherkin] scripts to make sure they
 make sense from a substantive perspective.  They can edit them to add
-additional conditions so that the [Aloe] tests are more
+additional conditions so that the [Behave] tests are more
 comprehensive.
 
 It is possible to structure [YAML] interview files so that they are
@@ -1620,7 +1615,7 @@ staff member who knows a lot about the subject matter.
 [selenium]: http://selenium-python.readthedocs.io/getting-started.html
 [Behavior-Driven Development]: https://en.wikipedia.org/wiki/Behavior-driven_development
 [install chromedriver]: https://chromedriver.storage.googleapis.com/index.html?path=2.33/
-[Aloe]: https://aloe.readthedocs.io/en/latest/
+[Behave]: https://behave.readthedocs.io/en/stable/index.html
 [Cucumber]: https://cucumber.io/
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
