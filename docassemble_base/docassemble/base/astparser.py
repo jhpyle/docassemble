@@ -26,22 +26,37 @@ class myextract(ast.NodeVisitor):
         self.stack.append(node.attr)
         ast.NodeVisitor.generic_visit(self, node)
     def visit_Subscript(self, node):
-        if hasattr(node.slice, 'value') and hasattr(node.slice.value, 'id'):
-            self.stack.append('[' + str(node.slice.value.id) + ']')
+        if isinstance(node.slice, ast.Name):
+            self.stack.append('[' + str(node.slice.id) + ']')
             self.in_subscript += 1
             self.seen_name = False
-        elif hasattr(node.slice, 'value') and hasattr(node.slice.value, 'n'):
-            self.stack.append('[' + repr(node.slice.value.n) + ']')
+        elif isinstance(node.slice, ast.Constant):
+            self.stack.append('[' + repr(node.slice.value) + ']')
             self.in_subscript += 1
             self.seen_name = False
-        elif hasattr(node.slice, 'value') and hasattr(node.slice.value, 's'):
-            self.stack.append('[' + repr(str(node.slice.value.s)) + ']')
-            self.in_subscript += 1
-            self.seen_name = False
+        elif isinstance(node.slice, ast.Index):
+            if isinstance(node.slice.value, ast.Name):
+                self.stack.append('[' + str(node.slice.value.id) + ']')
+                self.in_subscript += 1
+                self.seen_name = False
+            elif isinstance(node.slice.value, ast.Constant):
+                self.stack.append('[' + repr(node.slice.value.value) + ']')
+                self.in_subscript += 1
+                self.seen_name = False
+            elif hasattr(node.slice.value, 'n'):
+                self.stack.append('[' + repr(node.slice.value.n) + ']')
+                self.in_subscript += 1
+                self.seen_name = False
+            elif hasattr(node.slice.value, 's'):
+                self.stack.append('[' + repr(str(node.slice.value.s)) + ']')
+                self.in_subscript += 1
+                self.seen_name = False
+            else:
+                self.seen_complexity = 1
         else:
             self.seen_complexity = 1
         ast.NodeVisitor.generic_visit(self, node)
-        if hasattr(node.slice, 'slice') and (hasattr(node.slice.value, 'id') or hasattr(node.slice.value, 'n')):
+        if hasattr(node.slice, 'slice') and (hasattr(node.slice.value, 'id') or hasattr(node.slice.value, 'n') or hasattr(node.slice.value, 'value')):
             self.in_subscript -= 1
 class myvisitnode(ast.NodeVisitor):
     def __init__(self):

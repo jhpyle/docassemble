@@ -53,6 +53,7 @@ def invalid_variable_name(varname):
 
 class ForcedNameError(NameError):
     def __init__(self, *pargs, **kwargs):
+        super().__init__()
         the_args = list(pargs)
         if len(the_args) == 0:
             raise DAError("ForcedNameError must have at least one argument")
@@ -128,9 +129,8 @@ class ForcedNameError(NameError):
             self.next_action = None
         if first_is_plain:
             self.arguments = None
-        super().__init__()
     def set_action(self, data):
-        if not hasattr(self, 'name'):
+        if (not hasattr(self, 'name')) or self.name is None:
             if isinstance(data, dict) and 'action' in data and (len(data) == 1 or 'arguments' in data):
                 self.name = data['action']
                 self.arguments = data.get('arguments', {})

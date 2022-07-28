@@ -30,7 +30,7 @@ from celery.exceptions import TimeoutError
 USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
 
 WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
-container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
+CONTAINER_ROLE = ':' + os.environ.get('CONTAINERROLE', '') + ':'
 
 ONEDRIVE_CHUNK_SIZE = 2000000
 
@@ -44,7 +44,9 @@ broker = daconfig.get('rabbitmq', None)
 if broker is None:
     broker = 'pyamqp://guest@' + socket.gethostname() + '//'
 
-SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
+SUPERVISORCTL = [daconfig.get('supervisorctl', 'supervisorctl')]
+if daconfig['supervisor'].get('username', None):
+    SUPERVISORCTL.extend(['--username', daconfig['supervisor']['username'], '--password', daconfig['supervisor']['password']])
 
 workerapp = Celery('docassemble.webapp.worker', backend=backend, broker=broker)
 importlib.import_module('docassemble.webapp.config_worker')
@@ -923,12 +925,12 @@ def reset_server(result, run_create=None):
         logmessage("reset_server in worker: setting da:skip_create_tables.")
         pipe.execute()
     if USING_SUPERVISOR:
-        if re.search(r':(web|celery|all):', container_role):
+        if re.search(r':(web|celery|all):', CONTAINER_ROLE):
             if result.hostname == hostname:
                 hostname_to_use = 'localhost'
             else:
                 hostname_to_use = result.hostname
-            args = [SUPERVISORCTL, '-s', 'http://' + hostname_to_use + ':9001', 'start', 'reset']
+            args = SUPERVISORCTL + ['-s', 'http://' + hostname_to_use + ':9001', 'start', 'reset']
             result = subprocess.run(args, check=False).returncode
             logmessage("reset_server in worker: called " + ' '.join(args))
         else:
@@ -955,7 +957,7 @@ def update_packages(restart=True):
             logmessage("update_packages in worker: starting update after " + str(time.time() - start_time) + " seconds")
             ok, logmessages, results = worker_controller.update.check_for_updates(start_time=start_time, full=restart)
             logmessage("update_packages in worker: update completed after " + str(time.time() - start_time) + " seconds")
-            if restart:
+            if restart and ':all:' not in CONTAINER_ROLE:
                 worker_controller.trigger_update(except_for=hostname)
                 logmessage("update_packages in worker: trigger completed after " + str(time.time() - start_time) + " seconds")
             return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results, hostname=hostname, restart=restart)

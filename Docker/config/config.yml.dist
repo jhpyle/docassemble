@@ -1,8 +1,12 @@
 debug: {{DADEBUG}}
 enable playground: {{DAENABLEPLAYGROUND}}
 allow log viewing: {{DAALLOWLOGVIEWING}}
+root owned: {{DAROOTOWNED}}
 allow demo: {{DADEBUG}}
 exitpage: https://docassemble.org
+supervisor:
+  username: {{DASUPERVISORUSERNAME}}
+  password: {{DASUPERVISORPASSWORD}}
 db:
   prefix: {{DBPREFIX}}
   name: {{DBNAME}}
@@ -80,6 +84,11 @@ s3:
   bucket: {{S3BUCKET}}
   region: {{S3REGION}}
   endpoint url: {{S3ENDPOINTURL}}
+  server side encryption:
+    algorithm: {{S3_SSE_ALGORITHM}}
+    customer algorithm: {{S3_SSE_CUSTOMER_ALGORITHM}}
+    customer key: {{S3_SSE_CUSTOMER_KEY}}
+    KMS key ID: {{S3_SSE_KMS_KEY_ID}}
 azure:
   enable: {{AZUREENABLE}}
   account name: {{AZUREACCOUNTNAME}}

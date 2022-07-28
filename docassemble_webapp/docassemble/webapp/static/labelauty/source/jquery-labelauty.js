@@ -347,7 +347,7 @@
 
     if (label == true && icon == true) {
       block =
-        '<label class="form-label text-start btn btn-light" for="' +
+        '<label class="form-label text-start btn btn-light dalabelauty" for="' +
         input_id +
         '" ' +
         aria +
@@ -367,7 +367,7 @@
         "</label>";
     } else if (label == true) {
       block =
-        '<label class="form-label text-start btn btn-light" for="' +
+        '<label class="form-label text-start btn btn-light dalabelauty" for="' +
         input_id +
         '" ' +
         aria +
@@ -381,7 +381,7 @@
         "</label>";
     } else {
       block =
-        '<label class="form-label text-start btn btn-light" for="' +
+        '<label class="form-label text-start btn btn-light dalabelauty" for="' +
         input_id +
         '" ' +
         aria +

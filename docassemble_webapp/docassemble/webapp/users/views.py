@@ -2,7 +2,10 @@ import datetime
 import email.utils
 import json
 import re
-from backports import zoneinfo
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 #import docassemble.webapp.daredis
 from docassemble.webapp.app_object import app
 from docassemble.webapp.backend import delete_user_data

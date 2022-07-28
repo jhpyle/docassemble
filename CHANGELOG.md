@@ -1,5 +1,46 @@
 # Change Log
 
+## [1.4.0] - 2022-07-31
+
+### Added
+- The `floating labels` feature and the `floating label` field
+  modifier.
+- The `root owned` Configuration directive.
+- Support in the Kubernetes implementation for using a read-only file
+  system where all Configuration changes and package updates take
+  place using Docker images and the only directories on the server
+  that are writable are directories for storing runtime information
+  (e.g. PID files) or log files.
+- The `ip address ban enabled` Configuration directive.
+- The `old_password` parameter for `set_user_info()` and the API
+  endpoints for changing user information, so that the user's
+  encrypted data can be migrated.
+- The `transform_json_variables()` function.
+- Support for server-side encryption when using S3.
+### Changed
+- In the Docker container, the operating system is upgraded to Ubuntu
+  22.04 LTS and Python is upgraded to 3.10.
+- `aloe` is no longer a required package. It has a dependency, `nose`,
+  that is not compatible with Python 3.10. Instead, `behave` is now a
+  required package.
+- Switched to the Azure CLI for managing files in Azure Blob Storage
+  from shell scripts.
+- A restart (e.g., saving the Configuration, installing a package)
+  will erase any IP address bans caused by failed login attempts.
+- The API endpoints for changing information about existing users now
+  work with `PATCH` as well as `POST`.
+### Fixed
+- Links in dropdown navigation menu for mobile devices were not
+  clickable.
+- The `session` parameter of `/api/resume_url` was not working (it was
+  expecting `session_id`.
+- Optimized `interview_list` for cases where `action='delete_all'` and
+  `query` are used together.
+- Unnecessary transmittal of background task result to web browser
+  when the `refresh` option of `background_action()` is used.
+- Migration of encrypted `DAStore` objects when password is changed.
+- The `set_parts()` function did not support all of the screen parts.
+
 ## [1.3.52] - 2022-07-08
 
 ### Changed

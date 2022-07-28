@@ -6,7 +6,7 @@ import collections
 import copy
 import datetime
 import email
-from distutils.version import LooseVersion
+import packaging
 import filecmp
 from functools import update_wrapper
 import hashlib
@@ -15,6 +15,7 @@ import inspect
 import io
 from io import BytesIO, TextIOWrapper
 import json
+import locale
 import logging
 import math
 import mimetypes
@@ -129,7 +130,10 @@ from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import YamlLexer, PythonLexer
 import pytz # should be loaded into memory because pickled objects might use it
-from backports import zoneinfo
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 import qrcode
 import qrcode.image.svg
 from rauth import OAuth1Service, OAuth2Service
@@ -170,6 +174,7 @@ DEBUG = daconfig.get('debug', False)
 ERROR_TYPES_NO_EMAIL = daconfig.get('suppress error notificiations', [])
 COOKIELESS_SESSIONS = daconfig.get('cookieless sessions', False)
 BAN_IP_ADDRESSES = daconfig.get('ip address ban enabled', True)
+CONCURRENCY_LOCK_TIMEOUT = daconfig.get('concurrency lock timeout', 4)
 
 if DEBUG:
     PREVENT_DEMO = False
@@ -530,7 +535,9 @@ CHECKIN_INTERVAL = int(daconfig.get('checkin interval', 6000))
 NOTIFICATION_CONTAINER = '<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>'
 NOTIFICATION_MESSAGE = '<div class="da-alert alert alert-%s alert-dismissible fade show" role="alert">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
 
-USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
+SUPERVISOR_SERVER_URL = os.environ.get('SUPERVISOR_SERVER_URL', None)
+USING_SUPERVISOR = bool(SUPERVISOR_SERVER_URL)
+SINGLE_SERVER = USING_SUPERVISOR and bool(':all:' in ':' + os.environ.get('CONTAINERROLE', 'all') + ':')
 
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
 
@@ -560,9 +567,17 @@ ROOT = daconfig.get('root', '/')
 #app.logger.warning("default sender is " + current_app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', 'https://docassemble.org')
 
-SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
+SUPERVISORCTL = [daconfig.get('supervisorctl', 'supervisorctl')]
+if daconfig['supervisor'].get('username', None):
+    SUPERVISORCTL.extend(['--username', daconfig['supervisor']['username'], '--password', daconfig['supervisor']['password']])
+
 #PACKAGE_CACHE = daconfig.get('packagecache', '/var/www/.cache')
 WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
+if packaging.version.parse(daconfig.get('system version', '0.1.12')) < packaging.version.parse('1.4.0'):
+    READY_FILE = daconfig.get('ready file', '/usr/share/docassemble/webapp/ready')
+else:
+    READY_FILE = daconfig.get('ready file', '/var/run/docassemble/ready')
+
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
 PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + str(sys.version_info.major) + '.' + str(sys.version_info.minor))
 FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor), 'site-packages')
@@ -1138,6 +1153,25 @@ lm = LoginManager()
 lm.init_app(app)
 lm.login_view = 'custom_login'
 lm.anonymous_user = AnonymousUserModel
+
+def url_for_interview(**args):
+    for k, v in daconfig.get('dispatch').items():
+        if v == args['i']:
+            args['dispatch'] = k
+            del args['i']
+            is_new = False
+            try:
+                if true_or_false(args['new_session']):
+                    is_new = True
+                    del args['new_session']
+            except:
+                is_new = False
+            if is_new:
+                return docassemble.base.functions.url_of('run_new_dispatch', **args)
+            return docassemble.base.functions.url_of('run_dispatch', **args)
+    return url_for('index', **args)
+
+app.jinja_env.globals.update(url_for=url_for, url_for_interview=url_for_interview)
 
 def syslog_message(message):
     message = re.sub(r'\n', ' ', message)
@@ -1800,6 +1834,15 @@ def get_base_words():
             return ruamel.yaml.safe_load(content)
     return None
 
+def get_pg_code_cache():
+    documentation = get_info_from_file_reference('docassemble.base:data/questions/pgcodecache.yml')
+    if 'fullpath' in documentation and documentation['fullpath'] is not None:
+        with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
+            content = fp.read()
+            content = fix_tabs.sub('  ', content)
+            return ruamel.yaml.safe_load(content)
+    return None
+
 def get_documentation_dict():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/documentation.yml')
     if 'fullpath' in documentation and documentation['fullpath'] is not None:
@@ -1989,6 +2032,12 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
             record.message = encrypt_phrase(phrase, newsecret)
         db.session.commit()
         #release_lock(user_code, filename)
+    for object_entry in db.session.execute(select(GlobalObjectStorage).where(and_(GlobalObjectStorage.user_id == user.id, GlobalObjectStorage.encrypted == True)).with_for_update()).scalars():
+        try:
+            object_entry.value = encrypt_object(decrypt_object(object_entry.value, oldsecret), newsecret)
+        except:
+            pass
+    db.session.commit()
     return newsecret
 
 def MD5Hash(data=None):
@@ -2898,7 +2947,7 @@ def obtain_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
     #logmessage("obtain_lock: getting " + key)
     found = False
-    count = 4
+    count = CONCURRENCY_LOCK_TIMEOUT * 3
     while count > 0:
         record = r.get(key)
         if record:
@@ -2914,14 +2963,14 @@ def obtain_lock(user_code, filename):
         release_lock(user_code, filename)
     pipe = r.pipeline()
     pipe.set(key, 1)
-    pipe.expire(key, 4)
+    pipe.expire(key, CONCURRENCY_LOCK_TIMEOUT)
     pipe.execute()
 
 def obtain_lock_patiently(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
     #logmessage("obtain_lock: getting " + key)
     found = False
-    count = 20
+    count = 200
     while count > 0:
         record = r.get(key)
         if record:
@@ -2933,16 +2982,17 @@ def obtain_lock_patiently(user_code, filename):
         found = True
         count -= 1
     if found:
-        logmessage("Request for " + key + " deadlocked")
-        release_lock(user_code, filename)
+        #logmessage("Request for " + key + " deadlocked")
+        #release_lock(user_code, filename)
+        raise Exception("obtain_lock_patiently: aborting attempt to obtain lock on " + user_code + " for " + filename + " due to deadlock")
     pipe = r.pipeline()
     pipe.set(key, 1)
-    pipe.expire(key, 4)
+    pipe.expire(key, CONCURRENCY_LOCK_TIMEOUT)
     pipe.execute()
 
 def release_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
-    #logmessage("obtain_lock: releasing " + key)
+    #logmessage("release_lock: releasing " + key)
     r.delete(key)
 
 def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, extra_class=None):
@@ -3109,7 +3159,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                         navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a>'
                     for item in app.config['ADMIN_INTERVIEWS']:
                         if item.can_use() and docassemble.base.functions.this_thread.current_info.get('yaml_filename', '') != item.interview:
-                            navbar += '<a class="dropdown-item" href="' + url_for('index', i=item.interview, new_session='1') + '">' + item.get_title(docassemble.base.functions.get_language()) + '</a>'
+                            navbar += '<a class="dropdown-item" href="' + url_for_interview(i=item.interview, new_session='1') + '">' + item.get_title(docassemble.base.functions.get_language()) + '</a>'
                     if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
                         navbar += '<a class="dropdown-item" href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a>'
                     if current_user.has_role('admin', 'developer'):
@@ -3535,7 +3585,7 @@ def get_ml_info(varname, default_package, default_file):
         the_varname = varname
     return (the_package, the_file, the_varname)
 
-pg_code_cache = {}
+pg_code_cache = get_pg_code_cache()
 
 def source_code_url(the_name, datatype=None):
     if datatype == 'module':
@@ -4129,7 +4179,7 @@ def trigger_update(except_for=None):
                     logmessage("trigger_update: using http://localhost:9001")
                 else:
                     the_url = host.url
-                args = [SUPERVISORCTL, '-s', the_url, 'start', 'update']
+                args = SUPERVISORCTL + ['-s', the_url, 'start', 'update']
                 result = subprocess.run(args, check=False).returncode
                 if result == 0:
                     logmessage("trigger_update: sent update to " + str(host.hostname) + " using " + the_url)
@@ -4146,7 +4196,7 @@ def restart_on(host):
         the_url = 'http://localhost:9001'
     else:
         the_url = host.url
-    args = [SUPERVISORCTL, '-s', the_url, 'start', 'reset']
+    args = SUPERVISORCTL + ['-s', the_url, 'start', 'reset']
     result = subprocess.run(args, check=False).returncode
     if result == 0:
         logmessage("restart_on: sent reset to " + str(host.hostname))
@@ -4159,11 +4209,20 @@ def restart_all():
     logmessage("restarting all")
     for interview_path in [x.decode() for x in r.keys('da:interviewsource:*')]:
         r.delete(interview_path)
-    restart_others()
+    if not SINGLE_SERVER:
+        restart_others()
     restart_this()
 
 def restart_this():
     logmessage("restart_this: hostname is " + str(hostname))
+    if SINGLE_SERVER:
+        args = SUPERVISORCTL + ['-s', SUPERVISOR_SERVER_URL, 'start', 'reset']
+        result = subprocess.run(args, check=False).returncode
+        if result == 0:
+            logmessage("restart_this: sent reset")
+        else:
+            logmessage("restart_this: call to supervisorctl with reset was not successful")
+        return
     if USING_SUPERVISOR:
         to_delete = set()
         for host in db.session.execute(select(Supervisors)).scalars():
@@ -4292,7 +4351,7 @@ def indent_by(text, num):
 def call_sync():
     if not USING_SUPERVISOR:
         return
-    args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'sync']
+    args = SUPERVISORCTL + ['-s', 'http://localhost:9001', 'start', 'sync']
     result = subprocess.run(args, check=False).returncode
     if result == 0:
         pass
@@ -4302,7 +4361,7 @@ def call_sync():
         abort(404)
     in_process = 1
     counter = 10
-    check_args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'status', 'sync']
+    check_args = SUPERVISORCTL + ['-s', 'http://localhost:9001', 'status', 'sync']
     while in_process == 1 and counter > 0:
         output, err = Popen(check_args, stdout=PIPE, stderr=PIPE).communicate()
         if not re.search(r'RUNNING', output.decode()):
@@ -5528,20 +5587,18 @@ def cleanup_sessions():
     kv_session.cleanup_sessions()
     return render_template('base_templates/blank.html')
 
-ready_file = os.path.join(os.path.dirname(WEBAPP_PATH), 'ready')
-
 @app.route("/health_status", methods=['GET'])
 def health_status():
     ok = True
     if request.args.get('ready', False):
-        if not os.path.isfile(ready_file):
+        if not os.path.isfile(READY_FILE):
             ok = False
     return jsonify({'ok': ok, 'server_start_time': START_TIME, 'version': da_version})
 
 @app.route("/health_check", methods=['GET'])
 def health_check():
     if request.args.get('ready', False):
-        if not os.path.isfile(ready_file):
+        if not os.path.isfile(READY_FILE):
             return ('', 400)
     response = make_response(render_template('pages/health_check.html', content="OK"), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -5691,7 +5748,10 @@ def checkin():
             if interview_status.question.question_type == "backgroundresponse":
                 the_response = interview_status.question.backgroundresponse
                 if isinstance(the_response, dict) and 'pargs' in the_response and isinstance(the_response['pargs'], list) and len(the_response['pargs']) == 2 and the_response['pargs'][1] in ('javascript', 'flash', 'refresh', 'fields'):
-                    commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response['pargs'][0]), extra=the_response['pargs'][1]))
+                    if the_response['pargs'][1] == 'refresh':
+                        commands.append(dict(action=do_action, value=None, extra=the_response['pargs'][1]))
+                    else:
+                        commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response['pargs'][0]), extra=the_response['pargs'][1]))
                 elif isinstance(the_response, list) and len(the_response) == 2 and the_response[1] in ('javascript', 'flash', 'refresh', 'fields'):
                     commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response[0]), extra=the_response[1]))
                 elif isinstance(the_response, str) and the_response == 'refresh':
@@ -6565,7 +6625,7 @@ def index(action_argument=None, refer=None):
         if '_datatypes' in post_data:
             known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
             for data_type in known_datatypes.values():
-                if data_type.startswith('object'):
+                if data_type.startswith('object') or data_type in ('integer', 'float', 'currency', 'number'):
                     should_assemble = True
     if not should_assemble:
         for key in post_data:
@@ -7027,6 +7087,7 @@ def index(action_argument=None, refer=None):
                 else:
                     data = repr('')
             elif known_datatypes[real_key] == 'integer':
+                data = data.replace(',', '')
                 if data.strip() == '':
                     data = 0
                 try:
@@ -7040,10 +7101,10 @@ def index(action_argument=None, refer=None):
             elif known_datatypes[real_key] in ('ml', 'mlarea'):
                 is_ml = True
             elif known_datatypes[real_key] in ('number', 'float', 'currency', 'range'):
+                data = data.replace('%', '')
+                data = data.replace(',', '')
                 if data == '':
                     data = 0.0
-                if isinstance(data, str):
-                    data = re.sub(r'[,\%]', '', data)
                 try:
                     test_data = float(data)
                 except:
@@ -7175,17 +7236,24 @@ def index(action_argument=None, refer=None):
                 else:
                     data = repr('')
             elif known_datatypes[orig_key] == 'integer':
-                if data == '':
+                data = data.replace(',', '')
+                if data.strip() == '':
                     data = 0
-                test_data = int(data)
+                try:
+                    test_data = int(data)
+                except:
+                    validated = False
+                    field_error[orig_key] = word("You need to enter a valid number.")
+                    new_values[key] = repr(data)
+                    continue
                 data = "int(" + repr(data) + ")"
             elif known_datatypes[orig_key] in ('ml', 'mlarea'):
                 is_ml = True
             elif known_datatypes[orig_key] in ('number', 'float', 'currency', 'range'):
+                data = data.replace(',', '')
+                data = data.replace('%', '')
                 if data == '':
                     data = 0.0
-                if isinstance(data, str):
-                    data = re.sub(r'[,\%]', '', data)
                 test_data = float(data)
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[orig_key] in ('object', 'object_radio'):
@@ -8357,7 +8425,7 @@ def index(action_argument=None, refer=None):
         }
         var returnVal = null;
         for (var i = 0; i < possibleElements.length; ++i){
-          if (!$(possibleElements[i]).prop('disabled')){
+          if (!$(possibleElements[i]).prop('disabled') || $(possibleElements[i]).parents(".file-input.is-locked").length > 0 ){
             var showifParents = $(possibleElements[i]).parents(".dajsshowif,.dashowif");
             if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
               if (notInDiv && $.contains(notInDiv, possibleElements[i])){
@@ -10413,17 +10481,21 @@ def index(action_argument=None, refer=None):
         })
         $('.dacurrency').each(function(){
           var theVal = $(this).val().toString();
-          if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
+          if (theVal.indexOf('.') >= 0){
+            theVal = theVal.replace(',', '');
             var num = parseFloat(theVal);
-            var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """);
-            $(this).val(cleanNum);
+            var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """).toString();
+            if (cleanNum != 'NaN') {
+              $(this).val(cleanNum);
+            }
           }
         });
         $('.dacurrency').on('blur', function(){
           var theVal = $(this).val().toString();
-          if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
+          if (theVal.indexOf('.') >= 0){
+            theVal = theVal.replace(',', '');
             var num = parseFloat(theVal);
-            var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """);
+            var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """).toString();
             if (cleanNum != 'NaN') {
               $(this).val(cleanNum);
             }
@@ -10952,6 +11024,7 @@ def index(action_argument=None, refer=None):
               $("#" + showIfVarEscaped).change(showHideDivFast);
               $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
               $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+              $("input.dafile[name='" + showIfVarEscaped + "']").on('filecleared', showHideDivFast);
               $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
               $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
               $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
@@ -11117,6 +11190,7 @@ def index(action_argument=None, refer=None):
             $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
+            $("input.dafile[name='" + showIfVarEscaped + "']").on('filecleared', showHideDivFast);
           }
         });
         function daTriggerAllShowHides(){
@@ -12889,6 +12963,17 @@ def observer():
         return allFields;
       }
       var daGetFields = getFields;
+      function daAppendIfExists(fieldName, theArray){
+        var elem = $("[name='" + fieldName + "']");
+        if (elem.length > 0){
+          for (var i = 0; i < theArray.length; ++i){
+            if (theArray[i] == elem[0]){
+              return;
+            }
+          }
+          theArray.push(elem[0]);
+        }
+      }
       function getField(fieldName, notInDiv){
         if (daVarLookupSelect[fieldName]){
           var n = daVarLookupSelect[fieldName].length;
@@ -13568,6 +13653,7 @@ def observer():
               $("#" + showIfVarEscaped).change(showHideDivFast);
               $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
               $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
+              $("input.dafile[name='" + showIfVarEscaped + "']").on('filecleared', showHideDivFast);
               $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
               $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
               $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
@@ -13727,6 +13813,7 @@ def observer():
             $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
+            $("input.dafile[name='" + showIfVarEscaped + "']").on('filecleared', showHideDivFast);
           }
         });
         function daTriggerAllShowHides(){
@@ -14417,7 +14504,7 @@ def monitor():
           var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
           var the_html;
           var wants_to_chat;
-          if (obj.chatstatus != 'off'){ //obj.chatstatus == 'waiting' || obj.chatstatus == 'standby' || obj.chatstatus == 'ringing' || obj.chatstatus == 'ready' || obj.chatstatus == 'on' || obj.chatstatus == 'observeonly'
+          if (obj.chatstatus != 'off'){
               wants_to_chat = true;
           }
           if (wants_to_chat){
@@ -15477,13 +15564,13 @@ def update_package():
     dw_status = pypi_status('docassemble.webapp')
     if daconfig.get('stable version', False):
         if not dw_status['error'] and 'info' in dw_status and 'releases' in dw_status['info'] and isinstance(dw_status['info']['releases'], dict):
-            stable_version = LooseVersion('1.1')
+            stable_version = packaging.version.parse('1.1')
             latest_version = None
             for version_number, version_info in dw_status['info']['releases'].items():
-                version_number_loose = LooseVersion(version_number)
+                version_number_loose = packaging.version.parse(version_number)
                 if version_number_loose >= stable_version:
                     continue
-                if latest_version is None or version_number_loose > LooseVersion(latest_version):
+                if latest_version is None or version_number_loose > packaging.version.parse(latest_version):
                     latest_version = version_number
             if latest_version != str(python_version):
                 version += ' ' + word("Available") + ': <span class="badge bg-success">' + latest_version + '</span>'
@@ -15692,7 +15779,10 @@ def create_playground_package():
         for sec in ('playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'):
             area[sec] = SavedFile(playground_user.id, fix=True, section=sec)
             the_directory = directory_for(area[sec], current_project)
-            file_list[sec] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+            if os.path.isdir(the_directory):
+                file_list[sec] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+            else:
+                file_list[sec] = []
         if os.path.isfile(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)):
             filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + current_package)
             info = {}
@@ -15772,7 +15862,7 @@ def create_playground_package():
                     else:
                         logmessage("Commit file not found")
                         pulled_already = False
-                directory = tempfile.mkdtemp()
+                directory = tempfile.mkdtemp(prefix='SavedFile')
                 (private_key_file, public_key_file) = get_ssh_keys(github_email)
                 os.chmod(private_key_file, stat.S_IRUSR | stat.S_IWUSR)
                 os.chmod(public_key_file, stat.S_IRUSR | stat.S_IWUSR)
@@ -16192,7 +16282,7 @@ class Fruit(DAObject):
     def eat(self):
         return "Yum, that " + self.name + " was good!"
 """
-        directory = tempfile.mkdtemp()
+        directory = tempfile.mkdtemp(prefix='SavedFile')
         packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
         questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
         templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
@@ -18673,7 +18763,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
     need_to_restart = False
     extracted = {}
     data_files = dict(templates=[], static=[], sources=[], interviews=[], modules=[], questions=[])
-    directory = tempfile.mkdtemp()
+    directory = tempfile.mkdtemp(prefix='SavedFile')
     output = ''
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
     expected_name = 'unknown'
@@ -18934,7 +19024,10 @@ def playground_packages():
         if sec == 'playground' and current_project != 'default' and not os.path.isdir(the_directory):
             current_project = set_current_project('default')
             the_directory = directory_for(area[sec], current_project)
-        file_list[sec] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        if os.path.isdir(the_directory):
+            file_list[sec] = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+        else:
+            file_list[sec] = []
     for sec, field in section_field.items():
         the_list = []
         for item in file_list[sec]:
@@ -20383,6 +20476,16 @@ def playground_select():
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
+@app.route("/pgcodecache", methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def get_pg_var_cache():
+    response = make_response(ruamel.yaml.safe_dump(pg_code_cache, default_flow_style=False, default_style = '"', allow_unicode=True, width=10000).encode('utf-8'), 200)
+    response.headers['Content-Disposition'] = 'attachment; filename=pgcodecache.yml'
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Content-Type'] = 'text/plain; charset=utf-8'
+    return response
+
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -21310,14 +21413,14 @@ def server_error(the_error):
       });
     </script>"""
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
-    if (request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')) and 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata and docassemble.base.functions.interview_path() is not None:
-        session['in error'] = True
+    if (request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')) and docassemble.base.functions.interview_path() is not None:
         try:
             release_lock(docassemble.base.functions.this_thread.current_info['session'], docassemble.base.functions.this_thread.current_info['yaml_filename'])
         except:
             pass
-        #session['action'] = docassemble.base.functions.myb64quote(json.dumps({'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}))
-        return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}, refer=['error'])
+        if 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata:
+            session['in error'] = True
+            return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess)}, refer=['error'])
     show_debug = not bool((not DEBUG) and isinstance(the_error, DAError))
     if int(int(error_code)/100) == 4:
         show_debug = False
@@ -24807,9 +24910,9 @@ def make_user_inactive(user_id=None, email=None):
     user.active = False
     db.session.commit()
 
-@app.route('/api/user', methods=['GET', 'POST'])
+@app.route('/api/user', methods=['GET', 'POST', 'PATCH'])
 @csrf.exempt
-@cross_origin(origins='*', methods=['GET', 'POST', 'HEAD'], automatic_options=True)
+@cross_origin(origins='*', methods=['GET', 'POST', 'PATCH', 'HEAD'], automatic_options=True)
 def api_user():
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -24823,14 +24926,14 @@ def api_user():
         return jsonify_with_status('User not found', 404)
     if request.method == 'GET':
         return jsonify(user_info)
-    if request.method == 'POST':
+    if request.method in ('POST', 'PATCH'):
         if current_user.limited_api and not current_user.can_do('edit_user_info'):
             return jsonify_with_status("You do not have sufficient privileges to edit a user's information", 403)
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
         info = {}
-        for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password'):
+        for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password', 'old_password'):
             if key in post_data:
                 info[key] = post_data[key]
         if 'password' in info and not current_user.has_role_or_permission('admin', permissions='edit_user_password'):
@@ -24997,9 +25100,9 @@ def api_user_info():
     if request.method == 'GET':
         return jsonify(user_info)
 
-@app.route('/api/user/<int:user_id>', methods=['GET', 'DELETE', 'POST'])
+@app.route('/api/user/<int:user_id>', methods=['GET', 'DELETE', 'POST', 'PATCH'])
 @csrf.exempt
-@cross_origin(origins='*', methods=['GET', 'DELETE', 'POST', 'HEAD'], automatic_options=True)
+@cross_origin(origins='*', methods=['GET', 'DELETE', 'POST', 'PATCH', 'HEAD'], automatic_options=True)
 def api_user_by_id(user_id):
     if not api_verify(request):
         return jsonify_with_status("Access denied.", 403)
@@ -25035,14 +25138,14 @@ def api_user_by_id(user_id):
                 return jsonify_with_status("You do not have sufficient privileges to inactivate user accounts.", 403)
             make_user_inactive(user_id=user_id)
         return ('', 204)
-    if request.method == 'POST':
+    if request.method in ('POST', 'PATCH'):
         if not (current_user.has_role_or_permission('admin', permissions=['edit_user_info']) or current_user.same_as(user_id)):
             return jsonify_with_status("You do not have sufficient privileges to edit user information.", 403)
         post_data = request.get_json(silent=True)
         if post_data is None:
             post_data = request.form.copy()
         info = {}
-        for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password'):
+        for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password', 'old_password'):
             if key in post_data:
                 info[key] = post_data[key]
         if 'password' in info and not current_user.has_role_or_permission('admin', permissions=['edit_user_password']):
@@ -25364,6 +25467,11 @@ def set_user_info(**kwargs):
     if 'password' in kwargs:
         if not editing_self and not current_user.has_role_or_permission('admin', permissions=['edit_user_password']):
             raise Exception("You do not have sufficient privileges to change a user's password.")
+        if 'old_password' in kwargs and kwargs['password'] != kwargs['old_password']:
+            user_manager = current_app.user_manager
+            if (not user_manager.get_password(user)) or (not user_manager.verify_password(kwargs['old_password'], user)):
+                raise Exception("The old_password is incorrect")
+            substitute_secret(pad_to_16(MD5Hash(data=kwargs['old_password']).hexdigest()), pad_to_16(MD5Hash(data=kwargs['password']).hexdigest()), user=user)
         user.user_auth.password = app.user_manager.hash_password(kwargs['password'])
     if 'active' in kwargs:
         user.active = kwargs['active']
@@ -26358,7 +26466,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
                         menu_items.append({'href': url_for('interview_start'), 'anchor': word('Available Interviews')})
                     for item in app.config['ADMIN_INTERVIEWS']:
                         if item.can_use() and docassemble.base.functions.this_thread.current_info.get('yaml_filename', '') != item.interview:
-                            menu_items.append({'href': url_for('index'), 'anchor': item.get_title(docassemble.base.functions.get_language())})
+                            menu_items.append({'href': url_for_interview(i=item.interview, new_session='1'), 'anchor': item.get_title(docassemble.base.functions.get_language())})
                     if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
                         menu_items.append({'href': url_for('interview_list'), 'anchor': word('My Interviews')})
                     if current_user.has_role('admin', 'developer'):
@@ -29251,7 +29359,9 @@ def make_necessary_dirs():
     paths = []
     if app.config['ALLOW_UPDATES'] or app.config['ENABLE_PLAYGROUND']:
         paths.append(FULL_PACKAGE_DIRECTORY)
-    paths.extend([UPLOAD_DIRECTORY, LOG_DIRECTORY])
+    if cloud is None:
+        paths.append(UPLOAD_DIRECTORY)
+    paths.append(LOG_DIRECTORY)
     for path in paths:
         if not os.path.isdir(path):
             try:
@@ -29386,7 +29496,7 @@ def define_examples():
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 
-if LooseVersion(min_system_version) > LooseVersion(daconfig['system version']):
+if packaging.version.parse(min_system_version) > packaging.version.parse(daconfig['system version']):
     version_warning = word("A new docassemble system version is available.  If you are using Docker, install a new Docker image.")
 else:
     version_warning = None

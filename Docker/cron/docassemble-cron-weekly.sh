@@ -1,7 +1,7 @@
 #! /bin/bash
 
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
-export DA_DEFAULT_LOCAL="local3.8"
+export DA_DEFAULT_LOCAL="local3.10"
 
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 source "${DA_ACTIVATE}"
@@ -11,26 +11,6 @@ source /dev/stdin < <(su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.
 
 set -- $LOCALE
 export LANG=$1
-
-if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
-    export S3ENABLE=true
-fi
-
-if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
-    export S3_ACCESS_KEY="$S3ACCESSKEY"
-    export S3_SECRET_KEY="$S3SECRETACCESSKEY"
-    export AWS_ACCESS_KEY_ID="$S3ACCESSKEY"
-    export AWS_SECRET_ACCESS_KEY="$S3SECRETACCESSKEY"
-    export AWS_DEFAULT_REGION="$S3REGION"
-fi
-
-if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
-    export S4CMD_OPTS="--endpoint-url=\"${S3ENDPOINTURL}\""
-fi
-
-if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
-    export AZUREENABLE=true
-fi
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     "${DA_ROOT}/webapp/run-cron.sh" cron_weekly

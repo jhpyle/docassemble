@@ -955,7 +955,7 @@ def set_parts(**kwargs):
         this_thread.internal['subtitle'] = kwargs['subtitle']
     for key, val in kwargs.items():
         key = re.sub(r'_', r' ', key)
-        if key in ('title', 'logo', 'exit link', 'exit label', 'pre', 'post', 'submit', 'continue button label', 'help label', 'under', 'right', 'tab title', 'short title', 'back button label', 'resume button label', 'date format', 'time format', 'datetime format', 'footer'):
+        if key in ('title', 'logo', 'exit link', 'exit label', 'exit url', 'pre', 'post', 'submit', 'continue button label', 'help label', 'under', 'right', 'tab title', 'short title', 'short logo', 'back button label', 'corner back button label', 'resume button label', 'date format', 'time format', 'datetime format', 'footer', 'title url', 'css class', 'table css class', 'title url opens in other window', 'navigation bar html'):
             this_thread.internal[key] = val
 
 def set_title(**kwargs):
@@ -2255,16 +2255,18 @@ def set_locale(*pargs, **kwargs):
     """Sets the current locale.  See also update_locale()."""
     if len(pargs) == 1:
         this_thread.locale = pargs[0]
-    if 'currency_symbol' in kwargs:
-        this_thread.misc['currency symbol'] = kwargs['currency_symbol']
+    if len(kwargs):
+        this_thread.misc['locale_overrides'] = kwargs
 
 def get_locale(*pargs):
-    """Returns the current locale setting, or the current currency symbol
-    if the argument is 'currency_symbol'.
+    """Given no argments, returns the current locale setting. Given one
+    argument, returns the locale convention indicated by the argument.
 
     """
-    if len(pargs) == 1 and pargs[0] == 'currency_symbol':
-        return this_thread.misc.get('currency symbol', None)
+    if len(pargs) == 1:
+        if 'locale_override' in this_thread.misc and pargs[0] in this_thread.misc['locale_override']:
+            return this_thread.misc['locale_override'][pargs[0]]
+        return locale.localeconv().get(pargs[0], None)
     return this_thread.locale
 
 def get_currency_symbol():
@@ -2272,9 +2274,8 @@ def get_currency_symbol():
     one, and otherwise returns the default currency symbol.
 
     """
-    symbol = this_thread.misc.get('currency symbol', None)
-    if symbol is not None:
-        return symbol
+    if 'locale_override' in this_thread.misc and 'currency_symbol' in this_thread.misc['locale_override']:
+        return this_thread.misc['locale_override']['currency_symbol']
     return currency_symbol()
 
 def update_locale():
@@ -2569,6 +2570,7 @@ def currency_default(the_value, **kwargs):
     """
     decimals = kwargs.get('decimals', True)
     symbol = kwargs.get('symbol', None)
+    symbol_precedes = kwargs.get('symbol_precedes', None)
     ensure_definition(the_value, decimals, symbol)
     obj_type = type(the_value).__name__
     if obj_type in ['FinancialList', 'PeriodicFinancialList']:
@@ -2584,22 +2586,50 @@ def currency_default(the_value, **kwargs):
         float(the_value)
     except:
         return ''
+    the_float_value = float(the_value)
     the_symbol = None
     if symbol is not None:
         the_symbol = symbol
-    elif this_thread.misc.get('currency symbol', None) not in (None, ''):
-        the_symbol = this_thread.misc['currency symbol']
+    elif 'locale_overrides' in this_thread.misc and 'currency_symbol' in this_thread.misc['locale_overrides']:
+        the_symbol = this_thread.misc['locale_overrides']['currency_symbol']
     elif language_functions['currency_symbol']['*'] is not currency_symbol_default:
         the_symbol = currency_symbol()
+    the_symbol_precedes = None
+    if symbol_precedes is not None:
+        the_symbol_precedes = symbol_precedes
+    elif 'locale_overrides' in this_thread.misc and the_float_value < 0 and 'n_cs_precedes' in this_thread.misc['locale_overrides']:
+        the_symbol_precedes = bool(this_thread.misc['locale_overrides']['n_cs_precedes'])
+    elif 'locale_overrides' in this_thread.misc and 'p_cs_precedes' in this_thread.misc['locale_overrides']:
+        the_symbol_precedes = bool(this_thread.misc['locale_overrides']['p_cs_precedes'])
+    if the_symbol is None and the_symbol_precedes is None and decimals:
+        return str(locale.currency(the_float_value, symbol=True, grouping=True))
     if the_symbol is None:
-        if decimals:
-            return str(locale.currency(float(the_value), symbol=True, grouping=True))
+        the_symbol = currency_symbol()
+    if the_symbol_precedes is None:
+        if the_float_value < 0:
+            the_symbol_precedes = bool(get_locale('n_cs_precedes'))
         else:
-            return currency_symbol() + locale.format_string("%d", int(float(the_value)), grouping=True)
+            the_symbol_precedes = bool(get_locale('p_cs_precedes'))
+    output = ''
+    if the_symbol_precedes:
+        output += the_symbol
+        if the_float_value < 0:
+            if get_locale('n_sep_by_space'):
+                output += ' '
+        elif get_locale('p_sep_by_space'):
+            output += ' '
     if decimals:
-        return the_symbol + locale.format_string('%.' + str(server.daconfig.get('currency decimal places', 2)) + 'f', float(the_value), grouping=True)
+        output += locale.format_string('%.' + str(server.daconfig.get('currency decimal places', locale.localeconv()['frac_digits'])) + 'f', the_float_value, grouping=True, monetary=True)
     else:
-        return the_symbol + locale.format_string("%d", int(float(the_value)), grouping=True)
+        output += locale.format_string("%d", int(the_float_value), grouping=True, monetary=True)
+    if not the_symbol_precedes:
+        if the_float_value < 0:
+            if get_locale('n_sep_by_space'):
+                output += ' '
+        elif get_locale('p_sep_by_space'):
+            output += ' '
+        output += the_symbol
+    return output
 
 def prefix_constructor(prefix):
     def func(word, **kwargs):
@@ -3761,6 +3791,7 @@ def process_action():
             this_thread.internal['event_stack'][unique_id].pop(0)
         raise ForcedReRun()
     if the_action == '_da_list_add' and 'action_list' in this_thread.current_info:
+        need_item = False
         the_list = this_thread.current_info['action_list']
         if hasattr(the_list, 'gathered') and the_list.gathered:
             the_list.was_gathered = True
@@ -3770,7 +3801,15 @@ def process_action():
                     the_list.append(None)
                 else:
                     if the_list.object_type is None:
-                        the_list.__getitem__(len(the_list.elements))
+                        need_item = True
+                        unique_id = this_thread.current_info['user']['session_uid']
+                        if 'event_stack' not in this_thread.internal:
+                            this_thread.internal['event_stack'] = {}
+                        if unique_id not in this_thread.internal['event_stack']:
+                            this_thread.internal['event_stack'][unique_id] = []
+                        item_action = dict(action=the_list.item_name(len(the_list.elements)), arguments={})
+                        this_thread.internal['event_stack'][unique_id].insert(0, item_action)
+                        this_thread.current_info.update(item_action)
                     else:
                         the_list.appendObject()
         else:
@@ -3796,8 +3835,11 @@ def process_action():
         if len(this_thread.internal['event_stack'][unique_id]) > 0 and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['list'] == the_list.instanceName:
             this_thread.internal['event_stack'][unique_id].pop(0)
         the_action = dict(action='_da_list_complete', arguments=dict(list=the_list.instanceName))
-        this_thread.internal['event_stack'][unique_id].insert(0, the_action)
-        this_thread.current_info.update(the_action)
+        if need_item:
+            this_thread.internal['event_stack'][unique_id].insert(1, the_action)
+        else:
+            this_thread.internal['event_stack'][unique_id].insert(0, the_action)
+            this_thread.current_info.update(the_action)
         raise ForcedReRun()
         #the_list._validate(the_list.object_type, the_list.complete_attribute)
     if the_action == '_da_dict_add' and 'action_dict' in this_thread.current_info:

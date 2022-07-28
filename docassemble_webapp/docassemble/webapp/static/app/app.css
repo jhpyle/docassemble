@@ -301,6 +301,10 @@ i.da-chat-inactive:hover {
     padding: 0;
 }
 
+.dabackicon a.nav-link {
+    padding: 0;
+}
+
 a.dabackbuttoncolor:hover,
 a.dabackbuttoncolor:focus {
     text-decoration: none;
@@ -1830,4 +1834,7 @@ input[type=number] {
 
 a.dadisabled {
   pointer-events: none;
+}
+
+.danavlinknopad {
 }

@@ -14,5 +14,4 @@ server {
         include uwsgi_params;
         uwsgi_pass unix:///var/run/uwsgi/docassemblelog.sock;
     }
-
 }

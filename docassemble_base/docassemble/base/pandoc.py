@@ -315,7 +315,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
     if filename is None:
         filename = 'file'
     filename = docassemble.base.functions.secure_filename(filename)
-    tempdir = tempfile.mkdtemp()
+    tempdir = tempfile.mkdtemp(prefix='SavedFile')
     from_file = os.path.join(tempdir, "file." + in_format)
     to_file = os.path.join(tempdir, "file.pdf")
     shutil.copyfile(in_file, from_file)
@@ -389,6 +389,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
         if use_libreoffice:
             start_time = time.time()
             if UNOCONV_AVAILABLE:
+                #logmessage("Trying unoconv with " + repr(subprocess_arguments))
                 try:
                     result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
                 except subprocess.TimeoutExpired:
@@ -447,7 +448,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
     return True
 
 def rtf_to_docx(in_file, out_file):
-    tempdir = tempfile.mkdtemp()
+    tempdir = tempfile.mkdtemp(prefix='SavedFile')
     from_file = os.path.join(tempdir, "file.rtf")
     to_file = os.path.join(tempdir, "file.docx")
     shutil.copyfile(in_file, from_file)
@@ -500,8 +501,8 @@ def rtf_to_docx(in_file, out_file):
 def convert_file(in_file, out_file, input_extension, output_extension):
     if not UNOCONV_AVAILABLE:
         initialize_libreoffice()
-    tempdir1 = tempfile.mkdtemp()
-    tempdir2 = tempfile.mkdtemp()
+    tempdir1 = tempfile.mkdtemp(prefix='SavedFile')
+    tempdir2 = tempfile.mkdtemp(prefix='SavedFile')
     from_file = os.path.join(tempdir1, "file." + input_extension)
     to_file = os.path.join(tempdir2, "file." + output_extension)
     shutil.copyfile(in_file, from_file)
@@ -557,7 +558,7 @@ def word_to_markdown(in_file, in_format):
         initialize_libreoffice()
     temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
     if in_format not in ['docx', 'odt']:
-        tempdir = tempfile.mkdtemp()
+        tempdir = tempfile.mkdtemp(prefix='SavedFile')
         from_file = os.path.join(tempdir, "file." + in_format)
         to_file = os.path.join(tempdir, "file.docx")
         shutil.copyfile(in_file, from_file)

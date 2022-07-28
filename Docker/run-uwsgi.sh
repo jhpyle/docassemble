@@ -3,7 +3,7 @@
 export DEBIAN_FRONTEND=noninteractive
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
-export DA_DEFAULT_LOCAL="local3.8"
+export DA_DEFAULT_LOCAL="local3.10"
 
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 source "${DA_ACTIVATE}"
@@ -25,5 +25,12 @@ function stopfunc {
 
 trap stopfunc SIGINT SIGTERM
 
-uwsgi --ini "${DA_ROOT}/config/docassemble.ini" &
+if [ "${DAWEBSERVER:-nginx}" = "none" ]; then
+    unset DAWEBSERVER
+    uwsgi --ini "${DA_ROOT}/config/docassemble-expose-uwsgi.ini" &
+else
+    unset DAWEBSERVER
+    uwsgi --ini "${DA_ROOT}/config/docassemble.ini" &
+fi
+
 wait %1

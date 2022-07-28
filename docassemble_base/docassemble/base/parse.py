@@ -36,7 +36,10 @@ from jinja2.ext import Extension
 from docxtpl import DocxTemplate
 import pandas
 import dateutil.parser
-from backports import zoneinfo
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 from bs4 import BeautifulSoup
 from docassemble_textstat.textstat import textstat
 import qrcode
@@ -3748,7 +3751,7 @@ class Question:
                             js_info['sign'] = False
                         js_info['mode'] = 0
                         js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
-                        js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
+                        js_info['vars'] = list(set(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', field[key]) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', field[key])))
                         if 'extras' not in field_info:
                             field_info['extras'] = {}
                         field_info['extras']['show_if_js'] = js_info
@@ -3762,7 +3765,7 @@ class Question:
                             js_info['sign'] = False
                         js_info['mode'] = 1
                         js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
-                        js_info['vars'] = list(set(re.findall(r'val\(\'([^\)]+)\'\)', field[key]) + re.findall(r'val\("([^\)]+)"\)', field[key])))
+                        js_info['vars'] = list(set(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', field[key]) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', field[key])))
                         if 'extras' not in field_info:
                             field_info['extras'] = {}
                         field_info['extras']['show_if_js'] = js_info
@@ -8158,7 +8161,7 @@ class Interview:
         for mv in totry:
             #realMissingVariable = mv['real']
             missingVariable = mv['vari']
-            #logmessage("Trying missingVariable " + missingVariable + " and realMissingVariable " + realMissingVariable)
+            #logmessage("Trying missingVariable " + missingVariable)
             if mv['is_generic']:
                 #logmessage("Testing out generic " + mv['generic'])
                 try:

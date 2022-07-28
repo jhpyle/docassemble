@@ -9,20 +9,26 @@ metadata:
   temporary session: True
   hidden: True
 ---
+mandatory: True
+code: |
+  current_page = 0
+  next_id_of_page = [None]
+---
 reconsider: True
 code: |
   current_info = user_info()
-  list_of_interviews = list()
-  next_id = None
-  while True:
-    (items, next_id) = interview_list(next_id=next_id)
-    for info in items:
-      if not info['metadata'].get('hidden', False):
-        list_of_interviews.append(info)
-    if not next_id:
-        break
+  list_of_interviews = []
+  (items, next_id) = interview_list(next_id=next_id_of_page[current_page])
+  if len(next_id_of_page) == current_page + 1 and next_id is not None:
+    next_id_of_page.append(next_id)
+  del next_id
+  for info in items:
+    if not info['metadata'].get('hidden', False):
+      list_of_interviews.append(info)
+    del info
   if len(list_of_interviews) > 0:
     list_of_interviews += [dict()]
+  set_save_status('overwrite')
 ---
 table: session_table
 rows: |
@@ -36,20 +42,29 @@ columns:
       action_button_html(url_action('delete', filename=row_item['filename'], session=row_item['session']), color='warning', label='Delete') if 'title' in row_item else action_button_html(url_action('delete_all'), color='danger', label='Delete All')
 ---
 table css class: table table-striped
-prevent going back: True
 mandatory: True
 question: |
   Resume an interview
 subquestion: |
   % if len(list_of_interviews) > 0:
-  Click the interview title
-  to resume an interview
+  Click interview title to resume an interview
   you already started.
 
   ${ session_table }
   % else:
   You do not have any sessions.
   % endif
+
+  % if current_page > 0:
+  ${ action_button_html(url_action('change_page', direction=-1), label="Prev", icon='chevron-left', size='md', color='secondary') }
+  % endif
+  % if current_page + 1 < len(next_id_of_page):
+  ${ action_button_html(url_action('change_page', direction=1), label="Next", icon='chevron-right', size='md', color='secondary') }
+  % endif
+---
+event: change_page
+code: |
+  current_page += int(action_argument('direction'))
 ---
 event: delete
 code: |

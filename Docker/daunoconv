@@ -1,6 +1,11 @@
 #! /bin/bash
 
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
-unset VIRTUAL_ENV
+export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
+export DA_DEFAULT_LOCAL="local3.10"
 
-/usr/bin/unoconv $@
+export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
+export DA_UNOCONV="/usr/bin/unoconv"
+
+source "${DA_ACTIVATE}"
+
+${DA_UNOCONV} $@

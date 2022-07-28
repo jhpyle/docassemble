@@ -1,8 +1,4 @@
-try:
-    from aloe import *
-except ImportError:
-    from lettuce import *
-
+from behave import *
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
@@ -11,7 +7,6 @@ from selenium.webdriver import ChromeOptions, Chrome
 import time
 import os
 from webdriver_manager.chrome import ChromeDriverManager
-
 default_path = "http://localhost"
 #default_path = "https://demo.docassemble.org"
 default_wait_seconds = 0
@@ -70,33 +65,31 @@ class MyChrome(Chrome):
             return False
         return text in body.text
 
-@before.all
-def setup_browser():
-    world.screenshot_number = 0
-    world.screenshot_folder = None
-    world.headless = False
+def before_all(context):
+    context.screenshot_number = 0
+    context.screenshot_folder = None
+    context.headless = False
     if use_firefox:
-        world.browser = MyFirefox()
-        world.browser.set_window_size(450, 1200)
-        world.browser.set_window_position(0, 0)
-        #world.browser.maximize_window()
+        context.browser = MyFirefox()
+        context.browser.set_window_size(450, 1200)
+        context.browser.set_window_position(0, 0)
+        #context.browser.maximize_window()
     elif use_phantomjs:
-        world.browser = MyPhantomJS()
+        context.browser = MyPhantomJS()
     elif use_headless_chrome:
-        world.headless = True
+        context.headless = True
         options = ChromeOptions()
         options.add_argument("--window-size=1005,9999")
         options.add_argument("--headless");
-        world.browser = MyChrome(ChromeDriverManager().install(), chrome_options=options)
+        context.browser = MyChrome(ChromeDriverManager().install(), chrome_options=options)
     else:
         options = ChromeOptions()
         options.add_argument("--start-maximized");
-        world.browser = MyChrome(ChromeDriverManager().install(), chrome_options=options)
-    world.da_path = default_path
-    world.wait_seconds = default_wait_seconds
+        context.browser = MyChrome(ChromeDriverManager().install(), chrome_options=options)
+    context.da_path = default_path
+    context.wait_seconds = default_wait_seconds
 
-@after.all
-def tear_down():
+def after_all(context):
     time.sleep(2)
     #print("Total %d of %d scenarios passed!" % ( total.scenarios_ran, total.scenarios_passed ))
-    world.browser.quit()
+    context.browser.quit()

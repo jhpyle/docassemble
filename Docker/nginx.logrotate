@@ -14,7 +14,7 @@
         endscript
         postrotate
 	        if /etc/init.d/nginx status > /dev/null ; then \
-                    supervisorctl -s http://localhost:9001 restart nginx > /dev/null ; \
+                        /usr/share/docassemble/webapp/restart-nginx.sh ; \
                 fi
         endscript
 }

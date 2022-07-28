@@ -9,7 +9,7 @@ import re
 import shutil
 import time
 import fcntl
-from distutils.version import LooseVersion
+from packaging import version
 import docassemble.base.config
 from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
@@ -26,8 +26,9 @@ if __name__ == "__main__":
     else:
         mode = 'initialize'
 
-supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
-USING_SUPERVISOR = bool(supervisor_url)
+SUPERVISOR_SERVER_URL = os.environ.get('SUPERVISOR_SERVER_URL', None)
+USING_SUPERVISOR = bool(SUPERVISOR_SERVER_URL)
+SINGLE_SERVER = USING_SUPERVISOR and bool(':all:' in ':' + os.environ.get('CONTAINERROLE', 'all') + ':')
 
 def fix_fnctl():
     try:
@@ -124,11 +125,11 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
             logmessage("check_for_updates: installing psycopg2-binary")
             install_package(DummyPackage('psycopg2-binary'), start_time=start_time)
             changed = True
-        if 'kombu' not in here_already or LooseVersion(here_already['kombu']) <= LooseVersion('4.1.0'):
+        if 'kombu' not in here_already or version.parse(here_already['kombu']) <= version.parse('4.1.0'):
             logmessage("check_for_updates: installing new kombu version")
             install_package(DummyPackage('kombu'), start_time=start_time)
             changed = True
-        if 'celery' not in here_already or LooseVersion(here_already['celery']) <= LooseVersion('4.1.0'):
+        if 'celery' not in here_already or version.parse(here_already['celery']) <= version.parse('4.1.0'):
             logmessage("check_for_updates: installing new celery version")
             install_package(DummyPackage('celery'), start_time=start_time)
             changed = True
@@ -259,7 +260,7 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
     for package in packages.values():
         #logmessage("check_for_updates: processing package id " + str(package.id))
         #logmessage("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion))
-        if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
+        if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and version.parse(package.packageversion) > version.parse(installs[package.id].packageversion)):
             logmessage("check_for_updates: a new version of " + package.name + " is needed because the necessary package version, " + str(package.packageversion) + ", is ahead of the installed version, " + str(installs[package.id].packageversion) + " after " + str(time.time() - start_time) + " seconds")
             new_version_needed = True
         else:
@@ -504,7 +505,7 @@ def install_package(package, start_time=None):
     PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local' + str(sys.version_info.major) + '.' + str(sys.version_info.minor))
     logfilecontents = ''
     pip_log = tempfile.NamedTemporaryFile()
-    temp_dir = tempfile.mkdtemp()
+    temp_dir = tempfile.mkdtemp(prefix='SavedFile')
     #use_pip_cache = r.get('da:updatepackage:use_pip_cache')
     #if use_pip_cache is None:
     #    disable_pip_cache = False
@@ -683,16 +684,19 @@ def main():
                 add_dependencies(1, start_time=start_time)
                 update_versions(start_time=start_time)
             check_for_updates(start_time=start_time, invalidate_cache=False)
-            remove_inactive_hosts(start_time=start_time)
+            if not SINGLE_SERVER:
+                remove_inactive_hosts(start_time=start_time)
         else:
             logmessage("update: updating with mode check_for_updates after " + str(time.time() - start_time) + " seconds")
             check_for_updates(start_time=start_time)
             if USING_SUPERVISOR:
-                SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
+                SUPERVISORCTL = [daconfig.get('supervisorctl', 'supervisorctl')]
+                if daconfig['supervisor'].get('username', None):
+                    SUPERVISORCTL.extend(['--username', daconfig['supervisor']['username'], '--password', daconfig['supervisor']['password']])
                 container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
                 if re.search(r':(web|celery|all):', container_role):
                     logmessage("update: sending reset signal after " + str(time.time() - start_time) + " seconds")
-                    args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'reset']
+                    args = SUPERVISORCTL + ['-s', 'http://localhost:9001', 'start', 'reset']
                     subprocess.run(args, check=False)
                 else:
                     logmessage("update: not sending reset signal because not web or celery after " + str(time.time() - start_time) + " seconds")

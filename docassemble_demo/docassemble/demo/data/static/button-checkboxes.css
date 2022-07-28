@@ -1,0 +1,24 @@
+.da-field-checkboxes .dalabelauty.btn-light {
+  background-color: #ddd;
+  border: 0;
+}
+.da-field-checkboxes .dalabelauty.btn-primary {
+  background-color: red;
+  border: 0;
+}
+.da-field-checkboxes input.labelauty + label {
+  display: inline-block;
+  margin-right: 0.3em;
+}
+.da-field-checkboxes .dafullwidth + label {
+  width: unset;
+}
+.da-field-checkboxes .labelauty-unchecked-image {
+  display: none !important;
+}
+.da-field-checkboxes .labelauty-checked-image {
+  display: none !important;
+}
+.da-field-checkboxes input.labelauty + label > span.labelauty-unchecked-image + span.labelauty-unchecked, .da-field-checkboxes input.labelauty + label > span.labelauty-checked-image + span.labelauty-checked {
+  margin-left: 0;
+}

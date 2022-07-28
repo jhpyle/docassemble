@@ -1,44 +1,47 @@
 speaklist|upload|integer||
 speaklist|encrypted|boolean||true
-package|version|integer||1
+package|active|boolean||true
+package_auth|id|integer||nextval('package_auth_id_seq'::regclass)
+package_auth|package_id|integer||
+package_auth|user_id|integer||
+machinelearning|modtime|timestamp without time zone||
+shortener|id|integer||nextval('shortener_id_seq'::regclass)
+install|id|integer||nextval('install_id_seq'::regclass)
+machinelearning|active|boolean||false
+install|version|integer||
+shortener|user_id|integer||
+shortener|temp_user_id|integer||
+globalobjectstorage|id|integer||nextval('globalobjectstorage_id_seq'::regclass)
+shortener|index|integer||
+shortener|modtime|timestamp without time zone||now()
+role|id|integer||nextval('role_id_seq'::regclass)
+install|package_id|integer||
+jsonstorage|id|integer||nextval('jsonstorage_id_seq'::regclass)
+supervisors|id|integer||nextval('supervisors_id_seq'::regclass)
+email|datetime_received|timestamp without time zone||
+machinelearning|id|integer||nextval('machinelearning_id_seq'::regclass)
+supervisors|start_time|timestamp without time zone||now()
+jsonstorage|data|jsonb||
+uploads|indexno|integer||nextval('uploads_indexno_seq'::regclass)
+globalobjectstorage|encrypted|boolean||true
+jsonstorage|modtime|timestamp without time zone||now()
+jsonstorage|persistent|boolean||false
+uploads|private|boolean||true
+uploads|persistent|boolean||false
+uploadsroleauth|id|integer||nextval('uploadsroleauth_id_seq'::regclass)
+uploadsroleauth|uploads_indexno|integer||
+uploadsroleauth|role_id|integer||
 uploadsuserauth|id|integer||nextval('uploadsuserauth_id_seq'::regclass)
 uploadsuserauth|uploads_indexno|integer||
 uploadsuserauth|user_id|integer||
 uploadsuserauth|temp_user_id|integer||
-uploads|indexno|integer||nextval('uploads_indexno_seq'::regclass)
-jsonstorage|data|jsonb||
-email|datetime_message|timestamp without time zone||
-jsonstorage|modtime|timestamp without time zone||now()
-uploads|private|boolean||true
-uploads|persistent|boolean||false
-role|id|integer||nextval('role_id_seq'::regclass)
-jsonstorage|persistent|boolean||false
-machinelearning|id|integer||nextval('machinelearning_id_seq'::regclass)
-supervisors|id|integer||nextval('supervisors_id_seq'::regclass)
-email|datetime_received|timestamp without time zone||
-package|dependency|boolean||false
-supervisors|start_time|timestamp without time zone||now()
-package|core|boolean||false
-shortener|id|integer||nextval('shortener_id_seq'::regclass)
-package|active|boolean||true
-package|id|integer||nextval('package_id_seq'::regclass)
-machinelearning|create_time|timestamp without time zone||
-shortener|user_id|integer||
-shortener|temp_user_id|integer||
-machinelearning|modtime|timestamp without time zone||
-shortener|index|integer||
-shortener|modtime|timestamp without time zone||now()
 tempuser|id|integer||nextval('tempuser_id_seq'::regclass)
-package_auth|id|integer||nextval('package_auth_id_seq'::regclass)
-package_auth|package_id|integer||
-package_auth|user_id|integer||
-machinelearning|active|boolean||false
 user_auth|id|integer||nextval('user_auth_id_seq'::regclass)
 user_auth|user_id|integer||
 objectstorage|id|integer||nextval('objectstorage_id_seq'::regclass)
-globalobjectstorage|id|integer||nextval('globalobjectstorage_id_seq'::regclass)
+globalobjectstorage|user_id|integer||
 user_invite|id|integer||nextval('user_invite_id_seq'::regclass)
-attachments|question|integer||
+globalobjectstorage|temp_user_id|integer||
 user_invite|role_id|integer||
 user_invite|invited_by_user_id|integer||
 chatlog|id|integer||nextval('chatlog_id_seq'::regclass)
@@ -46,45 +49,42 @@ user_roles|id|integer||nextval('user_roles_id_seq'::regclass)
 user_roles|user_id|integer||
 user_roles|role_id|integer||
 userdict|indexno|integer||nextval('userdict_indexno_seq'::regclass)
+package|id|integer||nextval('package_id_seq'::regclass)
+attachments|question|integer||
 attachments|id|integer||nextval('attachments_id_seq'::regclass)
-globalobjectstorage|encrypted|boolean||true
-globalobjectstorage|user_id|integer||
 userdict|user_id|integer||
 userdict|encrypted|boolean||true
 userdict|modtime|timestamp without time zone||
-user|id|integer||nextval('user_id_seq'::regclass)
+userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
 chatlog|user_id|integer||
 chatlog|temp_user_id|integer||
+userdictkeys|user_id|integer||
+userdictkeys|temp_user_id|integer||
+user|id|integer||nextval('user_id_seq'::regclass)
 chatlog|owner_id|integer||
-user|confirmed_at|timestamp without time zone||
-user|active|boolean||false
 chatlog|temp_owner_id|integer||
 chatlog|open_to_peer|boolean||false
+user|confirmed_at|timestamp without time zone||
+user|active|boolean||false
 chatlog|encrypted|boolean||true
 chatlog|modtime|timestamp without time zone||
 emailattachment|id|integer||nextval('emailattachment_id_seq'::regclass)
 emailattachment|email_id|integer||
 emailattachment|index|integer||
-globalobjectstorage|temp_user_id|integer||
-install|id|integer||nextval('install_id_seq'::regclass)
+attachments|encrypted|boolean||true
+email|id|integer||nextval('email_id_seq'::regclass)
 emailattachment|upload|integer||
 speaklist|id|integer||nextval('speaklist_id_seq'::regclass)
-attachments|encrypted|boolean||true
-install|version|integer||
+package|upload|integer||
+package|version|integer||1
+email|datetime_message|timestamp without time zone||
+speaklist|question|integer||
 user|modified_at|timestamp without time zone||
 user|last_login|timestamp without time zone||
-uploadsroleauth|id|integer||nextval('uploadsroleauth_id_seq'::regclass)
-uploadsroleauth|uploads_indexno|integer||
-uploadsroleauth|role_id|integer||
-userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
-email|id|integer||nextval('email_id_seq'::regclass)
-speaklist|question|integer||
-userdictkeys|user_id|integer||
-userdictkeys|temp_user_id|integer||
-install|package_id|integer||
-jsonstorage|id|integer||nextval('jsonstorage_id_seq'::regclass)
-package|upload|integer||
-user|last_name|character varying|255|''::character varying
+machinelearning|create_time|timestamp without time zone||
+package|dependency|boolean||false
+package|core|boolean||false
+speaklist|language|character varying|10|
 attachments|key|character varying|250|
 attachments|dictionary|text||
 attachments|filename|text||
@@ -96,6 +96,13 @@ email|from_addr|text||
 email|reply_to_addr|text||
 email|return_path_addr|text||
 email|subject|text||
+machinelearning|group_id|character varying|1024|
+machinelearning|key|character varying|1024|
+machinelearning|independent|text||
+machinelearning|dependent|text||
+machinelearning|info|text||
+globalobjectstorage|key|character varying|1024|
+globalobjectstorage|value|text||
 package|name|character varying|255|
 package|type|text||
 package|giturl|character varying|255|
@@ -103,18 +110,11 @@ package|gitsubdir|text||
 package|packageversion|text||
 package|limitation|text||
 package|gitbranch|character varying|255|
-globalobjectstorage|key|character varying|1024|
-globalobjectstorage|value|text||
 install|hostname|text||
 install|packageversion|text||
 jsonstorage|filename|character varying|255|
 jsonstorage|key|character varying|250|
 jsonstorage|tags|text||
-machinelearning|group_id|character varying|1024|
-machinelearning|key|character varying|1024|
-machinelearning|independent|text||
-machinelearning|dependent|text||
-machinelearning|info|text||
 objectstorage|key|character varying|1024|
 objectstorage|value|text||
 chatlog|filename|character varying|255|
@@ -126,22 +126,22 @@ speaklist|filename|character varying|255|
 speaklist|key|character varying|250|
 speaklist|phrase|text||
 speaklist|type|character varying|20|
-speaklist|language|character varying|10|
+alembic_version|version_num|character varying|32|
 speaklist|dialect|character varying|10|
 speaklist|digest|text||
-uploads|key|character varying|250|
-uploads|filename|character varying|255|
-uploads|yamlfile|character varying|255|
+package_auth|authtype|character varying|255|'owner'::character varying
+shortener|short|character varying|250|
+shortener|filename|character varying|255|
+shortener|uid|character varying|250|
+shortener|key|character varying|255|
 role|name|character varying|50|
 role|description|character varying|255|
 supervisors|hostname|text||
 supervisors|url|text||
 supervisors|role|text||
-shortener|short|character varying|250|
-shortener|filename|character varying|255|
-shortener|uid|character varying|250|
-shortener|key|character varying|255|
-package_auth|authtype|character varying|255|'owner'::character varying
+uploads|key|character varying|250|
+uploads|filename|character varying|255|
+uploads|yamlfile|character varying|255|
 user_auth|password|character varying|255|''::character varying
 user_auth|reset_password_token|character varying|100|''::character varying
 user_invite|email|character varying|255|
@@ -149,11 +149,13 @@ user_invite|token|character varying|100|''::character varying
 userdict|filename|character varying|255|
 userdict|key|character varying|250|
 userdict|dictionary|text||
+userdictkeys|filename|character varying|255|
+userdictkeys|key|character varying|250|
 user|social_id|character varying|255|
 user|nickname|character varying|255|
 user|email|character varying|255|
 user|first_name|character varying|255|''::character varying
-alembic_version|version_num|character varying|32|
+user|last_name|character varying|255|''::character varying
 user|country|character varying|3|
 user|subdivisionfirst|character varying|255|
 user|subdivisionsecond|character varying|255|
@@ -165,5 +167,3 @@ user|password|character varying|255|''::character varying
 user|otp_secret|character varying|255|
 user|pypi_username|character varying|255|
 user|pypi_password|character varying|255|
-userdictkeys|filename|character varying|255|
-userdictkeys|key|character varying|250|

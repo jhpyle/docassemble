@@ -245,12 +245,12 @@ def main():
             if not insp.has_table(dbtableprefix + 'alembic_version'):
                 logmessage("create_tables.main: creating alembic stamp")
                 command.stamp(alembic_cfg, "head")
-                logmessage("create_tables.main: done creating alembic stamp after " + str(time.time() - start_time) + " seconds")
+                logmessage("create_tables.main: done creating alembic stamp after " + str(time.time() - start_time) + " seconds.")
             if insp.has_table(dbtableprefix + 'user'):
                 logmessage("create_tables.main: creating alembic stamp")
                 logmessage("create_tables.main: running alembic upgrade")
                 command.upgrade(alembic_cfg, "head")
-                logmessage("create_tables.main: done running alembic upgrade after " + str(time.time() - start_time) + " seconds")
+                logmessage("create_tables.main: done running alembic upgrade after " + str(time.time() - start_time) + " seconds.")
         #db.drop_all()
         try:
             logmessage("create_tables.main: trying to create tables")

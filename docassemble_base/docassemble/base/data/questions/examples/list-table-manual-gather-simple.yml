@@ -14,6 +14,9 @@ code: |
   person[1]
   person.gathered = True
 ---
+code: |
+  person.there_is_another = False
+---
 question: |
   Who is the ${ ordinal(i) } person?
 fields:
@@ -24,9 +27,9 @@ question: |
   All done
 subquestion: |
   The people are ${ person }.
-  
+
   ${ person.table }
-  
+
   ${ person.add_action() }
 ---
 table: person.table

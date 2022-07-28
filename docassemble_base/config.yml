@@ -64,6 +64,11 @@ s3:
   access key id: FWIEJFIJIDGISEJFWOEF
   secret access key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
+  server side encryption:
+    algorithm: null
+    customer algorithm: null
+    customer key: null
+    KMS key ID: null
 azure:
   enable: False
   account name: example-com

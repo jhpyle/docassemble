@@ -13,6 +13,31 @@ Feature: Example interviews
   #   And I wait 2 seconds
   #   Then I should see the phrase "Here is the file you uploaded"
 
+  Scenario: Test the interview "Preview"
+    Given I start the interview "docassemble.demo:data/questions/examples/preview.yml"
+    Then I should see the phrase "The food section"
+    And I wait 2 seconds
+    And I set "Favorite fruit" to "apple"
+    And I unfocus
+    And I wait 2 seconds
+    Then I should see the phrase "I am a really big fan of apple."
+    And I set "Favorite vegetable" to "turnip"
+    And I unfocus
+    And I wait 2 seconds
+    And I should see the phrase "With dinner I like to have a side of turnip."
+    And I click the option "No" under "Like mushrooms"
+    And I wait 2 seconds
+    And I set "Favorite mushroom" to "button mushrooms"
+    And I unfocus
+    And I wait 2 seconds
+    And I select "Pie" as the "Favorite dessert"
+    And I wait 2 seconds
+    Then I should see the phrase "My favorite part of the meal is dessert"
+    And I should see the phrase "when I can have a nice big slice of pie"
+    And I click the button "Continue"
+    Then I should see the phrase "Here is your document."
+    And I should see the phrase "The following document has been created for you."
+
   Scenario: Test the interview "Action with arguments"
     Given I start the interview "docassemble.base:data/questions/examples/actions-parameters.yml"
     And I click the link "Add blue fish"
@@ -8831,7 +8856,7 @@ Feature: Example interviews
     Then I should see the phrase "Upload a PDF file or image."
     And I upload the file "/home/jpyle/da/tests/testfile2.png"
     And I click the button "Continue"
-    And I wait 20 seconds
+    And I wait 25 seconds
     Then I should see the phrase "Your OCR PDF"
 
   Scenario: Test the interview "OCR PDF"
@@ -8839,7 +8864,7 @@ Feature: Example interviews
     Then I should see the phrase "Upload a PDF file or image."
     And I upload the file "/home/jpyle/da/tests/testfile2.png"
     And I click the button "Continue"
-    And I wait 10 seconds
+    And I wait 20 seconds
     Then I should see the phrase "Your OCR PDF"
 
   # Scenario: Test the interview "Multiple signatures"
@@ -8890,7 +8915,8 @@ Feature: Example interviews
     Given I start the interview "docassemble.demo:data/questions/examples/phone-number-2.yml"
     Then I should see the phrase "What is your phone number?"
     And I set "Enter your phone number" to "215-555-2342"
-    Then I should see the phrase "I will text you at +12155552342."
+    And I click the button "Continue"
+    Then I should see the phrase "I will text you at +12155552342"
 
   Scenario: Test the interview "Phone number"
     Given I start the interview "docassemble.demo:data/questions/examples/phone-number.yml"
@@ -8909,25 +8935,6 @@ Feature: Example interviews
     Then I should see the phrase "How tasty is it?"
     And I click the button "Continue"
     Then I should see the phrase "Exception: Reference to undefined variable in context where dependency satisfaction not allowed"
-
-  Scenario: Test the interview "Preview"
-    Given I start the interview "docassemble.demo:data/questions/examples/preview.yml"
-    Then I should see the phrase "The food section"
-    And I set "Favorite fruit" to "apple"
-    And I set "Favorite vegetable" to "turnip"
-    And I unfocus
-    And I wait 1 second
-    Then I should see the phrase "I am a really big fan of apple. With dinner I like to have a side of turnip."
-    And I click the option "No" under "Like mushrooms"
-    And I set "Favorite mushroom" to "button mushrooms"
-    And I select "Pie" as the "Favorite dessert"
-    And I unfocus
-    And I wait 2 second
-    Then I should see the phrase "My favorite part of the meal is dessert"
-    And I should see the phrase "when I can have a nice big slice"
-    And I click the button "Continue"
-    Then I should see the phrase "Here is your document."
-    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "DOM"
     Given I start the interview "docassemble.demo:data/questions/examples/pytojs-dom.yml"
@@ -8970,18 +8977,18 @@ Feature: Example interviews
     Then I should see the phrase "Think of a fruit."
     And I click the button "Continue"
     Then I should see the phrase "Is it round?"
-    And I click the button "No"
+    And I click the button "Yes"
     Then I should see the phrase "What color is it when ripe?"
-    And I click the option "Yellow"
+    And I click the option "Red"
     And I click the button "Continue"
     Then I should see the phrase "Where are its seeds?"
-    And I click the option "Throughout"
+    And I click the option "Inside"
     And I click the button "Continue"
     Then I should see the phrase "How many inches wide is a typical specimen?"
     And I click the button "Continue"
     Then I should see the phrase "How sweet is it, on a scale from 1 to 5?"
     And I click the button "Continue"
-    Then I should see the phrase "I think it is a banana. Am I right?"
+    Then I should see the phrase "I think it is an apple. Am I right?"
     And I click the button "Yes"
     Then I should see the phrase "Thank you!"
 

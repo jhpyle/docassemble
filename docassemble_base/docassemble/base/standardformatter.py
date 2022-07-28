@@ -4,9 +4,10 @@ import json
 import random
 import codecs
 import datetime
+import locale
 from io import StringIO
 from html.parser import HTMLParser
-from docassemble.base.functions import word, get_currency_symbol, comma_and_list, server, custom_types
+from docassemble.base.functions import word, get_currency_symbol, comma_and_list, server, custom_types, get_locale
 from docassemble.base.util import format_date, format_datetime, format_time
 from docassemble.base.generate_key import random_string
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape, process_target
@@ -2127,6 +2128,9 @@ def add_validation(extra_scripts, validation_rules, field_error):
   }
 </script>""")
 
+def locale_format_string(the_value):
+    return re.sub(r'[^0-9]$', '', locale.format_string('%.10f', float(the_value), grouping=False).rstrip('0'))
+
 def input_for(status, field, wide=False, embedded=False, floating_label=None):
     output = str()
     if field.number in status.defaults:
@@ -2742,7 +2746,12 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 output += '</span>'
         elif hasattr(field, 'inputtype') and field.inputtype == 'ajax':
             if defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)):
-                if field.datatype in ('currency', 'number') and hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(float(status.extras['step'][field.number])) == float(status.extras['step'][field.number]):
+                if field.datatype in ('currency', 'number'):
+                    if hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(float(status.extras['step'][field.number])) == float(status.extras['step'][field.number]):
+                        defaultvalue = int(float(defaultvalue))
+                    else:
+                        defaultvalue = locale_format_string(defaultvalue)
+                elif field.datatype == 'integer':
                     defaultvalue = int(float(defaultvalue))
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
                 default_val = defaultvalue
@@ -2788,7 +2797,12 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     the_date = format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm')
                     if the_date != word("Bad date"):
                         defaultvalue = the_date
-                elif field.datatype in ('currency', 'number') and hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(float(status.extras['step'][field.number])) == float(status.extras['step'][field.number]):
+                elif field.datatype in ('currency', 'number'):
+                    if hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step'] and int(float(status.extras['step'][field.number])) == float(status.extras['step'][field.number]):
+                        defaultvalue = int(float(defaultvalue))
+                    else:
+                        defaultvalue = locale_format_string(defaultvalue)
+                elif field.datatype == 'integer':
                     defaultvalue = int(float(defaultvalue))
                 defaultstring = ' value=' + fix_double_quote(str(defaultvalue))
             elif isinstance(defaultvalue, datetime.time):
@@ -2807,7 +2821,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 input_type = 'datetime-local'
             step_string = ''
             if field.datatype in ['integer', 'float', 'currency', 'number']:
-                input_type = 'number'
+                input_type = 'text" inputmode="numeric" pattern="[\-\d.,]*'
                 if hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step']:
                     step_string = ' step="' + str(status.extras['step'][field.number]) + '"'
                 else:
@@ -2815,14 +2829,19 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                         step_string = ' step="1"'
                     if field.datatype in ('float', 'number'):
                         step_string = ''
-                    if field.datatype == 'currency':
-                        step_string = ' step="' + str(1.0/pow(10, daconfig.get('currency decimal places', 2))) + '"'
+                    #if field.datatype == 'currency':
+                    #    step_string = ' step="' + str(1.0/pow(10, daconfig.get('currency decimal places', 2))) + '"'
                 if field.datatype == 'currency':
                     extra_class += ' dacurrency'
                     if embedded:
-                        output += '<span class="da-embed-currency-wrapper"><span class="da-embed-currency-symbol">' + the_currency_symbol(status, field) + '</span>'
+                        output += '<span class="da-embed-currency-wrapper">'
+                        currency_symbol = '<span class="da-embed-currency-symbol">' + the_currency_symbol(status, field) + '</span>'
                     else:
-                        output += '<div class="input-group"><span class="input-group-text">' + the_currency_symbol(status, field) + '</span>'
+                        output += '<div class="input-group">'
+                        currency_symbol = '<span class="input-group-text">' + the_currency_symbol(status, field) + '</span>'
+                    currency_symbol_before = bool(get_locale('p_cs_precedes'))
+                    if currency_symbol_before:
+                        output += currency_symbol
             if field.datatype in ('ml', 'raw'):
                 input_type = 'text'
             if embedded:
@@ -2844,12 +2863,18 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                         data_part += ' data-' + re.sub(r'[^A-Za-z0-9\-]', '-', param_name).strip('-') + '=' + fix_double_quote(str(param_val))
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + data_part + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if not embedded and field.datatype == 'currency':
-                output += ' aria-describedby="' + escape_id(saveas_string) + '-error"' + disable_others_data + autocomplete_off + req_attr + ' /></div><div class="da-has-error invalid-feedback" style="display: none;" id="' + escape_id(saveas_string) + '-error"></div>'
+                output += ' aria-describedby="' + escape_id(saveas_string) + '-error"' + disable_others_data + autocomplete_off + req_attr + ' />'
+                if not currency_symbol_before:
+                    output += currency_symbol
+                output += '</div><div class="da-has-error invalid-feedback" style="display: none;" id="' + escape_id(saveas_string) + '-error"></div>'
             else:
                 output += disable_others_data + autocomplete_off + req_attr + ' />'
             if embedded:
                 if field.datatype == 'currency':
-                    output += '</span></span>'
+                    output += '</span>'
+                    if not currency_symbol_before:
+                        output += currency_symbol
+                    output += '</span>'
                 else:
                     output += '</span>'
     return output

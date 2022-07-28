@@ -3,7 +3,7 @@ Feature: Demonstration interview
   to run the example interviews.
 
   Scenario: Test whole interview
-    And I start the interview "docassemble.demo:data/questions/questions.yml"
+    Given I start the interview "docassemble.demo:data/questions/questions.yml"
     Then I should see the phrase "What language do you speak?"
     And I click the "English" option
     And I click the button "Continue"
@@ -89,7 +89,7 @@ Feature: Demonstration interview
     Then I should see the phrase "Please upload a picture of yourself."
     And I upload the file "/home/jpyle/da/tests/testfile.png"
     And I click the button "Continue"
-    And I wait 1 second
+    And I wait 5 seconds
     Then I should see the phrase "Is this the picture you uploaded?"
     And I click the button "Yes"
     Then I should see the phrase "Instructions for signing your name"

@@ -30,7 +30,10 @@ from requests.exceptions import RequestException
 import httplib2
 import oauth2client.client
 import apiclient
-from backports import zoneinfo
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pycountry
@@ -330,7 +333,8 @@ __all__ = [
     'language_name',
     'DA',
     'DAGlobal',
-    'run_action_in_session'
+    'run_action_in_session',
+    'transform_json_variables'
 ]
 
 #knn_machine_learner = DummyObject
@@ -1746,6 +1750,8 @@ class DAList(DAObject):
         language = kwargs.get('language', None)
         return possessify(self.as_noun(**kwargs), target, plural=(self.number() > 1), language=language)
     def quantity_noun(self, *pargs, **kwargs):
+        """Returns the output of the quantity_noun() function using the number
+        of elements in the list as the quantity."""
         the_args = [self.number()] + list(pargs)
         return quantity_noun(*the_args, **kwargs)
     def as_noun(self, *pargs, **kwargs):
@@ -2216,12 +2222,16 @@ class DAList(DAObject):
             return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
         return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
     def hook_on_gather(self, *pargs, **kwargs):
+        """Code that runs just before a list is marked as gathered."""
         pass
     def hook_after_gather(self, *pargs, **kwargs):
+        """Code that runs just after a list is marked as gathered."""
         pass
     def hook_on_item_complete(self, item, *pargs, **kwargs):
+        """Code that runs when an item is marked as complete."""
         pass
     def hook_on_remove(self, item, *pargs, **kwargs):
+        """Code that runs when an item is removed from the list."""
         pass
     def __eq__(self, other):
         self._trigger_gather()
@@ -2550,6 +2560,8 @@ class DADict(DAObject):
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun
     def quantity_noun(self, *pargs, **kwargs):
+        """Returns the output of the quantity_noun() function using the number
+        of elements in the dictionary as the quantity."""
         the_args = [self.number()] + list(pargs)
         return quantity_noun(*the_args, **kwargs)
     def as_noun(self, *pargs, **kwargs):
@@ -3079,12 +3091,16 @@ class DADict(DAObject):
     def _new_elements(self):
         return {}
     def hook_on_gather(self, *pargs, **kwargs):
+        """Code that runs just before a dictionary is marked as gathered."""
         pass
     def hook_after_gather(self, *pargs, **kwargs):
+        """Code that runs just after a dictionary is marked as gathered."""
         pass
     def hook_on_item_complete(self, item, *pargs, **kwargs):
+        """Code that runs when an item is marked as complete."""
         pass
     def hook_on_remove(self, item, *pargs, **kwargs):
+        """Code that runs when an item is removed from the dictionary."""
         pass
     def __eq__(self, other):
         self._trigger_gather()
@@ -3310,6 +3326,8 @@ class DASet(DAObject):
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun
     def quantity_noun(self, *pargs, **kwargs):
+        """Returns the output of the quantity_noun() function using the number
+        of elements in the set as the quantity."""
         the_args = [self.number()] + list(pargs)
         return quantity_noun(*the_args, **kwargs)
     def as_noun(self, *pargs, **kwargs):
@@ -3545,12 +3563,16 @@ class DASet(DAObject):
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
     def hook_on_gather(self, *pargs, **kwargs):
+        """Code that runs just before a set is marked as gathered."""
         pass
     def hook_after_gather(self, *pargs, **kwargs):
+        """Code that runs just after a set is marked as gathered."""
         pass
     def hook_on_item_complete(self, item, *pargs, **kwargs):
+        """Code that runs when an item is marked as complete."""
         pass
     def hook_on_remove(self, item, *pargs, **kwargs):
+        """Code that runs when an item is removed from the set."""
         pass
     def __eq__(self, other):
         self._trigger_gather()
@@ -3585,6 +3607,7 @@ class DAFile(DAObject):
             if 'make_pngs' in kwargs and kwargs['make_pngs']:
                 self._make_pngs_for_pdf()
     def convert_to(self, output_extension):
+        """Converts the file in-place to a different file extension."""
         self.retrieve()
         if hasattr(self, 'extension'):
             input_extension = self.extension
@@ -3838,7 +3861,7 @@ class DAFile(DAObject):
                 args.append(doc)
             else:
                 args.append(doc.path())
-        the_dir = tempfile.mkdtemp()
+        the_dir = tempfile.mkdtemp(prefix='SavedFile')
         try:
             result = subprocess.run(args, cwd=the_dir, timeout=300).returncode
         except subprocess.TimeoutExpired:
@@ -4400,6 +4423,7 @@ class DAFileList(DAList):
             return None
         return self.elements[0].is_encrypted()
     def convert_to(self, output_extension):
+        """Converts each file in-place to a different file extension."""
         for element in self.elements:
             element.convert_to(output_extension)
     def size_in_bytes(self):
@@ -5224,6 +5248,7 @@ class DALink(DAObject):
     def __str__(self):
         return str(self.show())
     def show(self):
+        """In the DOCX context, returns a DOCX hyperlink. Otherwise, returns a Markdown hyperlink."""
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             return docassemble.base.file_docx.create_hyperlink(self.url, self.anchor_text, docassemble.base.functions.this_thread.misc.get('docx_template', None))
         return '[%s](%s)' % (self.anchor_text, self.url)
@@ -5429,6 +5454,7 @@ class DAStore(DAObject):
         the_key = self._get_base_key() + ':' + key
         server.server_sql_delete(the_key)
     def keys(self):
+        """Returns a list of keys in use."""
         return server.server_sql_keys(self._get_base_key() + ':')
 
 class DAWeb(DAObject):
@@ -6514,6 +6540,7 @@ class Address(DAObject):
                 return self.norm.geolocate_response
         return []
     def geolocate(self, address=None, reset=False):
+        """This exists for backward compatibility only. Use .geocode()."""
         return self.geocode(address=address, reset=reset)
     def geocode(self, address=None, reset=False):
         """Determines the latitude and longitude of the location from its components.  If an address is supplied, the address fields that are not already populated will be populated with the result of the geocoding of the selected address."""
@@ -6636,6 +6663,7 @@ class Address(DAObject):
         self.norm_long = the_norm_long
         return True
     def reset_geolocation(self):
+        """This exists for backward compatibility only. Use .reset_geocoding()."""
         return self.reset_geocoding()
     def reset_geocoding(self):
         """Resets the geocoding information"""
@@ -7813,7 +7841,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
                 return word("(Not a readable image file)")
             path = doc.path()
             if doc.extension == 'pdf':
-                directory = tempfile.mkdtemp()
+                directory = tempfile.mkdtemp(prefix='SavedFile')
                 temp_directory_list.append(directory)
                 prefix = os.path.join(directory, 'page')
                 args = [pdf_to_ppm, '-r', str(ocr_resolution)]
@@ -7885,7 +7913,7 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):
                 return word("(Not a readable image file)")
             path = doc.path()
             if doc.extension == 'pdf':
-                directory = tempfile.mkdtemp()
+                directory = tempfile.mkdtemp(prefix='SavedFile')
                 temp_directory_list.append(directory)
                 prefix = os.path.join(directory, 'page')
                 args = [pdf_to_ppm, '-r', str(ocr_resolution)]
@@ -8544,16 +8572,20 @@ def retrieve_stashed_data(stash_key, secret, delete=False, refresh=False):
 
 class DABreadCrumbs(DAObject):
     def get_crumbs(self):
+        """Returns a list of breadcrumb names of the "parent" questions, followed by the current question."""
         return docassemble.base.functions.get_action_stack()
     def show(self):
+        """Displays the breadcrumbs."""
         crumbs = self.get_crumbs()
         if len(crumbs) < 2:
             return ''
         last_indexno = len(crumbs) - 1
         return self.container(self.inner(item['breadcrumb'], indexno == last_indexno) for indexno, item in enumerate(crumbs))
     def container(self, items):
+        """Returns the HTML of the container element. This is called from .show()."""
         return '<nav class="da-breadcrumb mt-2" aria-label="' + word('breadcrumb') + '"><ol class="breadcrumb">' + ''.join(items) + '</ol></nav>\n'
     def inner(self, label, active):
+        """Returns the HTML for an individual breadcrumb. This is called from .show()."""
         if active:
             return '<li class="da-breadcrumb-item breadcrumb-item">' + label + '</li>'
         return '<li class="da-breadcrumb-item breadcrumb-item active" aria-current="page">' + label + '</li>'
@@ -8626,6 +8658,7 @@ class DAOAuth(DAObject):
             tries -= 1
         raise Exception("DAOAuth: unable to set a random unique id")
     def get_credentials(self):
+        """Returns the stored credentials."""
         self._setup()
         r = DARedis()
         r_key = self._get_redis_key()
@@ -9125,3 +9158,6 @@ def complex_delattr(obj, attr):
         pre_attr = parts.pop(0)
         obj = getattr(obj, pre_attr)
     delattr(obj, parts[0])
+
+def transform_json_variables(obj):
+    return server.transform_json_variables(obj)

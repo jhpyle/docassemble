@@ -1,4 +1,5 @@
 import os
+import sys
 from fnmatch import fnmatchcase
 from distutils.util import convert_path
 from setuptools import setup, find_packages
@@ -58,7 +59,6 @@ install_requires = [
     "azure-nspkg==3.0.2",
     "azure-storage-blob==12.11.0",
     "Babel==2.9.1",
-    "backports.zoneinfo==0.2.1",
     "bcrypt==3.2.0",
     "beautifulsoup4==4.11.1",
     "bleach==5.0.0",
@@ -218,6 +218,9 @@ install_requires = [
     "xlwt==1.3.0",
     "zipp==3.8.0"
 ]
+
+if sys.version_info < (3 , 9):
+    install_requires.append("backports.zoneinfo==0.2.1")
 
 setup(name='docassemble.base',
       version='1.3.52',

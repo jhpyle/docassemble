@@ -8,6 +8,10 @@ from azure.storage.blob import BlobServiceClient, BlobSasPermissions, ContentSet
 from azure.identity import ManagedIdentityCredential
 from azure.keyvault.secrets import SecretClient
 
+import logging
+logger = logging.getLogger('azure.mgmt.resource')
+logger.setLevel(logging.WARNING)
+
 epoch = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=datetime.timezone.utc)
 
 class azureobject:

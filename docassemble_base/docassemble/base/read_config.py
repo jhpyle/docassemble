@@ -13,12 +13,12 @@ if __name__ == "__main__":
         print('export LOCALE="' + str(daconfig['os locale']) + '"')
     else:
         print('export LOCALE="en_US.UTF-8 UTF-8"')
-    if '--limited' in sys.argv:
-        sys.exit(0)
     if 'web server' in daconfig and isinstance(daconfig['web server'], str):
         print('export DAWEBSERVER="' + daconfig['web server'] + '"')
     else:
         print('export DAWEBSERVER="nginx"')
+    if '--limited' in sys.argv:
+        sys.exit(0)
     if 'other os locales' in daconfig and type(daconfig['other os locales']) is list:
         print('declare -a OTHERLOCALES')
         print('export OTHERLOCALES')
@@ -108,6 +108,14 @@ if __name__ == "__main__":
             print('export DBSSLKEY="' + str(daconfig['db']['ssl key']) + '"')
         if 'ssl root cert' in daconfig['db'] and daconfig['db']['ssl root cert'] is not None:
             print('export DBSSLROOTCERT="' + str(daconfig['db']['ssl root cert']) + '"')
+    if daconfig['supervisor'].get('username', None):
+        print('export DASUPERVISORUSERNAME=' + str(daconfig['supervisor']['username']))
+        print('export DASUPERVISORPASSWORD=' + str(daconfig['supervisor']['password']))
+        print('export DASUPERVISOROPTS="--username ' + str(daconfig['supervisor']['username']) + ' --password ' + str(daconfig['supervisor']['password']) + ' "')
+    else:
+        print('export DASUPERVISORUSERNAME=""')
+        print('export DASUPERVISORPASSWORD=""')
+        print('export DASUPERVISOROPTS=""')
     if 'update on start' in daconfig:
         if daconfig['update on start'] is False:
             print('export DAUPDATEONSTART=false')
@@ -115,8 +123,16 @@ if __name__ == "__main__":
             print('export DAUPDATEONSTART=initial')
     if 'allow updates' in daconfig and daconfig['allow updates'] is False:
         print('export DAALLOWUPDATES=false')
+    if 'allow configuration editing' in daconfig and daconfig['allow configuration editing'] is False:
+        print('export DAALLOWCONFIGURATIONEDITING=false')
+    if 'enable playground' in daconfig and daconfig['enable playground'] is False:
+        print('export DAENABLEPLAYGROUND=false')
     if 'allow log viewing' in daconfig and daconfig['allow log viewing'] is False:
         print('export DAALLOWLOGVIEWING=false')
+    if 'root owned' in daconfig and daconfig['root owned'] is True:
+        print('export DAROOTOWNED=true')
+    if 'read only file system' in daconfig and daconfig['read only file system'] is True:
+        print('export DAREADONLYFILESYSTEM=true')
     if 'expose websockets' in daconfig and daconfig['expose websockets']:
         print('export DAEXPOSEWEBSOCKETS=true')
     if 'websockets ip' in daconfig and daconfig['websockets ip']:
@@ -155,7 +171,8 @@ if __name__ == "__main__":
     else:
         print('export ENABLEUNOCONV=false')
     if 's3' in daconfig:
-        if 'enable' in daconfig['s3'] and daconfig['s3']['enable']:
+        s4_options = []
+        if ('enable' in daconfig['s3'] and daconfig['s3']['enable']) or ('enable' not in daconfig['s3'] and 'bucket' in daconfig['s3'] and daconfig['s3']['bucket'] is not None):
             print('export S3ENABLE=true')
         else:
             print('export S3ENABLE=false')
@@ -174,10 +191,28 @@ if __name__ == "__main__":
             print('export AWS_DEFAULT_REGION="' + str(daconfig['s3']['region']) + '"')
         if 'endpoint url' in daconfig['s3'] and daconfig['s3']['endpoint url'] is not None:
             print('export S3ENDPOINTURL="' + str(daconfig['s3']['endpoint url']) + '"')
-            print('export S4CMD_OPTS="--endpoint-url=\\"' + str(daconfig['s3']['endpoint url']) + '\\""')
+            s4_options.append('--endpoint-url=\\"' + str(daconfig['s3']['endpoint url']) + '\\"')
+        if 'server side encryption' in daconfig['s3'] and isinstance(daconfig['s3']['server side encryption'], dict):
+            if 'algorithm' in daconfig['s3']['server side encryption'] and daconfig['s3']['server side encryption']['algorithm'] is not None:
+                print('export S3_SSE_ALGORITHM="' + str(daconfig['s3']['server side encryption']['algorithm']).strip() + '"')
+                s4_options.append('--API-ServerSideEncryption=\\"' + str(daconfig['s3']['server side encryption']['algorithm']).strip() + '\\"')
+            if 'customer algorithm' in daconfig['s3']['server side encryption'] and daconfig['s3']['server side encryption']['customer algorithm'] is not None:
+                print('export S3_SSE_CUSTOMER_ALGORITHM="' + str(daconfig['s3']['server side encryption']['customer algorithm']).strip() + '"')
+                s4_options.append('--API-SSECustomerAlgorithm=\\"' + str(daconfig['s3']['server side encryption']['customer algorithm']).strip() + '\\"')
+            if 'customer key' in daconfig['s3']['server side encryption'] and daconfig['s3']['server side encryption']['customer key'] is not None:
+                print('export S3_SSE_CUSTOMER_KEY="' + str(daconfig['s3']['server side encryption']['customer key']).strip() + '"')
+                s4_options.append('--API-SSECustomerKey=\\"' + str(daconfig['s3']['server side encryption']['customer key']).strip() + '\\"')
+            if 'KMS key ID' in daconfig['s3']['server side encryption'] and daconfig['s3']['server side encryption']['KMS key ID'] is not None:
+                print('export S3_SSE_KMS_KEY_ID="' + str(daconfig['s3']['server side encryption']['KMS key ID']).strip() + '"')
+                s4_options.append('--API-SSEKMSKeyId=\\"' + str(daconfig['s3']['server side encryption']['KMS key ID']).strip() + '\\"')
+        if len(s4_options) > 0:
+            print('export S4CMD_OPTS="' + " ".join(s4_options) + '"')
     if 'azure' in daconfig:
-        if 'enable' in daconfig['azure'] and daconfig['azure']['enable']:
+        if ('enable' in daconfig['azure'] and daconfig['azure']['enable']) or ('enable' not in daconfig['azure'] and 'container' in daconfig['azure'] and daconfig['azure']['container'] is not None and 'account name' in daconfig['azure'] and daconfig['azure']['account name'] is not None):
             print('export AZUREENABLE=true')
+            print('export AZURE_STORAGE_KEY="' + str(daconfig['azure'].get('account key', '')) + '"')
+            print('export AZURE_STORAGE_ACCOUNT="' + str(daconfig['azure']['account name']) + '"')
+            print('export AZURE_STORAGE_AUTH_MODE=key')
         else:
             print('export AZUREENABLE=false')
         if 'connection string' in daconfig['azure'] and daconfig['azure']['connection string'] is not None:

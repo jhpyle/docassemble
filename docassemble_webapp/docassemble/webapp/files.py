@@ -8,10 +8,13 @@ import subprocess
 import sys
 import tempfile
 import zipfile
-from distutils.version import LooseVersion
+from packaging import version
 from flask import url_for
 from flask_login import current_user
-from backports import zoneinfo
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
 import requests
 import pycurl
 from docassemble.base.config import daconfig
@@ -500,7 +503,7 @@ def get_version_suffix(package_name):
         the_version = info['Version']
         if the_version is None:
             the_version = '1.0'
-        installed_version = LooseVersion(the_version.strip())
+        installed_version = version.parse(the_version.strip())
         latest_release = None
         printable_latest_release = None
         try:
@@ -508,7 +511,7 @@ def get_version_suffix(package_name):
             assert r.status_code == 200
             pypi_info = r.json()
             for the_version in pypi_info['releases'].keys():
-                past_version = LooseVersion(the_version)
+                past_version = version.parse(the_version)
                 if past_version <= installed_version and (latest_release is None or past_version > latest_release):
                     latest_release = past_version
                     printable_latest_release = the_version
@@ -646,7 +649,7 @@ This directory is used to store word translation files,
 machine learning training files, and other source files.
 """
     if directory is None:
-        directory = tempfile.mkdtemp()
+        directory = tempfile.mkdtemp(prefix='SavedFile')
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     maindir = os.path.join(packagedir, 'docassemble', str(pkgname))
     questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
