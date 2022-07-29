@@ -1455,7 +1455,7 @@ they are being used at the start of a sentence.
 # <a name="read before signing"></a>Allow user to read a document before signing it
 
 This interview uses [`depends on`] to force the reassembly of a
-document after the user has viewed a draft version with a "sig n here"
+document after the user has viewed a draft version with a "sign here"
 sticker in place of the signature.
 
 {% include demo-side-by-side.html demo="signature-preview" %}
