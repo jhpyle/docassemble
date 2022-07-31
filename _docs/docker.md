@@ -776,9 +776,14 @@ indicated location, **docassemble** will create an initial
 * <a name="S3_SSE_ALGORITHM"></a>`S3_SSE_ALGORITHM`: the server-side
   encryption algorithm used (e.g., `AES256`, `aws:kms`). This should
   only be specified if the S3 bucket uses server-side encryption.
+* <a name="S3_SSE_CUSTOMER_ALGORITHM"></a>`S3_SSE_CUSTOMER_ALGORITHM`: the
+  server-side encryption algorithm used (e.g., `AES256`,
+  `aws:kms`). This should only be specified if the S3 bucket uses
+  server-side encryption and you are passing an `S3_SSE_CUSTOMER_KEY`.
 * <a name="S3_SSE_CUSTOMER_KEY"></a>`S3_SSE_CUSTOMER_KEY`: the
   encryption key used when encrypting data. This should only be
-  specified if the S3 bucket uses server-side encryption.
+  specified if the S3 bucket uses server-side encryption and you have
+  specified an `S3_SSE_CUSTOMER_ALGORITHM`.
 * <a name="S3_SSE_KMS_KEY_ID"></a>`S3_SSE_KMS_KEY_ID`: the AWS KMS key
   ID to use for object encryption. This should only be specified if
   the S3 bucket uses server-side encryption.

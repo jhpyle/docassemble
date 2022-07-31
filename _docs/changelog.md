@@ -3,7 +3,7 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
-## [1.3.53](https://github.com/jhpyle/docassemble/releases/tag/v1.3.53) - 2022-07-
+## [1.4.0](https://github.com/jhpyle/docassemble/releases/tag/v1.4.0) - 2022-07-31
 
 
 ### Added
@@ -23,6 +23,11 @@ short_title: Change Log
 - Support for server-side encryption when using S3.
 
 ### Changed
+- In the Docker container, the operating system is upgraded to Ubuntu
+  22.04 LTS and Python is upgraded to 3.10.
+- `aloe` is no longer a required package. It has a dependency, `nose`,
+  that is not compatible with Python 3.10. Instead, `behave` is now a
+  required package.
 - Switched to the Azure CLI for managing files in Azure Blob Storage
   from shell scripts.
 - A restart (e.g., saving the Configuration, installing a package)
@@ -40,6 +45,7 @@ short_title: Change Log
 - Unnecessary transmittal of background task result to web browser
   when the `refresh` option of `background_action()` is used.
 - Migration of encrypted `DAStore` objects when password is changed.
+- The `set_parts()` function did not support all of the screen parts.
 
 ## [1.3.52](https://github.com/jhpyle/docassemble/releases/tag/v1.3.52) - 2022-07-08
 

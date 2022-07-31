@@ -10,3 +10,4 @@ _docs/requirements.md
 _docs/functions-errors.md
 publish.sh
 CHANGELOG.yml
+.jekyll-cache

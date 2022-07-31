@@ -3522,9 +3522,10 @@ s3:
   bucket: yourbucketname
   region: us-west-1
   server side encryption:
-    algorithm: AES256
-    customer key: abcdefgabcdefgabcdefgabcdefg
-    KMS key ID: abcdefgabcdefgabcdefgabcdefg
+    algorithm: null
+    customer algorithm: AES256
+    customer key: 91F8F26A0783345D16C4249990B54B6E
+    KMS key ID: null
 {% endhighlight %}
 
 If you are using [Docker], you should not define an `s3` directive in
