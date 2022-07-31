@@ -31,8 +31,7 @@ if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [ "${USEHTTPS:-false}" == "true" ] && 
 	    s4cmd dsync "/etc/apache2/sites-available" "s3://${S3BUCKET}/apache"
 	fi
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
-	cmd_retry blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
-	cmd_retry blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
+	az storage blob upload --no-progress --overwrite true --only-show-errors --output none --container-name "${AZURECONTAINER}" -f /tmp/letsencrypt.tar.gz -n "letsencrypt.tar.gz"
 	if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
 	    for the_file in $( find /etc/apache2/sites-available/ -type f ); do
 		target_file=`basename ${the_file}`
@@ -69,7 +68,6 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
 	let LOGDIRECTORYLENGTH=${#LOGDIRECTORY}+2
 	for the_file in $(find "${LOGDIRECTORY}" -type f | cut -c ${LOGDIRECTORYLENGTH}-); do
-	    echo "initialize: Saving log file $the_file" >&2
 	    az storage blob upload --no-progress --overwrite true --only-show-errors --output none --container-name "${AZURECONTAINER}" -f "${LOGDIRECTORY}/${the_file}" -n "log/${the_file}"
 	done
     fi
@@ -150,6 +148,16 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ] && [ "${DABACKUPDAYS}" != "0"
     BACKUPDIR="${DA_ROOT}/backup/$MONTHDAY"
     rm -rf $BACKUPDIR
     mkdir -p $BACKUPDIR
+
+    # Copy Let's Encrypt certificates to rolling backup
+    if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [ "${USEHTTPS:-false}" == "true" ] && [ "${USELETSENCRYPT:-false}" == "true" ] && [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
+	cd /
+	rm -f /tmp/letsencrypt.tar.gz
+	tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+	cp /tmp/letsencrypt.tar.gz "${BACKUPDIR}/"
+	rm -f /tmp/letsencrypt.tar.gz
+	cd /tmp
+    fi
 
     # Copy uploaded files, configuration, and logs to the rolling backup
     if [[ $CONTAINERROLE =~ .*:(all|web|celery|log|cron):.* ]]; then

@@ -294,8 +294,9 @@ if [ "${RESTOREFROMBACKUP}" == "true" ]; then
 			echo "initialize: Found $the_file on Azure" >&2
 			if ! [[ $the_file =~ /$ ]]; then
 			    if [ ! -f "${DA_ROOT}/backup/${the_file}" ]; then
-			       echo "initialize: Copying backup file" $the_file >&2
-			       az storage blob download --no-progress --only-show-errors --output none --container-name "${AZURECONTAINER}" -n "backup/${the_file}" -f "${DA_ROOT}/backup/${the_file}"
+				echo "initialize: Copying backup file" $the_file >&2
+				mkdir -p "`dirname \"${DA_ROOT}/backup/${the_file}\"`"
+				az storage blob download --no-progress --only-show-errors --output none --container-name "${AZURECONTAINER}" -n "backup/${the_file}" -f "${DA_ROOT}/backup/${the_file}"
 			    fi
 			fi
 		    done
@@ -309,6 +310,7 @@ if [ "${RESTOREFROMBACKUP}" == "true" ]; then
 		    if ! [[ $the_file =~ /$ ]]; then
 			if [ ! -f "${DA_ROOT}/backup/${the_file}" ]; then
 			   echo "initialize: Copying backup file" $the_file >&2
+			   mkdir -p "`dirname \"${DA_ROOT}/backup/${the_file}\"`"
 			   az storage blob download --no-progress --only-show-errors --output none --container-name "${AZURECONTAINER}" -n "backup/${LOCAL_HOSTNAME}/${the_file}" -f "${DA_ROOT}/backup/${the_file}"
 			fi
 		    fi
@@ -418,7 +420,9 @@ if [ "${BEHINDHTTPSLOADBALANCER:-null}" == "true" ] && [ "${XSENDFILE:-null}" ==
 fi
 
 if [ ! -f "$DA_CONFIG_FILE" ]; then
-    DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
+    if [ "${DADEFAULTSECRET:-null}" = "null" ]; then
+	DADEFAULTSECRET=$(python -m docassemble.base.generate_key)
+    fi
     echo "initialize: There is no config file.  Creating one from source." >&2
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2:\/\/}"'@' \
         -e 's/{{DBNAME}}/'"${DBNAME:-docassemble}"'/' \
@@ -464,7 +468,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DAHOSTNAME}}/'"${DAHOSTNAME:-none}"'/' \
         -e 's/{{LOCALE}}/'"${LOCALE:-null}"'/' \
         -e 's/{{SERVERADMIN}}/'"${SERVERADMIN:-webmaster@localhost}"'/' \
-        -e 's@{{DASECRETKEY}}@'"${DEFAULT_SECRET}"'@' \
+        -e 's@{{DASECRETKEY}}@'"${DADEFAULTSECRET}"'@' \
         -e 's@{{URLROOT}}@'"${URLROOT:-null}"'@' \
         -e 's@{{POSTURLROOT}}@'"${POSTURLROOT:-/}"'@' \
         -e 's/{{BEHINDHTTPSLOADBALANCER}}/'"${BEHINDHTTPSLOADBALANCER:-false}"'/' \
