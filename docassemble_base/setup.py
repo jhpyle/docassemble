@@ -46,7 +46,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 install_requires = [
-    'docassemble==1.4.0',
+    'docassemble==1.4.1',
     "3to2==1.1.1",
     "alembic==1.7.7",
     "astunparse==1.6.3",
@@ -223,7 +223,7 @@ if sys.version_info < (3 , 9):
     install_requires.append("backports.zoneinfo==0.2.1")
 
 setup(name='docassemble.base',
-      version='1.4.0',
+      version='1.4.1',
       python_requires='>=3.8',
       description=('The base components of the docassemble system.'),
       long_description=read("README.md"),
