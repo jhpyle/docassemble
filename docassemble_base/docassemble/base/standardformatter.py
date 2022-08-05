@@ -1207,7 +1207,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                             else:
                                 formatted_item = markdown_to_html(str(status.extras['nota'][field.number]), status=status, trim=True, escape=True, do_terms=False)
                             unescaped_item = markdown_to_html(str(status.extras['nota'][field.number]), status=status, trim=False, escape=False, do_terms=False)
-                        validation_rules['messages']['_ignore' + str(field.number)] = dict(checkatleast=field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple([strip_tags(unescaped_item)])))
+                        if '_ignore' + str(field.number) not in validation_rules['messages']:
+                            validation_rules['messages']['_ignore' + str(field.number)] = {}
+                        validation_rules['messages']['_ignore' + str(field.number)]['checkatleast'] = field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple([strip_tags(unescaped_item)]))
                     validation_rules['ignore'] = None
                 if field.datatype == 'object_radio' or (field.datatype == 'object' and hasattr(field, 'inputtype') and field.inputtype == 'radio'):
                     validation_rules['ignore'] = None
