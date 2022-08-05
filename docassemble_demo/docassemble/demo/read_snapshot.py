@@ -2,6 +2,7 @@ from docassemble.base.util import variables_snapshot_connection, user_info
 
 __all__ = ['analyze']
 
+
 def analyze():
     conn = variables_snapshot_connection()
     cur = conn.cursor()

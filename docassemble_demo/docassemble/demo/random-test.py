@@ -107,9 +107,9 @@ while iterations:
             sys.exit(r.text)
         steps += 1
 
-    #r = requests.delete(root + '/api/session', params={'key': key, 'i': i, 'session': session})
-    #if r.status_code != 204:
-    #    sys.exit(r.text)
+    # r = requests.delete(root + '/api/session', params={'key': key, 'i': i, 'session': session})
+    # if r.status_code != 204:
+    #     sys.exit(r.text)
 
     iterations -= 1
 

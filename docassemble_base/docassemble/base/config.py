@@ -32,13 +32,16 @@ errors = []
 env_messages = []
 allowed = {}
 
+
 def env_true_false(var):
     value = str(os.getenv(var, 'false')).lower().strip()
     return value == 'true'
 
+
 def env_exists(var):
     value = os.getenv(var)
     return value is not None
+
 
 def env_translate(var):
     value = str(os.getenv(var)).strip()
@@ -51,6 +54,7 @@ def env_translate(var):
     if re.match(r'^\-?[0-9]+$', value):
         return int(value)
     return value
+
 
 def override_config(the_config, messages, key, var, pre_key=None):
     value = env_translate(var)
@@ -76,9 +80,11 @@ def override_config(the_config, messages, key, var, pre_key=None):
             messages.append("The value of configuration key %s in %s has been set to %s based on the value of environment variable %s" % (key, ", ".join(pre_key), value, var))
         root[key] = value
 
+
 def config_error(error):
     errors.append(error)
     sys.stderr.write(error + "\n")
+
 
 def cleanup_filename(filename):
     filename = filename.strip()
@@ -89,6 +95,7 @@ def cleanup_filename(filename):
         return parts[0] + ':' + 'data/questions/' + parts[1]
     return filename
 
+
 def delete_environment():
     for var in ('DBSSLMODE', 'DBSSLCERT', 'DBSSLKEY', 'DBSSLROOTCERT', 'DBTYPE', 'DBPREFIX', 'DBNAME', 'DBUSER', 'DBPASSWORD', 'DBHOST', 'DBPORT', 'DBTABLEPREFIX', 'DBBACKUP', 'DASECRETKEY', 'DABACKUPDAYS', 'ENVIRONMENT_TAKES_PRECEDENCE', 'DASTABLEVERSION', 'DASSLPROTOCOLS', 'SERVERADMIN', 'REDIS', 'REDISCLI', 'RABBITMQ', 'DACELERYWORKERS', 'S3ENABLE', 'S3ACCESSKEY', 'S3SECRETACCESSKEY', 'S3BUCKET', 'S3REGION', 'S3ENDPOINTURL', 'S3_SSE_ALGORITHM', 'S3_SSE_CUSTOMER_ALGORITHM', 'S3_SSE_CUSTOMER_KEY', 'S3_SSE_KMS_KEY_ID', 'AZUREENABLE', 'AZUREACCOUNTKEY', 'AZUREACCOUNTNAME', 'AZURECONTAINER', 'AZURECONNECTIONSTRING', 'EC2', 'COLLECTSTATISTICS', 'KUBERNETES', 'LOGSERVER', 'USECLOUDURLS', 'USEMINIO', 'USEHTTPS', 'USELETSENCRYPT', 'LETSENCRYPTEMAIL', 'BEHINDHTTPSLOADBALANCER', 'XSENDFILE', 'DAUPDATEONSTART', 'URLROOT', 'DAHOSTNAME', 'DAEXPOSEWEBSOCKETS', 'DAWEBSOCKETSIP', 'DAWEBSOCKETSPORT', 'POSTURLROOT', 'DAWEBSERVER', 'DASQLPING', 'PORT', 'OTHERLOCALES', 'DAMAXCONTENTLENGTH', 'DACELERYWORKERS', 'PACKAGES', 'PYTHONPACKAGES', 'DAALLOWUPDATES', 'AWS_SECRET_ACCESS_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_DEFAULT_REGION', 'S4CMD_OPTS', 'WSGIROOT', 'DATIMEOUT', 'PIPINDEXURL', 'PIPEXTRAINDEXURLS', 'DAALLOWCONFIGURATIONEDITING', 'DADEBUG', 'DAENABLEPLAYGROUND', 'DAALLOWLOGVIEWING', 'DAROOTOWNED', 'DAREADONLYFILESYSTEM', 'DASUPERVISORUSERNAME', 'DASUPERVISORPASSWORD'):
         if var in os.environ:
@@ -98,11 +105,13 @@ this_thread = threading.local()
 this_thread.botoclient = {}
 this_thread.azureclient = {}
 
+
 def aws_get_region(arn):
     m = re.search(r'arn:aws:secretsmanager:([^:]+):', arn)
     if m:
         return m.group(1)
     return 'us-east-1'
+
 
 def aws_get_secret(data):
     region = aws_get_region(data)
@@ -115,7 +124,7 @@ def aws_get_secret(data):
             session = boto3.session.Session()
         this_thread.botoclient[region] = session.client(
             service_name='secretsmanager',
-	    region_name=region,
+            region_name=region
         )
     try:
         response = this_thread.botoclient[region].get_secret_value(SecretId=data)
@@ -146,11 +155,12 @@ def aws_get_secret(data):
         sys.stderr.write("aws_get_secret: problem decoding JSON\n")
     return result
 
+
 def azure_get_secret(data):
     vault_name = None
     secret_name = None
     secret_version = None
-    m = re.search('^@Microsoft.KeyVault\(([^\)]+)\)', data)
+    m = re.search(r'^@Microsoft.KeyVault\(([^\)]+)\)', data)
     if m:
         parts = m.group(1).split(';')
         for part in parts:
@@ -209,6 +219,7 @@ def azure_get_secret(data):
         data = secret_data.value
     return data
 
+
 def recursive_fetch_cloud(data):
     if isinstance(data, str):
         if data.startswith('arn:aws:secretsmanager:'):
@@ -228,8 +239,10 @@ def recursive_fetch_cloud(data):
         return tuple(recursive_fetch_cloud(y) for y in data)
     return data
 
+
 def fix_authorized_domain(domain):
     return '@' + re.sub(r'^@+', '', domain.lower().strip())
+
 
 def load(**kwargs):
     global daconfig
@@ -872,6 +885,7 @@ def load(**kwargs):
             override_config(daconfig, messages, 'read only file system', 'DAREADONLYFILESYSTEM')
         env_messages = messages
 
+
 def default_config():
     config = """\
 secretkey: """ + random_string(32) + """
@@ -879,6 +893,7 @@ mail:
   default sender: '"Administrator" <no-reply@example.com>'
 """
     return config
+
 
 def parse_redis_uri():
     redis_url = daconfig.get('redis', None)
@@ -961,6 +976,7 @@ def parse_redis_uri():
             redis_cli += ' --key ' + json.dumps(redis_key)
             ssl_opts['ssl_keyfile'] = redis_key
     return (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts)
+
 
 def noquote(string):
     if isinstance(string, str):

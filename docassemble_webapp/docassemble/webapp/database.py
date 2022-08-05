@@ -64,11 +64,14 @@ if alchemy_connect_string.startswith('postgres'):
             if os.path.isfile(cert_file):
                 alchemy_connect_args[postgres_parameter] = cert_file
 
+
 def connection_string():
     return connect_string
 
+
 def alchemy_connection_string():
     return alchemy_connect_string
+
 
 def connect_args():
     return alchemy_connect_args

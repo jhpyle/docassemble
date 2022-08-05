@@ -13,6 +13,7 @@ from docassemble.base.logger import logmessage
 import docassemble.base.amazon
 import docassemble.base.microsoft
 
+
 def main():
     certs_location = daconfig.get('certs', None)
     cloud = None
@@ -73,7 +74,7 @@ def main():
         if os.path.isdir(dest):
             shutil.rmtree(dest)
         shutil.copytree(certs_location, dest)
-        for root, dirs, files in os.walk(dest):
+        for root, dirs, files in os.walk(dest):  # pylint: disable=unused-variable
             for the_file in files:
                 os.chmod(os.path.join(root, the_file), stat.S_IRUSR)
     else:

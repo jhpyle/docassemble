@@ -8,7 +8,6 @@ from PyPDF2 import PdfFileReader, PdfFileWriter
 from reportlab.pdfgen import canvas
 
 
-
 class Area(Enum):
     TOP_LEFT = 0
     TOP_RIGHT = 1

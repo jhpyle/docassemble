@@ -1,8 +1,9 @@
 import os
 from setuptools import setup, find_packages
 
+
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 setup(name='docassemble',
       version='1.4.1',
@@ -15,5 +16,5 @@ setup(name='docassemble',
       license='MIT',
       url='https://docassemble.org',
       packages=find_packages(),
-      zip_safe = False,
-     )
+      zip_safe=False
+      )

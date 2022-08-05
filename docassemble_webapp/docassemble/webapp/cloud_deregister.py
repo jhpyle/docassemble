@@ -6,6 +6,7 @@ if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
 import docassemble.webapp.cloud
 
+
 def main():
     roles = os.environ.get('CONTAINERROLE', None)
     if roles is None:

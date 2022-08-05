@@ -8,6 +8,7 @@ import sqlalchemy
 db = None
 UserMixin = None
 
+
 def init_flask():
     global db
     global UserMixin
@@ -28,6 +29,7 @@ def init_flask():
     UserMixin = docassemble_flask_user.UserMixin
     return db
 
+
 def init_sqlalchemy():
     global db
     global UserMixin
@@ -37,7 +39,7 @@ def init_sqlalchemy():
         db = sqlalchemy.create_engine(url, client_encoding='utf8', connect_args=connect_args, pool_pre_ping=docassemble.webapp.database.pool_pre_ping)
     else:
         db = sqlalchemy.create_engine(url, pool_pre_ping=docassemble.webapp.database.pool_pre_ping)
-    #meta = sqlalchemy.MetaData(bind=con, reflect=True)
+    # meta = sqlalchemy.MetaData(bind=con, reflect=True)
     Session = sessionmaker(bind=db)
     db.Model = declarative_base()
     db.Column = sqlalchemy.Column

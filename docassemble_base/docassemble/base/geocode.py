@@ -2,14 +2,19 @@ from docassemble.base.logger import logmessage
 from geopy.geocoders import GoogleV3
 from geopy.geocoders import AzureMaps
 
+
 class GeoCoder:
-    def __init__(self, *pargs, **kwargs):
+
+    def __init__(self, *pargs, **kwargs):  # pylint: disable=unused-argument
         self.server = kwargs['server']
+
     def geocode(self, *pargs, **kwargs):
         self.data = self.geocoder.geocode(*pargs, **kwargs)
         return True
 
+
 class GoogleV3GeoCoder(GeoCoder):
+
     def config_ok(self):
         try:
             assert isinstance(self.server.daconfig['google']['api key'], str)
@@ -17,8 +22,10 @@ class GoogleV3GeoCoder(GeoCoder):
             logmessage("geocode: cannot geocode without an 'api key' under 'google' in the Configuration. Set 'geolocate service' in the Configuration to use a different geocoding service.")
             return False
         return True
+
     def initialize(self):
         self.geocoder = GoogleV3(api_key=self.server.daconfig['google']['api key'])
+
     def populate_address(self, address):
         if 'formatted_address' in self.data.raw:
             address.one_line = self.data.raw['formatted_address']
@@ -51,8 +58,7 @@ class GoogleV3GeoCoder(GeoCoder):
                 'sublocality_level_2': ('sublocality_level_2', 'long_name'),
                 'sublocality_level_3': ('sublocality_level_3', 'long_name'),
                 'sublocality_level_4': ('sublocality_level_4', 'long_name'),
-                'sublocality_level_5': ('sublocality_level_5', 'long_name'),
-#                    'subpremise': ('unit', 'long_name'),
+                'sublocality_level_5': ('sublocality_level_5', 'long_name')
             }
             for component in self.data.raw['address_components']:
                 if 'types' in component:
@@ -91,8 +97,7 @@ class GoogleV3GeoCoder(GeoCoder):
                 'sublocality_level_2': 'sublocality_level_2',
                 'sublocality_level_3': 'sublocality_level_3',
                 'sublocality_level_4': 'sublocality_level_4',
-                'sublocality_level_5': 'sublocality_level_5',
-#                    'subpremise': 'unit'
+                'sublocality_level_5': 'sublocality_level_5'
             }
             for component in self.data.raw['address_components']:
                 if 'types' in component:
@@ -123,7 +128,9 @@ class GoogleV3GeoCoder(GeoCoder):
             if (not hasattr(address.norm_long, 'city')) and hasattr(address.norm_long, 'neighborhood'):
                 address.norm_long.city = address.norm_long.neighborhood
 
+
 class AzureMapsGeoCoder(GeoCoder):
+
     def config_ok(self):
         try:
             assert isinstance(self.server.daconfig['azure maps']['primary key'], str)
@@ -131,10 +138,12 @@ class AzureMapsGeoCoder(GeoCoder):
             logmessage("geocode: cannot geocode without a 'primary key' under 'azure maps' in the Configuration. Set 'geolocate service' in the Configuration to use a different geocoding service.")
             return False
         return True
+
     def initialize(self):
         self.geocoder = AzureMaps(self.server.daconfig['azure maps']['primary key'])
+
     def populate_address(self, address):
-        if not 'address' in self.data.raw:
+        if 'address' not in self.data.raw:
             return
         if 'freeformAddress' in self.data.raw['address']:
             address.one_line = self.data.raw['address']['freeformAddress']

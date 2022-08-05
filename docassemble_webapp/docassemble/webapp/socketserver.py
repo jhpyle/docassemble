@@ -8,33 +8,34 @@ import time
 import eventlet
 eventlet.sleep()
 eventlet.monkey_patch()
-import docassemble.base.config
+import docassemble.base.config  # noqa: E402
 docassemble.base.config.load(arguments=sys.argv)
-from docassemble.base.config import daconfig
-import docassemble.base.functions
-import docassemble.base.util
+from docassemble.base.config import daconfig  # noqa: E402
+import docassemble.base.functions  # noqa: E402
+import docassemble.base.util  # noqa: E402
 docassemble.base.functions.server_context.context = 'websockets'
-from docassemble.base.functions import get_default_timezone, word
-from docassemble.base.logger import logmessage
-import docassemble.webapp.daredis
-from docassemble.webapp.app_socket import app, db, socketio
-from docassemble.webapp.backend import nice_utc_date, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj, get_session
-from docassemble.webapp.daredis import r as rr, redis_host, redis_port, redis_offset
-from docassemble.webapp.users.models import UserModel, ChatLog
-from docassemblekvsession import KVSessionExtension
-from flask import session, request
-from flask_socketio import join_room
-from simplekv.memory.redisstore import RedisStore
-from sqlalchemy import select
-from sqlalchemy.orm import sessionmaker, joinedload
-import netifaces as ni
-import redis
+from docassemble.base.functions import get_default_timezone, word  # noqa: E402,F401 # pylint: disable=unused-import
+from docassemble.base.logger import logmessage  # noqa: E402
+import docassemble.webapp.daredis  # noqa: E402
+from docassemble.webapp.app_socket import app, db, socketio  # noqa: E402
+from docassemble.webapp.backend import nice_utc_date, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj, get_session  # noqa: E402
+from docassemble.webapp.daredis import r as rr, redis_host, redis_port, redis_offset  # noqa: E402
+from docassemble.webapp.users.models import UserModel, ChatLog  # noqa: E402
+from docassemblekvsession import KVSessionExtension  # noqa: E402
+from flask import session, request  # noqa: E402
+from flask_socketio import join_room  # noqa: E402
+from simplekv.memory.redisstore import RedisStore  # noqa: E402
+from sqlalchemy import select  # noqa: E402
+from sqlalchemy.orm import sessionmaker, joinedload  # noqa: E402
+import netifaces as ni  # noqa: E402 # pylint: disable=import-error
+import redis  # noqa: E402
 
 store = RedisStore(docassemble.webapp.daredis.r_store)
 kv_session = KVSessionExtension(store, app)
 threads = {}
 secrets = {}
 Session = sessionmaker(bind=db)
+
 
 @contextmanager
 def session_scope():
@@ -49,6 +50,7 @@ def session_scope():
         raise
     finally:
         dbsession.close()
+
 
 def obtain_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
@@ -72,6 +74,7 @@ def obtain_lock(user_code, filename):
     pipe.expire(key, 4)
     pipe.execute()
 
+
 def release_lock(user_code, filename):
     key = 'da:lock:' + user_code + ':' + filename
     rr.delete(key)
@@ -82,6 +85,7 @@ def release_lock(user_code, filename):
 #     if hasattr(db, 'engine'):
 #         # logmessage("Tearing down")
 #         db.engine.dispose()
+
 
 def background_thread(sid=None, user_id=None, temp_user_id=None):
     if user_id is not None:
@@ -96,7 +100,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
         with session_scope() as dbsession:
             person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
         user_is_temp = False
-    if not(person is not None and person.timezone is not None):
+    if not (person is not None and person.timezone is not None):
         r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
 
     partners = set()
@@ -107,7 +111,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
             logmessage("0\n" + repr(item))
             if item['type'] != 'message':
                 continue
-            #logmessage("sid: " + str(sid) + ":")
+            # logmessage("sid: " + str(sid) + ":")
             data = None
             try:
                 data = json.loads(item['data'].decode())
@@ -121,7 +125,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
             logmessage("  Got something for sid " + str(sid) + " from " + data.get('origin', "Unknown origin"))
             if 'messagetype' in data:
                 if data['messagetype'] == 'chat':
-                    #logmessage("  Emitting interview chat message: " + str(data['message']['message']))
+                    # logmessage("  Emitting interview chat message: " + str(data['message']['message']))
                     data['message']['is_self'] = bool((user_is_temp is True and str(temp_user_id) == str(data['message'].get('temp_user_id', None))) or (user_is_temp is False and str(user_id) == str(data['message'].get('user_id', None))))
                     socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/wsinterview', room=sid)
                 elif data['messagetype'] == 'chatready':
@@ -155,9 +159,10 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
                 #     socketio.emit('newpage', {'obj': obj}, namespace='/wsinterview', room=sid)
             logmessage('  exiting interview thread for sid ' + str(sid))
 
+
 @socketio.on('start_being_controlled', namespace='/wsinterview')
 def interview_start_being_controlled(data):
-    #logmessage("received start_being_controlled")
+    # logmessage("received start_being_controlled")
     yaml_filename = data['i']
     session_info = get_session(yaml_filename)
     if session_info is not None:
@@ -165,6 +170,7 @@ def interview_start_being_controlled(data):
         the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
         key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         rr.publish(key, json.dumps(dict(message='start_being_controlled', key=re.sub(r'^da:input:uid:', 'da:session:uid:', key))))
+
 
 @socketio.on('chat_log', namespace='/wsinterview')
 def chat_log(data):
@@ -189,16 +195,18 @@ def chat_log(data):
             secret = request.cookies.get('secret', None)
             if secret is not None:
                 secret = str(secret)
-            #logmessage("chat_log: " + str(repr(user_id)) + " " + str(repr(temp_user_id)))
+            # logmessage("chat_log: " + str(repr(user_id)) + " " + str(repr(temp_user_id)))
             messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, user_id, temp_user_id)
             socketio.emit('chat_log', {'data': messages}, namespace='/wsinterview', room=request.sid)
-    #logmessage("Interview: sending back " + str(len(messages)) + " messages")
+    # logmessage("Interview: sending back " + str(len(messages)) + " messages")
+
 
 @socketio.on('transmit', namespace='/wsinterview')
 def handle_message(message):
     session_info = get_session(message['i'])
     if session_info is not None:
         rr.publish(session_info['uid'], json.dumps(dict(origin='client', room=request.sid, message=message['data'])))
+
 
 @socketio.on('terminate', namespace='/wsinterview')
 def terminate_interview_connection():
@@ -207,7 +215,8 @@ def terminate_interview_connection():
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
     socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
-    #disconnect()
+    # disconnect()
+
 
 @socketio.on('chatmessage', namespace='/wsinterview')
 def chat_message(data):
@@ -255,7 +264,8 @@ def chat_message(data):
             if len(role_list) == 0:
                 role_list = ['user']
             rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=role_list, mode=chat_mode))))
-    #logmessage('received chat message from sid ' + str(request.sid) + ': ' + data['data'])
+    # logmessage('received chat message from sid ' + str(request.sid) + ': ' + data['data'])
+
 
 def wait_for_channel(the_rr, channel):
     times = 0
@@ -266,6 +276,7 @@ def wait_for_channel(the_rr, channel):
         return False
     return True
 
+
 @socketio.on('connect', namespace='/wsinterview')
 def on_interview_connect():
     with session_scope():
@@ -274,6 +285,7 @@ def on_interview_connect():
         interview_connect(request.args['i'])
         rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
 
+
 @socketio.on('connectagain', namespace='/wsinterview')
 def on_interview_reconnect(data):
     with session_scope():
@@ -281,6 +293,7 @@ def on_interview_reconnect(data):
         interview_connect(data['i'])
         rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
         socketio.emit('reconnected', {}, namespace='/wsinterview', room=request.sid)
+
 
 def interview_connect(yaml_filename):
     session_info = get_session(yaml_filename)
@@ -303,12 +316,12 @@ def interview_connect(yaml_filename):
             logmessage("Socket started but chat is unavailable.")
             socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             return
-        #logmessage('chat info is ' + str(chat_info))
+        # logmessage('chat info is ' + str(chat_info))
         peer_ok = bool(user_dict['_internal']['livehelp']['mode'] in ['peer', 'peerhelp'])
         the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
 
         if request.sid not in threads:
-            #logmessage('Starting thread for sid ' + str(request.sid))
+            # logmessage('Starting thread for sid ' + str(request.sid))
             threads[request.sid] = socketio.start_background_task(target=background_thread, sid=request.sid, user_id=session.get('user_id', None), temp_user_id=session.get('tempuser', None))
         channel_up = wait_for_channel(rr, request.sid)
         if not channel_up:
@@ -316,17 +329,17 @@ def interview_connect(yaml_filename):
             socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
             return
         lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-        #logmessage("Searching: " + lkey)
+        # logmessage("Searching: " + lkey)
         lkey_exists = bool(rr.exists(lkey))
         if lkey_exists is False and peer_ok is False:
             logmessage("Key does not exist: " + lkey + ".")
-            #socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
-            #return
+            # socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
+            # return
         failed_to_find_partner = True
         found_help = False
         if lkey_exists:
             partner_keys = rr.lrange(lkey, 0, -1)
-            #logmessage("partner_keys is: " + str(type(partner_keys)) + " " + str(partner_keys))
+            # logmessage("partner_keys is: " + str(type(partner_keys)) + " " + str(partner_keys))
             if partner_keys is None and not peer_ok:
                 logmessage("No partner keys: " + lkey + ".")
                 socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
@@ -334,16 +347,16 @@ def interview_connect(yaml_filename):
             rr.delete(lkey)
             for pkey in partner_keys:
                 pkey = pkey.decode()
-                #logmessage("Considering: " + pkey)
+                # logmessage("Considering: " + pkey)
                 partner_sid = rr.get(pkey)
                 if partner_sid is not None:
                     partner_sid = partner_sid.decode()
                     is_help = bool(re.match(r'^da:monitor:available:.*', pkey))
                     if is_help and found_help:
                         continue
-                    #logmessage("Trying to pub to " + str(partner_sid) + " from " + str(pkey))
+                    # logmessage("Trying to pub to " + str(partner_sid) + " from " + str(pkey))
                     listeners = rr.publish(partner_sid, json.dumps(dict(messagetype='chatready', uid=session_id, i=yaml_filename, userid=the_user_id, secret=secret, sid=request.sid)))
-                    #logmessage("Listeners: " + str(listeners))
+                    # logmessage("Listeners: " + str(listeners))
                     if re.match(r'^da:interviewsession.*', pkey):
                         rr.publish(request.sid, json.dumps(dict(messagetype='chatready', sid=partner_sid)))
                     else:
@@ -354,10 +367,11 @@ def interview_connect(yaml_filename):
                         failed_to_find_partner = False
         if failed_to_find_partner and peer_ok is False:
             logmessage("Unable to reach any potential chat partners.")
-            #socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
-            #return
+            # socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
+            # return
         key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         rr.set(key, request.sid)
+
 
 @socketio.on('manual_disconnect', namespace='/wsinterview')
 def on_interview_manual_disconnect(data):
@@ -374,14 +388,17 @@ def on_interview_manual_disconnect(data):
         rr.expire(key, 10)
         rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
 
+
 @socketio.on('disconnect', namespace='/wsinterview')
 def on_interview_disconnect():
     logmessage('Client disconnected from interview')
+
 
 def get_current_info(yaml_filename, session_id, secret):
     url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
     url = url_root + 'interview'
     return dict(user=dict(is_anonymous=False, is_authenticated=True, email='admin@admin.com', theid=1, the_user_id=1, roles=['admin'], firstname='Admin', lastname='User', nickname='', country='', subdivisionfirst='', subdivisionsecond='', subdivisionthird='', organization='', location=None, session_uid='admin', device_id='admin'), session=session_id, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=True, action=None, interface='chat', arguments={})
+
 
 def get_dict(yaml_filename):
     session_info = get_session(yaml_filename)
@@ -395,17 +412,18 @@ def get_dict(yaml_filename):
     if session_id is None or yaml_filename is None:
         logmessage('Attempt to get dictionary where session not defined')
         return None
-    #obtain_lock(session_id, yaml_filename)
+    # obtain_lock(session_id, yaml_filename)
     docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     try:
-        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
     except Exception as err:
-        #release_lock(session_id, yaml_filename)
+        # release_lock(session_id, yaml_filename)
         logmessage('get_dict: attempt to get dictionary failed: ' + str(err))
         return None
     docassemble.base.functions.this_thread.current_info['encrypted'] = is_encrypted
-    #release_lock(session_id, yaml_filename)
+    # release_lock(session_id, yaml_filename)
     return user_dict
+
 
 def get_dict_encrypt(yaml_filename):
     session_info = get_session(yaml_filename)
@@ -419,19 +437,20 @@ def get_dict_encrypt(yaml_filename):
     if session_id is None or yaml_filename is None:
         logmessage('Attempt to get dictionary where session not defined')
         return None, None
-    #obtain_lock(session_id, yaml_filename)
+    # obtain_lock(session_id, yaml_filename)
     docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     try:
-        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
     except Exception as err:
-        #release_lock(session_id, yaml_filename)
+        # release_lock(session_id, yaml_filename)
         logmessage('get_dict_encrypt: attempt to get dictionary failed: ' + str(err))
         return None, None
     docassemble.base.functions.this_thread.current_info['encrypted'] = is_encrypted
-    #release_lock(session_id, yaml_filename)
+    # release_lock(session_id, yaml_filename)
     return user_dict, is_encrypted
 
-#monitor
+# monitor
+
 
 def monitor_thread(sid=None, user_id=None):
     logmessage("Started monitor thread for " + str(sid) + " who is " + str(user_id))
@@ -449,7 +468,7 @@ def monitor_thread(sid=None, user_id=None):
             logmessage("1\n" + repr(item))
             if item['type'] != 'message':
                 continue
-            #logmessage("monitor sid: " + str(sid) + ":")
+            # logmessage("monitor sid: " + str(sid) + ":")
             data = None
             try:
                 data = json.loads(item['data'].decode())
@@ -471,11 +490,11 @@ def monitor_thread(sid=None, user_id=None):
                 continue
             logmessage("  Got something for monitor")
             if 'messagetype' in data:
-                #if data['messagetype'] == 'abortcontroller':
+                # if data['messagetype'] == 'abortcontroller':
                 #    socketio.emit('abortcontroller', {'key': data['key']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'sessionupdate':
-                    #logmessage("  Got a session update: " + str(data['session']))
-                    #logmessage("  Got a session update")
+                    # logmessage("  Got a session update: " + str(data['session']))
+                    # logmessage("  Got a session update")
                     socketio.emit('sessionupdate', {'key': data['key'], 'session': data['session']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'chatready':
                     pubsub.subscribe(data['sid'])
@@ -500,7 +519,7 @@ def monitor_thread(sid=None, user_id=None):
                 if data['messagetype'] == 'refreshsessions':
                     socketio.emit('refreshsessions', {}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'chat':
-                    #logmessage("  Emitting monitor chat message: " + str(data['message']['message']))
+                    # logmessage("  Emitting monitor chat message: " + str(data['message']['message']))
                     data['message']['is_self'] = bool(str(user_id) == str(data['message'].get('user_id', None)))
                     socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'chatstop':
@@ -511,6 +530,7 @@ def monitor_thread(sid=None, user_id=None):
                     r.hdel('da:monitor:chatpartners:' + str(user_id), 'da:interviewsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + data['userid'])
                     socketio.emit('chatstop', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
             logmessage('  exiting monitor thread for sid ' + str(sid))
+
 
 @socketio.on('connect', namespace='/monitor')
 def on_monitor_connect():
@@ -528,6 +548,7 @@ def on_monitor_connect():
     user_id = session.get('user_id', None)
     if request.sid not in threads:
         threads[request.sid] = socketio.start_background_task(target=monitor_thread, sid=request.sid, user_id=user_id)
+
 
 @socketio.on('disconnect', namespace='/monitor')
 def on_monitor_disconnect():
@@ -548,6 +569,7 @@ def on_monitor_disconnect():
     rr.expire('da:monitor:chatpartners:' + str(user_id), 5)
     rr.publish(request.sid, json.dumps(dict(message='KILL', sid=request.sid)))
 
+
 @socketio.on('terminate', namespace='/monitor')
 def terminate_monitor_connection():
     logmessage("terminate_monitor_connection")
@@ -555,7 +577,8 @@ def terminate_monitor_connection():
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
     socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
-    #disconnect()
+    # disconnect()
+
 
 @socketio.on('block', namespace='/monitor')
 def monitor_block(data):
@@ -576,6 +599,7 @@ def monitor_block(data):
         logmessage("Could not block because could not get sid")
     socketio.emit('block', {'key': key}, namespace='/monitor', room=request.sid)
 
+
 @socketio.on('unblock', namespace='/monitor')
 def monitor_unblock(data):
     if 'monitor' not in session:
@@ -593,18 +617,20 @@ def monitor_unblock(data):
         rr.publish(sid, json.dumps(dict(messagetype='chatpartner', sid=request.sid)))
     socketio.emit('unblock', {'key': key}, namespace='/monitor', room=request.sid)
 
+
 def decode_dict(the_dict):
     out_dict = {}
     for k, v in the_dict.items():
         out_dict[k.decode()] = v.decode()
     return out_dict
 
+
 @socketio.on('updatemonitor', namespace='/monitor')
 def update_monitor(message):
     if 'monitor' not in session:
         socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
-    #logmessage('received message from ' + str(request.sid))
+    # logmessage('received message from ' + str(request.sid))
     available_for_chat = message['available_for_chat']
     new_subscribed_roles = message['subscribed_roles']
     new_phone_partners = message['phone_partners_to_add']
@@ -666,7 +692,7 @@ def update_monitor(message):
                 break
             if times >= 1000:
                 logmessage("update_monitor: could not get a random integer")
-    #logmessage('subscribed roles are type ' + str(type(new_subscribed_roles)) + " which is "  + str(new_subscribed_roles))
+    # logmessage('subscribed roles are type ' + str(type(new_subscribed_roles)) + " which is "  + str(new_subscribed_roles))
     monitor_key = 'da:monitor:' + str(request.sid)
     pipe = rr.pipeline()
     pipe.set(monitor_key, 1)
@@ -681,14 +707,14 @@ def update_monitor(message):
             rr.hdel('da:monitor:chatpartners:' + str(session['user_id']), cp_key)
         else:
             chat_partners[re.sub('^da:interviewsession:uid:', r'da:session:uid:', cp_key)] = 1
-    #logmessage('daAvailableForChat is ' + str(available_for_chat) + " for key " + key)
+    # logmessage('daAvailableForChat is ' + str(available_for_chat) + " for key " + key)
     if available_for_chat:
         pipe = rr.pipeline()
         pipe.set(key, request.sid)
         pipe.expire(key, 60)
         pipe.execute()
     elif key_exists:
-        #logmessage("Not available to chat; deleting da:monitor:role")
+        # logmessage("Not available to chat; deleting da:monitor:role")
         pipe = rr.pipeline()
         pipe.delete(key)
         for avail_key in rr.keys('da:monitor:role:*:userid:' + str(session['user_id'])):
@@ -705,7 +731,7 @@ def update_monitor(message):
     del_mon_role_keys = []
     for role_key in list(new_subscribed_roles.keys()):
         if role_key not in avail_roles:
-            #logmessage("role_key is " + str(role_key) + " which is " + str(type(role_key)))
+            # logmessage("role_key is " + str(role_key) + " which is " + str(type(role_key)))
             del new_subscribed_roles[role_key]
     for role_key in list(subscribed_roles.keys()):
         if role_key not in avail_roles:
@@ -755,13 +781,14 @@ def update_monitor(message):
                 sessions[key] = sessobj
     socketio.emit('updatemonitor', {'available_for_chat': available_for_chat, 'subscribedRoles': subscribed_roles, 'sessions': sessions, 'availRoles': sorted(avail_roles), 'chatPartners': chat_partners, 'phonePartners': phone_partners}, namespace='/monitor', room=request.sid)
 
+
 @socketio.on('chatmessage', namespace='/monitor')
 def monitor_chat_message(data):
     if 'monitor' not in session:
         socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
     key = data.get('key', None)
-    #logmessage("Key is " + str(key))
+    # logmessage("Key is " + str(key))
     if key is None:
         logmessage("No key provided")
         return
@@ -781,16 +808,16 @@ def monitor_chat_message(data):
     secret = secrets.get(sid, None)
     if secret is not None:
         secret = str(secret)
-    #obtain_lock(session_id, yaml_filename)
+    # obtain_lock(session_id, yaml_filename)
     docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     with session_scope() as dbsession:
         try:
-            steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+            steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
         except Exception as err:
-            #release_lock(session_id, yaml_filename)
+            # release_lock(session_id, yaml_filename)
             logmessage("monitor_chat_message: could not get dictionary: " + str(err))
             return
-        #release_lock(session_id, yaml_filename)
+        # release_lock(session_id, yaml_filename)
         docassemble.base.functions.this_thread.current_info['encrypted'] = encrypted
         nowtime = datetime.datetime.utcnow()
         if encrypted:
@@ -818,7 +845,8 @@ def monitor_chat_message(data):
         if len(role_list) == 0:
             role_list = ['user']
         rr.publish(sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=chat_user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=role_list, mode=chat_mode))))
-    #logmessage('received chat message on monitor from sid ' + str(request.sid) + ': ' + data['data'])
+    # logmessage('received chat message on monitor from sid ' + str(request.sid) + ': ' + data['data'])
+
 
 @socketio.on('chat_log', namespace='/monitor')
 def monitor_chat_log(data):
@@ -828,8 +856,8 @@ def monitor_chat_log(data):
             return
         key = data.get('key', None)
         scroll = data.get('scroll', True)
-        #logmessage("Key is " + str(key))
-        #logmessage("scroll is " + repr(scroll))
+        # logmessage("Key is " + str(key))
+        # logmessage("scroll is " + repr(scroll))
         if key is None:
             logmessage("No key provided")
             return
@@ -849,16 +877,16 @@ def monitor_chat_log(data):
         secret = secrets.get(sid, None)
         if secret is not None:
             secret = str(secret)
-        #obtain_lock(session_id, yaml_filename)
+        # obtain_lock(session_id, yaml_filename)
         docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
         try:
-            steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+            steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
         except Exception as err:
-            #release_lock(session_id, yaml_filename)
+            # release_lock(session_id, yaml_filename)
             logmessage("monitor_chat_log: could not get dictionary: " + str(err))
             return
         docassemble.base.functions.this_thread.current_info['encrypted'] = encrypted
-        #release_lock(session_id, yaml_filename)
+        # release_lock(session_id, yaml_filename)
         chat_mode = user_dict['_internal']['livehelp']['mode']
         m = re.match('t([0-9]+)', chat_user_id)
         if m:
@@ -876,9 +904,10 @@ def monitor_chat_log(data):
             self_user_id = int(self_user_id)
         messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, None)
         socketio.emit('chat_log', {'uid': session_id, 'i': yaml_filename, 'userid': chat_user_id, 'mode': chat_mode, 'data': messages, 'scroll': scroll}, namespace='/monitor', room=request.sid)
-        #logmessage("Monitor: sending back " + str(len(messages)) + " messages")
+        # logmessage("Monitor: sending back " + str(len(messages)) + " messages")
 
-#observer
+# observer
+
 
 def observer_thread(sid=None, key=None):
     logmessage("Started observer thread for " + str(sid))
@@ -889,7 +918,7 @@ def observer_thread(sid=None, key=None):
         logmessage("2\n" + repr(item))
         if item['type'] != 'message':
             continue
-        #logmessage("observer sid: " + str(sid) + ":")
+        # logmessage("observer sid: " + str(sid) + ":")
         data = None
         try:
             data = json.loads(item['data'].decode())
@@ -902,7 +931,7 @@ def observer_thread(sid=None, key=None):
             break
         if 'message' in data:
             if data['message'] == "newpage":
-                #logmessage("  Got new page for observer")
+                # logmessage("  Got new page for observer")
                 try:
                     obj = json.loads(r.get(data['key']).decode())
                 except:
@@ -910,12 +939,13 @@ def observer_thread(sid=None, key=None):
                     continue
                 socketio.emit('newpage', {'obj': obj}, namespace='/observer', room=sid)
             elif data['message'] == "start_being_controlled":
-                #logmessage("  got start_being_controlled message with key " + str(data['key']))
+                # logmessage("  got start_being_controlled message with key " + str(data['key']))
                 socketio.emit('start_being_controlled', {'key': data['key']}, namespace='/observer', room=sid)
         else:
-            #logmessage("  Got parameters for observer")
+            # logmessage("  Got parameters for observer")
             socketio.emit('pushchanges', {'parameters': data}, namespace='/observer', room=sid)
         logmessage('  exiting observer thread for sid ' + str(sid))
+
 
 @socketio.on('connect', namespace='/observer')
 def on_observer_connect():
@@ -924,6 +954,7 @@ def on_observer_connect():
         return
     join_room(request.sid)
 
+
 @socketio.on('observe', namespace='/observer')
 def on_observe(message):
     if 'observer' not in session:
@@ -931,8 +962,9 @@ def on_observe(message):
         return
     if request.sid not in threads:
         key = 'da:input:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
-        #logmessage('Observing ' + key)
+        # logmessage('Observing ' + key)
         threads[request.sid] = socketio.start_background_task(target=observer_thread, sid=request.sid, key=key)
+
 
 @socketio.on('observerStartControl', namespace='/observer')
 def start_control(message):
@@ -943,7 +975,7 @@ def start_control(message):
     key = 'da:control:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
     existing_sid = rr.get(key)
     if existing_sid is None or existing_sid.decode() == request.sid:
-        #logmessage('Controlling ' + key)
+        # logmessage('Controlling ' + key)
         pipe = rr.pipeline()
         pipe.set(self_key, key)
         pipe.expire(self_key, 12)
@@ -958,8 +990,9 @@ def start_control(message):
     else:
         logmessage('That key ' + key + ' is already taken')
         key = 'da:session:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
-        #rr.publish('da:monitor', json.dumps(dict(messagetype='abortcontroller', key=key)))
+        # rr.publish('da:monitor', json.dumps(dict(messagetype='abortcontroller', key=key)))
         socketio.emit('abortcontrolling', {'key': key}, namespace='/observer', room=request.sid)
+
 
 @socketio.on('observerStopControl', namespace='/observer')
 def stop_control(message):
@@ -983,6 +1016,7 @@ def stop_control(message):
     else:
         pipe.execute()
 
+
 @socketio.on('observerChanges', namespace='/observer')
 def observer_changes(message):
     logmessage('observerChanges')
@@ -1005,13 +1039,14 @@ def observer_changes(message):
         # sid=request.sid, yaml_filename=str(message['i']), uid=str(message['uid']), user_id=str(message['userid'])
         self_key = 'da:control:sid:' + str(request.sid)
         key = 'da:control:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
-        #logmessage('Controlling ' + key)
+        # logmessage('Controlling ' + key)
         pipe = rr.pipeline()
         pipe.set(self_key, key)
         pipe.expire(key, 12)
         pipe.set(key, request.sid)
         pipe.expire(key, 12)
         pipe.execute()
+
 
 @socketio.on('disconnect', namespace='/observer')
 def on_observer_disconnect():
@@ -1031,6 +1066,7 @@ def on_observer_disconnect():
         rr.publish(other_sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
     rr.publish(request.sid, json.dumps(dict(message='KILL', sid=request.sid)))
 
+
 @socketio.on('terminate', namespace='/observer')
 def terminate_observer_connection():
     logmessage("terminate_observer_connection")
@@ -1038,7 +1074,7 @@ def terminate_observer_connection():
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
     socketio.emit('terminate', {}, namespace='/observer', room=request.sid)
-    #disconnect()
+    # disconnect()
 
 if __name__ == '__main__':
     if daconfig.get('expose websockets', False):

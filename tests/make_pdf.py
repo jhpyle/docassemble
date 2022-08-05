@@ -56,7 +56,7 @@ if __name__ == "__main__":
                 fp.write(middle_part % (base_name, base_name))
         fp.write(end_part)
     try:
-        subprocess.run(['pdflatex', directory])
+        subprocess.run(['pdflatex', directory], check=False)
         returnval = 0
     except subprocess.CalledProcessError as err:
         returnval = err.returncode

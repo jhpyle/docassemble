@@ -4,6 +4,7 @@ from docassemble.base.functions import set_language, parse_accept_language
 from docassemble.base.config import daconfig
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 
+
 def setup_translation():
     language = None
     if current_user.is_authenticated:

@@ -4,6 +4,7 @@ from googleapiclient.discovery import build
 
 __all__ = ['translate_phrase']
 
+
 def translate_phrase(phrase, source_language, target_language):
     try:
         api_key = get_config('google')['api key']

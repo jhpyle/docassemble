@@ -9,14 +9,16 @@ from docassemble.base.config import daconfig, parse_redis_uri
 from docassemble.webapp.cloud import get_cloud
 from docassemble.base.logger import logmessage
 
+
 def errlog(text):
     logmessage(str(datetime.datetime.now()) + " " + text)
+
 
 def main():
     container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
     errlog("checking to see if running create_tables if necessary")
     if ':all:' in container_role or ':cron:' in container_role:
-        (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts) = parse_redis_uri()
+        (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts) = parse_redis_uri()  # pylint: disable=unused-variable
         r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password, username=redis_username, **ssl_opts)
         if daconfig.get('ip address ban enabled', True):
             keys_to_delete = r.keys('da:failedlogin:ip:*')
@@ -30,7 +32,7 @@ def main():
             r.delete('da:skip_create_tables')
         else:
             errlog("running create_tables")
-            import docassemble.webapp.create_tables
+            import docassemble.webapp.create_tables  # pylint: disable=redefined-outer-name,import-outside-toplevel
             docassemble.webapp.create_tables.main()
             errlog("finished create_tables")
         if ':cron:' in container_role:

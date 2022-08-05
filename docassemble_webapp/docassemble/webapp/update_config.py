@@ -5,6 +5,7 @@ if __name__ == "__main__":
 from docassemble.base.config import daconfig
 import docassemble.webapp.cloud
 
+
 def check_for_config():
     cloud = docassemble.webapp.cloud.get_cloud()
     if cloud is not None:

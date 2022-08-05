@@ -1,11 +1,9 @@
 import io
-import json
-import re
 import docassemble.base.util
 from google.cloud import vision
-from google.cloud import storage
 
 __all__ = ['gv_ocr']
+
 
 def gv_ocr(the_file):
     api = docassemble.base.util.DAGoogleAPI()

@@ -29,18 +29,21 @@ from docassemble.base.logger import logmessage
 
 set_request_active(False)
 
+
 def get_filenames():
     results = []
-    for record in db.session.execute(select(UserDict.filename).where(UserDict.encrypted == False).group_by(UserDict.filename)):
+    for record in db.session.execute(select(UserDict.filename).where(UserDict.encrypted == False).group_by(UserDict.filename)):  # noqa: E712 # pylint: disable=singleton-comparison
         results.append(record.filename)
     return results
 
+
 def get_records(filename, last_index):
-    subq = select(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('cnt')).group_by(UserDict.filename, UserDict.key).where(UserDict.filename == filename, UserDict.encrypted == False, UserDict.indexno > last_index).subquery()
+    subq = select(UserDict.key, UserDict.filename, db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('cnt')).group_by(UserDict.filename, UserDict.key).where(UserDict.filename == filename, UserDict.encrypted == False, UserDict.indexno > last_index).subquery()  # noqa: E712 # pylint: disable=singleton-comparison
     results = []
     for record in db.session.execute(select(UserDict.key, UserDict.filename, UserDict.dictionary, subq.c.indexno, subq.c.cnt).join(subq, and_(subq.c.indexno == UserDict.indexno)).order_by(UserDict.indexno).limit(200)):
         results.append((record.indexno, record.key, record.filename, record.dictionary, record.cnt))
     return results
+
 
 def get_cron_user():
     for user in UserModel.query.options(db.joinedload(UserModel.roles)).all():
@@ -48,6 +51,7 @@ def get_cron_user():
             if role.name == 'cron':
                 return user
     sys.exit("Cron user not found")
+
 
 def delete_inactive_users():
     user_auto_delete = docassemble.base.config.daconfig.get('user auto delete', {})
@@ -80,7 +84,7 @@ def delete_inactive_users():
             logmessage("Error in configuration for user auto delete: invalid privilege")
             return
         if item not in role_ids:
-            logmessage("Error in configuration for user auto delete: unknown privilege" + repr(item) )
+            logmessage("Error in configuration for user auto delete: unknown privilege" + repr(item))
             return
         if item == 'cron':
             logmessage("Error in configuration for user auto delete: invalid privilege")
@@ -107,8 +111,9 @@ def delete_inactive_users():
         user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=delete_shared, admin=True)
         docassemble.webapp.backend.delete_user_data(user_id, r, r_user)
 
+
 def clear_old_interviews():
-    #logmessage("clear_old_interviews: starting")
+    # logmessage("clear_old_interviews: starting")
     try:
         interview_delete_days = int(docassemble.base.config.daconfig.get('interview delete days', 90))
     except:
@@ -123,7 +128,7 @@ def clear_old_interviews():
         except:
             logmessage("Error in configuration for interview delete days by filename")
     nowtime = datetime.datetime.utcnow()
-    #logmessage("clear_old_interviews: days is " + str(interview_delete_days))
+    # logmessage("clear_old_interviews: days is " + str(interview_delete_days))
     for filename, days in days_by_filename.items():
         last_index = -1
         while True:
@@ -135,7 +140,7 @@ def clear_old_interviews():
                 results_count += 1
                 last_index = record.indexno
                 delta = nowtime - record.modtime
-                #logmessage("clear_old_interviews: delta days is " + str(delta.days))
+                # logmessage("clear_old_interviews: delta days is " + str(delta.days))
                 if delta.days > days:
                     stale.append(dict(key=record.key, filename=record.filename))
             if results_count == 0:
@@ -158,7 +163,7 @@ def clear_old_interviews():
             results_count += 1
             last_index = record.indexno
             delta = nowtime - record.modtime
-            #logmessage("clear_old_interviews: delta days is " + str(delta.days))
+            # logmessage("clear_old_interviews: delta days is " + str(delta.days))
             if delta.days > interview_delete_days:
                 stale.append(dict(key=record.key, filename=record.filename))
         if results_count == 0:
@@ -169,6 +174,7 @@ def clear_old_interviews():
             release_lock(item['key'], item['filename'])
             time.sleep(0.15)
         time.sleep(0.6)
+
 
 def run_cron(the_cron_type):
     cron_types = [the_cron_type]

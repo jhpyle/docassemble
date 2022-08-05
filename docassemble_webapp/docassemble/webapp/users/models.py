@@ -2,24 +2,32 @@ from docassemble.webapp.db_object import db, UserMixin
 from docassemble.base.config import dbtableprefix, allowed
 from flask_login import AnonymousUserMixin
 
+
 class AnonymousUserModel(AnonymousUserMixin):
+
     @property
     def id(self):
         return -1
-    def same_as(self, user_id):
+
+    def same_as(self, user_id):  # pylint: disable=unused-argument
         return False
-    def has_role(self, *pargs, **kwargs):
+
+    def has_role(self, *pargs, **kwargs):  # pylint: disable=unused-argument
         return False
-    def has_roles(self, *pargs, **kwargs):
+
+    def has_roles(self, *pargs, **kwargs):  # pylint: disable=unused-argument
         return False
-    def has_role_or_permission(self, *specified_role_names, permissions=None):
+
+    def has_role_or_permission(self, *specified_role_names, permissions=None):  # pylint: disable=unused-argument
         if isinstance(permissions, list):
             for task in permissions:
                 if self.can_do(task):
                     return True
         return False
+
     def can_do(self, task):
         return bool('anonymous' in allowed and task in allowed['anonymous'])
+
 
 class UserModel(db.Model, UserMixin):
     __tablename__ = dbtableprefix + 'user'
@@ -40,18 +48,20 @@ class UserModel(db.Model, UserMixin):
     language = db.Column(db.String(64))
     user_auth = db.relationship('UserAuthModel', uselist=False, primaryjoin="UserAuthModel.user_id==UserModel.id", back_populates="user")
     roles = db.relationship('Role', secondary=dbtableprefix + 'user_roles', backref=db.backref(dbtableprefix + 'user', lazy='dynamic'))
-    password = db.Column(db.String(255), nullable=False, server_default='') # work around a bug
+    password = db.Column(db.String(255), nullable=False, server_default='')  # work around a bug
     otp_secret = db.Column(db.String(255), nullable=True)
     pypi_username = db.Column(db.String(255), nullable=True)
     pypi_password = db.Column(db.String(255), nullable=True)
     modified_at = db.Column(db.DateTime())
     last_login = db.Column(db.DateTime())
-    #email_is_phone_number = db.Column(db.Boolean(), nullable=True, server_default='0')
+    # email_is_phone_number = db.Column(db.Boolean(), nullable=True, server_default='0')
     limited_api = False
+
     def same_as(self, user_id):
         if self.limited_api:
             return False
         return self.id == user_id
+
     def has_role_or_permission(self, *specified_role_names, permissions=None):
         if self.limited_api:
             if isinstance(permissions, list):
@@ -65,6 +75,7 @@ class UserModel(db.Model, UserMixin):
                 if self.can_do(task):
                     return True
         return role_result
+
     def can_do(self, task):
         if self.is_anonymous:
             return False
@@ -82,14 +93,16 @@ class UserModel(db.Model, UserMixin):
                 return True
         return False
 
+
 class UserAuthModel(db.Model, UserMixin):
     __tablename__ = dbtableprefix + 'user_auth'
     id = db.Column(db.Integer, primary_key=True, unique=True)
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
     password = db.Column(db.String(255), nullable=False, server_default='')
     reset_password_token = db.Column(db.String(100), nullable=False, server_default='')
-    #active = db.Column(db.Boolean(), nullable=False, server_default='0')
+    # active = db.Column(db.Boolean(), nullable=False, server_default='0')
     user = db.relationship('UserModel', uselist=False, primaryjoin="UserModel.id==UserAuthModel.user_id", back_populates="user_auth")
+
 
 class Role(db.Model):
     __tablename__ = dbtableprefix + 'role'
@@ -97,11 +110,13 @@ class Role(db.Model):
     name = db.Column(db.String(50), unique=True, index=True)
     description = db.Column(db.String(255))
 
+
 class UserRoles(db.Model):
     __tablename__ = dbtableprefix + 'user_roles'
     id = db.Column(db.Integer(), primary_key=True, unique=True)
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
     role_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'role.id', ondelete='CASCADE'), index=True)
+
 
 class UserDict(db.Model):
     __tablename__ = dbtableprefix + "userdict"
@@ -115,6 +130,7 @@ class UserDict(db.Model):
 
 db.Index(dbtableprefix + 'ix_userdict_key_filename', UserDict.key, UserDict.filename)
 
+
 class UserDictKeys(db.Model):
     __tablename__ = dbtableprefix + "userdictkeys"
     indexno = db.Column(db.Integer(), primary_key=True)
@@ -125,9 +141,11 @@ class UserDictKeys(db.Model):
 
 db.Index(dbtableprefix + 'ix_userdictkeys_key_filename', UserDictKeys.key, UserDictKeys.filename)
 
+
 class TempUser(db.Model):
     __tablename__ = dbtableprefix + 'tempuser'
     id = db.Column(db.Integer, primary_key=True, unique=True)
+
 
 class ChatLog(db.Model):
     __tablename__ = dbtableprefix + "chatlog"
@@ -142,6 +160,7 @@ class ChatLog(db.Model):
     open_to_peer = db.Column(db.Boolean(), nullable=False, server_default='0')
     encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
     modtime = db.Column(db.DateTime())
+
 
 class MyUserInvitation(db.Model):
     __tablename__ = dbtableprefix + 'user_invite'

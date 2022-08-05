@@ -3,30 +3,40 @@ import re
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
+
 class DAIndexError(IndexError):
     pass
+
 
 class DAAttributeError(AttributeError):
     pass
 
+
 class DAError(Exception):
+
     def __init__(self, value, code=501):
         self.value = value
         self.error_code = code
         super().__init__(value)
+
     def __str__(self):
         return str(self.value)
+
 
 class DANotFoundError(Exception):
     pass
 
+
 class DAValidationError(Exception):
     """This is an Exception object that is used when raising an exception inside input validation code."""
+
     def __init__(self, *pargs, field=None):
         self.field = field
         super().__init__(*pargs)
 
+
 class CodeExecute(Exception):
+
     def __init__(self, compute, question):
         if isinstance(compute, list):
             self.compute = "\n".join(compute)
@@ -35,11 +45,14 @@ class CodeExecute(Exception):
         self.question = question
         super().__init__()
 
+
 class ForcedReRun(Exception):
     pass
 
+
 class LazyNameError(NameError):
     pass
+
 
 def invalid_variable_name(varname):
     if not isinstance(varname, str):
@@ -51,7 +64,9 @@ def invalid_variable_name(varname):
         return True
     return False
 
+
 class ForcedNameError(NameError):
+
     def __init__(self, *pargs, **kwargs):
         super().__init__()
         the_args = list(pargs)
@@ -129,6 +144,7 @@ class ForcedNameError(NameError):
             self.next_action = None
         if first_is_plain:
             self.arguments = None
+
     def set_action(self, data):
         if (not hasattr(self, 'name')) or self.name is None:
             if isinstance(data, dict) and 'action' in data and (len(data) == 1 or 'arguments' in data):
@@ -139,27 +155,36 @@ class ForcedNameError(NameError):
                 raise DAError("force_ask: invalid parameter " + repr(data))
         self.next_action.append(data)
 
+
 class DAErrorNoEndpoint(DAError):
     pass
 
+
 class DAErrorMissingVariable(DAError):
+
     def __init__(self, value, variable=None, code=501):
         self.value = value
         self.variable = variable
         self.error_code = code
         super().__init__(value)
 
+
 class DAErrorCompileError(DAError):
     pass
 
+
 class MandatoryQuestion(Exception):
+
     def __init__(self):
         self.value = 'Mandatory Question'
         super().__init__()
+
     def __str__(self):
         return str(self.value)
 
+
 class QuestionError(Exception):
+
     def __init__(self, *pargs, **kwargs):
         if len(pargs) >= 1:
             self.question = pargs[0]
@@ -204,10 +229,13 @@ class QuestionError(Exception):
         else:
             self.dead_end = None
         super().__init__()
+
     def __str__(self):
         return str(self.question)
 
+
 class BackgroundResponseError(Exception):
+
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0 and len(kwargs) > 0:
             self.backgroundresponse = dict(pargs=list(pargs), kwargs=kwargs)
@@ -220,12 +248,15 @@ class BackgroundResponseError(Exception):
         if 'sleep' in kwargs:
             self.sleep = kwargs['sleep']
         super().__init__()
+
     def __str__(self):
         if hasattr(self, 'backgroundresponse'):
             return str(self.backgroundresponse)
         return "A BackgroundResponseError exception was thrown"
 
+
 class BackgroundResponseActionError(Exception):
+
     def __init__(self, *pargs, **kwargs):
         self.action = dict(arguments={})
         if len(pargs) == 0:
@@ -235,12 +266,15 @@ class BackgroundResponseActionError(Exception):
         for key, val in kwargs.items():
             self.action['arguments'][key] = val
         super().__init__()
+
     def __str__(self):
         if hasattr(self, 'action'):
             return str(self.action)
         return "A BackgroundResponseActionError exception was thrown"
 
+
 class ResponseError(Exception):
+
     def __init__(self, *pargs, **kwargs):
         if len(pargs) == 0 and not ('response' in kwargs or 'binaryresponse' in kwargs or 'all_variables' in kwargs or 'file' in kwargs or 'url' in kwargs or 'null' in kwargs):
             self.response = "Empty Response"
@@ -267,12 +301,15 @@ class ResponseError(Exception):
         if 'content_type' in kwargs:
             self.content_type = kwargs['content_type']
         super().__init__()
+
     def __str__(self):
         if hasattr(self, 'response'):
             return str(self.response)
         return "A ResponseError exception was thrown"
 
+
 class CommandError(Exception):
+
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0:
             self.return_type = pargs[0]
@@ -283,10 +320,13 @@ class CommandError(Exception):
         self.url = kwargs.get('url', '')
         self.sleep = kwargs.get('sleep', None)
         super().__init__()
+
     def __str__(self):
         return str(self.return_type)
 
+
 class DAWebError(Exception):
+
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
             setattr(self, key, val)

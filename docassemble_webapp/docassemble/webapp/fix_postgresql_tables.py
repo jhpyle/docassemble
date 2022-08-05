@@ -8,11 +8,13 @@ if __name__ == "__main__":
 from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 
+
 def read_in(line, target):
     col = line.split('|')
     if col[0] not in target:
         target[col[0]] = {}
     target[col[0]][col[1]] = {'type': col[2], 'size': col[3], 'default': col[4]}
+
 
 def main():
     dbconfig = daconfig.get('db', {})

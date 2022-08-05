@@ -4,11 +4,14 @@ from fnmatch import fnmatchcase
 from distutils.util import convert_path
 from setuptools import setup, find_packages
 
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
 standard_exclude_directories = ('.*', 'CVS', '_darcs', os.path.join('.', 'build'), os.path.join('.', 'dist'), 'EGG-INFO', '*.egg-info')
+
+
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
     stack = [(convert_path(where), '', package)]
@@ -19,8 +22,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
             if os.path.isdir(fn):
                 bad_name = False
                 for pattern in exclude_directories:
-                    if (fnmatchcase(name, pattern)
-                        or fn.lower() == pattern.lower()):
+                    if (fnmatchcase(name, pattern) or fn.lower() == pattern.lower()):
                         bad_name = True
                         break
                 if bad_name:
@@ -36,8 +38,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
             else:
                 bad_name = False
                 for pattern in exclude:
-                    if (fnmatchcase(name, pattern)
-                        or fn.lower() == pattern.lower()):
+                    if (fnmatchcase(name, pattern) or fn.lower() == pattern.lower()):
                         bad_name = True
                         break
                 if bad_name:
@@ -219,7 +220,7 @@ install_requires = [
     "zipp==3.8.0"
 ]
 
-if sys.version_info < (3 , 9):
+if sys.version_info < (3, 9):
     install_requires.append("backports.zoneinfo==0.2.1")
 
 setup(name='docassemble.base',
@@ -232,9 +233,9 @@ setup(name='docassemble.base',
       author_email='jhpyle@gmail.com',
       license='MIT',
       url='https://docassemble.org',
-      namespace_packages = ['docassemble'],
-      install_requires = install_requires,
+      namespace_packages=['docassemble'],
+      install_requires=install_requires,
       packages=find_packages(),
-      zip_safe = False,
+      zip_safe=False,
       package_data=find_package_data(where=os.path.join('docassemble', 'base', ''), package='docassemble.base'),
-     )
+      )

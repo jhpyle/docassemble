@@ -4,7 +4,9 @@ from docassemble.base.util import DAObject, DAList, DAFileCollection, interview_
 
 __all__ = ['SigningProcess']
 
+
 class SigningProcess(DAObject):
+
     def init(self, *pargs, **kwargs):
         self.deadline_days = 30
         self.additional_people_to_notify = []
@@ -23,8 +25,9 @@ class SigningProcess(DAObject):
         self.initial_notification_sent = False
         self.final_notification_triggered = False
         self.final_notification_sent = False
+
     def rationalize(self):
-        if not isinstance(self.documents, (list, DAList)):
+        if not isinstance(self.documents, (list, DAList)):  # pylint: disable=access-member-before-definition
             self.documents = [self.documents]
         for document in self.documents:
             if not isinstance(document, str):
@@ -36,6 +39,7 @@ class SigningProcess(DAObject):
         for person in self.additional_people_to_notify:
             if not isinstance(person, (Person, DAEmailRecipient)):
                 raise Exception("SigningProcess: an additional person to notify must be a person")
+
     def out_for_signature(self):
         if self.initial_notification_triggered or self.initial_notification_sent:
             return
@@ -49,6 +53,7 @@ class SigningProcess(DAObject):
         background_action(self.attr_name('background_initial_notification'))
         prevent_going_back()
         self.initial_notification_triggered = True
+
     def initial_notify(self):
         if self.initial_notification_sent:
             return
@@ -66,14 +71,17 @@ class SigningProcess(DAObject):
         self.initial_notification_sent = True
         if interface() == 'worker':
             background_response()
+
     def sign_for(self, signer, signature):
         code = self._code_for(self, signer)
         if self.info_by_code[code]['signed']:
             return
         self.signature[code] = signature
         self.validate_signature(code)
+
     def refresh_documents(self):
         reconsider(*self.documents)
+
     def final_notify(self):
         if self.final_notification_sent:
             return
@@ -89,6 +97,7 @@ class SigningProcess(DAObject):
         self.final_notification_sent = True
         if interface() == 'worker':
             background_response()
+
     def _verify_signer(self, signer):
         if not isinstance(signer, Person):
             if hasattr(signer, 'instanceName'):
@@ -97,15 +106,18 @@ class SigningProcess(DAObject):
         if signer not in [y['signer'] for y in self.info_by_code.values()]:
             code = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
             self.info_by_code[code] = dict(signed=False, signer=signer)
+
     def _code_for(self, signer):
         self._verify_signer(signer)
         for code, info in self.info_by_code.items():
             if info['signer'] is signer:
                 return code
         raise Exception("No code existed for signer")
+
     def has_signed(self, signer):
         code = self._code_for(signer)
         return self.info_by_code[code]['signed']
+
     def signature_of(self, signer, width=None):
         code = self._code_for(signer)
         if self.info_by_code[code]['signed']:
@@ -113,31 +125,36 @@ class SigningProcess(DAObject):
                 return self.signature[code].show(width=width)
             return self.signature[code]
         return self.blank_signature[code]
+
     def signature_date_of(self, signer):
         code = self._code_for(signer)
         if self.info_by_code[code]['signed']:
             return self.info_by_code[code]['date']
         return self.blank_signature_date[code]
+
     def signature_datetime_of(self, signer):
         code = self._code_for(signer)
         if self.info_by_code[code]['signed']:
             return self.info_by_code[code]['datetime']
         return self.blank_signature_datetime[code]
+
     def signature_ip_address_of(self, signer):
         code = self._code_for(signer)
         if self.info_by_code[code]['signed']:
             return self.info_by_code[code]['ip']
         return self.blank_ip_address[code]
+
     def collect_signature(self, code):
         if code is None or code not in self.info_by_code:
             force_ask(self.attr_name('unauthorized_screen'))
-        self.info_by_code[code]
+        self.info_by_code[code]  # pylint: disable=pointless-statement
         index_part = '[' + repr(code) + ']'
         if self.info_by_code[code]['signed']:
             force_ask(self.attr_name('thank_you_screen') + index_part)
         force_ask(self.attr_name('willing_to_sign') + index_part,
                   self.attr_name('signature') + index_part,
                   self.attr_name('thank_you_screen') + index_part)
+
     def validate_signature(self, code):
         if code not in self.info_by_code:
             raise Exception("Invalid code")
@@ -146,6 +163,7 @@ class SigningProcess(DAObject):
         self.info_by_code[code]['datetime'] = current_datetime()
         self.info_by_code[code]['ip'] = device(ip=True) or word("Unable to determine IP address")
         self.check_if_final()
+
     def check_if_final(self):
         if self.final_notification_triggered or self.final_notification_sent:
             return
@@ -153,46 +171,57 @@ class SigningProcess(DAObject):
             background_action(self.attr_name('background_final_notification'))
             prevent_going_back()
             self.final_notification_triggered = True
+
     def signer(self, code):
         if code is None:
             return None
         if code in self.info_by_code:
             return self.info_by_code[code]['signer']
         return None
+
     def url(self, code):
         return interview_url_action(self.attr_name('request_signature'), code=code, temporary=24 * self.deadline_days)
+
     def list_of_documents(self, refresh=False):
         self.rationalize()
         if refresh:
             self.refresh_documents()
         return [value(y) for y in self.documents]
+
     def number_of_documents(self):
         return len(self.documents)
+
     def singular_or_plural(self, singular_word, plural_word):
         return singular_word if self.number_of_documents() == 1 else plural_word
+
     def documents_name(self):
         return comma_and_list([y.info['name'] for y in self.list_of_documents()])
+
     def all_signatures_in(self):
         return all(y['signed'] for y in self.info_by_code.values())
+
     def list_of_signers(self):
         result = DAList()
         result.set_random_instance_name()
-        for code, info in self.info_by_code.items():
+        for info in self.info_by_code.values():
             result.append(info['signer'])
         return result
+
     def signers_who_signed(self):
         result = DAList()
         result.set_random_instance_name()
-        for code, info in self.info_by_code.items():
+        for info in self.info_by_code.values():
             if info['signed']:
                 result.append(info['signer'])
         return result
+
     def signers_who_did_not_sign(self):
         result = DAList()
         result.set_random_instance_name()
-        for code, info in self.info_by_code.items():
+        for info in self.info_by_code.values():
             if not info['signed']:
                 result.append(info['signer'])
         return result
+
     def number_of_signers(self):
         return len(self.info_by_code)

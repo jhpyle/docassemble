@@ -1,5 +1,5 @@
 import os
-import sys
+# import sys
 import tempfile
 import re
 import subprocess
@@ -10,6 +10,7 @@ from docassemble.base.util import DAFile
 from docassemble.base.logger import logmessage
 
 __all__ = ['mmdc']
+
 
 def mmdc(input_text, file_format='svg', flags=None):
     if flags is None:

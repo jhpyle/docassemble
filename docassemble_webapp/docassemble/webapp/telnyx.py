@@ -1,7 +1,8 @@
 import requests
 import docassemble.base.util
 
-def send_fax(fax_number, the_file, config, country=None):
+
+def send_fax(fax_number, the_file, config, country=None):  # pylint: disable=unused-argument
     if not bool((hasattr(the_file, 'extension') and the_file.extension == 'pdf') or (hasattr(the_file, 'mimetype') and the_file.mimetype == 'application/pdf')):
         the_file = docassemble.base.util.pdf_concatenate(the_file)
     telnyx_api_endpoint = config.get('api endpoint', 'https://api.telnyx.com/v2/faxes')

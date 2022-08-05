@@ -5,6 +5,7 @@ api = DAGoogleAPI()
 
 __all__ = ['get_folder_names', 'get_files_in_folder', 'write_file_to_folder', 'download_file']
 
+
 def get_folder_names():
     service = api.drive_service()
     items = []
@@ -17,6 +18,7 @@ def get_folder_names():
             break
     return [item['name'] for item in items]
 
+
 def get_folder_id(folder_name):
     service = api.drive_service()
     response = service.files().list(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and sharedWithMe and name='" + str(folder_name) + "'").execute()
@@ -24,6 +26,7 @@ def get_folder_id(folder_name):
     for item in response.get('files', []):
         folder_id = item['id']
     return folder_id
+
 
 def get_file_id(filename, folder_name):
     folder_id = get_folder_id(folder_name)
@@ -35,6 +38,7 @@ def get_file_id(filename, folder_name):
     for item in response.get('files', []):
         file_id = item['id']
     return file_id
+
 
 def get_files_in_folder(folder_name):
     folder_id = get_folder_id(folder_name)
@@ -51,17 +55,19 @@ def get_files_in_folder(folder_name):
             break
     return [item['name'] for item in items]
 
+
 def write_file_to_folder(path, mimetype, filename, folder_name):
     folder_id = get_folder_id(folder_name)
     if folder_id is None:
         raise Exception("The folder was not found")
     service = api.drive_service()
-    file_metadata = { 'name': filename, 'parents': [folder_id] }
+    file_metadata = {'name': filename, 'parents': [folder_id]}
     media = apiclient.http.MediaFileUpload(path, mimetype=mimetype)
     the_new_file = service.files().create(body=file_metadata,
                                           media_body=media,
                                           fields='id').execute()
     return the_new_file.get('id')
+
 
 def download_file(filename, folder_name):
     file_id = get_file_id(filename, folder_name)
@@ -76,6 +82,6 @@ def download_file(filename, folder_name):
         downloader = apiclient.http.MediaIoBaseDownload(fh, response)
         done = False
         while done is False:
-            status, done = downloader.next_chunk()
+            status, done = downloader.next_chunk()  # pylint: disable=unused-variable
     the_file.commit()
     return the_file

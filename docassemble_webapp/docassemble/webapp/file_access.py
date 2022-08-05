@@ -4,7 +4,7 @@ import mimetypes
 import os
 import re
 import subprocess
-import sys
+# import sys
 import tempfile
 import xml.etree.ElementTree as ET
 import PyPDF2
@@ -25,6 +25,7 @@ from sqlalchemy import and_, select
 cloud = docassemble.webapp.cloud.get_cloud()
 
 QPDF_PATH = 'qpdf'
+
 
 def url_if_exists(file_reference, **kwargs):
     attach_parameter = '&attachment=1' if kwargs.get('_attachment', False) else ''
@@ -61,6 +62,7 @@ def url_if_exists(file_reference, **kwargs):
         return base_url + '/packagestatic/' + parts[0] + '/' + re.sub(r'^data/static/', '', parts[1]) + version_parameter + attach_parameter
     return None
 
+
 def get_version_parameter(package):
     try:
         return '?v=' + str(importlib.import_module(package).__version__)
@@ -68,6 +70,7 @@ def get_version_parameter(package):
         if package.startswith('docassemble.playground'):
             return '?v=' + random_lower_string(6)
         return ''
+
 
 def reference_exists(file_reference):
     if cloud:
@@ -90,13 +93,14 @@ def reference_exists(file_reference):
                 return False
     the_path = docassemble.base.functions.static_filename_path(file_reference)
     if the_path is None or not os.path.isfile(the_path):
-        #logmessage("Returning false")
+        # logmessage("Returning false")
         return False
-    #logmessage("Returning true because path is " + str(the_path))
+    # logmessage("Returning true because path is " + str(the_path))
     return True
 
+
 def get_info_from_file_reference(file_reference, **kwargs):
-    #logmessage('file reference is ' + str(file_reference))
+    # logmessage('file reference is ' + str(file_reference))
     convert = kwargs.get('convert', None)
     privileged = kwargs.get('privileged', None)
     has_info = False
@@ -116,36 +120,36 @@ def get_info_from_file_reference(file_reference, **kwargs):
             result['fullpath'] = None
         has_info = True
     elif re.search(r'^https?://', str(file_reference)):
-        #logmessage("get_info_from_file_reference: " + str(file_reference) + " is a URL")
+        # logmessage("get_info_from_file_reference: " + str(file_reference) + " is a URL")
         possible_filename = re.sub(r'.*/', '', file_reference)
         if possible_filename == '':
             possible_filename = 'index.html'
         if re.search(r'\.', possible_filename):
             (possible_ext, possible_mimetype) = get_ext_and_mimetype(possible_filename)
             possible_ext = re.sub(r'[^A-Za-z0-9\.].*', '', possible_ext)
-            #logmessage("get_info_from_file_reference: starting with " + str(possible_ext) + " and " + str(possible_mimetype))
+            # logmessage("get_info_from_file_reference: starting with " + str(possible_ext) + " and " + str(possible_mimetype))
         else:
             possible_ext = 'txt'
             possible_mimetype = 'text/plain'
         result = {}
         temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.' + possible_ext, delete=False)
-        req = Request(file_reference, headers={'User-Agent' : docassemble.base.config.daconfig.get('user agent', 'curl/7.64.0')})
+        req = Request(file_reference, headers={'User-Agent': docassemble.base.config.daconfig.get('user agent', 'curl/7.64.0')})
         response = urlopen(req)
         temp_file.write(response.read())
-        #(local_filename, headers) = urllib.urlretrieve(file_reference)
+        # (local_filename, headers) = urllib.urlretrieve(file_reference)
         result['fullpath'] = temp_file.name
         try:
-            #result['mimetype'] = headers.gettype()
+            # result['mimetype'] = headers.gettype()
             result['mimetype'] = response.headers['Content-Type']
-            #logmessage("get_info_from_file_reference: mimetype is " + str(result['mimetype']))
+            # logmessage("get_info_from_file_reference: mimetype is " + str(result['mimetype']))
         except Exception:
             logmessage("get_info_from_file_reference: could not get mimetype from headers")
             result['mimetype'] = possible_mimetype
             result['extension'] = possible_ext
         if 'extension' not in result:
-            #logmessage("get_info_from_file_reference: extension not in result")
+            # logmessage("get_info_from_file_reference: extension not in result")
             result['extension'] = re.sub(r'^\.', '', mimetypes.guess_extension(result['mimetype']))
-            #logmessage("get_info_from_file_reference: extension is " + str(result['extension']))
+            # logmessage("get_info_from_file_reference: extension is " + str(result['extension']))
         if re.search(r'\.', possible_filename):
             result['filename'] = possible_filename
         else:
@@ -153,9 +157,9 @@ def get_info_from_file_reference(file_reference, **kwargs):
         path_parts = os.path.splitext(result['fullpath'])
         result['path'] = path_parts[0]
         has_info = True
-        #logmessage("get_info_from_file_reference: downloaded to " + str(result['fullpath']))
+        # logmessage("get_info_from_file_reference: downloaded to " + str(result['fullpath']))
     else:
-        #logmessage(str(file_reference) + " is not a URL")
+        # logmessage(str(file_reference) + " is not a URL")
         result = {}
         question = kwargs.get('question', None)
         manual_package = kwargs.get('package', None)
@@ -178,10 +182,10 @@ def get_info_from_file_reference(file_reference, **kwargs):
             if folder is not None and not re.search(r'/', file_reference):
                 file_reference = 'data/' + str(folder) + '/' + file_reference
             if the_package is not None:
-                #logmessage("package is " + str(the_package))
+                # logmessage("package is " + str(the_package))
                 file_reference = the_package + ':' + file_reference
             else:
-                #logmessage("package was null")
+                # logmessage("package was null")
                 file_reference = 'docassemble.base:' + file_reference
             if the_package is not None:
                 result['package'] = the_package
@@ -189,31 +193,32 @@ def get_info_from_file_reference(file_reference, **kwargs):
             result['package'] = parts[0]
         result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference)
     # logmessage("path is " + str(result['fullpath']))
-    if result['fullpath'] is not None: #os.path.isfile(result['fullpath'])
+    if result['fullpath'] is not None:  # os.path.isfile(result['fullpath'])
         if not has_info:
             result['filename'] = os.path.basename(result['fullpath'])
-            ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
+            ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])  # pylint: disable=unused-variable
             path_parts = os.path.splitext(result['fullpath'])
             result['path'] = path_parts[0]
             result['extension'] = path_parts[1].lower()
             result['extension'] = re.sub(r'\.', '', result['extension'])
-        #logmessage("Extension is " + result['extension'])
+        # logmessage("Extension is " + result['extension'])
         if convert is not None and result['extension'] in convert:
-            #logmessage("Converting...")
+            # logmessage("Converting...")
             if os.path.isfile(result['path'] + '.' + convert[result['extension']]):
-                #logmessage("Found conversion file ")
+                # logmessage("Found conversion file ")
                 result['extension'] = convert[result['extension']]
                 result['fullpath'] = result['path'] + '.' + result['extension']
                 ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
             else:
                 logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
                 return {}
-        #logmessage("Full path is " + result['fullpath'])
+        # logmessage("Full path is " + result['fullpath'])
         if os.path.isfile(result['fullpath']) and not has_info:
             add_info_about_file(result['fullpath'], result['path'], result)
     else:
         logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
     return result
+
 
 def safe_pypdf_reader(filename):
     try:
@@ -228,6 +233,7 @@ def safe_pypdf_reader(filename):
         if result != 0:
             raise Exception("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
         return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'), overwriteWarnings=False)
+
 
 def add_info_about_file(filename, basename, result):
     if result['extension'] == 'pdf':
@@ -275,6 +281,7 @@ def add_info_about_file(filename, basename, result):
             raise Exception("problem reading " + str(filename))
             # logmessage('add_info_about_file: could not read ' + str(filename))
 
+
 def get_info_from_file_number(file_number, privileged=False, filename=None, uids=None):
     if current_user and current_user.is_authenticated and current_user.has_role('admin', 'developer', 'advocate', 'trainer'):
         privileged = True
@@ -308,7 +315,7 @@ def get_info_from_file_number(file_number, privileged=False, filename=None, uids
         result['fullpath'] = result['path'] + '.' + result['extension']
         result['private'] = upload.private
         result['persistent'] = upload.persistent
-        #logmessage("fullpath is " + str(result['fullpath']))
+        # logmessage("fullpath is " + str(result['fullpath']))
     if 'path' not in result:
         logmessage("get_info_from_file_number: path is not in result for " + str(file_number))
         return result

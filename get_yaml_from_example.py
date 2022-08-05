@@ -11,6 +11,7 @@ document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 fix_tabs = re.compile(r'\t')
 fix_initial = re.compile(r'^---\n')
 
+
 def main():
     if len(sys.argv) < 2:
         sys.exit("Usage: get_yaml_from_example.py yaml_directory png_directory")
@@ -38,6 +39,7 @@ def main():
             (result['width'], result['height']) = image.size
         output[example_name] = result
     print(yaml.safe_dump(output, default_flow_style=False, default_style = '|'))
+
 
 def read_file(filename):
     start_block = 1

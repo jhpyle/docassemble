@@ -13,6 +13,7 @@ custom_db = daconfig.get('variables snapshot db', None)
 if custom_db is None:
     JsonDb = docassemble.webapp.db_object.db.session
     JsonStorage = CoreJsonStorage
+
     def variables_snapshot_connection():
         return docassemble.webapp.db_object.db.engine.raw_connection()
 else:
@@ -45,6 +46,7 @@ else:
     def variables_snapshot_connection():
         return engine.raw_connection()
 
+
 def read_answer_json(user_code, filename, tags=None, all_tags=False):
     if all_tags:
         entries = []
@@ -56,6 +58,7 @@ def read_answer_json(user_code, filename, tags=None, all_tags=False):
         return existing_entry.data
     return None
 
+
 def write_answer_json(user_code, filename, data, tags=None, persistent=False):
     existing_entry = JsonDb.execute(select(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags).with_for_update()).scalar()
     if existing_entry:
@@ -66,6 +69,7 @@ def write_answer_json(user_code, filename, data, tags=None, persistent=False):
         new_entry = JsonStorage(filename=filename, key=user_code, data=data, tags=tags, persistent=persistent)
         JsonDb.add(new_entry)
     JsonDb.commit()
+
 
 def delete_answer_json(user_code, filename, tags=None, delete_all=False, delete_persistent=False):
     if delete_all:

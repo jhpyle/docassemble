@@ -8,6 +8,7 @@ parser.add_argument("--digits", help="number of digits in Bates numbers", type=i
 parser.add_argument("--start", help="starting number", type=int)
 parser.add_argument("--area", help="area of page")
 
+
 def bates_number(docs, prefix, digits, start_number, area):
     m = Marisol(prefix, digits, start_number, area=getattr(Area, area))
     for doc in docs:

@@ -18,7 +18,7 @@ app.config['MAIL_SERVER'] = daconfig['mail'].get('server', 'localhost')
 app.config['MAIL_PORT'] = daconfig['mail'].get('port', 25)
 app.config['MAIL_USE_SSL'] = daconfig['mail'].get('use ssl', False)
 app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use tls', True)
-#app.config['ADMINS'] = [daconfig.get('admin address', None)]
+# app.config['ADMINS'] = [daconfig.get('admin address', None)]
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
 app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
 app.config['CSRF_ENABLED'] = False
@@ -91,8 +91,8 @@ if not daconfig.get('allow registration', True):
     app.config['USER_REQUIRE_INVITATION'] = True
 app.config['MAX_CONTENT_LENGTH'] = daconfig.get('maximum content length', 16 * 1024 * 1024)
 app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True) if daconfig.get('web server', 'nginx') == 'apache' else False
-#if daconfig.get('behind https load balancer', False):
-#    app.config['PREFERRED_URL_SCHEME'] = 'https'
+# if daconfig.get('behind https load balancer', False):
+#     app.config['PREFERRED_URL_SCHEME'] = 'https'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000
 connect_string = docassemble.webapp.database.connection_string()
 alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()

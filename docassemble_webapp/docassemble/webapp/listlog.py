@@ -20,6 +20,7 @@ if version.parse(system_version) < version.parse('1.4.0'):
 else:
     READY_FILE = '/var/run/docassemble/ready'
 
+
 @app.route('/listlog')
 def list_log_files():
     cmd = "supervisorctl "
@@ -34,6 +35,7 @@ def list_log_files():
             file_listing = [f for f in os.listdir(LOG_DIRECTORY) if os.path.isfile(os.path.join(LOG_DIRECTORY, f))]
         return "\n".join(sorted(file_listing))
     return "There was an error."
+
 
 @app.route("/listlog/health_check", methods=['GET'])
 def health_check():

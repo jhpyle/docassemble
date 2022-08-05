@@ -13,9 +13,9 @@ from xml.sax.saxutils import escape as html_escape
 from docxtpl import InlineImage, RichText
 from docx.shared import Mm, Inches, Pt, Cm, Twips
 import docx.opc.constants
-from docx.oxml.section import CT_SectPr # For figuring out if an element is a section or not
+from docx.oxml.section import CT_SectPr  # For figuring out if an element is a section or not
 import docx
-from docxcompose.composer import Composer # For fixing up images, etc when including docx files within templates
+from docxcompose.composer import Composer  # For fixing up images, etc when including docx files within templates
 from docassemble.base.functions import server, this_thread, package_template_filename, get_config, roman
 from docassemble.base.error import DAError
 import docassemble.base.filter
@@ -32,6 +32,7 @@ NoneType = type(None)
 DEFAULT_PAGE_WIDTH = '6.5in'
 
 list_types = ['1', 'A', 'a', 'I', 'i']
+
 
 def image_for_docx(fileref, question, tpl, width=None):
     if fileref.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile', 'DAStaticFile'):
@@ -65,31 +66,38 @@ def image_for_docx(fileref, question, tpl, width=None):
         the_width = Inches(2)
     return InlineImage(tpl, file_info['fullpath'], the_width)
 
+
 def transform_for_docx(text):
     if type(text) in (int, float, bool, NoneType):
         return text
     text = str(text)
     return text
 
+
 def create_hyperlink(url, anchor_text, tpl):
     return InlineHyperlink(tpl, url, sanitize_xml(anchor_text))
 
+
 class InlineHyperlink:
+
     def __init__(self, tpl, url, anchor_text):
         self.tpl = tpl
         self.url = url
         self.anchor_text = anchor_text
+
     def _insert_link(self):
         ref = self.tpl.docx._part.relate_to(self.url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
         return '</w:t></w:r><w:hyperlink r:id="%s"><w:r><w:rPr><w:rStyle w:val="InternetLink"/></w:rPr><w:t>%s</w:t></w:r></w:hyperlink><w:r><w:rPr></w:rPr><w:t xml:space="preserve">' % (ref, html_escape(self.anchor_text))
+
     def __str__(self):
         return self._insert_link()
+
 
 def fix_subdoc(masterdoc, subdoc_info):
     """Fix the images, styles, references, shapes, etc of a subdoc"""
     subdoc = subdoc_info['subdoc']
     change_numbering = subdoc_info['change_numbering']
-    composer = Composer(masterdoc) # Using docxcompose
+    composer = Composer(masterdoc)  # Using docxcompose
     composer.reset_reference_mapping()
 
     # This is the same as the docxcompose function, except it doesn't copy the elements over.
@@ -116,6 +124,7 @@ def fix_subdoc(masterdoc, subdoc_info):
     composer.renumber_bookmarks()
     composer.renumber_docpr_ids()
     composer.fix_section_types(subdoc)
+
 
 def include_docx_template(template_file, **kwargs):
     """Include the contents of one docx file inside another docx file."""
@@ -165,6 +174,7 @@ def include_docx_template(template_file, **kwargs):
         return re.sub(r'<w:p[^>]*>\s*(.*)</w:p>\s*', r'\1', str(first_paragraph._p.xml), flags=re.DOTALL)
     return sd
 
+
 def get_children(descendants, parsed):
     subelement = False
     descendants_buff = deque()
@@ -188,6 +198,7 @@ def get_children(descendants, parsed):
     descendants_buff.reverse()
     return descendants_buff
 
+
 def html_linear_parse(soup):
     html_tag = soup.html
     descendants = deque()
@@ -199,23 +210,29 @@ def html_linear_parse(soup):
         descendants.extendleft(from_children)
     return parsed
 
+
 def Alpha(number):
     multiplier = int((number - 1) / 26)
     indexno = (number - 1) % 26
     return string.ascii_uppercase[indexno] * (multiplier + 1)
+
 
 def alpha(number):
     multiplier = int((number - 1) / 26)
     indexno = (number - 1) % 26
     return string.ascii_lowercase[indexno] * (multiplier + 1)
 
+
 def Roman_Numeral(number):
     return roman((number - 1) % 4000, case='upper')
+
 
 def roman_numeral(number):
     return roman((number - 1) % 4000, case='lower')
 
+
 class SoupParser:
+
     def __init__(self, tpl):
         self.paragraphs = [dict(params=dict(style='p', indentation=0, list_number=1), runs=[RichText('')])]
         self.current_paragraph = self.paragraphs[-1]
@@ -234,6 +251,7 @@ class SoupParser:
         self.charstyle = None
         self.color = None
         self.tpl = tpl
+
     def new_paragraph(self, classes, styles):
         if self.still_new:
             # logmessage("new_paragraph is still new and style is " + self.style + " and indentation is " + str(self.indentation))
@@ -249,6 +267,7 @@ class SoupParser:
         self.paragraphs.append(self.current_paragraph)
         self.run = self.current_paragraph['runs'][-1]
         self.still_new = True
+
     def set_attribs(self, classes, styles):
         if 'dacenter' in classes:
             self.current_paragraph['params']['align'] = 'center'
@@ -282,6 +301,7 @@ class SoupParser:
             m = re.search(r'text-indent:([0-9\.]+)px', styles)
             if m:
                 self.current_paragraph['params']['firstline'] = 20 * int(m.group(1))
+
     def __str__(self):
         output = ''
         for para in self.paragraphs:
@@ -338,18 +358,22 @@ class SoupParser:
                 output += str(run)
             output += '</w:p>'
         return output
+
     def start_link(self, url):
         ref = self.tpl.docx._part.relate_to(url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
         self.current_paragraph['runs'].append('<w:hyperlink r:id="%s">' % (ref, ))
         self.new_run()
         self.still_new = False
+
     def end_link(self):
         self.current_paragraph['runs'].append('</w:hyperlink>')
         self.new_run()
         self.still_new = False
+
     def new_run(self):
         self.current_paragraph['runs'].append(RichText(''))
         self.run = self.current_paragraph['runs'][-1]
+
     def traverse(self, elem):
         for part in elem.contents:
             if isinstance(part, NavigableString):
@@ -472,7 +496,9 @@ class SoupParser:
             else:
                 logmessage("Encountered a " + part.__class__.__name__)
 
+
 class InlineSoupParser:
+
     def __init__(self, tpl):
         self.runs = [RichText('')]
         self.run = self.runs[-1]
@@ -489,6 +515,7 @@ class InlineSoupParser:
         self.at_start = True
         self.list_number = 1
         self.list_type = list_types[-1]
+
     def new_paragraph(self):
         if self.at_start:
             self.at_start = False
@@ -515,21 +542,26 @@ class InlineSoupParser:
             self.list_number += 1
         # else:
         #     self.list_number = 1
+
     def __str__(self):
         output = ''
         for run in self.runs:
             output += str(run)
         return output
+
     def start_link(self, url):
         ref = self.tpl.docx._part.relate_to(url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
         self.runs.append('<w:hyperlink r:id="%s">' % (ref, ))
         self.new_run()
+
     def end_link(self):
         self.runs.append('</w:hyperlink>')
         self.new_run()
+
     def new_run(self):
         self.runs.append(RichText(''))
         self.run = self.runs[-1]
+
     def traverse(self, elem):
         for part in elem.contents:
             if isinstance(part, NavigableString):
@@ -609,6 +641,7 @@ class InlineSoupParser:
             else:
                 logmessage("Encountered a " + part.__class__.__name__)
 
+
 def inline_markdown_to_docx(text, question, tpl):
     old_context = docassemble.base.functions.this_thread.evaluation_context
     docassemble.base.functions.this_thread.evaluation_context = None
@@ -619,14 +652,15 @@ def inline_markdown_to_docx(text, question, tpl):
         raise
     docassemble.base.functions.this_thread.evaluation_context = old_context
     source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
-    source_code = re.sub("\n", ' ', source_code)
-    source_code = re.sub(">\s+<", '><', source_code)
+    source_code = re.sub(r"\n", ' ', source_code)
+    source_code = re.sub(r">\s+<", '><', source_code)
     soup = BeautifulSoup('<html>' + source_code + '</html>', 'html.parser')
     parser = InlineSoupParser(tpl)
     for elem in soup.find_all(recursive=False):
         parser.traverse(elem)
     output = str(parser)
     return docassemble.base.filter.docx_template_filter(output, question=question, replace_newlines=False)
+
 
 def markdown_to_docx(text, question, tpl):
     old_context = docassemble.base.functions.this_thread.evaluation_context
@@ -639,8 +673,8 @@ def markdown_to_docx(text, question, tpl):
     docassemble.base.functions.this_thread.evaluation_context = old_context
     if get_config('new markdown to docx', False):
         source_code = docassemble.base.filter.markdown_to_html(text, do_terms=False)
-        source_code = re.sub("\n", ' ', source_code)
-        source_code = re.sub(">\s+<", '><', source_code)
+        source_code = re.sub(r"\n", ' ', source_code)
+        source_code = re.sub(r">\s+<", '><', source_code)
         soup = BeautifulSoup('<html>' + source_code + '</html>', 'html.parser')
         parser = SoupParser(tpl)
         for elem in soup.find_all(recursive=False):
@@ -649,6 +683,7 @@ def markdown_to_docx(text, question, tpl):
         # logmessage(output)
         return docassemble.base.filter.docx_template_filter(output, question=question)
     return inline_markdown_to_docx(text, question, tpl)
+
 
 def safe_pypdf_reader(filename):
     try:
@@ -663,6 +698,7 @@ def safe_pypdf_reader(filename):
         if result != 0:
             raise Exception("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
         return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'), overwriteWarnings=False)
+
 
 def pdf_pages(file_info, width):
     output = ''
@@ -699,10 +735,11 @@ def pdf_pages(file_info, width):
         output += ' '
     return output
 
+
 def concatenate_files(path_list):
     new_path_list = []
     for path in path_list:
-        mimetype, encoding = mimetypes.guess_type(path)
+        mimetype, encoding = mimetypes.guess_type(path)  # pylint: disable=unused-variable
         if mimetype in ('application/rtf', 'application/msword', 'application/vnd.oasis.opendocument.text'):
             new_docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
             if mimetype == 'application/rtf':
@@ -725,6 +762,7 @@ def concatenate_files(path_list):
     docx_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
     composer.save(docx_file.name)
     return docx_file.name
+
 
 def sanitize_xml(text):
     return re.sub(r'{([{%#])', '{' + zerowidth + r'\1', re.sub(r'([}%#])}', r'\1' + zerowidth + '}', text))

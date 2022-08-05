@@ -1,23 +1,24 @@
-#import sys
-#from werkzeug.contrib.fixers import ProxyFix
+# import sys
+# from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask
-#from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
-import docassemble.webapp.db_object
+import docassemble.webapp.db_object  # noqa: F401 # pylint: disable=unused-import
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 
+
 def create_app():
     the_app = Flask(__name__)
     the_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    from docassemble.base.config import daconfig
-    import docassemble.webapp.database
+    from docassemble.base.config import daconfig  # pylint: disable=import-outside-toplevel
+    import docassemble.webapp.database  # pylint: disable=import-outside-toplevel,redefined-outer-name
     alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
-    #the_app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
+    # the_app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
     the_app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
-    #the_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    #the_db = SQLAlchemy(the_app)
+    # the_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # the_db = SQLAlchemy(the_app)
     if alchemy_connect_string.startswith('postgresql'):
         connect_args = docassemble.webapp.database.connect_args()
         the_db = sqlalchemy.create_engine(alchemy_connect_string, connect_args=connect_args, pool_pre_ping=docassemble.webapp.database.pool_pre_ping)
@@ -25,7 +26,7 @@ def create_app():
         the_db = sqlalchemy.create_engine(alchemy_connect_string, pool_pre_ping=docassemble.webapp.database.pool_pre_ping)
     Base = declarative_base()
     Base.metadata.bind = the_db
-    #the_app.wsgi_app = ProxyFix(the_app.wsgi_app)
+    # the_app.wsgi_app = ProxyFix(the_app.wsgi_app)
     the_db.Model = Base
     the_db.Column = sqlalchemy.Column
     the_db.Integer = sqlalchemy.Integer
@@ -39,7 +40,7 @@ def create_app():
     the_db.backref = backref
     the_db.ForeignKey = sqlalchemy.ForeignKey
     docassemble.webapp.db_object.db = the_db
-    #import flask_login
+    # import flask_login
     docassemble.webapp.db_object.UserMixin = object
     if 'cross site domains' in daconfig and isinstance(daconfig['cross site domains'], list) and len(daconfig['cross site domains']) > 0:
         origins = daconfig['cross site domains']

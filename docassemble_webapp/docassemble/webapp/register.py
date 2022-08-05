@@ -9,6 +9,7 @@ from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
 from docassemble.webapp.core.models import Supervisors
 
+
 def main():
     supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
     if supervisor_url:
@@ -19,9 +20,8 @@ def main():
         db.session.commit()
 
 if __name__ == "__main__":
-    #import docassemble.webapp.database
+    # import docassemble.webapp.database
     with app.app_context():
-        #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
+        # app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
         main()
         db.engine.dispose()
-

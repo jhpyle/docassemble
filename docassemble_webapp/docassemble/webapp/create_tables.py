@@ -22,12 +22,13 @@ import docassemble.webapp.packages.models
 from docassemble.webapp.api_key import add_specific_api_key
 from sqlalchemy import select, delete, inspect
 from sqlalchemy.sql import text
-#import random
-#import string
+# import random
+# import string
 from docassemble_flask_user import UserManager, SQLAlchemyAdapter
 import pkg_resources
 from alembic.config import Config
 from alembic import command
+
 
 def get_role(the_db, name, result=None):
     if result is None:
@@ -40,6 +41,7 @@ def get_role(the_db, name, result=None):
     the_db.session.commit()
     result['changed'] = True
     return the_role
+
 
 def get_user(the_db, role, defaults, result=None):
     if result is None:
@@ -60,14 +62,14 @@ def get_user(the_db, role, defaults, result=None):
         social_id=new_social,
         email=defaults['email'],
         user_auth=user_auth,
-        first_name = defaults.get('first_name', ''),
-        last_name = defaults.get('last_name', ''),
-        country = defaults.get('country', ''),
-        subdivisionfirst = defaults.get('subdivisionfirst', ''),
-        subdivisionsecond = defaults.get('subdivisionsecond', ''),
-        subdivisionthird = defaults.get('subdivisionthird', ''),
-        organization = defaults.get('organization', ''),
-        confirmed_at = datetime.datetime.now()
+        first_name=defaults.get('first_name', ''),
+        last_name=defaults.get('last_name', ''),
+        country=defaults.get('country', ''),
+        subdivisionfirst=defaults.get('subdivisionfirst', ''),
+        subdivisionsecond=defaults.get('subdivisionsecond', ''),
+        subdivisionthird=defaults.get('subdivisionthird', ''),
+        organization=defaults.get('organization', ''),
+        confirmed_at=datetime.datetime.now()
     )
     the_user.roles.append(role)
     the_db.session.add(user_auth)
@@ -75,6 +77,7 @@ def get_user(the_db, role, defaults, result=None):
     the_db.session.commit()
     result['changed'] = True
     return the_user
+
 
 def test_for_errors(start_time=None):
     todo = [['chatlog', 'id', ChatLog],
@@ -110,6 +113,7 @@ def test_for_errors(start_time=None):
             logmessage('create_tables.test_for_errors: ' + table + " has an error: " + str(last_value) + " " + str(max_value) + " after " + str(time.time() - start_time) + " seconds.")
             db.session.execute(text("alter sequence " + table + "_" + column + "_seq restart with :newval"), {'newval': max_value + 1})
             db.session.commit()
+
 
 def populate_tables(start_time=None):
     if start_time is None:
@@ -190,6 +194,7 @@ def populate_tables(start_time=None):
         db.session.commit()
     logmessage("create_tables.populate_tables: ending after " + str(time.time() - start_time) + " seconds.")
 
+
 def main():
     logmessage("create_tables.main: starting")
     start_time = time.time()
@@ -251,7 +256,7 @@ def main():
                 logmessage("create_tables.main: running alembic upgrade")
                 command.upgrade(alembic_cfg, "head")
                 logmessage("create_tables.main: done running alembic upgrade after " + str(time.time() - start_time) + " seconds.")
-        #db.drop_all()
+        # db.drop_all()
         try:
             logmessage("create_tables.main: trying to create tables")
             db.create_all()

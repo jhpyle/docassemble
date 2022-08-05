@@ -1,4 +1,4 @@
-#import sys
+# import sys
 try:
     from werkzeug.middleware.proxy_fix import ProxyFix
     proxyfix_version = 15
@@ -11,12 +11,13 @@ from flask_babel import Babel
 from flask_cors import CORS
 import docassemble.base.functions
 
+
 def create_app():
     the_app = Flask(__name__)
     the_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    from docassemble.base.config import daconfig
-    import docassemble.webapp.database
-    import docassemble.webapp.db_object
+    from docassemble.base.config import daconfig  # pylint: disable=import-outside-toplevel
+    import docassemble.webapp.database  # pylint: disable=import-outside-toplevel,redefined-outer-name
+    import docassemble.webapp.db_object  # pylint: disable=import-outside-toplevel,redefined-outer-name
     alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
     the_app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
     if alchemy_connect_string.startswith('postgres'):
@@ -41,6 +42,6 @@ def create_app():
     return the_app, the_csrf, the_babel
 
 if docassemble.base.functions.server_context.context == 'websockets':
-    from docassemble.webapp.app_socket import app
+    from docassemble.webapp.app_socket import app  # pylint: disable=unused-import
 else:
     app, csrf, flaskbabel = create_app()

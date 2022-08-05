@@ -3,6 +3,7 @@ import os
 import docassemble.base.amazon
 import docassemble.base.microsoft
 
+
 def main():
     if os.environ.get('S3ENABLE', 'false') == 'true':
         s3_config = {}
@@ -30,6 +31,7 @@ def main():
     else:
         prefix = None
     recursive_list(cloud, prefix)
+
 
 def recursive_list(cloud, prefix):
     for key in cloud.list_keys(prefix):

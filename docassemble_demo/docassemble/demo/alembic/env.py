@@ -1,12 +1,9 @@
 from __future__ import with_statement
-
+import json
 from logging.config import fileConfig
-
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-
 from alembic import context
-import json
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -28,6 +25,7 @@ target_metadata = None
 # ... etc.
 
 connect_args = json.loads(config.get_main_option("connect_args"))
+
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.

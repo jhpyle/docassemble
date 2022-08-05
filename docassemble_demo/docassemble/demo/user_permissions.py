@@ -9,11 +9,14 @@ r = random.SystemRandom()
 other_user = 29
 other_interview = 'docassemble.base:data/questions/examples/madlibs.yml'
 
+
 def random_alphanumeric(length):
     return ''.join(r.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for x in range(length))
 
+
 def random_lower_string(length):
     return ''.join(r.choice(string.ascii_lowercase) for i in range(length))
+
 
 def get_permissions():
     results = {}

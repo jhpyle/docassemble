@@ -2,6 +2,7 @@ import os
 from docassemble.base.config import daconfig
 from docassemble.base.error import DAError
 
+
 def alchemy_url(db_config):
     if db_config not in daconfig or (not isinstance(daconfig[db_config], dict)) or 'name' not in daconfig[db_config]:
         raise Exception("alchemy_url: missing or invalid configuration for " + db_config)
@@ -36,6 +37,7 @@ def alchemy_url(db_config):
             raise DAError("No database name provided")
 
     return alchemy_connect_string
+
 
 def connect_args(db_config):
     if db_config not in daconfig or (not isinstance(daconfig[db_config], dict)) or 'name' not in daconfig[db_config]:

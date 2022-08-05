@@ -4,14 +4,15 @@ from docassemble.base.functions import word
 
 __all__ = ['to_text']
 
+
 def to_text(html_doc):
-    #logmessage("Starting to_text")
+    # logmessage("Starting to_text")
     output = ''
     soup = BeautifulSoup(html_doc, 'html.parser')
-    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
-    [s.extract() for s in soup.find_all(hidden)]
-    [s.extract() for s in soup.find_all('div', {'class': 'dainvisible'})]
-    [s.extract() for s in soup.select('.sr-exclude')]
+    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]  # pylint: disable=expression-not-assigned
+    [s.extract() for s in soup.find_all(hidden)]  # pylint: disable=expression-not-assigned
+    [s.extract() for s in soup.find_all('div', {'class': 'dainvisible'})]  # pylint: disable=expression-not-assigned
+    [s.extract() for s in soup.select('.sr-exclude')]  # pylint: disable=expression-not-assigned
     previous = ''
     for s in soup.find_all(do_show):
         if s.name in ['input', 'textarea', 'img'] and s.has_attr('alt'):
@@ -41,6 +42,7 @@ def to_text(html_doc):
     output = re.sub(r'<[^>]+>', '', output)
     return output
 
+
 def hidden(element):
     if element.name == 'input':
         if element.has_attr('type'):
@@ -53,6 +55,7 @@ def hidden(element):
 bad_list = ['div', 'option']
 
 good_list = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'button', 'textarea', 'note', 'label', 'li']
+
 
 def do_show(element):
     if re.match('<!--.*-->', str(element), re.DOTALL):

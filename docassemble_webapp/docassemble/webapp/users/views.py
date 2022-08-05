@@ -6,7 +6,7 @@ try:
     import zoneinfo
 except ImportError:
     from backports import zoneinfo
-#import docassemble.webapp.daredis
+# import docassemble.webapp.daredis
 from docassemble.webapp.app_object import app
 from docassemble.webapp.backend import delete_user_data
 from docassemble.webapp.db_object import db
@@ -24,6 +24,7 @@ from flask import make_response, redirect, render_template, request, flash, curr
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 PAGINATION_LIMIT = daconfig.get('pagination limit', 100)
 PAGINATION_LIMIT_PLUS_ONE = PAGINATION_LIMIT + 1
+
 
 @app.route('/privilegelist', methods=['GET', 'POST'])
 @login_required
@@ -54,6 +55,7 @@ def privilege_list():
     response = make_response(render_template('users/rolelist.html', version_warning=None, bodyclass='daadminbody', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output, can_edit=can_edit), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
+
 
 @app.route('/userlist', methods=['GET'])
 @login_required
@@ -114,15 +116,16 @@ def user_list():
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
+
 @app.route('/privilege/<int:id>/delete', methods=['GET'])
 @login_required
 @roles_required('admin', permission='edit_privileges')
-def delete_privilege(id):
+def delete_privilege(the_id):
     setup_translation()
-    if not id:
+    if not the_id:
         flash(word('The role could not be deleted.'), 'error')
         return redirect(url_for('privilege_list'))
-    role = db.session.execute(select(Role).filter_by(id=id)).scalar_one()
+    role = db.session.execute(select(Role).filter_by(id=the_id)).scalar_one()
     user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
     if user_role is None or role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
         flash(word('The role could not be deleted.'), 'error')
@@ -141,13 +144,14 @@ def delete_privilege(id):
         db.session.delete(role)
         db.session.commit()
         flash(word('The role ' + role.name + ' was deleted.'), 'success')
-        #docassemble.webapp.daredis.clear_user_cache()
+        # docassemble.webapp.daredis.clear_user_cache()
     return redirect(url_for('privilege_list'))
+
 
 @app.route('/user/<int:id>/editprofile', methods=['GET', 'POST'])
 @login_required
 @roles_required('admin', permission='edit_user_info')
-def edit_user_profile_page(id):
+def edit_user_profile_page(the_id):
     setup_translation()
     is_admin = bool(current_user.has_roles('admin'))
     if is_admin:
@@ -158,10 +162,10 @@ def edit_user_profile_page(id):
         can_edit_privileges = current_user.can_do('edit_user_privileges')
         can_delete = current_user.can_do('delete_user') and current_user.can_do('access_sessions') and current_user.can_do('edit_sessions')
         can_edit_user_active_status = current_user.can_do('edit_user_active_status')
-    if not id:
+    if not the_id:
         flash(word('The user account did not exit.'), 'danger')
         return redirect(url_for('user_list'))
-    user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=id)).unique().scalar_one()
+    user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=the_id)).unique().scalar_one()
     if not user:
         flash(word('The user account did not exit.'), 'danger')
         return redirect(url_for('user_list'))
@@ -180,23 +184,23 @@ def edit_user_profile_page(id):
     if 'disable_mfa' in request.args and int(request.args['disable_mfa']) == 1:
         user.otp_secret = None
         db.session.commit()
-        #docassemble.webapp.daredis.clear_user_cache()
-        return redirect(url_for('edit_user_profile_page', id=id))
+        # docassemble.webapp.daredis.clear_user_cache()
+        return redirect(url_for('edit_user_profile_page', id=the_id))
     if 'reset_email_confirmation' in request.args and int(request.args['reset_email_confirmation']) == 1:
         user.confirmed_at = None
         db.session.commit()
-        #docassemble.webapp.daredis.clear_user_cache()
-        return redirect(url_for('edit_user_profile_page', id=id))
+        # docassemble.webapp.daredis.clear_user_cache()
+        return redirect(url_for('edit_user_profile_page', id=the_id))
     if can_delete and daconfig.get('admin can delete account', True) and user.id != current_user.id:
         if 'delete_account' in request.args and int(request.args['delete_account']) == 1:
-            server.user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
-            delete_user_data(id, server.server_redis, server.server_redis_user)
+            server.user_interviews(user_id=the_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
+            delete_user_data(the_id, server.server_redis, server.server_redis_user)
             db.session.commit()
             flash(word('The user account was deleted.'), 'success')
             return redirect(url_for('user_list'))
         if 'delete_account_complete' in request.args and int(request.args['delete_account_complete']) == 1:
-            server.user_interviews(user_id=id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
-            delete_user_data(id, server.server_redis, server.server_redis_user)
+            server.user_interviews(user_id=the_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
+            delete_user_data(the_id, server.server_redis, server.server_redis_user)
             db.session.commit()
             flash(word('The user account was deleted.'), 'success')
             return redirect(url_for('user_list'))
@@ -260,6 +264,7 @@ def edit_user_profile_page(id):
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
+
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required
 @roles_required('admin', permission='edit_privileges')
@@ -281,6 +286,7 @@ def add_privilege():
     response = make_response(render_template('users/new_role_page.html', version_warning=None, bodyclass='daadminbody', page_title=word('Add Privilege'), tab_title=word('Add Privilege'), form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
+
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
@@ -306,18 +312,20 @@ def user_profile_page():
             if current_user.social_id and current_user.social_id.startswith('phone$'):
                 current_user.email = form.email.data
         db.session.commit()
-        #docassemble.webapp.daredis.clear_user_cache()
+        # docassemble.webapp.daredis.clear_user_cache()
         flash(word('Your information was saved.'), 'success')
         return redirect(url_for('interview_list'))
     response = make_response(render_template('users/user_profile_page.html', version_warning=None, page_title=word('User Profile'), tab_title=word('User Profile'), form=form, debug=debug_status()), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
+
 def _endpoint_url(endpoint):
     url = url_for('index')
     if endpoint:
         url = url_for(endpoint)
     return url
+
 
 @app.route('/user/invite', methods=['GET', 'POST'])
 @login_required
@@ -337,10 +345,10 @@ def invite():
         invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin')).order_by('name'))]
     else:
         invite_form.role_id.choices = [(str(r.id), str(r.name)) for r in db.session.execute(select(Role.id, Role.name).where(and_(Role.name != 'cron', Role.name != 'admin', Role.name != 'developer', Role.name != 'advocate')).order_by('name'))]
-    if request.method=='POST' and invite_form.validate():
+    if request.method == 'POST' and invite_form.validate():
         email_addresses = []
         for email_address in re.split(r'[\n\r]+', invite_form.email.data.strip()):
-            (part_one, part_two) = email.utils.parseaddr(email_address)
+            (part_one, part_two) = email.utils.parseaddr(email_address)  # pylint: disable=unused-variable
             email_addresses.append(part_two)
 
         the_role_id = None
@@ -356,7 +364,7 @@ def invite():
 
         has_error = False
         for email_address in email_addresses:
-            user, user_email = user_manager.find_user_by_email(email_address)
+            user, user_email = user_manager.find_user_by_email(email_address)  # pylint: disable=unused-variable
             if user:
                 flash(word("A user with that e-mail has already registered") + " (" + email_address + ")", "error")
                 has_error = True
@@ -371,7 +379,7 @@ def invite():
 
             user_invite.token = token
             db.session.commit()
-            #docassemble.webapp.daredis.clear_user_cache()
+            # docassemble.webapp.daredis.clear_user_cache()
             try:
                 logmessage("Trying to send invite e-mail to " + str(user_invite.email))
                 emails.send_invite_email(user_invite, accept_invite_link)
@@ -383,7 +391,7 @@ def invite():
                     logmessage("Failed to send invite e-mail")
                 db.session.delete(user_invite)
                 db.session.commit()
-                #docassemble.webapp.daredis.clear_user_cache()
+                # docassemble.webapp.daredis.clear_user_cache()
                 flash(word('Unable to send e-mail.  Error was: ') + str(e), 'error')
                 has_error = True
         if has_error:
@@ -398,6 +406,7 @@ def invite():
     response = make_response(render_template('flask_user/invite.html', version_warning=None, bodyclass='daadminbody', page_title=word('Invite User'), tab_title=word('Invite User'), form=invite_form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
+
 
 @app.route('/user/add', methods=['GET', 'POST'])
 @login_required
@@ -415,7 +424,7 @@ def user_add():
     if str(add_form.role_id.data) == 'None':
         add_form.role_id.data = user_role.id
     if request.method == 'POST' and add_form.validate():
-        user, user_email = app.user_manager.find_user_by_email(add_form.email.data)
+        user, user_email = app.user_manager.find_user_by_email(add_form.email.data)  # pylint: disable=unused-variable
         if user:
             flash(word("A user with that e-mail has already registered"), "error")
             return redirect(url_for('user_add'))
@@ -432,24 +441,24 @@ def user_add():
             social_id=new_social,
             email=add_form.email.data,
             user_auth=user_auth,
-            first_name = add_form.first_name.data,
-            last_name = add_form.last_name.data,
-            confirmed_at = datetime.datetime.now()
+            first_name=add_form.first_name.data,
+            last_name=add_form.last_name.data,
+            confirmed_at=datetime.datetime.now()
         )
         num_roles = 0
         for role in db.session.execute(select(Role).order_by('id')).scalars():
             if not is_admin and role.name in ('admin', 'developer', 'advocate'):
-                next
+                continue
             if role.id in add_form.role_id.data:
                 if role.name != 'cron':
                     the_user.roles.append(role)
-                    num_roles +=1
+                    num_roles += 1
         if num_roles == 0:
             the_user.roles.append(user_role)
         db.session.add(user_auth)
         db.session.add(the_user)
         db.session.commit()
-        #docassemble.webapp.daredis.clear_user_cache()
+        # docassemble.webapp.daredis.clear_user_cache()
         flash(word("The new user has been created"), "success")
         return redirect(url_for('user_list'))
     response = make_response(render_template('users/add_user_page.html', version_warning=None, bodyclass='daadminbody', page_title=word('Add User'), tab_title=word('Add User'), form=add_form), 200)

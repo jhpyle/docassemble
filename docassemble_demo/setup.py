@@ -1,14 +1,16 @@
 import os
-import sys
-from setuptools import setup, find_packages
 from fnmatch import fnmatchcase
 from distutils.util import convert_path
+from setuptools import setup, find_packages
+
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 standard_exclude = ('*.pyc', '*~', '.*', '*.bak', '*.swp*')
 standard_exclude_directories = ('.*', 'CVS', '_darcs', os.path.join('.', 'build'), os.path.join('.', 'dist'), 'EGG-INFO', '*.egg-info')
+
+
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
     stack = [(convert_path(where), '', package)]
@@ -19,8 +21,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
             if os.path.isdir(fn):
                 bad_name = False
                 for pattern in exclude_directories:
-                    if (fnmatchcase(name, pattern)
-                        or fn.lower() == pattern.lower()):
+                    if (fnmatchcase(name, pattern) or fn.lower() == pattern.lower()):
                         bad_name = True
                         break
                 if bad_name:
@@ -36,8 +37,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
             else:
                 bad_name = False
                 for pattern in exclude:
-                    if (fnmatchcase(name, pattern)
-                        or fn.lower() == pattern.lower()):
+                    if (fnmatchcase(name, pattern) or fn.lower() == pattern.lower()):
                         bad_name = True
                         break
                 if bad_name:
@@ -62,6 +62,6 @@ setup(name='docassemble.demo',
           'docassemble.base==1.4.1',
           'googledrivedownloader==0.4'
       ],
-      zip_safe = False,
-      package_data=find_package_data(where=os.path.join('docassemble', 'demo', ''), package='docassemble.demo'),
-  )
+      zip_safe=False,
+      package_data=find_package_data(where=os.path.join('docassemble', 'demo', ''), package='docassemble.demo')
+      )

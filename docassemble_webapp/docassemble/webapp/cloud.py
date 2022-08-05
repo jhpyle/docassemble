@@ -2,6 +2,7 @@ from docassemble.base.config import s3_config, S3_ENABLED, azure_config, AZURE_E
 import docassemble.base.amazon
 import docassemble.base.microsoft
 
+
 def get_cloud():
     if S3_ENABLED:
         cloud = docassemble.base.amazon.s3object(s3_config)
@@ -10,6 +11,7 @@ def get_cloud():
     else:
         cloud = None
     return cloud
+
 
 def get_custom_cloud(provider, config):
     if provider is None or config is None:

@@ -15,6 +15,8 @@ __all__ = ['Bank', 'Customer', 'BankCustomer']
 Base = declarative_base()
 
 # SQLAlchemy table definition for a Bank
+
+
 class BankModel(Base):
     __tablename__ = 'bank'
     id = Column(Integer, primary_key=True)
@@ -22,6 +24,8 @@ class BankModel(Base):
     name = Column(String(250))
 
 # SQLAlchemy table definition for a Customer
+
+
 class CustomerModel(Base):
     __tablename__ = 'customer'
     id = Column(Integer, primary_key=True)
@@ -35,6 +39,8 @@ class CustomerModel(Base):
     zip = Column(String(250))
 
 # SQLAlchemy table definition for keeping track of which Banks have which Customers
+
+
 class BankCustomerModel(Base):
     __tablename__ = 'bank_customer'
     id = Column(Integer, primary_key=True)
@@ -63,6 +69,8 @@ DBSession = sessionmaker(bind=engine)()
 upgrade_db(url, __file__, engine, conn_args=conn_args)
 
 # Define Bank as both a DAObject and SQLObject
+
+
 class Bank(Person, SQLObject):
     # This tells the SQLObject code what the SQLAlchemy model is
     _model = BankModel
@@ -72,11 +80,13 @@ class Bank(Person, SQLObject):
     _required = ['name']
     # This indicates that the human-readable unique identifier for the table is the column "routing"
     _uid = 'routing'
+
     def init(self, *pargs, **kwargs):
         super().init(*pargs, **kwargs)
         # This runs necessary SQLObject initialization code for the instance
         self.sql_init()
     # The db_get function specifies how to get attributes from the DAObject for purposes of setting SQL column values
+
     def db_get(self, column):
         if column == 'name':
             return self.name.text
@@ -84,6 +94,7 @@ class Bank(Person, SQLObject):
             return self.routing
         raise Exception("Invalid column " + column)
     # The db_set function specifies how to set attributes of the DAObject on the basis of non-null SQL column values
+
     def db_set(self, column, value):
         if column == 'name':
             self.name.text = value
@@ -92,6 +103,7 @@ class Bank(Person, SQLObject):
         else:
             raise Exception("Invalid column " + column)
     # The db_null function specifies how to delete attributes of the DAObject when the SQL column value becomes null
+
     def db_null(self, column):
         if column == 'name':
             del self.name.text
@@ -100,6 +112,7 @@ class Bank(Person, SQLObject):
         else:
             raise Exception("Invalid column " + column)
     # This is an example of a method that uses SQLAlchemy to return True or False
+
     def has_customer(self, customer):
         if not (self.ready() and customer.ready()):
             raise Exception("has_customer: cannot retrieve data")
@@ -111,6 +124,7 @@ class Bank(Person, SQLObject):
     # This is an example of a method that uses SQLAlchemy to add a record to the BankCustomer SQL table
     # to indicate that a bank has a customer.  Note that it is designed to be idempotent; it will not add
     # a duplicate record.
+
     def add_customer(self, customer):
         if not self.has_customer(customer):
             db_entry = BankCustomerModel(bank_id=self.id, customer_id=customer.id)
@@ -118,6 +132,7 @@ class Bank(Person, SQLObject):
             self._session.commit()
     # This is an example of a method that uses SQLAlchemy to return a list of Customer objects.
     # It uses the by_id() class method to return a Customer object for the given id.
+
     def get_customers(self):
         if not self.ready():
             raise Exception("get_customers: cannot retrieve data")
@@ -126,20 +141,24 @@ class Bank(Person, SQLObject):
             results.append(Customer.by_id(db_entry.customer_id))
         return results
     # This is an example of a method that uses SQLAlchemy to delete a bank-customer relationship
+
     def del_customer(self, customer):
         if not (self.ready() and customer.ready()):
             raise Exception("del_customer: cannot retrieve data")
         self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).delete()
         self._session.commit()
 
+
 class Customer(Individual, SQLObject):
     _model = CustomerModel
     _session = DBSession
     _required = ['first_name']
     _uid = 'ssn'
+
     def init(self, *pargs, **kwargs):
         super().init(*pargs, **kwargs)
         self.sql_init()
+
     def db_get(self, column):
         if column == 'ssn':
             return self.ssn
@@ -158,6 +177,7 @@ class Customer(Individual, SQLObject):
         if column == 'zip':
             return self.address.zip
         raise Exception("Invalid column " + column)
+
     def db_set(self, column, value):
         if column == 'ssn':
             self.ssn = value
@@ -175,6 +195,7 @@ class Customer(Individual, SQLObject):
             self.address.state = value
         elif column == 'zip':
             self.address.zip = value
+
     def db_null(self, column):
         if column == 'ssn':
             del self.ssn
@@ -193,20 +214,24 @@ class Customer(Individual, SQLObject):
         elif column == 'zip':
             del self.address.zip
 
+
 class BankCustomer(DAObject, SQLObjectRelationship):
     _model = BankCustomerModel
     _session = DBSession
     _parent = [Bank, 'bank', 'bank_id']
     _child = [Customer, 'customer', 'customer_id']
+
     def init(self, *pargs, **kwargs):
         super().init(*pargs, **kwargs)
         self.rel_init(*pargs, **kwargs)
+
     def db_get(self, column):
         if column == 'bank_id':
             return self.bank.id
         if column == 'customer_id':
             return self.customer.id
         raise Exception("Invalid column " + column)
+
     def db_set(self, column, value):
         if column == 'bank_id':
             self.bank = Bank.by_id(value)
@@ -220,6 +245,7 @@ class BankCustomer(DAObject, SQLObjectRelationship):
     # not a single column, but rather the combination of bank ID and customer ID, there is no _uid
     # column for the default db_find_existing() method to use.  But we can write our own method for
     # how to locate an existing record based on Python object attributes (.bank.id and .customer.id).
+
     def db_find_existing(self):
         try:
             return self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.bank.id, BankCustomerModel.customer_id == self.customer.id).first()

@@ -1,6 +1,6 @@
 # Adapted from flask_mail
 import base64
-import sys
+# import sys
 import time
 from docassemble.base.functions import word
 from docassemble.base.logger import logmessage
@@ -8,14 +8,19 @@ from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispat
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail as SGMail, Attachment, FileContent, FileName, FileType, Disposition, Email, To, ReplyTo
 
+
 class Connection:
+
     def __init__(self, mail):
         self.mail = mail
+
     def __enter__(self):
         return self
+
     def __exit__(self, exc_type, exc_value, tb):
         pass
-    def send(self, message, envelope_from=None):
+
+    def send(self, message, envelope_from=None):  # pylint: disable=unused-argument
         assert message.send_to, "No recipients have been added"
         assert message.sender, (
                 "The message does not specify a sender and a default sender "
@@ -59,8 +64,10 @@ class Connection:
                 pass
             raise Exception("Failed to send e-mail message to SendGrid")
         email_dispatched.send(message, app=current_app._get_current_object())
+
     def send_message(self, *args, **kwargs):
         self.send(Message(*args, **kwargs))
+
 
 class _MailMixin:
 
@@ -71,7 +78,7 @@ class _MailMixin:
 
         outbox = []
 
-        def _record(message, app):
+        def _record(message, app):  # pylint: disable=unused-argument
             outbox.append(message)
 
         email_dispatched.connect(_record)
@@ -95,7 +102,9 @@ class _MailMixin:
         except KeyError:
             raise RuntimeError("The curent application was not configured with Flask-Mail")
 
+
 class _Mail(_MailMixin):
+
     def __init__(self, api_key,
                  default_sender, debug, suppress,
                  ascii_attachments=False):
@@ -105,7 +114,9 @@ class _Mail(_MailMixin):
         self.suppress = suppress
         self.ascii_attachments = ascii_attachments
 
+
 class Mail(_MailMixin):
+
     def __init__(self, app=None):
         self.app = app
         if app is not None:

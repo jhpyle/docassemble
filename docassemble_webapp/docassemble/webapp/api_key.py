@@ -3,6 +3,7 @@ import hashlib
 import codecs
 from docassemble.webapp.daredis import r
 
+
 def add_specific_api_key(name, api_key, user_id, secret_key):
     info = dict(name=name, method='none', constraints=[])
     if not (isinstance(api_key, str) and len(api_key) == 32):
@@ -22,6 +23,7 @@ def add_specific_api_key(name, api_key, user_id, secret_key):
             return False
     r.set('da:apikey:userid:' + str(user_id) + ':key:' + new_api_key + ':info', json.dumps(info))
     return True
+
 
 def encrypt_api_key(key, secret_key):
     return codecs.encode(hashlib.pbkdf2_hmac('sha256', bytearray(key, 'utf-8'), bytearray(secret_key, encoding='utf-8'), 100000), 'base64').decode().strip()

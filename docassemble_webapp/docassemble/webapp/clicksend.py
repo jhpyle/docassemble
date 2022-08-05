@@ -5,6 +5,7 @@ from clicksend_client import FaxMessage
 from clicksend_client.rest import ApiException
 from docassemble.base.logger import logmessage
 
+
 def send_fax(fax_number, the_file, config, country=None):
     use_url = bool((hasattr(the_file, 'extension') and the_file.extension == 'pdf') or (hasattr(the_file, 'mimetype') and the_file.mimetype == 'application/pdf'))
     configuration = clicksend_client.Configuration()

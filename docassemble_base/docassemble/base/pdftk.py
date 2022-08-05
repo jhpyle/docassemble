@@ -1,7 +1,7 @@
 import subprocess
 import tempfile
 import shutil
-#import fdfgen
+# import fdfgen
 import re
 import string
 import codecs
@@ -10,7 +10,7 @@ import uuid
 from xfdfgen import Xfdf
 import yaml
 import PyPDF2 as pypdf
-#import pypdftk
+# import pypdftk
 from PIL import Image
 from docassemble.base.error import DAError
 from docassemble.base.pdfa import pdf_to_pdfa
@@ -27,13 +27,16 @@ logging.getLogger('pdfminer').setLevel(logging.ERROR)
 PDFTK_PATH = 'pdftk'
 QPDF_PATH = 'qpdf'
 
+
 def set_pdftk_path(path):
     global PDFTK_PATH
     PDFTK_PATH = path
 
+
 def set_qpdf_path(path):
     global QPDF_PATH
     QPDF_PATH = path
+
 
 def read_fields(pdffile):
     outfields = []
@@ -51,6 +54,7 @@ def read_fields(pdffile):
     recursively_add_fields(fields, id_to_page, outfields)
     return sorted(outfields, key=fieldsorter)
 
+
 def fieldsorter(x):
     if x[3] and isinstance(x[3], list):
         x_coord = x[3][0]
@@ -59,6 +63,7 @@ def fieldsorter(x):
         x_coord = 0
         y_coord = 0
     return (x[2], y_coord, x_coord)
+
 
 def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
     if isinstance(fields, PDFObjRef):
@@ -92,7 +97,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
             if not isinstance(value, bytes):
                 value = bytes(str(value), encoding='utf-8')
             value = remove_nonprintable_bytes_limited(value)
-        #logmessage("name is " + repr(name) + " and FT is |" + repr(str(field_type)) + "| and value is " + repr(value))
+        # logmessage("name is " + repr(name) + " and FT is |" + repr(str(field_type)) + "| and value is " + repr(value))
         if page is not None and hasattr(page, 'objid'):
             try:
                 pageno = id_to_page[page.objid]
@@ -119,10 +124,10 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
             default = '${ user.signature }'
         else:
             if value is not None:
-                #for val in value:
+                # for val in value:
                 #    logmessage("Got a " + str(ord(val)))
-                #logmessage(repr(value.decode('utf8')))
-                #default = re.sub(r'^\xc3\xbe\xc3\xbf', '', value)
+                # logmessage(repr(value.decode('utf8')))
+                # default = re.sub(r'^\xc3\xbe\xc3\xbf', '', value)
                 default = value
                 if not default:
                     default = word("something")
@@ -145,6 +150,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
             else:
                 outfields.append((prefix, default, pageno, rect, field_type, export_value))
 
+
 def read_fields_pdftk(pdffile):
     output = subprocess.check_output([PDFTK_PATH, pdffile, 'dump_data_fields']).decode()
     fields = []
@@ -161,6 +167,7 @@ def read_fields_pdftk(pdffile):
 
 pdf_parts = ['/AcroForm', '/Metadata', '/OCProperties', '/StructTreeRoot', '/OpenAction', '/AA', '/MarkInfo', '/Lang']
 
+
 def recursive_get_pages(indirect_obj, result):
     obj = indirect_obj.getObject()
     if '/Type' in obj and obj['/Type'] == '/Page':
@@ -168,6 +175,7 @@ def recursive_get_pages(indirect_obj, result):
     if '/Kids' in obj:
         for kid in obj['/Kids']:
             recursive_get_pages(kid, result)
+
 
 def get_page_hash(obj):
     page_list = []
@@ -179,26 +187,27 @@ def get_page_hash(obj):
         indexno += 1
     return result
 
+
 def recursive_add_bookmark(reader, writer, outlines, parent=None):
-    #logmessage("recursive_add_bookmark")
+    # logmessage("recursive_add_bookmark")
     cur_bm = None
     for destination in outlines:
         if isinstance(destination, list):
-            #logmessage("Going into subbookmark")
+            # logmessage("Going into subbookmark")
             recursive_add_bookmark(reader, writer, destination, parent=cur_bm)
         else:
-            #logmessage("page is " + str(destination.page))
+            # logmessage("page is " + str(destination.page))
             if isinstance(destination.page, pypdf.generic.NullObject):
-                #logmessage("continue 1")
+                # logmessage("continue 1")
                 continue
             if not isinstance(destination.page, pypdf.generic.IndirectObject):
-                #logmessage("continue 2")
+                # logmessage("continue 2")
                 continue
             if destination.page.idnum not in reader.idnum_to_page:
-                #logmessage("continue 3")
+                # logmessage("continue 3")
                 continue
             if reader.idnum_to_page[destination.page.idnum] > len(writer.page_list):
-                #logmessage("continue 4")
+                # logmessage("continue 4")
                 continue
             destination_page = writer.page_list[reader.idnum_to_page[destination.page.idnum] - 1]
             if destination.typ in ('/FitH', '/FitBH'):
@@ -211,7 +220,8 @@ def recursive_add_bookmark(reader, writer, outlines, parent=None):
                 cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ, destination.left, destination.top, destination.zoom)
             else:
                 cur_bm = writer.addBookmark(destination.title, destination_page, parent, None, False, False, destination.typ)
-            #logmessage("Added bookmark " + destination.title)
+            # logmessage("Added bookmark " + destination.title)
+
 
 def safe_pypdf_reader(filename):
     try:
@@ -228,6 +238,7 @@ def safe_pypdf_reader(filename):
             logmessage("Failed to convert PDF template " + str(filename))
             raise DAError("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
         return pypdf.PdfFileReader(open(new_filename.name, 'rb'), overwriteWarnings=False)
+
 
 def fill_template(template, data_strings=None, data_names=None, hidden=None, readonly=None, images=None, pdf_url=None, editable=True, pdfa=False, password=None, template_password=None, default_export_value=None):
     if data_strings is None:
@@ -248,7 +259,7 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
     if len(the_fields) == 0:
         raise DAError("PDF template has no fields in it.")
     export_values = {}
-    for field, default, pageno, rect, field_type, export_value in the_fields:
+    for field, default, pageno, rect, field_type, export_value in the_fields:  # pylint: disable=unused-variable
         field_type = re.sub(r'[^/A-Za-z]', '', str(field_type))
         if field_type in ('/Btn', "/'Btn'"):
             export_values[field] = export_value or default_export_value or 'Yes'
@@ -273,9 +284,9 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
     for key, val in data_strings:
         data_dict[key] = val
     fdf = Xfdf(pdf_url, data_dict)
-    #fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
+    # fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
     fdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".xfdf", delete=False)
-    #fdf_file.write(fdf)
+    # fdf_file.write(fdf)
     fdf_file.close()
     fdf.write_xfdf(fdf_file.name)
 #     if False:
@@ -300,7 +311,7 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
             raise DAError("Call to qpdf failed for template " + str(template) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
         template = template_file.name
     subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name]
-    #logmessage("Arguments are " + str(subprocess_arguments))
+    # logmessage("Arguments are " + str(subprocess_arguments))
     if editable or len(images) > 0:
         subprocess_arguments.append('need_appearances')
     else:
@@ -323,7 +334,7 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
             if field not in fields:
                 logmessage("field name " + str(field) + " not found in PDF file")
                 continue
-            #logmessage("Need to put image on page " + str(fields[field]['pageno']))
+            # logmessage("Need to put image on page " + str(fields[field]['pageno']))
             temp_png = tempfile.NamedTemporaryFile(mode="wb", suffix=".png")
             args = [daconfig.get('imagemagick', 'convert'), file_info['fullpath'], "-trim", "+repage", "+profile", '*', '-density', '0', temp_png.name]
             try:
@@ -396,6 +407,7 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
         pdf_encrypt(pdf_file.name, password)
     return pdf_file.name
 
+
 def get_passwords(password):
     if password is None:
         return (None, None)
@@ -412,8 +424,9 @@ def get_passwords(password):
         raise DAError("get_passwords: invalid password")
     return (owner_password, user_password)
 
+
 def pdf_encrypt(filename, password):
-    #logmessage("pdf_encrypt: running; password is " + repr(password))
+    # logmessage("pdf_encrypt: running; password is " + repr(password))
     (owner_password, user_password) = get_passwords(password)
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
     if owner_password == user_password:
@@ -425,11 +438,13 @@ def pdf_encrypt(filename, password):
     except subprocess.CalledProcessError as err:
         output = err.output
         raise DAError("pdf_encrypt: error running pdftk.  " + output)
-    #logmessage(' '.join(commands))
-    #logmessage(output)
+    # logmessage(' '.join(commands))
+    # logmessage(output)
     shutil.move(outfile.name, filename)
 
+
 class DAPdfFileWriter(pypdf.PdfFileWriter):
+
     def DAGetFields(self, tree=None, results=None):
         if results is None:
             results = {}
@@ -468,7 +483,7 @@ class DAPdfFileWriter(pypdf.PdfFileWriter):
             for kid in tree["/Kids"]:
                 self.DAGetFields(tree=kid, results=results)
 
-    def addBookmark(self, title, pagenum, parent=None, color=None, bold=False, italic=False, fit='/Fit', *args):
+    def addBookmark(self, title, pagenum, *args, parent=None, color=None, bold=False, italic=False, fit='/Fit'):
         """
         Add a bookmark to this PDF file.
 
@@ -493,8 +508,8 @@ class DAPdfFileWriter(pypdf.PdfFileWriter):
         dest = pypdf.generic.Destination(pypdf.generic.NameObject("/"+str(uuid.uuid4())), pagenum, pypdf.generic.NameObject(fit), *zoomArgs)
         destArray = dest.getDestArray()
         action.update({
-            pypdf.generic.NameObject('/D') : destArray,
-            pypdf.generic.NameObject('/S') : pypdf.generic.NameObject('/GoTo')
+            pypdf.generic.NameObject('/D'): destArray,
+            pypdf.generic.NameObject('/S'): pypdf.generic.NameObject('/GoTo')
         })
         actionRef = self._addObject(action)
 
@@ -528,12 +543,14 @@ class DAPdfFileWriter(pypdf.PdfFileWriter):
 
         return bookmarkRef
 
+
 def remove_nonprintable(text):
     final = str()
     for char in text:
         if char in string.printable:
             final += char
     return final
+
 
 def remove_nonprintable_bytes(byte_list):
     if isinstance(byte_list, str):
@@ -544,6 +561,7 @@ def remove_nonprintable_bytes(byte_list):
             final += chr(the_int)
     return bytearray(final, 'utf-8')
 
+
 def remove_nonprintable_bytes_limited(byte_list):
     final = bytes()
     if len(byte_list) >= 2 and byte_list[0] == 254 and byte_list[1] == 255:
@@ -553,20 +571,22 @@ def remove_nonprintable_bytes_limited(byte_list):
             final += bytes([the_int])
     return codecs.decode(final, 'latin1')
 
+
 def remove_nonprintable_limited(text):
     text = re.sub(r'^\xfe\xff', '', text)
     text = re.sub(r'\x00', '', text)
     return codecs.decode(text, 'latin1')
 
+
 def replicate_js_and_calculations(template_filename, original_filename, password):
-    #logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename + " and password is " + repr(password))
+    # logmessage("replicate_js_and_calculations where template_filename is " + template_filename + " and original_filename is " + original_filename + " and password is " + repr(password))
     template = safe_pypdf_reader(template_filename)
     co_field_names = []
     if '/AcroForm' in template.trailer['/Root']:
-        #logmessage("Found AcroForm")
+        # logmessage("Found AcroForm")
         acroform = template.trailer['/Root']['/AcroForm'].getObject()
         if '/CO' in acroform:
-            #logmessage("Found CO in AcroForm")
+            # logmessage("Found CO in AcroForm")
             for f in acroform['/CO']:
                 field = f.getObject()
                 if '/TM' in field:
@@ -575,15 +595,15 @@ def replicate_js_and_calculations(template_filename, original_filename, password
                     name = field['/T']
                 else:
                     continue
-                #logmessage("Found CO name " + str(name))
+                # logmessage("Found CO name " + str(name))
                 co_field_names.append(name)
 
     js_to_write = []
     if '/Names' in template.trailer['/Root'] and '/JavaScript' in template.trailer['/Root']['/Names']:
-        #logmessage("Found name in root and javascript in names")
+        # logmessage("Found name in root and javascript in names")
         js_names = template.trailer['/Root']['/Names']['/JavaScript'].getObject()
         if '/Names' in js_names:
-            #logmessage("Found names in javascript")
+            # logmessage("Found names in javascript")
             js_list = js_names['/Names']
             while len(js_list) > 0:
                 name = js_list.pop(0)
@@ -596,29 +616,29 @@ def replicate_js_and_calculations(template_filename, original_filename, password
                         js_to_write.append((name, remove_nonprintable_bytes(js_obj['/JS'].getData())))
 
     if len(js_to_write) == 0 and len(co_field_names) == 0:
-        #logmessage("Nothing to do here")
+        # logmessage("Nothing to do here")
         if password:
             pdf_encrypt(original_filename, password)
         return
     original = safe_pypdf_reader(original_filename)
-    #logmessage("Opening " + original_filename)
+    # logmessage("Opening " + original_filename)
     writer = DAPdfFileWriter()
     writer.cloneReaderDocumentRoot(original)
     if len(co_field_names) > 0:
-        #logmessage("Cloning CO")
+        # logmessage("Cloning CO")
         fields = writer.DAGetFields()
         co = []
         for field_name in co_field_names:
             if field_name in fields:
                 co.append(fields[field_name])
-        #writer._root_object['/AcroForm'][pypdf.generic.NameObject("/CO")] = pypdf.generic.ArrayObject(co)
+        # writer._root_object['/AcroForm'][pypdf.generic.NameObject("/CO")] = pypdf.generic.ArrayObject(co)
         if '/AcroForm' not in writer._root_object:
             writer._root_object.update({pypdf.generic.NameObject('/AcroForm'): pypdf.generic.DictionaryObject()})
         writer._root_object['/AcroForm'].update({
             pypdf.generic.NameObject("/CO"): pypdf.generic.ArrayObject(co)
         })
     if len(js_to_write) > 0:
-        #logmessage("Cloning JS")
+        # logmessage("Cloning JS")
         name_array = []
         for js_string_name, js_text in js_to_write:
             js_object = pypdf.generic.DecodedStreamObject()
@@ -646,21 +666,22 @@ def replicate_js_and_calculations(template_filename, original_filename, password
     if password is not None:
         (owner_password, user_password) = get_passwords(password)
         if owner_password == user_password:
-            #logmessage("Password for encryption is " + str(user_password))
+            # logmessage("Password for encryption is " + str(user_password))
             writer.encrypt(str(user_password))
         else:
-            #logmessage("Passwords for encryption are " + str(user_password) + " and " + str(owner_password))
+            # logmessage("Passwords for encryption are " + str(user_password) + " and " + str(owner_password))
             writer.encrypt(str(user_password), owner_pwd=str(owner_password))
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     with open(outfile.name, 'wb') as fp:
         writer.write(fp)
     shutil.move(outfile.name, original_filename)
 
+
 def flatten_pdf(filename):
-    #logmessage("flatten_pdf: running")
+    # logmessage("flatten_pdf: running")
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH, filename, 'output', outfile.name, 'flatten']
-    #logmessage("Arguments are " + str(subprocess_arguments))
+    # logmessage("Arguments are " + str(subprocess_arguments))
     try:
         result = subprocess.run(subprocess_arguments, timeout=60, check=False).returncode
     except subprocess.TimeoutExpired:
@@ -670,6 +691,7 @@ def flatten_pdf(filename):
         logmessage("Failed to flatten PDF form")
         raise DAError("Call to pdftk failed for template where arguments were " + " ".join(subprocess_arguments))
     shutil.move(outfile.name, filename)
+
 
 def overlay_pdf_multi(main_file, logo_file, out_file):
     subprocess_arguments = [PDFTK_PATH, main_file, 'multistamp', logo_file, 'output', out_file]
@@ -681,6 +703,7 @@ def overlay_pdf_multi(main_file, logo_file, out_file):
     if result != 0:
         logmessage("Failed to overlay PDF")
         raise DAError("Call to pdftk failed for overlay where arguments were " + " ".join(subprocess_arguments))
+
 
 def overlay_pdf(main_file, logo_file, out_file, first_page=None, last_page=None, logo_page=None, only=None):
     main_pdf = safe_pypdf_reader(main_file)
@@ -711,6 +734,7 @@ def overlay_pdf(main_file, logo_file, out_file, first_page=None, last_page=None,
         output_pdf.addPage(page)
     with open(out_file, 'wb') as fp:
         output_pdf.write(fp)
+
 
 def apply_qpdf(filename):
     try:

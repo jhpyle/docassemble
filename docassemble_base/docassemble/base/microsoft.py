@@ -3,18 +3,20 @@ import io
 import mimetypes
 import os
 import re
+import logging
 import yaml
 from azure.storage.blob import BlobServiceClient, BlobSasPermissions, ContentSettings, generate_blob_sas
 from azure.identity import ManagedIdentityCredential
 from azure.keyvault.secrets import SecretClient
 
-import logging
 logger = logging.getLogger('azure.mgmt.resource')
 logger.setLevel(logging.WARNING)
 
 epoch = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=datetime.timezone.utc)
 
+
 class azureobject:
+
     def __init__(self, azure_config):
         if ('key vault name' in azure_config and azure_config['key vault name'] is not None and 'managed identity' in azure_config and azure_config['managed identity'] is not None):
             self.credential = ManagedIdentityCredential()
@@ -38,6 +40,7 @@ class azureobject:
             self.container_client = self.service_client.get_container_client(azure_config['container'])
         else:
             raise Exception("Cannot connect to Azure without account name, account key, and container specified")
+
     def get_key(self, key_name):
         new_key = azurekey(self, key_name, load=False)
         if new_key.exists():
@@ -46,29 +49,36 @@ class azureobject:
         else:
             new_key.does_exist = False
         return new_key
+
     def search_key(self, key_name):
         for blob in self.container_client.list_blobs(name_starts_with=key_name):
             if blob.name == key_name:
                 return azurekey(self, blob.name)
         return None
+
     def list_keys(self, prefix):
         output = []
         for blob in self.container_client.list_blobs(name_starts_with=prefix):
             output.append(azurekey(self, blob.name))
         return output
+
     def get_secret(self, key_vault_reference):
         new_secret = azuresecret(self, key_vault_reference)
         return new_secret.get_secret_as_string()
+
     def replace_secrets(self, match):
         match = match.groups()
         return self.get_secret(match[0])
+
     def load_with_secrets(self, config):
         config_dump_raw = yaml.dump(config)
         config_dump_replace_secrets = re.sub(self.key_vault_reference_regex, self.replace_secrets, config_dump_raw)
         loaded_config_with_secrets = yaml.load(config_dump_replace_secrets, Loader=yaml.FullLoader)
         return loaded_config_with_secrets
 
+
 class azurekey:
+
     def __init__(self, azure_object, key_name, load=True):
         self.azure_object = azure_object
         self.blob_client = azure_object.container_client.get_blob_client(key_name)
@@ -77,28 +87,34 @@ class azurekey:
             if not key_name.endswith('/'):
                 self.get_properties()
                 self.does_exist = True
+
     def get_properties(self):
         properties = self.blob_client.get_blob_properties()
         self.size = properties.size
         self.last_modified = properties.last_modified
         self.content_type = properties.content_settings.content_type
+
     def get_contents_as_string(self):
         return self.blob_client.download_blob().readall().decode()
+
     def exists(self):
         return self.blob_client.exists()
+
     def delete(self):
         self.blob_client.delete_blob()
+
     def get_contents_to_filename(self, filename):
         with open(filename, "wb") as fp:
             download_stream = self.blob_client.download_blob()
             fp.write(download_stream.readall())
         secs = (self.last_modified - epoch).total_seconds()
         os.utime(filename, (secs, secs))
+
     def set_contents_from_filename(self, filename):
         if hasattr(self, 'content_type') and self.content_type is not None:
             mimetype = self.content_type
         else:
-            mimetype, encoding = mimetypes.guess_type(filename)
+            mimetype, encoding = mimetypes.guess_type(filename)  # pylint: disable=unused-variable
         content_length = os.path.getsize(filename)
         if mimetype is not None:
             with open(filename, "rb") as data:
@@ -109,14 +125,17 @@ class azurekey:
         self.get_properties()
         secs = (self.last_modified - epoch).total_seconds()
         os.utime(filename, (secs, secs))
+
     def set_contents_from_string(self, text):
         text = text.encode()
         with io.BytesIO(text) as data:
             self.blob_client.upload_blob(data=data, length=len(text), overwrite=True)
+
     def get_epoch_modtime(self):
         if not hasattr(self, 'last_modified'):
             self.get_properties()
         return (self.last_modified - epoch).total_seconds()
+
     def generate_url(self, seconds, display_filename=None, content_type=None, inline=False):
         if content_type is None:
             content_type = self.content_type
@@ -140,7 +159,9 @@ class azurekey:
         )
         return self.blob_client.url + '?' + token
 
+
 class azuresecret:
+
     def __init__(self, azure_object, key_vault_reference):
         self.azure_object = azure_object
         self.secret_client = azure_object.secret_client
@@ -149,11 +170,11 @@ class azuresecret:
         self.secret = None
         self.secret_value = None
         self.reference_secret_name = None
-        self.reference_secret_version= None
+        self.reference_secret_version = None
 
     def set_secret_reference_components(self):
-        secret_regex=re.compile(self.key_vault_reference_regex)
-        secret_match=secret_regex.search(self.key_vault_reference)
+        secret_regex = re.compile(self.key_vault_reference_regex)
+        secret_match = secret_regex.search(self.key_vault_reference)
         if secret_match is not None:
             self.reference_vault_name = secret_match.groups()[1]
             self.reference_secret_name = secret_match.groups()[2]

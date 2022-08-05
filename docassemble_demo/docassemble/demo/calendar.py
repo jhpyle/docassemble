@@ -1,10 +1,12 @@
-from datetime import timezone
-from docassemble.base.util import as_datetime, DALazyTemplate, DAFile
+from docassemble.base.util import as_datetime, DAFile
 from ics import Calendar, Event, Attendee, Organizer
 
 __all__ = ['make_event']
 
-def make_event(title=None, location=None, description=None, begin_date=None, begin_time=None, end_date=None, end_time=None, organizer=None, attendees=[]):
+
+def make_event(title=None, location=None, description=None, begin_date=None, begin_time=None, end_date=None, end_time=None, organizer=None, attendees=None):
+    if attendees is None:
+        attendees = []
     if title is None:
         raise Exception("make_event: a title parameter is required")
     if begin_date is None:
@@ -29,11 +31,11 @@ def make_event(title=None, location=None, description=None, begin_date=None, beg
     if description not in (None, ''):
         e.description = str(description)
     c.events.add(e)
-    c.events
+    c.events  # pylint: disable=pointless-statement
     ics_file = DAFile('ics_file')
     ics_file.set_random_instance_name()
     ics_file.initialize(filename="event.ics", mimetype="text/calendar")
-    with open(ics_file.path(), 'w') as f:
+    with open(ics_file.path(), 'w', encoding='utf-8') as f:
         f.write(str(c))
     ics_file.commit()
     return ics_file

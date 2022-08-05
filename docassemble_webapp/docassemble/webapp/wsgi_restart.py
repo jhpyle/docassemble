@@ -6,6 +6,7 @@ if __name__ == "__main__":
 from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 
+
 def main():
     webapp_path = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
     wsgi_file = webapp_path

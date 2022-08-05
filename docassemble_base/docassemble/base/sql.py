@@ -1,6 +1,6 @@
 import copy
 import os
-import sys
+# import sys
 import json
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import server, this_thread
@@ -10,11 +10,13 @@ from alembic import command
 
 __all__ = ['SQLObject', 'SQLObjectRelationship', 'SQLObjectList', 'SQLRelationshipList', 'StandardRelationshipList', 'alchemy_url', 'connect_args', 'upgrade_db']
 
+
 class SQLObject:
     _required = []
     _uid = 'uid'
     _child_mapping = {}
     _parent_mapping = {}
+
     def sql_init(self):
         self._zombie = False
         db_entry = None
@@ -46,6 +48,7 @@ class SQLObject:
             return
         self._nascent = True
         self._orig = {}
+
     def __getstate__(self):
         try:
             self.db_save()
@@ -55,12 +58,14 @@ class SQLObject:
         if '_orig' in dict_to_save:
             del dict_to_save['_orig']
         return dict_to_save
+
     def __setstate__(self, pickle_dict):
         self.__dict__ = pickle_dict
         try:
             self.db_read()
         except Exception as err:
             logmessage("On SQLObject read, " + err.__class__.__name__ + ": " + str(err))
+
     @classmethod
     def filter(cls, instance_name, **kwargs):
         if 'dbcache' not in this_thread.misc:
@@ -88,12 +93,14 @@ class SQLObject:
                 obj.db_cache()
         listobj.gathered = True
         return listobj
+
     @classmethod
     def any(cls):
         db_entry = cls._session.query(cls._model).first()
         if db_entry is None:
             return False
         return True
+
     @classmethod
     def all(cls, instance_name=None):
         if 'dbcache' not in this_thread.misc:
@@ -120,6 +127,7 @@ class SQLObject:
                 obj.db_cache()
         listobj.gathered = True
         return listobj
+
     @classmethod
     def by_id(cls, the_id, instance_name=None):
         if 'dbcache' not in this_thread.misc:
@@ -135,6 +143,7 @@ class SQLObject:
         else:
             obj = cls(instance_name, id=the_id)
         return obj
+
     @classmethod
     def by_uid(cls, uid, instance_name=None):
         if cls._uid not in cls._model.__dict__:
@@ -151,12 +160,14 @@ class SQLObject:
             obj.set_random_instance_name()
         obj.ready()
         return obj
+
     @classmethod
     def delete_by_id(cls, the_id):
         cls._session.query(cls._model).filter(cls._model.id == the_id).delete()
         cls._session.commit()
         if 'dbcache' in this_thread.misc and cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
             this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
+
     @classmethod
     def delete_by_uid(cls, uid):
         if cls._uid not in cls._model.__dict__:
@@ -168,12 +179,14 @@ class SQLObject:
             cls._session.commit()
             if 'dbcache' in this_thread.misc and cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
                 this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
+
     @classmethod
     def id_exists(cls, the_id):
         db_entry = cls._session.query(cls._model).filter(cls._model.id == the_id).first()
         if db_entry is None:
             return False
         return True
+
     @classmethod
     def uid_exists(cls, uid):
         if cls._uid not in cls._model.__dict__:
@@ -182,6 +195,7 @@ class SQLObject:
         if db_entry is None:
             return False
         return True
+
     def db_from_cache(self, the_id):
         if 'dbcache' not in this_thread.misc:
             this_thread.misc['dbcache'] = {}
@@ -190,6 +204,7 @@ class SQLObject:
         if the_id in this_thread.misc['dbcache'][self._model.__name__]:
             return this_thread.misc['dbcache'][self._model.__name__][the_id]
         return None
+
     def db_cache(self):
         if 'dbcache' not in this_thread.misc:
             this_thread.misc['dbcache'] = {}
@@ -197,9 +212,11 @@ class SQLObject:
             this_thread.misc['dbcache'][self._model.__name__] = {}
         if hasattr(self, 'id'):
             this_thread.misc['dbcache'][self._model.__name__][self.id] = self
+
     def __del__(self):
         if hasattr(self, 'id') and 'dbcache' in this_thread.misc and self._model.__name__ in this_thread.misc['dbcache'] and self.id in this_thread.misc['dbcache'][self._model.__name__]:
             del this_thread.misc['dbcache'][self._model.__name__][self.id]
+
     def db_delete(self):
         self.db_read()
         if self._nascent or self._zombie:
@@ -207,6 +224,7 @@ class SQLObject:
         if hasattr(self, 'id'):
             self.delete_by_id(self.id)
             self._zombie = True
+
     def db_save(self):
         if self._zombie:
             return
@@ -216,7 +234,7 @@ class SQLObject:
             if column == 'id' or column.startswith('_'):
                 continue
             try:
-                db_values[column] = self.db_get(column)
+                db_values[column] = self.db_get(column)  # pylint: disable=assignment-from-no-return
             except:
                 if column == self._uid:
                     return
@@ -267,12 +285,15 @@ class SQLObject:
             self._orig = db_values
             for key in null_keys:
                 self._orig[key] = None
+
     def save_if_nascent(self):
         if self._nascent:
             self.db_save()
+
     def ready(self):
         self.save_if_nascent()
         return not (self._nascent or self._zombie)
+
     def db_read(self):
         if self._zombie:
             self.db_cache()
@@ -309,20 +330,25 @@ class SQLObject:
                     pass
         self._orig = db_values
         self.db_cache()
+
     def db_find_existing(self):
         if self._uid not in self._model.__dict__:
             return None
         try:
-            the_uid = self.db_get(self._uid)
+            the_uid = self.db_get(self._uid)  # pylint: disable=assignment-from-no-return
         except:
             return None
         return self._session.query(self._model).filter(getattr(self._model, self._uid) == the_uid).first()
-    def db_get(self, column):
+
+    def db_get(self, column):  # pylint: disable=unused-argument
         pass
-    def db_set(self, column, value):
+
+    def db_set(self, column, value):  # pylint: disable=unused-argument
         pass
-    def db_null(self, column):
+
+    def db_null(self, column):  # pylint: disable=unused-argument
         pass
+
     def has_child(self, rel_name, rel):
         if not (self.ready() and rel.ready()):
             raise Exception("has_child: cannot retrieve data")
@@ -332,6 +358,7 @@ class SQLObject:
         if db_entry is None:
             return False
         return True
+
     def add_child(self, rel_name, child):
         if not self.has_child(rel_name, child):
             info = self._child_mapping[rel_name]
@@ -341,6 +368,7 @@ class SQLObject:
             db_entry = info['relationship_class']._model(**arg_dict)
             self._session.add(db_entry)
             self._session.commit()
+
     def get_child(self, rel_name, instance_name=None):
         if not self.ready():
             raise Exception("get_child: cannot retrieve data")
@@ -359,6 +387,7 @@ class SQLObject:
                 results.append(info['child_class'].by_id(db_entry.getattr(info['child_column'])), instance_name=instance_name + '[' + str(indexno) + ']')
                 indexno += 1
         return results
+
     def del_child(self, rel_name, child):
         if not (self.ready() and child.ready()):
             raise Exception("del_child: cannot retrieve data")
@@ -366,6 +395,7 @@ class SQLObject:
         model = info['relationship_class']._model
         self._session.query(model).filter(model.getattr(info['parent_column']) == self.id, model.getattr(info['child_column']) == child.id).delete()
         self._session.commit()
+
     def has_parent(self, rel_name, rel):
         if not (self.ready() and rel.ready()):
             raise Exception("has_parent: cannot retrieve data")
@@ -375,6 +405,7 @@ class SQLObject:
         if db_entry is None:
             return False
         return True
+
     def add_parent(self, rel_name, parent):
         if not self.has_parent(rel_name, parent):
             info = self._parent_mapping[rel_name]
@@ -384,6 +415,7 @@ class SQLObject:
             db_entry = info['relationship_class']._model(**arg_dict)
             self._session.add(db_entry)
             self._session.commit()
+
     def get_parent(self, rel_name, instance_name=None):
         if not self.ready():
             raise Exception("get_parent: cannot retrieve data")
@@ -402,6 +434,7 @@ class SQLObject:
                 results.append(info['parent_class'].by_id(db_entry.getattr(info['parent_column'])), instance_name=instance_name + '[' + str(indexno) + ']')
                 indexno += 1
         return results
+
     def del_parent(self, rel_name, parent):
         if not (self.ready() and parent.ready()):
             raise Exception("del_parent: cannot retrieve data")
@@ -410,13 +443,16 @@ class SQLObject:
         self._session.query(model).filter(model.getattr(info['child_column']) == self.id, model.getattr(info['parent_column']) == parent.id).delete()
         self._session.commit()
 
+
 def alchemy_url(db_config):
     """Returns a URL representing a database connection."""
     return server.alchemy_url(db_config)
 
+
 def connect_args(db_config):
     """Returns PostgreSQL arguments for connecting via SSL."""
     return server.connect_args(db_config)
+
 
 def upgrade_db(url, py_file, engine, name=None, conn_args=None):
     if name is None:
@@ -443,7 +479,9 @@ def upgrade_db(url, py_file, engine, name=None, conn_args=None):
         command.stamp(alembic_cfg, "head")
     command.upgrade(alembic_cfg, "head")
 
+
 class SQLObjectRelationship(SQLObject):
+
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         cls._required = [cls._parent[2], cls._child[2]]
@@ -459,6 +497,7 @@ class SQLObjectRelationship(SQLObject):
         cls._child[0]._parent_mapping[cls.__name__]['parent_class'] = cls._parent[0]
         cls._child[0]._parent_mapping[cls.__name__]['child_column'] = cls._child[2]
         cls._child[0]._parent_mapping[cls.__name__]['parent_column'] = cls._parent[2]
+
     @classmethod
     def filter_by_parent(cls, instance_name, parent):
         if not parent.ready():
@@ -466,6 +505,7 @@ class SQLObjectRelationship(SQLObject):
         filters = {}
         filters[cls._parent[2]] = parent.id
         return cls.filter(instance_name, **filters)
+
     @classmethod
     def filter_by_child(cls, instance_name, child):
         if not child.ready():
@@ -473,6 +513,7 @@ class SQLObjectRelationship(SQLObject):
         filters = {}
         filters[cls._child[2]] = child.id
         return cls.filter(instance_name, **filters)
+
     @classmethod
     def filter_by_parent_child(cls, instance_name, parent, child):
         if not (child.ready() and parent.ready()):
@@ -481,30 +522,36 @@ class SQLObjectRelationship(SQLObject):
         filters[cls._parent[2]] = parent.id
         filters[cls._child[2]] = child.id
         return cls.filter(instance_name, **filters)
-    def rel_init(self, *pargs, **kwargs):
+
+    def rel_init(self, *pargs, **kwargs):  # pylint: disable=unused-argument
         self.sql_init()
         if not hasattr(self, self._parent[1]):
             self.initializeAttribute(self._parent[1], self._parent[0])
         if not hasattr(self, self._child[1]):
             self.initializeAttribute(self._child[1], self._child[0])
+
     def db_get(self, column):
         if column == self._parent[2]:
             return getattr(getattr(self, self._parent[1]), 'id')
         if column == self._child[2]:
             return getattr(getattr(self, self._child[1]), 'id')
         raise Exception("Invalid column " + column)
+
     def db_set(self, column, value):
         if column == self._parent[2]:
             self.reInitializeAttribute(self._parent[1], self._parent[0].using(id=value))
         elif column == self._child[2]:
             self.reInitializeAttribute(self._child[1], self._child[0].using(id=value))
+
     def db_find_existing(self):
         try:
             return self._session.query(self._model).filter(getattr(self._model, self._parent[2]) == getattr(getattr(self, self._parent[1]), 'id'), getattr(self._model, self._child[2]) == getattr(getattr(self, self._child[1]), 'id')).first()
         except:
             return None
 
+
 class SQLObjectList(DAList):
+
     def init(self, *pargs, **kwargs):
         all_arg = kwargs.get('all', False)
         if 'all' in kwargs:
@@ -513,7 +560,9 @@ class SQLObjectList(DAList):
         if all_arg:
             self.elements = self.object_type.all(self.instanceName)
 
+
 class SQLRelationshipList(DAList):
+
     def init(self, *pargs, **kwargs):
         parent_arg = kwargs.get('parent', None)
         child_arg = kwargs.get('child', None)
@@ -540,12 +589,16 @@ class SQLRelationshipList(DAList):
             self.elements = self.object_type.filter_by_child(self.instanceName, child_arg)
         elif child_arg and parent_arg:
             self.elements = self.object_type.filter_by_parent_child(self.instanceName, parent_arg, child_arg)
-    def hook_on_remove(self, item):
+
+    def hook_on_remove(self, item, *pargs, **kwargs):
         item.db_delete()
+
     def reset_gathered(self, recursive=False, only_if_empty=False, mark_incomplete=False):
         return
 
+
 class StandardRelationshipList(SQLRelationshipList):
+
     def init(self, *pargs, **kwargs):
         super().init(*pargs, **kwargs)
         self.there_is_another = False
