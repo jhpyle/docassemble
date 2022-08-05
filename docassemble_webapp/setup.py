@@ -70,7 +70,7 @@ install_requires = [
     "docopt==0.6.2",
     "docutils==0.18.1",
     "docxcompose==1.3.4",
-    "docxtpl==0.15.2",
+    "docxtpl==0.16.3",
     "email-validator==1.1.3",
     "et-xmlfile==1.1.0",
     "eventlet==0.33.0",

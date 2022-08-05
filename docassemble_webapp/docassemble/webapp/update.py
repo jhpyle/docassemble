@@ -26,8 +26,7 @@ if __name__ == "__main__":
     else:
         mode = 'initialize'
 
-SUPERVISOR_SERVER_URL = os.environ.get('SUPERVISOR_SERVER_URL', None)
-USING_SUPERVISOR = bool(SUPERVISOR_SERVER_URL)
+USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
 SINGLE_SERVER = USING_SUPERVISOR and bool(':all:' in ':' + os.environ.get('CONTAINERROLE', 'all') + ':')
 
 def fix_fnctl():

@@ -58,3 +58,5 @@ docassemble_webapp/docassemble/webapp/static/js
 settings.json
 */.mypy_cache
 .idea
+.dir-locals.el
+.flake8

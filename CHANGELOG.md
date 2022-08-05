@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.4.1] - 2022-08-05
+
+### Changed
+- Upgraded `docxtpl`.
+### Fixed
+- Problem with restarting the server when using a single-server
+  configuration.
+
 ## [1.4.0] - 2022-07-31
 
 ### Added

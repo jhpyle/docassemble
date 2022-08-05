@@ -535,8 +535,7 @@ CHECKIN_INTERVAL = int(daconfig.get('checkin interval', 6000))
 NOTIFICATION_CONTAINER = '<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>'
 NOTIFICATION_MESSAGE = '<div class="da-alert alert alert-%s alert-dismissible fade show" role="alert">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
 
-SUPERVISOR_SERVER_URL = os.environ.get('SUPERVISOR_SERVER_URL', None)
-USING_SUPERVISOR = bool(SUPERVISOR_SERVER_URL)
+USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
 SINGLE_SERVER = USING_SUPERVISOR and bool(':all:' in ':' + os.environ.get('CONTAINERROLE', 'all') + ':')
 
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
@@ -4216,7 +4215,7 @@ def restart_all():
 def restart_this():
     logmessage("restart_this: hostname is " + str(hostname))
     if SINGLE_SERVER:
-        args = SUPERVISORCTL + ['-s', SUPERVISOR_SERVER_URL, 'start', 'reset']
+        args = SUPERVISORCTL + ['-s', 'http://localhost:9001', 'start', 'reset']
         result = subprocess.run(args, check=False).returncode
         if result == 0:
             logmessage("restart_this: sent reset")
