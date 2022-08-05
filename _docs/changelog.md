@@ -3,6 +3,16 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.1](https://github.com/jhpyle/docassemble/releases/tag/v1.4.1) - 2022-08-05
+
+
+### Changed
+- Upgraded `docxtpl`.
+
+### Fixed
+- Problem with restarting the server when using a single-server
+  configuration.
+
 ## [1.4.0](https://github.com/jhpyle/docassemble/releases/tag/v1.4.0) - 2022-07-31
 
 
