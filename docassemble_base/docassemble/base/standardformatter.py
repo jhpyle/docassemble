@@ -1535,7 +1535,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         datadefault = ''
                         daspaceafter = ''
                         field_container_class = ' da-field-container-dropdown'
-                    output += '                <div class="row' + field_container_class + '"><div class="col-md-12' + daspaceafter + '"><select class="daspaceafter' + combobox + '"' + datadefault + ' name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '" required >' + "".join(inner_fieldlist) + '</select></div></div>\n'
+                    output += '                <div class="row' + field_container_class + '"><div class="col-md-12' + daspaceafter + '"><select aria-labelledby="daMainQuestion" class="daspaceafter' + combobox + '"' + datadefault + ' name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '" required >' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
                     validation_rules['ignore'] = []
                     validation_rules['messages'][status.question.fields[0].saveas] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
