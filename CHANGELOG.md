@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.2] - 2022-08-08
+
+### Fixed
+- Unicode characters in the `id` of a `question` were not sent to the
+  browser as Unicode.
+
 ## [1.4.1] - 2022-08-05
 
 ### Changed

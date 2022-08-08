@@ -1,7 +1,6 @@
 from io import IOBase as FileType
 import codecs
 import json
-import logging  # noqa: F401 # pylint: disable=unused-import
 import math
 import os
 import pickle
@@ -30,7 +29,7 @@ import docassemble.base.parse
 from docassemble.webapp.app_object import app
 from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth, SpeakList, ObjectStorage, Shortener, MachineLearning, GlobalObjectStorage, Email, EmailAttachment
 from docassemble.webapp.db_object import db
-from docassemble.webapp.file_access import get_info_from_file_number, get_info_from_file_reference, reference_exists, url_if_exists  # noqa: F401 # pylint: disable=unused-import
+from docassemble.webapp.file_access import get_info_from_file_number, get_info_from_file_reference, url_if_exists  # noqa: F401 # pylint: disable=unused-import
 from docassemble.webapp.file_number import get_new_file_number
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.webapp.fixpickle import fix_pickle_obj, fix_pickle_dict

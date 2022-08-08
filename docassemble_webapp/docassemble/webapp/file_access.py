@@ -72,33 +72,6 @@ def get_version_parameter(package):
         return ''
 
 
-def reference_exists(file_reference):
-    if cloud:
-        parts = file_reference.split(":")
-        if len(parts) == 2:
-            m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
-            if m:
-                user_id = m.group(1)
-                if re.search(r'^data/sources/', parts[1]):
-                    section = 'playgroundsources'
-                    filename = re.sub(r'^data/sources/', '', parts[1])
-                else:
-                    section = 'playgroundstatic'
-                    filename = re.sub(r'^data/static/', '', parts[1])
-                filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filename)
-                key = str(section) + '/' + str(user_id) + '/' + filename
-                cloud_key = cloud.get_key(key)
-                if cloud_key.does_exist:
-                    return True
-                return False
-    the_path = docassemble.base.functions.static_filename_path(file_reference)
-    if the_path is None or not os.path.isfile(the_path):
-        # logmessage("Returning false")
-        return False
-    # logmessage("Returning true because path is " + str(the_path))
-    return True
-
-
 def get_info_from_file_reference(file_reference, **kwargs):
     # logmessage('file reference is ' + str(file_reference))
     convert = kwargs.get('convert', None)

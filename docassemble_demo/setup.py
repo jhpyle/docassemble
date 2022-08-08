@@ -56,8 +56,8 @@ setup(name='docassemble.demo',
       license='MIT',
       url='https://docassemble.org',
       packages=find_packages(),
-      namespace_packages = ['docassemble'],
-      install_requires = [
+      namespace_packages=['docassemble'],
+      install_requires=[
           'docassemble==1.4.1',
           'docassemble.base==1.4.1',
           'googledrivedownloader==0.4'

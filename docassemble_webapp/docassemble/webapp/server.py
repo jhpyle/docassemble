@@ -10,7 +10,6 @@ import importlib
 import inspect
 from io import BytesIO, TextIOWrapper
 import json
-import locale  # noqa: F401 # pylint: disable=unused-import
 import logging
 import math
 import mimetypes
@@ -19,14 +18,12 @@ import os
 import pickle
 import re
 import shutil
-import socket  # noqa: F401 # pylint: disable=unused-import
 import stat
 import subprocess
 from subprocess import Popen, PIPE
 import sys
 import tarfile
 import tempfile
-import threading  # noqa: F401 # pylint: disable=unused-import
 import time
 import traceback
 import types
@@ -37,7 +34,6 @@ from urllib.parse import unquote as urllibunquote
 from urllib.parse import urlparse, urlunparse, urlencode, urlsplit, parse_qsl
 from urllib.request import urlretrieve
 import uuid
-import weakref  # noqa: F401 # pylint: disable=unused-import
 import xml.etree.ElementTree as ET
 import zipfile
 

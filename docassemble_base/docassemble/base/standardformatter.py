@@ -94,7 +94,7 @@ def tracker_tag(status):
     if status.orig_sought is not None and not STRICT_MODE:
         output += '                <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps([status.orig_sought])) + ' />\n'
     if status.question.name:
-        output += '                <input type="hidden" name="_question_name" value=' + json.dumps(status.question.name) + '/>\n'
+        output += '                <input type="hidden" name="_question_name" value=' + json.dumps(status.question.name, ensure_ascii=False) + '/>\n'
     # if 'orig_action' in status.current_info:
     #     output += '                <input type="hidden" name="_action_context" value=' + myb64doublequote(json.dumps(dict(action=status.current_info['orig_action'], arguments=status.current_info['orig_arguments']))) + '/>\n'
     output += '                <input type="hidden" name="_tracker" value=' + json.dumps(str(status.tracker)) + '/>\n'
@@ -1087,7 +1087,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     field_class += ' da-field-container-inputtype-dropdown'
             field_class += extra_container_class
             if field.number in status.helptexts:
-                helptext_start = '<a tabindex="0" class="text-info mx-1" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content=' + noquote(markdown_to_html(status.helptexts[field.number], trim=True)) + '>'
+                helptext_start = '<a tabindex="0" class="text-info ms-1 dapointer" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content=' + noquote(markdown_to_html(status.helptexts[field.number], trim=True)) + '>'
                 helptext_end = '<i class="fas fa-question-circle"></i></a>'
             else:
                 helptext_start = ''
@@ -1858,7 +1858,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 <div aria-labelledby="daheadingOne">
                   <div class="card-body">
                     <form aria-labelledby="daheadingOne" action=\"""" + root + """\" id="daemailform" class="form-horizontal" method="POST">
-                      <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name) + """/>
+                      <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name, ensure_ascii=False) + """/>
                       <div class="da-form-group row"><label for="da_attachment_email_address" class="col-md-4 col-form-label da-form-label datext-right">""" + word('E-mail address') + """</label><div class="col-md-8"><input alt=""" + fix_double_quote(word("Input box")) + """ class="form-control" type="email" name="_attachment_email_address" id="da_attachment_email_address" value=""" + fix_double_quote(str(default_email)) + """/></div></div>"""
                 if editable_included:
                     if automatically_include_editable:
@@ -1887,7 +1887,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 <div aria-labelledby="daheadingTwo">
                   <div class="card-body">
                     <form aria-labelledby="daheadingTwo" action=\"""" + root + """\" id="dadownloadform" class="form-horizontal" method="POST">
-                      <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name) + """/>"""
+                      <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name, ensure_ascii=False) + """/>"""
                 if editable_included:
                     if automatically_include_editable:
                         output += """

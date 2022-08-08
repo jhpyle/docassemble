@@ -15,7 +15,6 @@ import random
 import re
 import shutil
 import stat
-import string  # noqa: F401 # pylint: disable=unused-import
 import subprocess
 # import sys
 import tempfile
