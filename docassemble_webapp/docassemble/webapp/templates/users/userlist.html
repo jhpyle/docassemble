@@ -64,7 +64,7 @@
       <td class="text-danger">{{ user_info['name'] }}</td>
       {%- endif %}
       {%- if current_user.has_role('admin') or (current_user.can_do('edit_user_info') and user_info['high_priv'] in ('trainer', 'user')) %}
-      <td style="text-align:right;"><a class="text-nowrap btn btn-sm {{ config['BUTTON_STYLE'] }}secondary" href="{{ url_for('edit_user_profile_page', id=user_info['id']) }}"><i class="fas fa-pencil-alt"></i> {{ word('Edit') }}</a></td>
+      <td style="text-align:right;"><a class="text-nowrap btn btn-sm {{ config['BUTTON_STYLE'] }}secondary" href="{{ url_for('edit_user_profile_page', the_id=user_info['id']) }}"><i class="fas fa-pencil-alt"></i> {{ word('Edit') }}</a></td>
       {%- else %}
       <td style="text-align:right;">&nbsp;</td>
       {%- endif %}
