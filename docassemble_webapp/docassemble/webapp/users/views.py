@@ -44,7 +44,7 @@ def privilege_list():
 """
     for role in db.session.execute(select(Role).order_by(Role.name)).scalars():
         if can_edit and role.name not in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
-            output += '        <tr><td>' + str(role.name) + '</td><td class="text-end"><a class="btn ' + app.config['BUTTON_CLASS'] + ' btn-danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
+            output += '        <tr><td>' + str(role.name) + '</td><td class="text-end"><a class="btn ' + app.config['BUTTON_CLASS'] + ' btn-danger btn-sm" href="' + url_for('delete_privilege', the_id=role.id) + '">Delete</a></td></tr>\n'
         else:
             output += '        <tr><td>' + str(role.name) + '</td><td>&nbsp;</td></tr>\n'
 
@@ -117,7 +117,7 @@ def user_list():
     return response
 
 
-@app.route('/privilege/<int:id>/delete', methods=['GET'])
+@app.route('/privilege/<int:the_id>/delete', methods=['GET'])
 @login_required
 @roles_required('admin', permission='edit_privileges')
 def delete_privilege(the_id):
