@@ -21966,7 +21966,7 @@ def request_developer():
         body = "User " + str(current_user.email) + " (" + str(current_user.id) + ") has requested developer privileges.\n\n"
         if form.reason.data:
             body += "Reason given: " + str(form.reason.data) + "\n\n"
-        body += "Go to " + url_for('edit_user_profile_page', id=current_user.id, _external=True) + " to change the user's privileges."
+        body += "Go to " + url_for('edit_user_profile_page', the_id=current_user.id, _external=True) + " to change the user's privileges."
         msg = Message("Request for developer account from " + str(current_user.email), recipients=recipients, body=body)
         if len(recipients) == 0:
             flash(word('No administrators could be found.'), 'error')

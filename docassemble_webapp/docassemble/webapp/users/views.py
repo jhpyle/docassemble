@@ -148,7 +148,7 @@ def delete_privilege(the_id):
     return redirect(url_for('privilege_list'))
 
 
-@app.route('/user/<int:id>/editprofile', methods=['GET', 'POST'])
+@app.route('/user/<int:the_id>/editprofile', methods=['GET', 'POST'])
 @login_required
 @roles_required('admin', permission='edit_user_info')
 def edit_user_profile_page(the_id):
@@ -185,12 +185,12 @@ def edit_user_profile_page(the_id):
         user.otp_secret = None
         db.session.commit()
         # docassemble.webapp.daredis.clear_user_cache()
-        return redirect(url_for('edit_user_profile_page', id=the_id))
+        return redirect(url_for('edit_user_profile_page', the_id=the_id))
     if 'reset_email_confirmation' in request.args and int(request.args['reset_email_confirmation']) == 1:
         user.confirmed_at = None
         db.session.commit()
         # docassemble.webapp.daredis.clear_user_cache()
-        return redirect(url_for('edit_user_profile_page', id=the_id))
+        return redirect(url_for('edit_user_profile_page', the_id=the_id))
     if can_delete and daconfig.get('admin can delete account', True) and user.id != current_user.id:
         if 'delete_account' in request.args and int(request.args['delete_account']) == 1:
             server.user_interviews(user_id=the_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
