@@ -44,7 +44,7 @@ def privilege_list():
 """
     for role in db.session.execute(select(Role).order_by(Role.name)).scalars():
         if can_edit and role.name not in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
-            output += '        <tr><td>' + str(role.name) + '</td><td class="text-end"><a class="btn ' + app.config['BUTTON_CLASS'] + ' btn-danger btn-sm" href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></td></tr>\n'
+            output += '        <tr><td>' + str(role.name) + '</td><td class="text-end"><a class="btn ' + app.config['BUTTON_CLASS'] + ' btn-danger btn-sm" href="' + url_for('delete_privilege', privilege_id=role.id) + '">Delete</a></td></tr>\n'
         else:
             output += '        <tr><td>' + str(role.name) + '</td><td>&nbsp;</td></tr>\n'
 
@@ -117,15 +117,15 @@ def user_list():
     return response
 
 
-@app.route('/privilege/<int:id>/delete', methods=['GET'])
+@app.route('/privilege/<int:privilege_id>/delete', methods=['GET'])
 @login_required
 @roles_required('admin', permission='edit_privileges')
-def delete_privilege(the_id):
+def delete_privilege(privilege_id):
     setup_translation()
-    if not the_id:
+    if not privilege_id:
         flash(word('The role could not be deleted.'), 'error')
         return redirect(url_for('privilege_list'))
-    role = db.session.execute(select(Role).filter_by(id=the_id)).scalar_one()
+    role = db.session.execute(select(Role).filter_by(id=privilege_id)).scalar_one()
     user_role = db.session.execute(select(Role).filter_by(name='user')).scalar_one()
     if user_role is None or role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron', 'trainer']:
         flash(word('The role could not be deleted.'), 'error')
@@ -148,10 +148,10 @@ def delete_privilege(the_id):
     return redirect(url_for('privilege_list'))
 
 
-@app.route('/user/<int:id>/editprofile', methods=['GET', 'POST'])
+@app.route('/user/<int:user_id>/editprofile', methods=['GET', 'POST'])
 @login_required
 @roles_required('admin', permission='edit_user_info')
-def edit_user_profile_page(the_id):
+def edit_user_profile_page(user_id):
     setup_translation()
     is_admin = bool(current_user.has_roles('admin'))
     if is_admin:
@@ -162,10 +162,10 @@ def edit_user_profile_page(the_id):
         can_edit_privileges = current_user.can_do('edit_user_privileges')
         can_delete = current_user.can_do('delete_user') and current_user.can_do('access_sessions') and current_user.can_do('edit_sessions')
         can_edit_user_active_status = current_user.can_do('edit_user_active_status')
-    if not the_id:
+    if not user_id:
         flash(word('The user account did not exit.'), 'danger')
         return redirect(url_for('user_list'))
-    user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=the_id)).unique().scalar_one()
+    user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=user_id)).unique().scalar_one()
     if not user:
         flash(word('The user account did not exit.'), 'danger')
         return redirect(url_for('user_list'))
@@ -185,22 +185,22 @@ def edit_user_profile_page(the_id):
         user.otp_secret = None
         db.session.commit()
         # docassemble.webapp.daredis.clear_user_cache()
-        return redirect(url_for('edit_user_profile_page', id=the_id))
+        return redirect(url_for('edit_user_profile_page', user_id=user_id))
     if 'reset_email_confirmation' in request.args and int(request.args['reset_email_confirmation']) == 1:
         user.confirmed_at = None
         db.session.commit()
         # docassemble.webapp.daredis.clear_user_cache()
-        return redirect(url_for('edit_user_profile_page', id=the_id))
+        return redirect(url_for('edit_user_profile_page', user_id=user_id))
     if can_delete and daconfig.get('admin can delete account', True) and user.id != current_user.id:
         if 'delete_account' in request.args and int(request.args['delete_account']) == 1:
-            server.user_interviews(user_id=the_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
-            delete_user_data(the_id, server.server_redis, server.server_redis_user)
+            server.user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=False)
+            delete_user_data(user_id, server.server_redis, server.server_redis_user)
             db.session.commit()
             flash(word('The user account was deleted.'), 'success')
             return redirect(url_for('user_list'))
         if 'delete_account_complete' in request.args and int(request.args['delete_account_complete']) == 1:
-            server.user_interviews(user_id=the_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
-            delete_user_data(the_id, server.server_redis, server.server_redis_user)
+            server.user_interviews(user_id=user_id, secret=None, exclude_invalid=False, action='delete_all', delete_shared=True)
+            delete_user_data(user_id, server.server_redis, server.server_redis_user)
             db.session.commit()
             flash(word('The user account was deleted.'), 'success')
             return redirect(url_for('user_list'))

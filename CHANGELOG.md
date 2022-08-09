@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.3] - 2022-08-09
+
+### Fixed
+- Bug in User List interface.
+
 ## [1.4.2] - 2022-08-08
 
 ### Fixed
