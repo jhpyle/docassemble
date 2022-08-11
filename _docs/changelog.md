@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.4](https://github.com/jhpyle/docassemble/releases/tag/v1.4.4) - 2022-08-11
+
+
+### Fixed
+- Bug with default values that evaluate to the empty string.
+
 ## [1.4.3](https://github.com/jhpyle/docassemble/releases/tag/v1.4.3) - 2022-08-09
 
 
