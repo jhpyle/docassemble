@@ -1511,7 +1511,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     if 'default' in pair and pair['default'] and defaultvalue is None:
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                     formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=True, do_terms=False)
-                    if defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float, NoneType)) and str(pair['key']) == str(defaultvalue):
+                    if defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue):
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                         found_default = True
                     if status.question.question_variety == "radio":
@@ -2167,6 +2167,9 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     defaultvalue.append(item)
         else:
             defaultvalue = status.defaults[field.number]
+        if not isinstance(defaultvalue, (list, NoneType, datetime.datetime, datetime.date, datetime.time, int, float)) and (defaultvalue.__class__.__name__ == 'DAEmpty' or (not hasattr(defaultvalue, 'instanceName') and str(defaultvalue).strip() == '')):
+            defaultvalue_set = False
+            defaultvalue = None
     else:
         defaultvalue_set = False
         defaultvalue = None

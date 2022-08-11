@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.4] - 2022-08-11
+
+### Fixed
+- Bug with default values that evaluate to the empty string.
+
 ## [1.4.3] - 2022-08-09
 
 ### Fixed
