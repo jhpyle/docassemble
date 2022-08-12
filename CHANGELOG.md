@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.5] - 2022-08-11
+
+### Fixed
+- Exception raised due to interaction of `SQLObject` and
+  `create_session()`.
+
 ## [1.4.4] - 2022-08-11
 
 ### Fixed

@@ -1936,6 +1936,10 @@ this_thread.current_question = None
 
 
 def backup_thread_variables():
+    reset_context()
+    for key in ('pending_error', 'docx_subdocs', 'dbcache'):
+        if key in this_thread.misc:
+            del this_thread.misc[key]
     backup = {}
     for key in ('interview', 'interview_status', 'open_files', 'current_question'):
         if hasattr(this_thread, key):
