@@ -270,6 +270,8 @@ install_requires = [
 
 if sys.version_info < (3, 9):
     install_requires.append("backports.zoneinfo==0.2.1")
+else:
+    install_requires.append("docassemble-backports==1.0")
 
 setup(name='docassemble.webapp',
       version='1.4.5',
