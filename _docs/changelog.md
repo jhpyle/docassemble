@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.6](https://github.com/jhpyle/docassemble/releases/tag/v1.4.6) - 2022-08-13
+
+
+### Fixed
+- Backwards-compatibility issue involving `backports.zoneinfo`. This
+  is an important fix if you upgraded your system version from 1.3.x
+  to 1.4.x.
+
 ## [1.4.5](https://github.com/jhpyle/docassemble/releases/tag/v1.4.5) - 2022-08-11
 
 
