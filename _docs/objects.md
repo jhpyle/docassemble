@@ -6070,18 +6070,23 @@ class Bank(Person, SQLObject):
             return self.name.text
         elif column == 'routing':
             return self.routing
+        raise Exception("Invalid column " + column)
     # The db_set function specifies how to set attributes of the DAObject on the basis of non-null SQL column values
     def db_set(self, column, value):
         if column == 'name':
             self.name.text = value
         elif column == 'routing':
             self.routing = value
+        else:
+            raise Exception("Invalid column " + column)
     # The db_null function specifies how to delete attributes of the DAObject when the SQL column value becomes null
     def db_null(self, column):
         if column == 'name':
             del self.name.text
         elif column == 'routing':
             del self.routing
+        else:
+            raise Exception("Invalid column " + column)
     # This is an example of a method that uses SQLAlchemy to return True or False
     def has_customer(self, customer):
         if not (self.ready() and customer.ready()):
@@ -6140,6 +6145,7 @@ class Customer(Individual, SQLObject):
             return self.address.state
         elif column == 'zip':
             return self.address.zip
+        raise Exception("Invalid column " + column)
     def db_set(self, column, value):
         if column == 'ssn':
             self.ssn = value
@@ -6157,6 +6163,8 @@ class Customer(Individual, SQLObject):
             self.address.state = value
         elif column == 'zip':
             self.address.zip = value
+        else:
+            raise Exception("Invalid column " + column)
     def db_null(self, column):
         if column == 'ssn':
             del self.ssn
@@ -6174,6 +6182,8 @@ class Customer(Individual, SQLObject):
             del self.address.state
         elif column == 'zip':
             del self.address.zip
+        else:
+            raise Exception("Invalid column " + column)
 
 class BankCustomer(DAObject, SQLObjectRelationship):
     _model = BankCustomerModel
@@ -6188,11 +6198,14 @@ class BankCustomer(DAObject, SQLObjectRelationship):
             return self.bank.id
         elif column == 'customer_id':
             return self.customer.id
+        raise Exception("Invalid column " + column)
     def db_set(self, column, value):
         if column == 'bank_id':
             self.bank = Bank.by_id(value)
         elif column == 'customer_id':
             self.customer = Customer.by_id(value)
+        else:
+            raise Exception("Invalid column " + column)
     # A db_find_existing method is defined here because the default db_find_existing() method for
     # the SQLObject class tries to find existing records based on a unique identifier column indicated
     # by the _uid attribute.  Since the unique identifier for a bank-customer relationship record is
@@ -6610,16 +6623,21 @@ def db_get(self, column):
         return self.name.text
     elif column == 'routing':
         return self.routing
+    raise Exception("Invalid column " + column)
 def db_set(self, column, value):
     if column == 'name':
         self.name.text = value
     elif column == 'routing':
         self.routing = value
+    else:
+        raise Exception("Invalid column " + column)
 def db_null(self, column):
     if column == 'name':
         del self.name.text
     elif column == 'routing':
         del self.routing
+    else:
+        raise Exception("Invalid column " + column)
 {% endhighlight %}
 
 As the `name` column demonstrates, a column value in [SQL] land can
