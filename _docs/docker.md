@@ -147,15 +147,15 @@ Linux, you many need to do `sudo /etc/init.d/docker start`, `sudo
 systemctl start docker`, or `sudo service docker start`.
 
 The operating system that runs inside of the **docassemble** Docker
-container is Ubuntu 21 (`impish`). This is a fairly recent version of
+container is Ubuntu 22.04. This is a fairly recent version of
 Ubuntu. When using Docker, it is recommended that you run a recent
-version of Docker on a recent operating system, such as Ubuntu 20
-or 21. (If you run Docker on Mac or Windows, it will likely start a
-virtual machine and then deploy the **docassemble** Docker container
+version of Docker on a recent operating system, such as Ubuntu 22 or
+Debian 11. (If you run Docker on Mac or Windows, it will likely start
+a virtual machine and then deploy the **docassemble** Docker container
 inside that virtual machine; the operating system of that virtual
-machine, which is likely a flavor of Linux, should be recent.) You may
-encounter difficult-to-diagnose problems if **docassemble**'s Ubuntu
-21 does not fully function inside its host operating system.
+machine, which is likely a flavor of Linux, should be recent.)  You
+may encounter difficult-to-diagnose problems if **docassemble**'s
+Ubuntu 21 does not fully function inside its host operating system.
 
 # <a name="single server arrangement"></a>Quick start
 
