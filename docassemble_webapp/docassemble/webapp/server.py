@@ -21842,12 +21842,16 @@ def playground_css_bundle():
 @app.route('/bundle.js', methods=['GET'])
 def js_bundle():
     base_path = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), os.path.join('docassemble', 'webapp', 'static'))
+    logmessage('in bundle!')
     output = ''
     for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['app', 'socket.io.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js']]:
+        logmessage(f'in bundle loop!: {parts}')
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
-    return Response(output, mimetype='application/javascript')
+    resp = Response(output, mimetype='application/javascript')
+    resp.headers['hey'] = 'there'
+    return resp
 
 
 @app.route('/playgroundbundle.js', methods=['GET'])

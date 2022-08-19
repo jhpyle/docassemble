@@ -31,6 +31,7 @@
     this.$container = this.setup();
     this.$element = this.$container.find("input[type=text]");
     this.$target = this.$container.find("input[type=hidden]");
+    this.mousedover = false;
     if (this.$source.attr("disabled") !== undefined) {
       this.$target.prop("disabled", true);
     }
@@ -118,6 +119,9 @@
       // Set aria-controls now that things have ids
       this.$element.attr("aria-controls", this.$menu.attr("id"));
       this.$button.attr("aria-controls", this.$menu.attr("id"));
+      this.$button.attr("aria-label", this.$source.attr("aria-label"));
+      this.$button.attr("aria-labelledby", this.$source.attr("aria-labelledby"));
+      this.$button.attr("aria-describedby", this.$source.attr("aria-describedby"));
       this.$element.attr("placeholder", this.options.placeholder);
       this.$target.prop("name", this.$source.prop("name"));
       this.$target.val(this.$source.val());
@@ -277,7 +281,7 @@
       var that = this;
 
       items = $(items).map(function (i, item) {
-        i = $(that.options.item).attr("data-value", item);
+        i = $(that.options.item).attr("data-value", item).attr("aria-label", item);
         i.attr("id", that.$element.attr("id") + "-option-" + item)
         i.html(that.highlighter(item));
         return i[0];
@@ -329,8 +333,8 @@
           this.clearTarget();
           this.triggerChange();
           this.clearElement();
-          this.$element.attr("aria-expanded", true);
-          this.$button.attr("aria-expanded", true);
+          this.$element.attr("aria-expanded", false);
+          this.$button.attr("aria-expanded", false);
         } else {
           if (this.shown) {
             this.$element.attr("aria-expanded", false);
@@ -399,7 +403,7 @@
         .on("mouseenter", "li", $.proxy(this.mouseenter, this))
         .on("mouseleave", "li", $.proxy(this.mouseleave, this));
 
-      this.$button.on("click", $.proxy(this.toggle, this));
+      this.$button.on("click touchend", $.proxy(this.toggle, this));
     },
 
     eventSupported: function (eventName) {
