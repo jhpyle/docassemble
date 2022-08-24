@@ -618,6 +618,26 @@ def load(**kwargs):
     if daconfig['verification code timeout'] < 1:
         config_error('verification code timeout must be one or greater')
         daconfig['verification code timeout'] = 180
+    if 'module whitelist' in daconfig:
+        if isinstance(daconfig['module whitelist'], list):
+            daconfig['module whitelist'] = [y.strip() for y in daconfig['module whitelist'] if isinstance(y, str)]
+        else:
+            del daconfig['module whitelist']
+    if 'module blacklist' in daconfig:
+        if isinstance(daconfig['module blacklist'], list):
+            daconfig['module blacklist'] = [y.strip() for y in daconfig['module blacklist'] if isinstance(y, str)]
+        else:
+            daconfig['module blacklist'] = []
+    else:
+        daconfig['module blacklist'] = []
+    if 'user profile fields' in daconfig:
+        if isinstance(daconfig['user profile fields'], list):
+            daconfig['user profile fields'] = [y for y in daconfig['user profile fields'] if y in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language')]
+        else:
+            config_error('user profile fields must be a list')
+            daconfig['user profile fields'] = []
+    else:
+        daconfig['user profile fields'] = []
     if 'permissions' in daconfig:
         if not isinstance(daconfig['permissions'], dict):
             config_error("permissions must be in the form of a dict")

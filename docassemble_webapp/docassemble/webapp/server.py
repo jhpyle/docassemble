@@ -5,6 +5,7 @@ import copy
 import datetime
 import email as emailpackage
 import filecmp
+import fnmatch
 import hashlib
 import importlib
 import inspect
@@ -699,6 +700,8 @@ def custom_register():
     # invite token used to determine validity of registeree
     invite_token = request.values.get("token")
 
+    the_tz = get_default_timezone()
+
     # require invite without a token should disallow the user from registering
     if user_manager.require_invitation and not invite_token:
         flash(word("Registration is invite only"), "error")
@@ -718,6 +721,17 @@ def custom_register():
         login_form.reg_next.data = register_form.reg_next.data = safe_reg_next
         if user_invite:
             register_form.email.data = user_invite.email
+
+    register_form.timezone.choices = [(x, x) for x in sorted(list(zoneinfo.available_timezones()))]
+    register_form.timezone.default = the_tz
+    if str(register_form.timezone.data) == 'None' or str(register_form.timezone.data) == '':
+        register_form.timezone.data = the_tz
+    if request.method == 'POST':
+        if 'timezone' not in app.config['USER_PROFILE_FIELDS']:
+            register_form.timezone.data = the_tz
+        for reg_field in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'language'):
+            if reg_field not in app.config['USER_PROFILE_FIELDS']:
+                getattr(register_form, reg_field).data = ""
 
     # Process valid POST
     if request.method == 'POST' and register_form.validate():
@@ -1256,6 +1270,7 @@ def import_necessary(url, url_root):
                   os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'demo'),
                   os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'webapp')]
     modules = ['docassemble.base.legal']
+    use_whitelist = 'module whitelist' in daconfig
     for root, dirs, files in os.walk(os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble')):  # pylint: disable=unused-variable
         ok = True
         for avoid in avoid_dirs:
@@ -1268,16 +1283,28 @@ def import_necessary(url, url_root):
             if not the_file.endswith('.py'):
                 continue
             thefilename = os.path.join(root, the_file)
+            if use_whitelist:
+                parts = thefilename.split(os.sep)[start_dir:]
+                parts[-1] = parts[-1][0:-3]
+                module_name = '.'.join(parts)
+                module_name = re.sub(r'\.__init__$', '', module_name)
+                if any(fnmatch.fnmatchcase(module_name, whitelist_item) for whitelist_item in daconfig['module whitelist']):
+                    modules.append(module_name)
+                continue
             with open(thefilename, 'r', encoding='utf-8') as fp:
                 for line in fp:
                     if line.startswith('# do not pre-load'):
                         break
-                    if line.startswith('class') or line.startswith('# pre-load') or 'docassemble.base.util.update' in line:
+                    if line.startswith('class ') or line.startswith('# pre-load') or 'docassemble.base.util.update' in line:
                         parts = thefilename.split(os.sep)[start_dir:]
                         parts[-1] = parts[-1][0:-3]
-                        modules.append(('.'.join(parts)))
+                        module_name = '.'.join(parts)
+                        module_name = re.sub(r'\.__init__$', '', module_name)
+                        modules.append(module_name)
                         break
     for module_name in modules:
+        if any(fnmatch.fnmatchcase(module_name, blacklist_item) for blacklist_item in daconfig['module blacklist']):
+            continue
         current_package = re.sub(r'\.[^\.]+$', '', module_name)
         docassemble.base.functions.this_thread.current_package = current_package
         docassemble.base.functions.this_thread.current_info.update(dict(yaml_filename=current_package + ':data/questions/test.yml'))

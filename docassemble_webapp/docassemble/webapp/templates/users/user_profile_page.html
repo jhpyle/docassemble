@@ -4,7 +4,7 @@
 {%- set extra_js = get_part('profile page extra javascript') %}
 {%- extends 'flask_user/public_base.html' %}
 {%- block content %}
-{%- from "base_templates/form_macros.html" import render_field, render_submit_field %}
+{%- from "base_templates/form_macros.html" import render_field, render_select_field, render_submit_field %}
           <h1>{{ get_part('profile page heading', word('User profile')) }}</h1>
           {{ get_part('profile page pre') }}
           <div class="row">
@@ -25,7 +25,7 @@
             {{ render_field(form.email) }}
             {%- endif %}
             {%- if (not current_user.is_anonymous) and current_user.has_roles(['admin', 'developer']) %}
-            {{ render_field(form.country, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }} 
+            {{ render_field(form.country, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }}
             {{ render_field(form.subdivisionfirst) }}
             {{ render_field(form.subdivisionsecond) }}
             {{ render_field(form.subdivisionthird) }}
@@ -35,6 +35,28 @@
             {%- if config['ENABLE_PLAYGROUND'] and config['USE_PYPI'] %}
             {{ render_field(form.pypi_username) }}
             {{ render_field(form.pypi_password) }}
+            {%- endif %}
+            {%- else %}
+            {%- if 'country' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.country, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }}
+            {%- endif %}
+            {%- if 'subdivisionfirst' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.subdivisionfirst) }}
+            {%- endif %}
+            {%- if 'subdivisionsecond' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.subdivisionsecond) }}
+            {%- endif %}
+            {%- if 'subdivisionthird' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.subdivisionthird) }}
+            {%- endif %}
+            {%- if 'organization' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.organization) }}
+            {%- endif %}
+            {%- if 'language' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.language) }}
+            {%- endif %}
+            {%- if 'timezone' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_select_field(form.timezone) }}
             {%- endif %}
             {%- endif %}
             <br>

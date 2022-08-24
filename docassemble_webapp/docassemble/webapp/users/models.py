@@ -62,6 +62,11 @@ class UserModel(db.Model, UserMixin):
             return False
         return self.id == user_id
 
+    def has_role(self, *specified_role_names):
+        if len(self.roles) == 0 and 'user' in specified_role_names:
+            return True
+        return super().has_role(*specified_role_names)
+
     def has_role_or_permission(self, *specified_role_names, permissions=None):
         if self.limited_api:
             if isinstance(permissions, list):
@@ -69,7 +74,7 @@ class UserModel(db.Model, UserMixin):
                     if self.can_do(task):
                         return True
             return False
-        role_result = super().has_role(*specified_role_names)
+        role_result = self.has_role(*specified_role_names)
         if not role_result and isinstance(permissions, list):
             for task in permissions:
                 if self.can_do(task):

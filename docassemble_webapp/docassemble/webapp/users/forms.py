@@ -152,6 +152,13 @@ def da_registration_restrict_validator(form, field):  # pylint: disable=unused-a
 class MyRegisterForm(RegisterForm):
     first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
     last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
+    country = StringField(word('Country code'), [validators.Length(min=0, max=2)])
+    subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=0, max=64)])
+    subdivisionsecond = StringField(word('Second subdivision'), [validators.Length(min=0, max=64)])
+    subdivisionthird = StringField(word('Third subdivision'), [validators.Length(min=0, max=64)])
+    organization = StringField(word('Organization'), [validators.Length(min=0, max=64)])
+    language = StringField(word('Language'), [validators.Length(min=0, max=64)])
+    timezone = SelectField(word('Time Zone'), [validators.Length(min=0, max=64)])
     nickname = StringField(word('Nickname'), [fix_nickname])
     email = StringField(word('Email'), validators=[
         validators.DataRequired(word('Email is required')),
@@ -180,9 +187,9 @@ class UserProfileForm(FlaskForm):
     subdivisionthird = StringField(word('Third subdivision'), [validators.Length(min=0, max=64)])
     organization = StringField(word('Organization'), [validators.Length(min=0, max=64)])
     language = StringField(word('Language'), [validators.Length(min=0, max=64)])
-    timezone = SelectField(word('Time Zone'))
-    pypi_username = StringField(word('PyPI Username'))
-    pypi_password = StringField(word('PyPI Password'))
+    timezone = SelectField(word('Time Zone'), [validators.Length(min=0, max=64)])
+    pypi_username = StringField(word('PyPI Username'), [validators.Length(min=0, max=255)])
+    pypi_password = StringField(word('PyPI Password'), [validators.Length(min=0, max=255)])
     confirmed_at = DateField(word('Confirmation Date'))
     submit = SubmitField(word('Save'))
     cancel = SubmitField(word('Cancel'))

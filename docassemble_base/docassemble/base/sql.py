@@ -5,6 +5,7 @@ import json
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import server, this_thread
 from docassemble.base.util import DAList, DAObjectPlusParameters
+from docassemble.base.error import DAAttributeError
 from alembic.config import Config
 from alembic import command
 
@@ -41,8 +42,10 @@ class SQLObject:
                 else:
                     try:
                         self.db_null(column)
-                    except:
+                    except (DAAttributeError, AttributeError):
                         pass
+                    except Exception as err:
+                        logmessage("On SQLObject null, " + err.__class__.__name__ + ": " + str(err))
             self._orig = db_values
             self.db_cache()
             return
@@ -257,9 +260,12 @@ class SQLObject:
                         else:
                             try:
                                 self.db_null(column)
-                            except:
+                            except (DAAttributeError, AttributeError):
                                 pass
-            except:
+                            except Exception as err:
+                                logmessage("On SQLObject null, " + err.__class__.__name__ + ": " + str(err))
+            except Exception as err:
+                logmessage(err.__class__.__name__ + ": " + str(err))
                 if not required_ok:
                     return
                 db_entry = self._model(**db_values)
@@ -303,7 +309,8 @@ class SQLObject:
         else:
             try:
                 db_entry = self.db_find_existing()
-            except:
+            except Exception as err:
+                logmessage("On SQLObject read, " + err.__class__.__name__ + ": " + str(err))
                 db_entry = None
             if db_entry is None and self._nascent:
                 self.db_cache()
@@ -326,8 +333,10 @@ class SQLObject:
             else:
                 try:
                     self.db_null(column)
-                except:
+                except (DAAttributeError, AttributeError):
                     pass
+                except Exception as err:
+                    logmessage("On SQLObject null, " + err.__class__.__name__ + ": " + str(err))
         self._orig = db_values
         self.db_cache()
 
@@ -544,10 +553,7 @@ class SQLObjectRelationship(SQLObject):
             self.reInitializeAttribute(self._child[1], self._child[0].using(id=value))
 
     def db_find_existing(self):
-        try:
-            return self._session.query(self._model).filter(getattr(self._model, self._parent[2]) == getattr(getattr(self, self._parent[1]), 'id'), getattr(self._model, self._child[2]) == getattr(getattr(self, self._child[1]), 'id')).first()
-        except:
-            return None
+        return self._session.query(self._model).filter(getattr(self._model, self._parent[2]) == getattr(getattr(self, self._parent[1]), 'id'), getattr(self._model, self._child[2]) == getattr(getattr(self, self._child[1]), 'id')).first()
 
 
 class SQLObjectList(DAList):

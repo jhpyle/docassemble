@@ -1,5 +1,18 @@
 # Change Log
 
+## [1.4.7] - 2022-08-24
+
+### Added
+- The `module whitelist` and `module blacklist` Configuration
+  directives.
+- The `user profile fields` Configuration directive.
+### Changed
+- The `SQLObject` methods were changed so that they will raise
+  exceptions if there is an unexpected error.
+- Upgraded jQuery Validation Plugin.
+### Fixed
+- Fixes to multifactor authentication to make configuration easier.
+
 ## [1.4.6] - 2022-08-13
 
 ### Fixed

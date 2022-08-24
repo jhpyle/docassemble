@@ -311,6 +311,9 @@ def user_profile_page():
             current_user.last_name = form.last_name.data
             if current_user.social_id and current_user.social_id.startswith('phone$'):
                 current_user.email = form.email.data
+            for reg_field in ('country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'language', 'timezone'):
+                if reg_field in app.config['USER_PROFILE_FIELDS']:
+                    setattr(current_user, reg_field, getattr(form, reg_field).data)
         db.session.commit()
         # docassemble.webapp.daredis.clear_user_cache()
         flash(word('Your information was saved.'), 'success')

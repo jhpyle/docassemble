@@ -30,6 +30,7 @@ if 'required for' in daconfig['two factor authentication'] and isinstance(daconf
 else:
     app.config['MFA_REQUIRED_FOR_ROLE'] = []
 app.config['MFA_ROLES'] = daconfig['two factor authentication'].get('allowed for', ['admin', 'developer'])
+app.config['MFA_ROLES'] = list(set(app.config['MFA_ROLES'] + app.config['MFA_REQUIRED_FOR_ROLE']))
 if not (app.config['MFA_ALLOW_SMS'] or app.config['MFA_ALLOW_APP']):
     app.config['USE_MFA'] = False
 app.config['API_ROLES'] = daconfig.get('api privileges', ['admin', 'developer'])
@@ -129,3 +130,4 @@ app.config['ALLOW_LOG_VIEWING'] = daconfig.get('allow log viewing', True)
 app.config['ALLOW_UPDATES'] = daconfig.get('allow updates', True)
 app.config['ALLOW_CONFIGURATION_EDITING'] = daconfig.get('allow configuration editing', True)
 app.config['ALLOW_RESTARTING'] = bool(app.config['ENABLE_PLAYGROUND'] or app.config['ALLOW_UPDATES'] or app.config['ALLOW_CONFIGURATION_EDITING'])
+app.config['USER_PROFILE_FIELDS'] = daconfig.get('user profile fields', [])

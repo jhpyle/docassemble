@@ -5,7 +5,7 @@
 {%- set extra_js = get_part('register page extra javascript') %}
 {%- extends 'flask_user/public_base.html' %}
 {%- block content %}
-{%- from "base_templates/form_macros.html" import render_field, render_submit_field, myrender_hidden_field %}
+{%- from "base_templates/form_macros.html" import render_field, render_submit_field, render_select_field, myrender_hidden_field %}
           <h1>{{ get_part('register page heading', word('Register')) }}</h1>
 {{ get_part('register page pre') }}
           {%- if user_manager.enable_register %}
@@ -18,6 +18,33 @@
           {%- if config['USE_PASSWORD_LOGIN'] or ('admin' in request.args and request.args['admin'] == '1') %}
           <form action="" method="POST" novalidate formnovalidate class="form" role="form">
             {{ form.hidden_tag() }}
+            {%- if 'first_name' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.first_name) }}
+            {%- endif %}
+            {%- if 'last_name' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.last_name) }}
+            {%- endif %}
+            {%- if 'country' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.country) }}
+            {%- endif %}
+            {%- if 'subdivisionfirst' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.subdivisionfirst) }}
+            {%- endif %}
+            {%- if 'subdivisionsecond' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.subdivisionsecond) }}
+            {%- endif %}
+            {%- if 'subdivisionthird' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.subdivisionthird) }}
+            {%- endif %}
+            {%- if 'organization' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.organization) }}
+            {%- endif %}
+            {%- if 'language' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_field(form.language) }}
+            {%- endif %}
+            {%- if 'timezone' in config['USER_PROFILE_FIELDS'] %}
+            {{ render_select_field(form.timezone) }}
+            {%- endif %}
             {%- set field = form.username if user_manager.enable_username else form.email %}
             <div class="da-form-group">
               <label for="{{ field.id }}" class="form-label">{{ field.label.text }}</label>

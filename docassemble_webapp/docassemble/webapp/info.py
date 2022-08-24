@@ -62,6 +62,7 @@ system_packages = [
     "Deprecated",
     "distro",
     "dnspython",
+    "docassemble-backports",
     "Docassemble-Flask-User",
     "Docassemble-Pattern",
     "docassemble-textstat",
