@@ -2404,7 +2404,12 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
           idToUse = daQuestionID['ga'];
         }
         if (idToUse != null){
-          gtag('config', """ + json.dumps(ga_id) + """, {""" + ("'cookie_flags': 'SameSite=None;Secure', " if app.config['SESSION_COOKIE_SECURE'] else '') + """'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + idToUse.replace(/[^A-Za-z0-9]+/g, '_')});
+          if (!daGAConfigured){
+            gtag('config', """ + json.dumps(ga_id) + """, {'send_page_view': false""" + (", 'cookie_flags': 'SameSite=None;Secure'" if app.config['SESSION_COOKIE_SECURE'] else '') + """});
+            daGAConfigured = true;
+          }
+          gtag('set', 'page_path', """ + json.dumps(interview_package + "/" + interview_filename + "/") + """ + idToUse.replace(/[^A-Za-z0-9]+/g, '_'));
+          gtag('event', 'page_view', {'page_path': """ + json.dumps(interview_package + "/" + interview_filename + "/") + """ + idToUse.replace(/[^A-Za-z0-9]+/g, '_')});
         }
       }
 """
@@ -8400,6 +8405,7 @@ def index(action_argument=None, refer=None):
       var daSpinnerTimeout = null;
       var daSubmitter = null;
       var daUsingGA = """ + ("true" if ga_id is not None else 'false') + """;
+      var daGAConfigured = false;
       var daUsingSegment = """ + ("true" if segment_id is not None else 'false') + """;
       var daDoAction = """ + do_action + """;
       var daQuestionID = """ + json.dumps(question_id_dict) + """;
