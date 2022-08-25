@@ -210,9 +210,9 @@
     template: function () {
       //console.log('template');
       if (this.options.bsVersion == "2") {
-        return '<div class="combobox-container"><input type="hidden" /> <div class="input-append"> <input type="text" autocomplete="off" /> <span class="add-on dropdown-toggle" data-bs-dropdown="dropdown"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>';
+        return '<div class="combobox-container"><input type="hidden" /> <div class="input-append"> <input type="text" autocomplete="off" /> <span class="add-on dropdown-toggle"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>';
       } else {
-        return '<div class="combobox-container"> <input type="hidden" /> <div class="input-group"> <input type="text" autocomplete="off" />  <div class="input-group-append"><button class="btn btn-outline-secondary dacomboboxtoggle" data-bs-toggle="dropdown" type="button"><span class="fas fa-caret-down"></span><span class="fas fa-xmark"></span></button> </div> </div> </div>';
+        return '<div class="combobox-container"> <input type="hidden" /> <div class="input-group"> <input type="text" autocomplete="off" />  <div class="input-group-append"><button class="btn btn-outline-secondary dacomboboxtoggle" type="button"><span class="fas fa-caret-down"></span><span class="fas fa-xmark"></span></button> </div> </div> </div>';
       }
     },
 
@@ -456,7 +456,21 @@
           if (!this.shown) {
             return;
           }
-          this.select();
+          if (this.selected) {
+            this.select();
+          } else {
+            var val = this.$element.val();
+            var opts = this.$menu.find("a");
+            var n = opts.length;
+            for (var i = 0; i < n; ++i) {
+              if ($(opts[i]).attr("data-value") == val) {
+                e.stopPropagation();
+                e.preventDefault();
+                $(opts[i]).click();
+                return false;
+              }
+            }
+          }
           break;
 
         case 27: // escape
@@ -486,6 +500,16 @@
       var that = this;
       this.focused = false;
       var val = this.$element.val();
+      if (this.shown) {
+        var opts = this.$menu.find("a");
+        var n = opts.length;
+        for (var i = 0; i < n; ++i) {
+          if ($(opts[i]).attr("data-value") == val) {
+            $(opts[i]).click();
+            return;
+          }
+        }
+      }
       var oldVal;
       if (this.clearIfNoMatch && !this.selected && val !== "") {
         this.$element.val("");

@@ -12,6 +12,7 @@
 - Upgraded jQuery Validation Plugin.
 ### Fixed
 - Fixes to multifactor authentication to make configuration easier.
+- JavaScript issues with comboboxes.
 
 ## [1.4.6] - 2022-08-13
 
