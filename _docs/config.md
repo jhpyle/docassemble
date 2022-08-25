@@ -2600,6 +2600,37 @@ passwords.
 allow changing password: False
 {% endhighlight %}
 
+## <a name="user profile fields"></a>Fields available to users when registering
+
+By default, logged-in users without privileges of `admin` or
+`developer` can only edit their first and last names on their user
+profiles, and when they register they can only set their e-mail
+address and password.
+
+If you would like to expand the fields available to the user on the
+registration page and in the user profile, you can set `user profile
+fields` to a list of fields that you wish to be editable.
+
+{% highlight yaml %}
+user profile fields:
+  - first_name
+  - last_name
+  - country
+  - subdivisionfirst
+  - subdivisionsecond
+  - subdivisionthird
+  - organization
+  - timezone
+  - language
+{% endhighlight %}
+
+Although you can expose the `language` field to the user for editing,
+this is not recommended because the `language` field is a special
+code. The field is not a multiple-choice list; developers can use any
+code of their choosing to represent a language or a dialect of a
+language. You can use an interview to ask the user for their language
+and then set the field in the user profile using [`set_user_info()`].
+
 ## <a name="show interviews link"></a>Hiding the "my interviews" link
 
 If the `show interviews link` directive is set to `False`, logged-in
@@ -5203,6 +5234,79 @@ starts and never be changed. Although the `supervisor` directive will
 be visible when calling [`get_config()`], it should not appear in your
 Configuration YAML.
 
+## <a name="module whitelist"></a><a name="module blacklist"></a>Controlling which docassemble add-on modules are loaded
+
+By default, when docassemble starts or restarts (specifically, when
+the `docassemble.webapp.server` module loads), it searches through the
+`.py` files located within the `docassemble` namespace and `import`s
+the module if the `.py` file contains a line that starts with `#
+pre-load`, `class`, or `docassemble.base.util.update`. However, if the
+first line of the module is `# do not pre-load`, then the module is
+not imported. Note that the Modules folder in each developer's
+Playground (and each project therein) is part of the `docassemble`
+namespace, so all of those modules are eligible for being
+automatically imported.
+
+This means that if you write modules containing code that has global
+side effects, you need to be mindful that you do not have multiple
+conflicting versions of that code installed on your server. Even
+though you may not run any interviews that use a module, that module
+will be automatically loaded into memory when **docassemble**
+starts. Code that has global effects includes:
+
+* [`SQLObject`] class declarations
+* [`CustomDataType`] class declarations
+* [`docassemble.base.util.update_word_collection()`] function calls
+* [`docassemble.base.util.update_locale()`] function calls
+* [`docassemble.base.util.update_language_function()`] function calls
+* [`docassemble.base.util.update_nice_numbers()`] function calls
+* [`docassemble.base.util.update_ordinal_numbers()`] function calls
+* [`docassemble.base.util.update_ordinal_function()`] function calls
+
+The `module whitelist` and `module blacklist` Configuration directives
+allow you to override the normal methods that **docassemble** uses to
+choose which modules are automatically loaded.
+
+{% highlight yaml %}
+module whitelist:
+  - docassemble.familylaw.objects
+  - docassemble.mypackage.*
+{% endhighlight %}
+
+If you specify a `module whitelist`, then **docassemble** will load
+all installed modules that match the module names listed, and will not
+load any other modules. Even if you include `# pre-load` in a module
+file, it will not automatically load unless the module matches one of
+the items under `module whitelist`.
+
+The wildcard character `*` can be used. In the example above, all
+modules under `docassemble.mypackage` will be loaded.
+
+Note that all module files that match `module whitelist` entries will
+be loaded, regardless of whether they would otherwise have been
+preloaded based on their content, and regardless of whether the file
+contains the line `# do not pre-load`.
+
+{% highlight yaml %}
+module blacklist:
+  - docassemble.playground*
+  - docassemble.familylaw.oldobjects
+{% endhighlight %}
+
+If you specify a `module blacklist`, then any modules in the
+`docassemble` namespace that match any of the items under `module
+blacklist` will not be automatically loaded. In the example above, all
+modules in every user's Playground are prevented from loading
+automatically. The module `docassemble.familylaw.oldobjects` is also
+singled out for exclusion.
+
+Note that `module blacklist` only affects the auto-loading of
+modules. If you have an interview that loads a module using
+[`imports`] or [`modules`], or you load code that `import`s the
+module, the module will still be loaded. `module blacklist` only
+affects the auto-loading of modules that happens when **docassemble**
+starts.
+
 ## <a name="config from"></a>Importing configuration directives
 
 The following sections, [Using AWS Secrets Manager](#aws_secrets) and
@@ -5942,3 +6046,14 @@ and Facebook API keys.
 [language support]: https://docassemble.org/docs/language.html
 [`language`]: {{ site.baseurl }}/docs/config.html#language
 [`background_response_action()`]: {{ site.baseurl }}/docs/background.html#background_response_action
+[`set_user_info()`]: {{ site.baseurl }}/docs/functions.html#set_user_info
+[`SQLObject`]: {{ site.baseurl }}/docs/objects.html#SQLObject
+[`CustomDataType`]: {{ site.baseurl }}/docs/fields.html#custom datatype
+[`docassemble.base.util.update_word_collection()`]: {{ site.baseurl }}/docs/functions.html#update_word_collection
+[`docassemble.base.util.update_locale()`]: {{ site.baseurl }}/docs/functions.html#update_locale
+[`docassemble.base.util.update_language_function()`]: {{ site.baseurl }}/docs/functions.html#update_language_function
+[`docassemble.base.util.update_nice_numbers()`]: {{ site.baseurl }}/docs/functions.html#update_nice_numbers
+[`docassemble.base.util.update_ordinal_numbers()`]: {{ site.baseurl }}/docs/functions.html#update_ordinal_numbers
+[`docassemble.base.util.update_ordinal_function()`]: {{ site.baseurl }}/docs/functions.html#update_ordinal_function
+[`imports`]: {{ site.baseurl }}/docs/initial.html#imports
+[`modules`]: {{ site.baseurl }}/docs/initial.html#modules
