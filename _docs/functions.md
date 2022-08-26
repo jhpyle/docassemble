@@ -2633,6 +2633,9 @@ It accepts any of the following optional keyword arguments:
   navigation bar in place of the plain text title of the interview.
   If you include an image, you should size it to be about 20 pixels in
   height.
+* `short_logo` - If you include a logo that is much wider than 100 pixels, 
+  you should also specify a short logo that is not as wide, so your 
+  navigation bar will look good on small screens.   
 * `short` - for the mobile-friendly version of the interview title,
   which is displayed in the navigation bar when the screen is small.
 * `short_title` does the same thing as `short`.
