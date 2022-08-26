@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.8](https://github.com/jhpyle/docassemble/releases/tag/v1.4.8) - 2022-08-25
+
+
+### Fixed
+- Google Analytics JavaScript was being called in a way that used to
+  work but does not work anymore.
+
 ## [1.4.7](https://github.com/jhpyle/docassemble/releases/tag/v1.4.7) - 2022-08-24
 
 

@@ -80,8 +80,11 @@ the cloud.
 
 You can test out **docassemble** on a PC or a Mac, but for serious,
 long-term deployment, it is worthwhile to run it in the cloud, or on a
-dedicated on-premises server.  Running [Docker] on a machine that
-shuts down or restarts frequently could lead to [database corruption].
+dedicated on-premises server. Running [Docker] on a machine that shuts
+down or restarts frequently could lead to [database corruption]. If
+you run **docassemble** inside of [Docker Desktop], you may encounter
+problems if you have an ARM architecture processor or if Docker does
+not have at least 4GB of memory available to it.
 
 If you have never deployed a Linux-based virtual machine in the cloud
 before, this might be a good opportunity to learn.  The ability to use
@@ -2758,3 +2761,4 @@ the [docassemble repository].
 [`enable playground`]: {{ site.baseurl }}/docs/config.html#enable playground
 [`allow configuration editing`]: {{ site.baseurl }}/docs/config.html#allow configuration editing
 [`supervisor`]: {{ site.baseurl }}/docs/config.html#supervisor
+[Docker Desktop]: https://docs.docker.com/desktop/install/mac-install/
