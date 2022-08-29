@@ -28618,7 +28618,7 @@ def manage_api():
             if not success:
                 flash(word("Could not create new key"), 'error')
                 return render_template('pages/manage_api.html', **argu)
-            argu['description'] = Markup(word("Your new API key, known internally as %s, is %s") % (form.name.data, "<code>" + api_key + "</code>") + '.  ' + word("This is the only time you will be able to see your API key, so make sure to make a note of it and keep it in a secure place."))
+            argu['description'] = Markup(word("Your new API key, known internally as <strong>%s</strong>, is:<br />%s<br />") % (form.name.data, "<code>" + api_key + "</code>") + word("<strong>This is the only time you will be able to see your API key</strong>, so make sure to make a note of it and keep it in a secure place."))
         elif action == 'edit':
             argu['title'] = word("Edit API Key")
             argu['tab_title'] = argu['title']

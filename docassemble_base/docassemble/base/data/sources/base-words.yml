@@ -945,6 +945,7 @@
 "Static Files": Null
 "Stop Controlling": Null
 "Stop Observing": Null
+"<strong>This is the only time you will be able to see your API key</strong>, so make sure to make a note of it and keep it in a secure place.": Null
 "Submit": Null
 "Sudan": Null
 "(%s uncompressed)": Null
@@ -1046,7 +1047,6 @@
 "This field is required.": Null
 "This image file does not exist": Null
 "This is my custom interview page.": Null
-"This is the only time you will be able to see your API key, so make sure to make a note of it and keep it in a secure place.": Null
 "This package is not yet published on PyPI.": Null
 "This package is not yet published on your GitHub account.": Null
 "This package is": Null
@@ -1301,7 +1301,7 @@
 "Your GitHub settings were saved.": Null
 "Your information was saved.": Null
 "Your IP address is": Null
-"Your new API key, known internally as %s, is %s": Null
+"Your new API key, known internally as <strong>%s</strong>, is:<br />%s<br />": Null
 "Your password has been changed": Null
 "Your password has been changed.": Null
 "Your password has been changed successfully.": Null
