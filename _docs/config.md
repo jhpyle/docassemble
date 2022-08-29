@@ -1861,6 +1861,14 @@ mailgun api url: https://api.mailgun.net/v3/%s/messages.mime
 
 (The `mailgun domain` will be substituted in place of the `%s`.)
 
+Mailgun domains created in their EU region have a different base URL.
+To cater for this, you can  configure the URL used by the [Mailgun]
+API as follows: 
+
+{% highlight yaml %}
+mailgun api url: https://api.eu.mailgun.net/v3/%s/messages.mime
+{% endhighlight %}
+
 ### <a name="sendgrid api"></a>Using the SendGrid API
 
 You can send e-mail using the [SendGrid API].  First, sign up for
