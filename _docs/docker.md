@@ -126,8 +126,8 @@ If you have a Mac, follow the [Docker installation instructions for OS X]{:targe
 On Ubuntu (assuming username `ubuntu`):
 
 {% highlight bash %}
-sudo apt-get -y update
-sudo apt-get -y install docker.io
+sudo apt -y update
+sudo apt -y install docker.io
 sudo usermod -a -G docker ubuntu
 {% endhighlight %}
 
@@ -364,10 +364,10 @@ Cloud].
 
 If the server will not have access to the internet, you may wish to
 set `DAALLOWUPDATES` to `false` so that **docassemble** will not try
-to run `apt-get -q -y update` during the initialization
+to run `apt -q -y update` during the initialization
 process. However, even if you don't change `DAALLOWUPDATES`, the
 **docassemble** container should still start properly, because if
-`apt-get` cannot find a server it will fail and move on.
+`apt` cannot find a server it will fail and move on.
 
 # <a name="troubleshooting"></a>Troubleshooting
 
@@ -562,7 +562,7 @@ packages, note that **docassemble**'s [Python] code is installed in a
 [Python virtual environment] in which all of the files are readable
 and writable by the `www-data` user.  The virtual environment is
 located at `/usr/share/docassemble/local3.8/`.  Thus, installing
-[Python] packages through Debian's `apt-get` utility will not actually
+[Python] packages through Ubuntu's `apt` utility will not actually
 make that [Python] code available to **docassemble**.  Before using
 [pip], you need to first change the user to `www-data`, and then
 switch into the appropriate [Python virtual environment].
@@ -2080,7 +2080,7 @@ ownership and permissions.
 To create your own [Docker] image, first make sure [git] is installed:
 
 {% highlight bash %}
-sudo apt-get -y install git
+sudo apt -y install git
 {% endhighlight %}
 
 or
@@ -2100,9 +2100,7 @@ application that will be installed in the image, edit the following
 files:
 
 * <span></span>[`docassemble/Dockerfile`]: you may want to change the
-  locale and the Debian mirror; the standard "httpredir" mirror can
-  lead to random packages not being downloaded, depending on which
-  mirrors it chooses to use.
+  locale.
 * <span></span>[`docassemble/Docker/config/config.yml.dist`]: you
   probably do not need to change this; it is a template that is
   updated based on the contents of the environment variables passed to
