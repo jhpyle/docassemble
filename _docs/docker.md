@@ -81,10 +81,11 @@ the cloud.
 You can test out **docassemble** on a PC or a Mac, but for serious,
 long-term deployment, it is worthwhile to run it in the cloud, or on a
 dedicated on-premises server. Running [Docker] on a machine that shuts
-down or restarts frequently could lead to [database corruption]. If
-you run **docassemble** inside of [Docker Desktop], you may encounter
-problems if you have an ARM architecture processor or if Docker does
-not have at least 4GB of memory available to it.
+down or restarts frequently could lead to [database
+corruption]. Also, if you are using [Docker Desktop], **docassemble**
+will run very slowly if you do not have an `amd64`-based processor. If
+your processor is an Apple M1 chip, or other ARM-based microprocessor,
+you should [build the image first](#build) and then [`docker run`] it.
 
 If you have never deployed a Linux-based virtual machine in the cloud
 before, this might be a good opportunity to learn.  The ability to use
@@ -2077,7 +2078,12 @@ ownership and permissions.
 
 # <a name="build"></a>Creating your own Docker image
 
-To create your own [Docker] image, first make sure [git] is installed:
+To create your own [Docker] image, first make sure [git] is
+installed. If you are using [Docker Desktop] on a Windows PC or a Mac,
+you may find that `git` is already installed, or the instructions may
+explain how to run `git` using a Docker container.
+
+If you are using Linux, installing git will look something like:
 
 {% highlight bash %}
 sudo apt -y install git
@@ -2089,18 +2095,32 @@ or
 sudo yum -y install git
 {% endhighlight %}
 
-Then download docassemble:
+Then download docassemble, which consists of two images:
 
 {% highlight bash %}
+git clone https://github.com/jhpyle/docassemble-os
 git clone {{ site.github.repository_url }}
 {% endhighlight %}
 
+Each of these repositories contains a `Dockerfile`. The
+`jhpyle/docassemble` repository depends on
+`jhpyle/docassemble-os`. (The `jhpyle/docassemble-os` repository is
+separate because it contains operating system files and takes a long
+time to build. If you are on the `amd64` platform and you want to
+modify the Docker image, you can download
+the `jhpyle/docassemble-os` image and then `docker build` the
+`jhpyle/docassemble` repository only.)
+
+To make changes to the operating system or the operating system
+packages that are installed inside the container, edit the
+`Dockerfile` in the `jhpyle/docassemble-os` repository.
+
 To make changes to the configuration of the **docassemble**
-application that will be installed in the image, edit the following
-files:
+application, edit the following files in the `jhpyle/docassemble`
+repository:
 
 * <span></span>[`docassemble/Dockerfile`]: you may want to change the
-  locale.
+  Python packages that are available when the server starts.
 * <span></span>[`docassemble/Docker/config/config.yml.dist`]: you
   probably do not need to change this; it is a template that is
   updated based on the contents of the environment variables passed to
@@ -2174,19 +2194,22 @@ files:
 To build the image, run:
 
 {% highlight bash %}
-cd docassemble
-docker build -t yourdockerhubusername/mydocassemble .
+cd docassemble-os
+docker build -t jhpyle/docassemble-os .
+cd ../docassemble
+docker build -t jhpyle/docassemble .
 {% endhighlight %}
 
 You can then run your image:
 
 {% highlight bash %}
-docker run -d -p 80:80 -p 443:443 --stop-timeout 600 yourdockerhubusername/mydocassemble
+docker run -d -p 80:80 -p 443:443 --stop-timeout 600 jhpyle/docassemble
 {% endhighlight %}
 
 Or push it to [Docker Hub]:
 
 {% highlight bash %}
+docker tag yourdockerhubusername/mydocassemble jhpyle/docassemble
 docker push yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
@@ -2483,12 +2506,6 @@ above overwrites the `jhpyle/docassemble-os` image that is stored on
 your local machine.  If you want, you can edit the [Dockerfile] before
 building your custom `jhpyle/docassemble` version so that it
 references a different base image.
-
-The versioning of the [docassemble-os repository] on [GitHub] follows
-that of the [docassemble repository].  The two repositories are
-maintained together.  However, the latest version of the
-[docassemble-os repository] is usually several versions behind that of
-the [docassemble repository].
 
 
 [Redis]: http://redis.io/
