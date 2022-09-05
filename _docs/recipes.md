@@ -1470,7 +1470,7 @@ when all signatures have been provided.
 
 This interview uses [`include`] to bring in the contents of
 [`docassemble.demo:data/questions/sign.yml`].  This [YAML] file
-disabled server-side encryption by setting [`multi_user`] to `True`,
+disables server-side encryption by setting [`multi_user`] to `True`,
 and loads the `SigningProcess` class from the
 [`docassemble.demo.sign`] module.  The object `sign`, an instance of
 `SigningProcess`, controls the gathering and display of signatures.

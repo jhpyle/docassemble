@@ -1891,7 +1891,7 @@ your certificates to **docassemble**.
 
 Using your own SSL certificates with [Docker] requires that your SSL
 certificates reside within each container.  There are several ways to
-get your certificates into th:
+get your certificates into the container:
 
 * Use [S3](#persistent s3) or [Azure blob storage](#persistent azure)
   and upload the certificates to `certs/` in your bucket/container.

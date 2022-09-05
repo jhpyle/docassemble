@@ -62,6 +62,10 @@ voicerss:
     en: us
     es: mx
     fr: fr
+  voices:
+    en: Amy
+    es: Juana
+    fr: Axel
 s3:
   enable: False
   access key id: FWIEJFIJIDGISEJFWOEF
@@ -1937,7 +1941,7 @@ celery flask log: /tmp/docassemble-log/celery-flask.log
 The default locates for the [Flask] log files are `/tmp/flask.log` and
 `/tmp/celery-flask.log`.
 
-## <a name="language"></a><a name="dialect"></a><a name="locale"></a>Default language, locale, and dialect
+## <a name="language"></a><a name="dialect"></a><a name="voice"></a><a name="locale"></a>Default language, locale, dialect, and voice
 
 These directives set the default [language and locale settings] for
 the **docassemble** server.
@@ -1946,6 +1950,7 @@ the **docassemble** server.
 language: en
 locale: en_US.utf8
 dialect: us
+voice: Amy
 {% endhighlight %}
 
 The `language` needs to be a lowercase [ISO-639-1] or [ISO-639-3]
@@ -1988,12 +1993,13 @@ to be in Euros, the code that runs [`update_locale()`] for the French
 user could cause the Japanese user to see the Euro symbol in place of
 the Yen symbol in a [`question`].
 
-The dialect is only relevant for the text-to-speech feature, which is
-controlled by the [special variable `speak_text`].  See the
-[`voicerss`] configuration for more information about configuring this
-feature.  The default dialect is only used as a fallback, in case the
-dialect cannot be determined any other way.  It is better to set the
-dialect using [`set_language()`] or the [`voicerss`] configuration.
+The `dialect` and `voice` are only relevant for the text-to-speech
+feature, which is controlled by the [special variable `speak_text`].
+See the [`voicerss`] configuration for more information about
+configuring this feature.  The default dialect and default voice are
+only used as a fallback, in case the dialect and voice cannot be
+determined any other way.  It is better to set the dialect and voice
+using [`set_language()`] or the [`voicerss`] configuration.
 
 ## <a name="country"></a>Default country
 
