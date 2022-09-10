@@ -1253,6 +1253,11 @@ Here are some examples of usage:
 * `fruit_table.export()`: returns a Microsoft Excel file called
   `file.xlsx`.
 
+The optional keyword parameter `output_to` can be used to specify a
+[`DAFile`] to which the output of `.export()` should be
+written. If omitted, [`DAFile`] with a random instance name will be
+returned.
+
 ## <a name="as_df"></a>Converting tables to a pandas dataframe
 
 If you want to work with your table as a [`pandas`] dataframe, you can

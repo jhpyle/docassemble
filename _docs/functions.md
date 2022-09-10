@@ -2865,22 +2865,23 @@ The value given to `set_language()` must be a lowercase [ISO-639-1] or
 [ISO-639-3] code.  For example in [ISO-639-1], Spanish is `es`, French
 is `fr`, and Arabic is `ar`.
 
-Using the optional `dialect` keyword argument, you can also set the
-dialect of the language.  The dialect is relevant only for the
-text-to-speech engine.  For example:
+Using the optional `dialect` and `voice` keyword arguments, you can
+also set the dialect and/or voice of the language that should be used
+for the text-to-speech engine.  For example:
 
 {% highlight yaml %}
 ---
 initial: True
 code: |
-  set_language('en', dialect='au')
+  set_language('en', dialect='au', voice='Zoe')
 ---
 {% endhighlight %}
 
 This will set the language to English, and will instruct the
-text-to-speech engine to use an Australian dialect.  (The dialect is
-relevant only for the text-to-speech engine, which is controlled by
-the [special variable `speak_text`].)
+text-to-speech engine to use an Australian dialect with the voice of
+"Zoe."  (The dialect is relevant only for the text-to-speech engine,
+which is controlled by the [special variable `speak_text`].) The
+default values are controlled by the [VoiceRSS Configuration].
 
 For more information about languages in **docassemble**, see
 [language support].
@@ -6200,7 +6201,7 @@ list, it will be unpacked.
 
 {% include side-by-side.html demo="pdf-concatenate" %}
 
-`pdf_concatenate()` has three optional keyword parameters:
+`pdf_concatenate()` supports the following optional keyword parameters:
 
 * `filename`: if provided, this will be the name of the resulting
   file.  If not provided, the file will be named `file.pdf`.
@@ -6208,6 +6209,10 @@ list, it will be unpacked.
   format.  The default is `False`.
 * `password`: if provided, the [PDF] file will be protected.  See the
   documentation for the [`password`] document modifier.
+* `output_to`: if this refers to a [`DAFile`] object, the output of
+  `pdf_concatenate()` will be saved to this [`DAFile`]. By default,
+  `pdf_concatenate()` returns a new [`DAFile`] with a random instance
+  name.
 
 ## <a name="docx_concatenate"></a>docx_concatenate()
 
@@ -6221,6 +6226,12 @@ are accepted.  If any of the arguments is a list, it will be unpacked.
 `docx_concatenate()` takes an optional keyword parameter `filename`,
 which, if provided, will be used as the name of the resulting file.
 If no `filename` is provided, the file will be named `file.docx`.
+
+`docx_concatenate()` takes an optional keyword parameter `output_to`,
+which, if provided, will be used as the [`DAFile`] object to which the
+output of `docx_concatenate()` will be stored. By default,
+`docx_concatenate()` returns a new [`DAFile`] with a random instance
+name.
 
 ## <a name="overlay_pdf"></a>overlay_pdf()
 
@@ -6263,15 +6274,23 @@ document B, etc.)
 When `multi=True` is used, the `first_page`, `last_page`, `only`, and
 `logo_page` parameters are disregarded.
 
+`overlay_pdf()` takes an optional keyword parameter `output_to`,
+which, if provided, will be used as the [`DAFile`] object to which the
+output of `overlay_pdf()` will be stored. By default, `overlay_pdf()`
+returns a new [`DAFile`] with a random instance name.
+
 ## <a name="zip_file"></a>zip_file()
 
 The `zip_file()` function is like the [`pdf_concatenate()`] function,
 except it returns a [ZIP file] archive of the files.
 
-`zip_file()` has one optional keyword parameter:
+`zip_file()` has two optional keyword parameters:
 
 * `filename`: if provided, this will be the name of the resulting
   file.  If not provided, the file will be named `file.zip`.
+* `output_to`: if this refers to a [`DAFile`] object, the output of
+  `zip_file()` will be saved to this [`DAFile`]. By default,
+  `zip_file()` returns a new [`DAFile`] with a random instance name.
 
 If you want your zip file to include file structure, you can pass a
 [Python dictionary] as a parameter, and they keys of the dictionary
@@ -8575,3 +8594,4 @@ $(document).on('daPageLoad', function(){
 [`action_perform()` JavaScript function]: #js_action_perform
 [`action_call()` JavaScript function]: js_action_call
 [locale conventions]: https://docs.python.org/3/library/locale.html#locale.localeconv
+[VoiceRSS Configuration]: {{ site.baseurl }}/docs/config.html#voicerss

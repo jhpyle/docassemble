@@ -3485,6 +3485,43 @@ voicerss:
     zh: cn
 {% endhighlight %}
 
+You can set the default "voice" for a given language:
+
+{% highlight yaml %}
+voicerss:
+  enable: True
+  key: 347593849874e7454b9872948a87987d
+  voices:
+    it: Pietro
+{% endhighlight %}
+
+You can set the default "voice" for a given dialect of a given
+language:
+
+{% highlight yaml %}
+voicerss:
+  enable: True
+  key: 347593849874e7454b9872948a87987d
+  voices:
+    en: 
+      us: Amy
+      au: Jack
+    fr:
+      ca: Logan
+{% endhighlight %}
+
+You can set the audio format for [VoiceRSS] audio files:
+
+{% highlight yaml %}
+voicerss:
+  enable: True
+  key: 347593849874e7454b9872948a87987d
+  format: 44khz_16bit_stereo
+{% endhighlight %}
+
+The default format is `16khz_16bit_stereo`.
+
+
 ## <a name="babel dates map"></a>Translation of dates
 
 Many of the [date functions] rely on the [`babel.dates`] package.
@@ -3762,6 +3799,35 @@ authentication.
 The default value of `enable` is True, so you can omit the
 `enable` line.  You can write `two factor authentication: True`
 to enable two-factor authentication with all of the default options.
+
+## <a name="auto login"></a>Automatic login
+
+The `auto login` directive causes users to automatically redirect to a
+third-party login service when they arrive at the `/user/sign-in` endpoint.
+
+If you have only one alternative login method, you can set `auto
+login` to `True`:
+
+{% highlight yaml %}
+auto login: True
+{% endhighlight %}
+
+If you have multiple alternative login methods, and you want one of
+them to be automatic, you can set `auto login` to the name of the
+login method:
+
+{% highlight yaml %}
+auto login: google
+{% endhighlight %}
+
+Valid values are `phone`, `google`, `facebook`, `twitter`, `auth0`,
+`keycloak`, and `azure`.
+
+If you wish to prevent the user from being automatically redirected
+when they visit `/user/sign-in`, you can add `from_logout=1` to the URL
+parameters. (This is how the logout process avoids an immediate login
+when `logoutpage` is not defined and the user is directed back to the
+login page after they log out.)
 
 ## <a name="playground examples"></a>List of examples in the Playground
 

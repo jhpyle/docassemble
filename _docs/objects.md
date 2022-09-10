@@ -1414,6 +1414,9 @@ follows (where `myfile` is a `DAFile` object):
 * `myfile.initialize()` - `filename` will be `file.txt`, `extension`
   will be `txt`, `mimetype` will be `text/plain`.
 
+When it completes, the `.initialize()` method sets the `initialized`
+to `True`.
+
 If the object has already been initialized, the `.initialize()` method
 can safely be called on it, but this will only have the effect of
 calling `.retrieve()` on it, and the `filename` and `extension`
@@ -1423,6 +1426,13 @@ The following example uses the [Python Imaging Library] to create a
 JPEG image.
 
 {% include side-by-side.html demo="dafile" %}
+
+Note that because the `.initialize()` method defines the
+`.initialized` attribute, you can attach `sets` to a `code` block that
+calls `initialize()`. This way, your `code` block that initializes a
+file can be called implicitly. In this example, the attempt to display
+`myfile` in the `subquestion` of the final `question` causes
+**docassemble** to seek out the value of `myfile.initialized`.
 
 <a name="DAFile.show"></a>The `.show()` method returns markup that
 displays the file as an image.  This method takes an optional keyword
@@ -1665,6 +1675,12 @@ file will be converted in place to that format.  Word processing files
 cannot be converted to image files, and vice-versa.  If the conversion
 fails, an exception will be raised.
 
+The `.convert_to()` method accepts an optional keyword parameter,
+`output_to`, which can be set to a [`DAFile`]. If `output_to` is
+specified, then the input file is not converted in-place, and instead
+the `output_to` file will be be redefined to contain the converted
+file.
+
 <a name="DAFile.size_in_bytes"></a>The `.size_in_bytes()` method
 returns the number of bytes in the file.
 
@@ -1797,6 +1813,23 @@ If you do not want to edit a PDF file in place, you can create a new
 as positional parameters to `make_ocr_pdf_in_background()`.
 
 {% include demo-side-by-side.html demo="make-ocr-pdf-in-background-2" %}
+
+<a name="DAFile.extract_pages"></a>The `.extract_pages()` method
+extracts a page range from a PDF file and returns a new [`DAFile`]
+containing the extracted pages.
+
+{% include demo-side-by-side.html demo="pdfextract" %}
+
+The `.extract_pages()` method accepts the optional keyword parameters
+`first` and `last`, indicating the sequential range of page numbers
+you wish to extract. If `first` is not provided, it defaults to
+`1`. If `last` is not provided, it defaults to the last page of the
+document.
+
+The optional keyword parameter `output_to` can be used to specify a
+[`DAFile`] to which the output of `.extract_pages()` should be
+written. If `output_to` is omitted, a [`DAFile`] with a random
+instance name will be returned.
 
 <a name="DAFile.bates_number"></a>The `.bates_number()` method overwrites
 any existing contents of the file with a [Bates numbered] PDF of the

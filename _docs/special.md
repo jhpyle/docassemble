@@ -401,6 +401,20 @@ There are some built-in variable names with special meaning:
 * <a name="cron_weekly"></a>[`cron_weekly`] is similar, except runs on a weekly basis.
 * <a name="cron_monthly"></a>[`cron_monthly`] is similar, except runs on a monthly basis.
 
+# <a name="javascript"></a>Variables in the JavaScript context
+
+In the web browser, there are a number of variables, most of which
+begin with `da`, that are special and should not be overwritten. Check
+the JavaScript console before using a global variable.
+
+Some JavaScript variables you might want to access include:
+
+* `daUserId` - the user's integer ID if the user is logged in, and
+  `null` otherwise.
+* `daYamlFilename` - the filename of the current interview.
+* `daUsingGA` - whether Google Analytics is being used.
+* `daUsingSegment` - whether Segment is being used.
+
 # <a name="reserved"></a>Reserved names
 
 The following variables are set internally by **docassemble**.  If you
