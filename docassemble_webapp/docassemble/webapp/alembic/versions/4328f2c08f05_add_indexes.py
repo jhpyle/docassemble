@@ -6,7 +6,6 @@ Create Date: 2019-02-05 19:23:02.744161
 
 """
 from alembic import op
-import sqlalchemy as sa
 from docassemble.webapp.database import dbtableprefix
 
 
@@ -43,6 +42,7 @@ def upgrade():
     op.create_index(dbtableprefix + 'ix_userdictkeys_user_id', 'userdictkeys', ['user_id'])
     op.create_index(dbtableprefix + 'ix_userdict_key_filename', 'userdict', ['key', 'filename'])
     op.create_index(dbtableprefix + 'ix_userdictkeys_key_filename', 'userdictkeys', ['key', 'filename'])
+
 
 def downgrade():
     op.drop_index(dbtableprefix + 'ix_attachments_filename', table_name='attachments')

@@ -19,5 +19,6 @@ depends_on = None
 def upgrade():
     op.add_column(dbtableprefix + 'package', sa.Column('gitbranch', sa.String(255)))
 
+
 def downgrade():
     op.drop_column(dbtableprefix + 'package', 'gitbranch')

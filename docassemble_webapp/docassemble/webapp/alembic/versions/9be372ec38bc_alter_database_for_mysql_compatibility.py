@@ -5,16 +5,17 @@ Revises: 4328f2c08f05
 Create Date: 2020-02-16 15:43:35.276655
 
 """
+import sys
 from alembic import op
 import sqlalchemy as sa
 from docassemble.webapp.database import dbtableprefix, dbprefix, daconfig
-import sys
 
 # revision identifiers, used by Alembic.
 revision = '9be372ec38bc'
 down_revision = '4328f2c08f05'
 branch_labels = None
 depends_on = None
+
 
 def upgrade():
     if dbprefix.startswith('postgresql') and not daconfig.get('force text to varchar upgrade', False):
@@ -81,6 +82,7 @@ def upgrade():
             type_=sa.String(1024)
         )
     op.create_index(dbtableprefix + 'ix_uploads_yamlfile', 'uploads', ['yamlfile'])
+
 
 def downgrade():
     op.alter_column(

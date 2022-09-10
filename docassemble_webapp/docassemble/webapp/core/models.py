@@ -48,6 +48,7 @@ class SpeakList(db.Model):
     type = db.Column(db.String(20))
     language = db.Column(db.String(10))
     dialect = db.Column(db.String(10))
+    voice = db.Column(db.String(20))
     upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
     encrypted = db.Column(db.Boolean(), nullable=False, server_default=true())
     digest = db.Column(db.Text())

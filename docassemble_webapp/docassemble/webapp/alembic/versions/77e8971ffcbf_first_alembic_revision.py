@@ -1,7 +1,7 @@
 """first alembic revision
 
 Revision ID: 77e8971ffcbf
-Revises: 
+Revises:
 Create Date: 2017-08-13 09:07:33.368044
 
 """
@@ -15,8 +15,10 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
+
 def upgrade():
     op.add_column(dbtableprefix + 'user', sa.Column('modified_at', sa.DateTime))
+
 
 def downgrade():
     op.drop_column(dbtableprefix + 'user', 'modified_at')

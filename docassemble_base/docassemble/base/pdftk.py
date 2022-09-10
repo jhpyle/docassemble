@@ -760,3 +760,13 @@ def apply_qpdf(filename):
     except:
         raise DAError("Could not fix PDF")
     shutil.copyfile(new_file.name, filename)
+
+
+def extract_pages(input_path, output_path, first, last):
+    subprocess_arguments = [PDFTK_PATH, input_path, 'cat', str(first) + '-' + str(last), 'output', output_path]
+    try:
+        result = subprocess.run(subprocess_arguments, timeout=60, check=False).returncode
+    except subprocess.TimeoutExpired:
+        raise Exception("call to pdftk took too long where arguments were " + " ".join(subprocess_arguments))
+    if result != 0:
+        raise Exception("call to pdftk failed where arguments were " + " ".join(subprocess_arguments))

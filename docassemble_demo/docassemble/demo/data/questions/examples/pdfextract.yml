@@ -1,0 +1,25 @@
+metadata:
+  title: Extract pages from PDF
+  short title: Extract
+  example start: 1
+  example end: 3
+---
+question: |
+  Upload a PDF document at least 6 pages long.
+fields:
+  - File: pdf_file
+    datatype: file
+validation code: |
+  try:
+    assert pdf_file.num_pages() > 5
+  except:
+    raise DAValidationError("That is not a valid PDF of at least six pages in length.")
+---
+code: |
+  first_five_pages = pdf_file.extract_pages(first=1, last=5)
+---
+mandatory: True
+question: |
+  Here are the first five pages of your document.
+subquestion: |
+  ${ first_five_pages }

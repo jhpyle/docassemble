@@ -41,7 +41,7 @@ from jinja2.exceptions import TemplateError
 from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError, LazyNameError, DAAttributeError
 from docassemble.base.file_docx import include_docx_template
 from docassemble.base.filter import markdown_to_html
-from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms, possessify_long, a_in_the_b, its, the, this, these, underscore_to_space, some, ReturnValue, set_variables, language_name, run_action_in_session  # noqa: F401 # pylint: disable=unused-import
+from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, get_voice, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms, possessify_long, a_in_the_b, its, the, this, these, underscore_to_space, some, ReturnValue, set_variables, language_name, run_action_in_session  # noqa: F401 # pylint: disable=unused-import
 from docassemble.base.generate_key import random_alphanumeric, random_string
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import word_to_markdown, concatenate_files
@@ -89,6 +89,7 @@ __all__ = [
     'get_language',
     'set_language',
     'get_dialect',
+    'get_voice',
     'set_country',
     'get_country',
     'get_locale',
@@ -4022,6 +4023,7 @@ class DAFile(DAObject):
         if 'number' in kwargs:
             self.number = kwargs['number']
             self.ok = True
+            self.initialized = True
         else:
             self.ok = False
         if hasattr(self, 'extension') and self.extension == 'pdf':
@@ -4030,8 +4032,14 @@ class DAFile(DAObject):
             if 'make_pngs' in kwargs and kwargs['make_pngs']:
                 self._make_pngs_for_pdf()
 
-    def convert_to(self, output_extension):
+    def convert_to(self, output_extension, output_to=None):
         """Converts the file in-place to a different file extension."""
+        if output_to is None:
+            output_to = self
+        elif isinstance(output_to, DAFileList):
+            output_to = output_to.elements[0]
+        if not isinstance(output_to, DAFile):
+            raise Exception("convert_to: output_to must be a DAFile")
         self.retrieve()
         if hasattr(self, 'extension'):
             input_extension = self.extension
@@ -4040,48 +4048,47 @@ class DAFile(DAObject):
         else:
             raise Exception("DAFile.convert: could not identify file type")
         output_extension = output_extension.strip().lower()
-        if output_extension == input_extension:
+        if output_to is self and output_extension == input_extension:
             return
         if hasattr(self, 'filename'):
             output_filename = re.sub(r'\.[^\.]+$', '.' + output_extension, self.filename)
         else:
             output_filename = 'file.' + output_extension
         input_path = self.path()
-        input_number = self.number
-        del self.number
-        self.ok = False
-        if hasattr(self, 'mimetype'):
-            del self.mimetype
-        self.initialize(extension=output_extension, filename=output_filename)
+        if output_to is self:
+            temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=input_extension, delete=False)
+            shutil.copyfile(input_path, temp_file.name)
+            input_path = temp_file.name
+        output_to.initialize(extension=output_extension, filename=output_filename, reinitialize=output_to.ok)
         if input_extension == output_extension:
-            shutil.copyfile(input_path, self.path())
+            shutil.copyfile(input_path, output_to.path())
         elif input_extension in ("docx", "doc", "odt", "rtf", "png", "jpg", "tif") and output_extension == "pdf":
-            shutil.copyfile(docassemble.base.pandoc.concatenate_files([input_path]), self.path())
+            shutil.copyfile(docassemble.base.pandoc.concatenate_files([input_path]), output_to.path())
         elif input_extension in ("docx", "doc", "odt", "rtf") and output_extension in ("docx", "doc", "odt", "rtf"):
-            docassemble.base.pandoc.convert_file(input_path, self.path(), input_extension, output_extension)
+            if not docassemble.base.pandoc.convert_file(input_path, output_to.path(), input_extension, output_extension):
+                raise DAError("Could not convert file")
         elif input_extension in ("docx", "doc", "odt", "rtf") and output_extension == 'md':
             result = docassemble.base.pandoc.word_to_markdown(input_path, input_extension)
             if result is None:
                 raise DAError("Could not convert file")
-            shutil.copyfile(result.name, self.path())
+            shutil.copyfile(result.name, output_to.path())
         elif input_extension in ("png", "jpg", "tif") and output_extension in ("png", "jpg", "tif"):
             the_image = Image.open(input_path)
             if input_extension == 'png':
                 rgb_image = the_image.convert('RGB')
-                rgb_image.save(self.path())
+                rgb_image.save(output_to.path())
             else:
-                the_image.save(self.path())
+                the_image.save(output_to.path())
         else:
             raise Exception("DAFile.convert: could not identify file type")
-        server.SavedFile(input_number).delete()
-        self.commit()
-        self.retrieve()
+        output_to.commit()
+        output_to.retrieve()
 
     def fix_up(self):
         """Makes corrections to the file and changes it in-place if necessary.
         Raises an exception if the file is corrupt and cannot be fixed."""
-        if not self.ok:
-            raise DAError("Cannot call fix_up on a DAFile object that is just a shell.")
+        if not self.ok and not hasattr(self, 'content'):
+            self.initialized  # pylint: disable=pointless-statement
         if hasattr(self, 'extension'):
             if self.extension == 'pdf':
                 docassemble.base.pdftk.apply_qpdf(self.path())
@@ -4137,6 +4144,8 @@ class DAFile(DAObject):
                 server.SavedFile(self.number).delete()
                 del self.number
             self.ok = False
+            if hasattr(self, 'initialized'):
+                del self.initialized
             self.has_specific_filename = False
             if hasattr(self, 'file_info'):
                 del self.file_info
@@ -4182,6 +4191,7 @@ class DAFile(DAObject):
         if not (os.path.isfile(the_path) or os.path.islink(the_path)):
             sf = server.SavedFile(self.number, extension=self.extension, fix=True, should_not_exist=should_not_exist)
             sf.save()
+        self.initialized = True
 
     def retrieve(self):
         """Ensures that the file is ready to be used."""
@@ -4253,6 +4263,42 @@ class DAFile(DAObject):
         self.retrieve()
         shutil.copyfile(filepath, self.file_info['path'])
         self.retrieve()
+
+    def extract_pages(self, first=None, last=None, output_to=None):
+        if first is None:
+            first = 1
+        elif not isinstance(first, int):
+            raise Exception("extract_pages: first must be an integer")
+        if first < 1:
+            raise Exception("extract_pages: first must be 1 or greater")
+        if last is None:
+            last = ''
+        elif not isinstance(last, int):
+            raise Exception("extract_pages: last must be an integer")
+        elif last < first:
+            raise Exception("extract_pages: last must greater than or equal to first")
+        self.retrieve()
+        if output_to is None:
+            output_to = DAFile()
+            output_to.set_random_instance_name()
+        elif isinstance(output_to, DAFileList):
+            output_to = output_to.elements[0]
+        else:
+            raise Exception("extract_pages: output_to must be a DAFile")
+        input_filename = self.filename
+        input_path = self.path()
+        if output_to is self:
+            temp_file = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
+            shutil.copyfile(input_path, temp_file.name)
+            input_path = temp_file.name
+        output_to.initialize(extension='pdf', filename=input_filename, reinitialize=output_to.ok)
+        try:
+            docassemble.base.pdftk.extract_pages(input_path, output_to.path(), first, last)
+        except Exception as err:
+            raise Exception("extract_pages: " + str(err))
+        output_to.retrieve()
+        output_to.commit()
+        return output_to
 
     def bates_number(self, *pargs, **kwargs):
         """Makes the contents of the file a Bates-numbered of the file or, if provided, another file."""
@@ -4486,6 +4532,8 @@ class DAFile(DAObject):
 
     def num_pages(self):
         """Returns the number of pages in the file, if a PDF file, and 1 otherwise"""
+        if not self.ok:
+            self.initialized  # pylint: disable=pointless-statement
         if not hasattr(self, 'number'):
             raise Exception("Cannot get pages in file without a file number.")
         if not hasattr(self, 'file_info'):
@@ -4499,6 +4547,8 @@ class DAFile(DAObject):
         return 1
 
     def _pdf_page_path(self, page):
+        if not self.ok:
+            self.initialized  # pylint: disable=pointless-statement
         if not hasattr(self, 'number'):
             raise Exception("Cannot get path of file without a file number.")
         self.retrieve()
@@ -4515,6 +4565,8 @@ class DAFile(DAObject):
 
     def page_path(self, page, prefix, wait=True):
         """Returns a file path at which a PDF page image can be accessed."""
+        if not self.ok:
+            self.initialized  # pylint: disable=pointless-statement
         if not hasattr(self, 'number'):
             raise Exception("Cannot get path of file without a file number.")
         self.retrieve()
@@ -4572,6 +4624,8 @@ class DAFile(DAObject):
 
     def cloud_path(self, filename=None):
         """Returns the path with which the file can be accessed using S3 or Azure Blob Storage, or None if cloud storage is not enabled."""
+        if not self.ok and not hasattr(self, 'content'):
+            self.initialized  # pylint: disable=pointless-statement
         if not hasattr(self, 'number'):
             raise Exception("Cannot get the cloud path of file without a file number.")
         return server.SavedFile(self.number, fix=False).cloud_path(filename)
@@ -4579,6 +4633,8 @@ class DAFile(DAObject):
     def path(self):
         """Returns a path and filename at which the file can be accessed."""
         # logmessage("path")
+        if not self.ok and not hasattr(self, 'content'):
+            self.initialized  # pylint: disable=pointless-statement
         if not hasattr(self, 'number'):
             raise Exception("Cannot get path of file without a file number.")
         # if not hasattr(self, 'file_info'):
@@ -4602,7 +4658,9 @@ class DAFile(DAObject):
 
         """
         if not self.ok:
-            return ''
+            if hasattr(self, 'content'):
+                return ''
+            self.initialized  # pylint: disable=pointless-statement
         if hasattr(self, 'number') and hasattr(self, 'extension') and self.extension == 'pdf' and wait:
             self.page_path(1, 'page')
         if self.mimetype == 'text/markdown':
@@ -4734,7 +4792,7 @@ class DAFileCollection(DAObject):
 
     def _extension_list(self):
         if hasattr(self, 'info') and 'formats' in self.info:
-            return self.info['formats']
+            return [item for item in self.info['formats'] if item != 'html']
         return ['pdf', 'docx', 'rtf']
 
     def fix_up(self):
@@ -4845,6 +4903,12 @@ class DAFileCollection(DAObject):
                 return the_file
         return ' '.join(the_files)
 
+    def extract_pages(self, first=None, last=None):
+        """Extracts a page range from a PDF file and returns a new PDF file"""
+        if not hasattr(self, 'pdf'):
+            raise DAError("Cannot call extract_pages() on a DAFileCollection object without a pdf attribute.")
+        return self.pdf.extract_pages(first=first, last=last)
+
     def bates_number(self, **kwargs):
         """Makes the contents of the pdf file a Bates-numbered PDF."""
         if not hasattr(self, 'pdf'):
@@ -4916,10 +4980,10 @@ class DAFileList(DAList):
             return None
         return self.elements[0].is_encrypted()
 
-    def convert_to(self, output_extension):
+    def convert_to(self, output_extension, output_to=None):
         """Converts each file in-place to a different file extension."""
         for element in self.elements:
-            element.convert_to(output_extension)
+            element.convert_to(output_extension, output_to=output_to)
 
     def size_in_bytes(self):
         """Returns the number of bytes in the first file."""
@@ -4993,6 +5057,10 @@ class DAFileList(DAList):
         for element in sorted(self.elements):
             if element.ok:
                 element.privilege_access(*pargs, **kwargs)
+
+    def extract_pages(self, first=None, last=None):
+        """Extracts a page range from a PDF file and returns a new PDF file"""
+        return self.elements[0].extract_pages(first=first, last=last)
 
     def bates_number(self, **kwargs):
         """Makes the contents of the first file a Bates-numbered PDF of the list of files."""
@@ -5494,7 +5562,7 @@ class DALazyTableTemplate(DALazyTemplate):
             raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         return text_of_table(self.table_info, self.userdict, self.tempvars)
 
-    def export(self, filename=None, file_format=None, title=None, freeze_panes=True):
+    def export(self, filename=None, file_format=None, title=None, freeze_panes=True, output_to=None):
         if file_format is None:
             if filename is not None:
                 base_filename, file_format = os.path.splitext(filename)  # pylint: disable=unused-variable
@@ -5505,29 +5573,34 @@ class DALazyTableTemplate(DALazyTemplate):
             raise Exception("export: unsupported file format")
         header_output, contents = self.header_and_contents()
         df = pandas.DataFrame.from_records(contents, columns=header_output)
-        outfile = DAFile()
-        outfile.set_random_instance_name()
+        if output_to is None:
+            output_to = DAFile()
+            output_to.set_random_instance_name()
+        elif isinstance(output_to, DAFileList):
+            output_to = output_to.elements[0]
+        if not isinstance(output_to, DAFile):
+            raise Exception("export: output_to must be a DAFile")
         if filename is not None:
-            outfile.initialize(filename=filename, extension=file_format)
+            output_to.initialize(filename=filename, extension=file_format, reinitialize=output_to.ok)
         else:
-            outfile.initialize(extension=file_format)
+            output_to.initialize(extension=file_format, reinitialize=output_to.ok)
         if file_format == 'xlsx':
             if freeze_panes:
                 freeze_panes = (1, 0)
             else:
                 freeze_panes = None
-            writer = pandas.ExcelWriter(outfile.path(),  # pylint: disable=abstract-class-instantiated
+            writer = pandas.ExcelWriter(output_to.path(),  # pylint: disable=abstract-class-instantiated
                                         engine='xlsxwriter',
                                         options={'remove_timezone': True})
             df.to_excel(writer, sheet_name=title, index=False, freeze_panes=freeze_panes)
             writer.save()
         elif file_format == 'csv':
-            df.to_csv(outfile.path(), index=False)
+            df.to_csv(output_to.path(), index=False)
         elif file_format == 'json':
-            df.to_json(outfile.path(), orient='records')
-        outfile.commit()
-        outfile.retrieve()
-        return outfile
+            df.to_json(output_to.path(), orient='records')
+        output_to.commit()
+        output_to.retrieve()
+        return output_to
 
     def as_df(self):
         """Returns the table as a pandas data frame"""
@@ -8893,8 +8966,15 @@ def docx_concatenate(*pargs, **kwargs):
     if len(paths) == 0:
         raise DAError("docx_concatenate: no valid files to concatenate")
     docx_path = docassemble.base.file_docx.concatenate_files(paths)
-    docx_file = DAFile()._set_instance_name_for_function()
-    docx_file.initialize(filename=kwargs.get('filename', 'file.docx'))
+    docx_file = kwargs.get('output_to', None)
+    if docx_file is None:
+        docx_file = DAFile()
+        docx_file.set_random_instance_name()
+    elif isinstance(docx_file, DAFileList):
+        docx_file = docx_file.elements[0]
+    if not isinstance(docx_file, DAFile):
+        raise Exception("docx_concatenate: output_to must be a DAFile")
+    docx_file.initialize(filename=kwargs.get('filename', 'file.docx'), reinitialize=docx_file.ok)
     docx_file.copy_into(docx_path)
     docx_file.retrieve()
     docx_file.commit()
@@ -8923,9 +9003,15 @@ def pdf_concatenate(*pargs, **kwargs):
     if len(paths) == 0:
         raise DAError("pdf_concatenate: no valid files to concatenate")
     pdf_path = docassemble.base.pandoc.concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=kwargs.get('password', None))
-    pdf_file = DAFile()
-    pdf_file.set_random_instance_name()
-    pdf_file.initialize(filename=kwargs.get('filename', 'file.pdf'))
+    pdf_file = kwargs.get('output_to', None)
+    if pdf_file is None:
+        pdf_file = DAFile()
+        pdf_file.set_random_instance_name()
+    elif isinstance(pdf_file, DAFileList):
+        pdf_file = pdf_file.elements[0]
+    if not isinstance(pdf_file, DAFile):
+        raise Exception("pdf_concatenate: output_to must be a DAFile")
+    pdf_file.initialize(filename=kwargs.get('filename', 'file.pdf'), reinitialize=pdf_file.ok)
     pdf_file.copy_into(pdf_path)
     pdf_file.retrieve()
     pdf_file.commit()
@@ -8974,8 +9060,15 @@ def zip_file(*pargs, **kwargs):
     files = []
     timezone = get_default_timezone()
     recurse_zip_params(pargs, '', files)
-    the_zip_file = DAFile()._set_instance_name_for_function()
-    the_zip_file.initialize(filename=kwargs.get('filename', 'file.zip'))
+    the_zip_file = kwargs.get('output_to', None)
+    if the_zip_file is None:
+        the_zip_file = DAFile()
+        the_zip_file.set_random_instance_name()
+    elif isinstance(the_zip_file, DAFileList):
+        the_zip_file = the_zip_file.elements[0]
+    if not isinstance(the_zip_file, DAFile):
+        raise Exception("zip_file: output_to must be a DAFile")
+    the_zip_file.initialize(filename=kwargs.get('filename', 'file.zip'), reinitialize=the_zip_file.ok)
     zf = zipfile.ZipFile(the_zip_file.path(), mode='w')
     seen = {}
     for zip_path, path in files:
@@ -9153,7 +9246,7 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
     return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
 
 
-def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None, multi=False):
+def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None, multi=False, output_to=None, filename=None):
     """Overlays one or more pages from a PDF file on top of the pages of another PDF file."""
     if isinstance(main_pdf, DAFileCollection):
         main_file = main_pdf.pdf.path()
@@ -9171,9 +9264,17 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
         logo_file = logo_pdf
     else:
         raise Exception("overlay_pdf: bad logo filename")
-    outfile = DAFile()
-    outfile.set_random_instance_name()
-    outfile.initialize(extension='pdf')
+    outfile = kwargs.get('output_to', None)
+    if outfile is None:
+        outfile = DAFile()
+        outfile.set_random_instance_name()
+    elif isinstance(outfile, DAFileList):
+        outfile = outfile.elements[0]
+    if not isinstance(outfile, DAFile):
+        raise Exception("overlay_pdf: output_to must be a DAFile")
+    if filename is None:
+        filename = 'file.pdf'
+    outfile.initialize(extension='pdf', filename=filename, reinitialize=outfile.ok)
     if multi:
         docassemble.base.pdftk.overlay_pdf_multi(main_file, logo_file, outfile.path())
     else:

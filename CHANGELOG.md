@@ -1,5 +1,32 @@
 # Change Log
 
+## [1.4.9] - 2022-09-10
+
+### Added
+- The `voices` option of the `voicerss` Configuration.
+- The `voice` keyword parameter of the `set_language()` function.
+- The `auto login` Configuration directive.
+- The `output_to` keyword parameter of the `.convert_to()` method of `DAFile`.
+- The `output_to` keyword parameter of the `.export()` method of
+  `DALazyTableTemplate`.
+- The `output_to` keyword parameter of `pdf_concatenate()`,
+  `docx_concatenate()`, `zip_file()`, `overlay_pdf()`.
+- The `extract_pages()` method of `DAFile`.
+### Changed
+- If an attempt is made to access the contents of a `DAFile` that is
+  not yet initialized, the `.initialized` attribute will be
+  sought. The `.initialize()` method sets `.initialized` to
+  `True`. Thus, if you have a `code` block that calls `.initialize()`
+  on a `DAFile` called `myfile`, you can attach `sets:
+  myfile.initialized` to the `code` block and it will be called upon
+  if the interview logic requires the contents of `myfile`.
+- When an `attachment` that has a `name` creates a `DAFileCollection`
+  object, the `DAFile` attributes will have their `alt_text` set to
+  the `name` followed by the file type in parentheses.
+### Fixed
+- Adjusted the `Dockerfile` so that the server can start up even if
+  the internet is not available.
+
 ## [1.4.8] - 2022-08-25
 
 ### Fixed

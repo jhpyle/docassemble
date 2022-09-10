@@ -10,12 +10,12 @@ imports:
 objects:
   - myfile: DAFile
 ---
-mandatory: True
+sets: myfile.initialized
 code: |
-  myfile.initialize(filename="foo.jpg")
   im = PIL.Image.new("RGB",
                      (512, 512),
                      "green")
+  myfile.initialize(filename="foo.jpg")
   im.save(myfile.path())
 ---
 mandatory: True

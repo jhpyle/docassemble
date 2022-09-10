@@ -389,7 +389,7 @@ content: |
   "{{ signature_date.format('MM/dd/yyyy') }}".
 
   To include your signature as well, you can include
-  "{{ advocate_signature}}" and "{{ advocate_signature_date }}" in
+  "{{ advocate_signature }}" and "{{ advocate_signature_date }}" in
   the same way.  You will sign first before the document is sent
   to the signer.
 
@@ -818,6 +818,8 @@ code: |
   default_signature_updated_for_language = True
 ---
 code: |
+  if defined('advocate_signature') and isinstance(advocate_signature, str):
+    undefine('advocate_signature')
   if defined('advocate_wants_to_keep_signature') and advocate_wants_to_keep_signature:
     store.set('signature', advocate_signature.slurp(auto_decode=False))
   advocate_signature_saved_if_necessary = True

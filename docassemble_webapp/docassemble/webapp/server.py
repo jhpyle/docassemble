@@ -522,6 +522,7 @@ PDFTOPPM_COMMAND = daconfig.get('pdftoppm', 'pdftoppm')
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
+DEFAULT_VOICE = daconfig.get('voice', None)
 LOGSERVER = daconfig.get('log server', None)
 CHECKIN_INTERVAL = int(daconfig.get('checkin interval', 6000))
 # message_sequence = dbtableprefix + 'message_id_seq'
@@ -534,23 +535,40 @@ SINGLE_SERVER = USING_SUPERVISOR and bool(':all:' in ':' + os.environ.get('CONTA
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
 
 valid_voicerss_dialects = {
+    'ar': ['eg', 'sa'],
+    'bg': ['bg'],
     'ca': ['es'],
-    'zh': ['cn', 'hk', 'tw'],
+    'cs': ['cz'],
     'da': ['dk'],
-    'nl': ['nl'],
-    'en': ['au', 'ca', 'gb', 'in', 'us'],
+    'de': ['de', 'at', 'ch'],
+    'el': ['gr'],
+    'en': ['au', 'ca', 'gb', 'in', 'ie', 'us'],
+    'es': ['mx', 'es'],
     'fi': ['fi'],
-    'fr': ['ca, fr'],
-    'de': ['de'],
+    'fr': ['ca', 'fr', 'ch'],
+    'he': ['il'],
+    'hi': ['in'],
+    'hr': ['hr'],
+    'hu': ['hu'],
+    'id': ['id'],
     'it': ['it'],
     'ja': ['jp'],
     'ko': ['kr'],
+    'ms': ['my'],
     'nb': ['no'],
+    'nl': ['be', 'nl'],
     'pl': ['pl'],
     'pt': ['br', 'pt'],
+    'ro': ['ro'],
     'ru': ['ru'],
-    'es': ['mx', 'es'],
-    'sv': ['se']
+    'sk': ['sk'],
+    'sl': ['si'],
+    'sv': ['se'],
+    'ta': ['in'],
+    'th': ['th'],
+    'tr': ['tr'],
+    'vi': ['vn'],
+    'zh': ['cn', 'hk', 'tw']
     }
 
 voicerss_config = daconfig.get('voicerss', None)
@@ -990,6 +1008,24 @@ def custom_login():
     #                            extra_css=Markup(extra_css),
     #                            extra_js=Markup(extra_js))
     # else:
+    if app.config['AUTO_LOGIN'] and not (app.config['USE_PASSWORD_LOGIN'] or ('admin' in request.args and request.args['admin'] == '1') or ('from_logout' in request.args and request.args['from_logout'] == '1')):
+        if app.config['AUTO_LOGIN'] is True:
+            number_of_methods = 0
+            the_method = None
+            for login_method in ('USE_PHONE_LOGIN', 'USE_GOOGLE_LOGIN', 'USE_FACEBOOK_LOGIN', 'USE_TWITTER_LOGIN', 'USE_AUTH0_LOGIN', 'USE_KEYCLOAK_LOGIN', 'USE_AZURE_LOGIN'):
+                if app.config[login_method]:
+                    number_of_methods += 1
+                    the_method = re.sub(r'USE_(.*)_LOGIN', r'\1', login_method).lower()
+            if number_of_methods > 1:
+                the_method = None
+        else:
+            the_method = app.config['AUTO_LOGIN']
+        if the_method == 'phone':
+            return redirect(url_for('phone_login'))
+        if the_method == 'google':
+            return redirect(url_for('google_page', next=request.args.get('next', '')))
+        if the_method in ('facebook', 'twitter', 'auth0', 'keycloak', 'azure'):
+            return redirect(url_for('oauth_authorize', provider=the_method, next=request.args.get('next', '')))
     response = make_response(user_manager.render_function(user_manager.login_template,
                                                           form=login_form,
                                                           login_form=login_form,
@@ -1028,9 +1064,9 @@ def logout():
         next_url = daconfig.get('logoutpage', None)
     if next_url is None:
         if session.get('language', None) and session['language'] != DEFAULT_LANGUAGE:
-            next_url = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'])
+            next_url = _endpoint_url(user_manager.after_logout_endpoint, lang=session['language'], from_logout='1')
         else:
-            next_url = _endpoint_url(user_manager.after_logout_endpoint)
+            next_url = _endpoint_url(user_manager.after_logout_endpoint, from_logout='1')
     if current_user.is_authenticated:
         if current_user.social_id.startswith('auth0$') and 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and 'domain' in daconfig['oauth']['auth0']:
             if next_url.startswith('/'):
@@ -1421,6 +1457,7 @@ app.config['USE_ONEDRIVE'] = False
 app.config['USE_PHONE_LOGIN'] = False
 app.config['USE_GITHUB'] = False
 app.config['USE_PASSWORD_LOGIN'] = not bool(daconfig.get('password login', True) is False)
+app.config['AUTO_LOGIN'] = daconfig.get('auto login', False)
 if twilio_config is not None and daconfig.get('phone login', False) is True:
     app.config['USE_PHONE_LOGIN'] = True
 if 'oauth' in daconfig:
@@ -8390,6 +8427,7 @@ def index(action_argument=None, refer=None):
       var daAllowGoingBack = """ + ('true' if allow_going_back else 'false') + """;
       var daSteps = """ + str(steps) + """;
       var daIsUser = """ + is_user + """;
+      var daUserId = """ + ('null' if current_user.is_anonymous else str(current_user.id)) + """;
       var daChatStatus = """ + json.dumps(chat_status) + """;
       var daChatAvailable = """ + json.dumps(chat_available) + """;
       var daChatPartnersAvailable = 0;
@@ -11875,6 +11913,7 @@ def index(action_argument=None, refer=None):
         interview_status.initialize_screen_reader()
         util_language = docassemble.base.functions.get_language()
         util_dialect = docassemble.base.functions.get_dialect()
+        util_voice = docassemble.base.functions.get_voice()
         question_language = interview_status.question.language
         if len(interview.translations) > 0:
             the_language = util_language
@@ -11894,9 +11933,19 @@ def index(action_argument=None, refer=None):
             logmessage("index: unable to determine dialect; reverting to default")
             the_language = DEFAULT_LANGUAGE
             the_dialect = DEFAULT_DIALECT
+        if the_language == util_language and the_dialect == util_dialect and util_voice is not None:
+            the_voice = util_voice
+        elif voicerss_config and 'voices' in voicerss_config and isinstance(voicerss_config['voices'], dict) and the_language in voicerss_config['voices'] and isinstance(voicerss_config['voices'][the_language], dict) and the_dialect in voicerss_config['voices'][the_language]:
+            the_voice = voicerss_config['voices'][the_language][the_dialect]
+        elif voicerss_config and 'voices' in voicerss_config and isinstance(voicerss_config['voices'], dict) and the_language in voicerss_config['voices'] and isinstance(voicerss_config['voices'][the_language], str):
+            the_voice = voicerss_config['voices'][the_language]
+        elif the_language == DEFAULT_LANGUAGE and the_dialect == DEFAULT_DIALECT:
+            the_voice = DEFAULT_VOICE
+        else:
+            the_voice = None
         for question_type in ('question', 'help'):
             for audio_format in ('mp3', 'ogg'):
-                interview_status.screen_reader_links[question_type].append([url_for('speak_file', i=yaml_filename, question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
+                interview_status.screen_reader_links[question_type].append([url_for('speak_file', i=yaml_filename, question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect, voice=the_voice or ''), audio_mimetype_table[audio_format]])
     if (not validated) and the_question.name == interview_status.question.name:
         for def_key, def_val in new_values.items():
             safe_def_key = safeid(def_key)
@@ -12019,7 +12068,10 @@ def index(action_argument=None, refer=None):
                 the_phrase = pack_phrase(phrase)
             the_hash = MD5Hash(data=phrase).hexdigest()
             content = re.sub(r'XXXTHEXXX' + question_type + 'XXXHASHXXX', the_hash, content)
-            existing_entry = db.session.execute(select(SpeakList).filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).with_for_update()).scalar()
+            params = {'filename': yaml_filename, 'key': user_code, 'question': interview_status.question.number, 'digest': the_hash, 'type': question_type, 'language': the_language, 'dialect': the_dialect}
+            if the_voice:
+                params['voice'] = the_voice
+            existing_entry = db.session.execute(select(SpeakList).filter_by(**params).with_for_update()).scalar()
             if existing_entry:
                 if existing_entry.encrypted:
                     existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
@@ -12031,7 +12083,7 @@ def index(action_argument=None, refer=None):
                     existing_entry.upload = None
                     existing_entry.encrypted = encrypted
             else:
-                new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
+                new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted, voice=the_voice)
                 db.session.add(new_entry)
             db.session.commit()
     append_css_urls = []
@@ -12418,6 +12470,9 @@ def speak_file():
     file_format = request.args.get('format', None)
     the_language = request.args.get('language', None)
     the_dialect = request.args.get('dialect', None)
+    the_voice = request.args.get('voice', '')
+    if the_voice == '':
+        the_voice = None
     the_hash = request.args.get('digest', None)
     secret = request.cookies.get('secret', None)
     if secret is not None:
@@ -12425,12 +12480,15 @@ def speak_file():
     if file_format not in ('mp3', 'ogg') or not (filename and key and question and question_type and file_format and the_language and the_dialect):
         logmessage("speak_file: could not serve speak file because invalid or missing data was provided: filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         return ('File not found', 404)
-    entry = db.session.execute(select(SpeakList).filter_by(filename=filename, key=key, question=question, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect)).scalar()
+    params = {'filename': filename, 'key': key, 'question': question, 'digest': the_hash, 'type': question_type, 'language': the_language, 'dialect': the_dialect}
+    if the_voice:
+        params['voice'] = the_voice
+    entry = db.session.execute(select(SpeakList).filter_by(**params)).scalar()
     if not entry:
-        logmessage("speak_file: could not serve speak file because no entry could be found in speaklist for filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
+        logmessage("speak_file: could not serve speak file because no entry could be found in speaklist for filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect) + " and voice " + str(the_voice))
         return ('File not found', 404)
     if not entry.upload:
-        existing_entry = db.session.execute(select(SpeakList).where(and_(SpeakList.phrase == entry.phrase, SpeakList.language == entry.language, SpeakList.dialect == entry.dialect, SpeakList.upload != None, SpeakList.encrypted == entry.encrypted))).scalar()  # noqa: E711 # pylint: disable=singleton-comparison
+        existing_entry = db.session.execute(select(SpeakList).where(and_(SpeakList.phrase == entry.phrase, SpeakList.language == entry.language, SpeakList.dialect == entry.dialect, SpeakList.voice == entry.voice, SpeakList.upload != None, SpeakList.encrypted == entry.encrypted))).scalar()  # noqa: E711 # pylint: disable=singleton-comparison
         if existing_entry:
             logmessage("speak_file: found existing entry: " + str(existing_entry.id) + ".  Setting to " + str(existing_entry.upload))
             entry.upload = existing_entry.upload
@@ -12447,7 +12505,10 @@ def speak_file():
             url = voicerss_config.get('url', "https://api.voicerss.org/")
             # logmessage("Retrieving " + url)
             audio_file = SavedFile(new_file_number, extension='mp3', fix=True, should_not_exist=True)
-            audio_file.fetch_url_post(url, dict(f=voicerss_config.get('format', '16khz_16bit_stereo'), key=voicerss_config['key'], src=phrase, hl=str(entry.language) + '-' + str(entry.dialect)))
+            voicerss_parameters = {'f': voicerss_config.get('format', '16khz_16bit_stereo'), 'key': voicerss_config['key'], 'src': phrase, 'hl': str(entry.language) + '-' + str(entry.dialect)}
+            if the_voice is not None:
+                voicerss_parameters['v'] = the_voice
+            audio_file.fetch_url_post(url, voicerss_parameters)
             if audio_file.size_in_bytes() > 100:
                 call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', audio_file.path + '.mp3']
                 logmessage("speak_file: calling " + " ".join(call_array))

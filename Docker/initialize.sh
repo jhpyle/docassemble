@@ -34,7 +34,9 @@ touch /var/run/docassemble/da_running
 
 export DEBIAN_FRONTEND=noninteractive
 if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
+    echo "initialize: running apt-get clean" >&2
     apt-get clean &> /dev/null
+    echo "initialize: running apt-get update" >&2
     apt-get -q -y update &> /dev/null
 fi
 

@@ -15,8 +15,10 @@ down_revision = '9be372ec38bc'
 branch_labels = None
 depends_on = None
 
+
 def upgrade():
     op.add_column(dbtableprefix + 'user', sa.Column('last_login', sa.DateTime()))
+
 
 def downgrade():
     op.drop_column(dbtableprefix + 'user', 'last_login')

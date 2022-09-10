@@ -6,7 +6,6 @@ Create Date: 2021-05-08 07:49:59.180288
 
 """
 from alembic import op
-import sqlalchemy as sa
 from docassemble.webapp.database import dbtableprefix
 
 

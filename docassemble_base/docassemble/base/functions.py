@@ -1594,6 +1594,7 @@ server.debug = False
 server.debug_status = False
 server.default_country = 'US'
 server.default_dialect = 'us'
+server.default_voice = None
 server.default_language = 'en'
 server.default_locale = 'US.utf8'
 try:
@@ -1912,6 +1913,7 @@ class GenericObject:
 this_thread = threading.local()
 this_thread.language = server.default_language
 this_thread.dialect = server.default_dialect
+this_thread.voice = server.default_voice
 this_thread.country = server.default_country
 this_thread.locale = server.default_locale
 this_thread.current_info = {}
@@ -2357,6 +2359,7 @@ def reset_local_variables():
     # logmessage("reset_local_variables")
     this_thread.language = server.default_language
     this_thread.dialect = server.default_dialect
+    this_thread.voice = server.default_voice
     this_thread.country = server.default_country
     this_thread.locale = server.default_locale
     this_thread.session_id = None
@@ -2386,15 +2389,25 @@ def prevent_going_back():
     this_thread.prevent_going_back = True
 
 
-def set_language(lang, dialect=None):
-    """Sets the language to use for linguistic functions.
-    E.g., set_language('es') to set the language to Spanish.
-    Use the keyword argument "dialect" to set a dialect."""
+def set_language(lang, dialect=None, voice=None):
+    """Sets the language to use for linguistic functions.  E.g.,
+    set_language('es') to set the language to Spanish.  Use the
+    keyword argument "dialect" to set a dialect. Use the keyword
+    argument "voice" to set a voice.
+
+    """
     try:
         if dialect:
             this_thread.dialect = dialect
         elif lang != this_thread.language:
             this_thread.dialect = None
+    except:
+        pass
+    try:
+        if voice:
+            this_thread.voice = voice
+        elif lang != this_thread.language:
+            this_thread.voice = None
     except:
         pass
     this_thread.language = lang
@@ -2418,6 +2431,11 @@ def get_country():
 def get_dialect():
     """Returns the current dialect."""
     return this_thread.dialect
+
+
+def get_voice():
+    """Returns the current voice."""
+    return this_thread.voice
 
 
 def set_locale(*pargs, **kwargs):

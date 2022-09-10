@@ -20,6 +20,7 @@ def upgrade():
     op.add_column(dbtableprefix + 'uploads', sa.Column('private', sa.Boolean, server_default=sa.true()))
     op.add_column(dbtableprefix + 'uploads', sa.Column('persistent', sa.Boolean, server_default=sa.false()))
 
+
 def downgrade():
     op.drop_column(dbtableprefix + 'uploads', 'private')
     op.drop_column(dbtableprefix + 'uploads', 'persistent')

@@ -346,7 +346,7 @@ do
 done
 
 cd tests
-aloe --verbosity=3 --color -x -d features/Screenshots.feature
+behave features/Screenshots.feature
 if [ $? -ne 0 ]
 then
     echo "Failure while making screenshots"

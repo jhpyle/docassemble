@@ -121,7 +121,10 @@ bash -c \
 USER www-data
 RUN bash -c \
 "source /usr/share/docassemble/local3.10/bin/activate \
-&& python /tmp/docassemble/Docker/nltkdownload.py"
+&& python /tmp/docassemble/Docker/nltkdownload.py \
+&& cd /var/www/nltk_data/corpora \
+&& unzip wordnet.zip \
+&& unzip omw-1.4.zip"
 
 USER root
 RUN rm -rf /tmp/docassemble

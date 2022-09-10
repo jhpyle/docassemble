@@ -52,7 +52,6 @@ question: |
   Your document
 subquestion: |
   ### As image
-  ${ the_file.show(width='1em') }
 
   ${ the_file }
 

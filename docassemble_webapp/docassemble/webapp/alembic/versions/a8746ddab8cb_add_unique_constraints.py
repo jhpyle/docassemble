@@ -6,7 +6,6 @@ Create Date: 2022-04-07 17:49:47.832279
 
 """
 from alembic import op
-import sqlalchemy as sa
 from docassemble.webapp.database import dbtableprefix
 
 
@@ -38,6 +37,7 @@ def upgrade():
     op.create_unique_constraint(dbtableprefix + 'user_invite_id_key', dbtableprefix + 'user_invite', ['id'])
     op.create_unique_constraint(dbtableprefix + 'user_roles_id_key', dbtableprefix + 'user_roles', ['id'])
 
+
 def downgrade():
     op.drop_constraint(dbtableprefix + 'chatlog_id_key', dbtableprefix + 'chatlog')
     op.drop_constraint(dbtableprefix + 'email_id_key', dbtableprefix + 'email')
@@ -58,4 +58,3 @@ def downgrade():
     op.drop_constraint(dbtableprefix + 'user_auth_id_key', dbtableprefix + 'user_auth')
     op.drop_constraint(dbtableprefix + 'user_invite_id_key', dbtableprefix + 'user_invite')
     op.drop_constraint(dbtableprefix + 'user_roles_id_key', dbtableprefix + 'user_roles')
-

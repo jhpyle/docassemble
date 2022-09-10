@@ -204,6 +204,7 @@ def da_send_mail(the_message):
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
+DEFAULT_VOICE = daconfig.get('voice', None)
 if 'timezone' in daconfig and daconfig['timezone'] is not None:
     DEFAULT_TIMEZONE = daconfig['timezone']
 else:
@@ -308,6 +309,7 @@ DEFAULT_COUNTRY = daconfig.get('country', None) or re.sub(r'^.*_', '', re.sub(r'
 docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_locale=DEFAULT_LOCALE,
                                          default_dialect=DEFAULT_DIALECT,
+                                         default_voice=DEFAULT_VOICE,
                                          default_timezone=DEFAULT_TIMEZONE,
                                          default_country=DEFAULT_COUNTRY,
                                          daconfig=daconfig,
@@ -335,7 +337,7 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_table_class=DEFAULT_TABLE_CLASS,
                                          default_thead_class=DEFAULT_THEAD_CLASS,
                                          to_text=to_text)
-docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
+docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT, voice=DEFAULT_VOICE)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()
 

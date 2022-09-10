@@ -6540,11 +6540,15 @@ class Question:
                         markdown_string = ', markdown=' + repr(result['markdown'][doc_format])
                     else:
                         markdown_string = ''
+                    if 'name' in result and result['name']:
+                        alt_text_string = ', alt_text=' + repr(result['name'] + ' (' + doc_format.upper() + ')')
+                    else:
+                        alt_text_string = ''
                     if result['raw']:
                         the_ext = result['raw']
                     else:
                         the_ext = '.' + extension_of_doc_format[doc_format]
-                    the_string = variable_string + " = DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + the_ext) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + ")"
+                    the_string = variable_string + " = DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + the_ext) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + alt_text_string + ")"
                     # logmessage("Executing " + the_string)
                     exec(the_string, the_user_dict)
                 for doc_format in result['content']:

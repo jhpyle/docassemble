@@ -400,6 +400,8 @@ class Document(Thing, SQLObject):
         elif column == 'upload_id':
             del self.upload[0].number
             self.upload[0].ok = False
+            if hasattr(self.upload[0], 'initialized'):
+                del self.upload[0].initialized
         elif column == 'date':
             del self.date
         elif column == 'filename':
