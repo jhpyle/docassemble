@@ -55,7 +55,7 @@ locale: en_US.utf8
 voicerss:
   enable: False
   key: ae8734983948ebc98239e9898f998432
-  languages:
+  dialects:
     en: us
     es: mx
     fr: fr
