@@ -1420,7 +1420,11 @@ to `True`.
 If the object has already been initialized, the `.initialize()` method
 can safely be called on it, but this will only have the effect of
 calling `.retrieve()` on it, and the `filename` and `extension`
-parameters will not overwrite existing values.
+parameters will not overwrite existing values. If you actually want to
+redo the initialization process on a `DAObject` that has already been
+initialized, you can set the optional keyword argument `reinitialize`
+to `True`. This will delete any existing file from the file system and
+reset the values of `filename`, `extension`, and `mimetype`.
 
 The following example uses the [Python Imaging Library] to create a
 JPEG image.
@@ -1568,7 +1572,12 @@ allows you to set three characteristics of the uploaded document:
   also deleted when the session has been [inactive for a period].  You
   can prevent the deletion of a file by setting the `persistent`
   attribute to `True`.
-* `filename`: the name of the file, e.g., `complaint.pdf`.
+* `filename`: the name of the file, e.g., `complaint.pdf`. Note that
+  while you can use [`.set_attributes()`] to change the filename, you
+  cannot use it to change the file type. The file type (its MIME type
+  and extension) are intrinsic to the file as it is stored on the file
+  system. If you want to change the type of a file you would need to
+  use [`.convert_to()`] or initialize a new file.
 
 You can set these attributes with code like this:
 
@@ -7219,3 +7228,4 @@ the `_uid` of the table rather than the `id`.
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
 [Font Awesome]: https://fontawesome.com
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
+[`.convert_to()`]: #DAFile.convert_to

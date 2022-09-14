@@ -114,8 +114,7 @@ First, make sure you are running [Docker] on a computer or virtual
 computer with at least 4GB of memory and 20GB of hard drive space.
 The **docassemble** installation will use up about 10GB of space, and
 you should always have at least 10GB free when you are running
-**docassemble**.  **docassemble** works on 64-bit Intel/AMD
-processors.
+**docassemble**.
 
 If you have a Windows PC, follow the
 [Docker installation instructions for Windows]{:target="_blank"}.  You
@@ -152,14 +151,15 @@ systemctl start docker`, or `sudo service docker start`.
 
 The operating system that runs inside of the **docassemble** Docker
 container is Ubuntu 22.04. This is a fairly recent version of
-Ubuntu. When using Docker, it is recommended that you run a recent
-version of Docker on a recent operating system, such as Ubuntu 22 or
-Debian 11. (If you run Docker on Mac or Windows, it will likely start
-a virtual machine and then deploy the **docassemble** Docker container
-inside that virtual machine; the operating system of that virtual
-machine, which is likely a flavor of Linux, should be recent.)  You
-may encounter difficult-to-diagnose problems if **docassemble**'s
-Ubuntu 21 does not fully function inside its host operating system.
+Ubuntu. When using [Docker], it is recommended that you run a recent
+version of [Docker] and its dependencies ([containerd] and
+[runC]). Ubuntu 22 and Debian 11 are known to work well. (If you run
+Docker on Mac or Windows, it will likely start a virtual machine and
+then deploy the **docassemble** Docker container inside that virtual
+machine; the operating system of that virtual machine, which is likely
+a flavor of Linux, should be recent.)  You may encounter
+difficult-to-diagnose problems if **docassemble**'s OS and software do
+not fully function inside the host operating system.
 
 # <a name="single server arrangement"></a>Quick start
 
@@ -2777,3 +2777,7 @@ references a different base image.
 [`allow configuration editing`]: {{ site.baseurl }}/docs/config.html#allow configuration editing
 [`supervisor`]: {{ site.baseurl }}/docs/config.html#supervisor
 [Docker Desktop]: https://docs.docker.com/desktop/install/mac-install/
+[Pandoc]: http://johnmacfarlane.net/pandoc/
+[LibreOffice]: https://www.libreoffice.org/
+[containerd]: https://containerd.io/
+[runC]: https://github.com/opencontainers/runc
