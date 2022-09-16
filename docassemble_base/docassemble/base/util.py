@@ -9264,7 +9264,7 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
         logo_file = logo_pdf
     else:
         raise Exception("overlay_pdf: bad logo filename")
-    outfile = kwargs.get('output_to', None)
+    outfile = output_to
     if outfile is None:
         outfile = DAFile()
         outfile.set_random_instance_name()

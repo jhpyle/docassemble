@@ -176,7 +176,7 @@ def sync_with_google_drive(user_id):
             gd_zero = {}
             sections_modified = set()
             commentary = ''
-            for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+            for section in ['static', 'templates', 'questions', 'modules', 'sources', 'packages']:
                 local_files[section] = set()
                 local_modtimes[section] = {}
                 if section == 'questions':
@@ -202,6 +202,18 @@ def sync_with_google_drive(user_id):
                     page_token = response.get('nextPageToken', None)
                     if page_token is None:
                         break
+                if len(subdirs) == 0:
+                    file_metadata = {
+                        'name': section,
+                        'mimeType': 'application/vnd.google-apps.folder',
+                        'parents': [the_folder]
+                    }
+                    new_dir = service.files().create(body=file_metadata,
+                                                     fields='id').execute()
+                    new_id = new_dir.get('id', None)
+                    if new_id is None:
+                        return worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in Google Drive", restart=False)
+                    subdirs.append(new_id)
                 if len(subdirs) == 0:
                     return worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in Google Drive", restart=False)
                 subdir = subdirs[0]
@@ -486,14 +498,26 @@ def sync_with_onedrive(user_id):
                 for item in info['value']:
                     if 'deleted' in item or 'folder' not in item:
                         continue
-                    if item['name'] in ('static', 'templates', 'questions', 'modules', 'sources'):
+                    if item['name'] in ('static', 'templates', 'questions', 'modules', 'sources', 'packages'):
                         subdirs[item['name']] = item['id']
                         subdir_count[item['name']] = item['folder']['childCount']
                 if "@odata.nextLink" not in info:
                     break
                 r, content = try_request(http, info["@odata.nextLink"], "GET")
-            for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+            for section in ['static', 'templates', 'questions', 'modules', 'sources', 'packages']:
                 logmessage("sync_with_onedrive: processing " + section)
+                if section not in subdirs:
+                    headers = {'Content-Type': 'application/json'}
+                    data = {}
+                    data['name'] = section
+                    data['folder'] = {}
+                    data["@microsoft.graph.conflictBehavior"] = "rename"
+                    resp, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + str(the_folder) + "/children", "POST", headers=headers, body=json.dumps(data))
+                    if int(resp['status']) != 201:
+                        worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in OneDrive", restart=False)
+                    new_item = json.loads(content.decode())
+                    subdirs[section] = new_item['id']
+                    subdir_count[section] = 0
                 if section not in subdirs:
                     worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in OneDrive", restart=False)
                 local_files[section] = set()

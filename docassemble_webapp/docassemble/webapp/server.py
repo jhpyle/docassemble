@@ -16886,7 +16886,7 @@ def rename_gd_project(old_project, new_project):
     if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
         logmessage('rename_gd_project: folder did not exist')
         return False
-    for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+    for section in ['static', 'templates', 'questions', 'modules', 'sources', 'packages']:
         logmessage("rename_gd_project: section is " + section)
         subdir = None
         page_token = None
@@ -16940,7 +16940,7 @@ def trash_gd_project(old_project):
     if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
         logmessage('trash_gd_project: folder did not exist')
         return False
-    for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+    for section in ['static', 'templates', 'questions', 'modules', 'sources', 'packages']:
         subdir = None
         page_token = None
         while True:
@@ -17212,7 +17212,7 @@ def rename_od_project(old_project, new_project):
         return False
     resp, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
     subdir = {}
-    for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+    for section in ['static', 'templates', 'questions', 'modules', 'sources', 'packages']:
         subdir[section] = None
     while True:
         if int(resp['status']) != 200:
@@ -17281,7 +17281,7 @@ def trash_od_project(old_project):
         logmessage('trash_od_project: folder did not exist')
         return False
     subdir = {}
-    for section in ['static', 'templates', 'questions', 'modules', 'sources']:
+    for section in ['static', 'templates', 'questions', 'modules', 'sources', 'packages']:
         subdir[section] = None
     resp, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + urllibquote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
     while True:
@@ -17780,7 +17780,7 @@ def gd_fix_subdirs(service, the_folder):
         page_token = response.get('nextPageToken', None)
         if page_token is None:
             break
-    todo = set(['questions', 'static', 'sources', 'templates', 'modules'])
+    todo = set(['questions', 'static', 'sources', 'templates', 'modules', 'packages'])
     done = set(x['name'] for x in subdirs if x['name'] in todo)
     for key in todo - done:
         file_metadata = {
@@ -17917,7 +17917,7 @@ def od_fix_subdirs(http, the_folder):
         if "@odata.nextLink" not in info:
             break
         resp, content = http.request(info["@odata.nextLink"], "GET")
-    todo = set(['questions', 'static', 'sources', 'templates', 'modules'])
+    todo = set(['questions', 'static', 'sources', 'templates', 'modules', 'packages'])
     for folder_name in (todo - subdirs):
         headers = {'Content-Type': 'application/json'}
         data = {}

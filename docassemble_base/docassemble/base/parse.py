@@ -6645,6 +6645,10 @@ class Question:
             result['mimetype'] = {}
             result['file'] = {}
             if attachment['raw']:
+                if '.' in the_filename:
+                    m = re.search(r'(.*)(\..*)', the_filename)
+                    result['filename'] = m.group(1)
+                    actual_extension = m.group(2)
                 result['raw'] = actual_extension
                 result['formats_to_use'] = ['raw']
             else:
