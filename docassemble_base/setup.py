@@ -124,7 +124,7 @@ install_requires = [
     "joblib==1.1.0",
     "keyring==23.5.0",
     "lxml==4.9.1",
-    "Mako==1.2.0",
+    "Mako==1.2.2",
     "Markdown==3.3.6",
     "MarkupSafe==2.1.1",
     "mdx-smartypants==1.5.1",
