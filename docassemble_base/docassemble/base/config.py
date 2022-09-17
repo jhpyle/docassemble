@@ -303,6 +303,11 @@ def load(**kwargs):
             daconfig[re.sub(r'_', r' ', key)] = val
         else:
             daconfig[key] = val
+    if 'google' in daconfig:
+        if not isinstance(daconfig['google'], dict):
+            daconfig['google'] = {}
+    else:
+        daconfig['google'] = {}
     if 'avconv' in daconfig:
         config_error("The Configuration directive avconv has been renamed ffmpeg.")
         daconfig['ffmpeg'] = daconfig['avconv']

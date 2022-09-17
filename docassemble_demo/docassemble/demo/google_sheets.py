@@ -2,7 +2,7 @@ import json
 import gspread
 from docassemble.base.util import get_config
 from oauth2client.service_account import ServiceAccountCredentials
-credential_json = get_config('google', {}).get('service account credentials', None)
+credential_json = get_config('google').get('service account credentials', None)
 if credential_json is None:
     credential_info = None
 else:

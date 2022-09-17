@@ -1,14 +1,16 @@
 # mako/exceptions.py
-# Copyright (C) 2006-2015 the Mako authors and contributors <see AUTHORS file>
+# Copyright 2006-2022 the Mako authors and contributors <see AUTHORS file>
 #
 # This module is part of Mako and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """exception classes"""
 
-import traceback
 import sys
-from docassemble.base.mako import util, compat
+import traceback
+
+from docassemble.base.mako import compat
+from docassemble.base.mako import util
 
 
 class MakoException(Exception):
@@ -27,11 +29,10 @@ def _format_filepos(lineno, pos, filename):
 
 
 class CompileException(MakoException):
-
     def __init__(self, message, source, lineno, pos, filename):
         MakoException.__init__(
-            self,
-            message + _format_filepos(lineno, pos, filename))
+            self, message + _format_filepos(lineno, pos, filename)
+        )
         self.lineno = lineno
         self.pos = pos
         self.filename = filename
@@ -39,11 +40,10 @@ class CompileException(MakoException):
 
 
 class SyntaxException(MakoException):
-
     def __init__(self, message, source, lineno, pos, filename):
         MakoException.__init__(
-            self,
-            message + _format_filepos(lineno, pos, filename))
+            self, message + _format_filepos(lineno, pos, filename)
+        )
         self.lineno = lineno
         self.pos = pos
         self.filename = filename
@@ -68,7 +68,7 @@ class TopLevelLookupException(TemplateLookupException):
     pass
 
 
-class RichTraceback(object):
+class RichTraceback:
 
     """Pull the current exception from the ``sys`` traceback and extracts
     Mako-specific template information.
@@ -106,7 +106,7 @@ class RichTraceback(object):
     def _init_message(self):
         """Find a unicode representation of self.error"""
         try:
-            self.message = compat.text_type(self.error)
+            self.message = str(self.error)
         except UnicodeError:
             try:
                 self.message = str(self.error)
@@ -114,8 +114,8 @@ class RichTraceback(object):
                 # Fallback to args as neither unicode nor
                 # str(Exception(u'\xe6')) work in Python < 2.6
                 self.message = self.error.args[0]
-        if not isinstance(self.message, compat.text_type):
-            self.message = compat.text_type(self.message, 'ascii', 'replace')
+        if not isinstance(self.message, str):
+            self.message = str(self.message, "ascii", "replace")
 
     def _get_reformatted_records(self, records):
         for rec in records:
@@ -139,8 +139,7 @@ class RichTraceback(object):
 
     @property
     def reverse_traceback(self):
-        """Return the same data as traceback, except in reverse order.
-        """
+        """Return the same data as traceback, except in reverse order."""
 
         return list(self._get_reformatted_records(self.reverse_records))
 
@@ -151,47 +150,51 @@ class RichTraceback(object):
         source, and code line from that line number of the template."""
 
         import docassemble.base.mako.template
+
         mods = {}
         rawrecords = traceback.extract_tb(trcback)
         new_trcback = []
         for filename, lineno, function, line in rawrecords:
             if not line:
-                line = ''
+                line = ""
             try:
-                (line_map, template_lines) = mods[filename]
+                (line_map, template_lines, template_filename) = mods[filename]
             except KeyError:
                 try:
-                    info = docassemble.base.mako.template._get_module_info(filename)
+                    info = mako.template._get_module_info(filename)
                     module_source = info.code
                     template_source = info.source
-                    template_filename = info.template_filename or filename
+                    template_filename = (
+                        info.template_filename or info.template_uri or filename
+                    )
                 except KeyError:
                     # A normal .py file (not a Template)
-                    if not compat.py3k:
-                        try:
-                            fp = open(filename, 'rb')
-                            encoding = util.parse_encoding(fp)
-                            fp.close()
-                        except IOError:
-                            encoding = None
-                        if encoding:
-                            line = line.decode(encoding)
-                        else:
-                            line = line.decode('ascii', 'replace')
-                    new_trcback.append((filename, lineno, function, line,
-                                        None, None, None, None))
+                    new_trcback.append(
+                        (
+                            filename,
+                            lineno,
+                            function,
+                            line,
+                            None,
+                            None,
+                            None,
+                            None,
+                        )
+                    )
                     continue
 
                 template_ln = 1
 
-                source_map = docassemble.base.mako.template.ModuleInfo.\
-                    get_module_source_metadata(
-                        module_source, full_line_map=True)
-                line_map = source_map['full_line_map']
+                mtm = mako.template.ModuleInfo
+                source_map = mtm.get_module_source_metadata(
+                    module_source, full_line_map=True
+                )
+                line_map = source_map["full_line_map"]
 
-                template_lines = [line_ for line_ in
-                                  template_source.split("\n")]
-                mods[filename] = (line_map, template_lines)
+                template_lines = [
+                    line_ for line_ in template_source.split("\n")
+                ]
+                mods[filename] = (line_map, template_lines, template_filename)
 
             template_ln = line_map[lineno - 1]
 
@@ -199,9 +202,18 @@ class RichTraceback(object):
                 template_line = template_lines[template_ln - 1]
             else:
                 template_line = None
-            new_trcback.append((filename, lineno, function,
-                                line, template_filename, template_ln,
-                                template_line, template_source))
+            new_trcback.append(
+                (
+                    filename,
+                    lineno,
+                    function,
+                    line,
+                    template_filename,
+                    template_ln,
+                    template_line,
+                    template_source,
+                )
+            )
         if not self.source:
             for l in range(len(new_trcback) - 1, 0, -1):
                 if new_trcback[l][5]:
@@ -212,15 +224,16 @@ class RichTraceback(object):
                 if new_trcback:
                     try:
                         # A normal .py file (not a Template)
-                        fp = open(new_trcback[-1][0], 'rb')
-                        encoding = util.parse_encoding(fp)
-                        fp.seek(0)
-                        self.source = fp.read()
-                        fp.close()
+                        with open(new_trcback[-1][0], "rb") as fp:
+                            encoding = util.parse_encoding(fp)
+                            if not encoding:
+                                encoding = "utf-8"
+                            fp.seek(0)
+                            self.source = fp.read()
                         if encoding:
                             self.source = self.source.decode(encoding)
                     except IOError:
-                        self.source = ''
+                        self.source = ""
                     self.lineno = new_trcback[-1][1]
         return new_trcback
 
@@ -233,7 +246,9 @@ def text_error_template(lookup=None):
 
     """
     import docassemble.base.mako.template
-    return docassemble.base.mako.template.Template(r"""
+
+    return docassemble.base.mako.template.Template(
+        r"""
 <%page args="error=None, traceback=None"/>
 <%!
     from docassemble.base.mako.exceptions import RichTraceback
@@ -247,7 +262,8 @@ Traceback (most recent call last):
     ${line | trim}
 % endfor
 ${tback.errorname}: ${tback.message}
-""")
+"""
+    )
 
 
 def _install_pygments():
@@ -259,9 +275,10 @@ def _install_pygments():
 def _install_fallback():
     global syntax_highlight, pygments_html_formatter
     from docassemble.base.mako.filters import html_escape
+
     pygments_html_formatter = None
 
-    def syntax_highlight(filename='', language=None):
+    def syntax_highlight(filename="", language=None):
         return html_escape
 
 
@@ -270,6 +287,8 @@ def _install_highlighting():
         _install_pygments()
     except ImportError:
         _install_fallback()
+
+
 _install_highlighting()
 
 
@@ -287,7 +306,9 @@ def html_error_template():
 
     """
     import docassemble.base.mako.template
-    return docassemble.base.mako.template.Template(r"""
+
+    return docassemble.base.mako.template.Template(
+        r"""
 <%!
     from docassemble.base.mako.exceptions import RichTraceback, syntax_highlight,\
             pygments_html_formatter
@@ -390,5 +411,7 @@ def html_error_template():
 </body>
 </html>
 % endif
-""", output_encoding=sys.getdefaultencoding(),
-                                  encoding_errors='htmlentityreplace')
+""",
+        output_encoding=sys.getdefaultencoding(),
+        encoding_errors="htmlentityreplace",
+    )

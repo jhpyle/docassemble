@@ -8624,7 +8624,7 @@ def ocr_file_in_background(*pargs, **kwargs):
 
 
 def get_work_bucket():
-    bucket_name = server.daconfig.get('google', {}).get('work bucket', None)
+    bucket_name = server.daconfig['google'].get('work bucket', None)
     if bucket_name is None:
         raise Exception("Cannot use Google Storage unless there is a work bucket configured in the google configuration")
     api = DAGoogleAPI()

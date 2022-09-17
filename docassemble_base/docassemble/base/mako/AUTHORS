@@ -1,0 +1,17 @@
+Mako was created by Michael Bayer.
+
+Major contributing authors include:
+
+- Michael Bayer <mike_mp@zzzcomputing.com>
+- Geoffrey T. Dairiki <dairiki@dairiki.org>
+- Philip Jenvey <pjenvey@underboss.org>
+- David Peckam
+- Armin Ronacher
+- Ben Bangert <ben@groovie.org>
+- Ben Trofatter
+
+The docassemble.base.mako package is a modification of Mako for use
+with docassemble. The modifications were written by:
+
+- Jonathan Pyle <jhpyle@gmail.com>
+

@@ -489,7 +489,7 @@ update_editable()
 default_yaml_filename = daconfig.get('default interview', None)
 final_default_yaml_filename = daconfig.get('default interview', 'docassemble.base:data/questions/default-interview.yml')
 keymap = daconfig.get('keymap', None)
-google_config = daconfig.get('google', {})
+google_config = daconfig['google']
 
 contains_volatile = re.compile(r'^(x\.|x\[|.*\[[ijklmn]\])')
 is_integer = re.compile(r'^[0-9]+$')
@@ -22180,7 +22180,7 @@ def utilities():
             result = {}
             result[language] = {}
             existing = docassemble.base.functions.word_collection.get(language, {})
-            if 'google' in daconfig and 'api key' in daconfig['google'] and daconfig['google']['api key']:
+            if 'api key' in daconfig['google'] and daconfig['google']['api key']:
                 try:
                     service = googleapiclient.discovery.build('translate', 'v2',
                                                               developerKey=daconfig['google']['api key'])

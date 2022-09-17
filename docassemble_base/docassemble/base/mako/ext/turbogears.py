@@ -1,5 +1,5 @@
 # ext/turbogears.py
-# Copyright (C) 2006-2015 the Mako authors and contributors <see AUTHORS file>
+# Copyright 2006-2022 the Mako authors and contributors <see AUTHORS file>
 #
 # This module is part of Mako and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -9,11 +9,11 @@ from docassemble.base.mako.lookup import TemplateLookup
 from docassemble.base.mako.template import Template
 
 
-class TGPlugin(object):
+class TGPlugin:
 
     """TurboGears compatible Template Plugin."""
 
-    def __init__(self, extra_vars_func=None, options=None, extension='mak'):
+    def __init__(self, extra_vars_func=None, options=None, extension="mak"):
         self.extra_vars_func = extra_vars_func
         self.extension = extension
         if not options:
@@ -22,9 +22,9 @@ class TGPlugin(object):
         # Pull the options out and initialize the lookup
         lookup_options = {}
         for k, v in options.items():
-            if k.startswith('mako.'):
+            if k.startswith("mako."):
                 lookup_options[k[5:]] = v
-            elif k in ['directories', 'filesystem_checks', 'module_directory']:
+            elif k in ["directories", "filesystem_checks", "module_directory"]:
                 lookup_options[k] = v
         self.lookup = TemplateLookup(**lookup_options)
 
@@ -40,15 +40,18 @@ class TGPlugin(object):
         if template_string is not None:
             return Template(template_string, **self.tmpl_options)
         # Translate TG dot notation to normal / template path
-        if '/' not in templatename:
-            templatename = '/' + templatename.replace('.', '/') + '.' +\
-                self.extension
+        if "/" not in templatename:
+            templatename = (
+                "/" + templatename.replace(".", "/") + "." + self.extension
+            )
 
         # Lookup template
         return self.lookup.get_template(templatename)
 
-    def render(self, info, format="html", fragment=False, template=None):
-        if isinstance(template, compat.string_types):
+    def render(
+        self, info, format="html", fragment=False, template=None  # noqa
+    ):
+        if isinstance(template, str):
             template = self.load_template(template)
 
         # Load extra vars func if provided

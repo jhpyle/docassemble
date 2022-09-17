@@ -7,7 +7,7 @@ from docassemble.base.config import daconfig
 from oauth2client.service_account import ServiceAccountCredentials
 
 logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
-credential_json = daconfig.get('google', {}).get('service account credentials', None)
+credential_json = daconfig.get('google').get('service account credentials', None)
 
 if credential_json is None:
     credential_info = None
