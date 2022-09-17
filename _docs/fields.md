@@ -2172,6 +2172,8 @@ attributes of the [`Address`] object that can be set by [Place Autocomplete].
 
 {% include side-by-side.html demo="address-autocomplete-test" %}
 
+Fields with `address autocomplete` do not work inside of a `show if`.
+
 ## <a name="continue button field"></a><a name="field"></a>Setting a variable with the Continue button
 
 Sometimes, it is useful for a `question` to set a single variable to
