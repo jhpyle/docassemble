@@ -3993,7 +3993,7 @@ class Question:
                                     field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
                                     self.find_fields_in(x)
                     elif key == 'address autocomplete':
-                        field_info['address_autocomplete'] = True
+                        field_info['address_autocomplete'] = bool(field[key])
                     elif key == 'label above field':
                         field_info['label_above_field'] = True
                     elif key == 'floating label':
