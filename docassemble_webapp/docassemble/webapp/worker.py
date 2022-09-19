@@ -25,6 +25,7 @@ from docassemble.base.error import DAError
 from docassemble.webapp.files import SavedFile
 from celery import Celery, chord  # noqa: F401 # pylint: disable=unused-import
 from celery.result import result_from_tuple
+from celery.exceptions import TimeoutError # noqa: F401 # pylint: disable=unused-import
 
 USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
 
