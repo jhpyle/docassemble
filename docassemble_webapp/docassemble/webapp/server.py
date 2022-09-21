@@ -85,6 +85,7 @@ from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, 
 from docassemble.webapp.users.views import user_profile_page
 if not in_celery:
     import docassemble.webapp.worker
+    import celery.exceptions
 
 import packaging
 import apiclient
@@ -4311,7 +4312,7 @@ def wait_for_task(task_id, timeout=None):
         result.get(timeout=timeout)
         # logmessage("wait_for_task: returning true")
         return True
-    except docassemble.webapp.worker.TimeoutError:
+    except celery.exceptions.TimeoutError:
         logmessage("wait_for_task: timed out")
         return False
     except Exception as the_error:
@@ -8410,6 +8411,7 @@ def index(action_argument=None, refer=None):
         var $ = jQuery.noConflict();
       }
       var daMapInfo = null;
+      var daThicknessScalingFactor = """ + daconfig.get("signature pen thickness scaling factor") + """;
       var daWhichButton = null;
       var daSocket = null;
       var daChatHistory = [];

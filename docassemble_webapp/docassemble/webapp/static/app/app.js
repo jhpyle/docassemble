@@ -133,7 +133,7 @@ function daNewCanvas() {
   $("#dasigcontent").html(canvas);
   //theTop = $("#sigcanvas").offset().top;
   //theLeft = $("#sigcanvas").offset().left;
-  daTheWidth = cwidth / 100.0;
+  daTheWidth = (daThicknessScalingFactor * cwidth) / 100.0;
   if (daTheWidth < 1) {
     daTheWidth = 1;
   }

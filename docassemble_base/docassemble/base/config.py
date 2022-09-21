@@ -308,6 +308,13 @@ def load(**kwargs):
             daconfig['google'] = {}
     else:
         daconfig['google'] = {}
+    if 'signature pen thickness scaling factor' not in daconfig:
+        daconfig['signature pen thickness scaling factor'] = 1.0
+    if isinstance(daconfig['signature pen thickness scaling factor'], int):
+        daconfig['signature pen thickness scaling factor'] = float(daconfig['signature pen thickness scaling factor'])
+    if not isinstance(daconfig['signature pen thickness scaling factor'], float):
+        config_error("signature pen thickness scaling factor must be a floating point value")
+        daconfig['signature pen thickness scaling factor'] = 1.0
     if 'avconv' in daconfig:
         config_error("The Configuration directive avconv has been renamed ffmpeg.")
         daconfig['ffmpeg'] = daconfig['avconv']

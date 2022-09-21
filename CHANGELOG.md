@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.4.10] - 2022-09-
+
+### Added
+- The `signature pen thickness scaling factor` Configuration directive.
+### Changed
+- Upgraded Mako to version 1.2.2.
+- The field modifiers `address autocomplete`, `label above field`, and
+  `floating label` can now refer to Python expressions.
+
 ## [1.4.9] - 2022-09-10
 
 ### Added

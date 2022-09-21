@@ -910,7 +910,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     validation_rules['rules'][the_saveas] = {}
                 if the_saveas not in validation_rules['messages']:
                     validation_rules['messages'][the_saveas] = {}
-                if hasattr(field, 'address_autocomplete') and field.address_autocomplete:
+                if 'address_autocomplete' in status.extras and field.number in status.extras['address_autocomplete'] and status.extras['address_autocomplete'][field.number]:
                     autocomplete_id.append(the_saveas)
         seen_extra_header = False
         for field in field_list:
@@ -1049,7 +1049,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         if field.number in status.helptexts:
                             fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row da-field-container da-field-container-note' + class_def + extra_container_class + '"><div class="col-md-12">' + help_wrap(note_fields[field.number], status.helptexts[field.number], status) + '</div></div>\n')
                         else:
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row da-field-container da-field-container-note' + class_def + extra_container_class +  '"><div class="col-md-12">' + note_fields[field.number] + '</div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row da-field-container da-field-container-note' + class_def + extra_container_class + '"><div class="col-md-12">' + note_fields[field.number] + '</div></div>\n')
                     # continue
                 # elif field.datatype in ['script', 'css']:
                 #     continue
@@ -1347,7 +1347,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '' + side_note_parent + req_tag + field_class + ' da-field-container-nolabel">\n                  <span class="visually-hidden">' + word("Answer here") + '</span>\n                  <div class="col dawidecol dafieldpart">' + input_for(status, field, wide=True) + '</div>' + side_note + '\n                </div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
                     fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row dayesnospacing ' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="col dawidecol dafieldpart">' + input_for(status, field) + '</div>' + side_note + '\n                </div>\n')
-                elif floating_labels or (hasattr(field, 'floating_label') and field.floating_label):
+                elif floating_labels or (hasattr(field, 'floating_label') and status.extras['floating_label'][field.number]):
                     if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
                         fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                     elif status.labels[field.number] == '':
@@ -1355,7 +1355,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     else:
                         floating_label = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True)
                         fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group-floating form-floating mb-3' + side_note_parent + req_tag + field_class + class_def + '">\n                  ' + input_for(status, field, floating_label=strip_quote(to_text(floating_label, {}, []).strip())) + side_note + '\n                  <label ' + label_for + '>' + floating_label + '</label>\n                </div>\n')
-                elif labels_above or (hasattr(field, 'label_above_field') and field.label_above_field):
+                elif labels_above or (hasattr(field, 'label_above_field') and status.extras['label_above_field'][field.number]):
                     if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
                         fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                     elif status.labels[field.number] == '':

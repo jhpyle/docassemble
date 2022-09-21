@@ -1184,7 +1184,7 @@ class InterviewStatus:
                     if get_config('maximum content length') is not None:
                         the_field['max'] = get_config('maximum content length')
                         the_field['validation_messages']['max'] = field.validation_message('maxuploadsize', self, word("Your file upload is larger than the server can accept. Please reduce the size of your file upload."))
-            for param in ('datatype', 'fieldtype', 'sign', 'inputtype', 'address_autocomplete', 'label_above_field', 'floating_label'):
+            for param in ('datatype', 'fieldtype', 'sign', 'inputtype'):
                 if hasattr(field, param):
                     the_field[param] = getattr(field, param)
             if hasattr(field, 'shuffle') and field.shuffle is not False:
@@ -1193,7 +1193,7 @@ class InterviewStatus:
                 the_field['disable_others'] = True
             if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                 the_field['uncheck_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata', 'css class'):
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata', 'css class', 'address_autocomplete', 'label_above_field', 'floating_label'):
                 if key in self.extras and field.number in self.extras[key]:
                     if key in ('minlength', 'maxlength', 'min', 'max', 'step'):
                         validation_rules_used.add(key)
@@ -3993,11 +3993,23 @@ class Question:
                                     field_info['selections']['exclude'].append(compile(x, '<expression>', 'eval'))
                                     self.find_fields_in(x)
                     elif key == 'address autocomplete':
-                        field_info['address_autocomplete'] = bool(field[key])
+                        if isinstance(field[key], str):
+                            field_info['address_autocomplete'] = compile(field[key], '<address autocomplete expression>', 'eval')
+                            self.find_fields_in(field[key])
+                        else:
+                            field_info['address_autocomplete'] = bool(field[key])
                     elif key == 'label above field':
-                        field_info['label_above_field'] = True
+                        if isinstance(field[key], str):
+                            field_info['label_above_field'] = compile(field[key], '<label above field expression>', 'eval')
+                            self.find_fields_in(field[key])
+                        else:
+                            field_info['label_above_field'] = bool(field[key])
                     elif key == 'floating label':
-                        field_info['floating_label'] = True
+                        if isinstance(field[key], str):
+                            field_info['floating_label'] = compile(field[key], '<floating label expression>', 'eval')
+                            self.find_fields_in(field[key])
+                        else:
+                            field_info['floating_label'] = bool(field[key])
                     elif key == 'action' and 'input type' in field and field['input type'] == 'ajax':
                         if not isinstance(field[key], str):
                             raise DAError("An action must be plain text" + self.idebug(data))
@@ -5943,6 +5955,27 @@ class Question:
                         extras['required'][field.number] = field.required
                     else:
                         extras['required'][field.number] = eval(field.required['compute'], user_dict)
+                    if hasattr(field, 'address_autocomplete'):
+                        if 'address_autocomplete' not in extras:
+                            extras['address_autocomplete'] = {}
+                        if isinstance(field.address_autocomplete, bool):
+                            extras['address_autocomplete'][field.number] = field.address_autocomplete
+                        else:
+                            extras['address_autocomplete'][field.number] = eval(field.address_autocomplete, user_dict)
+                    if hasattr(field, 'label_above_field'):
+                        if 'label_above_field' not in extras:
+                            extras['label_above_field'] = {}
+                        if isinstance(field.label_above_field, bool):
+                            extras['label_above_field'][field.number] = field.label_above_field
+                        else:
+                            extras['label_above_field'][field.number] = eval(field.label_above_field, user_dict)
+                    if hasattr(field, 'floating_label'):
+                        if 'floating_label' not in extras:
+                            extras['floating_label'] = {}
+                        if isinstance(field.floating_label, bool):
+                            extras['floating_label'][field.number] = field.floating_label
+                        else:
+                            extras['floating_label'][field.number] = eval(field.floating_label, user_dict)
                     if hasattr(field, 'max_image_size') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
                         extras['max_image_size'] = eval(field.max_image_size['compute'], user_dict)
                     if hasattr(field, 'image_type') and hasattr(field, 'datatype') and field.datatype in ('file', 'files', 'camera', 'user', 'environment'):
