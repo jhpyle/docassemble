@@ -516,7 +516,6 @@ fi
 if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
     if [ ! -f /etc/hasbeeninitialized ]; then
 	echo "initialize: This is the first time the server was initialized" >&2
-	touch /etc/hasbeeninitialized
 	if [ "${DAROOTOWNED:-false}" == "true" ]; then
 	    if [ "${DAALLOWUPDATES:-true}" == "true" ] \
 		   || [ "${DAENABLEPLAYGROUND:-true}" == "true" ]; then
@@ -545,6 +544,7 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
 		  /usr/share/docassemble/webapp/docassemble.wsgi
 	    DAINSTALLASROOT=false
 	fi
+	touch /etc/hasbeeninitialized
     else
 	echo "initialize: This is not the first time the server was initialized" >&2
     fi
