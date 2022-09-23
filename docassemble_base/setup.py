@@ -150,7 +150,7 @@ install_requires = [
     "ply==3.11",
     "portalocker==2.4.0",
     "proto-plus==1.20.3",
-    "protobuf==3.20.0",
+    "protobuf==3.20.2",
     "py==1.11.0",
     "pyasn1-modules==0.2.8",
     "pyasn1==0.4.8",
