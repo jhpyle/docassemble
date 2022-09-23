@@ -463,15 +463,15 @@ However, when the interview is driven by rules, this way of
 envisioning the interview process is misleading.  For example,
 consider the following structure for an interview:
 
-#. Ask "What is your name?"
-#. Ask "When were you injured?"
-#. If the injury took place more than two years ago, say, "Sorry, the
+1. Ask "What is your name?"
+2. Ask "When were you injured?"
+3. If the injury took place more than two years ago, say, "Sorry, the
    statute of limitations has expired, so you cannot file a complaint."
-#. Ask "Where did the injury take place?"
-#. Ask "How much did you pay in medical bills?"
-#. Ask "How much time did you have to take off from work?"
-#. etc.
-#. Here is a complaint you can file in court.
+4. Ask "Where did the injury take place?"
+5. Ask "How much did you pay in medical bills?"
+6. Ask "How much time did you have to take off from work?"
+7. etc.
+8. Here is a complaint you can file in court.
 
 Suppose the user started the interview one day before the statute of
 limitations expired, and proceeded as far as the "How much did you pay
@@ -584,16 +584,16 @@ screen loads, you need to be careful about how you specify the
 checklist items.  For example, you wouldn't want the checklist to be
 the following:
 
-#. Ask for the user's name.
-#. Ask for the user's date of birth.
-#. Give the user an assembled document.
+1. Ask for the user's name.
+2. Ask for the user's date of birth.
+3. Give the user an assembled document.
 
 That would mean that every time the screen loads, it would ask for the
 user's name.  Instead, the checklist should be:
 
-#. If the user's name is unknown, ask them for it.
-#. If the user's date of birth is unknown, ask them for it.
-#. Give the user an assembled document.
+1. If the user's name is unknown, ask them for it.
+2. If the user's date of birth is unknown, ask them for it.
+3. Give the user an assembled document.
 
 When you write a checklist in Python format, it looks like this:
 
