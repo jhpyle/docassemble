@@ -1,4 +1,4 @@
-name: Build and Push to GCR
+name: Build and Push to Google Container Registry
 on: [push]
 
 jobs:
@@ -12,7 +12,6 @@ jobs:
         id: 'auth'
         uses: 'google-github-actions/auth@v0'
         with:
-          token_format: 'access_token' # <--
           workload_identity_provider: projects/309162069921/locations/global/workloadIdentityPools/my-pool/providers/my-provider 
           service_account: 'my-service-account@my-project.iam.gserviceaccount.com'
 
