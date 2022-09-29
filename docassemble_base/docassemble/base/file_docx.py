@@ -14,6 +14,7 @@ from docxtpl import InlineImage, RichText
 from docx.shared import Mm, Inches, Pt, Cm, Twips
 import docx.opc.constants
 from docx.oxml.section import CT_SectPr  # For figuring out if an element is a section or not
+from docx.oxml.table import CT_Tbl       #                -""-                 table    -""-
 import docx
 from docxcompose.composer import Composer  # For fixing up images, etc when including docx files within templates
 from docassemble.base.functions import server, this_thread, package_template_filename, get_config, roman
@@ -109,7 +110,7 @@ def fix_subdoc(masterdoc, subdoc_info):
             continue
         composer.add_referenced_parts(subdoc.part, masterdoc.part, element)
         composer.add_styles(subdoc, element)
-        if change_numbering:
+        if change_numbering and not isinstance(element, CT_Tbl):
             try:
                 composer.add_numberings(subdoc, element)
                 composer.restart_first_numbering(subdoc, element)
