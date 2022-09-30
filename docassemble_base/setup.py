@@ -121,7 +121,7 @@ install_requires = [
     "jellyfish==0.6.1",
     "Jinja2==3.1.1",
     "jmespath==1.0.0",
-    "joblib==1.1.0",
+    "joblib==1.2.0",
     "keyring==23.5.0",
     "lxml==4.9.1",
     "Mako==1.2.2",
