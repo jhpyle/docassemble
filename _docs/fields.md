@@ -1891,6 +1891,9 @@ larger screens, the label is positioned to the left of the field.)
 
 {% include side-by-side.html demo="label-above-field" %}
 
+You can set `label above field` to `True`, `False`, or a Python
+expression.
+
 You can use the [`labels above fields`] feature to make this the
 default setting for all fields in your interview.
 
@@ -1900,6 +1903,9 @@ If you set `floating label` to `True`, then the label will be
 formatted using [Bootstrap]'s [floating labels] style.
 
 {% include side-by-side.html demo="floating-label" %}
+
+You can set `floating label` to `True`, `False`, or a Python
+expression.
 
 You can use the [`floating labels`] feature to make this the default
 setting for all fields in your interview.
@@ -2163,6 +2169,9 @@ feature, modify the street address (`.address`) field by setting
 
 {% include side-by-side.html demo="address-autocomplete" %}
 
+You can set `address autocomplete` to `True`, `False`, or a Python
+expression.
+
 For more information on using this feature, see the documentation for
 the [`Address`] object.
 
@@ -2171,8 +2180,6 @@ types.  Here is an example that illustrates all of the possible
 attributes of the [`Address`] object that can be set by [Place Autocomplete].
 
 {% include side-by-side.html demo="address-autocomplete-test" %}
-
-Fields with `address autocomplete` do not work inside of a `show if`.
 
 ## <a name="continue button field"></a><a name="field"></a>Setting a variable with the Continue button
 

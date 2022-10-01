@@ -2076,6 +2076,270 @@ On startup, `docassemble.webapp.install_certs` will copy these files
 into the appropriate location (`/etc/exim4`) with the appropriate
 ownership and permissions.
 
+# <a name="forwarding"></a>Using a web server and a reverse proxy
+
+Instead of having users access your **docassemble** interviews at
+https://da.foobar.com, where the DNS for `da.foobar.com` points to
+your **docassemble** server, and SSL certificates are obtained by your
+**docassemble** container, you can have your users access your
+**docassemble** interviews at https://foobar.com/da, where the DNS for
+`foobar.com` points to a web server you operate, and that web server
+acts as a go-between between the user's web browser and the
+**docassemble** server. The **docassemble** server may operate on a
+same machine that runs your web server, or a different machine. The
+machine that operates the **docassemble** server does not have to be
+exposed to the internet; it might be on a local network, so long as
+the web server can access it.
+
+You should use this deployment strategy if you wish to [embed] a
+**docassemble** interview into another site using an [`<iframe>`]. In
+the past, using an [`<iframe>`] was a convenient way to allow HTML
+content from a different server to appear inside your server. However,
+in recent years, web browsers have become more restrictive about
+[Cross-Origin Resource Sharing]. Browsers like Safari will block
+[`<iframe>`] content that stores information in the user's browser if
+the URL of the [`<iframe>`] uses a hostname that is different from the
+hostname in the browser location bar.
+
+The following example illustrates how to do this.  Your situation will
+probably be different, but this example will still help you figure out
+how to configure your system.
+
+## <a name="forwarding nginx"></a>Example using NGINX
+
+The example will demonstrate how to run **docassemble** using [Docker]
+on an Ubuntu 22.04 server running in the cloud.  The machine that runs
+[Docker] will also run the [NGINX] web browser. [NGINX] will be
+configured to use encryption and it will listen on ports 80 and 443.
+The web server will be accessible at `https://justice.example.com` and
+will serve resources other than **docassemble**.  The **docassemble**
+resources will be accessible at `https://justice.example.com/da`.
+[Docker] will run on the machine and will listen on ports 8080
+and 8050.  The web server will accept HTTPS requests at `/da` and
+forward thema as HTTP requests to port 8080.  The SSL certificate will
+be installed on the Ubuntu server, and the [Docker] container will run
+an HTTP server.  [Docker] will be controlled by the user account
+`ubuntu`, which is assumed to have [sudo] privileges.
+
+This example uses only one machine, but if you want to have a separate
+machine for your web browser and a separate machine for running
+**docassemble**, it is easy to set that up.
+
+If you want to follow along with this example, make sure that you have
+purchased a domain name from a domain registrar and you have set up a
+[CNAME record] or an [A record] in your [DNS] configuration that
+associates a hostname with your server. Also make sure that the
+firewall protecting the machine has ports 80 (HTTP) and 443 (HTTPS)
+open.
+
+In this example, we own the domain `example.com` domain and we have
+set up an `A` record in our [DNS] configuration that associates
+`justice.example.com` with the IP address of our server.
+
+First, let's install [NGINX], [Let's Encrypt] (the [certbot] utility),
+and [Docker] on the Ubuntu server. We use an [SSH client] to log in to
+the server as the user `ubuntu`. Then we run some commands on the
+command line:
+
+{% highlight bash %}
+sudo apt -y update
+sudo apt -y install snapd nginx docker.io
+sudo snap install --classic certbot
+sudo usermod -a -G docker ubuntu
+{% endhighlight %}
+
+The last command changes the user privileges of the `ubuntu` user.
+For these changes to take effect, you need to log out and log in again.
+(E.g., exit the [ssh] session and start a new one.)
+
+At this point, your web server should be running and should be visible
+from the internet. In our example, we can visit
+`http://justice.example.com` and we are greeted by a page that
+says "Welcome to nginx!"
+
+This is good, but we want to access our server using `https://`, not
+`http://`. We will encounter a lot of problems if our connection runs
+on `http://`. In order to enable HTTPS, we can run
+[`certbot`]. [`certbot`] is an application that automates the process
+of obtaining SSL certificates from [Let's Encrypt] and modifying the
+web browser configuration files so that they use these new
+certificates.
+
+To run `certbot`, do:
+
+{% highlight bash %}
+sudo certbot --nginx
+{% endhighlight %}
+
+Answer all of the prompts that appear. It is particularly important
+that you provide the correct domain name. In our example, we entered
+`justice.example.com`.
+
+Note that if you are using [AWS] and you are given a hostname such as
+`ec2-54-213-142-150.us-west-2.compute.amazonaws.com`, [certbot] will
+not issue a certificate for this hostname. You must purchase a real
+hostname of your own from a domain name registrar.
+
+It is also important that you provide a good e-mail address to
+[`certbot`]. You will get an e-mail from [Let's Encrypt] if your
+certificate is about to expire.
+
+Upon completion, `certbot` shows the message "Congratulations! You
+have successfully enabled HTTPS on https://justice.example.com."
+
+Now, if you visit your web site again, you will see it redirects your
+browser to the `https://` version of the site. In the browser you can
+see a padlock next to the location bar, indicating that the web site
+uses encryption.
+
+Now that you have your web server running, you can install
+**docassemble**. (In this example, we will install it on the same
+server that is running [NGINX], but you can also use a different
+machine.) First you need to create a short text file called `env.list`
+that contains some configuration options for **docassemble**.
+
+{% highlight bash %}
+nano env.list
+{% endhighlight %}
+
+Set the contents of `env.list` to:
+
+{% highlight text %}
+BEHINDHTTPSLOADBALANCER=true
+POSTURLROOT=/da/
+DAEXPOSEWEBSOCKETS=true
+{% endhighlight %}
+
+Inside of `nano`, you can save the file by typing Ctrl-s and exit by
+typing Ctrl-x.
+
+The `POSTURLROOT` variable, which is set to `/da/`, indicates the
+path after the domain at which **docassemble** can be accessed.  The
+[NGINX] web server will be able to provide other resources at other
+paths, but `/da/` will be reserved for the exclusive use of
+**docassemble**.  The beginning slash and the trailing slash are both
+necessary.
+
+Setting [`DAEXPOSEWEBSOCKETS`] to `true` means that the [WebSocket]
+server running inside the container (the [supervisor] process called
+`websockets`) will expose port 5000 to the external IP address rather
+than port 5000 of 127.0.0.1, so that the web server on the host can
+act as a proxy server for it.
+
+Now, let's download, install, and run **docassemble**.
+
+{% highlight bash %}
+docker run --env-file=env.list -v dabackup:/usr/share/docassemble/backup -d -p 8080:80 -p 8050:5000 jhpyle/docassemble
+{% endhighlight %}
+
+The option `-p 8080:80` means that port 8080 on the Ubuntu machine
+will be mapped to port 80 within the [Docker] container.  The option
+`-p 8050:5000` means that the web sockets port of the container should
+be accessible on port 8050 of the host, so that the web server on the
+host can tunnel traffic to it directly. Note that ports 8080 and 8050
+are not available from the internet (unless you configured your
+firewall to allow such access); what is important is that they are
+available to the [NGINX] web server that is running on the host.
+
+Now, let's edit the NGINX configuration so that the **docassemble**
+application is accessible through the NGINX web server.
+
+{% highlight bash %}
+nano /etc/nginx/sites-available/default
+{% endhighlight %}
+
+Scroll down to the second `server {` configuration. Look for a line
+that looks like this:
+
+{% highlight text %}
+server_name justice.example.com; # managed by Certbot
+{% endhighlight %}
+
+After this line, put in the following:
+
+{% highlight text %}
+location /da/ws {
+    include proxy_params;
+    proxy_pass http://localhost:8050;
+}
+
+location /da/ws/socket.io {
+    include proxy_params;
+    proxy_http_version 1.1;
+    proxy_buffering off;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_pass http://localhost:8050/socket.io;
+}
+
+location /da {
+    include proxy_params;
+    proxy_pass http://localhost:8080;
+}
+{% endhighlight %}
+
+The last `location` configuration is the most important setting. The
+others support websockets connections, which support the [Live Help]
+feature.
+
+Next, restart [NGINX] so that it uses the new configuration.
+
+{% highlight text %}
+sudo systemctl restart nginx
+{% endhighlight %}
+
+Now, we can access the **docassemble** server at
+`https://justice.example.com/da`.
+
+Next, we can build a web site (using non-**docassemble** tools) and
+operate it on the [NGINX] web server running at
+https://justice.example.com. Any URL that does not start with `/da`
+will be handled by [NGINX] in the ordinary fashion.
+
+If we wanted to embed a **docassemble** interview into a page of this
+web site using an [`<iframe>`], there would be no [CORS] issues
+because from the web browser's perspective, **docassemble** is just
+another page on the https://justice.example.com web site.
+
+## <a name="forwarding apache"></a>Example using Apache
+
+If you prefer to use the [Apache] web server instead of [NGINX], you can
+follow the above procedure, but instead of installing [NGINX], install
+[Apache], run `sudo certbot --apache`.
+
+Install the following [Apache] modules.
+
+{% highlight bash %}
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+sudo a2enmod proxy_wstunnel
+sudo a2enmod headers
+{% endhighlight %}
+
+Edit the configuration file inside of `/etc/apache2/sites-enabled` so
+that it contains:
+
+{% highlight text %}
+RewriteEngine On
+RewriteCond %{REQUEST_URI}    ^/da/ws/socket.io     [NC]
+RewriteCond %{QUERY_STRING}   transport=websocket   [NC]
+RewriteRule /da/ws/(.*)  ws://localhost:8050/$1    [P,L]
+
+ProxyPass /da/ws/ http://localhost:8050/
+ProxyPassReverse /da/ws/ http://localhost:8050/
+
+ProxyPass "/da"  "http://localhost:8080/da"
+ProxyPassReverse "/da"  "http://localhost:8080/da"
+RequestHeader set X-Forwarded-Proto "https"
+{% endhighlight %}
+
+Then restart the [Apache] server so that it uses the new
+configuration.
+
+{% highlight bash %}
+sudo systemctl restart apache2
+{% endhighlight %}
+
 # <a name="build"></a>Creating your own Docker image
 
 To create your own [Docker] image, first make sure [git] is
@@ -2781,3 +3045,12 @@ references a different base image.
 [LibreOffice]: https://www.libreoffice.org/
 [containerd]: https://containerd.io/
 [runC]: https://github.com/opencontainers/runc
+[Live Help]: {{ site.baseurl }}/docs/livehelp.html
+[DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
+[`<iframe>`]: https://www.w3schools.com/tags/tag_iframe.asp
+[embed]: {{ site.baseurl }}/docs/interviews.html#iframe
+[Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+[CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+[`certbot`]: https://certbot.eff.org/
+[SSH client]: https://www.ssh.com/academy/ssh/client
+[Apache]: https://httpd.apache.org/

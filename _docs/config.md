@@ -944,8 +944,17 @@ pixels in height.  But if your theme makes the navigation bar 66
 pixels tall, you will need to add the following styles:
 
 {% highlight css %}
-.da-pad-for-navbar         { padding-top: 76px; }
-.da-top-for-navbar         { top: 76px;         }
+.da-pad-for-navbar {
+    padding-top: 76px;
+}
+@media (min-width: 576px) {
+    body.dasignature.da-pad-for-navbar {
+	    padding-top: 76px;
+    }
+}
+.da-top-for-navbar {
+    top: 76px;
+}
 {% endhighlight %}
 
 Also, some of the colors that **docassemble** uses in the navigation
@@ -1791,9 +1800,6 @@ password, you will want to be able to reset it using the "forgot my
 password" feature, which relies on e-mailing an address you can
 access.
 
-By default, **docassemble** assumes that an [SMTP] server is installed
-on the same machine as the web server and that it uses port 25.
-
 <a name="default sender"></a>If you are going to send mail, you should
 at least set the `default sender` directive, which sets the return
 address on any e-mails generated from **docassemble**:
@@ -1803,9 +1809,10 @@ mail:
   default sender: '"Administrator" <no-reply@example.com>'
 {% endhighlight %}
 
-The default set-up of a local [SMTP] server will probably not be
-appropriate for your situation, as most internet service providers
-block outgoing e-mail.
+In order to send e-mail, you will need to sign up with an e-mail
+sending service. You can use an external [SMTP] server, or you can use
+an e-mail service with an HTTP-based API. The latter is recommended
+because [SMTP] is slow.
 
 ### <a name="smtp"></a>Using an external [SMTP] server
 
@@ -2490,6 +2497,17 @@ If you are using [Docker] and [NGINX], then after changing this value,
 you will need to do a complete restart of the system for the change to
 take effect.  (That is, `docker stop -t 600 <container ID>` followed
 by `docker start <container ID>`.)
+
+## <a name="signature pen thickness scaling factor"></a>Scaling factor for thickness of signature line
+
+If you think the line thickness of users' signatures is either too
+thick or too thin, you can set the `signature pen thickness scaling
+factor`. If you want a 10% thicker line, set `signature pen thickness
+scaling factor` to 1.1. If you want a 50% thinner line, set it to 0.5.
+
+{% highlight yaml %}
+signature pen thickness scaling factor: 0.5
+{% endhighlight %}
 
 ## <a name="png resolution"></a><a name="png screen resolution"></a>Image conversion resolution
 

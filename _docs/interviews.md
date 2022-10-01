@@ -1148,8 +1148,8 @@ containing `# use jinja` was encountered.
 [development overview]: {{ site.baseurl }}/docs/development.html
 [section on YAML]: #yaml
 [how answers are stored]: #howstored
-[Drupal module]: https://github.com/jpylephilalegal/docassemble_embed
-[WordPress plugin]: https://github.com/jpylephilalegal/docassemble-embedder
+[Drupal module]: https://github.com/jhpyle/docassemble_embed
+[WordPress plugin]: https://github.com/jhpyle/docassemble-embedder
 [installing on a machine already using a web server]: {{ site.baseurl }}/docs/docker.html#forwarding
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
 [`SQLObject`]: {{ site.baseurl }}/docs/objects.html#SQLObject

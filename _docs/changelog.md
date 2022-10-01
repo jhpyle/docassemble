@@ -3,6 +3,25 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.10](https://github.com/jhpyle/docassemble/releases/tag/v1.4.10) - 2022-10-01
+
+
+### Added
+- The `signature pen thickness scaling factor` Configuration
+  directive.
+
+### Changed
+- Upgraded Mako to version 1.2.2.
+- The field modifiers `address autocomplete`, `label above field`, and
+  `floating label` can now refer to Python expressions.
+- Upgraded Google OAuth.
+
+### Fixed
+- Issue with exim4's overinclusive `dc_other_hostnames` setting.
+- Error with images in Markdown to DOCX conversion.
+- Error with `overlay_pdf()`.
+- Error with `temporary session` when user is not logged in.
+
 ## [1.4.9](https://github.com/jhpyle/docassemble/releases/tag/v1.4.9) - 2022-09-10
 
 
