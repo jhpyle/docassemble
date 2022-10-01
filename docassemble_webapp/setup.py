@@ -162,7 +162,7 @@ install_requires = [
     "portalocker==2.4.0",
     "prompt-toolkit==3.0.29",
     "proto-plus==1.20.3",
-    "protobuf==3.20.0",
+    "protobuf==3.20.2",
     "psutil==5.9.0",
     "psycopg2-binary==2.9.3",
     "py==1.11.0",
