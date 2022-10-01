@@ -1423,15 +1423,19 @@ def get_twilio_config():
         the_twilio_config = {}
         the_twilio_config['account sid'] = {}
         the_twilio_config['number'] = {}
+        the_twilio_config['whatsapp number'] = {}
         the_twilio_config['name'] = {}
         if not isinstance(daconfig['twilio'], list):
             config_list = [daconfig['twilio']]
         else:
             config_list = daconfig['twilio']
         for tconfig in config_list:
-            if isinstance(tconfig, dict) and 'account sid' in tconfig and 'number' in tconfig:
+            if isinstance(tconfig, dict) and 'account sid' in tconfig and ('number' in tconfig or 'whatsapp number' in tconfig):
                 the_twilio_config['account sid'][str(tconfig['account sid'])] = 1
-                the_twilio_config['number'][str(tconfig['number'])] = tconfig
+                if tconfig.get('number'):
+                    the_twilio_config['number'][str(tconfig['number'])] = tconfig
+                if tconfig.get('whatsapp number'):
+                    the_twilio_config['whatsapp number'][str(tconfig['whatsapp number'])] = tconfig
                 if 'default' not in the_twilio_config['name']:
                     the_twilio_config['name']['default'] = tconfig
                 if 'name' in tconfig:
@@ -23853,10 +23857,20 @@ def do_sms(form, base_url, url_root, config='default', save=True):
     if "AccountSid" not in form or form["AccountSid"] not in twilio_config['account sid']:
         logmessage("do_sms: request to sms did not authenticate")
         return resp
-    if "To" not in form or form["To"] not in twilio_config['number']:
-        logmessage("do_sms: request to sms ignored because recipient number " + str(form.get('To', None)) + " not in configuration, " + str(twilio_config['number']))
+    if "To" not in form:
+        logmessage("do_sms: request to sms ignored because phone number not provided")
         return resp
-    tconfig = twilio_config['number'][form["To"]]
+    if form["To"].startswith('whatsapp:'):
+        actual_number = re.sub(r'^whatsapp:', '', form["To"])
+        if actual_number not in twilio_config['whatsapp number']:
+            logmessage("do_sms: request to whatsapp ignored because recipient number " + str(form['To']) + " not in configuration")
+            return resp
+        tconfig = twilio_config['whatsapp number'][actual_number]
+    else:
+        if form["To"] not in twilio_config['number']:
+            logmessage("do_sms: request to sms ignored because recipient number " + str(form['To']) + " not in configuration")
+            return resp
+        tconfig = twilio_config['number'][form["To"]]
     if 'sms' not in tconfig or tconfig['sms'] in (False, None, 0):
         logmessage("do_sms: ignoring message to sms because SMS not enabled")
         return resp
@@ -24556,24 +24570,28 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             if save:
                 encrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if len(interview_status.attachments) > 0:
-            with resp.message(qoutput) as m:
-                media_count = 0
-                for attachment in interview_status.attachments:
-                    if media_count >= 9:
-                        break
-                    for doc_format in attachment['formats_to_use']:
-                        if media_count >= 9:
-                            break
-                        if doc_format not in ('pdf', 'rtf'):
-                            continue
-                        filename = attachment['filename'] + '.' + docassemble.base.parse.extension_of_doc_format[doc_format]
-                        # saved_file = save_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
-                        url = url_for('serve_stored_file', _external=True, uid=sess_info['uid'], number=attachment['file'][doc_format], filename=attachment['filename'], extension=docassemble.base.parse.extension_of_doc_format[doc_format])
-                        # logmessage('sms: url is ' + str(url))
-                        m.media(url)
-                        media_count += 1
-        else:
-            resp.message(qoutput)
+            for attachment in interview_status.attachments:
+                for doc_format in attachment['formats_to_use']:
+                    if doc_format not in ('pdf', 'rtf', 'docx'):
+                        continue
+                    qoutput += "\n" + url_for('serve_stored_file', _external=True, uid=sess_info['uid'], number=attachment['file'][doc_format], filename=attachment['filename'], extension=docassemble.base.parse.extension_of_doc_format[doc_format])
+            # with resp.message(qoutput) as m:
+            #     media_count = 0
+            #     for attachment in interview_status.attachments:
+            #         if media_count >= 9:
+            #             break
+            #         for doc_format in attachment['formats_to_use']:
+            #             if media_count >= 9:
+            #                 break
+            #             if doc_format not in ('pdf', 'rtf'):
+            #                 continue
+            #             filename = attachment['filename'] + '.' + docassemble.base.parse.extension_of_doc_format[doc_format]
+            #             # saved_file = save_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
+            #             url = url_for('serve_stored_file', _external=True, uid=sess_info['uid'], number=attachment['file'][doc_format], filename=attachment['filename'], extension=docassemble.base.parse.extension_of_doc_format[doc_format])
+            #             # logmessage('sms: url is ' + str(url))
+            #             m.media(url)
+            #             media_count += 1
+        resp.message(qoutput)
     release_lock(sess_info['uid'], sess_info['yaml_filename'])
     # logmessage(str(form))
     return resp
