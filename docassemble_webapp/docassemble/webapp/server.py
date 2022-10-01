@@ -130,6 +130,8 @@ except ImportError:
 import qrcode
 import qrcode.image.svg
 from rauth import OAuth1Service, OAuth2Service
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 import requests
 import ruamel.yaml
 from simplekv.memory.redisstore import RedisStore
@@ -4619,40 +4621,34 @@ class GoogleSignIn(OAuthSignIn):
         )
 
     def authorize(self):
-        result = urllib.parse.parse_qs(request.data.decode())
-        # logmessage("GoogleSignIn, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
-        # logmessage("GoogleSignIn, request: " + str(request.data))
-        # logmessage("GoogleSignIn, result: " + repr(raw_result))
-        session['google_id'] = result.get('id', [None])[0]
-        session['google_email'] = result.get('email', [None])[0]
-        session['google_name'] = result.get('name', [None])[0]
-        response = make_response(json.dumps('Successfully connected user.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        # oauth_session = self.service.get_auth_session(
-        #     data={'code': request.args['code'],
-        #           'grant_type': 'authorization_code',
-        #           'redirect_uri': self.get_callback_url()}
-        # )
-        return response
+        pass
 
     def callback(self):
         # logmessage("GoogleCallback, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
         # logmessage("GoogleCallback, request: " + str(request.data))
-        email = session.get('google_email', None)
-        google_id = session.get('google_id', None)
-        google_name = session.get('google_name', None)
-        if 'google_id' in session:
-            del session['google_id']
-        if 'google_email' in session:
-            del session['google_email']
-        if 'google_name' in session:
-            del session['google_name']
+        csrf_cookie = request.cookies.get('g_csrf_token', None)
+        post_data = request.form.copy()
+        csrf_body = post_data.get('g_csrf_token', None)
+        token = post_data.get('credential', None)
+        if token is None or csrf_cookie is None or csrf_cookie != csrf_body or not app.config['USE_GOOGLE_LOGIN']:
+            logmessage("Google authentication problem")
+            return (None, None, None, None)
+        try:
+            idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), app.config['OAUTH_CREDENTIALS']['google']['id'])
+        except ValueError:
+            logmessage("Google ID did not verify")
+            return (None, None, None, None)
+        google_id = idinfo.get('sub', None)
+        email = idinfo.get('email', None)
+        google_name = idinfo.get('name', None)
+        first_name = idinfo.get('given_name', None)
+        last_name = idinfo.get('family_name', None)
         if email is not None and google_id is not None:
             return (
                 'google$' + str(google_id),
                 email.split('@')[0],
                 email,
-                {'name': google_name}
+                {'name': google_name, 'first': first_name, 'last': last_name}
             )
         raise Exception("Could not get Google authorization information")
 
@@ -4975,11 +4971,13 @@ def oauth_authorize(provider):
     return oauth.authorize()
 
 
-@app.route('/callback/<provider>')
+@app.route('/callback/<provider>', methods=['POST', 'GET'])
 @csrf.exempt
 def oauth_callback(provider):
     if not current_user.is_anonymous:
         return redirect(url_for('interview_list', from_login='1'))
+    if request.method == 'POST' and provider != 'google':
+        return ('The method is not allowed for the requested URL.', 405)
     # for argument in request.args:
     #     logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
     oauth = OAuthSignIn.get_provider(provider)
@@ -6628,7 +6626,7 @@ def index(action_argument=None, refer=None):
                             break
                         the_current_info['session'] = session_id
                         the_current_info['encrypted'] = encrypted
-                    reset_interview = 1
+                reset_interview = 1
             if current_user.is_anonymous:
                 if (not interview.allowed_to_initiate(is_anonymous=True)) or (not interview.allowed_to_access(is_anonymous=True)):
                     delete_session_for_interview(yaml_filename)
@@ -8410,8 +8408,9 @@ def index(action_argument=None, refer=None):
       if (typeof($) == 'undefined'){
         var $ = jQuery.noConflict();
       }
+      var isAndroid = /android/i.test(navigator.userAgent.toLowerCase());
       var daMapInfo = null;
-      var daThicknessScalingFactor = """ + daconfig.get("signature pen thickness scaling factor") + """;
+      var daThicknessScalingFactor = """ + str(daconfig.get("signature pen thickness scaling factor")) + """;
       var daWhichButton = null;
       var daSocket = null;
       var daChatHistory = [];
@@ -10978,7 +10977,7 @@ def index(action_argument=None, refer=None):
           }
         });
         $("body").focus();
-        if (!daJsEmbed){
+        if (!daJsEmbed && !isAndroid){
           setTimeout(function(){
             var firstInput = $("#daform .da-field-container").not(".da-field-container-note").first().find("input, textarea, select").filter(":visible").first();
             if (firstInput.length > 0 && $(firstInput).visible()){
@@ -11897,7 +11896,7 @@ def index(action_argument=None, refer=None):
         if interview.options.get('hide navbar', False):
             bodyclass = "dasignature navbarhidden"
         else:
-            bodyclass = "dasignature"
+            bodyclass = "dasignature da-pad-for-navbar"
     else:
         if interview.options.get('hide navbar', False):
             bodyclass = "dabody"
@@ -13009,6 +13008,7 @@ def observer():
     userid = request.args.get('userid', None)
     observation_script = """
     <script>
+      var isAndroid = /android/i.test(navigator.userAgent.toLowerCase());
       var daMapInfo = null;
       var daWhichButton = null;
       var daSendChanges = false;

@@ -1473,6 +1473,14 @@ fi
 if [ "$EXIM4RUNNING" == "false" ] && [[ $CONTAINERROLE =~ .*:(all|mail):.* && ($DBTYPE = "postgresql" || $DBTYPE = "mysql") ]]; then
     echo "initialize: Starting exim4" >&2
     if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
+	if [ -f /usr/share/docassemble/config/exim4-update ] && [ "${DAHOSTNAME}" != "localhost" ]; then
+	    sed "s/dc_other_hostnames='\**'/dc_other_hostnames='${DAHOSTNAME}'/" /usr/share/docassemble/config/exim4-update > /tmp/temp-exim4-update
+	    if [ ! -f /etc/exim4/update-exim4.conf.conf ] || ! cmp -s /tmp/temp-exim4-update /etc/exim4/update-exim4.conf.conf; then
+		cp /tmp/temp-exim4-update /etc/exim4/update-exim4.conf.conf
+		update-exim4.conf
+	    fi
+	    rm -f /tmp/temp-exim4-update
+	fi
 	rm -f /etc/cron.daily/exim4-base
 	ln -s /usr/share/docassemble/cron/exim4-base /etc/cron.daily/exim4-base
 	if [ "${DBTYPE}" = "postgresql" ]; then

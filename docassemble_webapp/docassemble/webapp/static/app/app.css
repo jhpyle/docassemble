@@ -1582,8 +1582,8 @@ div.daconstraintlist div + div {
 }
 
 @media (min-width: 576px) {
-    body.dasignature {
-	padding-top: 60px;
+    body.dasignature.da-pad-for-navbar {
+	padding-top: 66px;
     }
     body.dasignature.navbarhidden {
 	padding-top: 0px;

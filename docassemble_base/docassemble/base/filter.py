@@ -1211,7 +1211,7 @@ def image_include_docx(match, question=None):
                 output = '![](' + file_info['path'] + '.pdf){width=' + width + '}'
                 return output
             if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps', 'jpe', 'jpeg']:
-                output = '![](' + file_info['path'] + '){width=' + width + '}'
+                output = '![](' + file_info['fullpath'] + '){width=' + width + '}'
                 return output
     return '[invalid graphics reference]'
 
