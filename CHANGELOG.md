@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.4.10] - 2022-09-30
+## [1.4.10] - 2022-10-01
 
 ### Added
 - The `signature pen thickness scaling factor` Configuration
