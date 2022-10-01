@@ -290,7 +290,7 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
             if not hasattr(the_field, 'saveas'):
                 logmessage("as_sms: field has no saveas")
                 continue
-            if the_field.number not in status.current_info['skip']:
+            if the_field.number not in the_user_dict['_internal']['skip']:
                 # logmessage("as_sms: field is not defined yet")
                 if field is None:
                     field = the_field

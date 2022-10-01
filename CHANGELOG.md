@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.11] - 2022-10-01
+
+### Fixed
+- Issues with SMS interface.
+
 ## [1.4.10] - 2022-10-01
 
 ### Added

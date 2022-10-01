@@ -24130,6 +24130,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
                     skip_it = True
                     data = repr('')
+                elif user_entered_skip:
+                    data = None
+                    special_messages.append(word("You must attach a file."))
                 else:
                     files_to_process = []
                     num_media = int(form.get('NumMedia', '0'))
