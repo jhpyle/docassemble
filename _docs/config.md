@@ -4640,7 +4640,8 @@ twilio:
 {% endhighlight %}
 
 The `sms: True` line tells **docassemble** that you intend to use the
-text messaging features.
+text messaging features. This should be set to `True` even if you only
+intend to use [WhatsApp].
 
 The `voice: True` line tells **docassemble** that you intend to use the
 [call forwarding] feature.

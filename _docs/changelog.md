@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.11](https://github.com/jhpyle/docassemble/releases/tag/v1.4.11) - 2022-10-01
+
+
+### Fixed
+- Issues with SMS interface.
+
 ## [1.4.10](https://github.com/jhpyle/docassemble/releases/tag/v1.4.10) - 2022-10-01
 
 
