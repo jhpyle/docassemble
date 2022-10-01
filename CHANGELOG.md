@@ -3,7 +3,8 @@
 ## [1.4.10] - 2022-09-30
 
 ### Added
-- The `signature pen thickness scaling factor` Configuration directive.
+- The `signature pen thickness scaling factor` Configuration
+  directive.
 ### Changed
 - Upgraded Mako to version 1.2.2.
 - The field modifiers `address autocomplete`, `label above field`, and

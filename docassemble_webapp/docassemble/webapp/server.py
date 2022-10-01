@@ -23854,7 +23854,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         logmessage("do_sms: request to sms did not authenticate")
         return resp
     if "To" not in form or form["To"] not in twilio_config['number']:
-        logmessage("do_sms: request to sms ignored because recipient number " + str(form.get('To', None)) + " not in configuration, " + str(twilio_config))
+        logmessage("do_sms: request to sms ignored because recipient number " + str(form.get('To', None)) + " not in configuration, " + str(twilio_config['number']))
         return resp
     tconfig = twilio_config['number'][form["To"]]
     if 'sms' not in tconfig or tconfig['sms'] in (False, None, 0):
