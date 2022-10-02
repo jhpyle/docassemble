@@ -24570,30 +24570,30 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             if save:
                 encrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if len(interview_status.attachments) > 0:
-            for attachment in interview_status.attachments:
-                for doc_format in attachment['formats_to_use']:
-                    if doc_format not in ('pdf', 'rtf', 'docx'):
-                        continue
-                    qoutput += "\n" + url_for('serve_stored_file', _external=True, uid=sess_info['uid'], number=attachment['file'][doc_format], filename=attachment['filename'], extension=docassemble.base.parse.extension_of_doc_format[doc_format])
-            # with resp.message(qoutput) as m:
-            #     media_count = 0
-            #     for attachment in interview_status.attachments:
-            #         if media_count >= 9:
-            #             break
-            #         for doc_format in attachment['formats_to_use']:
-            #             if media_count >= 9:
-            #                 break
-            #             if doc_format not in ('pdf', 'rtf'):
-            #                 continue
-            #             filename = attachment['filename'] + '.' + docassemble.base.parse.extension_of_doc_format[doc_format]
-            #             # saved_file = save_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
-            #             url = url_for('serve_stored_file', _external=True, uid=sess_info['uid'], number=attachment['file'][doc_format], filename=attachment['filename'], extension=docassemble.base.parse.extension_of_doc_format[doc_format])
-            #             # logmessage('sms: url is ' + str(url))
-            #             m.media(url)
-            #             media_count += 1
-        resp.message(qoutput)
+            if tconfig.get("mms attachments", True):
+                with resp.message(qoutput) as m:
+                    media_count = 0
+                    for attachment in interview_status.attachments:
+                        if media_count >= 9:
+                            break
+                        for doc_format in attachment['formats_to_use']:
+                            if media_count >= 9:
+                                break
+                            if doc_format != 'pdf':
+                                continue
+                            url = url_for('serve_stored_file', _external=True, uid=sess_info['uid'], number=attachment['file'][doc_format], filename=attachment['filename'], extension=docassemble.base.parse.extension_of_doc_format[doc_format])
+                            m.media(url)
+                            media_count += 1
+            else:
+                for attachment in interview_status.attachments:
+                    for doc_format in attachment['formats_to_use']:
+                        if doc_format not in ('pdf', 'rtf', 'docx'):
+                            continue
+                        qoutput += "\n" + url_for('serve_stored_file', _external=True, uid=sess_info['uid'], number=attachment['file'][doc_format], filename=attachment['filename'], extension=docassemble.base.parse.extension_of_doc_format[doc_format])
+                resp.message(qoutput)
+        else:
+            resp.message(qoutput)
     release_lock(sess_info['uid'], sess_info['yaml_filename'])
-    # logmessage(str(form))
     return resp
 
 

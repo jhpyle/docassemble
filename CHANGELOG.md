@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.12] - 2022-10-02
+
+### Added
+- The `mms attachments` option in the `twilio` configuration.
+
 ## [1.4.11] - 2022-10-01
 
 ### Fixed
