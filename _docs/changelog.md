@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.12](https://github.com/jhpyle/docassemble/releases/tag/v1.4.12) - 2022-10-02
+
+
+### Added
+- The `mms attachments` option in the `twilio` configuration.
+
 ## [1.4.11](https://github.com/jhpyle/docassemble/releases/tag/v1.4.11) - 2022-10-01
 
 

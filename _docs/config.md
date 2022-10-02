@@ -4633,6 +4633,7 @@ twilio:
   auth token: 87559c7a427c25e34e20c654e8b05234
   number: "+12762410114"
   whatsapp number: "+12762268342"
+  mms attachments: False
   dispatch:
     color: docassemble.base:data/questions/examples/buttons-code-color.yml
     doors: docassemble.base:data/questions/examples/doors.yml
@@ -4660,6 +4661,15 @@ which your users will exchange [SMS] messages.
 The `whatsapp number` (optional) is the phone number you use for
 sending [WhatsApp] messages.  The number must be written in [E.164]
 format.
+
+The `mms attachments` (optional) option allows you to indicate whether
+MMS should be used to deliver documents to the user when a `question`
+has `attachments`, `attachment`, or `attachment code`. When `mms
+attachments` is `True` (which is the default), **docassemble** will
+only deliver PDF attachments (because Twilio blocks other content
+types). If you set `mms attachments: False`, then instead of using
+MMS, **docassemble** will include hyperlinks to PDF, RTF, and DOCX
+attachments.
 
 The `dispatch` configuration allows you to direct users to different
 interviews.  For example, with the above configuration, you can tell
