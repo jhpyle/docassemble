@@ -967,7 +967,7 @@ guided interview processes.  Someone who has too much expertise in
 certain areas of software development may not not be ideal for the
 "guided interview developer" role.  As the saying goes, "if the only
 tool you have is a hammer, everything looks like a nail."  Front-end
-developers tend want to write complicated CSS and JavaScript.
+developers tend to want to write complicated CSS and JavaScript.
 Developers with experience on other platforms will tend to spend time
 thinking about integrating the guided interview platform with their
 favorite platform, rather than working within the guided interview
