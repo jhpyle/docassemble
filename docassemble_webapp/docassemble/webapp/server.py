@@ -24334,9 +24334,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     data = repr('')
                     skip_it = True
                 else:
-                    data = re.sub(r'[^0-9\-\.]', '', inp)
-                    if data == '':
-                        data = '0'
+                    data = re.sub(r'[^0-9\.\-]', '', inp)
                     try:
                         the_value = eval("int(" + repr(data) + ")")
                         data = "int(" + repr(data) + ")"
@@ -24387,12 +24385,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         data = None
             elif hasattr(field, 'datatype') and field.datatype in ('number', 'float', 'currency'):
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
-                    data = repr('')
+                    data = '0.0'
                     skip_it = True
                 else:
-                    data = re.sub(r'[^0-9\-\.]', '', inp)
-                    if data == '':
-                        data = '0.0'
+                    data = re.sub(r'[^0-9\.\-]', '', inp)
                     try:
                         the_value = eval("float(" + json.dumps(data) + ")", user_dict)
                         data = "float(" + json.dumps(data) + ")"

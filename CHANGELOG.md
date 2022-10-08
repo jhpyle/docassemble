@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.13] - 2022-10-
+
+### Fixed
+- Problem with the exim4 mail configuration.
+
 ## [1.4.12] - 2022-10-02
 
 ### Added
