@@ -612,7 +612,7 @@ docassemble.base.functions.update_language_function('fr', 'currency_symbol', lam
 {% endhighlight %}
 
 [`currency symbol`]: {{ site.baseurl }}/docs/config.html#currency symbol
-[`locale` module]: https://docs.python.org/3.8/library/locale.htmle
+[`locale` module]: https://docs.python.org/3.10/library/locale.htmle
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [initial blocks]: {{ site.baseurl }}/docs/initial.html

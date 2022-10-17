@@ -139,3 +139,5 @@ group].  Consultants who are available for projects include:
 [A record]: https://en.wikipedia.org/wiki/List_of_DNS_record_types#A
 [Troubleshooting]: {{ site.baseurl }}/docs/docker.html#troubleshooting
 [web server and a reverse proxy]: {{ site.baseurl }}/docs/docker.html#forwarding
+[Namecheap]: https://www.namecheap.com/domains/
+[DNS]: https://en.wikipedia.org/wiki/Domain_Name_System

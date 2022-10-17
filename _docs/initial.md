@@ -2602,7 +2602,7 @@ This will cause the web application to run the JavaScript for the
 [`table width`]: #table width
 [`features`]: #features
 [document]: {{ site.baseurl }}/docs/documents.html
-[list]: https://docs.python.org/3.8/tutorial/datastructures.html
+[list]: https://docs.python.org/3.10/tutorial/datastructures.html
 [dictionary]: https://docs.python.org/3/library/stdtypes.html#dict
 [set]: https://docs.python.org/3/library/stdtypes.html#set
 [group]: {{ site.baseurl }}/docs/groups.html

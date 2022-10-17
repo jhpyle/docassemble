@@ -562,7 +562,7 @@ If you need to make manual changes to the installation of [Python]
 packages, note that **docassemble**'s [Python] code is installed in a
 [Python virtual environment] in which all of the files are readable
 and writable by the `www-data` user.  The virtual environment is
-located at `/usr/share/docassemble/local3.8/`.  Thus, installing
+located at `/usr/share/docassemble/local3.10/`.  Thus, installing
 [Python] packages through Ubuntu's `apt` utility will not actually
 make that [Python] code available to **docassemble**.  Before using
 [pip], you need to first change the user to `www-data`, and then
@@ -570,7 +570,7 @@ switch into the appropriate [Python virtual environment].
 
 {% highlight bash %}
 su www-data
-source /usr/share/docassemble/local3.8/bin/activate
+source /usr/share/docassemble/local3.10/bin/activate
 {% endhighlight %}
 
 Note that if you want to install a new version of a [Python] package
