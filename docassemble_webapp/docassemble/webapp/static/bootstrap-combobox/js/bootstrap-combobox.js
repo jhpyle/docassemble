@@ -59,6 +59,22 @@
       return combobox;
     },
 
+    template: function () {
+      //console.log('template');
+      if (this.options.bsVersion == "2") {
+        return '<div class="combobox-container"><input type="hidden" /> ' +
+            '<div class="input-append"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
+            '<span class="add-on dropdown-toggle"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>';
+      } else {
+        return '<div class="combobox-container"> <input type="hidden" /> ' +
+            '<div class="input-group"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
+            '<div class="input-group-append"> ' +
+              '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-expanded="false" aria-controls="id_controls">' +
+                '<span class="fas fa-caret-down"></span><span class="fas fa-xmark"></span>' +
+              '</button> </div> </div> </div>';
+      }
+    },
+
     disable: function () {
       //console.log('disable');
       this.$element.prop("disabled", true);
@@ -109,15 +125,15 @@
       this.options.placeholder =
         this.$source.attr("data-placeholder") || this.options.placeholder;
       if (this.options.appendId !== "undefined") {
-        this.$element.attr(
-          "id",
-          this.$source.attr("id") + this.options.appendId
-        );
+        // keep the source id on the input, otherwise the label (which refers to it by id) will be lost
+        this.$element.attr("id", this.$source.attr("id"));
+        this.$source.attr("id", this.$source.attr("id") + this.options.appendId);
         daComboBoxes[this.$element.attr("id")] = this;
       }
       this.$menu.attr("id", this.$element.attr("id") + "menu");
       // Set aria-controls now that things have ids
       this.$element.attr("aria-controls", this.$menu.attr("id"));
+      this.$element.attr("aria-owns", this.$menu.attr("id"));
       this.$button.attr("aria-controls", this.$menu.attr("id"));
       this.$button.attr("aria-label", this.$source.attr("aria-label"));
       this.$button.attr("aria-labelledby", this.$source.attr("aria-labelledby"));
@@ -178,7 +194,7 @@
         })
         .show();
 
-      $(".dropdown-menu").on("mousedown", $.proxy(this.scrollSafety, this));
+      this.hidden = false;
 
       this.$element.attr("aria-expanded", true);
       this.$button.attr("aria-expanded", true);
@@ -190,7 +206,7 @@
     hide: function () {
       //console.log('hide');
       this.$menu.hide();
-      $(".dropdown-menu").off("mousedown", $.proxy(this.scrollSafety, this));
+      this.hidden = true;
       this.$element.on("blur", $.proxy(this.blur, this));
       this.$element.attr("aria-expanded", false);
       this.$button.attr("aria-expanded", false);
@@ -204,8 +220,7 @@
       this.process(this.source);
     },
 
-    process: function (items) {
-      //console.log("process");
+    process: function(items) {
       var that = this;
 
       items = $.grep(items, function (item) {
@@ -219,22 +234,6 @@
       }
 
       return this.render(items.slice(0, this.options.items)).show();
-    },
-
-    template: function () {
-      //console.log('template');
-      if (this.options.bsVersion == "2") {
-        return '<div class="combobox-container"><input type="hidden" /> ' +
-            '<div class="input-append"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
-            '<span class="add-on dropdown-toggle"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>';
-      } else {
-        return '<div class="combobox-container"> <input type="hidden" /> ' +
-            '<div class="input-group"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
-            '<div class="input-group-append"> ' +
-              '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-expanded="false" aria-controls="id_controls">' +
-                '<span class="fas fa-caret-down"></span><span class="fas fa-xmark"></span>' +
-              '</button> </div> </div> </div>';
-      }
     },
 
     matcher: function (item) {
@@ -331,7 +330,7 @@
       if (!this.disabled) {
         if (this.$container.hasClass("combobox-selected")) {
           this.clearTarget();
-          this.triggerChange();
+          this.$source.trigger("change");
           this.clearElement();
           this.$element.attr("aria-expanded", false);
           this.$button.attr("aria-expanded", false);
@@ -355,12 +354,6 @@
       return false;
     },
 
-    scrollSafety: function (e) {
-      //console.log("scrollsafety");
-      if (e.target.tagName == "UL") {
-        this.$element.off("blur");
-      }
-    },
     clearElement: function () {
       //console.log('clearElement');
       this.$element.val("").focus();
@@ -372,11 +365,6 @@
       this.$target.val("");
       this.$container.removeClass("combobox-selected");
       this.selected = false;
-    },
-
-    triggerChange: function () {
-      //console.log('triggerChange');
-      this.$source.trigger("change");
     },
 
     refresh: function () {
@@ -401,7 +389,8 @@
       this.$menu
         .on("click", $.proxy(this.click, this))
         .on("mouseenter", "li", $.proxy(this.mouseenter, this))
-        .on("mouseleave", "li", $.proxy(this.mouseleave, this));
+        .on("mouseleave", "li", $.proxy(this.mouseleave, this))
+        .on("mousedown", "li", $.proxy(this.mousedown, this));
 
       this.$button.on("click touchend", $.proxy(this.toggle, this));
     },
@@ -504,11 +493,11 @@
           if (!this.shown) {
             return;
           }
-          if (this.selected) {
+          if (!this.selected) {
             this.select();
           } else {
             var val = this.$element.val();
-            var opts = this.$menu.find("a");
+            var opts = this.$menu.find("li");
             var n = opts.length;
             for (var i = 0; i < n; ++i) {
               if ($(opts[i]).attr("data-value") == val) {
@@ -549,7 +538,7 @@
       this.focused = false;
       var val = this.$element.val();
       if (this.shown) {
-        var opts = this.$menu.find("a");
+        var opts = this.$menu.find("li");
         var n = opts.length;
         for (var i = 0; i < n; ++i) {
           if ($(opts[i]).attr("data-value") == val) {
@@ -599,6 +588,17 @@
       //console.log('mouseenter');
       this.mousedover = true;
       this.setActiveDescendant(e);
+    },
+
+    mousedown: function (e) {
+      this.mousedover = true;
+      this.setActiveDescendant(e);
+      this.mousedover = false;
+      if (!this.hidden) {
+        if (e.target.tagName == "UL") {
+          this.$element.off("blur");
+        }
+      }
     },
 
     mouseleave: function (e) {
