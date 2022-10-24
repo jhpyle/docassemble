@@ -19734,8 +19734,8 @@ def playground_packages():
         return redirect(url_for('playground_packages', project=current_project))
     if not is_new:
         pkgname = 'docassemble.' + the_file
-        pypi_info = pypi_status(pkgname)
         if can_publish_to_pypi:
+            pypi_info = pypi_status(pkgname)
             if pypi_info['error']:
                 pypi_message = word("Unable to determine if the package is published on PyPI.")
             else:
@@ -19761,7 +19761,7 @@ def playground_packages():
                     old_filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + form.original_file_name.data)
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
-                if form.pypi.data and pypi_version is not None:
+                if can_publish_to_pypi and form.pypi.data and pypi_version is not None:
                     if not new_info['version']:
                         new_info['version'] = pypi_version
                     while 'releases' in pypi_info['info'] and new_info['version'] in pypi_info['info']['releases'].keys():
