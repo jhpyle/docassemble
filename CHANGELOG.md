@@ -2,6 +2,12 @@
 
 ## [1.4.13] - 2022-10-
 
+### Changed
+- The `include_internal` option of `store_variables_snapshot()`,
+  `variables_as_json()`, and `all_variables()` now controls whether
+  the `nav` variable is included in the output.
+- The `authorized registration domains` Configuration directive now
+  applies to social login methods as well as username/password login.
 ### Fixed
 - Problem with the exim4 mail configuration.
 

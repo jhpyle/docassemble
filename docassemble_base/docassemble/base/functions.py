@@ -4694,7 +4694,7 @@ def dict_as_json(user_dict, include_internal=False):
 def serializable_dict(user_dict, include_internal=False):
     result_dict = {}
     for key, data in user_dict.items():
-        if key == '_internal' and not include_internal:
+        if key in ('_internal', 'nav') and not include_internal:
             continue
         if key == '__builtins__':
             continue

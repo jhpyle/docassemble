@@ -2146,6 +2146,13 @@ def locale_format_string(the_value):
     return re.sub(r'[^0-9]$', '', locale.format_string('%.10f', float(the_value), grouping=False).rstrip('0'))
 
 
+def double_to_single_newline(text):
+    text = re.sub(r'\n\n', 'XXXNEWLINEXXX', text)
+    text = text.replace('\n', ' ')
+    text = text.replace('XXXNEWLINEXXX', '\n')
+    return text
+
+
 def input_for(status, field, wide=False, embedded=False, floating_label=None):
     output = str()
     if field.number in status.defaults:
@@ -2174,7 +2181,10 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
         defaultvalue_set = False
         defaultvalue = None
     if field.number in status.hints:
-        placeholdertext = ' placeholder=' + fix_double_quote(status.hints[field.number].replace('\n', ' '))
+        if hasattr(field, 'inputtype') and field.inputtype == 'area':
+            placeholdertext = ' placeholder=' + fix_double_quote(double_to_single_newline(status.hints[field.number]))
+        else:
+            placeholdertext = ' placeholder=' + fix_double_quote(status.hints[field.number].replace('\n', ' '))
     elif floating_label is not None:
         placeholdertext = ' placeholder=' + fix_double_quote(floating_label.replace('\n', ' '))
     else:

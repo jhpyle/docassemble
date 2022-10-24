@@ -4580,6 +4580,19 @@ class FakeRole:
     pass
 
 
+def verify_email(email):
+    if len(daconfig['authorized registration domains']) == 0:
+        ok = False
+        email = str(email).lower().strip()
+        for domain in daconfig['authorized registration domains']:
+            if email.endswith(domain):
+                ok = True
+                break
+        if not ok:
+            return False
+    return True
+
+
 class OAuthSignIn:
     providers = {}
     providers_obtained = False
@@ -4986,6 +4999,9 @@ def oauth_callback(provider):
     #     logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
     oauth = OAuthSignIn.get_provider(provider)
     social_id, username, email, name_data = oauth.callback()
+    if not verify_email(email):
+        flash(word('E-mail addresses with this domain are not authorized to register for accounts on this system.'), 'error')
+        return redirect(url_for('user.login'))
     if social_id is None:
         flash(word('Authentication failed.'), 'error')
         return redirect(url_for('interview_list', from_login='1'))
