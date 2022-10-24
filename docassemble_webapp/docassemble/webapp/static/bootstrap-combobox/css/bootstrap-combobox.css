@@ -29,3 +29,7 @@
 .control-group.success .combobox-container .fa-caret-down {
   border-top-color: #468847;
 }
+
+.combobox-container button[aria-expanded="true"] svg {
+  transform: rotate(180deg) translate(0, -1px);
+}
