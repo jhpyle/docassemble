@@ -603,10 +603,12 @@ answers, call it using `all_variables(simplify=False,
 make_copy=True)`.
 
 **docassemble** keeps a dictionary called `_internal` in the interview
-variables and uses it for a variety of internal purposes.  By default,
-it is not included in the output of [`all_variables()`].  If you want
-`_internal` to be included, set the optional keyword parameter
-`include_internal` to `True`.
+variables and uses it for a variety of internal purposes. There is
+also an object called `nav` that is used for tracking which sections
+of an interview the user has visited.  By default, `_internal` and
+`nav` are not included in the output of [`all_variables()`].  If you
+want `_internal` and `nav` to be included, set the optional keyword
+parameter `include_internal` to `True`.
 
 The [`all_variables()`] function also has three special behaviors:
 
@@ -796,7 +798,7 @@ The `variables_as_json()` function simplifies the interview variables
 in the same way that the [`all_variables()`] function does.  Like
 [`all_variables()`], it takes an optional keyword argument
 `include_internal`, which is `False` by default, but when `True`,
-includes internal variables in the output.
+includes the internal variables `_internal` and `nav` in the output.
 
 ## <a name="command"></a>command()
 
@@ -7139,9 +7141,12 @@ By default, `store_variables_snapshot()` does not save the "internal"
 portion of the interview answers; this is a data structure under the
 `_internal` key that **docassemble** uses internally.  (The data
 structure is not documented and the design may change at any time, but
-you are welcome to use it at your own risk.)  If you want to include
-the `_internal` data in the [JSON] snapshot, call
-`store_variables_snapshot()` with `include_internal=True`.
+you are welcome to use it at your own risk.)
+`store_variables_snapshot()` also does not store the `nav` variable,
+which stores information about which sections have been visited.  If
+you want to include the `_internal` data and the `nav` varialbe in the
+[JSON] snapshot, call `store_variables_snapshot()` with
+`include_internal=True`.
 
 `store_variables_snapshot()` can store something other than the
 interview answers if you set the optional keyword parameter `data`.
