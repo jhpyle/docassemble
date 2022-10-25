@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.13](https://github.com/jhpyle/docassemble/releases/tag/v1.4.13) - 2022-10-25
+
+
+### Fixed
+- Additional fix to allow the use of `table prefix` in `db`.
+
 ## [1.4.13](https://github.com/jhpyle/docassemble/releases/tag/v1.4.13) - 2022-10-24
 
 
