@@ -379,7 +379,7 @@ def set_combobox(context, value):
     togglers[0].click()
     time.sleep(0.5)
     found = False
-    for elem in context.browser.find_elements_by_css_selector("div.combobox-container a.dropdown-item"):
+    for elem in context.browser.find_elements_by_css_selector("div.combobox-container .dropdown-item"):
         if elem.text == value:
             found = True
             elem.click()
@@ -400,7 +400,7 @@ def set_combobox_text(context, value):
 @step(r'I select "(?P<value>[^"]+)" from the combobox dropdown')
 def select_combobox_option(context, value):
     found = False
-    for elem in context.browser.find_elements_by_css_selector("div.combobox-container a.dropdown-item"):
+    for elem in context.browser.find_elements_by_css_selector("div.combobox-container .dropdown-item"):
         if elem.text == value:
             found = True
             elem.click()

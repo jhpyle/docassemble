@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.4.13] - 2022-10-
+## [1.4.13] - 2022-10-24
 
 ### Changed
 - The `include_internal` option of `store_variables_snapshot()`,
@@ -8,8 +8,10 @@
   the `nav` variable is included in the output.
 - The `authorized registration domains` Configuration directive now
   applies to social login methods as well as username/password login.
+- Increased accessibility of the `datatype: combobox` interface.
 ### Fixed
 - Problem with the exim4 mail configuration.
+- Problem when `table prefix` in `db` was used.
 
 ## [1.4.12] - 2022-10-02
 
