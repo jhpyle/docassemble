@@ -9058,13 +9058,6 @@ Feature: Example interviews
     And I click the button "No"
     Then I should see the phrase "Thanks for that information."
 
-  Scenario: Test the interview "Interview answers snapshot"
-    Given I start the interview "docassemble.demo:data/questions/examples/snapshot.yml"
-    Then I should see the phrase "What is your favorite fruit?"
-    And I set "Fruit" to "apple"
-    And I click the button "Continue"
-    Then I should see the phrase "Here is a summary of fruits and how many people like them."
-
   Scenario: Test the interview "Stage one"
     Given I start the interview "docassemble.demo:data/questions/examples/stage-one.yml"
     Then I should see the phrase "What is your name?"

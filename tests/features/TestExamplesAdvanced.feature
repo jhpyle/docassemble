@@ -294,3 +294,10 @@ Feature: Example interviews
     And I click the link "Avance"
     And I wait 1 second
     Then I should see the phrase "This customer would like to order fries and a Coke."
+
+  Scenario: Test the interview "Interview answers snapshot"
+    Given I start the interview "docassemble.demo:data/questions/examples/snapshot.yml"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I set "Fruit" to "apple"
+    And I click the button "Continue"
+    Then I should see the phrase "Here is a summary of fruits and how many people like them."
