@@ -89,6 +89,7 @@ install_requires = [
     "docxcompose==1.3.4",
     "docxtpl==0.16.3",
     "et-xmlfile==1.1.0",
+    "Flask-Mail==0.9.1",
     "future==0.18.2",
     "geographiclib==1.52",
     "geopy==2.2.0",
