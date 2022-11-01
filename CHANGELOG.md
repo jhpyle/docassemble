@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.16] - 2022-11-01
+
+### Fixed
+- Issue with alembic not running properly during restart.
+
 ## [1.4.15] - 2022-10-31
 
 ### Fixed
