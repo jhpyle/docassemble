@@ -1263,8 +1263,8 @@ forms in a `pdf template file` can be edited by the user; the fill-in
 form boxes will still exist in the resulting document.
 
 If you want to prevent users from editing the forms created through
-`pdf template file`, set the `editable` specifier to `False`.  For
-example:
+`pdf template file`, set the `editable` specifier to `False` (or a
+[Python expression] that evaluates to `False`).  For example:
 
 {% include side-by-side.html demo="pdf-fill-not-editable" %}
 
@@ -2153,3 +2153,4 @@ interview, see the [`cache documents` feature].
 [`Legal-Template.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.yml
 [`Legal-Template.rtf`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.rtf
 [`Legal-Template.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.docx
+[Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
