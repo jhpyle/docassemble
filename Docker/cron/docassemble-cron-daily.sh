@@ -45,8 +45,8 @@ if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [ "${USEHTTPS:-false}" == "true" ] && 
     if [ ! -f /etc/ssl/docassemble/exim.crt ] && [ ! -f /etc/ssl/docassemble/exim.key ]; then
 	cp "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" /etc/exim4/exim.crt
 	cp "/etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem" /etc/exim4/exim.key
-	chown root.Debian-exim /etc/exim4/exim.crt
-	chown root.Debian-exim /etc/exim4/exim.key
+	chown root:Debian-exim /etc/exim4/exim.crt
+	chown root:Debian-exim /etc/exim4/exim.key
 	chmod 640 /etc/exim4/exim.crt
 	chmod 640 /etc/exim4/exim.key
 	supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 stop exim4
@@ -117,7 +117,7 @@ fi
 # If this container is running a SQL server, back up PostgreSQL
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$DBTYPE" == "postgresql" ]; then
     PGBACKUPDIR=`mktemp -d`
-    chown postgres.postgres "${PGBACKUPDIR}"
+    chown postgres:postgres "${PGBACKUPDIR}"
     su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	s4cmd dsync "$PGBACKUPDIR" "s3://${S3BUCKET}/postgres"

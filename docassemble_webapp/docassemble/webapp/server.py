@@ -4581,7 +4581,7 @@ class FakeRole:
 
 
 def verify_email(email):
-    if len(daconfig['authorized registration domains']) == 0:
+    if len(daconfig['authorized registration domains']) != 0:
         ok = False
         email = str(email).lower().strip()
         for domain in daconfig['authorized registration domains']:
