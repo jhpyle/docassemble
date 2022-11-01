@@ -3,7 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
-## [1.4.13](https://github.com/jhpyle/docassemble/releases/tag/v1.4.13) - 2022-10-25
+## [1.4.15](https://github.com/jhpyle/docassemble/releases/tag/v1.4.15) - 2022-10-31
+
+
+### Fixed
+- Problem with `authorized registration domains`.
+
+## [1.4.14](https://github.com/jhpyle/docassemble/releases/tag/v1.4.14) - 2022-10-25
 
 
 ### Fixed
