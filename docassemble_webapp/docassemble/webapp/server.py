@@ -7792,8 +7792,8 @@ def index(action_argument=None, refer=None):
                                     elements.append("docassemble.base.util.DAFile(" + repr(file_field_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
                                 the_file_list = "docassemble.base.util.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
-                                if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field]:
-                                    the_field = the_question.fields[field_numbers[orig_file_field]]
+                                if var_to_store in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[var_to_store]:
+                                    the_field = the_question.fields[field_numbers[var_to_store]]
                                     add_permissions_for_field(the_field, interview_status, files_to_process)
                                     if hasattr(the_field, 'validate'):
                                         the_key = orig_file_field
@@ -7854,14 +7854,15 @@ def index(action_argument=None, refer=None):
             for orig_file_field in file_fields:
                 if orig_file_field not in raw_visible_fields:
                     continue
-                if orig_file_field in known_varnames:
-                    orig_file_field = known_varnames[orig_file_field]
-                if orig_file_field not in visible_fields:
+                file_field_to_use = orig_file_field
+                if file_field_to_use in known_varnames:
+                    file_field_to_use = known_varnames[orig_file_field]
+                if file_field_to_use not in visible_fields:
                     empty_file_vars.add(orig_file_field)
                 try:
-                    file_field = from_safeid(orig_file_field)
+                    file_field = from_safeid(file_field_to_use)
                 except:
-                    error_messages.append(("error", "Error: Invalid file_field: " + str(orig_file_field)))
+                    error_messages.append(("error", "Error: Invalid file_field: " + str(file_field_to_use)))
                     break
                 if STRICT_MODE and file_field not in authorized_fields:
                     raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
@@ -7931,12 +7932,12 @@ def index(action_argument=None, refer=None):
                                     elements.append("docassemble.base.util.DAFile(" + repr(file_field_tr + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
                                 the_file_list = "docassemble.base.util.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
-                                if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field]:
-                                    the_field = the_question.fields[field_numbers[orig_file_field]]
+                                if var_to_store in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[var_to_store]:
+                                    the_field = the_question.fields[field_numbers[var_to_store]]
                                     add_permissions_for_field(the_field, interview_status, files_to_process)
-                                    if hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
+                                    if hasattr(the_question.fields[field_numbers[var_to_store]], 'validate'):
                                         the_key = orig_file_field
-                                        the_func = eval(the_question.fields[field_numbers[orig_file_field]].validate['compute'], user_dict)
+                                        the_func = eval(the_question.fields[field_numbers[var_to_store]].validate['compute'], user_dict)
                                         try:
                                             the_result = the_func(eval(the_file_list))
                                             if not the_result:
@@ -8042,7 +8043,7 @@ def index(action_argument=None, refer=None):
             #     raise DAError("The variable " + repr(collect['list']) + " was not in the allowed fields, which were " + repr(authorized_fields))
             # if not illegal_variable_name(collect['list']):
             if collect['function'] == 'add':
-                add_action_to_stack(interview_status, user_dict, '_da_list_add', {'list': list_collect_list})
+                add_action_to_stack(interview_status, user_dict, '_da_list_add', {'list': list_collect_list, 'complete': False})
         if list_collect_list is not None:
             exec(list_collect_list + '._disallow_appending()', user_dict)
         if the_question is not None and the_question.validation_code:

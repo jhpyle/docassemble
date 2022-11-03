@@ -4041,6 +4041,7 @@ def process_action():
     if the_action == '_da_list_add' and 'action_list' in this_thread.current_info:
         need_item = False
         the_list = this_thread.current_info['action_list']
+        do_complete = this_thread.current_info['arguments'].get('complete', True)
         if hasattr(the_list, 'gathered') and the_list.gathered:
             the_list.was_gathered = True
             the_list.reset_gathered()
@@ -4082,12 +4083,13 @@ def process_action():
             this_thread.internal['event_stack'][unique_id] = []
         if len(this_thread.internal['event_stack'][unique_id]) > 0 and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['list'] == the_list.instanceName:
             this_thread.internal['event_stack'][unique_id].pop(0)
-        the_action = dict(action='_da_list_complete', arguments=dict(list=the_list.instanceName))
-        if need_item:
-            this_thread.internal['event_stack'][unique_id].insert(1, the_action)
-        else:
-            this_thread.internal['event_stack'][unique_id].insert(0, the_action)
-            this_thread.current_info.update(the_action)
+        if do_complete:
+            the_action = dict(action='_da_list_complete', arguments=dict(list=the_list.instanceName))
+            if need_item:
+                this_thread.internal['event_stack'][unique_id].insert(1, the_action)
+            else:
+                this_thread.internal['event_stack'][unique_id].insert(0, the_action)
+                this_thread.current_info.update(the_action)
         raise ForcedReRun()
         # the_list._validate(the_list.object_type, the_list.complete_attribute)
     if the_action == '_da_dict_add' and 'action_dict' in this_thread.current_info:

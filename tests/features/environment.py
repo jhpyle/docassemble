@@ -9,7 +9,6 @@ default_path = "http://localhost"
 # default_path = "https://demo.docassemble.org"
 default_wait_seconds = 0
 use_firefox = False
-use_phantomjs = False
 use_headless_chrome = True
 
 
@@ -62,8 +61,6 @@ def before_all(context):
         context.browser.set_window_size(450, 1200)
         context.browser.set_window_position(0, 0)
         # context.browser.maximize_window()
-    elif use_phantomjs:
-        context.browser = MyPhantomJS()
     elif use_headless_chrome:
         context.headless = True
         options = ChromeOptions()
