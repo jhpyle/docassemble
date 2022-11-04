@@ -2,6 +2,9 @@
 
 ## [1.4.17] - 2022-11-03
 
+### Added
+- The `suppress login alerts` Configuration directive.
+
 ### Fixed
 - Changed NGINX configuration so that requests for hostnames other
   than `external hostname` are redirected.

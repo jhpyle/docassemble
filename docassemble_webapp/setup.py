@@ -64,7 +64,7 @@ install_requires = [
     "defusedxml==0.7.1",
     "Deprecated==1.2.13",
     "dnspython==2.2.1",
-    "Docassemble-Flask-User==0.6.27",
+    "Docassemble-Flask-User==0.6.28",
     "Docassemble-Pattern==3.6.5",
     "docassemble-textstat==0.7.2",
     "docassemblekvsession==0.7",

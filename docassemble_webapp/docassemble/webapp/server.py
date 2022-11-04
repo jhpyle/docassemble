@@ -1083,7 +1083,8 @@ def logout():
     logout_user()
     delete_session_info()
     session.clear()
-    flash(word('You have signed out successfully.'), 'success')
+    if next_url.startswith('/') and app.config['FLASH_LOGIN_MESSAGES']:
+        flash(word('You have signed out successfully.'), 'success')
     response = redirect(next_url)
     response.set_cookie('remember_token', '', expires=0)
     response.set_cookie('visitor_secret', '', expires=0)
@@ -5021,6 +5022,7 @@ def oauth_callback(provider):
             user.last_name = re.sub(r'.* ', '', name_data['name'])
         db.session.add(user)
         db.session.commit()
+    session["_flashes"] = []
     login_user(user, remember=False)
     update_last_login(user)
     if 'i' in session:  # TEMPORARY
@@ -8130,6 +8132,7 @@ def index(action_argument=None, refer=None):
         reset_user_dict(user_code, yaml_filename)
         delete_session_for_interview(i=yaml_filename)
         release_lock(user_code, yaml_filename)
+        session["_flashes"] = []
         logmessage("Redirecting because of an exit.")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
@@ -8191,6 +8194,7 @@ def index(action_argument=None, refer=None):
         return response
     if interview_status.question.question_type == "leave":
         release_lock(user_code, yaml_filename)
+        session["_flashes"] = []
         logmessage("Redirecting because of a leave.")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
@@ -8253,6 +8257,7 @@ def index(action_argument=None, refer=None):
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     elif interview_status.question.question_type == "redirect":
         logmessage("Redirecting because of a redirect.")
+        session["_flashes"] = []
         response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
     else:
         response_to_send = None

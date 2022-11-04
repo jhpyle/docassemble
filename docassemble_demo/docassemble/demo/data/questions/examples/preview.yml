@@ -2,7 +2,10 @@ metadata:
   title: Preview
   documentation: "https://docassemble.org/docs/recipes.html#preview"
   example start: 1
-  example end: 2
+  example end: 3
+---
+features:
+  centered: False
 ---
 question: |
   The food section
@@ -10,7 +13,7 @@ right: |
   <div class="da-page-header">
     <h1 class="h3">Preview</h1>
   </div>
-  
+
   [TARGET food_section_text]
 fields:
   - Favorite fruit: favorite_fruit

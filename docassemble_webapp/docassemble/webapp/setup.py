@@ -52,6 +52,7 @@ app.config['USER_ENABLE_LOGIN_WITHOUT_CONFIRM_EMAIL'] = not bool(daconfig.get('c
 app.config['USER_AUTO_LOGIN_AFTER_REGISTER'] = not bool(daconfig.get('confirm registration', False))
 app.config['USER_SHOW_USERNAME_EMAIL_DOES_NOT_EXIST'] = not bool(daconfig.get('confirm registration', False))
 app.config['USER_AUTO_LOGIN_AFTER_RESET_PASSWORD'] = False
+app.config['FLASH_LOGIN_MESSAGES'] = not bool(daconfig.get('suppress login alerts', False))
 app.config['USER_AFTER_FORGOT_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_CHANGE_PASSWORD_ENDPOINT'] = 'after_reset'
 app.config['USER_AFTER_CHANGE_USERNAME_ENDPOINT'] = 'user.login'
