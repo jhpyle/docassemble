@@ -8,8 +8,8 @@
 - The `hidden` `input type` for defining variables that are populated
   by JavaScript.
 ### Fixed
-- The YAML on the Configuration page can now be searched in its entirety using the
-  web browser's search feature.
+- The YAML on the Configuration page can now be searched in its
+  entirety using the web browser's search feature.
 
 ## [1.4.17] - 2022-11-03
 
