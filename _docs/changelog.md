@@ -3,6 +3,20 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.17](https://github.com/jhpyle/docassemble/releases/tag/v1.4.17) - 2022-11-03
+
+
+### Added
+- The `suppress login alerts` Configuration directive.
+
+
+### Fixed
+- Changed NGINX configuration so that requests for hostnames other
+  than `external hostname` are redirected.
+- Changed `list collect` behavior to prevent reaching circularity
+  limit when quantity of items is very large.
+- Issue with validation code on file fields with `show if`.
+
 ## [1.4.16](https://github.com/jhpyle/docassemble/releases/tag/v1.4.16) - 2022-11-01
 
 

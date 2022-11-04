@@ -107,6 +107,9 @@ docker run --env-file=env.list -v dabackup:/usr/share/docassemble/backup -d -p 8
 * Wait five minutes and then visit your **docassemble** server using
   your web browser (e.g., `https://da.foobar.com`).
 * If it doesn't work, check out the [Troubleshooting] section.
+* Click the link in the corner to log in. Log in using
+  "admin@admin.com" as the email and "password" as the password.
+* You will then be asked to change the password.
 
 Note that there are many different cloud providers and domain name
 registrars; [Amazon Lightsail] and [Namecheap] are mentioned here only

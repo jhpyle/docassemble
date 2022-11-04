@@ -2769,6 +2769,17 @@ never need to confirm that user's e-mail.
 Before you enable this feature, make sure you have a working
 [email configuration](#mail).
 
+## <a name="suppress login alerts"></a>Suppressing alerts during login and logout
+
+By default, the Flask-User package flashes an alert saying "You have
+signed in successfully," "You have signed out successfully," and "You
+have registered successfully." To suppress these messages, set
+`suppress login alerts` to true.
+
+{% highlight yaml %}
+suppress login alerts: True
+{% endhighlight %}
+
 ## <a name="ldap login"></a>LDAP login
 
 If you want to connect the **docassemble** login system to a local [LDAP]
