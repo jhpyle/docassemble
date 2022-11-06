@@ -3,6 +3,19 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.18](https://github.com/jhpyle/docassemble/releases/tag/v1.4.18) - 2022-11-06
+
+
+### Added
+- Ability to pass options directly to the Google Places JavaScript API
+  when using `address autocomplete`.
+- The `hidden` `input type` for defining variables that are populated
+  by JavaScript.
+
+### Fixed
+- The YAML on the Configuration page can now be searched in its
+  entirety using the web browser's search feature.
+
 ## [1.4.17](https://github.com/jhpyle/docassemble/releases/tag/v1.4.17) - 2022-11-03
 
 

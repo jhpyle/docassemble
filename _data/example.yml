@@ -219,6 +219,208 @@
       - Zip: defendant.address.zip
         required: False
       - County: defendant.address.county
+"address-autocomplete-cities":
+  "height": !!int |-
+    630
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Enter the name of a city.
+    fields:
+      - name: the_address.name
+        required: False
+        address autocomplete:
+          types:
+            - "(cities)"
+          fields:
+            - address_components
+            - geometry
+      - note: |
+          The following attribute names are Google Place address_components.
+      - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
+        required: False
+      - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
+        required: False
+      - "administrative_area_&#8203;level_3": the_address.administrative_area_level_3
+        required: False
+      - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
+        required: False
+      - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+        required: False
+      - colloquial_area: the_address.colloquial_area
+        required: False
+      - country: the_address.country
+        required: False
+      - locality: the_address.locality
+        required: False
+      - neighborhood: the_address.neighborhood
+        required: False
+      - postal_code: the_address.postal_code
+        required: False
+      - postal_code_prefix: the_address.postal_code_prefix
+        required: False
+      - postal_code_suffix: the_address.postal_code_suffix
+        required: False
+      - postal_town: the_address.postal_town
+        required: False
+      - sublocality: the_address.sublocality
+        required: False
+      - sublocality_level_1: the_address.sublocality_level_1
+        required: False
+      - sublocality_level_2: the_address.sublocality_level_2
+        required: False
+      - sublocality_level_3: the_address.sublocality_level_3
+        required: False
+      - sublocality_level_4: the_address.sublocality_level_4
+        required: False
+      - sublocality_level_5: the_address.sublocality_level_5
+        required: False
+      - note: |
+          The following attribute names are built in to **docassemble**.
+          They have different names than Google Place component names.
+      - city: the_address.city
+        required: False
+      - state: the_address.state
+        required: False
+      - zip: the_address.zip
+        required: False
+      - latitude: the_address.latitude
+        required: False
+      - longitude: the_address.longitude
+        required: False
+"address-autocomplete-establishment":
+  "height": !!int |-
+    630
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Enter the name of a business.
+    fields:
+      - name: the_address.name
+        required: False
+        address autocomplete:
+          types:
+            - establishment
+          fields:
+            - address_components
+            - adr_address
+            - business_status
+            - formatted_address
+            - formatted_phone_number
+            - geometry
+            - icon
+            - international_phone_number
+            - name
+            - place_id
+            - price_level
+            - rating
+            - url
+            - vicinity
+            - website
+      - note: |
+          The following attribute names are Google Place address_components.
+      - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
+        required: False
+      - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
+        required: False
+      - "administrative_area_&#8203;level_3": the_address.administrative_area_level_3
+        required: False
+      - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
+        required: False
+      - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+        required: False
+      - colloquial_area: the_address.colloquial_area
+        required: False
+      - country: the_address.country
+        required: False
+      - floor: the_address.floor
+        required: False
+      - intersection: the_address.intersection
+        required: False
+      - locality: the_address.locality
+        required: False
+      - neighborhood: the_address.neighborhood
+        required: False
+      - post_box: the_address.post_box
+        required: False
+      - postal_code: the_address.postal_code
+        required: False
+      - postal_code_prefix: the_address.postal_code_prefix
+        required: False
+      - postal_code_suffix: the_address.postal_code_suffix
+        required: False
+      - postal_town: the_address.postal_town
+        required: False
+      - premise: the_address.premise
+        required: False
+      - room: the_address.room
+        required: False
+      - route: the_address.route
+        required: False
+      - suite: the_address.suite
+        required: False
+      - street_number: the_address.street_number
+        required: False
+      - sublocality: the_address.sublocality
+        required: False
+      - sublocality_level_1: the_address.sublocality_level_1
+        required: False
+      - sublocality_level_2: the_address.sublocality_level_2
+        required: False
+      - sublocality_level_3: the_address.sublocality_level_3
+        required: False
+      - sublocality_level_4: the_address.sublocality_level_4
+        required: False
+      - sublocality_level_5: the_address.sublocality_level_5
+        required: False
+      - subpremise: the_address.subpremise
+        required: False
+      - note: |
+          The following attribute names are Google Place components other than address_components.
+      - adr_address: the_address.adr_address
+        datatype: raw
+        required: False
+      - business_status: the_address.business_status
+        required: False
+      - formatted_address: the_address.formatted_address
+        required: False
+      - formatted_phone_number: the_address.formatted_phone_number
+        required: False
+      - icon: the_address.icon
+        required: False
+      - international_phone_number: the_address.international_phone_number
+        required: False
+      - place_id: the_address.place_id
+        required: False
+      - price_level: the_address.price_level
+        required: False
+      - rating: the_address.rating
+        required: False
+      - url: the_address.url
+        required: False
+      - vicinity: the_address.vicinity
+        required: False
+      - website: the_address.website
+        required: False
+      - note: |
+          The following attribute names are built in to **docassemble**.
+          They have different names than Google Place component names.
+      - address: the_address.address
+        required: False
+      - unit: the_address.unit
+        required: False
+      - city: the_address.city
+        required: False
+      - state: the_address.state
+        required: False
+      - zip: the_address.zip
+        required: False
+      - latitude: the_address.latitude
+        required: False
+      - longitude: the_address.longitude
+        required: False
 "address-autocomplete-nz":
   "yaml": |-
     question: |
@@ -230,6 +432,172 @@
       - Suburb: defendant.address.sublocality_level_1
       - City: defendant.address.city
       - Postal Code: defendant.address.postal_code
+        required: False
+"address-autocomplete-regions":
+  "height": !!int |-
+    630
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Enter the name of a region.
+    fields:
+      - name: the_address.name
+        required: False
+        address autocomplete:
+          types:
+            - "(regions)"
+          fields:
+            - address_components
+            - geometry
+      - note: |
+          The following attribute names are Google Place address_components.
+      - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
+        required: False
+      - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
+        required: False
+      - "administrative_area_&#8203;level_3": the_address.administrative_area_level_3
+        required: False
+      - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
+        required: False
+      - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+        required: False
+      - colloquial_area: the_address.colloquial_area
+        required: False
+      - country: the_address.country
+        required: False
+      - locality: the_address.locality
+        required: False
+      - neighborhood: the_address.neighborhood
+        required: False
+      - postal_code: the_address.postal_code
+        required: False
+      - postal_code_prefix: the_address.postal_code_prefix
+        required: False
+      - postal_code_suffix: the_address.postal_code_suffix
+        required: False
+      - postal_town: the_address.postal_town
+        required: False
+      - sublocality: the_address.sublocality
+        required: False
+      - sublocality_level_1: the_address.sublocality_level_1
+        required: False
+      - sublocality_level_2: the_address.sublocality_level_2
+        required: False
+      - sublocality_level_3: the_address.sublocality_level_3
+        required: False
+      - sublocality_level_4: the_address.sublocality_level_4
+        required: False
+      - sublocality_level_5: the_address.sublocality_level_5
+        required: False
+      - note: |
+          The following attribute names are built in to **docassemble**.
+          They have different names than Google Place component names.
+      - city: the_address.city
+        required: False
+      - state: the_address.state
+        required: False
+      - zip: the_address.zip
+        required: False
+      - latitude: the_address.latitude
+        required: False
+      - longitude: the_address.longitude
+        required: False
+"address-autocomplete-specific":
+  "height": !!int |-
+    615
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Enter the name of a dentist or doctor.
+    fields:
+      - name: the_address.name
+        required: False
+        address autocomplete:
+          types:
+            - dentist
+            - doctor
+          fields:
+            - address_components
+            - formatted_phone_number
+            - website
+      - note: |
+          The following attribute names are Google Place address_components.
+      - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
+        required: False
+      - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
+        required: False
+      - "administrative_area_&#8203;level_3": the_address.administrative_area_level_3
+        required: False
+      - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
+        required: False
+      - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+        required: False
+      - colloquial_area: the_address.colloquial_area
+        required: False
+      - country: the_address.country
+        required: False
+      - floor: the_address.floor
+        required: False
+      - intersection: the_address.intersection
+        required: False
+      - locality: the_address.locality
+        required: False
+      - neighborhood: the_address.neighborhood
+        required: False
+      - post_box: the_address.post_box
+        required: False
+      - postal_code: the_address.postal_code
+        required: False
+      - postal_code_prefix: the_address.postal_code_prefix
+        required: False
+      - postal_code_suffix: the_address.postal_code_suffix
+        required: False
+      - postal_town: the_address.postal_town
+        required: False
+      - premise: the_address.premise
+        required: False
+      - room: the_address.room
+        required: False
+      - route: the_address.route
+        required: False
+      - suite: the_address.suite
+        required: False
+      - street_number: the_address.street_number
+        required: False
+      - sublocality: the_address.sublocality
+        required: False
+      - sublocality_level_1: the_address.sublocality_level_1
+        required: False
+      - sublocality_level_2: the_address.sublocality_level_2
+        required: False
+      - sublocality_level_3: the_address.sublocality_level_3
+        required: False
+      - sublocality_level_4: the_address.sublocality_level_4
+        required: False
+      - sublocality_level_5: the_address.sublocality_level_5
+        required: False
+      - subpremise: the_address.subpremise
+        required: False
+      - note: |
+          The following attribute names are Google Place components other than address_components.
+      - formatted_phone_number: the_address.formatted_phone_number
+        required: False
+      - website: the_address.website
+        required: False
+      - note: |
+          The following attribute names are built in to **docassemble**.
+          They have different names than Google Place component names.
+      - address: the_address.address
+        required: False
+      - unit: the_address.unit
+        required: False
+      - city: the_address.city
+        required: False
+      - state: the_address.state
+        required: False
+      - zip: the_address.zip
         required: False
 "address-autocomplete-test":
   "height": !!int |-
@@ -5550,6 +5918,71 @@
     \ \"[FIELD people[\" + str(index) + \"].name.last].\\n\\n\"\n---\nmandatory: True\n\
     question: |\n  List of people\nsubquestion: |\n  The people include:\n  \n  %\
     \ for person in people:\n  * ${ person }\n  % endfor"
+"fields-hidden":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      What is your favorite fruit?
+    fields:
+      - Fruit: favorite_fruit
+      - field: favorite_vegetable
+        input type: hidden
+        default: turnip
+"fields-hidden-autocomplete":
+  "height": !!int |-
+    446
+  "width": !!int |-
+    488
+  "yaml": |-
+    objects:
+      - doctor: Person
+    ---
+    question: |
+      Who is your doctor?
+    fields:
+      - Name: doctor.address.name
+        address autocomplete:
+          types:
+            - doctor
+          fields:
+            - address_components
+            - geometry
+            - name
+            - place_id
+      - Address: doctor.address.address
+      - Unit: doctor.address.unit
+        required: False
+      - City: doctor.address.city
+      - State: doctor.address.state
+        code: states_list()
+      - Zip: doctor.address.zip
+      - field: doctor.address.place_id
+        input type: hidden
+      - field: doctor.address.latitude
+        datatype: number
+        input type: hidden
+      - field: doctor.address.longitude
+        datatype: number
+        input type: hidden
+    validation code: |
+      if not doctor.address.place_id:
+        validation_error('You need to choose a doctor from the pull-down list.')
+    ---
+    depends on:
+      - doctor.address.name
+    code: |
+      doctor.name.text = doctor.address.name
+    ---
+    mandatory: True
+    question: |
+      The `place_id` of ${ doctor } is
+      `${ doctor.address.place_id }`.
+    subquestion: |
+      The office is located at
+      `${ repr((doctor.address.latitude, doctor.address.longitude)) }`.
 "fields-mc":
   "height": !!int |-
     270
@@ -14152,7 +14585,7 @@
     \  Apple  | 4\n  Orange | 3\n  Pear   | 6"
 "table-markdown-class":
   "height": !!int |-
-    290
+    289
   "width": !!int |-
     488
   "yaml": |-
@@ -16050,7 +16483,7 @@
         datatype: date
 "daglobal":
   "height": !!int |-
-    287
+    293
   "width": !!int |-
     488
   "yaml": "objects:\n  - g: DAGlobal.using(base=the_base, key=the_key)\n  - g.fruits:\
@@ -17028,7 +17461,7 @@
       Thank you for that information.
 "indexdemoquery":
   "height": !!int |-
-    208
+    96
   "width": !!int |-
     488
   "yaml": |-
@@ -18238,17 +18671,18 @@
       % endif
 "preview":
   "height": !!int |-
-    283
+    285
   "width": !!int |-
     488
-  "yaml": "question: |\n  The food section\nright: |\n  <div class=\"da-page-header\"\
-    >\n    <h1 class=\"h3\">Preview</h1>\n  </div>\n  \n  [TARGET food_section_text]\n\
-    fields:\n  - Favorite fruit: favorite_fruit\n  - Favorite vegetable: favorite_vegetable\n\
-    \  - Like mushrooms: likes_mushrooms\n    datatype: yesnoradio\n  - Favorite mushroom:\
-    \ favorite_mushroom\n  - Favorite dessert: favorite_dessert\n    choices:\n  \
-    \    - Pie: pie\n      - Cake: cake\ncheck in: question_food\n---\ntemplate: question_food\n\
-    content: |\n  I am a really big fan of \n  ${ action_argument('favorite_fruit')\
-    \ or \"[BLANK]\" }.\n  With dinner I like to have a side of\n  ${ action_argument('favorite_vegetable')\
+  "yaml": "features:\n  centered: False\n---\nquestion: |\n  The food section\nright:\
+    \ |\n  <div class=\"da-page-header\">\n    <h1 class=\"h3\">Preview</h1>\n  </div>\n\
+    \n  [TARGET food_section_text]\nfields:\n  - Favorite fruit: favorite_fruit\n\
+    \  - Favorite vegetable: favorite_vegetable\n  - Like mushrooms: likes_mushrooms\n\
+    \    datatype: yesnoradio\n  - Favorite mushroom: favorite_mushroom\n  - Favorite\
+    \ dessert: favorite_dessert\n    choices:\n      - Pie: pie\n      - Cake: cake\n\
+    check in: question_food\n---\ntemplate: question_food\ncontent: |\n  I am a really\
+    \ big fan of \n  ${ action_argument('favorite_fruit') or \"[BLANK]\" }.\n  With\
+    \ dinner I like to have a side of\n  ${ action_argument('favorite_vegetable')\
     \ or \"[BLANK]\" }.\n  % if action_argument('likes_mushrooms') == 'True':\n  And\
     \ I usually can't resist adding sauteed \n  ${ action_argument('favorite_mushroom')\
     \ or \"[BLANK]\" }\n  to my\n  ${ action_argument('favorite_vegetable') or \"\

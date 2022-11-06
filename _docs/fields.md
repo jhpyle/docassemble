@@ -398,10 +398,11 @@ stored, and use [`input type`] to indicate the type of user interface
 to use. The possible values of [`input type`] are:
 
 * [`area`](#area)
-* [`dropdown`](#select) (the default)
+* [`dropdown`](#select)
 * [`radio`](#radio)
 * [`combobox`](#combobox)
 * [`ajax`](#ajax)
+* [`hidden`](#hidden)
 
 The following subsections describe the available [`datatype`]s and
 [`input type`]s that you can assign to a field within [`fields`].
@@ -1095,6 +1096,32 @@ that is "trained" to classify user input.
 
 For more information about how to use machine learning variables, see
 the [machine learning section].
+
+## <a name="hidden"></a>Hidden field
+
+`input type: hidden` results in an invisible field that can only be
+changed from its default value by [JavaScript].
+
+{% include side-by-side.html demo="fields-hidden" %}
+
+This can be useful if you want fields to be populated by the [address
+autocomplete] feature but you do not want the fields to be shown to
+the user.
+
+If you think you need to use `input type: hidden`, but you are not
+using the [address autocomplete] feature and you have not written your
+own [JavaScript] code to populate the field, then you most likely
+should not use `input type: hidden`, and should perhaps use a [`code`]
+block instead. The `input type: hidden` feature exists solely for
+interacting with [JavaScript] and is not part of **docassemble**'s
+[logic system].
+
+No browser-based input validation is performed on a field with `input
+type: hidden`. If you need input validation on a `input type: hidden`
+field, use [`validation code`]. An error message cannot be displayed
+next to a hidden field.
+
+{% include side-by-side.html demo="fields-hidden-autocomplete" %}
 
 ## <a name="raw"></a><a name="raw"></a>Raw data
 
@@ -2170,7 +2197,7 @@ feature, modify the street address (`.address`) field by setting
 {% include side-by-side.html demo="address-autocomplete" %}
 
 You can set `address autocomplete` to `True`, `False`, or a Python
-expression.
+expression that returns `True` or `False`.
 
 For more information on using this feature, see the documentation for
 the [`Address`] object.
@@ -2180,6 +2207,72 @@ types.  Here is an example that illustrates all of the possible
 attributes of the [`Address`] object that can be set by [Place Autocomplete].
 
 {% include side-by-side.html demo="address-autocomplete-test" %}
+
+### <a name="address autocomplete advanced"></a>Advanced usage
+
+If you want to use additional features of the [Place Autocomplete]
+JavaScript API that are not, you can set `address autocomplete` to a
+dictionary of options that will be passed directly to the [Place
+Autocomplete] API.
+
+You will need to set the `types` and `fields` items within the
+dictionary to values that the [Place Autocomplete] API considers
+valid. Consult the API documentation for the list of valid [types] and
+[fields]. **docassemble** will pass the dictionary of options directly
+to the JavaScript for the [Place Autocomplete] API without checking if
+the options are valid. You need to monitor the JavaScript console and
+consult Google's documentation if you do not get valid results.
+
+The following example demonstrates conducting a query on
+"establishments" of all types.
+
+{% include side-by-side.html demo="address-autocomplete-establishment" %}
+
+Note that there are some [fields] that the API returns, such as
+`open_hours`, that **docassemble** will not process. The above example
+demonstrates all of the [fields] that **docassemble** is capable of
+populating. Specifying the `geometry` field allows the `latitude` and
+`longitude` fields to be populated. Specifying the
+`address_components` field allows the basic address fields to be
+populated.
+
+Note that in the above example, `address autocomplete` is attached to
+the `name` attribute of the `Address` rather than the `address`
+attribute. You can attach `address autocomplete` to any text field,
+whether or not it corresponds to a field that is re-written by
+[JavaScript]. However, you must attach `address autocomplete` to an
+attribute of the object whose attributes you wish to populate
+(typically this is an `Address` object).
+
+Setting `address autocomplete` to `True` passes the following options
+to the [Place Autocomplete] API:
+
+{% highlight yaml %}
+types:
+  - address
+fields:
+  - address_components
+{% endhighlight %}
+
+The following example demonstrates conducting a query on
+establishments of particular types.
+
+{% include side-by-side.html demo="address-autocomplete-specific" %}
+
+The following example demonstrates using the `(cities)` type.
+
+{% include side-by-side.html demo="address-autocomplete-cities" %}
+
+The following example demonstrates using the `(regions)` type.
+
+{% include side-by-side.html demo="address-autocomplete-regions" %}
+
+Instead of specifying the dictionary of options in YAML, you can set
+`address autocomplete` to a Python expression that returns a
+dictionary of options.
+
+Note that API calls to the [Place Autocomplete] API are more expensive
+depending on the type of search done and the fields that are returned.
 
 ## <a name="continue button field"></a><a name="field"></a>Setting a variable with the Continue button
 
@@ -2781,12 +2874,12 @@ reliable answer.  For example, you `household_size_int` instead of
 
 Since it is better for variables to be set to their natural types
 rather than as the artificial object `DACatchAll`, you will probably
-want to use [`validation code`](#validation code) to overwrite the
-`DACatchAll` object with a different value.  The example above does
-this by using the [`define()`] function, obtaining the name of the
-variable from the `instanceName`.  Thus, at the end of the interview,
-`user_name` is a string, `salary` is a floating-point number, and
-there are no `DACatchAll` objects.
+want to use [`validation code`] to overwrite the `DACatchAll` object
+with a different value.  The example above does this by using the
+[`define()`] function, obtaining the name of the variable from the
+`instanceName`.  Thus, at the end of the interview, `user_name` is a
+string, `salary` is a floating-point number, and there are no
+`DACatchAll` objects.
 
 It is possible to use `validation code` to try to transform data types
 once you know what input the user has provided.  For example, if the
@@ -3311,3 +3404,8 @@ why this needs to be done manually as opposed to automatically:
 [Social Security number]: https://en.wikipedia.org/wiki/Social_Security_number
 [`custom datatypes to load`]: {{ site.baseurl }}/docs/initial.html#custom datatypes to load
 [floating labels]: https://getbootstrap.com/docs/5.2/forms/floating-labels/
+[fields]: https://developers.google.com/maps/documentation/javascript/reference/places-service#PlaceResult
+[types]: https://developers.google.com/maps/documentation/javascript/supported_types
+[address autocomplete]: #address autocomplete
+[logic system]: {{ site.baseurl }}/docs/logic.html
+[`validation code`]: #validation code
