@@ -1,0 +1,53 @@
+metadata:
+  title: Address autocomplete with hidden field
+  short title: Autocomplete
+  example start: 1
+  example end: 4
+  documentation: "https://docassemble.org/docs/fields.html#hidden"
+---
+objects:
+  - doctor: Person
+---
+question: |
+  Who is your doctor?
+fields:
+  - Name: doctor.address.name
+    address autocomplete:
+      types:
+        - doctor
+      fields:
+        - address_components
+        - geometry
+        - name
+        - place_id
+  - Address: doctor.address.address
+  - Unit: doctor.address.unit
+    required: False
+  - City: doctor.address.city
+  - State: doctor.address.state
+    code: states_list()
+  - Zip: doctor.address.zip
+  - field: doctor.address.place_id
+    input type: hidden
+  - field: doctor.address.latitude
+    datatype: number
+    input type: hidden
+  - field: doctor.address.longitude
+    datatype: number
+    input type: hidden
+validation code: |
+  if not doctor.address.place_id:
+    validation_error('You need to choose a doctor from the pull-down list.')
+---
+depends on:
+  - doctor.address.name
+code: |
+  doctor.name.text = doctor.address.name
+---
+mandatory: True
+question: |
+  The `place_id` of ${ doctor } is
+  `${ doctor.address.place_id }`.
+subquestion: |
+  The office is located at
+  `${ repr((doctor.address.latitude, doctor.address.longitude)) }`.

@@ -330,7 +330,7 @@ function isCanvasSupported() {
 
 var daAutocomplete = Object();
 
-function daInitAutocomplete(ids) {
+function daInitAutocomplete(info) {
   var timePeriod = 0;
   try {
     google;
@@ -338,15 +338,13 @@ function daInitAutocomplete(ids) {
     timePeriod = 1000;
   }
   setTimeout(function () {
-    for (var i = 0; i < ids.length; ++i) {
-      var id = ids[i];
+    for (var i = 0; i < info.length; ++i) {
+      var id = info[i][0];
+      var opts = info[i][1];
       daAutocomplete[id] = new google.maps.places.Autocomplete(
         document.getElementById(id),
-        {
-          types: ["address"],
-        }
+        opts
       );
-      daAutocomplete[id].setFields(["address_components"]);
       google.maps.event.addListener(
         daAutocomplete[id],
         "place_changed",
@@ -445,7 +443,7 @@ function daFillInAddress(origId) {
   } else {
     id = origId;
   }
-  var base_varname = atob(id).replace(/.address$/, "");
+  var base_varname = atob(id).replace(/.[a-zA-Z0-9_]+$/, "");
   base_varname = base_varname.replace(/[\[\]]/g, ".");
   var re = new RegExp("^" + base_varname + "\\.(.*)");
   var componentForm = {
@@ -597,6 +595,129 @@ function daFillInAddress(origId) {
       document.getElementById(id_for_part["city"]).value =
         savedValues["administrative_area_level_3"];
     }
+  }
+  if (
+    place.adr_address &&
+    typeof id_for_part["adr_address"] != "undefined" &&
+    document.getElementById(id_for_part["adr_address"]) != null
+  ) {
+    document.getElementById(id_for_part["adr_address"]).value =
+      place.adr_address;
+  }
+  if (
+    place.business_status &&
+    typeof id_for_part["business_status"] != "undefined" &&
+    document.getElementById(id_for_part["business_status"]) != null
+  ) {
+    document.getElementById(id_for_part["business_status"]).value =
+      place.business_status;
+  }
+  if (
+    place.formatted_address &&
+    typeof id_for_part["formatted_address"] != "undefined" &&
+    document.getElementById(id_for_part["formatted_address"]) != null
+  ) {
+    document.getElementById(id_for_part["formatted_address"]).value =
+      place.formatted_address;
+  }
+  if (
+    place.formatted_phone_number &&
+    typeof id_for_part["formatted_phone_number"] != "undefined" &&
+    document.getElementById(id_for_part["formatted_phone_number"]) != null
+  ) {
+    document.getElementById(id_for_part["formatted_phone_number"]).value =
+      place.formatted_phone_number;
+  }
+  if (place.geometry && place.geometry.location) {
+    if (
+      typeof id_for_part["latitude"] != "undefined" &&
+      document.getElementById(id_for_part["latitude"]) != null
+    ) {
+      document.getElementById(
+        id_for_part["latitude"]
+      ).value = place.geometry.location.lat();
+    }
+    if (
+      typeof id_for_part["longitude"] != "undefined" &&
+      document.getElementById(id_for_part["longitude"]) != null
+    ) {
+      document.getElementById(
+        id_for_part["longitude"]
+      ).value = place.geometry.location.lng();
+    }
+  }
+  if (
+    place.icon &&
+    typeof id_for_part["icon"] != "undefined" &&
+    document.getElementById(id_for_part["icon"]) != null
+  ) {
+    document.getElementById(id_for_part["icon"]).value = place.icon;
+  }
+  if (
+    place.international_phone_number &&
+    typeof id_for_part["international_phone_number"] != "undefined" &&
+    document.getElementById(id_for_part["international_phone_number"]) != null
+  ) {
+    document.getElementById(id_for_part["international_phone_number"]).value =
+      place.international_phone_number;
+  }
+  if (
+    place.name &&
+    typeof id_for_part["name"] != "undefined" &&
+    document.getElementById(id_for_part["name"]) != null
+  ) {
+    document.getElementById(id_for_part["name"]).value = place.name;
+  }
+  if (
+    place.place_id &&
+    typeof id_for_part["place_id"] != "undefined" &&
+    document.getElementById(id_for_part["place_id"]) != null
+  ) {
+    document.getElementById(id_for_part["place_id"]).value = place.place_id;
+  }
+  if (
+    place.price_level &&
+    typeof id_for_part["price_level"] != "undefined" &&
+    document.getElementById(id_for_part["price_level"]) != null
+  ) {
+    document.getElementById(id_for_part["price_level"]).value =
+      place.price_level;
+  }
+  if (
+    place.rating &&
+    typeof id_for_part["rating"] != "undefined" &&
+    document.getElementById(id_for_part["rating"]) != null
+  ) {
+    document.getElementById(id_for_part["rating"]).value = place.rating;
+  }
+  if (
+    place.url &&
+    typeof id_for_part["url"] != "undefined" &&
+    document.getElementById(id_for_part["url"]) != null
+  ) {
+    document.getElementById(id_for_part["url"]).value = place.url;
+  }
+  if (
+    place.utc_offset_minutes &&
+    typeof id_for_part["utc_offset_minutes"] != "undefined" &&
+    document.getElementById(id_for_part["utc_offset_minutes"]) != null
+  ) {
+    document.getElementById(id_for_part["utc_offset_minutes"]).value =
+      place.utc_offset_minutes;
+  }
+  if (
+    place.vicinity &&
+    typeof id_for_part["vicinity"] != "undefined" &&
+    document.getElementById(id_for_part["vicinity"]) != null
+  ) {
+    document.getElementById(id_for_part["vicinity"]).value = place.vicinity;
+  }
+  if (
+    place.website &&
+    typeof id_for_part["website"] != "undefined" &&
+    document.getElementById(id_for_part["website"]) != null
+  ) {
+    document.getElementById(id_for_part["website"]).value = place.website;
   }
   for (var i = 0; i < toChange.length; i++) {
     $(toChange[i]).trigger("change");

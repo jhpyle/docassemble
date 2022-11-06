@@ -1,0 +1,19 @@
+metadata:
+  title: Hidden field
+  short title: Hidden
+  documentation: "https://docassemble.org/docs/fields.html#fields hidden"
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+  - field: favorite_vegetable
+    input type: hidden
+    default: turnip
+---
+mandatory: True
+question: |
+  Your favorite fruit is 
+  ${ favorite_fruit } 
+  and your favorite vegetable is
+  ${ favorite_vegetable }.
