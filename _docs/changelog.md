@@ -3,6 +3,21 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.19](https://github.com/jhpyle/docassemble/releases/tag/v1.4.19) - 2022-11-13
+
+
+### Added
+- The `wide side by side` directive under `features`.
+
+### Changed
+- Better example code for running Alembic from a package that uses
+  `SQLObject`.
+
+### Fixed
+- UI error on administrative screens on mobile.
+- Cancel button on Change Password page directed to the wrong place
+  when `show profile link: False` is in the Configuration.
+
 ## [1.4.18](https://github.com/jhpyle/docassemble/releases/tag/v1.4.18) - 2022-11-06
 
 

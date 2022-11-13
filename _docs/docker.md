@@ -1503,6 +1503,66 @@ way, you could remove the virtual machine that runs the application,
 along with its primary drive, without affecting the drive with the
 **docassemble** data.
 
+## <a name="password loss"></a>If you lose your admin password
+
+If you cannot log into your **docassemble** server because you forgot
+the password of your account with `admin` privileges, it is possible
+to go in through the back end to change the password. This is
+complicated by the fact that passwords are encrypted.
+
+In order to change the password of your user with `admin` privileges,
+you will need to know the password of another account on your server,
+even if it is an unprivileged account. If you don't know the password
+of any other account, you can register as a new user.
+
+The following instructions assume that you have not configured
+**docassemble** to use an external SQL database, and you are using the
+default configuration, which is that there is a SQL database inside
+the Docker container named `docassemble`.
+
+Use `docker exec` to get a command line inside your container. (If you
+don't know how to do this, see the [troubleshooting] section.)
+
+Then do:
+
+{% highlight text %}
+# su postgres
+$ psql docassemble
+{% endhighlight %}
+
+Now you should have a `#` prompt inside of `psql`, so that you can
+issue SQL commands.
+
+First, find out the user ID of the user whose password you know, as
+well as the user ID of the user with administrative privileges whose
+password you want to change.
+
+{% highlight text %}
+# select id, email from "user"
+{% endhighlight %}
+
+Then, get the encrypted password of that user (assuming the ID is
+`15`):
+
+{% highlight text %}
+# select password from user_auth where user_id=15;
+{% endhighlight %}
+
+Now that you know the encrypted version of the known password, you can
+change the password of the admin user to that encrypted password
+(assuming the ID of the user with `admin` privileges is `1`).
+
+{% highlight text %}
+# update user_auth set password='$2b$12$B5WscXrNatMg/0mMGU63VuY8NPN6IFY7MmhFocKGGU86OXFryLuDi' where id=1;
+{% endhighlight %}
+
+Now, you should be able to log in as the user with `admin` privileges
+using the known password.
+
+Note that the passwords are encrypted using the [`secretkey`] as a
+"salt," so the encrypted version of a password will vary from server
+to server.
+
 ## <a name="recovery"></a>Recovery from backup files
 
 When you are using [data storage], you can do `docker stop -t 600` on

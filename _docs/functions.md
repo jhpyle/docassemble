@@ -7661,6 +7661,22 @@ out, so you may encounter `pickle`-related errors if you import too
 much into your interview answers. Defining [`__all__`] in every module
 you write will protect against this.
 
+Using a module is a good way to avoid pickling errors. Objects that
+cannot be pickled can live in the namespace of the module (in which
+case you should make sure you have an [`__all__`] variable and make
+sure it does not include the names of those objects). Objects that
+cannot be pickled can also live in the namespace of a function. You
+can call those functions from Python code in your [YAML], but if so,
+make sure that you do not save the result of the function call in a
+variable in your interview answers, or else you will encounter a
+pickling problem. Also note that if you define a class in your module
+file and you want to keep instances of that class in your interview
+answers, all of the attributes of the object instance need to be
+pickleable. For example, you should not define a database connection
+object as an attribute of an object, because in order to save the
+object instance to the SQL database, **docassemble** would have to
+pickle the database connection object, which is not possible.
+
 ## <a name="jinja2"></a>A caveat regarding functions called from docx templates
 
 If you write your own functions and they are called from markup inside

@@ -80,11 +80,12 @@ You can also pass the API key as a "bearer token":
 curl -H "Authorization: Bearer H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
 {% endhighlight %}
 
-Although "bearer tokens" normally expire after a period of time, and
-**docassemble** API keys do not, using **docassemble** API keys as
-"bearer tokens" is somewhat of a misnomer. However, passing a token as
-a "bearer token" is more of an accepted standard than using
-`X-API-Key` as a header, so you may find it easier to
+Although "bearer tokens" traditionally expire after a period of time,
+and **docassemble** API keys do not, so using **docassemble** API keys
+as "bearer tokens" is somewhat of a misnomer. However, passing a token
+as a "bearer token" is more of an accepted standard than using
+`X-API-Key` as a header, so you may find it easier to use the "bearer
+token" method of authentication.
 
 If you prefer, you can include the API key in a cookie called
 `X-API-Key`:
@@ -244,6 +245,12 @@ to use a [serverless function] that knows the API key and acts as an
 intermediary.  The web browser would make requests to the serverless
 function, which in turn would make requests to the **docassemble**
 server and return results.
+
+**docassemble** does not enforce any rate limits in the use of the
+API. It is theoretically possible that you could overtax your
+**docassemble** server by making too many API calls in a short period
+of time, especially if the API calls cause heavy CPU usage. So you may
+wish to insert pauses in your code that calls the **docassemble** API.
 
 ## <a name="pagination"></a>How to use methods that return paginated results
 

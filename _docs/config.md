@@ -118,17 +118,14 @@ because the [Playground] is a development tool, not a means of
 deploying interviews in production.  For more information on how to
 install your interviews as packages, see the [Packages] section.
 
-## <a name="collect statistics"></a>Allow statistics collection
-
-If you set `collect statistics` to `True`, then **docassemble** will
-use [Redis] to keep track of the number of interview sessions
-initiated.
-
-{% highlight yaml %}
-collect statistics: True
-{% endhighlight %}
-
-The default is `False`.
+Note that if you set `debug` to `True`, then the sample interviews
+that come packaged with **docassemble** in the `docassemble.base` and
+`docassemble.demo` packages will not be accessible to ordinary users
+unless you choose to set `allow demo: True`. Note that default `default
+interview` is initially set to
+`docassemble.base:data/questions/default-interview.yml`, so if you set
+`debug: False`, you should change `default interview` to one of your
+own interviews.
 
 ## <a name="allow demo"></a>Allowing sample interviews in production mode
 
@@ -176,6 +173,18 @@ When `enable sharing playgrounds` is true, all users with `admin` or
 `developer` privileges will have read and write access to other users'
 Playgrounds. Therefore, this feature should only be used if the
 developers using the server trust each other.
+
+## <a name="collect statistics"></a>Allow statistics collection
+
+If you set `collect statistics` to `True`, then **docassemble** will
+use [Redis] to keep track of the number of interview sessions
+initiated.
+
+{% highlight yaml %}
+collect statistics: True
+{% endhighlight %}
+
+The default is `False`.
 
 ## <a name="allow log viewing"></a>Allowing the viewing of logs
 
@@ -3108,7 +3117,7 @@ files in order:
 
 {% highlight yaml %}
 words:
-  - docassemble.base:data/sources/es-words.yml
+  - docassemble.mypackage:data/sources/es-words.yml
 {% endhighlight %}
 
 Each [YAML] file listed under `words` must be in the form of a
@@ -3117,7 +3126,7 @@ codes) and the values are dictionaries with the translations of words
 or phrases.
 
 Assuming the following is the content of the
-`data/sources/es-words.yml` file in [`docassemble.base`]:
+`data/sources/es-words.yml` file in `docassemble.mypackage`:
 
 {% highlight yaml %}
 es:
@@ -3148,6 +3157,12 @@ be presented to the user.  If you have set up a [Google API
 key](#google), it will use the [Google Cloud Translation API] to
 prepare "first draft" translations for any [ISO-639-1] language you
 designate.
+
+When you have prepared a translation file and you want to use it on
+your server, you will need to put the file into the "sources" folder
+of a package and install that package on your server using [Package
+Management]. For more information about how to create packages,
+**docassemble**, see the [Packages] section.
 
 Users of **docassemble** have contributed translations of built-in
 system phrases.  These are available in the `docassemble.base`
@@ -3532,7 +3547,7 @@ voicerss:
   enable: True
   key: 347593849874e7454b9872948a87987d
   voices:
-    en: 
+    en:
       us: Amy
       au: Jack
     fr:

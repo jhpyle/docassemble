@@ -702,8 +702,7 @@ file.
 There are a few other data types that result in file uploads:
 
 <a name="camera"></a>`datatype: camera` is just like `file`, except
-with an [HTML5] input type that suggests using the device's camera to take a
-picture.  On many devices, this is no different from `datatype: file`.
+it limits the allowable file types to image files.
 
 <a name="user"></a>`datatype: user` is just like `camera`, except with
 an [HTML5] input type that suggests using the device's front
@@ -713,15 +712,11 @@ an [HTML5] input type that suggests using the device's front
 `camera`, except with an [HTML5] input type that suggests using the
 device's rear (environment-facing) camera.
 
-<a name="camcorder"></a>`datatype: camcorder` is just like `camera`,
-except for recording a video.
+<a name="camcorder"></a>`datatype: camcorder` is just like `file`,
+except it limits the allowable file types to video files.
 
-<a name="microphone"></a>`datatype: microphone` is just like `camera`,
-except for recording an audio clip.
-
-Whether these special data types do anything different from the `file`
-data type is dependent on the web browser.  Mobile browsers are the
-most likely to respond to these features.
+<a name="microphone"></a>`datatype: microphone` is just like `file`,
+except it limits the allowable file types to audio files.
 
 For more information about uploading files, and for instructions on
 uploading signature images, see the [Uploads](#uploads) subsection.

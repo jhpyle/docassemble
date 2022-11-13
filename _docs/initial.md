@@ -657,6 +657,27 @@ import datetime
 import us
 {% endhighlight %}
 
+Note that using third-party modules in [`code` blocks] could
+potentially lead to errors relating to the Python [`pickle`]
+module. Variables that are defined in your interview [YAML] are part of
+the "interview answers" that persist in the database. Most objects
+that are created by third-party Python modules are meant to live in
+the memory of a Python process and are not amenable to being
+"serialized" by [`pickle`] or any other mechanism.
+
+The "interview answers" are a Python `dict`. This `dict` is the
+context in which Python in your [YAML] is executed or evaluated. This
+`dict` is also stored to the SQL database using [`pickle`] after each
+screen in the interview process.
+
+Before pickling this dictionary, **docassemble** removes any top-level
+names that refer to modules, functions, and classes, because these
+variables cannot be pickled. Whenever the screen loads,
+**docassemble** restores the dictionary from SQL and then imports
+names from `docassemble.base.util`, loads the names of any modules
+listed in `imports` blocks, and imports names from the modules listed
+in `modules` blocks.
+
 ## <a name="modules"></a>Importing all names in a module: `modules`
 
 {% highlight yaml %}
@@ -689,6 +710,32 @@ modules:
 Note that if you use `modules` to import names from a module of your
 own, you should make sure to define [`__all__`] in the module to limit
 which names are imported.
+
+While a `modules` block can import names of functions, classes, and
+modules, you should not use `modules` to import other types of
+variables. If a name brought in by `modules` does not refer to a
+function, class, or module, you will get an error if the name refers
+to an object that is not pickleable. Even if the object is pickleable,
+it is not a good idea to bring it into the interview answers, because
+that would be like doing:
+
+{% highlight yaml %}
+foo = 3
+from somemodule import foo
+{% endhighlight %}
+
+If you have a module that contains constants, it would be better to
+bring in the name of the module and access constants from the module
+name:
+
+{% highlight yaml %}
+---
+imports:
+  - somemodule
+---
+code: |
+  bar = somemodule.foo * 42
+{% endhighlight %}
 
 # <a name="data"></a>Storing structured `data` in a variable
 
@@ -1813,6 +1860,16 @@ screen, set `centered` to `False`.
 
 {% include side-by-side.html demo="centered" %}
 
+## <a name="wide side by side"></a>Widening the screen when `right` is used
+
+If you want the effect of `centered: False` when there is text in the
+`right` screen part, set `wide side by side` to `True`.
+
+{% highlight yaml %}
+features:
+  wide side by side: True
+{% endhighlight %}
+
 ## <a name="progress bar"></a>Progress bar
 
 The `progress bar` feature controls whether a progress bar is shown
@@ -2667,3 +2724,4 @@ This will cause the web application to run the JavaScript for the
 [`hint` field modifier]: {{ site.baseurl }}/docs/fields.html#hint
 [`help` field modifier]: {{ site.baseurl }}/docs/fields.html#help
 [floating labels]: https://getbootstrap.com/docs/5.2/forms/floating-labels/
+[`pickle`]: https://docs.python.org/3/library/pickle.html

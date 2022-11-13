@@ -4602,8 +4602,9 @@ the [configuration] as the [`api key`] subdirective under the
 
 In previous versions of **docassemble**, this method was called
 `.geolocate()`.  The `.geolocate()` method and its associated
-attributes (`.geocoded`, `.geocode_success`, `.geocode_response` will
-continue to function until the next minor version update.
+attributes (`.geolocated`, `.geolocate_success`,
+`.geolocate_response`) will continue to function until the next minor
+version update.
 
 The following methods are available to query the status of geocoding:
 
@@ -6034,9 +6035,9 @@ from docassemble.base.util import Individual, Person, DAObject
 # Import the SQLObject and some associated utility functions
 from docassemble.base.sql import alchemy_url, connect_args, upgrade_db, SQLObject, SQLObjectRelationship
 # Import SQLAlchemy names
-from sqlalchemy import Column, ForeignKey, Integer, String, create_engine, or_, and_
+from sqlalchemy import Column, ForeignKey, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 # Only allow these names (DAObject classes) to be imported with a modules block
 __all__ = ['Bank', 'Customer', 'BankCustomer']
@@ -6044,14 +6045,18 @@ __all__ = ['Bank', 'Customer', 'BankCustomer']
 # Create the base class for SQLAlchemy table definitions
 Base = declarative_base()
 
+
 # SQLAlchemy table definition for a Bank
+
 class BankModel(Base):
     __tablename__ = 'bank'
     id = Column(Integer, primary_key=True)
     routing = Column(String(250), unique=True)
     name = Column(String(250))
 
+
 # SQLAlchemy table definition for a Customer
+
 class CustomerModel(Base):
     __tablename__ = 'customer'
     id = Column(Integer, primary_key=True)
@@ -6064,7 +6069,9 @@ class CustomerModel(Base):
     state = Column(String(250))
     zip = Column(String(250))
 
+
 # SQLAlchemy table definition for keeping track of which Banks have which Customers
+
 class BankCustomerModel(Base):
     __tablename__ = 'bank_customer'
     id = Column(Integer, primary_key=True)
@@ -6090,9 +6097,11 @@ DBSession = sessionmaker(bind=engine)()
 
 # Perform any necessary database schema updates using alembic, if there is an alembic
 # directory and alembic.ini file in the package.
-upgrade_db(url, __file__, engine, conn_args=conn_args)
+upgrade_db(url, __file__, engine, version_table='auto', conn_args=conn_args)
+
 
 # Define Bank as both a DAObject and SQLObject
+
 class Bank(Person, SQLObject):
     # This tells the SQLObject code what the SQLAlchemy model is
     _model = BankModel
@@ -6102,17 +6111,20 @@ class Bank(Person, SQLObject):
     _required = ['name']
     # This indicates that the human-readable unique identifier for the table is the column "routing"
     _uid = 'routing'
+
     def init(self, *pargs, **kwargs):
         super().init(*pargs, **kwargs)
         # This runs necessary SQLObject initialization code for the instance
         self.sql_init()
+
     # The db_get function specifies how to get attributes from the DAObject for purposes of setting SQL column values
     def db_get(self, column):
         if column == 'name':
             return self.name.text
-        elif column == 'routing':
+        if column == 'routing':
             return self.routing
         raise Exception("Invalid column " + column)
+
     # The db_set function specifies how to set attributes of the DAObject on the basis of non-null SQL column values
     def db_set(self, column, value):
         if column == 'name':
@@ -6121,6 +6133,7 @@ class Bank(Person, SQLObject):
             self.routing = value
         else:
             raise Exception("Invalid column " + column)
+
     # The db_null function specifies how to delete attributes of the DAObject when the SQL column value becomes null
     def db_null(self, column):
         if column == 'name':
@@ -6129,6 +6142,7 @@ class Bank(Person, SQLObject):
             del self.routing
         else:
             raise Exception("Invalid column " + column)
+
     # This is an example of a method that uses SQLAlchemy to return True or False
     def has_customer(self, customer):
         if not (self.ready() and customer.ready()):
@@ -6138,6 +6152,7 @@ class Bank(Person, SQLObject):
         if db_entry is None:
             return False
         return True
+
     # This is an example of a method that uses SQLAlchemy to add a record to the BankCustomer SQL table
     # to indicate that a bank has a customer.  Note that it is designed to be idempotent; it will not add
     # a duplicate record.
@@ -6146,15 +6161,17 @@ class Bank(Person, SQLObject):
             db_entry = BankCustomerModel(bank_id=self.id, customer_id=customer.id)
             self._session.add(db_entry)
             self._session.commit()
+
     # This is an example of a method that uses SQLAlchemy to return a list of Customer objects.
     # It uses the by_id() class method to return a Customer object for the given id.
     def get_customers(self):
         if not self.ready():
             raise Exception("get_customers: cannot retrieve data")
-        results = list()
+        results = []
         for db_entry in self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id).all():
             results.append(Customer.by_id(db_entry.customer_id))
         return results
+
     # This is an example of a method that uses SQLAlchemy to delete a bank-customer relationship
     def del_customer(self, customer):
         if not (self.ready() and customer.ready()):
@@ -6162,32 +6179,36 @@ class Bank(Person, SQLObject):
         self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).delete()
         self._session.commit()
 
+
 class Customer(Individual, SQLObject):
     _model = CustomerModel
     _session = DBSession
     _required = ['first_name']
     _uid = 'ssn'
+
     def init(self, *pargs, **kwargs):
         super().init(*pargs, **kwargs)
         self.sql_init()
+
     def db_get(self, column):
         if column == 'ssn':
             return self.ssn
-        elif column == 'first_name':
+        if column == 'first_name':
             return self.name.first
-        elif column == 'last_name':
+        if column == 'last_name':
             return self.name.last
-        elif column == 'address':
+        if column == 'address':
             return self.address.address
-        elif column == 'unit':
+        if column == 'unit':
             return self.address.unit
-        elif column == 'city':
+        if column == 'city':
             return self.address.city
-        elif column == 'state':
+        if column == 'state':
             return self.address.state
-        elif column == 'zip':
+        if column == 'zip':
             return self.address.zip
         raise Exception("Invalid column " + column)
+
     def db_set(self, column, value):
         if column == 'ssn':
             self.ssn = value
@@ -6205,8 +6226,7 @@ class Customer(Individual, SQLObject):
             self.address.state = value
         elif column == 'zip':
             self.address.zip = value
-        else:
-            raise Exception("Invalid column " + column)
+
     def db_null(self, column):
         if column == 'ssn':
             del self.ssn
@@ -6224,23 +6244,25 @@ class Customer(Individual, SQLObject):
             del self.address.state
         elif column == 'zip':
             del self.address.zip
-        else:
-            raise Exception("Invalid column " + column)
+
 
 class BankCustomer(DAObject, SQLObjectRelationship):
     _model = BankCustomerModel
     _session = DBSession
     _parent = [Bank, 'bank', 'bank_id']
     _child = [Customer, 'customer', 'customer_id']
+
     def init(self, *pargs, **kwargs):
         super().init(*pargs, **kwargs)
         self.rel_init(*pargs, **kwargs)
+
     def db_get(self, column):
         if column == 'bank_id':
             return self.bank.id
-        elif column == 'customer_id':
+        if column == 'customer_id':
             return self.customer.id
         raise Exception("Invalid column " + column)
+
     def db_set(self, column, value):
         if column == 'bank_id':
             self.bank = Bank.by_id(value)
@@ -6248,6 +6270,7 @@ class BankCustomer(DAObject, SQLObjectRelationship):
             self.customer = Customer.by_id(value)
         else:
             raise Exception("Invalid column " + column)
+
     # A db_find_existing method is defined here because the default db_find_existing() method for
     # the SQLObject class tries to find existing records based on a unique identifier column indicated
     # by the _uid attribute.  Since the unique identifier for a bank-customer relationship record is
@@ -6274,29 +6297,142 @@ demo db:
   password: supersecret
 {% endhighlight %}
 
+The above module file contains the line:
+
+{% highlight python %}
+Base.metadata.create_all(engine)
+{% endhighlight %}
+
+This [SQLAlchemy] command creates database tables for any models that
+have been defined in Python code. Thus, the mere loading of this
+module causes database tables to come into existence if they do not
+already exist.
+
 While the tables will be created automatically by [SQLAlchemy] if they
 do not exist, the database itself (which in this example is named
-`demo`) will need to be created beforehand.
+`demo`) will need to be created beforehand. You also need to make sure
+that the database user (in the above example, `jsmith`) has full
+privileges to the database.
 
 Note that while [SQLAlchemy] is capable of creating database tables,
-it is not capable of modifying them if you add or subtract columns,
-change the data types of columns, or make similar alterations.  If you
-need to make changes to database tables that have already been
-created, you need to use [Alembic], which is a version control system
-for [SQLAlchemy].  The code above will run [Alembic] if there is an
-[Alembic] directory structure in the package.  [Alembic] will perform
-whatever upgrades are necessary.  If you have not yet released your
-package to the world, using [Alembic] to alter your database tables is
-not really necessary; you can just make the alterations manually using
-SQL commands while updating your [SQLAlchemy] table definitions.  If
-your existing database tables do not contain anything of value, you
-can also just delete them manually and then when the module re-loads,
-the table will be reconstructed with the correct columns.
+it is not capable of modifying them if you edit the model classes
+after the database tables have already been created. If you are the
+only user of the module that uses [`SQLObject`], you could get around
+this problem by making the changes to your database tables
+manually. However, if you have released your module to the public, and
+someone who is using your module upgrades to your latest version, they
+will encounter errors because your code will use the new version of
+the model but the actual database table will be using the earlier
+version of the model.
 
-Although you can use any [SQLAlchemy] URL to describe your database,
-using the `alchemy_url()` function from `docassemble.base.sql` is
-recommended because this ensures that passwords are not hard-coded
-into [Python] code.
+[Alembic] is a version control system for [SQLAlchemy] that solves
+this problem. Using [Alembic] requires adding a configuration file and
+an `alembic` folder to the package in which your [`SQLObject`] module
+lives. Thus, you will need to prepare your package from the command
+line. You cannot do this from within the [Playground]. If you do not
+already have your package on your personal computer, you will need to
+download it.
+
+To get started, install [alembic] on your personal computer:
+
+{% highlight bash %}
+pip install alembic
+{% endhighlight %}
+
+Then, go into the directory where your module file is located.  For
+example, if your package is called `docassemble.foobar`, do:
+
+{% highlight bash %}
+cd docassemble-foobar/docassemble/foobar
+{% endhighlight %}
+
+From here, run the following command to initialize [alembic]:
+
+{% highlight bash %}
+alembic init alembic
+{% endhighlight %}
+
+Whenever you want to create a revision to your database structure, you
+run a command like:
+
+{% highlight bash %}
+alembic revision -m "add column for phone"
+{% endhighlight %}
+
+The [Alembic] directory structure will look something like this:
+
+{% highlight text %}
+docassemble-foobar
+|-- docassemble
+|   |-- foobar
+|   |   |-- alembic.ini
+|   |   |-- alembic
+|   |   |   |-- env.py
+|   |   |   |-- script.py.mako
+|   |   |   |-- versions
+|   |   |   |   `-- 5627e6ca17d18_add_column_for_phone.py
+|   |   |-- data
+|   |   |   |-- questions
+|   |   |   |   `-- myinterview.yml
+|   |   |   |-- static
+|   |   |   |   `-- logo.jpg
+|   |   |   |-- sources
+|   |   |   |   `-- data.yml
+|   |   |   `-- templates
+|   |   |       `-- mytemplate.docx
+|   |   |-- mydb.py
+|   |   `-- __init__.py
+|   `-- __init__.py
+|-- LICENSE
+|-- README.md
+|-- setup.cfg
+`-- setup.py
+{% endhighlight %}
+
+In this file listing, `5627e6ca17d18_add_column_for_phone.py` is a
+file that was created by running `alembic revision`. The code
+`5627e6ca17d18` represents a version. Each "version" file contains a
+reference to the current version and the previous version, along with
+code that indicates how to upgrade from the old version to the new
+version, and how to downgrade from the new version to the old
+version.
+
+After running `alembic revision`, you need to edit the resulting
+"version" file (in this example,
+`5627e6ca17d18_add_column_for_phone.py`) and write [SQLAlchemy] code
+in the `upgrade()` and `downgrade()` functions to modify the database
+tables in the appropriate ways to effectuate the change you made to
+the model.
+
+[Alembic] keeps track of the current version using a table in the
+database containing one row and one column. By scanning the files in
+`versions` and looking at the current version, [Alembic] knows which
+files in the `versions` directory it needs to run to perform an
+upgrade.
+
+The above module example contains code that calls [Alembic].
+
+{% highlight python %}
+upgrade_db(url, __file__, engine, version_table='auto', conn_args=conn_args)
+{% endhighlight %}
+
+This function calls [Alembic] to perform any necessary upgrades. When
+the `version_table` parameter is set to `'auto'`, that means that the
+name of the table in the database that [Alembic] uses to track the
+current version will be based on the name of the package. If
+`version_table` is set to `None`, the default name of
+`alembic_version` will be used. If the database you are using is
+already serving as the [`db`] database of a **docassemble** server,
+there will be a conflict because the **docassemble** server uses
+[Alembic] with `alembic_version` as the name of its version table. You
+can also set `version_table` to a string, in which case the name of
+the version table will be that string.
+
+For examples of what the [Alembic]-related files should look like, see
+the [`docassemble.demo`] package and consult the [Alembic]
+documentation. The [`docassemble.webapp`] package contains `version`
+files that you can look at to get a sense of what the `upgrade()` and
+`downgrade()` functions should look like.
 
 ## <a name="sqlobject how it works"></a>How it works
 
@@ -7229,3 +7365,5 @@ the `_uid` of the table rather than the `id`.
 [Font Awesome]: https://fontawesome.com
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
 [`.convert_to()`]: #DAFile.convert_to
+[`docassemble.demo`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo
+[`docassemble.webapp`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp
