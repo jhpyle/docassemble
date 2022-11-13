@@ -12143,8 +12143,8 @@ def index(action_argument=None, refer=None):
         if interview_status.using_navigation == 'vertical':
             output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-3 col-xl-2 daright">\n'
         else:
-            if interview.flush_left:
-                output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-6 col-xl-5 daright">\n'
+            if interview_status.flush_left():
+                output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-6 col-xxl-5 daright">\n'
             else:
                 output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-3 col-xl-3 daright">\n'
         output += docassemble.base.util.markdown_to_html(interview_status.extras['rightText'], trim=False, status=interview_status) + "\n"
@@ -12155,8 +12155,8 @@ def index(action_argument=None, refer=None):
         if interview_status.using_navigation == 'vertical':
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
         else:
-            if interview.flush_left:
-                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
+            if interview_status.flush_left():
+                output += '        <div class="offset-xxl-1 col-xxl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
             else:
                 output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
         output += interview_status.post
@@ -12167,8 +12167,8 @@ def index(action_argument=None, refer=None):
         if interview_status.using_navigation == 'vertical':
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
         else:
-            if interview.flush_left:
-                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
+            if interview_status.flush_left():
+                output += '        <div class="offset-xxl-1 col-xxl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
             else:
                 output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
         output += '          <br/><br/><br/><br/><br/><br/><br/>\n'

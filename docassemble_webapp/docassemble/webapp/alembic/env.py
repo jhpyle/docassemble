@@ -1,8 +1,7 @@
-from __future__ import with_statement
-from alembic import context
-from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
+from sqlalchemy import engine_from_config, pool
 from docassemble.webapp.database import alchemy_connection_string, connect_args, dbtableprefix
+from alembic import context
 
 VERSION_TABLE = dbtableprefix + 'alembic_version'
 
@@ -45,6 +44,7 @@ def run_migrations_offline():
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online():
     """Run migrations in 'online' mode.

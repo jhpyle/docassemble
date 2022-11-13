@@ -463,9 +463,13 @@ def connect_args(db_config):
     return server.connect_args(db_config)
 
 
-def upgrade_db(url, py_file, engine, name=None, conn_args=None):
+def upgrade_db(url, py_file, engine, version_table=None, name=None, conn_args=None):
     if name is None:
         name = 'alembic'
+    if version_table is None:
+        version_table = 'alembic_version'
+    elif version_table == 'auto':
+        version_table = 'alembic_version_' + os.path.abspath(py_file).split(os.sep)[-2]
     if not isinstance(conn_args, dict):
         conn_args = {}
     packagedir = os.path.dirname(os.path.abspath(py_file))
@@ -484,7 +488,7 @@ def upgrade_db(url, py_file, engine, name=None, conn_args=None):
     alembic_cfg.set_main_option("sqlalchemy.url", url)
     alembic_cfg.set_main_option("connect_args", json.dumps(conn_args))
     alembic_cfg.set_main_option("script_location", alembic_path)
-    if not engine.has_table('alembic_version'):
+    if not engine.has_table(version_table):
         command.stamp(alembic_cfg, "head")
     command.upgrade(alembic_cfg, "head")
 

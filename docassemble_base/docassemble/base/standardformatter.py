@@ -574,8 +574,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     if status.using_navigation == 'vertical':
         grid_class = "col-xl-6 col-lg-6 col-md-9"
     else:
-        if status.question.interview.flush_left:
-            grid_class = "offset-xl-1 col-xl-5 col-lg-6 col-md-8"
+        if status.flush_left():
+            grid_class = "offset-xxl-1 col-xxl-5 col-lg-6 col-md-8"
         else:
             grid_class = "offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8"
     labels_above = status.question.interview.options.get('labels above', False)
@@ -1931,7 +1931,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         if status.using_navigation == 'vertical':
             output += '            <div id="darightbottom" class="' + right_classes + '">\n'
         else:
-            if status.question.interview.flush_left:
+            if status.flush_left():
                 output += '            <div id="darightbottom" class="' + right_classes + '">\n'
             else:
                 output += '            <div id="darightbottom" class="' + right_classes + '">\n'
@@ -2715,10 +2715,8 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 # capture = ' capture="camera"'
             elif field.datatype == 'user':
                 accept = ' accept="image/*" capture="user"'
-                # capture = ' capture="environment"'
             elif field.datatype == 'environment':
-                accept = ' accept="image/*"'
-                # capture = ' capture="environment"'
+                accept = ' accept="image/*" capture="environment"'
             elif field.datatype == 'camcorder':
                 accept = ' accept="video/*"'
                 # capture = '  capture="camcorder"'

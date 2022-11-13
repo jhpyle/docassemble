@@ -301,3 +301,13 @@ Feature: Example interviews
     And I set "Fruit" to "apple"
     And I click the button "Continue"
     Then I should see the phrase "Here is a summary of fruits and how many people like them."
+
+  Scenario: Test the interview "Translation"
+    Given I start the interview "docassemble.demo:data/questions/examples/translation.yml"
+    Then I should see the phrase "Write a paragraph in French."
+    And I set the text area to "Mon bureau est à l'opposé des Pays-Bas."
+    And I click the button "Continue"
+    Then I should see the phrase "Revise the English translation."
+    And I click the button "Continue"
+    Then I should see the phrase "Translated text"
+    And I should see the phrase "My office is opposite the Netherlands."

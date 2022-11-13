@@ -1443,6 +1443,13 @@ class InterviewStatus:
                 indexno += 1
         return choice_list
 
+    def flush_left(self):
+        if self.question.interview.flush_left:
+            return True
+        if self.question.interview.wide_side_by_side and self.extras.get('rightText', ''):
+            return True
+        return False
+
 # def new_counter(initial_value=0):
 #     d = {'counter': initial_value}
 #     def f():
@@ -2019,6 +2026,8 @@ class Question:
                         self.interview.use_navigation_on_small_screens = False
             if 'centered' in data['features'] and not data['features']['centered']:
                 self.interview.flush_left = True
+            if data['features'].get('wide side by side', False):
+                self.interview.wide_side_by_side = True
             if 'maximum image size' in data['features']:
                 self.interview.max_image_size = eval(str(data['features']['maximum image size']))
             if 'image upload type' in data['features']:
@@ -7293,6 +7302,7 @@ class Interview:
         self.use_navigation = False
         self.use_navigation_on_small_screens = True
         self.flush_left = False
+        self.wide_side_by_side = False
         self.max_image_size = get_config('maximum image size', None)
         self.image_type = get_config('image upload type', None)
         self.bootstrap_theme = get_config('bootstrap theme', None)
