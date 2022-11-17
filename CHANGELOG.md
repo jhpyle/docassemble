@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.20] - 2022-11-16
+
+### Fixed
+- Updated the CloudConvert API.
+- Fixed typo affecting `/run/packagename/directoryname/filename` links.
+
 ## [1.4.19] - 2022-11-13
 
 ### Added

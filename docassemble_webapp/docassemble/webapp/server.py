@@ -12719,7 +12719,7 @@ def run_interview_in_package_directory(package, directory, filename):
         arguments[arg] = request.args[arg]
     arguments['i'] = 'docassemble.' + package + ':data/questions/' + directory + '/' + filename + '.yml'
     request.args = arguments
-    return index(refer=['run_direcory', package, directory, filename])
+    return index(refer=['run_directory', package, directory, filename])
 
 
 @app.route('/run/<package>/<filename>/', methods=['GET'])
