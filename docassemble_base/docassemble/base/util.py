@@ -68,6 +68,7 @@ import pandas
 import PyPDF2
 from docx import Document
 import google.cloud
+from typing import Any
 
 capitalize_func = capitalize
 NoneType = type(None)
@@ -1354,6 +1355,10 @@ class DACatchAll(DAObject):
     def __bool__(self):
         self.context = 'bool'
         return bool(self.value)
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        self.context = 'callable'
+        return self.value(*args, **kwargs)
 
 
 class RelationshipDir(DAObject):
