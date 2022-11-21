@@ -2062,6 +2062,8 @@ class Question:
                 self.interview.options['hide standard menu'] = data['features']['hide standard menu']
             if 'labels above fields' in data['features']:
                 self.interview.options['labels above'] = bool(data['features']['labels above fields'])
+            if 'suppress autofill' in data['features']:
+                self.interview.options['suppress autofill'] = bool(data['features']['suppress autofill'])
             if 'floating labels' in data['features']:
                 self.interview.options['floating labels'] = bool(data['features']['floating labels'])
             if 'send question data' in data['features']:
