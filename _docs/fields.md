@@ -1794,7 +1794,7 @@ showing or hiding is not triggered, even though [`val()`] would return the
 appropriate value.
 
 If you do not actually want to get the value of the variable in your expression,
-you can get around this by adding `& (val("variable") || !val("variable))`
+you can get around this by adding `& (val("variable") || !val("variable"))`
 to the expression (replacing "variable" with the name of the relevant
 variable that is on the screen).
 
