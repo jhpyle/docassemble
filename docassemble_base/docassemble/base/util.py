@@ -5934,7 +5934,7 @@ class DAContext(DADict):
 
 def objects_from_structure(target, root=None):
     if isinstance(target, dict):
-        if len(target.keys()) > 0 and len(set(target.keys()).difference(set(['question', 'document', 'docx', 'pdf', 'pandoc']))) == 0:
+        if len(target.keys()) > 0 and len(set(target.keys()).intersection(set(['question', 'document', 'docx', 'pdf', 'pandoc']))) >= 2:
             new_context = DAContext('abc_context', **target)
             if root:
                 new_context._set_instance_name_recursively(root)
