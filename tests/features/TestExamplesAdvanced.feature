@@ -54,7 +54,7 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Information about your address"
     And I should see the phrase "The address is located in Boca Raton."
-    And I should see the phrase "The latitude and longitude are 26.4024364 and -80.1167301."
+    And I should see the phrase "The latitude and longitude are 26.4024283 and -80.116787"
 
   Scenario: Test the interview "Geocode address"
     Given I start the interview "docassemble.base:data/questions/examples/geocode.yml"
@@ -294,3 +294,20 @@ Feature: Example interviews
     And I click the link "Avance"
     And I wait 1 second
     Then I should see the phrase "This customer would like to order fries and a Coke."
+
+  Scenario: Test the interview "Interview answers snapshot"
+    Given I start the interview "docassemble.demo:data/questions/examples/snapshot.yml"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I set "Fruit" to "apple"
+    And I click the button "Continue"
+    Then I should see the phrase "Here is a summary of fruits and how many people like them."
+
+  Scenario: Test the interview "Translation"
+    Given I start the interview "docassemble.demo:data/questions/examples/translation.yml"
+    Then I should see the phrase "Write a paragraph in French."
+    And I set the text area to "Mon bureau est à l'opposé des Pays-Bas."
+    And I click the button "Continue"
+    Then I should see the phrase "Revise the English translation."
+    And I click the button "Continue"
+    Then I should see the phrase "Translated text"
+    And I should see the phrase "My office is opposite the Netherlands."

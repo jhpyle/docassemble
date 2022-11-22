@@ -12,6 +12,9 @@ server {
     {{DALOCATIONREWRITE}}
     location {{DAWSGIROOT}} { try_files $uri @docassemble; }
     location @docassemble {
+        if ($host != '{{DAHOSTNAME}}') {
+          return 301 https://{{DAHOSTNAME}}$request_uri;
+        }
         include uwsgi_params;
         uwsgi_pass unix:///var/run/uwsgi/docassemble.sock;
     }

@@ -10,9 +10,9 @@ setup_requires = [
     'enum34==1.1.10'
     ]
 install_requires = [
-    'docassemble==1.4.12',
-    'docassemble.base==1.4.12',
-    'docassemble.demo==1.4.12',
+    'docassemble==1.4.20',
+    'docassemble.base==1.4.20',
+    'docassemble.demo==1.4.20',
     "3to2==1.1.1",
     "airtable-python-wrapper==0.15.3",
     "alembic==1.7.7",
@@ -64,7 +64,7 @@ install_requires = [
     "defusedxml==0.7.1",
     "Deprecated==1.2.13",
     "dnspython==2.2.1",
-    "Docassemble-Flask-User==0.6.27",
+    "Docassemble-Flask-User==0.6.28",
     "Docassemble-Pattern==3.6.5",
     "docassemble-textstat==0.7.2",
     "docassemblekvsession==0.7",
@@ -155,7 +155,7 @@ install_requires = [
     "passlib==1.7.4",
     "pdfminer.six==20220319",
     "phonenumbers==8.12.46",
-    "Pillow==9.1.1",
+    "Pillow==9.3.0",
     "pkginfo==1.8.2",
     "pluggy==1.0.0",
     "ply==3.11",
@@ -274,7 +274,7 @@ else:
     install_requires.append("docassemble-backports==1.0")
 
 setup(name='docassemble.webapp',
-      version='1.4.12',
+      version='1.4.20',
       python_requires='>=3.8',
       description=('The web application components of the docassemble system.'),
       long_description=read("README.md"),

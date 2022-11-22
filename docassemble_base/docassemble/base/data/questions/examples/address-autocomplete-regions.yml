@@ -1,0 +1,78 @@
+metadata:
+  title: Address autocomplete on regions
+  short title: Test autocomplete
+  example start: 2
+  example end: 2
+  documentation: "https://docassemble.org/docs/objects.html#address autocomplete"
+---
+objects:
+  - the_address: Address
+---
+question: |
+  Enter the name of a region.
+fields:
+  - name: the_address.name
+    required: False
+    address autocomplete:
+      types:
+        - "(regions)"
+      fields:
+        - address_components
+        - geometry
+  - note: |
+      The following attribute names are Google Place address_components.
+  - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
+    required: False
+  - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
+    required: False
+  - "administrative_area_&#8203;level_3": the_address.administrative_area_level_3
+    required: False
+  - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
+    required: False
+  - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+    required: False
+  - colloquial_area: the_address.colloquial_area
+    required: False
+  - country: the_address.country
+    required: False
+  - locality: the_address.locality
+    required: False
+  - neighborhood: the_address.neighborhood
+    required: False
+  - postal_code: the_address.postal_code
+    required: False
+  - postal_code_prefix: the_address.postal_code_prefix
+    required: False
+  - postal_code_suffix: the_address.postal_code_suffix
+    required: False
+  - postal_town: the_address.postal_town
+    required: False
+  - sublocality: the_address.sublocality
+    required: False
+  - sublocality_level_1: the_address.sublocality_level_1
+    required: False
+  - sublocality_level_2: the_address.sublocality_level_2
+    required: False
+  - sublocality_level_3: the_address.sublocality_level_3
+    required: False
+  - sublocality_level_4: the_address.sublocality_level_4
+    required: False
+  - sublocality_level_5: the_address.sublocality_level_5
+    required: False
+  - note: |
+      The following attribute names are built in to **docassemble**.
+      They have different names than Google Place component names.
+  - city: the_address.city
+    required: False
+  - state: the_address.state
+    required: False
+  - zip: the_address.zip
+    required: False
+  - latitude: the_address.latitude
+    required: False
+  - longitude: the_address.longitude
+    required: False
+---
+mandatory: True
+question: |
+  The city is ${ the_address.city }.

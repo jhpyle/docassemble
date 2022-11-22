@@ -77,11 +77,11 @@
 {%- endif %}
             <ul id="editnav" class="nav nav-pills mt-1">
               <li class="nav-item">
-                <a tabindex="571" class="nav-link" title="{{ word('Create a new file') }}" href="{{ url_for('playground_files', section=section, new='1', project=current_project) }}"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;&nbsp;{{ word('Add') }}</a>
+                <a tabindex="571" class="nav-link" title="{{ word('Create a new file') }}" href="{{ url_for('playground_files', section=section, new='1', project=current_project) }}"><i class="fas fa-plus-circle" aria-hidden="true"></i>&nbsp;{{ word('Add') }}</a>
               </li>
               <li class="nav-item dropdown">
                 <a tabindex="572" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another file')}}">
-                  <i class="fas fa-file" aria-hidden="true"></i>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
+                  <i class="fas fa-file" aria-hidden="true"></i>&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
                 </a>
                 <div class="dropdown-menu daheightlim">
                   {%- if any_files %}

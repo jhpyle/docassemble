@@ -1,8 +1,9 @@
-from __future__ import with_statement
-from alembic import context
-from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
-from docassemble.webapp.database import alchemy_connection_string, connect_args
+from sqlalchemy import engine_from_config, pool
+from docassemble.webapp.database import alchemy_connection_string, connect_args, dbtableprefix
+from alembic import context
+
+VERSION_TABLE = dbtableprefix + 'alembic_version'
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -39,10 +40,11 @@ def run_migrations_offline():
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True)
+        url=url, target_metadata=target_metadata, literal_binds=True, version_table=VERSION_TABLE)
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online():
     """Run migrations in 'online' mode.
@@ -61,7 +63,8 @@ def run_migrations_online():
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=target_metadata
+            target_metadata=target_metadata,
+            version_table=VERSION_TABLE
         )
 
         with context.begin_transaction():

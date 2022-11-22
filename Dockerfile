@@ -39,7 +39,7 @@ bash -c \
 && cp /tmp/docassemble/Docker/daunoconv /usr/bin/daunoconv \
 && chmod ogu+rx /usr/bin/daunoconv \
 && update-exim4.conf \
-&& chown -R www-data.www-data \
+&& chown -R www-data:www-data \
    /usr/share/docassemble/log \
    /usr/share/docassemble/files \
 && chmod ogu+r /usr/share/docassemble/config/config.yml.dist \

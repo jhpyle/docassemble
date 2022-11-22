@@ -316,14 +316,17 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
         subprocess_arguments.append('need_appearances')
     else:
         subprocess_arguments.append('flatten')
+    completed_process = None
     try:
-        result = subprocess.run(subprocess_arguments, timeout=600, check=False).returncode
+        completed_process = subprocess.run(subprocess_arguments, timeout=600, check=False, capture_output=True)
+        result = completed_process.returncode
     except subprocess.TimeoutExpired:
         result = 1
         logmessage("fill_template: call to pdftk fill_form took too long")
     if result != 0:
         logmessage("Failed to fill PDF form " + str(template))
-        raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments))
+        pdftk_error_msg = (f": {completed_process.stderr}") if completed_process else ""
+        raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments) + pdftk_error_msg)
     if len(images) > 0:
         fields = {}
         for field, default, pageno, rect, field_type, export_value in the_fields:
@@ -682,14 +685,17 @@ def flatten_pdf(filename):
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
     subprocess_arguments = [PDFTK_PATH, filename, 'output', outfile.name, 'flatten']
     # logmessage("Arguments are " + str(subprocess_arguments))
+    completed_process = None
     try:
-        result = subprocess.run(subprocess_arguments, timeout=60, check=False).returncode
+        completed_process = subprocess.run(subprocess_arguments, timeout=60, check=False, capture_output=True)
+        result = completed_process.returncode
     except subprocess.TimeoutExpired:
         result = 1
         logmessage("flatten_pdf: call to pdftk took too long")
     if result != 0:
         logmessage("Failed to flatten PDF form")
-        raise DAError("Call to pdftk failed for template where arguments were " + " ".join(subprocess_arguments))
+        pdftk_error_msg = (f": {completed_process.stderr}") if completed_process else ""
+        raise DAError("Call to pdftk failed for template where arguments were " + " ".join(subprocess_arguments) + pdftk_error_msg)
     shutil.move(outfile.name, filename)
 
 

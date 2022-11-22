@@ -72,7 +72,7 @@ def cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password):
             uploaded = True
     if not uploaded:
         raise Exception("cloudconvert_to_pdf: failed to upload")
-    r = requests.get("https://api.cloudconvert.com/v2/jobs/%s/wait" % (resp['data']['id'],), headers=headers, timeout=60)
+    r = requests.get("https://sync.api.cloudconvert.com/v2/jobs/%s" % (resp['data']['id'],), headers=headers, timeout=60)
     wait_resp = r.json()
     if 'data' not in wait_resp:
         logmessage("cloudconvert_to_pdf: wait returned " + repr(r.text))

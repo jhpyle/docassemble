@@ -569,13 +569,13 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     datatypes = {}
     varnames = {}
     onchange = []
-    autocomplete_id = []
+    autocomplete_info = []
     showUnderText = 'underText' in status.extras and len(status.attachments) == 0
     if status.using_navigation == 'vertical':
         grid_class = "col-xl-6 col-lg-6 col-md-9"
     else:
-        if status.question.interview.flush_left:
-            grid_class = "offset-xl-1 col-xl-5 col-lg-6 col-md-8"
+        if status.flush_left():
+            grid_class = "offset-xxl-1 col-xxl-5 col-lg-6 col-md-8"
         else:
             grid_class = "offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8"
     labels_above = status.question.interview.options.get('labels above', False)
@@ -911,7 +911,12 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 if the_saveas not in validation_rules['messages']:
                     validation_rules['messages'][the_saveas] = {}
                 if 'address_autocomplete' in status.extras and field.number in status.extras['address_autocomplete'] and status.extras['address_autocomplete'][field.number]:
-                    autocomplete_id.append(the_saveas)
+                    if isinstance(status.extras['address_autocomplete'][field.number], bool):
+                        autocomplete_info.append([the_saveas, {"types": ["address"], "fields": ["address_components"]}])
+                    elif isinstance(status.extras['address_autocomplete'][field.number], dict):
+                        autocomplete_info.append([the_saveas, status.extras['address_autocomplete'][field.number]])
+                    else:
+                        raise Exception("address autocomplete must refer to a boolean value or a dictionary of options")
         seen_extra_header = False
         for field in field_list:
             if hasattr(field, 'collect_type'):
@@ -1143,6 +1148,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                                 validation_rules['messages'][the_saveas][key] = field.validation_message(key, status, word("You must type at least %s characters."), parameters=tuple([status.extras[key][field.number]]))
                             elif key == 'maxlength':
                                 validation_rules['messages'][the_saveas][key] = field.validation_message(key, status, word("You cannot type more than %s characters."), parameters=tuple([status.extras[key][field.number]]))
+                if hasattr(field, 'inputtype') and field.inputtype == 'hidden':
+                    validation_rules['rules'][the_saveas] = {'required': False}
             if hasattr(field, 'inputtype'):
                 if field.inputtype in ['yesnoradio', 'noyesradio', 'radio']:
                     validation_rules['ignore'] = None
@@ -1336,6 +1343,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 elif not status.extras['required'][field.number]:
                     if hasattr(field, 'saveas'):
                         checkboxes[field.saveas] = 'None'
+            if hasattr(field, 'inputtype') and field.inputtype == 'hidden':
+                fieldlist.append('                ' + input_for(status, field) + '\n')
+                continue
             if hasattr(field, 'saveas') and field.saveas in status.embedded:
                 continue
             if hasattr(field, 'label'):
@@ -1921,7 +1931,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         if status.using_navigation == 'vertical':
             output += '            <div id="darightbottom" class="' + right_classes + '">\n'
         else:
-            if status.question.interview.flush_left:
+            if status.flush_left():
                 output += '            <div id="darightbottom" class="' + right_classes + '">\n'
             else:
                 output += '            <div id="darightbottom" class="' + right_classes + '">\n'
@@ -2100,10 +2110,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
       });
     </script>"""
         status.extra_scripts.append(track_js)
-    if len(autocomplete_id) > 0:
+    if len(autocomplete_info) > 0:
         status.extra_scripts.append("""
 <script>
-  daInitAutocomplete(""" + json.dumps(autocomplete_id) + """);
+  daInitAutocomplete(""" + json.dumps(autocomplete_info) + """);
 </script>
 """)
     if len(status.maps) > 0:
@@ -2146,6 +2156,13 @@ def locale_format_string(the_value):
     return re.sub(r'[^0-9]$', '', locale.format_string('%.10f', float(the_value), grouping=False).rstrip('0'))
 
 
+def double_to_single_newline(text):
+    text = re.sub(r'\n\n', 'XXXNEWLINEXXX', text)
+    text = text.replace('\n', ' ')
+    text = text.replace('XXXNEWLINEXXX', '\n')
+    return text
+
+
 def input_for(status, field, wide=False, embedded=False, floating_label=None):
     output = str()
     if field.number in status.defaults:
@@ -2174,7 +2191,10 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
         defaultvalue_set = False
         defaultvalue = None
     if field.number in status.hints:
-        placeholdertext = ' placeholder=' + fix_double_quote(status.hints[field.number].replace('\n', ' '))
+        if hasattr(field, 'inputtype') and field.inputtype == 'area':
+            placeholdertext = ' placeholder=' + fix_double_quote(double_to_single_newline(status.hints[field.number]))
+        else:
+            placeholdertext = ' placeholder=' + fix_double_quote(status.hints[field.number].replace('\n', ' '))
     elif floating_label is not None:
         placeholdertext = ' placeholder=' + fix_double_quote(floating_label.replace('\n', ' '))
     else:
@@ -2239,7 +2259,8 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
         autocomplete_off = ''
     if 'css class' in status.extras and field.number in status.extras['css class']:
         extra_class += ' ' + clean_whitespace(status.extras['css class'][field.number])
-    if hasattr(field, 'choicetype'):
+    is_hidden = hasattr(field, 'inputtype') and field.inputtype == 'hidden'
+    if hasattr(field, 'choicetype') and not is_hidden:
         if field.choicetype in ['compute', 'manual']:
             pairlist = list(status.selectcompute[field.number])
         else:
@@ -2552,7 +2573,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
             else:
                 output += '</select> '
     elif hasattr(field, 'datatype'):
-        if field.datatype == 'boolean':
+        if field.datatype == 'boolean' and not is_hidden:
             label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=(not embedded), do_terms=False)
             if hasattr(field, 'inputtype') and field.inputtype in ['yesnoradio', 'noyesradio']:
                 inner_fieldlist = []
@@ -2639,7 +2660,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     output += '</span>'
                 else:
                     output += '</fieldset>'
-        elif field.datatype == 'threestate':
+        elif field.datatype == 'threestate' and not is_hidden:
             inner_fieldlist = []
             id_index = 0
             if embedded:
@@ -2684,7 +2705,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 output += " ".join(inner_fieldlist) + '</span>'
             else:
                 output += "".join(inner_fieldlist) + '</fieldset>'
-        elif field.datatype in ['file', 'files', 'camera', 'user', 'environment', 'camcorder', 'microphone']:
+        elif field.datatype in ['file', 'files', 'camera', 'user', 'environment', 'camcorder', 'microphone'] and not is_hidden:
             if field.datatype == 'files':
                 multipleflag = ' multiple'
             else:
@@ -2694,10 +2715,8 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 # capture = ' capture="camera"'
             elif field.datatype == 'user':
                 accept = ' accept="image/*" capture="user"'
-                # capture = ' capture="environment"'
             elif field.datatype == 'environment':
-                accept = ' accept="image/*"'
-                # capture = ' capture="environment"'
+                accept = ' accept="image/*" capture="environment"'
             elif field.datatype == 'camcorder':
                 accept = ' accept="video/*"'
                 # capture = '  capture="camcorder"'
@@ -2726,7 +2745,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
             else:
                 output += '<input aria-describedby="' + escape_id(saveas_string) + '-error" alt=' + fix_double_quote(word("You can upload a file here")) + ' type="file" tabindex="-1" class="dafile" data-show-upload="false" ' + maximagesize + imagetype + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + req_attr + ' /><div class="da-has-error invalid-feedback" style="display: none;" id="' + escape_id(saveas_string) + '-error"></div>'
             # output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="fas fa-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-secondary btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-secondary fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
-        elif field.datatype == 'range':
+        elif field.datatype == 'range' and not is_hidden:
             ok = True
             for key in ['min', 'max']:
                 if not (hasattr(field, 'extras') and key in field.extras and key in status.extras and field.number in status.extras[key]):
@@ -2834,6 +2853,8 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     defaultstring = ' value="' + format_date(defaultvalue, format='yyyy-MM-dd') + '"'
             else:
                 defaultstring = ''
+            if is_hidden:
+                return '<input' + defaultstring + ' type="hidden" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" />'
             input_type = field.datatype
             if field.datatype == 'datetime':
                 input_type = 'datetime-local'

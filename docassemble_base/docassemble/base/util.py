@@ -68,6 +68,7 @@ import pandas
 import PyPDF2
 from docx import Document
 import google.cloud
+from typing import Any
 
 capitalize_func = capitalize
 NoneType = type(None)
@@ -1354,6 +1355,10 @@ class DACatchAll(DAObject):
     def __bool__(self):
         self.context = 'bool'
         return bool(self.value)
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        self.context = 'callable'
+        return self.value(*args, **kwargs)
 
 
 class RelationshipDir(DAObject):
@@ -5934,7 +5939,7 @@ class DAContext(DADict):
 
 def objects_from_structure(target, root=None):
     if isinstance(target, dict):
-        if len(target.keys()) > 0 and len(set(target.keys()).difference(set(['question', 'document', 'docx', 'pdf', 'pandoc']))) == 0:
+        if len(target.keys()) > 0 and len(set(target.keys()).intersection(set(['question', 'document', 'docx', 'pdf', 'pandoc']))) >= 2:
             new_context = DAContext('abc_context', **target)
             if root:
                 new_context._set_instance_name_recursively(root)

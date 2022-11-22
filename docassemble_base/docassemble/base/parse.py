@@ -1443,6 +1443,13 @@ class InterviewStatus:
                 indexno += 1
         return choice_list
 
+    def flush_left(self):
+        if self.question.interview.flush_left:
+            return True
+        if self.question.interview.wide_side_by_side and self.extras.get('rightText', ''):
+            return True
+        return False
+
 # def new_counter(initial_value=0):
 #     d = {'counter': initial_value}
 #     def f():
@@ -2019,6 +2026,8 @@ class Question:
                         self.interview.use_navigation_on_small_screens = False
             if 'centered' in data['features'] and not data['features']['centered']:
                 self.interview.flush_left = True
+            if data['features'].get('wide side by side', False):
+                self.interview.wide_side_by_side = True
             if 'maximum image size' in data['features']:
                 self.interview.max_image_size = eval(str(data['features']['maximum image size']))
             if 'image upload type' in data['features']:
@@ -3662,6 +3671,11 @@ class Question:
                 manual_keys = set()
                 field_info = {'type': 'text', 'number': field_number}
                 custom_data_type = False
+                if field.get('input type', None) == 'hidden':
+                    if 'field' in field and 'label' not in field:
+                        field['label'] = 'hidden'
+                    if field.get('datatype', None) in ['file', 'files', 'camera', 'user', 'environment', 'camcorder', 'microphone']:
+                        raise DAError("Invalid datatype of hidden field." + self.idebug(data))
                 if 'choices' in field and isinstance(field['choices'], dict) and len(field['choices']) == 1 and 'code' in field['choices']:
                     field['code'] = field['choices']['code']
                     del field['choices']
@@ -3674,6 +3688,9 @@ class Question:
                         field['datatype'] = 'ml'
                     if field['datatype'] == 'area':
                         field['input type'] = 'area'
+                        field['datatype'] = 'text'
+                    if field['datatype'] == 'hidden':
+                        field['input type'] = 'hidden'
                         field['datatype'] = 'text'
                     if field['datatype'] in ('object', 'object_radio', 'multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
                         raise DAError("A multiple choice field must refer to a list of choices." + self.idebug(data))
@@ -3996,6 +4013,10 @@ class Question:
                         if isinstance(field[key], str):
                             field_info['address_autocomplete'] = compile(field[key], '<address autocomplete expression>', 'eval')
                             self.find_fields_in(field[key])
+                        elif isinstance(field[key], dict):
+                            field_info['address_autocomplete'] = field[key]
+                        elif isinstance(field[key], list):
+                            raise DAError("address autocomplete must be a Python expression, a dictionary, or a boolean value." + self.idebug(data))
                         else:
                             field_info['address_autocomplete'] = bool(field[key])
                     elif key == 'label above field':
@@ -5958,10 +5979,12 @@ class Question:
                     if hasattr(field, 'address_autocomplete'):
                         if 'address_autocomplete' not in extras:
                             extras['address_autocomplete'] = {}
-                        if isinstance(field.address_autocomplete, bool):
+                        if isinstance(field.address_autocomplete, (bool, dict)):
                             extras['address_autocomplete'][field.number] = field.address_autocomplete
                         else:
                             extras['address_autocomplete'][field.number] = eval(field.address_autocomplete, user_dict)
+                            if hasattr(extras['address_autocomplete'][field.number], 'instanceName') and hasattr(extras['address_autocomplete'][field.number], 'elements'):
+                                extras['address_autocomplete'][field.number] = extras['address_autocomplete'][field.number].elements
                     if hasattr(field, 'label_above_field'):
                         if 'label_above_field' not in extras:
                             extras['label_above_field'] = {}
@@ -7279,6 +7302,7 @@ class Interview:
         self.use_navigation = False
         self.use_navigation_on_small_screens = True
         self.flush_left = False
+        self.wide_side_by_side = False
         self.max_image_size = get_config('maximum image size', None)
         self.image_type = get_config('image upload type', None)
         self.bootstrap_theme = get_config('bootstrap theme', None)

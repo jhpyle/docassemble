@@ -1083,7 +1083,8 @@ def logout():
     logout_user()
     delete_session_info()
     session.clear()
-    flash(word('You have signed out successfully.'), 'success')
+    if next_url.startswith('/') and app.config['FLASH_LOGIN_MESSAGES']:
+        flash(word('You have signed out successfully.'), 'success')
     response = redirect(next_url)
     response.set_cookie('remember_token', '', expires=0)
     response.set_cookie('visitor_secret', '', expires=0)
@@ -4580,6 +4581,19 @@ class FakeRole:
     pass
 
 
+def verify_email(email):
+    if len(daconfig['authorized registration domains']) != 0:
+        ok = False
+        email = str(email).lower().strip()
+        for domain in daconfig['authorized registration domains']:
+            if email.endswith(domain):
+                ok = True
+                break
+        if not ok:
+            return False
+    return True
+
+
 class OAuthSignIn:
     providers = {}
     providers_obtained = False
@@ -4986,6 +5000,9 @@ def oauth_callback(provider):
     #     logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
     oauth = OAuthSignIn.get_provider(provider)
     social_id, username, email, name_data = oauth.callback()
+    if not verify_email(email):
+        flash(word('E-mail addresses with this domain are not authorized to register for accounts on this system.'), 'error')
+        return redirect(url_for('user.login'))
     if social_id is None:
         flash(word('Authentication failed.'), 'error')
         return redirect(url_for('interview_list', from_login='1'))
@@ -5005,6 +5022,7 @@ def oauth_callback(provider):
             user.last_name = re.sub(r'.* ', '', name_data['name'])
         db.session.add(user)
         db.session.commit()
+    session["_flashes"] = []
     login_user(user, remember=False)
     update_last_login(user)
     if 'i' in session:  # TEMPORARY
@@ -7776,8 +7794,8 @@ def index(action_argument=None, refer=None):
                                     elements.append("docassemble.base.util.DAFile(" + repr(file_field_tr + "[" + str(indexno) + "]") + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
                                 the_file_list = "docassemble.base.util.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
-                                if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field]:
-                                    the_field = the_question.fields[field_numbers[orig_file_field]]
+                                if var_to_store in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[var_to_store]:
+                                    the_field = the_question.fields[field_numbers[var_to_store]]
                                     add_permissions_for_field(the_field, interview_status, files_to_process)
                                     if hasattr(the_field, 'validate'):
                                         the_key = orig_file_field
@@ -7838,14 +7856,15 @@ def index(action_argument=None, refer=None):
             for orig_file_field in file_fields:
                 if orig_file_field not in raw_visible_fields:
                     continue
-                if orig_file_field in known_varnames:
-                    orig_file_field = known_varnames[orig_file_field]
-                if orig_file_field not in visible_fields:
+                file_field_to_use = orig_file_field
+                if file_field_to_use in known_varnames:
+                    file_field_to_use = known_varnames[orig_file_field]
+                if file_field_to_use not in visible_fields:
                     empty_file_vars.add(orig_file_field)
                 try:
-                    file_field = from_safeid(orig_file_field)
+                    file_field = from_safeid(file_field_to_use)
                 except:
-                    error_messages.append(("error", "Error: Invalid file_field: " + str(orig_file_field)))
+                    error_messages.append(("error", "Error: Invalid file_field: " + str(file_field_to_use)))
                     break
                 if STRICT_MODE and file_field not in authorized_fields:
                     raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
@@ -7915,12 +7934,12 @@ def index(action_argument=None, refer=None):
                                     elements.append("docassemble.base.util.DAFile(" + repr(file_field_tr + '[' + str(indexno) + ']') + ", filename=" + repr(filename) + ", number=" + str(file_number) + ", make_pngs=True, mimetype=" + repr(mimetype) + ", extension=" + repr(extension) + ")")
                                     indexno += 1
                                 the_file_list = "docassemble.base.util.DAFileList(" + repr(file_field_tr) + ", elements=[" + ", ".join(elements) + "])"
-                                if orig_file_field in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[orig_file_field]:
-                                    the_field = the_question.fields[field_numbers[orig_file_field]]
+                                if var_to_store in field_numbers and the_question is not None and len(the_question.fields) > field_numbers[var_to_store]:
+                                    the_field = the_question.fields[field_numbers[var_to_store]]
                                     add_permissions_for_field(the_field, interview_status, files_to_process)
-                                    if hasattr(the_question.fields[field_numbers[orig_file_field]], 'validate'):
+                                    if hasattr(the_question.fields[field_numbers[var_to_store]], 'validate'):
                                         the_key = orig_file_field
-                                        the_func = eval(the_question.fields[field_numbers[orig_file_field]].validate['compute'], user_dict)
+                                        the_func = eval(the_question.fields[field_numbers[var_to_store]].validate['compute'], user_dict)
                                         try:
                                             the_result = the_func(eval(the_file_list))
                                             if not the_result:
@@ -8026,7 +8045,7 @@ def index(action_argument=None, refer=None):
             #     raise DAError("The variable " + repr(collect['list']) + " was not in the allowed fields, which were " + repr(authorized_fields))
             # if not illegal_variable_name(collect['list']):
             if collect['function'] == 'add':
-                add_action_to_stack(interview_status, user_dict, '_da_list_add', {'list': list_collect_list})
+                add_action_to_stack(interview_status, user_dict, '_da_list_add', {'list': list_collect_list, 'complete': False})
         if list_collect_list is not None:
             exec(list_collect_list + '._disallow_appending()', user_dict)
         if the_question is not None and the_question.validation_code:
@@ -8113,6 +8132,7 @@ def index(action_argument=None, refer=None):
         reset_user_dict(user_code, yaml_filename)
         delete_session_for_interview(i=yaml_filename)
         release_lock(user_code, yaml_filename)
+        session["_flashes"] = []
         logmessage("Redirecting because of an exit.")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
@@ -8174,6 +8194,7 @@ def index(action_argument=None, refer=None):
         return response
     if interview_status.question.question_type == "leave":
         release_lock(user_code, yaml_filename)
+        session["_flashes"] = []
         logmessage("Redirecting because of a leave.")
         if interview_status.questionText != '':
             response = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
@@ -8236,6 +8257,7 @@ def index(action_argument=None, refer=None):
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     elif interview_status.question.question_type == "redirect":
         logmessage("Redirecting because of a redirect.")
+        session["_flashes"] = []
         response_to_send = do_redirect(interview_status.questionText, is_ajax, is_json, js_target)
     else:
         response_to_send = None
@@ -12121,8 +12143,8 @@ def index(action_argument=None, refer=None):
         if interview_status.using_navigation == 'vertical':
             output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-3 col-xl-2 daright">\n'
         else:
-            if interview.flush_left:
-                output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-6 col-xl-5 daright">\n'
+            if interview_status.flush_left():
+                output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-6 col-xxl-5 daright">\n'
             else:
                 output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-3 col-xl-3 daright">\n'
         output += docassemble.base.util.markdown_to_html(interview_status.extras['rightText'], trim=False, status=interview_status) + "\n"
@@ -12133,8 +12155,8 @@ def index(action_argument=None, refer=None):
         if interview_status.using_navigation == 'vertical':
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
         else:
-            if interview.flush_left:
-                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
+            if interview_status.flush_left():
+                output += '        <div class="offset-xxl-1 col-xxl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
             else:
                 output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
         output += interview_status.post
@@ -12145,8 +12167,8 @@ def index(action_argument=None, refer=None):
         if interview_status.using_navigation == 'vertical':
             output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
         else:
-            if interview.flush_left:
-                output += '        <div class="offset-xl-1 col-xl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
+            if interview_status.flush_left():
+                output += '        <div class="offset-xxl-1 col-xxl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
             else:
                 output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
         output += '          <br/><br/><br/><br/><br/><br/><br/>\n'
@@ -12697,7 +12719,7 @@ def run_interview_in_package_directory(package, directory, filename):
         arguments[arg] = request.args[arg]
     arguments['i'] = 'docassemble.' + package + ':data/questions/' + directory + '/' + filename + '.yml'
     request.args = arguments
-    return index(refer=['run_direcory', package, directory, filename])
+    return index(refer=['run_directory', package, directory, filename])
 
 
 @app.route('/run/<package>/<filename>/', methods=['GET'])
@@ -17988,7 +18010,7 @@ def config_page():
         version = word("Version ") + str(python_version)
     else:
         version = word("Version ") + str(python_version) + ' (Python); ' + str(system_version) + ' (' + word('system') + ')'
-    response = make_response(render_template('pages/config.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.min.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n    </script>'), form=form), 200)
+    response = make_response(render_template('pages/config.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.min.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      daCodeMirror.setOption("viewportMargin", Infinity);\n    </script>'), form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -19718,8 +19740,8 @@ def playground_packages():
         return redirect(url_for('playground_packages', project=current_project))
     if not is_new:
         pkgname = 'docassemble.' + the_file
-        pypi_info = pypi_status(pkgname)
         if can_publish_to_pypi:
+            pypi_info = pypi_status(pkgname)
             if pypi_info['error']:
                 pypi_message = word("Unable to determine if the package is published on PyPI.")
             else:
@@ -19745,7 +19767,7 @@ def playground_packages():
                     old_filename = os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + form.original_file_name.data)
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
-                if form.pypi.data and pypi_version is not None:
+                if can_publish_to_pypi and form.pypi.data and pypi_version is not None:
                     if not new_info['version']:
                         new_info['version'] = pypi_version
                     while 'releases' in pypi_info['info'] and new_info['version'] in pypi_info['info']['releases'].keys():
@@ -24334,9 +24356,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                     data = repr('')
                     skip_it = True
                 else:
-                    data = re.sub(r'[^0-9\-\.]', '', inp)
-                    if data == '':
-                        data = '0'
+                    data = re.sub(r'[^0-9\.\-]', '', inp)
                     try:
                         the_value = eval("int(" + repr(data) + ")")
                         data = "int(" + repr(data) + ")"
@@ -24387,12 +24407,10 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         data = None
             elif hasattr(field, 'datatype') and field.datatype in ('number', 'float', 'currency'):
                 if user_entered_skip and not interview_status.extras['required'][field.number]:
-                    data = repr('')
+                    data = '0.0'
                     skip_it = True
                 else:
-                    data = re.sub(r'[^0-9\-\.]', '', inp)
-                    if data == '':
-                        data = '0.0'
+                    data = re.sub(r'[^0-9\.\-]', '', inp)
                     try:
                         the_value = eval("float(" + json.dumps(data) + ")", user_dict)
                         data = "float(" + json.dumps(data) + ")"

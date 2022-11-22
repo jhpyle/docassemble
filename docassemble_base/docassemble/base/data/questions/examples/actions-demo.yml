@@ -13,15 +13,15 @@ subquestion: |
   clicked may be different from the way they work the next time they
   are clicked.
 
-  [Variable defined by `question`](${ url_action('favorite_fruit') })
+  [Variable defined by question](${ url_action('favorite_fruit') })
 
-  [`event` question](${ url_action('fruit_info') })
+  [event question](${ url_action('fruit_info') })
 
-  [Variable defined by `code`](${ url_action('vegetable_asked_about') })
+  [Variable defined by code](${ url_action('vegetable_asked_about') })
 
-  [`event` code](${ url_action('increment_counter') })
+  [event code](${ url_action('increment_counter') })
 
-  [`event` code that calls `force_ask()`](${ url_action('review_preferences') })
+  [event code that calls force_ask()](${ url_action('review_preferences') })
 
   The value of the counter is ${ counter }.
 ---

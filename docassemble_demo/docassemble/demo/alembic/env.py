@@ -1,9 +1,11 @@
-from __future__ import with_statement
+import os
 import json
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
+
+VERSION_TABLE = 'alembic_version_' + os.path.abspath(__file__).split(os.sep)[-3]
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
