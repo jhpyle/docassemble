@@ -132,3 +132,6 @@ app.config['ALLOW_UPDATES'] = daconfig.get('allow updates', True)
 app.config['ALLOW_CONFIGURATION_EDITING'] = daconfig.get('allow configuration editing', True)
 app.config['ALLOW_RESTARTING'] = bool(app.config['ENABLE_PLAYGROUND'] or app.config['ALLOW_UPDATES'] or app.config['ALLOW_CONFIGURATION_EDITING'])
 app.config['USER_PROFILE_FIELDS'] = daconfig.get('user profile fields', [])
+app.config['GRID_CLASSES_USER'] = daconfig['grid classes']['user']
+app.config['GRID_CLASSES_WIDE'] = daconfig['grid classes']['admin wide']
+app.config['GRID_CLASSES_ADMIN'] = daconfig['grid classes']['admin']

@@ -308,6 +308,63 @@ def load(**kwargs):
             daconfig['google'] = {}
     else:
         daconfig['google'] = {}
+    if 'grid classes' in daconfig:
+        if not isinstance(daconfig['grid classes'], dict):
+            config_error("The Configuration directive grid classes must be a dictionary.")
+            daconfig['grid classes'] = {}
+        has_error = False
+        for key, item in daconfig['grid classes'].items():
+            if key in ('vertical navigation', 'flush left', 'centered'):
+                if isinstance(item, dict):
+                    for subkey, subitem in item.items():
+                        if not isinstance(subitem, str):
+                            config_error("Under the Configuration directive grid classes, " + key + ", " + str(subkey) + " must be a dictionary of string values.")
+                            has_error = True
+                            break
+                else:
+                    config_error("Under the Configuration directive grid classes, " + key + " must be a dictionary.")
+                    has_error = True
+            elif not isinstance(item, str):
+                config_error("The Configuration directive grid classes must only refer to strings.")
+                has_error = True
+                break
+        if has_error:
+            daconfig['grid classes'] = {}
+    else:
+        daconfig['grid classes'] = {}
+    for key in ('vertical navigation', 'flush left', 'centered'):
+        if key not in daconfig['grid classes']:
+            daconfig['grid classes'][key] = {}
+    if not daconfig['grid classes'].get('user', None):
+        daconfig['grid classes']['user'] = 'offset-lg-3 col-lg-6 offset-md-2 col-md-8 offset-sm-1 col-sm-10'
+    if not daconfig['grid classes'].get('admin wide', None):
+        daconfig['grid classes']['admin wide'] = 'col-sm-10'
+    if not daconfig['grid classes'].get('admin', None):
+        daconfig['grid classes']['admin'] = 'col-md-7 col-lg-6'
+    if not daconfig['grid classes'].get('label width', None):
+        daconfig['grid classes']['label width'] = 'md-4'
+    if not daconfig['grid classes'].get('field width', None):
+        daconfig['grid classes']['field width'] = 'md-8'
+    if not daconfig['grid classes']['vertical navigation'].get('bar', None):
+        daconfig['grid classes']['vertical navigation']['bar'] = 'offset-xl-1 col-xl-2 col-lg-3 col-md-3'
+    if not daconfig['grid classes']['vertical navigation'].get('body', None):
+        daconfig['grid classes']['vertical navigation']['body'] = 'col-lg-6 col-md-9'
+    if not daconfig['grid classes']['vertical navigation'].get('right', None):
+        daconfig['grid classes']['vertical navigation']['right'] = 'd-none d-lg-block col-lg-3 col-xl-2'
+    if not daconfig['grid classes']['vertical navigation'].get('right small screen', None):
+        daconfig['grid classes']['vertical navigation']['right small screen'] = 'd-block d-lg-none'
+    if not daconfig['grid classes']['flush left'].get('body', None):
+        daconfig['grid classes']['flush left']['body'] = 'offset-xxl-1 col-xxl-5 col-lg-6 col-md-8'
+    if not daconfig['grid classes']['flush left'].get('right', None):
+        daconfig['grid classes']['flush left']['right'] = 'd-none d-lg-block col-xxl-5 col-lg-6'
+    if not daconfig['grid classes']['flush left'].get('right small screen', None):
+        daconfig['grid classes']['flush left']['right small screen'] = 'd-block d-lg-none'
+    if not daconfig['grid classes']['centered'].get('body', None):
+        daconfig['grid classes']['centered']['body'] = 'offset-lg-3 col-lg-6 offset-md-2 col-md-8'
+    if not daconfig['grid classes']['centered'].get('right', None):
+        daconfig['grid classes']['centered']['right'] = 'd-none d-lg-block col-lg-3'
+    if not daconfig['grid classes']['centered'].get('right small screen', None):
+        daconfig['grid classes']['centered']['right small screen'] = 'd-block d-lg-none'
     if 'signature pen thickness scaling factor' not in daconfig:
         daconfig['signature pen thickness scaling factor'] = 1.0
     if isinstance(daconfig['signature pen thickness scaling factor'], int):

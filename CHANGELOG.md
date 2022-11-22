@@ -1,9 +1,11 @@
 # Change Log
 
-## [1.4.21] - 2022-11-16
+## [1.4.21] - 2022-11-22
 
 ### Added
 - The `suppress autofill` directive under `features`.
+- The `grid classes` Configuration directive.
+- The `alert html` and `alert container html` Configuration directives.
 
 ## [1.4.20] - 2022-11-16
 

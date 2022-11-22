@@ -529,8 +529,8 @@ DEFAULT_VOICE = daconfig.get('voice', None)
 LOGSERVER = daconfig.get('log server', None)
 CHECKIN_INTERVAL = int(daconfig.get('checkin interval', 6000))
 # message_sequence = dbtableprefix + 'message_id_seq'
-NOTIFICATION_CONTAINER = '<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>'
-NOTIFICATION_MESSAGE = '<div class="da-alert alert alert-%s alert-dismissible fade show" role="alert">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
+NOTIFICATION_CONTAINER = daconfig.get('alert container html', '<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>')
+NOTIFICATION_MESSAGE = daconfig.get('alert html', '<div class="da-alert alert alert-%s alert-dismissible fade show" role="alert">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>')
 
 USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
 SINGLE_SERVER = USING_SUPERVISOR and bool(':all:' in ':' + os.environ.get('CONTAINERROLE', 'all') + ':')
@@ -2898,7 +2898,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
         else:
             the_section = the_sections[0]
     if wrapper:
-        output = '<div role="navigation" class="offset-xl-1 col-xl-2 col-lg-3 col-md-3 d-none d-md-block danavdiv">\n  <div class="nav flex-column nav-pills danav danav-vertical danavlinks">\n'
+        output = '<div role="navigation" class="' + daconfig['grid classes']['vertical navigation']['bar'] + ' d-none d-md-block danavdiv">\n  <div class="nav flex-column nav-pills danav danav-vertical danavlinks">\n'
     else:
         output = ''
     section_reached = False
@@ -3167,11 +3167,11 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         else:
             target = ' target="_blank"'
         navbar += """\
-        <a id="dapagetitle" class="navbar-brand danavbar-title dapointer" href=""" + '"' + status.title_url + '"' + target + """><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></a>
+        <a id="dapagetitle" class="navbar-brand danavbar-title dapointer" href=""" + '"' + status.title_url + '"' + target + """><span class="d-none d-lg-block">""" + status.display_title + """</span><span class="d-block d-lg-none">""" + status.display_short_title + """</span></a>
 """
     else:
         navbar += """\
-        <span id="dapagetitle" class="navbar-brand danavbar-title"><span class="d-none d-md-block">""" + status.display_title + """</span><span class="d-block d-md-none">""" + status.display_short_title + """</span></span>
+        <span id="dapagetitle" class="navbar-brand danavbar-title"><span class="d-none d-lg-block">""" + status.display_title + """</span><span class="d-block d-lg-none">""" + status.display_short_title + """</span></span>
 """
     help_message = word("Help is available")
     help_label = None
@@ -3194,7 +3194,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     source_message = word("Information for the developer")
     if debug_mode:
         source_button = '<div class="nav-item navbar-nav d-none d-md-block"><button class="btn btn-link nav-link da-no-outline" title=' + json.dumps(source_message) + ' id="dasourcetoggle" data-bs-toggle="collapse" data-bs-target="#dasource"><i class="fas fa-code"></i></button></div>'
-        source_menu_item = '<a class="dropdown-item d-block d-md-none navbar" title=' + json.dumps(source_message) + ' href="#dasource" data-bs-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
+        source_menu_item = '<a class="dropdown-item d-block d-lg-none navbar" title=' + json.dumps(source_message) + ' href="#dasource" data-bs-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
     else:
         source_button = ''
         source_menu_item = ''
@@ -12141,36 +12141,36 @@ def index(action_argument=None, refer=None):
     output += content
     if 'rightText' in interview_status.extras:
         if interview_status.using_navigation == 'vertical':
-            output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-3 col-xl-2 daright">\n'
+            output += '          <section id="daright" role="complementary" class="' + daconfig['grid classes']['vertical navigation']['right'] + ' daright">\n'
         else:
             if interview_status.flush_left():
-                output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-6 col-xxl-5 daright">\n'
+                output += '          <section id="daright" role="complementary" class="' + daconfig['grid classes']['flush left']['right'] + ' daright">\n'
             else:
-                output += '          <section id="daright" role="complementary" class="d-none d-lg-block col-lg-3 col-xl-3 daright">\n'
+                output += '          <section id="daright" role="complementary" class="' + daconfig['grid classes']['centered']['right'] + ' daright">\n'
         output += docassemble.base.util.markdown_to_html(interview_status.extras['rightText'], trim=False, status=interview_status) + "\n"
         output += '          </section>\n'
     output += "      </div>\n"
     if interview_status.question.question_type != "signature" and interview_status.post:
         output += '      <div class="row">' + "\n"
         if interview_status.using_navigation == 'vertical':
-            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
+            output += '        <div class="' + daconfig['grid classes']['vertical navigation']['body'] + ' daattributions" id="daattributions">\n'
         else:
             if interview_status.flush_left():
-                output += '        <div class="offset-xxl-1 col-xxl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
+                output += '        <div class="' + daconfig['grid classes']['flush left']['body'] + ' daattributions" id="daattributions">\n'
             else:
-                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
+                output += '        <div class="' + daconfig['grid classes']['centered']['body'] + ' daattributions" id="daattributions">\n'
         output += interview_status.post
         output += '        </div>\n'
         output += '      </div>' + "\n"
     if len(interview_status.attributions) > 0:
         output += '      <div class="row">' + "\n"
         if interview_status.using_navigation == 'vertical':
-            output += '        <div class="offset-xl-3 offset-lg-3 offset-md-3 col-lg-6 col-md-9 col-sm-12 daattributions" id="daattributions">\n'
+            output += '        <div class="' + daconfig['grid classes']['vertical navigation']['body'] + ' daattributions" id="daattributions">\n'
         else:
             if interview_status.flush_left():
-                output += '        <div class="offset-xxl-1 col-xxl-5 col-lg-6 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
+                output += '        <div class="' + daconfig['grid classes']['flush left']['body'] + ' daattributions" id="daattributions">\n'
             else:
-                output += '        <div class="offset-xl-3 offset-lg-3 col-xl-6 col-lg-6 offset-md-2 col-md-8 col-sm-12 daattributions" id="daattributions">\n'
+                output += '        <div class="' + daconfig['grid classes']['centered']['body'] + ' daattributions" id="daattributions">\n'
         output += '          <br/><br/><br/><br/><br/><br/><br/>\n'
         for attribution in sorted(interview_status.attributions):
             output += '          <div><p><cite><small>' + docassemble.base.util.markdown_to_html(attribution, status=interview_status, strip_newlines=True, trim=True) + '</small></cite></p></div>\n'
@@ -21771,14 +21771,135 @@ def server_error(the_error):
     <script>
       var daGlobalEval = eval;
       var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
+      var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
+      if (!String.prototype.daSprintf){
+        Object.defineProperty(String.prototype, "daSprintf", {
+          value: function () {
+            var args = Array.from(arguments),
+              i = 0;
+            function defaultNumber(iValue) {
+              return iValue != undefined && !isNaN(iValue) ? iValue : "0";
+            }
+            function defaultString(iValue) {
+              return iValue == undefined ? "" : "" + iValue;
+            }
+            return this.replace(
+              /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
+              function (match, sign, filler, scale, precision, type) {
+                var strOut, space, value;
+                var asNumber = false;
+                if (match == "%%") return "%";
+                if (i >= args.length) return match;
+                value = args[i];
+                while (Array.isArray(value)) {
+                  args.splice(i, 1);
+                  for (var j = i; value.length > 0; j++)
+                    args.splice(j, 0, value.shift());
+                  value = args[i];
+                }
+                i++;
+                if (filler == undefined) filler = " "; // default
+                if (scale == undefined && !isNaN(filler)) {
+                  scale = filler;
+                  filler = " ";
+                }
+                if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
+                if (scale == undefined) scale = 0; // default
+                if (precision == undefined) precision = ".0"; // default
+                scale = parseInt(scale);
+                precision = parseInt(precision.substr(1));
+                switch (type) {
+                  case "d":
+                  case "i":
+                    // decimal integer
+                    asNumber = true;
+                    strOut = parseInt(defaultNumber(value));
+                    if (precision > 0) strOut += "." + "0".repeat(precision);
+                    break;
+                  case "e":
+                  case "E":
+                    // float in exponential notation
+                    asNumber = true;
+                    strOut = parseFloat(defaultNumber(value));
+                    if (precision == 0) strOut = strOut.toExponential();
+                    else strOut = strOut.toExponential(precision);
+                    if (type == "E") strOut = strOut.replace("e", "E");
+                    break;
+                  case "f":
+                    // decimal float
+                    asNumber = true;
+                    strOut = parseFloat(defaultNumber(value));
+                    if (precision != 0) strOut = strOut.toFixed(precision);
+                    break;
+                  case "o":
+                  case "h":
+                  case "H":
+                    // Octal or Hexagesimal integer notation
+                    strOut =
+                      "\\\\" +
+                      (type == "o" ? "0" : type) +
+                      parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
+                    break;
+                  case "q":
+                    // single quoted string
+                    strOut = "'" + defaultString(value) + "'";
+                    break;
+                  case "Q":
+                    // double quoted string
+                    strOut = '"' + defaultString(value) + '"';
+                    break;
+                  default:
+                    // string
+                    strOut = defaultString(value);
+                    break;
+                }
+                if (typeof strOut != "string") strOut = "" + strOut;
+                if ((space = strOut.length) < scale) {
+                  if (asNumber) {
+                    if (sign == "-") {
+                      if (strOut.indexOf("-") < 0)
+                        strOut = filler.repeat(scale - space) + strOut;
+                      else
+                        strOut =
+                          "-" +
+                          filler.repeat(scale - space) +
+                          strOut.replace("-", "");
+                    } else {
+                      if (strOut.indexOf("-") < 0)
+                        strOut = "+" + filler.repeat(scale - space - 1) + strOut;
+                      else
+                        strOut =
+                          "-" +
+                          filler.repeat(scale - space) +
+                          strOut.replace("-", "");
+                    }
+                  } else {
+                    if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
+                    else strOut = strOut + filler.repeat(scale - space);
+                  }
+                } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
+                  strOut = "+" + strOut;
+                return strOut;
+              }
+            );
+          },
+        });
+        Object.defineProperty(window, "daSprintf", {
+          value: function (str, ...rest) {
+            if (typeof str == "string")
+              return String.prototype.daSprintf.apply(str, rest);
+            return "";
+          },
+        });
+      }
       function flash(message, priority){
         if (priority == null){
           priority = 'info'
         }
         if (!$("#daflash").length){
-          $(daTargetDiv).append('<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash"></div>');
+          $("body").append(""" + json.dumps(NOTIFICATION_CONTAINER % ('',)) + """);
         }
-        $("#daflash").append('<div class="da-alert alert alert-' + priority + ' daalert-interlocutory alert-dismissible fade show" role="alert">' + message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"><\/button><\/div>');
+        $("#daflash").append(daSprintf(daNotificationMessage, priority, message));
         if (priority == 'success'){
           setTimeout(function(){
             $("#daflash .alert-success").hide(300, function(){
