@@ -87,13 +87,13 @@ class UserModel(db.Model, UserMixin):
         if self.limited_api:
             return bool(task in self.limits)
         if hasattr(self, 'roles'):
-            roles = self.roles
+            the_roles = self.roles
         else:
             if hasattr(self, 'user_profile') and hasattr(self.user_profile, 'roles'):
-                roles = self.user_profile.roles
+                the_roles = self.user_profile.roles
             else:
-                roles = None
-        for role in roles:
+                the_roles = None
+        for role in the_roles:
             if role.name in allowed and task in allowed[role.name]:
                 return True
         return False

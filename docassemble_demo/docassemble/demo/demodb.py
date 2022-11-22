@@ -66,7 +66,7 @@ DBSession = sessionmaker(bind=engine)()
 
 # Perform any necessary database schema updates using alembic, if there is an alembic
 # directory and alembic.ini file in the package.
-upgrade_db(url, __file__, engine, conn_args=conn_args)
+upgrade_db(url, __file__, engine, version_table='auto', conn_args=conn_args)
 
 
 # Define Bank as both a DAObject and SQLObject

@@ -96,6 +96,7 @@ class LawsuitDocumentModel(Base):
 url = alchemy_url('demo db')
 
 # Build the "engine" for connecting to the SQL server, using the URL for the database.
+conn_args = connect_args('demo db')
 if url.startswith('postgres'):
     engine = create_engine(url, connect_args=connect_args('demo db'), pool_pre_ping=False)
 else:
@@ -109,7 +110,7 @@ Base.metadata.bind = engine
 
 # Perform any necessary database schema updates using alembic, if there is an alembic
 # directory and alembic.ini file in the package.
-upgrade_db(url, __file__, engine)
+upgrade_db(url, __file__, engine, version_table='auto', conn_args=conn_args)
 
 # Create a connection to the SQL database, which will be used by the following classes.
 DBSession = sessionmaker(bind=engine)()

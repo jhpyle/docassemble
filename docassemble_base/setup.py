@@ -47,7 +47,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 install_requires = [
-    'docassemble==1.4.12',
+    'docassemble==1.4.20',
     "3to2==1.1.1",
     "alembic==1.7.7",
     "astunparse==1.6.3",
@@ -89,6 +89,7 @@ install_requires = [
     "docxcompose==1.3.4",
     "docxtpl==0.16.3",
     "et-xmlfile==1.1.0",
+    "Flask-Mail==0.9.1",
     "future==0.18.2",
     "geographiclib==1.52",
     "geopy==2.2.0",
@@ -144,7 +145,7 @@ install_requires = [
     "passlib==1.7.4",
     "pdfminer.six==20220319",
     "phonenumbers==8.12.46",
-    "Pillow==9.1.1",
+    "Pillow==9.3.0",
     "pkginfo==1.8.2",
     "pluggy==1.0.0",
     "ply==3.11",
@@ -226,7 +227,7 @@ else:
     install_requires.append("docassemble-backports==1.0")
 
 setup(name='docassemble.base',
-      version='1.4.12',
+      version='1.4.20',
       python_requires='>=3.8',
       description=('The base components of the docassemble system.'),
       long_description=read("README.md"),

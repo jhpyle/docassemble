@@ -1,2 +1,3 @@
 docassemble_check_rcpt:
-  accept
+  accept domains = +local_domains
+  accept hosts   = +relay_from_hosts

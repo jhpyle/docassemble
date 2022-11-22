@@ -4,7 +4,7 @@ import importlib
 from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 import docassemble.webapp.database
-da_version = '1.4.12'
+da_version = '1.4.20'
 app.config['DA_VERSION'] = da_version
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
@@ -46,12 +46,13 @@ app.config['USER_ENABLE_EMAIL'] = True
 app.config['USER_ENABLE_USERNAME'] = False
 app.config['USER_ENABLE_REGISTRATION'] = True
 app.config['USER_ENABLE_CHANGE_USERNAME'] = False
-app.config['ALLOW_CHANGING_PASSWORD'] = bool(daconfig.get('allow changing password', False))
+app.config['ALLOW_CHANGING_PASSWORD'] = bool(daconfig.get('allow changing password', True))
 app.config['USER_ENABLE_CONFIRM_EMAIL'] = bool(daconfig.get('confirm registration', False))
 app.config['USER_ENABLE_LOGIN_WITHOUT_CONFIRM_EMAIL'] = not bool(daconfig.get('confirm registration', False))
 app.config['USER_AUTO_LOGIN_AFTER_REGISTER'] = not bool(daconfig.get('confirm registration', False))
 app.config['USER_SHOW_USERNAME_EMAIL_DOES_NOT_EXIST'] = not bool(daconfig.get('confirm registration', False))
 app.config['USER_AUTO_LOGIN_AFTER_RESET_PASSWORD'] = False
+app.config['FLASH_LOGIN_MESSAGES'] = not bool(daconfig.get('suppress login alerts', False))
 app.config['USER_AFTER_FORGOT_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_CHANGE_PASSWORD_ENDPOINT'] = 'after_reset'
 app.config['USER_AFTER_CHANGE_USERNAME_ENDPOINT'] = 'user.login'

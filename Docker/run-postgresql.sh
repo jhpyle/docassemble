@@ -80,7 +80,7 @@ else
 fi
 
 mkdir -p "/var/run/postgresql/${PGVERSION}-main.pg_stat_tmp"
-chown -R postgres.postgres "/var/run/postgresql/${PGVERSION}-main.pg_stat_tmp"
+chown -R postgres:postgres "/var/run/postgresql/${PGVERSION}-main.pg_stat_tmp"
 
 su postgres -c "/usr/lib/postgresql/${PGVERSION}/bin/postgres -D /var/lib/postgresql/${PGVERSION}/main -c config_file=/etc/postgresql/${PGVERSION}/main/postgresql.conf" &
 wait %1

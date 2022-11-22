@@ -1,6 +1,7 @@
 import datetime
 import sys
 import os
+import subprocess
 import redis
 import docassemble.base.config
 if __name__ == "__main__":
@@ -32,8 +33,7 @@ def main():
             r.delete('da:skip_create_tables')
         else:
             errlog("running create_tables")
-            import docassemble.webapp.create_tables  # pylint: disable=redefined-outer-name,import-outside-toplevel
-            docassemble.webapp.create_tables.main()
+            subprocess.run(['python', '-m', 'docassemble.webapp.create_tables', os.getenv('DA_CONFIG_FILE', '/usr/share/docassemble/config/config.yml')], check=False)
             errlog("finished create_tables")
         if ':cron:' in container_role:
             r.delete('da:cron_restart')

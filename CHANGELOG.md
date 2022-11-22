@@ -1,5 +1,74 @@
 # Change Log
 
+## [1.4.20] - 2022-11-16
+
+### Fixed
+- Updated the CloudConvert API.
+- Fixed typo affecting `/run/packagename/directoryname/filename` links.
+
+## [1.4.19] - 2022-11-13
+
+### Added
+- The `wide side by side` directive under `features`.
+### Changed
+- Better example code for running Alembic from a package that uses
+  `SQLObject`.
+### Fixed
+- UI error on administrative screens on mobile.
+- Cancel button on Change Password page directed to the wrong place
+  when `show profile link: False` is in the Configuration.
+
+## [1.4.18] - 2022-11-06
+
+### Added
+- Ability to pass options directly to the Google Places JavaScript API
+  when using `address autocomplete`.
+- The `hidden` `input type` for defining variables that are populated
+  by JavaScript.
+### Fixed
+- The YAML on the Configuration page can now be searched in its
+  entirety using the web browser's search feature.
+
+## [1.4.17] - 2022-11-03
+
+### Added
+- The `suppress login alerts` Configuration directive.
+
+### Fixed
+- Changed NGINX configuration so that requests for hostnames other
+  than `external hostname` are redirected.
+- Changed `list collect` behavior to prevent reaching circularity
+  limit when quantity of items is very large.
+- Issue with validation code on file fields with `show if`.
+
+## [1.4.16] - 2022-11-01
+
+### Fixed
+- Issue with alembic not running properly during restart.
+
+## [1.4.15] - 2022-10-31
+
+### Fixed
+- Problem with `authorized registration domains`.
+
+## [1.4.14] - 2022-10-25
+
+### Fixed
+- Additional fix to allow the use of `table prefix` in `db`.
+
+## [1.4.13] - 2022-10-24
+
+### Changed
+- The `include_internal` option of `store_variables_snapshot()`,
+  `variables_as_json()`, and `all_variables()` now controls whether
+  the `nav` variable is included in the output.
+- The `authorized registration domains` Configuration directive now
+  applies to social login methods as well as username/password login.
+- Increased accessibility of the `datatype: combobox` interface.
+### Fixed
+- Problem with the exim4 mail configuration.
+- Problem when `table prefix` in `db` was used.
+
 ## [1.4.12] - 2022-10-02
 
 ### Added
