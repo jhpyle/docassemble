@@ -55,7 +55,7 @@
 
         // Use the greatest width between two text labels ?
         // If this has a true value, then label width will be the greatest between labels
-        same_width: true,
+        same_width: false,
       },
       options
     );
