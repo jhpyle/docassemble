@@ -4,7 +4,7 @@ import os
 import multiprocessing
 from concurrent import futures
 from enum import Enum
-from PyPDF2 import PdfFileReader, PdfFileWriter
+from pikepdf import Pdf, Page
 from reportlab.pdfgen import canvas
 
 
@@ -130,7 +130,7 @@ class Document:
         except AttributeError:
             with open(file, "rb") as fp:
                 self.file = io.BytesIO(fp.read())
-        self.reader = PdfFileReader(self.file)
+        self.reader = Pdf.open(self.file)
         self.prefix = prefix
         self.fill = fill
         self.start = copy.copy(start)
@@ -150,7 +150,7 @@ class Document:
         return self.pages[k]
 
     def __len__(self):
-        return self.reader.numPages
+        return len(self.reader.pages)
 
     def __iter__(self):
         return self
@@ -207,12 +207,9 @@ class Document:
         if os.path.exists(filename) and not overwrite:
             raise FileExistsError("PDF file {} already exists and overwrite is disabled.".format(filename))
 
-        with open(filename, "wb") as out_file:
-            writer = PdfFileWriter()
-            for page in self:
-                page.apply()
-                writer.addPage(page.page)
-            writer.write(out_file)
+        for page in self:
+            page.apply()
+        self.reader.save(filename)
         return filename
 
     def add_overlay(self, overlay):
@@ -251,8 +248,8 @@ class Page:
         self.fill = fill
         self.start = start
 
-        self.height = float(self.page.mediaBox.upperRight[1])
-        self.width = float(self.page.mediaBox.lowerRight[0])
+        self.height = float(self.page.mediabox[3])
+        self.width = float(self.page.mediabox[2])
 
         self.canvas_file = io.BytesIO()
         self.canvas = canvas.Canvas(self.canvas_file, pagesize=(self.width, self.height))
@@ -298,9 +295,9 @@ class Page:
         self.canvas.save()
 
         self.canvas_file.seek(0)
-        reader = PdfFileReader(self.canvas_file)
-        overlay_page = reader.getPage(0)
-        self.page.mergePage(overlay_page)
+        reader = Pdf.open(self.canvas_file)
+        overlay_page = reader.pages[0]
+        self.page.add_overlay(overlay_page)
         return True
 
     @property
