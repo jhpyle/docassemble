@@ -68,7 +68,6 @@ import pandas
 import PyPDF2
 from docx import Document
 import google.cloud
-from typing import Any
 
 capitalize_func = capitalize
 NoneType = type(None)
@@ -1095,6 +1094,8 @@ class DACatchAll(DAObject):
             return 'float'
         if self.context == 'complex':
             return 'complex'
+        if self.context == 'callable':
+            return 'callable'
         if self.context in ('add', 'radd', 'sub', 'rsub', 'mul', 'rmul', 'div', 'rdiv', 'truediv', 'rtruediv', 'floordiv', 'rfloordiv', 'mod', 'rmod', 'divmod', 'rdivmod', 'pow', 'rpow', 'lt', 'eq', 'gt', 'ne', 'ge', 'le'):
             if isinstance(self.operand, bool):
                 return 'bool'
@@ -1356,7 +1357,7 @@ class DACatchAll(DAObject):
         self.context = 'bool'
         return bool(self.value)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args, **kwargs):
         self.context = 'callable'
         return self.value(*args, **kwargs)
 
@@ -5937,9 +5938,12 @@ class DAContext(DADict):
         return hash((self.instanceName,))
 
 
+da_context_keys = set(['question', 'document', 'docx', 'pdf', 'pandoc'])
+
 def objects_from_structure(target, root=None):
     if isinstance(target, dict):
-        if len(target.keys()) > 0 and len(set(target.keys()).intersection(set(['question', 'document', 'docx', 'pdf', 'pandoc']))) >= 2:
+        target_keys = set(target.keys())
+        if len(target_keys) > 0 and len(target_keys.intersection(da_context_keys)) >= 2 and len(target_keys.difference(da_context_keys)) == 0:
             new_context = DAContext('abc_context', **target)
             if root:
                 new_context._set_instance_name_recursively(root)
