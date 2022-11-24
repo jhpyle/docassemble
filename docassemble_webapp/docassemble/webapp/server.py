@@ -21944,7 +21944,7 @@ def server_error(the_error):
             pass
         if 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata:
             session['in error'] = True
-            return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess, error_history=str(the_history), error_trace=str(the_trace))}, refer=['error'])
+            return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': dict(error_message=orig_errmess, error_history=the_history, error_trace=the_trace)}, refer=['error'])
     show_debug = not bool((not DEBUG) and isinstance(the_error, DAError))
     if int(int(error_code)/100) == 4:
         show_debug = False
