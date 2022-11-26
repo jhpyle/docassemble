@@ -3,11 +3,10 @@ import importlib
 import mimetypes
 import os
 import re
-import subprocess
 # import sys
 import tempfile
 import xml.etree.ElementTree as ET
-import PyPDF2
+from pikepdf import Pdf
 from PIL import Image
 from docassemble.base.generate_key import random_lower_string
 from docassemble.base.logger import logmessage
@@ -193,26 +192,11 @@ def get_info_from_file_reference(file_reference, **kwargs):
     return result
 
 
-def safe_pypdf_reader(filename):
-    try:
-        return PyPDF2.PdfFileReader(open(filename, 'rb'), overwriteWarnings=False)
-    except PyPDF2.utils.PdfReadError:
-        new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-        qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
-        try:
-            result = subprocess.run(qpdf_subprocess_arguments, timeout=60, check=False).returncode
-        except subprocess.TimeoutExpired:
-            result = 1
-        if result != 0:
-            raise Exception("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
-        return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'), overwriteWarnings=False)
-
-
 def add_info_about_file(filename, basename, result):
     if result['extension'] == 'pdf':
         try:
-            reader = safe_pypdf_reader(filename)
-            result['encrypted'] = reader.isEncrypted
+            reader = Pdf.open(filename)
+            result['encrypted'] = reader.is_encrypted
             try:
                 if '/AcroForm' in reader.trailer['/Root']:
                     result['acroform'] = True
@@ -220,13 +204,13 @@ def add_info_about_file(filename, basename, result):
                     result['acroform'] = False
             except:
                 result['acroform'] = False
-            result['pages'] = reader.getNumPages()
+            result['pages'] = len(reader.pages)
         except:
             result['pages'] = 1
     elif os.path.isfile(basename + '.pdf'):
         try:
-            reader = safe_pypdf_reader(basename + '.pdf')
-            result['encrypted'] = reader.isEncrypted
+            reader = Pdf.open(basename + '.pdf')
+            result['encrypted'] = reader.is_encrypted
             try:
                 if '/AcroForm' in reader.trailer['/Root']:
                     result['acroform'] = True
@@ -234,7 +218,7 @@ def add_info_about_file(filename, basename, result):
                     result['acroform'] = False
             except:
                 result['acroform'] = False
-            result['pages'] = reader.getNumPages()
+            result['pages'] = len(reader.pages)
         except:
             result['pages'] = 1
     elif result['extension'] in ['png', 'jpg', 'gif']:

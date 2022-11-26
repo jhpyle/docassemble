@@ -15,10 +15,11 @@ import docassemble.base.functions
 from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 from docassemble.base.pdfa import pdf_to_pdfa
-from docassemble.base.pdftk import pdf_encrypt, PDFTK_PATH, replicate_js_and_calculations
+from docassemble.base.pdftk import pdf_encrypt
 from docassemble.base.error import DAError
 import convertapi
 import requests
+from pikepdf import Pdf
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
@@ -711,7 +712,6 @@ def initialize_libreoffice():
 
 def concatenate_files(path_list, pdfa=False, password=None):
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-    subprocess_arguments = [PDFTK_PATH]
     new_path_list = []
     for path in path_list:
         mimetype, encoding = mimetypes.guess_type(path)  # pylint: disable=unused-variable
@@ -743,18 +743,14 @@ def concatenate_files(path_list, pdfa=False, password=None):
             new_path_list.append(path)
     if len(new_path_list) == 0:
         raise DAError("concatenate_files: no valid files to concatenate")
-    subprocess_arguments.extend(new_path_list)
-    subprocess_arguments.extend(['cat', 'output', pdf_file.name])
-    # logmessage("Arguments are " + str(subprocess_arguments))
-    try:
-        result = subprocess.run(subprocess_arguments, timeout=60, check=False).returncode
-    except subprocess.TimeoutExpired:
-        result = 1
-        logmessage("concatenate_files: call to cat took too long")
-    if result != 0:
-        logmessage("Failed to concatenate PDF files")
-        raise DAError("Call to pdftk failed for concatenation where arguments were " + " ".join(subprocess_arguments))
+    if len(new_path_list) == 1:
+        shutil.copyfile(new_path_list[0], pdf_file.name)
+    else:
+        original = Pdf.open(new_path_list[0])
+        for additional_file in new_path_list[1:]:
+            additional_pdf = Pdf.open(additional_file)
+            original.pages.extend(additional_pdf.pages)
+        original.save(pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
-    replicate_js_and_calculations(new_path_list[0], pdf_file.name, password)
     return pdf_file.name

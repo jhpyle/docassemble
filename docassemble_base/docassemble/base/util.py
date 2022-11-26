@@ -65,8 +65,8 @@ from pyzbar.pyzbar import decode
 from docxtpl import InlineImage, Subdoc, DocxTemplate
 # import tablib
 import pandas
-import PyPDF2
 from docx import Document
+from pikepdf import Pdf
 import google.cloud
 
 capitalize_func = capitalize
@@ -9777,21 +9777,6 @@ class RedisCredStorage(oauth2client.client.Storage):
         self.r.delete(self.key)
 
 
-def safe_pypdf_reader(filename):
-    try:
-        return PyPDF2.PdfFileReader(open(filename, 'rb'), overwriteWarnings=False)
-    except PyPDF2.utils.PdfReadError:
-        new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-        qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
-        try:
-            result = subprocess.run(qpdf_subprocess_arguments, timeout=60, check=False).returncode
-        except subprocess.TimeoutExpired:
-            result = 1
-        if result != 0:
-            raise Exception("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
-        return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'), overwriteWarnings=False)
-
-
 def ocr_finalize(*pargs, **kwargs):
     # logmessage("ocr_finalize started")
     if kwargs.get('pdf', False):
@@ -9936,7 +9921,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=N
                 raise Exception("document with extension " + doc.extension + " is not a readable image file")
             if doc.extension == 'pdf':
                 # doc.page_path(1, 'page')
-                for i in range(safe_pypdf_reader(doc.path()).getNumPages()):
+                for i in range(len(Pdf.open(doc.path()).pages)):
                     if f is not None and i + 1 < f:
                         continue
                     if l is not None and i + 1 > l:
@@ -9944,7 +9929,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=N
                     todo.append(dict(doc=doc, page=i+1, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code, user=user, pdf=pdf, preserve_color=preserve_color))
             elif doc.extension in ("docx", "doc", "odt", "rtf"):
                 doc_conv = pdf_concatenate(doc)
-                for i in range(safe_pypdf_reader(doc_conv.path()).getNumPages()):
+                for i in range(len(Pdf.open(doc_conv.path()).pages)):
                     if f is not None and i + 1 < f:
                         continue
                     if l is not None and i + 1 > l:

@@ -6,15 +6,14 @@ import stat
 import mimetypes
 import tempfile
 import string
-import subprocess
 from collections import deque
 from copy import deepcopy
 from xml.sax.saxutils import escape as html_escape
 from docxtpl import InlineImage, RichText
 from docx.shared import Mm, Inches, Pt, Cm, Twips
 import docx.opc.constants
-from docx.oxml.section import CT_SectPr  # For figuring out if an element is a section or not
-from docx.oxml.table import CT_Tbl       #                -""-                 table    -""-
+from docx.oxml.section import CT_SectPr
+from docx.oxml.table import CT_Tbl
 import docx
 from docxcompose.composer import Composer  # For fixing up images, etc when including docx files within templates
 from docassemble.base.functions import server, this_thread, package_template_filename, get_config, roman
@@ -23,7 +22,7 @@ import docassemble.base.filter
 import docassemble.base.pandoc
 from docassemble.base.logger import logmessage
 from bs4 import BeautifulSoup, NavigableString, Tag
-import PyPDF2
+from pikepdf import Pdf
 
 zerowidth = '\u200B'
 
@@ -686,21 +685,6 @@ def markdown_to_docx(text, question, tpl):
     return inline_markdown_to_docx(text, question, tpl)
 
 
-def safe_pypdf_reader(filename):
-    try:
-        return PyPDF2.PdfFileReader(open(filename, 'rb'), overwriteWarnings=False)
-    except PyPDF2.utils.PdfReadError:
-        new_filename = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-        qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
-        try:
-            result = subprocess.run(qpdf_subprocess_arguments, timeout=60, check=False).returncode
-        except subprocess.TimeoutExpired:
-            result = 1
-        if result != 0:
-            raise Exception("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
-        return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'), overwriteWarnings=False)
-
-
 def pdf_pages(file_info, width):
     output = ''
     if width is None:
@@ -710,8 +694,8 @@ def pdf_pages(file_info, width):
             server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
     if 'pages' not in file_info:
         try:
-            reader = safe_pypdf_reader(file_info['path'] + '.pdf')
-            file_info['pages'] = reader.getNumPages()
+            reader = Pdf.open(file_info['path'] + '.pdf')
+            file_info['pages'] = len(reader.pages)
         except:
             file_info['pages'] = 1
     max_pages = 1 + int(file_info['pages'])

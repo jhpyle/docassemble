@@ -19,7 +19,7 @@ Feature: Example interviews
     And I wait 2 seconds
     And I set "Favorite fruit" to "apple"
     And I unfocus
-    And I wait 2 seconds
+    And I wait 3 seconds
     Then I should see the phrase "I am a really big fan of apple."
     And I set "Favorite vegetable" to "turnip"
     And I unfocus

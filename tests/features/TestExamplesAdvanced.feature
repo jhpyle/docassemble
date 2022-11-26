@@ -54,7 +54,8 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Information about your address"
     And I should see the phrase "The address is located in Boca Raton."
-    And I should see the phrase "The latitude and longitude are 26.4024283 and -80.116787"
+    And I should see the phrase "The latitude and longitude are 26.402"
+    And I should see the phrase "and -80.116"
 
   Scenario: Test the interview "Geocode address"
     Given I start the interview "docassemble.base:data/questions/examples/geocode.yml"

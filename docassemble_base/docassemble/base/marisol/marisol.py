@@ -4,7 +4,7 @@ import os
 import multiprocessing
 from concurrent import futures
 from enum import Enum
-from pikepdf import Pdf, Page
+from pikepdf import Pdf
 from reportlab.pdfgen import canvas
 
 
@@ -119,18 +119,13 @@ class Document:
         Represents a document to be numbered.
 
         Args:
-            file (): PDF file associated with this document.
+            file (str): PDF file associated with this document.
             prefix (str): Bates number prefix.
             fill (int): Length to zero-pad number to.
             start (int): Number to start with.
             area (Area): Area on the document where the number should be drawn
         """
-        try:
-            self.file = io.BytesIO(file.read())
-        except AttributeError:
-            with open(file, "rb") as fp:
-                self.file = io.BytesIO(fp.read())
-        self.reader = Pdf.open(self.file)
+        self.reader = Pdf.open(file)
         self.prefix = prefix
         self.fill = fill
         self.start = copy.copy(start)
@@ -237,7 +232,7 @@ class Page:
 
         Args:
             document (Marisol.Document):  Parent document
-            page (PyPdf2.pdf.PageObject): PDF page associated with this page
+            page (pikepdf.Page): PDF page associated with this page
             prefix (str): Bates number prefix.
             fill (int): Length to zero-pad number to.
             start (int): Number to start with.

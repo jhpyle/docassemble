@@ -4,14 +4,13 @@ import mimetypes
 import codecs
 import json
 from io import BytesIO
-import subprocess
 import tempfile
 import time
 import stat
 import xml.etree.ElementTree as ET
 import qrcode
 import qrcode.image.svg
-import PyPDF2
+from pikepdf import Pdf
 import PIL
 from docassemble.base.logger import logmessage
 from docassemble.base.rtfng.object.picture import Image
@@ -788,21 +787,6 @@ def borderify(string):
     return '\\mdframed ' + str(string) + '\\endmdframed'
 
 
-def safe_pypdf_reader(filename):
-    try:
-        return PyPDF2.PdfFileReader(open(filename, 'rb'), overwriteWarnings=False)
-    except PyPDF2.utils.PdfReadError:
-        with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False) as new_filename:
-            qpdf_subprocess_arguments = [QPDF_PATH, filename, new_filename.name]
-            try:
-                result = subprocess.run(qpdf_subprocess_arguments, timeout=60, check=False).returncode
-            except subprocess.TimeoutExpired:
-                result = 1
-            if result != 0:
-                raise Exception("Call to qpdf failed for template " + str(filename) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
-            return PyPDF2.PdfFileReader(open(new_filename.name, 'rb'), overwriteWarnings=False)
-
-
 def image_as_rtf(match, question=None):
     width_supplied = False
     try:
@@ -863,8 +847,8 @@ def image_as_rtf(match, question=None):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
         if 'pages' not in file_info:
             try:
-                reader = safe_pypdf_reader(file_info['path'] + '.pdf')
-                file_info['pages'] = reader.getNumPages()
+                reader = Pdf.open(file_info['path'] + '.pdf')
+                file_info['pages'] = len(reader.pages)
             except:
                 file_info['pages'] = 1
         max_pages = 1 + int(file_info['pages'])
@@ -1064,8 +1048,8 @@ def image_url(file_reference, alt_text, width, emoji=False, question=None, exter
                     sf.finalize()
             if 'pages' not in file_info:
                 try:
-                    reader = safe_pypdf_reader(file_info['path'] + '.pdf')
-                    file_info['pages'] = reader.getNumPages()
+                    reader = Pdf.open(file_info['path'] + '.pdf')
+                    file_info['pages'] = len(reader.pages)
                 except:
                     file_info['pages'] = 1
             the_image_url = server.url_finder(file_reference, size="screen", page=1, _question=question, _external=external)
@@ -1080,9 +1064,9 @@ def image_url(file_reference, alt_text, width, emoji=False, question=None, exter
             else:
                 the_alt_text = alt_text
             try:
-                safe_pdf_reader = safe_pypdf_reader(file_info['path'] + '.pdf')
-                layout_width = str(safe_pdf_reader.getPage(0).mediaBox.getWidth())
-                layout_height = str(safe_pdf_reader.getPage(0).mediaBox.getHeight())
+                reader = Pdf.open(file_info['path'] + '.pdf')
+                layout_width = str(reader.pages[0].mediabox[2] - reader.pages[0].mediabox[0])
+                layout_height = str(reader.pages[0].mediabox[3] - reader.pages[0].mediabox[1])
                 output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" width=' + layout_width + ' height=' + layout_height + ' style="' + width_string + '; height: auto;" src="' + the_image_url + '"/></a>'
             except:
                 output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" style="' + width_string + '; height: auto;" src="' + the_image_url + '"/></a>'
