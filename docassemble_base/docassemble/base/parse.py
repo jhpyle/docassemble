@@ -8503,8 +8503,10 @@ class Interview:
                     if question.question_type == "data_from_code":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         old_values = question.get_old_values(user_dict)
-                        the_string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
+                        user_dict['_DADATAFROMCODE'] = recursive_eval_data_from_code(question.fields[0].data, user_dict)
+                        the_string = from_safeid(question.fields[0].saveas) + ' = _DADATAFROMCODE'
                         exec(the_string, user_dict)
+                        del user_dict['_DADATAFROMCODE']
                         question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)
@@ -8513,8 +8515,10 @@ class Interview:
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         old_values = question.get_old_values(user_dict)
                         exec(import_core, user_dict)
-                        the_string = from_safeid(question.fields[0].saveas) + ' = objects_from_structure(' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
+                        user_dict['_DADATAFROMCODE'] = recursive_eval_data_from_code(question.fields[0].data, user_dict)
+                        the_string = from_safeid(question.fields[0].saveas) + ' = objects_from_structure(_DADATAFROMCODE, root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                         exec(the_string, user_dict)
+                        del user_dict['_DADATAFROMCODE']
                         question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)

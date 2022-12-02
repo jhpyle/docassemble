@@ -199,8 +199,10 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
         for the_annot in page.Annots:
             for field, value in data_dict.items():
                 annot = the_annot
-                while not hasattr(annot, "FT"):
+                while not hasattr(annot, "FT") and hasattr(annot, 'Parent'):
                     annot = annot.Parent
+                if not (hasattr(annot, "T") and hasattr(annot, "FT")):
+                    continue
                 if field != str(annot.T):
                     continue
                 field_type = str(annot.FT)
