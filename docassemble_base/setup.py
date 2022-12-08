@@ -70,7 +70,7 @@ install_requires = [
     "cachetools==5.0.0",
     "cairocffi==1.3.0",
     "CairoSVG==2.5.2",
-    "certifi==2021.10.8",
+    "certifi==2022.12.7",
     "cffi==1.15.0",
     "chardet==4.0.0",
     "charset-normalizer==2.0.12",
