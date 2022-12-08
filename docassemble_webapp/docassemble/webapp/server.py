@@ -2886,8 +2886,8 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
     the_sections = nav.sections[the_language]
     if len(the_sections) == 0:
         return ''
-    if docassemble.base.functions.this_thread.current_question.section is not None:
-        the_section = docassemble.base.functions.this_thread.current_question.section
+    if docassemble.base.functions.this_thread.current_question.section is not None and docassemble.base.functions.this_thread.current_section:
+        the_section = docassemble.base.functions.this_thread.current_section
     else:
         the_section = nav.current
     # logmessage("Current section is " + repr(the_section))
@@ -8210,8 +8210,8 @@ def index(action_argument=None, refer=None):
             user_dict['_internal']['progress'] = None
         elif user_dict['_internal']['progress'] is None or interview_status.question.interview.options.get('strict progress', False) or interview_status.question.progress > user_dict['_internal']['progress']:
             user_dict['_internal']['progress'] = interview_status.question.progress
-    if interview.use_navigation and interview_status.question.section is not None:
-        user_dict['nav'].set_section(interview_status.question.section)
+    if interview.use_navigation and interview_status.question.section is not None and docassemble.base.functions.this_thread.current_section:
+        user_dict['nav'].set_section(docassemble.base.functions.this_thread.current_section)
     if interview_status.question.question_type == "response":
         if is_ajax:
             release_lock(user_code, yaml_filename)
@@ -15734,7 +15734,7 @@ def update_package():
         credentials = storage.get()
         if not credentials or credentials.invalid:
             state_string = random_string(16)
-            session['github_next'] = json.dumps(dict(state=state_string, path='playground_packages', arguments=request.args))
+            session['github_next'] = json.dumps(dict(state=state_string, path='update_package', arguments=request.args))
             flow = get_github_flow()
             uri = flow.step1_get_authorize_url(state=state_string)
             return redirect(uri)

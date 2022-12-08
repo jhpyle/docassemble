@@ -1935,6 +1935,7 @@ this_thread.misc = {}
 this_thread.probing = False
 this_thread.prevent_going_back = False
 this_thread.current_question = None
+this_thread.current_section = None
 
 
 def backup_thread_variables():
@@ -2378,6 +2379,7 @@ def reset_local_variables():
     this_thread.current_info = {}
     this_thread.current_package = None
     this_thread.current_question = None
+    this_thread.current_section = None
     this_thread.internal = {}
     this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html', 'footnotes'], output_format='html5')
     this_thread.prevent_going_back = False

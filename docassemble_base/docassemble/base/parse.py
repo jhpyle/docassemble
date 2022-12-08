@@ -2259,10 +2259,6 @@ class Question:
             if not isinstance(data['auto open'], bool):
                 raise DAError("An auto open directive can only be true or false." + self.idebug(data))
             self.interview.sections_auto_open = data['auto open']
-        if 'section' in data:
-            if 'question' not in data:
-                raise DAError("You can only set the section from a question." + self.idebug(data))
-            self.section = data['section']
         if 'machine learning storage' in data:
             should_append = False
             new_storage = data['machine learning storage']
@@ -2318,6 +2314,10 @@ class Question:
             definitions = "\n".join(defs) + "\n"
         else:
             definitions = ""
+        if 'section' in data:
+            if 'question' not in data:
+                raise DAError("You can only set the section from a question." + self.idebug(data))
+            self.section = TextObject(definitions + str(data['section']), question=self)
         if 'continue button label' in data:
             if 'yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data:
                 raise DAError("You cannot set a continue button label if the type of question is yesno, noyes, yesnomaybe, noyesmaybe, or buttons." + self.idebug(data))
@@ -5119,6 +5119,8 @@ class Question:
             docassemble.base.functions.undefine(the_field)
         if len(self.reconsider) > 0:
             docassemble.base.functions.reconsider(*self.reconsider)
+        if self.section:
+            docassemble.base.functions.this_thread.current_section = self.section.text(user_dict).strip()
         question_text = self.content.text(user_dict).rstrip()
         if self.breadcrumb is not None:
             breadcrumb = self.breadcrumb.text(user_dict).rstrip()
