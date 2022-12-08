@@ -242,8 +242,8 @@ it to `/`.
 
 ## <a name="url root"></a>URL of application
 
-The optional directive `url root` indicates the part of the URL that
-comes before the [`root`].
+The directive `url root` indicates the part of the URL that comes
+before the [`root`].
 
 {% highlight yaml %}
 url root: http://example.com
@@ -253,18 +253,27 @@ It is normally not necessary for **docassemble** to know how it is
 being accessed from the web, because the URL is provided to the web
 application with every HTTP request.
 
-You should also set `url root` if you are using [Auth0] logins.
-
 However, there are some circumstances when **docassemble** code runs
 outside the context of an HTTP request.  For example, if you have a
 [scheduled task] that uses [`send_sms()`] to send a text message with
 a media attachment, the URL for the media attachment will be unknown
-unless it is set in the configuration.
+unless `url root` is set correctly in the configuration.
+
+You need to make sure [`url root`] is set correctly if you use [Auth0]
+logins or you use any of the [live help] features.
+
+If you correctly specified [`DAHOSTNAME`] and
+[`BEHINDHTTPSLOADBALANCER`] (if your server is behind a proxy that
+provides SSL termination) when you first started **docassemble**, then
+[`url root`] should be correct.
+
+[`url root`] should match up with what you see in the location bar
+when you access the server.
 
 ## <a name="root redirect url"></a>Redirecting the root of the server
 
 By default, if the user accesses the root URL of the server (which is
-`/` unless configured differently using [`url root`]), the user is
+`/` unless configured differently using [`root`]), the user is
 redirected to:
 
 * The URL indicated by `root redirect url`, if it is defined in the
@@ -427,6 +436,85 @@ available interviews.
 By default, the main menu does not contain a link to the `/list` page,
 but you can add it to the main menu using the [`show dispatch link`]
 directive.
+
+## <a name="grid classes"></a>Customization of column widths
+
+**docassemble** uses the [Bootstrap grid system] for its mobile
+responsive layout. The widths of columns that are used in various
+parts of the application can be customized using the `grid classes`
+directive.
+
+The following example shows the default values.
+
+{% highlight yaml %}
+grid classes:
+  user: offset-lg-3 col-lg-6 offset-md-2 col-md-8 offset-sm-1 col-sm-10
+  admin: col-md-7 col-lg-6
+  admin wide: col-sm-10
+  vertical navigation:
+    bar: offset-xl-1 col-xl-2 col-lg-3 col-md-3
+    body: col-lg-6 col-md-9
+    right: d-none d-lg-block col-lg-3 col-xl-2
+    right small screen: d-block d-lg-none
+  flush left:
+    body: offset-xxl-1 col-xxl-5 col-lg-6 col-md-8
+    right: d-none d-lg-block col-xxl-5 col-lg-6
+    right small screen: d-block d-lg-none
+  centered:
+    body: offset-lg-3 col-lg-6 offset-md-2 col-md-8
+    right: d-none d-lg-block col-lg-3
+    right small screen: d-block d-lg-none
+  label width: md-4
+  field width: md-8
+{% endhighlight %}
+
+`user` refers to administrative screens that end users see, like the
+login screen. `admin` refers to administrative screens that only
+administrators can see, like the User List. `admin wide` refers to
+administrative screens that are wider than others, like the
+Configuration.
+
+The `vertical navigation`, `flush left`, and `centered` directives
+refer to modes in an interview when different column widths must be
+used. The default mode is `centered`. If you set `centered: False` in
+the [`features`], then the `flush left` directive is used. However, if
+you have a vertical navigation bar enabled in your interview, the
+`vertical navigation` directive is used.
+
+Under these directives, `body` refers to the width of the main part of
+the screen. `right` refers to the width of the `right` screen part
+that is positioned to the right of the `body`. On small screens, the
+`right` part is invisible and the same contents appear below the
+`body`, between the `under` part (if any) and the `post` part (if
+any). The `right small screen` directive refers to the size of this
+version of the `right` screen part. Under `vertical navigation`, the
+`bar` refers to the width of the vertical navigation bar.
+
+The `label width` and `field width` are not technically classes, but
+rather parts of classes. The actual classes used will be prefixed with
+`col-` or `offset-`, depending on the context. The default values of
+`md-4` and `md-8` mean that when labels and fields appear
+side-by-side, the width of the labels is half of the width of the
+fields, and below the `md` breakpoint, the labels appear above the
+fields.
+
+## <a name="alert html"></a><a name="alert container html"></a>Customization of alerts
+
+When the front end needs to alert the user about something, it places
+a [Bootstrap alert] at the top of the screen. The HTML of these alerts
+can be customized using `alert html` an `alert container html`.
+
+{% highlight yaml %}
+alert html: |
+  <div class="da-alert alert alert-%s alert-dismissible fade show" role="alert">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+alert container html: |
+  <div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>
+{% endhighlight %}
+
+In `alert html`, the first `%s` represents the [Bootstrap color] of
+the alert, while the second `%s` represents the HTML of the content of
+the message. In `alert container html`, the `%s` represents one or
+more `alert html` `<div>`s.
 
 ## <a name="customization"></a>Customization of administrative pages
 
@@ -6192,3 +6280,6 @@ and Facebook API keys.
 [`docassemble.base.util.update_ordinal_function()`]: {{ site.baseurl }}/docs/functions.html#update_ordinal_function
 [`imports`]: {{ site.baseurl }}/docs/initial.html#imports
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
+[Bootstrap grid system]: https://getbootstrap.com/docs/5.2/layout/grid/
+[Bootstrap alert]: https://getbootstrap.com/docs/5.2/components/alerts/
+[Bootstrap color]: https://getbootstrap.com/docs/5.2/customize/color/

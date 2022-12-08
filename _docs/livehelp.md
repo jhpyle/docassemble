@@ -25,7 +25,15 @@ or she can proceed with the interview.
 This section explains three additional features that facilitate the
 provision of assistance to users in real time.
 
-### First feature: session monitor
+These features require a working [WebSocket] connection on your
+server. The [WebSocket] connection may fail even if your server is
+otherwise accessible. If you did not specify a [`DAHOSTNAME`] when you
+started **docassemble**, then you may need to edit the [`url root`] in
+your [Configuration] so that it matches the URL for your
+**docassemble** server. It is also important that your [`behind https
+load balancer`] setting is correct.
+
+## First feature: session monitor
 
 ![monitor-example]({{ site.baseurl }}/img/monitor-example.png){:
  .col-md-7 .col-sm-8 .col-xs-12 .nofloat }
@@ -40,7 +48,7 @@ The operator can also [join] the interview as a co-interviewee.
 Interviews can be set up so that operators can make corrections to the
 user's answers.
 
-### Second feature: text-based "live chat"
+## Second feature: text-based "live chat"
 
 During a [live chat] conversation, the user sees a screen like the
 following:
@@ -57,7 +65,7 @@ Conversations will typically take place between the user and an
 operator, but it is also possible for the users of a multi-user
 interview to use [live chat] to communicate with each other.
 
-### Third feature: telephone call forwarding
+## Third feature: telephone call forwarding
 
 ![phone-demo]({{ site.baseurl }}/img/phone-demo.png){: .maybe-full-width }
 
@@ -682,3 +690,8 @@ user will not longer see the calling instructions or the phone icon.
 [Coordinated Universal Time]: https://en.wikipedia.org/wiki/Coordinated_Universal_Time
 [`timezone_list()`]: {{ site.baseurl }}/docs/functions.html#timezone_list
 [`pytz`]: http://pytz.sourceforge.net/
+[WebSocket]: https://en.wikipedia.org/wiki/WebSocket
+[Configuration]: {{ site.baseurl }}/docs/config.html
+[`DAHOSTNAME`]: {{ site.baseurl }}/docs/docker.html#DAHOSTNAME
+[`url root`]: {{ site.baseurl }}/docs/config.html#url root
+[`behind https load balancer`]: {{ site.baseurl }}/docs/config.html#behind https load balancer

@@ -1232,15 +1232,17 @@ Here is how it works:
 In order for this feature to work, your server must be configured to
 receive e-mails.  If you are using [Docker], this involves:
 * Disabling any e-mail server already running on the [Docker] host.
-* Including `-p 25:25` in the `docker run` statement when you start your
-  [Docker] container, so that communications to your server on [port
-  25] are forwarded to the [Docker] container;
+* Including `-p 25:25 -p 465:465` in the `docker run` statement when
+  you start your [Docker] container, so that communications to your
+  server on [port 25] and [port 465] are forwarded to the [Docker]
+  container;
 * Setting the [MX record] for your domain to point to your server.
   (If you are using a [multi-server arrangement], make sure to point
   it specifically to the machine that operates with the `mail`
   container role);
 * Ensuring that the firewall rules (a/k/a "security groups")
-  protecting your server allow incoming connections on [port 25].
+  protecting your server allow incoming connections on [port 25]
+  and/or [port 465].
 * Setting the [`incoming mail domain`] directive in the
   [configuration] to the e-mail domain you want to use, unless the
   domain you want to use for e-mailing is the same as the domain used
@@ -1409,5 +1411,6 @@ privileges and user identity of the [cron user].
 [`external hostname`]: {{ site.baseurl }}/docs/config.html#external hostname
 [MX record]: https://en.wikipedia.org/wiki/MX_record
 [port 25]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
+[port 465]: https://en.wikipedia.org/wiki/SMTPS
 [change]: https://developer.mozilla.org/en-US/docs/Web/Events/change
 [`docker exec`]: https://docs.docker.com/engine/reference/commandline/exec/

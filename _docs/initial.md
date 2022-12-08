@@ -256,7 +256,12 @@ When the interview encounters an error, the interview will run the
 [action] given by `error action`.  In this case, `error action` is
 `on_error`, and calling this [action] shows a [`question`] to the
 user. If you would like to use the error message in the [action], you
-can access it by calling `action_argument('error_message')`.
+can access it by calling `action_argument('error_message')`. The "How
+question came to be asked" explanation can be obtained by calling
+`action_argument('error_history')`. The result will be `None` if the
+server is not a development server, or if the history is unavailable
+for some reason. The error trace can be obtained by calling
+`action_argument('error_trace')`.
 
 An [action] can also run code that changes the interview logic.  For
 example, an `error action` could skip through the remainder of the
@@ -536,7 +541,7 @@ objects from file:
 ---
 {% endhighlight %}
 
-This is equivalent to running 
+This is equivalent to running
 `claims = objects_from_file('claim_list.yml', name='claims', use_objects=True)`.
 
 # <a name="include"></a>Incorporation by reference: `include`
@@ -777,8 +782,8 @@ attribute of these objects will be set to `True`.
 
 In addition, when `use objects: True` is enabled, any dictionaries in
 the data structure will be transformed into a [`DAContext`] object if
-the keys of the dictionary are a non-empty subset of `question`,
-`document`, `docx`, `pdf`, and `pandoc`.
+the keys of the dictionary are a subset of `question`, `document`,
+`docx`, `pdf`, and `pandoc` that has at least two elements.
 
 This is a useful shorthand for creating [`DAContext`] objects.  For
 example:
@@ -1089,7 +1094,7 @@ There are two special variables available to these
 * `row_item`: this is the item in the [group] corresponding to the
   current row.
 * `row_index`: this is `0` for the first row, `1` for the second row,
-  `2` for the third row, etc. 
+  `2` for the third row, etc.
 
 You can pretend that the [Python expression]s are evaluated in a
 context like this:
@@ -1488,9 +1493,9 @@ interview help:
   content: |
     If you are not sure what the right answer is, provide
     your best guess.
-    
+
     You are answering these questions under the pains and
-    penalties of perjury.  Your answers will be 
+    penalties of perjury.  Your answers will be
     shared with the special prosecutor.
 ---
 {% endhighlight %}
@@ -1701,7 +1706,7 @@ used were `required` and `max`.  The complete list of codes is:
   language `en` that translates this to "You need to fill this in."
   This is the standard message that users see when they fail to
   complete a required field.
-* `multiple choice required` for `You need to select one.` This is shown for 
+* `multiple choice required` for `You need to select one.` This is shown for
   multiple-choice fields.
 * `combobox required` for `You need to select one or type in a new
   value.` This is shown for [`combobox`] fields.
@@ -1712,9 +1717,9 @@ used were `required` and `max`.  The complete list of codes is:
   [`yesno`] fields.  `%s` is a code that is replaced with the label of
   the "None of the above" choice.
 * `minlength` for `You must type at least %s characters.`  This is shown when there is
-  a [`minlength`] field modifier. 
+  a [`minlength`] field modifier.
 * `maxlength` for `You cannot type more than %s characters.`  This is shown when there is
-  a [`maxlength`] field modifier. 
+  a [`maxlength`] field modifier.
 * `checkbox minmaxlength` for `Please select exactly %s.`  This is shown when there is a
   [`checkboxes`] field with a [`minlength`] field modifier that is the
   same as the [`maxlength`] field modifier.
@@ -1756,7 +1761,7 @@ used were `required` and `max`.  The complete list of codes is:
   [file upload fields] with an [`accept`] field modifier.
 
 # <a name="machine learning storage"></a>Machine learning training data
- 
+
 If you use [machine learning] in your interviews, then by default,
 **docassemble** will use training data associated with the
 particular interview in the particular [package] in which the
@@ -1897,7 +1902,7 @@ features:
   progress bar multiplier: 0.01
 {% endhighlight %}
 
-The default is 0.05. 
+The default is 0.05.
 
 If you set `progress bar method: stepped`, the progress bar advances a
 different way when there is no [`progress`] modifier.
@@ -2058,6 +2063,19 @@ features:
 
 If floating labels are used, then the [`hint` field modifier] and the
 [`help` field modifier] are unavailable.
+
+## <a name="suppress autofill"></a>Suppress autofill
+
+By default, web browsers try to be helpful by presenting you with a
+drop-down menu of past values you have used when you filled in a form
+field. Luckily, it is possible to tell the browser not to autofill
+form fields. If you want to tell the browser not to autofill, set
+`suppress autofill` to `True`.
+
+{% highlight yaml %}
+features:
+  suppress autofill: True
+{% endhighlight %}
 
 ## <a name="hide standard menu"></a>Hiding the standard menu items
 

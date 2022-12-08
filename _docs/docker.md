@@ -666,9 +666,9 @@ certificates hosted on [Let's Encrypt].  (The flag `-p 443:443` is
 included so that the [HTTPS] port is exposed.)
 
 If you want your server to be able to accept incoming [e-mails], you
-will need to add `-p 25:25` in order to open port 25.  See the
-[e-mailing the interview] section for information about configuring
-your server to receive e-mails.
+will need to add `-p 25:25 -p 465:465` in order to open ports 25
+and 465.  See the [e-mailing the interview] section for information
+about configuring your server to receive e-mails.
 
 A [template for the `env.list` file] is included in distribution.
 
@@ -1867,7 +1867,7 @@ docker run \
 --env S3BUCKET=docassemble-example-com \
 --env S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
 --env S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
--d -p 80:8080 -p 25:25 -p 5432:5432 -p 514:514 \
+-d -p 80:8080 -p 25:25 -p 465:465 -p 5432:5432 -p 514:514 \
 -p 6379:6379 -p 4369:4369 -p 5671:5671 \
 -p 5672:5672 -p 25672:25672 -p 9001:9001 \
 --stop-timeout 600 jhpyle/docassemble

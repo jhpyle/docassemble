@@ -3,12 +3,32 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.21](https://github.com/jhpyle/docassemble/releases/tag/v1.4.21) - 2022-12-07
+
+
+### Added
+- The `suppress autofill` directive under `features`.
+- The `grid classes` Configuration directive.
+- The `alert html` and `alert container html` Configuration
+  directives.
+
+### Changed
+- Replaced `PyPDF2` with `pikepdf`.
+- Bates numbering is more efficient.
+- The `section` modifier now accepts Mako templating.
+
+### Fixed
+- Overzealous matching of `DAContext` variables in `data` blocks.
+- Possibly remedied an inefficiency in labelauty.
+- Not all object types were allowed in `data from code`.
+
 ## [1.4.20](https://github.com/jhpyle/docassemble/releases/tag/v1.4.20) - 2022-11-16
 
 
 ### Fixed
 - Updated the CloudConvert API.
-- Fixed typo affecting `/run/packagename/directoryname/filename` links.
+- Fixed typo affecting `/run/packagename/directoryname/filename`
+  links.
 
 ## [1.4.19](https://github.com/jhpyle/docassemble/releases/tag/v1.4.19) - 2022-11-13
 

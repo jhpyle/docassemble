@@ -1876,9 +1876,8 @@ the_file.commit()
 
 <a name="DAFile.fix_up"></a>The `.fix_up()` method edits files in
 place in order to correct any errors that are correctable.  Currently,
-the only function of `.fix_up()` is to run PDF files through [qpdf] if
-they cannot be opened by [PyPDF2].  Additional operations may be
-supported in the future.
+the only function of `.fix_up()` is to run PDF files through [qpdf].
+Additional operations may be supported in the future.
 
 The `.fix_up()` method will raise an exception if the file is invalid
 even after correction.  A helpful way to use `.fix_up()` is in

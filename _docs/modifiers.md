@@ -279,6 +279,8 @@ to the keyword, not the displayed name.
 
 {% include side-by-side.html demo="sections" %}
 
+The `section` can include [Mako] templating.
+
 You can also set the current section using the [`nav.set_section()`]
 function.
 
