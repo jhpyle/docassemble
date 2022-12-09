@@ -6,7 +6,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 setup(name='docassemble',
-      version='1.4.21',
+      version='1.4.22',
       python_requires='>=3.8',
       description=('The namespace package for the docassemble system.'),
       long_description=read("README.md"),
