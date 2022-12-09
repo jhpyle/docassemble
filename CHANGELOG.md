@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.22] - 2022-12-08
+
+### Fixed
+- Error with the `.fix_up()` method of `DAFile` introduced in 1.4.21.
+
 ## [1.4.21] - 2022-12-07
 
 ### Added
