@@ -26,12 +26,16 @@ metadata:
     Exit label
   help label: |
     Help label
+  help button color: warning
   continue button label: |
     Continue button label
+  continue button color: success
   resume button label: |
     Resume button label
+  resume button color: info
   back button label: |
     Back button label
+  back button color: danger
   footer: |
     This is the footer part.
 ---
@@ -56,6 +60,16 @@ subquestion: |
   Subquestion
 fields:
   - Favorite fruit: favorite_fruit
+  - Best apples: favorite_apples
+    datatype: checkboxes
+    none of the above: False
+    choices:
+      - Fuji: fuji
+        help: |
+          Named after a mountain in Japan.
+      - Granny Smith: granny_smith
+        help: |
+          Named after someone's grandmother.
 help: |
   This is some question-specific
   help text for the fruit question.

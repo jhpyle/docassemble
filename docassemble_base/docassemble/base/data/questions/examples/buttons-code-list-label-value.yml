@@ -10,9 +10,18 @@ question: |
   you understand this?
 buttons:
   code: |
-    [{'label': "I understand", 'value': 'understands'},
-     {'label': "I do not understand", 'value': 'does not understand'},
-     {'label': "I'm not sure", 'value': 'unsure'}]
+    [{'label': "I understand",
+      'value': 'understands',
+      'css class': 'good',
+      'color': 'success'},
+     {'label': "I do not understand",
+      'value': 'does not understand',
+      'css class': 'clueless',
+      'color': 'danger'},
+     {'label': "I'm not sure",
+      'value': 'unsure',
+      'css class': 'unsure',
+      'color': 'warning'}]
 ---
 question: Result of question
 subquestion: |

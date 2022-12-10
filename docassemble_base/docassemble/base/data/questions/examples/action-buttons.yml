@@ -18,12 +18,14 @@ action buttons:
     arguments:
       amount: 1
     color: success
+    css class: quantity-up
     icon: chevron-up
   - label: Less
     action: change_quantity
     arguments:
       amount: -1
     color: danger
+    css class: quantity-down
     icon: chevron-down
 ---
 event: change_quantity

@@ -1,0 +1,20 @@
+metadata:
+  title: Customized buttons
+  documentation: "https://docassemble.org/docs/fields.html#field with buttons"
+---
+field: user_gender
+question: What is your gender?
+buttons:
+  - value: male
+    label: Male
+    css class: male-button
+    color: info
+  - value: female
+    label: Female
+    css class: female-button
+    color: danger
+---
+question: Result of question
+subquestion: |
+  You are ${ user_gender }.
+mandatory: True

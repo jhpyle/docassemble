@@ -1,0 +1,14 @@
+metadata:
+  title: Custom continue button color
+  documentation: "https://docassemble.org/docs/modifiers.html#continue button color"
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+continue button label: Keep going
+continue button color: success
+---
+question: |
+  Your favorite fruit is ${ favorite_fruit }.
+mandatory: True

@@ -1,0 +1,34 @@
+metadata:
+  title: Customized radio buttons
+  documentation: "https://docassemble.org/docs/fields.html#field with choices"
+---
+question: |
+  What type of shoes do you wear?
+field: target_variable
+choices:
+  - Sneakers: sneakers
+    help: |
+      Comfortable shoes.
+    css class: sneakers
+    color: secondary
+  - Sandals: sandals
+    help: |
+      For summer.
+    css class: sandals
+    color: danger
+  - Clogs: clogs
+    help: |
+      For hippies.
+    css class: clogs
+    color: warning
+  - Other: other
+    default: True
+    help: |
+      Because the other types suck.
+    css class: othershoe
+    color: success
+---
+question: Result of question
+subquestion: |
+  target_variable is: "${ target_variable }"
+mandatory: True

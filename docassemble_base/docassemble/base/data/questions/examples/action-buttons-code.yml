@@ -18,7 +18,8 @@ action buttons:
     [{'action': 'eat',
       'arguments': {'fruit': favorite_fruit},
       'label': 'Eat ' + favorite_fruit,
-      'color': 'secondary'}]
+      'color': 'secondary',
+      'css class': 'eat-button'}]
 ---
 event: eat
 code: |

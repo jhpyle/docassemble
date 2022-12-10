@@ -8,14 +8,22 @@ field: target_variable
 choices:
   code: |
     [{'sneakers': "Sneakers",
-      'help': "Comfortable shoes."},
+      'help': "Comfortable shoes.",
+      'css class': "sneakers",
+      'color': "secondary"},
      {'sandals': "Sandals",
-      'help': "For summer."},
+      'help': "For summer.",
+      'css class': "sandals",
+      'color': "danger"},
      {'clogs': "Clogs",
-      'help': "For hippies."},
+      'help': "For hippies.",
+      'css class': "clogs",
+      'color': "warning"},
      {'other': "Other",
       'default': True,
-      'help': "Because the other types suck."}]
+      'help': "Because the other types suck.",
+      'css class': "othershoe",
+      'color': "success"}]
 ---
 question: Result of question
 subquestion: |

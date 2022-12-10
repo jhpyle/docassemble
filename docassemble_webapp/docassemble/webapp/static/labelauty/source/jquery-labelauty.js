@@ -72,6 +72,8 @@
       var use_labels = true;
       var labels;
       var labels_object;
+      var color;
+      var classes;
       var input_id;
 
       //Get the aria label from the input element
@@ -85,6 +87,12 @@
       if ($object.is(":checkbox") === false && $object.is(":radio") === false)
         return this;
 
+      classes = $object
+        .attr("class")
+        .split(/\s+/)
+        .filter(function (value, index, arr) {
+          return value != "da-to-labelauty";
+        });
       // Add "labelauty" class to all checkboxes
       // So you can apply some custom styles
       $object.addClass(settings.class);
@@ -92,6 +100,7 @@
       // Get the value of "data-labelauty" attribute
       // Then, we have the labels for each case (or not, as we will see)
       labels = $object.attr("data-labelauty");
+      color = $object.attr("data-color");
 
       use_labels = settings.label;
       use_icons = settings.icon;
@@ -181,12 +190,15 @@
         )
       );
 
+      for (var idx = 0; idx < classes.length; idx++) {
+        $(element).addClass(classes[idx]);
+      }
       if ($object.is(":checked")) {
-        $(element).addClass("btn-primary");
+        $(element).addClass("btn-" + color);
         $(element).removeClass("btn-light");
         $(element).attr("aria-checked", true);
       } else {
-        $(element).removeClass("btn-primary");
+        $(element).removeClass("btn-" + color);
         $(element).addClass("btn-light");
         $(element).attr("aria-checked", false);
       }
@@ -197,11 +209,15 @@
           $('input.labelauty[type="radio"]').each(function () {
             if ($(this).attr("name") == the_name) {
               if ($(this).is(":checked")) {
-                $(this).next().addClass("btn-primary");
+                $(this)
+                  .next()
+                  .addClass("btn-" + color);
                 $(this).next().removeClass("btn-light");
                 $(this).next().attr("aria-checked", true);
               } else {
-                $(this).next().removeClass("btn-primary");
+                $(this)
+                  .next()
+                  .removeClass("btn-" + color);
                 $(this).next().addClass("btn-light");
                 $(this).next().attr("aria-checked", false);
               }
@@ -212,11 +228,15 @@
         $object.on("change", function () {
           $object.parents("fieldset").first().find(".da-has-error").remove();
           if ($(this).is(":checked")) {
-            $(this).next().addClass("btn-primary");
+            $(this)
+              .next()
+              .addClass("btn-" + color);
             $(this).next().removeClass("btn-light");
             $(this).next().attr("aria-checked", true);
           } else {
-            $(this).next().removeClass("btn-primary");
+            $(this)
+              .next()
+              .removeClass("btn-" + color);
             $(this).next().addClass("btn-light");
             $(this).next().attr("aria-checked", false);
           }
@@ -229,12 +249,12 @@
         if (theCode === 32 || theCode === 13) {
           event.preventDefault();
           if ($object.is(":checked")) {
-            $(this).addClass("btn-primary");
+            $(this).addClass("btn-" + color);
             $(this).removeClass("btn-light");
             $object.prop("checked", false);
             $(this).attr("aria-checked", true);
           } else {
-            $(this).addClass("btn-primary");
+            $(this).addClass("btn-" + color);
             $(this).removeClass("btn-light");
             $object.prop("checked", true);
             $(this).attr("aria-checked", false);

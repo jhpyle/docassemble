@@ -2,7 +2,6 @@
 
 import sys
 import os
-import codecs
 import re
 import yaml
 from PIL import Image
@@ -21,12 +20,12 @@ def main():
     pngdirname = sys.argv[2]
     if not os.path.isdir(pngdirname):
         sys.exit("Directory " + str(pngdirname) + " not found")
-    output = dict()
+    output = {}
     for filename in os.listdir(dirname):
         if not re.search(r'.ya*ml$', filename, flags=re.IGNORECASE):
             continue
         if re.search(r'\#', filename):
-            continue    
+            continue
         example_name = os.path.splitext(filename)[0]
         result = {}
         result['yaml'] = read_file(os.path.join(dirname, filename))
@@ -38,7 +37,7 @@ def main():
             image = Image.open(png_filename)
             (result['width'], result['height']) = image.size
         output[example_name] = result
-    print(yaml.safe_dump(output, default_flow_style=False, default_style = '|'))
+    print(yaml.safe_dump(output, default_flow_style=False, default_style='|'))
 
 
 def read_file(filename):
@@ -51,19 +50,19 @@ def read_file(filename):
         content = fix_tabs.sub('  ', content)
         content = fix_initial.sub('', content)
         blocks = list(map(lambda x: x.strip(), document_match.split(content)))
-        if not len(blocks):
+        if len(blocks) == 0:
             sys.stderr.write("File " + str(filename) + " could not be read\n")
             return None
-        metadata = dict()
+        metadata = {}
         for the_block in blocks:
             if re.search(r'metadata:', the_block):
-                block_info = yaml.load(the_block) #, Loader=yaml.FullLoader
+                block_info = yaml.load(the_block, Loader=yaml.FullLoader)
                 if 'metadata' in block_info:
                     metadata.update(block_info['metadata'])
         start_block = int(metadata.get('example start', 1))
         end_block = int(metadata.get('example end', start_block)) + 1
         result = "\n---\n".join(blocks[start_block:end_block])
-    return(result)
+    return result
 
 if __name__ == "__main__":
     main()

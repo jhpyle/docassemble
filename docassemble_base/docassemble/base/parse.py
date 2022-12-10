@@ -1369,8 +1369,9 @@ class InterviewStatus:
                     item = dict(label=docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), value=pair['key'])
                     if 'help' in pair:
                         item['help'] = docassemble.base.filter.markdown_to_html(pair['help'].rstrip(), trim=True, do_terms=False, status=self, verbatim=encode)
-                    if 'default' in pair:
-                        item['default'] = pair['default']
+                    for standard_key in ('default', 'css class', 'color', 'group'):
+                        if standard_key in pair:
+                            item[standard_key] = pair[standard_key]
                     if 'image' in pair:
                         if isinstance(pair['image'], dict):
                             if pair['image']['type'] == 'url':
@@ -1390,8 +1391,9 @@ class InterviewStatus:
                         item = dict(label=docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), value=from_safeid(pair['key']))
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue) or (isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]) or (isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             item['selected'] = True
-                        if 'help' in pair:
-                            item['help'] = pair['help']
+                        for standard_key in ('help', 'css class', 'color'):
+                            if standard_key in pair:
+                                item[standard_key] = pair[standard_key]
                         choice_list.append(item)
                 elif field.datatype in ('object', 'object_radio'):
                     for pair in pairlist:
@@ -1400,8 +1402,9 @@ class InterviewStatus:
                             item['selected'] = True
                         if 'default' in pair:
                             item['default'] = str(pair['default'])
-                        if 'help' in pair:
-                            item['help'] = pair['help']
+                        for standard_key in ('help', 'css class', 'color'):
+                            if standard_key in pair:
+                                item[standard_key] = pair[standard_key]
                         choice_list.append(item)
                 elif field.datatype in ('multiselect', 'checkboxes'):
                     for pair in pairlist:
@@ -1410,8 +1413,9 @@ class InterviewStatus:
                             item['variable_name_encoded'] = safeid(saveas + "[" + repr(pair['key']) + "]")
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue) or (isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]) or (isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             item['selected'] = True
-                        if 'help' in pair:
-                            item['help'] = pair['help']
+                        for standard_key in ('help', 'css class', 'color'):
+                            if standard_key in pair:
+                                item[standard_key] = pair[standard_key]
                         choice_list.append(item)
                 else:
                     for pair in pairlist:
@@ -1435,10 +1439,9 @@ class InterviewStatus:
                     the_image = self.icon_url(choice['image'])
                     if the_image:
                         item['image'] = the_image
-                if 'help' in choice:
-                    item['help'] = choice['help']
-                if 'default' in choice:
-                    item['default'] = choice['default']
+                for sub_item in ('css class', 'color', 'help', 'default', 'group'):
+                    if sub_item in choice:
+                        item[sub_item] = choice[sub_item]
                 choice_list.append(item)
                 indexno += 1
         return choice_list
@@ -1906,6 +1909,14 @@ class FileOnServer:
         raise DAError("Could not find the file " + str(self.fileref))
 
 
+def evaluate_image_in_item(data, user_dict):
+    if isinstance(data, dict) and 'type' in data and 'value' in data and data['type'] == 'decoration' and isinstance(data['value'], TextObject):
+        return {'type': data['type'], 'value': data['value'].text(user_dict)}
+    if isinstance(data, TextObject):
+        return data.text(user_dict)
+    return data
+
+
 class Question:
 
     def idebug(self, data):
@@ -1950,6 +1961,7 @@ class Question:
         self.breadcrumb = None
         self.reload_after = None
         self.continuelabel = None
+        self.continuecolor = None
         self.backbuttonlabel = None
         self.cornerbackbuttonlabel = None
         self.helplabel = None
@@ -1984,7 +1996,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'resume button label', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb'):
                     logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -2326,6 +2338,10 @@ class Question:
             if 'review' not in data:
                 raise DAError("You cannot set a resume button label if the type of question is not review." + self.idebug(data))
             self.continuelabel = TextObject(definitions + str(data['resume button label']), question=self)
+        if 'continue button color' in data:
+            self.continuecolor = TextObject(definitions + str(data['continue button color']), question=self)
+        if 'resume button color' in data:
+            self.continuecolor = TextObject(definitions + str(data['resume button color']), question=self)
         if 'back button label' in data:
             self.backbuttonlabel = TextObject(definitions + str(data['back button label']), question=self)
         if 'corner back button label' in data:
@@ -2931,6 +2947,7 @@ class Question:
                     color = item.get('color', 'primary')
                     icon = item.get('icon', None)
                     placement = item.get('placement', None)
+                    css_class = item.get('css class', None)
                     forget_prior = item.get('forget prior', False)
                     given_arguments = item.get('arguments', {})
                     if not isinstance(action, str):
@@ -2947,6 +2964,8 @@ class Question:
                         raise DAError("The icon specifier in an action buttons item must refer to plain text." + self.idebug(data))
                     if not isinstance(placement, (str, NoneType)):
                         raise DAError("The placement specifier in an action buttons item must refer to plain text." + self.idebug(data))
+                    if not isinstance(css_class, (str, NoneType)):
+                        raise DAError("The css classifier specifier in an action buttons item must refer to plain text." + self.idebug(data))
                     if not isinstance(forget_prior, bool):
                         raise DAError("The forget prior specifier in an action buttons item must refer to true or false." + self.idebug(data))
                     button = dict(action=TextObject(definitions + action, question=self), label=TextObject(definitions + label, question=self), color=TextObject(definitions + color, question=self))
@@ -2962,6 +2981,10 @@ class Question:
                         button['placement'] = TextObject(definitions + placement, question=self)
                     else:
                         button['placement'] = None
+                    if css_class is not None:
+                        button['css_class'] = TextObject(definitions + css_class, question=self)
+                    else:
+                        button['css_class'] = None
                     if forget_prior:
                         button['forget_prior'] = True
                     else:
@@ -5175,7 +5198,11 @@ class Question:
                         placement = item['placement'].text(user_dict).strip()
                     else:
                         placement = None
-                    extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement, forget_prior=forget_prior, target=target))
+                    if item['css_class'] is not None:
+                        css_class = item['css_class'].text(user_dict).strip()
+                    else:
+                        css_class = None
+                    extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement, css_class=css_class, forget_prior=forget_prior, target=target))
                 else:
                     action_buttons = eval(item, user_dict)
                     if hasattr(action_buttons, 'instanceName') and hasattr(action_buttons, 'elements'):
@@ -5196,6 +5223,7 @@ class Question:
                             color = 'primary'
                         icon = button.get('icon', None)
                         placement = button.get('placement', None)
+                        css_class = button.get('css class', None)
                         target = button.get('new window', None)
                         if target is True:
                             target = '_blank'
@@ -5214,7 +5242,7 @@ class Question:
                                 action = '_da_priority_action'
                             action = docassemble.base.functions.url_action(action, **arguments)
                         label = button['label']
-                        extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement, target=target))
+                        extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement, css_class=css_class, target=target))
             for item in extras['action_buttons']:
                 if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
                     raise DAError("color in action buttons not valid: " + repr(color))
@@ -5327,6 +5355,30 @@ class Question:
             extras['css'] = self.css.text(user_dict)
         if self.script is not None:
             extras['script'] = self.script.text(user_dict)
+        if self.continuecolor is not None:
+            extras['continuecolor'] = self.continuecolor.text(user_dict)
+        elif self.question_type == 'review':
+            if 'resume button color' in user_dict['_internal'] and user_dict['_internal']['resume button color'] is not None:
+                extras['continuecolor'] = user_dict['_internal']['resume button color']
+            elif self.language in self.interview.default_screen_parts and 'resume button color' in self.interview.default_screen_parts[self.language]:
+                extras['continuecolor'] = self.interview.default_screen_parts[self.language]['resume button color'].text(user_dict)
+            elif '*' in self.interview.default_screen_parts and 'resume button color' in self.interview.default_screen_parts['*']:
+                extras['continuecolor'] = self.interview.default_screen_parts['*']['resume button color'].text(user_dict)
+            elif 'resume button color' in the_default_titles:  # pylint: disable=consider-using-get
+                extras['continuecolor'] = the_default_titles['resume button color']
+            else:
+                extras['continuecolor'] = None
+        else:
+            if 'continue button color' in user_dict['_internal'] and user_dict['_internal']['continue button color'] is not None:
+                extras['continuecolor'] = user_dict['_internal']['continue button color']
+            elif self.language in self.interview.default_screen_parts and 'continue button color' in self.interview.default_screen_parts[self.language]:
+                extras['continuecolor'] = self.interview.default_screen_parts[self.language]['continue button color'].text(user_dict)
+            elif '*' in self.interview.default_screen_parts and 'continue button color' in self.interview.default_screen_parts['*']:
+                extras['continuecolor'] = self.interview.default_screen_parts['*']['continue button color'].text(user_dict)
+            elif 'continue button color' in the_default_titles:  # pylint: disable=consider-using-get
+                extras['continuecolor'] = the_default_titles['continue button color']
+            else:
+                extras['continuecolor'] = None
         if self.continuelabel is not None:
             continuelabel = self.continuelabel.text(user_dict)
         elif self.question_type == 'review':
@@ -5351,6 +5403,26 @@ class Question:
                 continuelabel = the_default_titles['continue button label']
             else:
                 continuelabel = None
+        if 'back button color' in user_dict['_internal'] and user_dict['_internal']['back button color'] is not None:
+            extras['back button color'] = user_dict['_internal']['back button color']
+        elif self.language in self.interview.default_screen_parts and 'back button color' in self.interview.default_screen_parts[self.language]:
+            extras['back button color'] = self.interview.default_screen_parts[self.language]['back button color'].text(user_dict)
+        elif '*' in self.interview.default_screen_parts and 'back button color' in self.interview.default_screen_parts['*']:
+            extras['back button color'] = self.interview.default_screen_parts['*']['back button color'].text(user_dict)
+        elif 'back button color' in the_default_titles:
+            extras['back button color'] = the_default_titles['back button color']
+        else:
+            extras['back button color'] = None
+        if 'help button color' in user_dict['_internal'] and user_dict['_internal']['help button color'] is not None:
+            extras['help button color'] = user_dict['_internal']['help button color']
+        elif self.language in self.interview.default_screen_parts and 'help button color' in self.interview.default_screen_parts[self.language]:
+            extras['help button color'] = self.interview.default_screen_parts[self.language]['help button color'].text(user_dict)
+        elif '*' in self.interview.default_screen_parts and 'help button color' in self.interview.default_screen_parts['*']:
+            extras['help button color'] = self.interview.default_screen_parts['*']['help button color'].text(user_dict)
+        elif 'help button color' in the_default_titles:
+            extras['help button color'] = the_default_titles['help button color']
+        else:
+            extras['help button color'] = None
         if self.backbuttonlabel is not None:
             extras['back button label text'] = self.backbuttonlabel.text(user_dict)
         elif 'back button label' in user_dict['_internal'] and user_dict['_internal']['back button label'] is not None:
@@ -5748,13 +5820,10 @@ class Question:
                             else:
                                 new_item = {}
                                 if 'image' in choice:
-                                    new_item['image'] = choice['image']
-                                if 'help' in choice:
-                                    new_item['help'] = choice['help'].text(user_dict)
-                                if 'default' in choice:
-                                    new_item['default'] = choice['default']
-                                if 'group' in choice:
-                                    new_item['group'] = choice['group']
+                                    new_item['image'] = evaluate_image_in_item(choice['image'], user_dict)
+                                for sub_item in ('help', 'css class', 'color', 'default', 'group'):
+                                    if sub_item in choice:
+                                        new_item[sub_item] = choice[sub_item].text(user_dict)
                                 if isinstance(choice['key'], TextObject):
                                     new_item['key'] = choice['key'].text(user_dict)
                                 else:
@@ -5844,13 +5913,10 @@ class Question:
                                 else:
                                     new_item = dict(key=candidate['key'], label=candidate['label'].text(user_dict))
                                 if 'image' in candidate:
-                                    new_item['image'] = candidate['image']
-                                if 'help' in candidate:
-                                    new_item['help'] = candidate['help'].text(user_dict)
-                                if 'default' in candidate:
-                                    new_item['default'] = candidate['default']
-                                if 'group' in candidate:
-                                    new_item['group'] = candidate['group']
+                                    new_item['image'] = evaluate_image_in_item(candidate['image'], user_dict)
+                                for sub_item in ('help', 'css class', 'color', 'default', 'group'):
+                                    if sub_item in candidate:
+                                        new_item[sub_item] = candidate[sub_item].text(user_dict)
                                 if new_item['key'] not in to_exclude:
                                     selectcompute[field.number].append(new_item)
                         else:
@@ -5861,13 +5927,10 @@ class Question:
                                 else:
                                     new_item = dict(key=item['key'], label=item['label'].text(user_dict))
                                 if 'image' in item:
-                                    new_item['image'] = item['image']
-                                if 'help' in item:
-                                    new_item['help'] = item['help'].text(user_dict)
-                                if 'default' in item:
-                                    new_item['default'] = item['default']
-                                if 'group' in item:
-                                    new_item['group'] = item['group']
+                                    new_item['image'] = evaluate_image_in_item(item['image'], user_dict)
+                                for sub_item in ('help', 'css class', 'color', 'default', 'group'):
+                                    if sub_item in item:
+                                        new_item[sub_item] = item[sub_item].text(user_dict)
                                 selectcompute[field.number].append(new_item)
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
@@ -5879,13 +5942,10 @@ class Question:
                         for item in field.choices:
                             new_item = {}
                             if 'image' in item:
-                                new_item['image'] = item['image']
-                            if 'help' in item:
-                                new_item['help'] = item['help'].text(user_dict)
-                            if 'default' in item:
-                                new_item['default'] = item['default']
-                            if 'group' in item:
-                                new_item['group'] = item['group']
+                                new_item['image'] = evaluate_image_in_item(item['image'], user_dict)
+                            for sub_item in ('help', 'css class', 'color', 'default', 'group'):
+                                if sub_item in item:
+                                    new_item[sub_item] = item[sub_item].text(user_dict)
                             if isinstance(item['key'], TextObject):
                                 new_item['key'] = item['key'].text(user_dict)
                             else:
@@ -5902,15 +5962,15 @@ class Question:
                         for item in field.choices:
                             new_item = {}
                             if 'image' in item:
-                                new_item['image'] = item['image']
-                            if 'help' in item:
-                                new_item['help'] = item['help'].text(user_dict)
-                            if 'default' in item:
-                                new_item['default'] = item['default']
-                            if 'group' in item:
-                                new_item['group'] = item['group']
+                                new_item['image'] = evaluate_image_in_item(item['image'], user_dict)
+                            for sub_item in ('help', 'css class', 'color', 'default', 'group'):
+                                if sub_item in item:
+                                    new_item[sub_item] = item[sub_item].text(user_dict)
                             new_item['label'] = item['label'].text(user_dict)
-                            new_item['key'] = item['key']
+                            if isinstance(item['key'], TextObject):
+                                new_item['key'] = item['key'].text(user_dict)
+                            else:
+                                new_item['key'] = item['key']
                             selectcompute[field.number].append(new_item)
                         only_empty_fields_exist = False
                     else:
@@ -6309,19 +6369,11 @@ class Question:
             elif not isinstance(the_dict, dict):
                 raise DAError("Unknown data type for the_dict in parse_fields.  " + self.idebug(the_list))
             result_dict = {}
+            uses_value_label = 'value' in the_dict and 'label' in the_dict
             for key, value in the_dict.items():
                 if len(the_dict) > 1:
-                    if key == 'image':
-                        result_dict['image'] = value
-                        continue
-                    if key == 'help':
-                        result_dict['help'] = TextObject(value, question=self)
-                        continue
-                    if key == 'default':
-                        result_dict['default'] = value
-                        continue
-                    if key == 'group':
-                        result_dict['group'] = value
+                    if key in ('image', 'css class', 'color', 'help', 'default', 'group', 'label'):
+                        result_dict[key] = TextObject(value, question=self)
                         continue
                 if uses_field:
                     if key == 'code':
@@ -6329,28 +6381,37 @@ class Question:
                         result_dict['compute'] = compile(value, '<expression>', 'eval')
                         self.find_fields_in(value)
                     else:
-                        result_dict['label'] = TextObject(key, question=self)
-                        result_dict['key'] = TextObject(value, question=self, translate=False)
+                        if uses_value_label:
+                            if key == 'value':
+                                result_dict['key'] = TextObject(value, question=self, translate=False)
+                        else:
+                            result_dict['label'] = TextObject(key, question=self)
+                            result_dict['key'] = TextObject(value, question=self, translate=False)
                 elif isinstance(value, dict):
-                    result_dict['label'] = TextObject(key, question=self)
+                    if not uses_value_label:
+                        result_dict['label'] = TextObject(key, question=self)
                     self.embeds = True
                     result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=codecs.decode(bytearray(yaml.safe_dump(value, default_flow_style=False, default_style='|', allow_unicode=True), encoding='utf-8'), 'utf-8'))
                 elif isinstance(value, str):
                     if value in ('exit', 'logout', 'exit_logout', 'leave') and 'url' in the_dict:
                         self.embeds = True
-                        result_dict['label'] = TextObject(key, question=self)
+                        if not uses_value_label:
+                            result_dict['label'] = TextObject(key, question=self)
                         result_dict['key'] = Question({'command': value, 'url': the_dict['url']}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif value in ('continue', 'restart', 'refresh', 'signin', 'register', 'exit', 'logout', 'exit_logout', 'leave', 'new_session'):
                         self.embeds = True
-                        result_dict['label'] = TextObject(key, question=self)
+                        if not uses_value_label:
+                            result_dict['label'] = TextObject(key, question=self)
                         result_dict['key'] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif key == 'url':
                         pass
                     else:
-                        result_dict['label'] = TextObject(key, question=self)
+                        if not uses_value_label:
+                            result_dict['label'] = TextObject(key, question=self)
                         result_dict['key'] = TextObject(key, question=self, translate=False)
                 elif isinstance(value, bool):
-                    result_dict['label'] = TextObject(key, question=self)
+                    if not uses_value_label:
+                        result_dict['label'] = TextObject(key, question=self)
                     result_dict['key'] = value
                 else:
                     raise DAError("Unknown data type in parse_fields:" + str(type(value)) + ".  " + self.idebug(the_list))
@@ -7104,16 +7165,13 @@ class Question:
                     the_item = {}
                     for key in entry:
                         if len(entry) > 1:
-                            if key in ['default', 'help', 'image', 'group']:
+                            if key in ['default', 'help', 'image', 'group', 'css class', 'color']:
                                 continue
                             if 'key' in entry and 'label' in entry and key != 'key':
                                 continue
-                            if 'default' in entry:
-                                the_item['default'] = entry['default']
-                            if 'group' in entry:
-                                the_item['group'] = entry['group']
-                            if 'help' in entry:
-                                the_item['help'] = TextObject(entry['help'], question=self)
+                            for standard_key in ('default', 'css class', 'color', 'group', 'help'):
+                                if standard_key in entry:
+                                    the_item[standard_key] = TextObject(entry[standard_key], question=self)
                             if 'image' in entry:
                                 if entry['image'].__class__.__name__ == 'DAFile':
                                     entry['image'].retrieve()
@@ -7126,7 +7184,7 @@ class Question:
                                 elif entry['image'].__class__.__name__ == 'DAStaticFile':
                                     the_item['image'] = dict(type='url', value=entry['image'].url_for())
                                 else:
-                                    the_item['image'] = dict(type='decoration', value=entry['image'])
+                                    the_item['image'] = dict(type='decoration', value=TextObject(entry['image'], question=self))
                             if 'key' in entry and 'label' in entry:
                                 the_item['key'] = TextObject(entry['key'], question=self, translate=False)
                                 the_item['label'] = TextObject(entry['label'], question=self)
@@ -7482,7 +7540,7 @@ class Interview:
         if converter is None:
             def converter(y):
                 return y
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short logo', 'short logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('under', 'under'), ('right', 'right'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'), ('navigation bar html', 'navigation bar html'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short logo', 'short logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('continue button color', 'continue button color'), ('resume button color', 'resume button color'), ('back button label', 'back button label'), ('back button color', 'back button color'), ('help button color', 'help button color'), ('corner back button label', 'corner back button label'), ('under', 'under'), ('right', 'right'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'), ('navigation bar html', 'navigation bar html'))
         title = {}
         for title_name, title_abb in mapping:
             if '_internal' in the_user_dict and title_name in the_user_dict['_internal'] and the_user_dict['_internal'][title_name] is not None:
@@ -7742,7 +7800,7 @@ class Interview:
                     recursive_update(self.consolidated_metadata[key], val)
                 else:
                     self.consolidated_metadata[key] = val
-        mapping = (('title', 'full'), ('logo', 'logo'), ('short logo', 'short logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('back button label', 'back button label'), ('corner back button label', 'corner back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'), ('navigation bar html', 'navigation bar html'))
+        mapping = (('title', 'full'), ('logo', 'logo'), ('short logo', 'short logo'), ('short title', 'short'), ('tab title', 'tab'), ('subtitle', 'sub'), ('exit link', 'exit link'), ('exit label', 'exit label'), ('exit url', 'exit url'), ('submit', 'submit'), ('pre', 'pre'), ('post', 'post'), ('footer', 'footer'), ('help label', 'help label'), ('continue button label', 'continue button label'), ('resume button label', 'resume button label'), ('continue button color', 'continue button color'), ('resume button color', 'resume button color'), ('back button label', 'back button label'), ('back button color', 'back button color'), ('help button color', 'help button color'), ('corner back button label', 'corner back button label'), ('right', 'right'), ('under', 'under'), ('submit', 'submit'), ('css class', 'css class'), ('table css class', 'table css class'), ('date format', 'date format'), ('time format', 'time format'), ('datetime format', 'datetime format'), ('title url', 'title url'), ('title url opens in other window', 'title url opens in other window'), ('navigation bar html', 'navigation bar html'))
         self.default_title = {'*': {}}
         for metadata in self.metadata:
             for title_name, title_abb in mapping:
@@ -9162,14 +9220,11 @@ def process_selections(data, exclude=None):
                 the_item = {}
                 for key in entry:
                     if len(entry) > 1:
-                        if key in ['default', 'help', 'image', 'label', 'group']:
+                        if key in ('default', 'help', 'image', 'label', 'group', 'css class', 'color'):
                             continue
-                        if 'default' in entry:
-                            the_item['default'] = entry['default']
-                        if 'help' in entry:
-                            the_item['help'] = entry['help']
-                        if 'group' in entry:
-                            the_item['group'] = entry['group']
+                        for standard_key in ('css class', 'color', 'default', 'help', 'group'):
+                            if standard_key in entry:
+                                the_item[standard_key] = entry[standard_key]
                         if 'image' in entry:
                             if entry['image'].__class__.__name__ == 'DAFile':
                                 entry['image'].retrieve()
@@ -9198,7 +9253,7 @@ def process_selections(data, exclude=None):
                         the_item['label'] = entry[key]
                         is_not_boolean = False
                         for key, val in entry.items():
-                            if key in ['default', 'help', 'image', 'label', 'group']:
+                            if key in ('default', 'help', 'image', 'label', 'group', 'css class', 'color'):
                                 continue
                             if val not in (True, False):
                                 is_not_boolean = True

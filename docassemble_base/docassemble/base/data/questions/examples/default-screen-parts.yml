@@ -25,8 +25,13 @@ default screen parts:
     of this interview so far.
   help label: |
     About
+  help button color: warning
+  back button label: |
+    Back
+  back button color: secondary
   continue button label: |
     Go to next step
+  continue button color: success
   subtitle: |
     A _groovy_ interview
   pre: |
