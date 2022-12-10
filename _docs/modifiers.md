@@ -440,7 +440,14 @@ This modifier also allows you to customize the "Done" button that
 appears in [`signature`] questions.
 
 For information about other ways to set a default value for the
-Continue button label, see the [screen parts] section.
+"Continue" button label, see the [screen parts] section.
+
+# <a name="continue button color"></a>Changing the `continue button color`
+
+In addition to modifying the label of the "Continue" button, you can set
+its color to one of the [Bootstrap colors].
+
+{% include side-by-side.html demo="continue-button-color" %}
 
 # <a name="generic object"></a>Reusable questions: `generic object`
 
@@ -1054,3 +1061,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [`update_terms()`]: {{ site.baseurl }}/docs/functions.html#update_terms
 [`continue button field`]: {{ site.baseurl }}/docs/fields.html#continue button field
 [`DABreadCrumbs`]: {{ site.baseurl }}/docs/objects.html#DABreadCrumbs
+[Bootstrap colors]: https://getbootstrap.com/docs/5.2/customize/color/

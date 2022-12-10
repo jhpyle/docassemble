@@ -361,14 +361,15 @@ use `action buttons`.  When the user clicks a button it will run an
 
 {% include side-by-side.html demo="action-buttons" %}
 
-For each button, the required items are `action` and `label`.  You can
+For each button, the required items are `action` and `label`. You can
 optionally include `color` to indicate the Bootstrap color of the
 button (`primary`, `secondary`, `success`, `danger`, `warning`,
-`info`, `light`, `link`, or `dark`).  The default color is `primary`.
+`info`, `light`, `link`, or `dark`). The default color is `primary`.
 You can also optionally include `icon` to indicate a Font Awesome icon
-name to include in the button.  If your `action` requires arguments,
-you can indicate the arguments using `arguments`.  You can use [Mako]
-templating in any of these elements.
+name to include in the button. If your `action` requires arguments,
+you can indicate the arguments using `arguments`. To specify that a
+particular button should have a particular CSS class, you can specify
+`css class`. You can use [Mako] templating in any of these elements.
 
 If you want to define the buttons programmatically, you can set
 `action buttons` to a dictionary where the only item is `code`.
@@ -464,11 +465,22 @@ results with different screen sizes.
   you set a [`question help button`], the `help label` will be used
   for the help button, while the label for the help tab will be the
   less conspicuous word "Help."
+* The `help button color` is the [Bootstrap color] of the help button
+  that appears when you set a [`question help button`] is
+  enabled. This also affects the color of the question mark icon that
+  appears when a choice in a multiple choice list has help text
+  associated with it.
 * The `continue button label` is the label for the "Continue" button.
   If the `question` is a [`review`] question, this is called the
   `resume button label`.
+* The `continue button color` is the [Bootstrap color] of the
+  "Continue" button. If the `question` is a [`review`] question, this
+  is called the `resume button color`.
 * The `back button label` is the label for the back button that
   appears within the question itself when [`question back button`] is
+  enabled.
+* The `back button color` is the [Bootstrap color] of the back button
+  that appears within the question itself when [`question back button`] is
   enabled.
 * The `corner back button label` is the label for the back button that
   appears in the upper-left corner.
@@ -499,10 +511,11 @@ specifiers to interview-wide defaults to server-wide defaults.  You
 should pick whatever method works best for your purposes.
 
 You can customize many of the screen parts as part of a `question`
-block.  As explained above, there are specifiers for the [`question`],
-[`subquestion`], [`under`], and [`right`] parts.  There are also
-modifiers for [`continue button label`], [`resume button label`],
-[`back button label`], and [`corner back button label`].  When you set
+block. As explained above, there are specifiers for the [`question`],
+[`subquestion`], [`under`], and [`right`] parts. There are also
+modifiers for [`continue button label`], [`continue button color`],
+[`resume button label`], [`resume button color`], [`back button
+label`], and [`corner back button label`]. When you set
 question-specific [`help`], you can indicate a `label` that will be
 used as a label for the help tab or the help button.
 
@@ -598,6 +611,8 @@ For more information about each method, see its documentation.
 [Available Interviews]: {{ site.baseurl }}/docs/admin.html#available%20interviews
 [`show login`]: {{ site.baseurl }}/docs/initial.html#show login
 [`help`]: {{ site.baseurl }}/docs/modifiers.html#help
+[`continue button color`]: {{ site.baseurl }}/docs/modifiers.html#continue button color
+[`resume button color`]: {{ site.baseurl }}/docs/modifiers.html#resume button color
 [`continue button label`]: {{ site.baseurl }}/docs/modifiers.html#continue button label
 [`back button label`]: {{ site.baseurl }}/docs/modifiers.html#back button label
 [`corner back button label`]: {{ site.baseurl }}/docs/modifiers.html#back button label
@@ -622,3 +637,4 @@ For more information about each method, see its documentation.
 [provide CSS]: {{ site.baseurl }}/docs/initial.html#css
 [adjust the CSS]: {{ site.baseurl }}/docs/config.html#bootstrap theme
 [Bootstrap Navbar]: https://getbootstrap.com/docs/5.2/components/navbar/#supported-content
+[Bootstrap color]: https://getbootstrap.com/docs/5.2/customize/color/

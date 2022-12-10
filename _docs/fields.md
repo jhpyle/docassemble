@@ -149,6 +149,18 @@ is equivalent to this:
 
 {% include side-by-side.html demo="buttons-variation-2" %}
 
+You can also provide the label and the corresponding value by using a
+dictionary containing keys `label` and `value`.
+
+You can customize the appearance of buttons by specifying a `css
+class` and/or a `color` in the dictionary.
+
+{% include side-by-side.html demo="buttons-css-class-color" %}
+
+The `color` should refer to one of the [Bootstrap colors] (`primary`,
+`secondary`, `success`, `danger`, `warning`, `info`, `light`, `link`,
+or `dark`).
+
 ### <a name="code generated buttons"></a>Using code to generate the choices
 
 A powerful feature of `buttons` (which also works with
@@ -180,9 +192,14 @@ specified with code:
 
 Instead of using key-value pairs to represent what the variable is set
 to and the label, you can use `value` and `label` as
-keys in the dictionary:
+keys in the dictionary. You can also use the dictionary keys `css
+class` and `color` to modify the appearance of the buttons.
 
 {% include side-by-side.html demo="buttons-code-list-label-value" %}
+
+The `color` should refer to one of the [Bootstrap colors] (`primary`,
+`secondary`, `success`, `danger`, `warning`, `info`, `light`, `link`,
+or `dark`).
 
 As explained [below](#image button), you can also use code to
 [decorate the buttons with images](#image button).
@@ -219,6 +236,15 @@ choice that you want to be the default.
 You can also provide help text for a radio button using `help`:
 
 {% include side-by-side.html demo="choices-with-help" %}
+
+You can customize the appearance of a particular item by specifying
+`color` and `css class`:
+
+{% include side-by-side.html demo="choices-css-class-color" %}
+
+The `color` should refer to one of the [Bootstrap colors] (`primary`,
+`secondary`, `success`, `danger`, `warning`, `info`, `light`, `link`,
+or `dark`).
 
 These customizations can also be specified when building a list of
 choices using code:
@@ -3404,3 +3430,4 @@ why this needs to be done manually as opposed to automatically:
 [address autocomplete]: #address autocomplete
 [logic system]: {{ site.baseurl }}/docs/logic.html
 [`validation code`]: #validation code
+[Bootstrap colors]: https://getbootstrap.com/docs/5.2/customize/color/

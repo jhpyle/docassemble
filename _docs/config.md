@@ -1128,6 +1128,8 @@ button colors:
   "help": info
   "question help": info
   "back to question": info
+  "labelauty": primary
+  "labelauty nota": primary
 {% endhighlight %}
 
 The above example lists the default colors.  The meanings of the keys
@@ -1185,6 +1187,11 @@ in this dictionary are as follows:
 * `back to question`: refers to the "Back to question" button that
   appears when the user is viewing the "help" tab on a `question`
   screen.
+* `labelauty`: refers to the default color of a selected item in a
+  radio button or checkbox list. Labelauty is the name of the JQuery
+  add-on that is used to style radio buttons and checkboxes.
+* `labelauty nota`: refers to the default color of a selected "None of
+  the above item in a checkbox list.
 
 One reason to set `button colors` is to avoid biasing the user toward
 clicking a particular button.  For example you might want to set `no:

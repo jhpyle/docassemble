@@ -3,6 +3,33 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.23](https://github.com/jhpyle/docassemble/releases/tag/v1.4.23) - 2022-12-10
+
+
+### Added
+- The screen parts `continue button color`, `resume button color`,
+  `help button color`, and `back button color`.
+- The question modifiers `continue button color` and `resume button
+  color`.
+- Additional options `labelauty` and `labelauty nota` under the
+  `button colors` Configuration directive.
+
+### Changed
+- Items in multiple choice lists, when expressed as a dictionary, can
+  now include keys `css class` and `color`. The HTML element for the
+  item will have the `css class` as a CSS class. The `color` is
+  expected to be a Bootstrap color name. This will change the
+  background color of the HTML element, unless the element is an
+  `<option>` element. The `css class` and `color` keys have no effect
+  on combobox items.
+- Buttons in `action buttons` can be modified with a `css class`.
+
+## [1.4.22](https://github.com/jhpyle/docassemble/releases/tag/v1.4.22) - 2022-12-08
+
+
+### Fixed
+- Error with the `.fix_up()` method of `DAFile` introduced in 1.4.21.
+
 ## [1.4.21](https://github.com/jhpyle/docassemble/releases/tag/v1.4.21) - 2022-12-07
 
 

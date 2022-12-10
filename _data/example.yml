@@ -16,10 +16,10 @@
     488
   "yaml": "question: | \n  I will give you \n  ${ quantity_noun(num_apples, 'apple')\
     \ }.\nfield: show_quantity\naction buttons:\n  - label: More\n    action: change_quantity\n\
-    \    arguments:\n      amount: 1\n    color: success\n    icon: chevron-up\n \
-    \ - label: Less\n    action: change_quantity\n    arguments:\n      amount: -1\n\
-    \    color: danger\n    icon: chevron-down\n---\nevent: change_quantity\ncode:\
-    \ |\n  num_apples += action_argument('amount')"
+    \    arguments:\n      amount: 1\n    color: success\n    css class: quantity-up\n\
+    \    icon: chevron-up\n  - label: Less\n    action: change_quantity\n    arguments:\n\
+    \      amount: -1\n    color: danger\n    css class: quantity-down\n    icon:\
+    \ chevron-down\n---\nevent: change_quantity\ncode: |\n  num_apples += action_argument('amount')"
 "action-buttons-before":
   "height": !!int |-
     122
@@ -50,7 +50,8 @@
         [{'action': 'eat',
           'arguments': {'fruit': favorite_fruit},
           'label': 'Eat ' + favorite_fruit,
-          'color': 'secondary'}]
+          'color': 'secondary',
+          'css class': 'eat-button'}]
     ---
     event: eat
     code: |
@@ -110,15 +111,15 @@
       clicked may be different from the way they work the next time they
       are clicked.
 
-      [Variable defined by `question`](${ url_action('favorite_fruit') })
+      [Variable defined by question](${ url_action('favorite_fruit') })
 
-      [`event` question](${ url_action('fruit_info') })
+      [event question](${ url_action('fruit_info') })
 
-      [Variable defined by `code`](${ url_action('vegetable_asked_about') })
+      [Variable defined by code](${ url_action('vegetable_asked_about') })
 
-      [`event` code](${ url_action('increment_counter') })
+      [event code](${ url_action('increment_counter') })
 
-      [`event` code that calls `force_ask()`](${ url_action('review_preferences') })
+      [event code that calls force_ask()](${ url_action('review_preferences') })
 
       The value of the counter is ${ counter }.
     ---
@@ -1906,7 +1907,7 @@
       - "I'm not sure": unsure
 "buttons-code-list-label-value":
   "height": !!int |-
-    186
+    187
   "width": !!int |-
     488
   "yaml": |-
@@ -1917,9 +1918,18 @@
       you understand this?
     buttons:
       code: |
-        [{'label': "I understand", 'value': 'understands'},
-         {'label': "I do not understand", 'value': 'does not understand'},
-         {'label': "I'm not sure", 'value': 'unsure'}]
+        [{'label': "I understand",
+          'value': 'understands',
+          'css class': 'good',
+          'color': 'success'},
+         {'label': "I do not understand",
+          'value': 'does not understand',
+          'css class': 'clueless',
+          'color': 'danger'},
+         {'label': "I'm not sure",
+          'value': 'unsure',
+          'css class': 'unsure',
+          'color': 'warning'}]
 "buttons-code-list-partial":
   "height": !!int |-
     186
@@ -1935,6 +1945,23 @@
       - "I understand": understands
       - code: |
           [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
+"buttons-css-class-color":
+  "height": !!int |-
+    122
+  "width": !!int |-
+    488
+  "yaml": |-
+    field: user_gender
+    question: What is your gender?
+    buttons:
+      - value: male
+        label: Male
+        css class: male-button
+        color: info
+      - value: female
+        label: Female
+        css class: female-button
+        color: danger
 "buttons-icons":
   "height": !!int |-
     437
@@ -2259,6 +2286,37 @@
       - Red: red
       - Green: green
       - Purple: purple
+"choices-css-class-color":
+  "height": !!int |-
+    306
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      What type of shoes do you wear?
+    field: target_variable
+    choices:
+      - Sneakers: sneakers
+        help: |
+          Comfortable shoes.
+        css class: sneakers
+        color: secondary
+      - Sandals: sandals
+        help: |
+          For summer.
+        css class: sandals
+        color: danger
+      - Clogs: clogs
+        help: |
+          For hippies.
+        css class: clogs
+        color: warning
+      - Other: other
+        default: True
+        help: |
+          Because the other types suck.
+        css class: othershoe
+        color: success
 "choices-dropdown":
   "height": !!int |-
     170
@@ -2275,7 +2333,7 @@
       - Other
 "choices-from-code":
   "height": !!int |-
-    298
+    306
   "width": !!int |-
     488
   "yaml": |-
@@ -2285,14 +2343,22 @@
     choices:
       code: |
         [{'sneakers': "Sneakers",
-          'help': "Comfortable shoes."},
+          'help': "Comfortable shoes.",
+          'css class': "sneakers",
+          'color': "secondary"},
          {'sandals': "Sandals",
-          'help': "For summer."},
+          'help': "For summer.",
+          'css class': "sandals",
+          'color': "danger"},
          {'clogs': "Clogs",
-          'help': "For hippies."},
+          'help': "For hippies.",
+          'css class': "clogs",
+          'color': "warning"},
          {'other': "Other",
           'default': True,
-          'help': "Because the other types suck."}]
+          'help': "Because the other types suck.",
+          'css class': "othershoe",
+          'color': "success"}]
 "choices-icons":
   "height": !!int |-
     436
@@ -2566,6 +2632,18 @@
     subquestion: |
       When you are ready to begin, press
       Continue.
+"continue-button-color":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      What is your favorite fruit?
+    fields:
+      - Fruit: favorite_fruit
+    continue button label: Keep going
+    continue button color: success
 "continue-button-field":
   "height": !!int |-
     240
@@ -3405,8 +3483,13 @@
         of this interview so far.
       help label: |
         About
+      help button color: warning
+      back button label: |
+        Back
+      back button color: secondary
       continue button label: |
         Go to next step
+      continue button color: success
       subtitle: |
         A _groovy_ interview
       pre: |
@@ -9599,12 +9682,16 @@
         Exit label
       help label: |
         Help label
+      help button color: warning
       continue button label: |
         Continue button label
+      continue button color: success
       resume button label: |
         Resume button label
+      resume button color: info
       back button label: |
         Back button label
+      back button color: danger
       footer: |
         This is the footer part.
 "min":
