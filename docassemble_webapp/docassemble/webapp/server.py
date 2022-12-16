@@ -19416,6 +19416,21 @@ def fix_package_folder():
         area.finalize()
 
 
+def secure_git_branchname(branch):
+  """Makes an input branch name a valid git branch name, and also strips out
+  things that would interpolated in bash."""
+  # The rules of what's allowed in a git branch name are: https://git-scm.com/docs/git-check-ref-format
+  branch = unicodedata.normalize("NFKD", branch)
+  branch = branch.encode("ascii", "ignore").decode("ascii")
+  branch = re.compile(r"[\u0000-\u0020]|(\")|(@{)|(\.\.)|[\u0170~ ^:?*$`[\\]|(//+)").sub("", branch)
+  branch = branch.strip("/")
+  # Can include a slash, but no slash-separated component can begin with a dot `.` or end with `.lock`
+  branch = "/".join([re.compile(r"\.lock$").sub("", component.lstrip('.')) for component in branch.split("/")])
+  branch = branch.rstrip(".")
+  if branch == "@":
+    branch = "_"
+  return branch
+
 def do_playground_pull(area, current_project, github_url=None, branch=None, pypi_package=None, can_publish_to_github=False, github_email=None, pull_only=False):
     playground_user = get_playground_user()
     area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
@@ -19424,7 +19439,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
     if branch in ('', 'None'):
         branch = None
     if branch:
-        branch = werkzeug.utils.secure_filename(branch)
+        branch = secure_git_branchname(branch)
         branch_option = '-b "' + branch + '" '
     else:
         branch_option = ''
