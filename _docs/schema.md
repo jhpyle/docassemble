@@ -27,9 +27,9 @@ concepts exist in most SQL database systems.)
 
 [starts up]: {{ site.github.repository_url }}/blob/master/Docker/initialize.sh
 [restarts]: {{ site.github.repository_url }}/blob/master/Docker/reset.sh
-[alembic]: http://alembic.zzzcomputing.com/en/latest/
+[alembic]: https://alembic.zzzcomputing.com/en/latest/
 [PostgreSQL]: https://www.postgresql.org/
-[SQLAlchemy]: http://www.sqlalchemy.org/
+[SQLAlchemy]: https://www.sqlalchemy.org/
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [installation]: {{ site.baseurl }}/docs/installation.html

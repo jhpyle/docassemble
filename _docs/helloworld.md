@@ -331,7 +331,7 @@ image sets:
     images:
       earth: globe.svg
     attribution: |
-      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+      Icon made by [Freepik](https://www.flaticon.com/authors/freepik)
 ---
 {% endhighlight %}
 
@@ -675,7 +675,7 @@ the [GitHub subsection] of the [packages] section.
 [configuration]: {{ site.baseurl }}/docs/config.html
 [reconfigured user roles]: {{ site.baseurl }}/docs/users.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
-[WordPad]: http://windows.microsoft.com/en-us/windows/using-wordpad#1TC=windows-7
+[WordPad]: https://windows.microsoft.com/en-us/windows/using-wordpad#1TC=windows-7
 [Notepad++]: https://notepad-plus-plus.org/
 [document]: {{ site.baseurl }}/docs/documents.html
 [documents]: {{ site.baseurl }}/docs/documents.html
@@ -710,7 +710,7 @@ the [GitHub subsection] of the [packages] section.
 [it is recommended]: {{ site.baseurl }}/docs/development.html
 [User List]: {{ site.baseurl }}/docs/admin.html#user list
 [globe.svg]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/data/static/globe.svg
-[Freepik]: http://www.flaticon.com/authors/freepik
+[Freepik]: https://www.flaticon.com/authors/freepik
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch

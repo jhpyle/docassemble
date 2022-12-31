@@ -612,7 +612,7 @@ docassemble.base.functions.update_language_function('fr', 'currency_symbol', lam
 {% endhighlight %}
 
 [`currency symbol`]: {{ site.baseurl }}/docs/config.html#currency symbol
-[`locale` module]: https://docs.python.org/3.10/library/locale.htmle
+[`locale` module]: https://docs.python.org/3.10/library/locale.html
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
@@ -625,14 +625,14 @@ docassemble.base.functions.update_language_function('fr', 'currency_symbol', lam
 [functions]: {{ site.baseurl }}/docs/functions.html
 [Unicode]: https://en.wikipedia.org/wiki/Unicode
 [documents]: {{ site.baseurl }}/docs/documents.html
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
-[LaTeX]: http://www.latex-project.org/
+[LaTeX]: https://www.latex-project.org/
 [polyglossia]: https://www.ctan.org/pkg/polyglossia
 [babel]: https://www.ctan.org/pkg/babel
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
 [ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
-[Pandoc]: http://johnmacfarlane.net/pandoc/
+[Pandoc]: https://pandoc.org/
 [`language` modifier]: {{ site.baseurl }}/docs/modifiers.html#language
 [`language`]: {{ site.baseurl }}/docs/config.html#language
 [`locale`]: {{ site.baseurl }}/docs/config.html#locale
@@ -656,7 +656,7 @@ docassemble.base.functions.update_language_function('fr', 'currency_symbol', lam
 [`other os locales`]: {{ site.baseurl }}/docs/config.html#other os locales
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`docx template file`]: {{ site.baseurl }}/docs/documents.html#docx template file
-[Pandoc]: http://johnmacfarlane.net/pandoc/
+[Pandoc]: https://pandoc.org/
 [selection]: {{ site.baseurl }}/docs/documents.html#metadata pdf
 [additional software packages]: https://packages.debian.org/stretch/texlive-lang-all
 [`translations`]: {{ site.baseurl }}/docs/initial.html#translations
@@ -672,7 +672,7 @@ docassemble.base.functions.update_language_function('fr', 'currency_symbol', lam
 [Translate system phrases into another language]: {{ site.baseurl }}/docs/admin.html#translate
 [use code]: {{ site.baseurl }}/docs/documents.html#template file code
 [Morningside Translations]: https://www.morningtrans.com/
-[`babel.dates`]: http://babel.pocoo.org/en/latest/api/dates.html
+[`babel.dates`]: https://babel.pocoo.org/en/latest/api/dates.html
 [`babel dates map`]: {{ site.baseurl }}/docs/config.html#babel dates map
 [language-specific functions]: {{ site.baseurl }}/docs/functions.html#linguistic
 [simple language functions]: {{ site.baseurl }}/docs/functions.html#simplelang

@@ -1065,8 +1065,8 @@ containing `# use jinja` was encountered.
 [functions]: {{ site.baseurl }}/docs/functions.html
 [DOCX documents]: {{ site.baseurl }}/docs/documents.html#docx template file
 [Markdown]: https://daringfireball.net/projects/markdown/
-[Mako]: http://www.makotemplates.org/
-[YAML specification]: http://yaml.org/spec/1.2/spec.html
+[Mako]: https://www.makotemplates.org/
+[YAML specification]: https://yaml.org/spec/1.2.2/
 [if/else statements]: {{ site.baseurl }}/docs/code.html#if
 [graphical user interface]: https://en.wikipedia.org/wiki/Graphical_user_interface
 [GitHub]: https://github.com/
@@ -1124,11 +1124,11 @@ containing `# use jinja` was encountered.
 [`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
-[jQuery]: http://jquery.com/
-[jQuery Validation Plugin]: http://jqueryvalidation.org/maxlength-method
+[jQuery]: https://jquery.com/
+[jQuery Validation Plugin]: https://jqueryvalidation.org/maxlength-method
 [using an iframe]: #iframe
-[Bootstrap 5]: http://getbootstrap.com/
-[Bootstrap]: http://getbootstrap.com/
+[Bootstrap 5]: https://getbootstrap.com/
+[Bootstrap]: https://getbootstrap.com/
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
 [favicon]: https://en.wikipedia.org/wiki/Favicon
 [Font Awesome]: https://fontawesome.com

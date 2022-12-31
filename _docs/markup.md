@@ -492,7 +492,7 @@ information about this feature, see the section on
 [raw LaTeX]: https://en.wikibooks.org/wiki/LaTeX/Tables
 [raw HTML]: https://www.w3schools.com/html/html_tables.asp
 [PHP Markdown Extra]: https://michelf.ca/projects/php-markdown/extra/#table
-[tables in attachments]: http://pandoc.org/MANUAL.html#extension-pipe_tables
+[tables in attachments]: https://pandoc.org/MANUAL.html#extension-pipe_tables
 [tables in HTML]: https://python-markdown.github.io/extensions/tables/
 [`code`]: {{ site.baseurl }}/docs/code.html
 [Processing interim user input]: {{ site.baseurl }}/docs/background.html#target
@@ -501,11 +501,11 @@ information about this feature, see the section on
 [document]: {{ site.baseurl }}/docs/documents.html
 [documents]: {{ site.baseurl }}/docs/documents.html
 [question modifiers]: {{ site.baseurl }}/docs/modifiers.html
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [mark up]: https://en.wikipedia.org/wiki/Markup_language
-[Pandoc]: http://johnmacfarlane.net/pandoc/
+[Pandoc]: https://pandoc.org
 [YouTube]: https://www.youtube.com/
 [Vimeo]: https://vimeo.com/
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
@@ -526,12 +526,12 @@ information about this feature, see the section on
 [object]: {{ site.baseurl }}/docs/objects.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [groups]: {{ site.baseurl }}/docs/groups.html
-[`loop`]: http://docs.makotemplates.org/en/latest/runtime.html#loop-context
-[`STOP_RENDERING`]: http://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template
+[`loop`]: https://docs.makotemplates.org/en/latest/runtime.html#loop-context
+[`STOP_RENDERING`]: https://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template
 [`ordinal()`]: {{ site.baseurl }}/docs/functions.html#ordinal
-[Mako documentation]: http://docs.makotemplates.org/en/latest/index.html
+[Mako documentation]: https://docs.makotemplates.org/en/latest/index.html
 [`defined()` function]: {{ site.baseurl }}/docs/functions.html#defined
-[`<%def>`]: http://docs.makotemplates.org/en/latest/defs.html#using-defs
+[`<%def>`]: https://docs.makotemplates.org/en/latest/defs.html#using-defs
 [`def` initial block]: {{ site.baseurl }}/docs/initial.html#def
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [signature field]: {{ site.baseurl }}/docs/fields.html#signature

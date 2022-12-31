@@ -407,6 +407,12 @@ launched by your button to be the only active action, set `forget
 prior: True` in the action button definition; then all prior actions
 will be forgotten.
 
+If you want a button to be included only conditionally, set `show if`
+to a Python expression. If the expression evaluates to a false value,
+the button will not be shown. When you define buttons with `code`, you
+can include `show if` in a `dict` for a button, and if it is a false
+value, the button will be omitted.
+
 # <a name="screen parts"></a>Customizing screen parts
 
 When the user looks at a screen in an interview, there are many
@@ -568,7 +574,7 @@ For more information about each method, see its documentation.
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [multi-user interview]: {{ site.baseurl }}/docs/roles.html
 [role]: {{ site.baseurl }}/docs/roles.html
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [initial blocks]: {{ site.baseurl }}/docs/initial.html

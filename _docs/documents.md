@@ -2035,10 +2035,10 @@ interview, see the [`cache documents` feature].
 
 [`content file`]: #content file
 [`cache documents` feature]: {{ site.baseurl }}/docs/initial.html#cache documents
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: https://en.wikipedia.org/wiki/YAML
-[Pandoc]: http://johnmacfarlane.net/pandoc/
+[Pandoc]: https://pandoc.org
 [graphicx]: https://en.wikibooks.org/wiki/LaTeX/Importing_Graphics#The_graphicx_package
 [geometry]: https://www.ctan.org/pkg/geometry?lang=en
 [fancyhdr]: https://www.ctan.org/pkg/fancyhdr
@@ -2047,7 +2047,7 @@ interview, see the [`cache documents` feature].
 [babel]: https://www.ctan.org/pkg/babel
 [HotDocs]: https://en.wikipedia.org/wiki/HotDocs
 [WYSIWYG]: https://en.wikipedia.org/wiki/WYSIWYG
-[LaTeX]: http://www.latex-project.org/
+[LaTeX]: https://www.latex-project.org/
 [objects]: {{ site.baseurl }}/docs/objects.html
 [function]: {{ site.baseurl }}/docs/functions.html
 [functions]: {{ site.baseurl }}/docs/functions.html
@@ -2077,8 +2077,8 @@ interview, see the [`cache documents` feature].
 [`pdf template file`]: #pdf template file
 [`docx template file`]: #docx template file
 [using `docx` as one of the `valid formats`]: #docx
-[`python-docx-template`]: http://docxtpl.readthedocs.io/en/latest/
-[documentation of that package]: http://docxtpl.readthedocs.io/en/latest/
+[`python-docx-template`]: https://docxtpl.readthedocs.io/en/latest/
+[documentation of that package]: https://docxtpl.readthedocs.io/en/latest/
 [Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
 [Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
 [insert an image]: {{ site.baseurl }}/docs/markup.html#inserting images
@@ -2153,4 +2153,4 @@ interview, see the [`cache documents` feature].
 [`Legal-Template.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.yml
 [`Legal-Template.rtf`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.rtf
 [`Legal-Template.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.docx
-[Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[Python expression]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python

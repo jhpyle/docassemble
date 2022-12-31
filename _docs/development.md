@@ -1606,13 +1606,13 @@ specific questions.  It is better to have a dedicated staff member who
 knows a little about the subject matter than to have a distracted
 staff member who knows a lot about the subject matter.
 
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [`comment`]: {{ site.baseurl }}/docs/modifiers.html#comment
 [`template`]: {{ site.baseurl }}/docs/initial.html#template
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
-[selenium]: http://selenium-python.readthedocs.io/getting-started.html
+[selenium]: https://selenium-python.readthedocs.io/getting-started.html
 [Behavior-Driven Development]: https://en.wikipedia.org/wiki/Behavior-driven_development
 [install chromedriver]: https://chromedriver.storage.googleapis.com/index.html?path=2.33/
 [Behave]: https://behave.readthedocs.io/en/stable/index.html
@@ -1652,7 +1652,7 @@ staff member who knows a lot about the subject matter.
 [hard-to-find directory]: https://docs.docker.com/engine/reference/commandline/volume_inspect/
 [`s3`]: {{ site.baseurl }}/docs/config.html#s3
 [`azure`]: {{ site.baseurl }}/docs/config.html#azure
-[bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[bucket]: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [Azure Portal]: https://portal.azure.com/
 [`S3ENABLE`]: {{ site.baseurl }}/docs/docker.html#S3ENABLE
 [`S3BUCKET`]: {{ site.baseurl }}/docs/docker.html#S3BUCKET
@@ -1667,7 +1667,7 @@ staff member who knows a lot about the subject matter.
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [Amazon Web Services]: https://aws.amazon.com
 [AWS]: https://aws.amazon.com
-[S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[S3 bucket]: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [packages folder]: {{ site.baseurl }}/docs/playground.html#packages
 [PyPI]: https://pypi.python.org/pypi
 [GitHub]: https://github.com/
@@ -1685,8 +1685,8 @@ staff member who knows a lot about the subject matter.
 [GitHub repository]: {{ site.github.repository_url }}
 [`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
 [`docker exec`]: https://docs.docker.com/engine/reference/commandline/exec/
-[Celery]: http://www.celeryproject.org/
-[Python virtual environment]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+[Celery]: https://docs.celeryq.dev/en/stable/
+[Python virtual environment]: https://docs.python-guide.org/dev/virtualenvs/
 [Gherkin]: https://en.wikipedia.org/wiki/Cucumber_(software)#Gherkin_language
 [`docassemble.demo`]: {{ site.github.repository_url }}/tree/master/docassemble_demo
 [`random-test.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/random-test.py
@@ -1708,6 +1708,6 @@ staff member who knows a lot about the subject matter.
 [uWSGI]: https://uwsgi-docs.readthedocs.io/en/latest/
 [a dummy package]: {{ site.baseurl }}/img/docassemble-dummy.zip
 [Notepad++]: https://notepad-plus-plus.org/
-[Sublime Text]: http://www.sublimetext.com/
+[Sublime Text]: https://www.sublimetext.com/
 [Visual Studio Code]: https://code.visualstudio.com/
 [`docassemblecli`]: https://pypi.org/project/docassemblecli/

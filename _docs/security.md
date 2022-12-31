@@ -265,17 +265,8 @@ result, an intruder with access to the server could reverse-engineer
 the encrpytion key for an interview belonging to a user who logs in
 with something other than a password.
 
-On [Docker], **docassemble** installs [npm] from a [different source]
-because [npm] is missing from [Debian stretch] due to unresolved
-security issues in a Javascript library.  The installation of [npm]
-may have security implications.  However, the only Javascript-based
-application that **docassemble** uses is [`azure-storage-cmd`], and
-this is only used when [Azure blob storage] is enabled.
-
 [Azure blob storage]: {{ site.baseurl }}/docs/docker.html#persistent azure
 [`azure-storage-cmd`]: https://www.npmjs.com/package/azure-storage-cmd
-[different source]: http://linuxbsdos.com/2017/06/26/how-to-install-node-js-lts-on-debian-9-stretch/
-[Debian stretch]: https://wiki.debian.org/DebianStretch
 [npm]: https://www.npmjs.com
 [login/password system]: {{ site.baseurl }}/docs/users.html
 [fail2ban]: https://en.wikipedia.org/wiki/Fail2ban

@@ -1123,14 +1123,14 @@ start one process per CPU.  So if the server has two CPUs, the total
 number of PostgreSQL connections will be 12.
 
 [t2.small]: https://aws.amazon.com/ec2/instance-types/t2/
-[IAM role]: http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html
+[IAM role]: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html
 [SMTP Authentication]: https://en.wikipedia.org/wiki/SMTP_Authentication
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [Apache configuration]: {{ site.baseurl }}/docs/installation.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [installation]: {{ site.baseurl }}/docs/installation.html
 [installation section]: {{ site.baseurl }}/docs/installation.html#email
-[SQLAlchemy]: http://www.sqlalchemy.org/
+[SQLAlchemy]: https://www.sqlalchemy.org/
 [S3]: https://aws.amazon.com/s3/
 [Amazon S3]: https://aws.amazon.com/s3/
 [Amazon EC2]: https://aws.amazon.com/ec2/
@@ -1140,33 +1140,33 @@ number of PostgreSQL connections will be 12.
 [Amazon Web Services]: https://aws.amazon.com
 [AWS]: https://aws.amazon.com
 [Docker]: {{ site.baseurl }}/docs/docker.html
-[Amazon's Docker instructions]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html
+[Amazon's Docker instructions]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html
 [Virtual Private Cloud]: https://aws.amazon.com/vpc/
 [VPC]: https://aws.amazon.com/vpc/
 [Amazon Route 53]: https://aws.amazon.com/route53/
-[Security Group]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
-[supervisor]: http://supervisord.org/
-[EC2 Container Service]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
-[ECS]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
+[Security Group]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
+[supervisor]: http://supervisord.org
+[EC2 Container Service]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
+[ECS]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
 [Elastic Load Balancer]: https://aws.amazon.com/elasticloadbalancing/
-[Auto Scaling Group]: http://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/AutoScalingGroup.html
+[Auto Scaling Group]: https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/AutoScalingGroup.html
 [create your own Docker image]: {{ site.baseurl }}/docs/docker.html#build
 [using Docker]: {{ site.baseurl }}/docs/docker.html#build
 [`create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
 [JSON]: https://en.wikipedia.org/wiki/JSON
-[Redis]: http://redis.io/
+[Redis]: https://redis.io/
 [RabbitMQ]: https://www.rabbitmq.com/
 [background processes]: {{ site.baseurl }}/docs/background.html#background
 [live help]: {{ site.baseurl }}/docs/livehelp.html
-[Celery]: http://www.celeryproject.org/
+[Celery]: https://www.celeryproject.org/
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
 [load balancer]: https://en.wikipedia.org/wiki/Load_balancing_(computing)
 [CNAME]: https://en.wikipedia.org/wiki/CNAME_record
-[AMI]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
-[VPC CIDR]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html
-[autoscaling tutorial]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cloudwatch_alarm_autoscaling.html
+[AMI]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
+[VPC CIDR]: https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html
+[autoscaling tutorial]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cloudwatch_alarm_autoscaling.html
 [Application Load Balancer]: https://aws.amazon.com/elasticloadbalancing/applicationloadbalancer/
-[cluster]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_clusters.html
+[cluster]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_clusters.html
 [DNS server]: https://en.wikipedia.org/wiki/Domain_Name_System
 [domain name]: https://en.wikipedia.org/wiki/Domain_name
 [GoDaddy]: https://www.godaddy.com/
@@ -1177,18 +1177,18 @@ number of PostgreSQL connections will be 12.
 [ECS Console]: https://console.aws.amazon.com/ecs/home
 [VPC Console]: https://console.aws.amazon.com/vpc/home
 [EC2 Console]: https://console.aws.amazon.com/ec2/home
-[Launch Configuration]: http://docs.aws.amazon.com/autoscaling/latest/userguide/LaunchConfiguration.html
+[Launch Configuration]: https://docs.aws.amazon.com/autoscaling/latest/userguide/LaunchConfiguration.html
 [CloudFormation]: https://aws.amazon.com/cloudformation/
-[Internet Gateway]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Internet_Gateway.html
-[Route Table]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html
-[VPC Attached Gateway]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Internet_Gateway.html#Add_IGW_Attach_Gateway
-[subnets]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html
-[Task Definition]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_defintions.html
+[Internet Gateway]: https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Internet_Gateway.html
+[Route Table]: https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html
+[VPC Attached Gateway]: https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Internet_Gateway.html#Add_IGW_Attach_Gateway
+[subnets]: https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html
+[Task Definition]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_defintions.html
 [Amazon]: https://amazon.com
 [IAM]: https://aws.amazon.com/iam/
 [CloudWatch]: https://aws.amazon.com/cloudwatch/
-[container instance]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_instances.html
-[container instances]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_instances.html
+[container instance]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_instances.html
+[container instances]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_instances.html
 [fully-qualified domain name]: https://en.wikipedia.org/wiki/Fully_qualified_domain_name
 [multi-server arrangement]: {{ site.baseurl }}/docs/docker.html#multi server arrangement
 [WebSocket]: https://en.wikipedia.org/wiki/WebSocket
@@ -1222,15 +1222,15 @@ number of PostgreSQL connections will be 12.
 [`DAHOSTNAME`]: {{ site.baseurl }}/docs/docker.html#DAHOSTNAME
 [`LETSENCRYPTEMAIL`]: {{ site.baseurl }}/docs/docker.html#LETSENCRYPTEMAIL
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
-[PostgreSQL]: http://www.postgresql.org/
+[PostgreSQL]: https://www.postgresql.org/
 [`docassemble.webapp.cloud_register`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/cloud_register.py
-[S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[S3 bucket]: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [`log server`]: {{ site.baseurl }}/docs/config.html#log server
 [`db`]: {{ site.baseurl }}/docs/config.html#db
 [`host`]: {{ site.baseurl }}/docs/config.html#db host
 [SMTP]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
 [e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
-[submit a support request]: http://docs.aws.amazon.com/ses/latest/DeveloperGuide/request-production-access.html
+[submit a support request]: https://docs.aws.amazon.com/ses/latest/DeveloperGuide/request-production-access.html
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
 [sendmail]: https://en.wikipedia.org/wiki/Sendmail
 [MailChimp]: https://mailchimp.com/
@@ -1241,9 +1241,9 @@ number of PostgreSQL connections will be 12.
 [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_DNS_lookup
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [S3 persistent storage]: {{ site.baseurl }}/docs/docker.html#persistent s3
-[start an EC2 instance using an ECS-optimized AMI]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html
+[start an EC2 instance using an ECS-optimized AMI]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_container_instance.html
 [HTTPS]: {{ site.baseurl }}/docs/docker.html#https
-[page on Amazon's web site]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
+[page on Amazon's web site]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
 [Helm]: https://helm.sh/
 [Kubernetes]: https://kubernetes.io/
 [`jhpyle/charts`]: https://github.com/jhpyle/charts

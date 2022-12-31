@@ -1191,7 +1191,7 @@ in this dictionary are as follows:
   radio button or checkbox list. Labelauty is the name of the JQuery
   add-on that is used to style radio buttons and checkboxes.
 * `labelauty nota`: refers to the default color of a selected "None of
-  the above item in a checkbox list.
+  the above" item in a checkbox list.
 
 One reason to set `button colors` is to avoid biasing the user toward
 clicking a particular button.  For example you might want to set `no:
@@ -3775,23 +3775,22 @@ will not create it for you.
 
 ## <a name="ec2"></a>ec2
 
-If you are running **docassemble** from within an [Amazon EC2]
-instance, or a [Docker] container within such an instance, set this to
-true:
+If you are running **docassemble** from within an [Amazon EC2] or
+[Lightsail] instance, set this to true:
 
 {% highlight yaml %}
 ec2: True
 {% endhighlight %}
 
-This is necessary because when **docassemble** runs in a
-[multi-server arrangement], each **docassemble** web server instance
-needs to allow other **docassemble** web instances to send messages to
-it through [supervisor].  Each web server instance advertises the
-hostname or IP address through which its [supervisor] can be accessed.
-Normally, this can be obtained using the computer's hostname, but
-within an [EC2] instance or [Docker] container, this hostname is not
-one that other web servers can resolve.  If `ec2` is set to `True`,
-then **docassemble** will determine the hostname by calling
+This is necessary because when **docassemble** runs in a [multi-server
+arrangement], each **docassemble** web server instance needs to allow
+other **docassemble** web instances to send messages to it through
+[supervisor].  Each web server instance advertises the hostname or IP
+address through which its [supervisor] can be accessed.  Normally,
+this can be obtained using the computer's hostname, but within an
+[EC2] or [Lightsail] instance, this hostname is not one that other web
+servers can resolve.  If `ec2` is set to `True`, then **docassemble**
+will determine the hostname by calling
 `http://169.254.169.254/latest/meta-data/local-ipv4`.
 
 ## <a name="ec2 ip url"></a>ec2 ip url
@@ -5902,10 +5901,10 @@ system because it may contain sensitive information, such as Google
 and Facebook API keys.
 
 [SameSite]: https://www.chromestatus.com/feature/5088147346030592
-[VoiceRSS]: http://www.voicerss.org/
-[Flask]: http://flask.pocoo.org/
+[VoiceRSS]: https://www.voicerss.org/
+[Flask]: https://flask.pocoo.org/
 [YAML]: https://en.wikipedia.org/wiki/YAML
-[LaTeX]: http://www.latex-project.org/
+[LaTeX]: https://www.latex-project.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [installation]: {{ site.baseurl }}/docs/installation.html
 [upgrades]: {{ site.baseurl }}/docs/installation.html#upgrade
@@ -5913,22 +5912,22 @@ and Facebook API keys.
 [multi-server arrangement]: {{ site.baseurl }}/docs/scalability.html
 [modifier]: {{ site.baseurl }}/docs/modifiers.html
 [interview]: {{ site.baseurl }}/docs/interviews.html
-[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
-[Flask]: http://flask.pocoo.org/
+[WSGI]: https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[Flask]: https://flask.pocoo.org/
 [language and locale settings]: {{ site.baseurl }}/docs/language.html
 [user login system]: {{ site.baseurl }}/docs/users.html
 [interview logic]: {{ site.baseurl }}/docs/logic.html
-[protection]: http://flask-wtf.readthedocs.org/en/latest/csrf.html
+[protection]: https://flask-wtf.readthedocs.org/en/latest/csrf.html
 [cross-site request forgery]: https://en.wikipedia.org/wiki/Cross-site_request_forgery
 [document]: {{ site.baseurl }}/docs/documents.html
 [functions]: {{ site.baseurl }}/docs/functions.html
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
 [ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
 [GitHub]: https://github.com/
-[Perl Audio Converter]: http://vorzox.wix.com/pacpl
+[Perl Audio Converter]: https://vorzox.wix.com/pacpl
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
-[list of language codes]: http://www.voicerss.org/api/documentation.aspx
-[supervisor]: http://supervisord.org/
+[list of language codes]: https://www.voicerss.org/api/documentation.aspx
+[supervisor]: http://supervisord.org
 [S3]: {{ site.baseurl }}/docs/docker.html#persistent s3
 [Azure blob storage]: {{ site.baseurl }}/docs/docker.html#persistent azure
 [Amazon S3]: https://aws.amazon.com/s3/
@@ -5955,7 +5954,7 @@ and Facebook API keys.
 [`docassemble.wsgi`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble.wsgi
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`root`]: #root
-[Pandoc]: http://johnmacfarlane.net/pandoc/
+[Pandoc]: https://pandoc.org
 [LibreOffice]: https://www.libreoffice.org/
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges
@@ -5967,24 +5966,23 @@ and Facebook API keys.
 [scheduled task]: {{ site.baseurl }}/docs/background.html#scheduled
 [enabled]: {{ site.baseurl }}/docs/background.html#enabling
 [`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
-[`pytz`]: http://pytz.sourceforge.net/
 [`speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text
 [call forwarding]: {{ site.baseurl }}/docs/livehelp.html#phone
 [`send_sms()`]: {{ site.baseurl }}/docs/functions.html#send_sms
 [`send_fax()`]: {{ site.baseurl }}/docs/functions.html#send_fax
 [text messaging interface]: {{ site.baseurl }}/docs/sms.html
 [Twilio]: https://twilio.com
-[Redis]: http://redis.io/
+[Redis]: https://redis.io/
 [RabbitMQ]: https://www.rabbitmq.com/
 [AMQP URI]: https://www.rabbitmq.com/uri-spec.html
 [redis URI]: https://www.iana.org/assignments/uri-schemes/prov/redis
 [`os locale`]: #os locale
-[ImageMagick]: http://www.imagemagick.org/
+[ImageMagick]: https://www.imagemagick.org/
 [Debian]: https://www.debian.org/
 [`voicerss`]: #voicerss
 [E.164]: https://support.twilio.com/hc/en-us/articles/223183008-Formatting-International-Phone-Numbers
 [SMS]: https://en.wikipedia.org/wiki/Short_Message_Service
-[SQLAlchemy]: http://www.sqlalchemy.org/
+[SQLAlchemy]: https://www.sqlalchemy.org/
 [PostgreSQL]: https://www.postgresql.org/
 [Packages]: {{ site.baseurl }}/docs/packages.html
 [fork]: https://en.wikipedia.org/wiki/Fork_(software_development)
@@ -6016,20 +6014,20 @@ and Facebook API keys.
 [`secretkey`]: #secretkey
 [`default sender`]: #default sender
 [Python]: https://www.python.org/
-[Celery]: http://www.celeryproject.org/
+[Celery]: https://docs.celeryq.dev/en/stable/
 [`ocr_file()`]: {{ site.baseurl }}/docs/functions.html#ocr_file
 [Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
 [`default interview`]: #default interview
 [readability statistics]: https://pypi.python.org/pypi/textstat/
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [packages folder]: {{ site.baseurl }}/docs/playground.html#packages
-[Vim]: http://www.vim.org/
+[Vim]: https://www.vim.org/
 [Emacs]: https://www.gnu.org/software/emacs/
 [Sublime Text]: https://www.sublimetext.com/
 [Vim bindings option]: https://codemirror.net/demo/vim.html
 [Emacs bindings option]: https://codemirror.net/demo/emacs.html
 [Sublime Text bindings option]: https://codemirror.net/demo/sublime.html
-[CodeMirror]: http://codemirror.net/
+[CodeMirror]: https://codemirror.net/
 [e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
 [`external hostname`]: #external hostname
 [`dispatch`]: #dispatch
@@ -6060,13 +6058,13 @@ and Facebook API keys.
 [Authy]: https://authy.com/
 [privilege]: {{ site.baseurl }}/docs/users.html
 [privileges]: {{ site.baseurl }}/docs/users.html
-[bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[bucket]: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [`pdf/a` features setting]: {{ site.baseurl }}/docs/initial.html#pdfa
 [`tagged pdf` features setting]: {{ site.baseurl }}/docs/initial.html#tagged pdf
 [Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
-[Flask]: http://flask.pocoo.org/
+[Flask]: https://flask.pocoo.org/
 [`interviews.html`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/templates/pages/interviews.html
 [`start.html`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/templates/pages/start.html
 [HTML]: https://en.wikipedia.org/wiki/HTML
@@ -6078,8 +6076,8 @@ and Facebook API keys.
 [GET request]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_methods
 [`global css`]: #global css
 [`global javascript`]: #global javascript
-[alembic]: http://alembic.zzzcomputing.com/en/latest/
-[CSRF protection]: http://flask-wtf.readthedocs.io/en/stable/csrf.html
+[alembic]: https://alembic.zzzcomputing.com/en/latest/
+[CSRF protection]: https://flask-wtf.readthedocs.io/en/stable/csrf.html
 [referer header]: https://en.wikipedia.org/wiki/HTTP_referer
 [jQuery]: https://jquery.com/
 [`$( document ).ready`]: https://api.jquery.com/ready/
@@ -6088,8 +6086,8 @@ and Facebook API keys.
 [`maximum image size` field modifier]: {{ site.baseurl }}/docs/fields.html#maximum image size
 [`maximum image size` interview feature]: {{ site.baseurl }}/docs/initial.html#maximum image size
 [`loop limit` and `recursion limit` features]: {{ site.baseurl }}/docs/initial.html#loop limit
-[region name]: http://docs.aws.amazon.com/general/latest/gr/rande.html
-[Bootstrap]: http://getbootstrap.com/
+[region name]: https://docs.aws.amazon.com/general/latest/gr/rande.html
+[Bootstrap]: https://getbootstrap.com/
 [Bootswatch]: https://bootswatch.com/
 [live help]: {{ site.baseurl }}/docs/livehelp.html
 [`bootstrap theme` feature]: {{ site.baseurl }}/docs/initial.html#bootstrap theme
@@ -6107,7 +6105,7 @@ and Facebook API keys.
 [`ServerAdmin`]: https://httpd.apache.org/docs/2.4/mod/core.html#ServerAdmin
 [background task]: {{ site.baseurl }}/docs/background.html#background
 [background tasks]: {{ site.baseurl }}/docs/background.html#background
-[`worker_concurrency`]: http://docs.celeryproject.org/en/latest/userguide/configuration.html#worker-concurrency
+[`worker_concurrency`]: https://docs.celeryproject.org/en/latest/userguide/configuration.html#worker-concurrency
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [fax sending]: {{ site.baseurl }}/docs/functions.html#send_fax
 [API]: {{ site.baseurl }}/docs/api.html
@@ -6170,7 +6168,7 @@ and Facebook API keys.
 [`segment id`]: {{ site.baseurl }}/docs/modifiers.html#segment id
 [`segment`]: {{ site.baseurl }}/docs/modifiers.html#segment
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
-[ECS]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
+[ECS]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
 [list of files on GitHub]: https://github.com/jhpyle/docassemble/tree/master/docassemble_base/docassemble/base/data/sources
 [examples area]: {{ site.baseurl }}/docs/playground.html#examples
 [`docassemble.base:data/questions/example-list.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/example-list.yml
@@ -6185,7 +6183,7 @@ and Facebook API keys.
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
 [WebSocket]: https://en.wikipedia.org/wiki/WebSocket
 [date functions]: {{ site.baseurl }}/docs/functions.html#date functions
-[`babel.dates`]: http://babel.pocoo.org/en/latest/api/dates.html
+[`babel.dates`]: https://babel.pocoo.org/en/latest/api/dates.html
 [edit user accounts]: {{ site.baseurl }}/docs/admin.html#edit user profile
 [user profile]: {{ site.baseurl }}/docs/admin.html#profile
 [multi-user interview]: {{ site.baseurl }}/docs/special.html#multi_user
@@ -6220,7 +6218,7 @@ and Facebook API keys.
 [`brandname`]: #brandname
 [`locale`]: #locale
 [meta tags]: https://en.wikipedia.org/wiki/Meta_element
-[`ssl_protocols`]: http://nginx.org/en/docs/http/configuring_https_servers.html
+[`ssl_protocols`]: https://nginx.org/en/docs/http/configuring_https_servers.html
 [`DASSLPROTOCOLS`]: {{ site.baseurl }}/docs/docker.html#DASSLPROTOCOLS
 [Docker section]: {{ site.baseurl }}/docs/docker.html#persistent s3
 [`store_variables_snapshot()`]: {{ site.baseurl }}/docs/functions.html#store_variables_snapshot
@@ -6290,3 +6288,4 @@ and Facebook API keys.
 [Bootstrap grid system]: https://getbootstrap.com/docs/5.2/layout/grid/
 [Bootstrap alert]: https://getbootstrap.com/docs/5.2/components/alerts/
 [Bootstrap color]: https://getbootstrap.com/docs/5.2/customize/color/
+[Lightsail]: https://aws.amazon.com/lightsail/

@@ -424,7 +424,7 @@ interview where two users each sign a document:
 [`default role` initial block]: {{ site.baseurl }}/docs/initial.html#default role
 [`role` modifier]: {{ site.baseurl }}/docs/modifiers.html#role
 [fields]: {{ site.baseurl }}/docs/fields.html
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [generic object]: {{ site.baseurl }}/docs/objects.html
 [generic objects]: {{ site.baseurl }}/docs/objects.html
 [attributes]: https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces

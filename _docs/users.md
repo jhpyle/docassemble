@@ -290,7 +290,7 @@ will run after [`imports`] and [`modules`] blocks, but before
 [`code`]: {{ site.baseurl }}/docs/code.html
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
-[country code]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+[country code]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [special variables]: {{ site.baseurl }}/docs/special.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [installation]: {{ site.baseurl }}/docs/installation.html

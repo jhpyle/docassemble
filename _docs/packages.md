@@ -650,7 +650,7 @@ If this line is present, then the server will not pre-load the module file.
 [namespace packages]: https://www.python.org/dev/peps/pep-0420/
 [reconfigured user roles]: {{ site.baseurl }}/docs/users.html
 [GitHub]: https://github.com/
-[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[WSGI]: https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [Windows application]: https://desktop.github.com/
 [Python module]: https://docs.python.org/3/tutorial/modules.html
 [Python modules]: https://docs.python.org/3/tutorial/modules.html
@@ -684,7 +684,7 @@ If this line is present, then the server will not pre-load the module file.
 [build packages]: {{ site.baseurl }}/docs/playground.html#packages
 [subpackage]: https://packaging.python.org/guides/packaging-namespace-packages/
 [how you run a **docassemble** interview]: {{ site.baseurl }}/docs/interviews.html#invocation
-[packaging your interview]: {{ site.baseurl }}/docs/hello.html#packaging
-[hello world]: {{ site.baseurl }}/docs/hello.html
+[packaging your interview]: {{ site.baseurl }}/docs/helloworld.html#packaging
+[hello world]: {{ site.baseurl }}/docs/helloworld.html
 [development workflows]: {{ site.baseurl }}/docs/development.html
 [UID]: http://www.linfo.org/uid.html

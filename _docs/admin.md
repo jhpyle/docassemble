@@ -637,7 +637,7 @@ For tips on troubleshooting your **docassemble** system, see the
 [Google Developers Console]: https://console.developers.google.com/
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
 [ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
-[ISO 3166]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+[ISO 3166]: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
 [`set_user_info()`]: {{ site.baseurl }}/docs/functions.html#set_user_info
 [`user_has_privilege()`]: {{ site.baseurl }}/docs/functions.html#user_has_privilege

@@ -414,11 +414,11 @@ Using the [API] avoids issues with [CORS].
 [MIME type]: https://en.wikipedia.org/wiki/Media_type
 [data URL]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
-[Flask]: http://flask.pocoo.org/
-[`flask_kvsession`]: http://pythonhosted.org/Flask-KVSession/
-[`simplekv.memory.redisstore`]: http://pythonhosted.org/simplekv/memory.html#redis-backend
-[`flask_user`]: http://flask-user.readthedocs.io/en/v0.6/
-[CSRF protection]: http://flask-wtf.readthedocs.io/en/stable/csrf.html
+[Flask]: https://flask.pocoo.org/
+[`flask_kvsession`]: https://pythonhosted.org/Flask-KVSession/
+[`simplekv.memory.redisstore`]: https://pythonhosted.org/simplekv/memory.html#redis-backend
+[`flask_user`]: https://flask-user.readthedocs.io/en/v0.6/
+[CSRF protection]: https://flask-wtf.readthedocs.io/en/stable/csrf.html
 [`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
 [`get_interview_variables()`]: {{ site.baseurl }}/docs/functions.html#get_interview_variables
 [cPickle]: https://docs.python.org/3/library/pickle.html#module-cPickle

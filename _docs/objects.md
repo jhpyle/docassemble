@@ -1438,6 +1438,12 @@ file can be called implicitly. In this example, the attempt to display
 `myfile` in the `subquestion` of the final `question` causes
 **docassemble** to seek out the value of `myfile.initialized`.
 
+However, if the reason **docassemble** runs the `code` block is to
+obtain a definition of `.initialized`, **docassemble** will be
+satisfied as soon as `.initialize()` returns. If you have code that
+runs after the call to `.initialize()`, you need to make sure that the
+code does not refer to any undefined variables.
+
 <a name="DAFile.show"></a>The `.show()` method returns markup that
 displays the file as an image.  This method takes an optional keyword
 argument, `width`, which can be set to, e.g., `'1in'`, `'44mm'`, or
@@ -1764,10 +1770,10 @@ objects:
 Then use [`code`] to initialize the object and set the contents:
 
 {% highlight yaml %}
+sets: pdf_file.initialized
 code: |
   pdf_file.initialize(extension="pdf")
   pdf_file.from_url("https://example.com/the_file.pdf")
-  pdf_file.created = True
 {% endhighlight %}
 
 <a name="DAFile.make_ocr_pdf"></a>The `.make_ocr_pdf()` method overwrites
@@ -7022,7 +7028,7 @@ the `_uid` of the table rather than the `id`.
 [`datetime.datetime.replace()`]: https://docs.python.org/3/library/datetime.html#datetime.datetime.replace
 [`date_interval()`]: {{ site.baseurl }}/docs/functions.html#date_interval
 [date functions]: {{ site.baseurl }}/docs/functions.html#date functions
-[`dateutil.relativedelta.relativedelta`]: http://dateutil.readthedocs.io/en/stable/relativedelta.html
+[`dateutil.relativedelta.relativedelta`]: https://dateutil.readthedocs.io/en/stable/relativedelta.html
 [`format_date()`]: {{ site.baseurl }}/docs/functions.html#format_date
 [`format_time()`]: {{ site.baseurl }}/docs/functions.html#format_time
 [`format_datetime()`]: {{ site.baseurl }}/docs/functions.html#format_datetime
@@ -7035,7 +7041,7 @@ the `_uid` of the table rather than the `id`.
 [Documents]: {{ site.baseurl }}/docs/documents.html
 [Flask-Mail]: https://pythonhosted.org/Flask-Mail/
 [HTML]: https://en.wikipedia.org/wiki/HTML
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [Python dict]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
@@ -7168,7 +7174,7 @@ the `_uid` of the table rather than the `id`.
 [`datatype: files`]: {{ site.baseurl }}/docs/fields.html#files
 [`City`]: #City
 [valid formats]: {{ site.baseurl }}/docs/documents.html#valid formats
-["new style" Python objects]: http://realmike.org/blog/2010/07/18/introduction-to-new-style-classes-in-python/
+["new style" Python objects]: https://realmike.org/blog/2010/07/18/introduction-to-new-style-classes-in-python/
 [relative module name]: https://docs.python.org/2.5/whatsnew/pep-328.html
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`object_type`]: #object_type
@@ -7213,9 +7219,9 @@ the `_uid` of the table rather than the `id`.
 [boto3]: https://boto3.readthedocs.io/en/latest/
 [azure.storage.blob]: https://docs.microsoft.com/en-us/python/api/overview/azure/storage?view=azure-python
 [`BlockBlobService()`]: https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-python
-[`boto3.resource('s3')`]: http://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.ServiceResource
-[`boto3.client('s3')`]: http://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Client
-[`Bucket`]: http://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Bucket
+[`boto3.resource('s3')`]: https://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.ServiceResource
+[`boto3.client('s3')`]: https://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Client
+[`Bucket`]: https://boto3.readthedocs.io/en/latest/reference/services/s3.html#S3.Bucket
 [`s3`]: {{ site.baseurl }}/docs/config.html#s3
 [`azure`]: {{ site.baseurl }}/docs/config.html#azure
 [Azure blob storage]: {{ site.baseurl }}/docs/docker.html#persistent azure
@@ -7226,21 +7232,21 @@ the `_uid` of the table rather than the `id`.
 [Google Developers Console]: https://console.developers.google.com/
 [directory of scopes]: https://developers.google.com/identity/protocols/googlescopes
 [Google Drive API]: https://developers.google.com/drive/
-[`httplib2.Http()`]: http://httplib2.readthedocs.io/en/latest/libhttplib2.html#httplib2.Http
-[`ServiceAccountCredentials`]: http://oauth2client.readthedocs.io/en/latest/source/oauth2client.service_account.html#oauth2client.service_account.ServiceAccountCredentials
-[oauth2client.service_account]: http://oauth2client.readthedocs.io/en/latest/source/oauth2client.service_account.html
+[`httplib2.Http()`]: https://httplib2.readthedocs.io/en/latest/libhttplib2.html#httplib2.Http
+[`ServiceAccountCredentials`]: https://oauth2client.readthedocs.io/en/latest/source/oauth2client.service_account.html#oauth2client.service_account.ServiceAccountCredentials
+[oauth2client.service_account]: https://oauth2client.readthedocs.io/en/latest/source/oauth2client.service_account.html
 [gspread]: https://gspread.readthedocs.io/en/latest/
 [Cloud Translation API Client Library]: https://cloud.google.com/translate/docs/reference/libraries#client-libraries-install-python
 [`google-api-python-client`]: https://github.com/google/google-api-python-client/
 [Google Cloud packages]: https://cloud.google.com/python/references/libraries
-[google.oauth2.service_account]: http://google-auth.readthedocs.io/en/latest/reference/google.oauth2.service_account.html
-[`Credentials`]: http://google-auth.readthedocs.io/en/latest/reference/google.oauth2.service_account.html#google.oauth2.service_account.Credentials
+[google.oauth2.service_account]: https://google-auth.readthedocs.io/en/latest/reference/google.oauth2.service_account.html
+[`Credentials`]: https://google-auth.readthedocs.io/en/latest/reference/google.oauth2.service_account.html#google.oauth2.service_account.Credentials
 [`get_config()`]: {{ site.baseurl }}/docs/functions.html#get_config
 [`DAGoogleAPI`]: #DAGoogleAPI
 [`google.cloud.storage`]: https://cloud.google.com/storage/docs/reference/libraries#client-libraries-install-python
 [`google.cloud.translate`]: https://cloud.google.com/translate/docs/reference/libraries#client-libraries-install-python
 [data storage]: {{ site.baseurl }}/docs/docker.html#data storage
-[S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[S3 bucket]: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [Google Drive]: https://www.google.com/drive/
 [Google Cloud Storage]: https://cloud.google.com/storage/docs/reference/libraries
 [Google Cloud Vision]: https://cloud.google.com/vision/docs/reference/libraries
@@ -7248,7 +7254,7 @@ the `_uid` of the table rather than the `id`.
 [`service account credentials`]: {{ site.baseurl }}/docs/config.html#service account credentials
 [Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
 [Quinten Steenhuis]: https://www.nonprofittechy.com/about/
-[Python book]: http://shop.oreilly.com/product/0636920028154.do
+[Python book]: https://shop.oreilly.com/product/0636920028154.do
 [list comprehension]: https://docs.python.org/3.10/tutorial/datastructures.html#list-comprehensions
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [logic]: {{ site.baseurl }}/docs/logic.html
@@ -7347,8 +7353,8 @@ the `_uid` of the table rather than the `id`.
 [`DAWeb`]: #DAWeb
 [`authorize()`]: #DAOAuth.authorize
 [`DAOAuth`]: #DAOAuth
-[Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.htmlmarkdown to docx
-[qpdf]: http://qpdf.sourceforge.net/
+[Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.html#markdown to docx
+[qpdf]: https://qpdf.sourceforge.net/
 [PyPDF2]: https://pythonhosted.org/PyPDF2/
 [ARM]: https://en.wikipedia.org/wiki/ARM_architecture
 [`button colors`]: {{ site.baseurl }}/docs/config.html#button colors

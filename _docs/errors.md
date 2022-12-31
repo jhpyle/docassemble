@@ -179,9 +179,9 @@ out the problem.
 [issues page]: {{ site.github.repository_url }}/issues
 [variable name]: {{ site.baseurl }}/docs/fields.html#variable names
 [reserved variable names]: {{ site.baseurl }}/docs/special.html#reserved
-[Flask]: http://flask.pocoo.org/
-[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
-[Mako]: http://www.makotemplates.org/
+[Flask]: https://flask.pocoo.org/
+[WSGI]: https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[Mako]: https://www.makotemplates.org/
 [exec]: https://docs.python.org/3.10/library/functions.html#exec
 [pickle]: https://docs.python.org/3/library/pickle.html
 [pickleable]: https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled

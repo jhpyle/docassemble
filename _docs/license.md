@@ -69,11 +69,11 @@ so this danger will only arise if you install additional modules.
 [subprocess]: https://docs.python.org/3/library/subprocess.html
 [`eval()`]: https://docs.python.org/3/library/functions.html#eval
 [`exec()`]: https://docs.python.org/3/reference/simple_stmts.html#exec
-[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[WSGI]: https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [`code`]: {{ site.baseurl }}/docs/code.html#code
 [mere aggregation]: https://www.gnu.org/licenses/gpl-faq.en.html#MereAggregation
 [pip]: https://en.wikipedia.org/wiki/Pip_(package_manager)
-[Pandoc]: http://johnmacfarlane.net/pandoc/
-[LaTeX]: http://www.latex-project.org/
+[Pandoc]: https://pandoc.org
+[LaTeX]: https://www.latex-project.org/
 [PDFtk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
-[ImageMagick]: http://www.imagemagick.org/
+[ImageMagick]: https://www.imagemagick.org/

@@ -991,9 +991,9 @@ by **docassemble**, so it can contain any valid [YAML].
 [language support]: {{ site.baseurl }}/docs/language.html
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
 [ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
-[Mako]: http://www.makotemplates.org/
-[HTML5 audio tag]: http://www.w3schools.com/html/html5_audio.asp
-[HTML5 video tag]: http://www.w3schools.com/html/html5_video.asp
+[Mako]: https://www.makotemplates.org/
+[HTML5 audio tag]: https://www.w3schools.com/html/html5_audio.asp
+[HTML5 video tag]: https://www.w3schools.com/html/html5_video.asp
 [YouTube]: https://www.youtube.com/
 [`prevent_going_back()` function]: {{ site.baseurl }}/docs/functions.html#prevent_going_back
 [special variables]: {{ site.baseurl }}/docs/special.html
@@ -1026,7 +1026,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [groups section]: {{ site.baseurl }}/docs/groups.html
 [index variable documentation]: {{ site.baseurl }}/docs/fields.html#index variables
 [`supersedes` modifier]: #precedence
-[Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[Python expression]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [`get_progress()`]: {{ site.baseurl}}/docs/functions.html#get_progress
 [`set_progress()`]: {{ site.baseurl}}/docs/functions.html#set_progress
 [Font Awesome]: https://fontawesome.com

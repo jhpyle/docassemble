@@ -45,7 +45,7 @@ the top priorities are:
 
 [Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
 [`pattern`]: https://github.com/clips/pattern/wiki
-[`python-docx-template`]: http://docxtpl.readthedocs.io/en/latest/
+[`python-docx-template`]: https://docxtpl.readthedocs.io/en/latest/
 [`docx`]: https://python-docx.readthedocs.io/en/latest/
 [Docusign integration]: https://github.com/radiant-law/docassemble-docusign
 [Spot API integration]: https://github.com/jhpyle/docassemble-spot

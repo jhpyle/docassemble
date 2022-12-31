@@ -1688,7 +1688,7 @@ after it is defined.
 
 [markup section]: {{ site.baseurl }}/docs/markup.html#for
 [legal applications]: {{ site.baseurl }}/docs/legal.html
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
@@ -1729,7 +1729,7 @@ after it is defined.
 [`DAEmailRecipient`]: {{ site.baseurl }}/docs/objects.html#DAEmailRecipient
 [`.current_index()` method]: {{ site.baseurl }}/docs/objects.html#DAList.current_index
 [embedding a code block within a multiple choice question]: {{ site.baseurl }}/docs/fields.html#code%20button
-[expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[expression]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
 [idempotent]: https://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning
 [`del`]: https://docs.python.org/3/tutorial/datastructures.html#the-del-statement

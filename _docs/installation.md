@@ -1560,7 +1560,7 @@ All of these system administration headaches can be avoided by
 [install it using Docker]: {{ site.baseurl }}/docs/docker.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [MacTex]: https://tug.org/mactex/
-[MiKTeX]: http://miktex.org/download
+[MiKTeX]: https://miktex.org/download
 [Nodebox English Linguistics library]: https://www.nodebox.net/code/index.php/Linguistics
 [site.USER_BASE]: https://pythonhosted.org/setuptools/easy_install.html#custom-installation-locations
 [configuration]: {{ site.baseurl }}/docs/config.html
@@ -1573,32 +1573,30 @@ All of these system administration headaches can be avoided by
 [`redis`]: {{ site.baseurl }}/docs/config.html#redis
 [`rabbitmq`]: {{ site.baseurl }}/docs/config.html#rabbitmq
 [`mail`]: {{ site.baseurl }}/docs/config.html#mail
-[Perl Audio Converter]: http://vorzox.wix.com/pacpl
-[pacpl]: http://vorzox.wix.com/pacpl
 [ffmpeg]: https://www.ffmpeg.org/
-[SQLAlchemy]: http://www.sqlalchemy.org/
-[Mako]: http://www.makotemplates.org/
+[SQLAlchemy]: https://www.sqlalchemy.org/
+[Mako]: https://www.makotemplates.org/
 [scalability]: {{ site.baseurl }}/docs/scalability.html
-[Python virtual environment]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+[Python virtual environment]: https://docs.python-guide.org/dev/virtualenvs/
 [pip]: https://pip.pypa.io/en/stable/
 [Debian]: https://www.debian.org/
-[Ubuntu]: http://www.ubuntu.com/
+[Ubuntu]: https://ubuntu.com
 [Amazon EC2]: https://aws.amazon.com/ec2/
 [Python]: https://www.python.org/
 [`update_locale()`]: {{ site.baseurl }}/docs/functions.html#update_locale
-[VoiceRSS]: http://www.voicerss.org/
+[VoiceRSS]: https://www.voicerss.org/
 [Google Maps Geocoding API]: https://developers.google.com/maps/documentation/geocoding/intro
 [wsgi]: https://modwsgi.readthedocs.org/en/develop/
 [xsendfile]: https://tn123.org/mod_xsendfile/
-[rewrite]: http://httpd.apache.org/docs/current/mod/mod_rewrite.html
+[rewrite]: https://httpd.apache.org/docs/current/mod/mod_rewrite.html
 [proxy]: https://httpd.apache.org/docs/current/mod/mod_proxy.html
 [proxy_http]: https://httpd.apache.org/docs/current/mod/mod_proxy_http.html
-[headers]: http://httpd.apache.org/docs/current/mod/mod_headers.html
+[headers]: https://httpd.apache.org/docs/current/mod/mod_headers.html
 [proxy_wstunnel]: https://httpd.apache.org/docs/current/mod/mod_proxy_wstunnel.html
-[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
-[uWSGI]: http://uwsgi-docs.readthedocs.org/en/latest/index.html
+[WSGI]: https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[uWSGI]: https://uwsgi-docs.readthedocs.org/en/latest/index.html
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
-[PostgreSQL]: http://www.postgresql.org/
+[PostgreSQL]: https://postgresql.org
 [Amazon ECS]: https://aws.amazon.com/ecs/
 [demonstration]: {{ site.baseurl }}/demo.html
 [on GitHub]: {{ site.github.repository_url }}
@@ -1615,16 +1613,16 @@ All of these system administration headaches can be avoided by
 [through the web interface]: {{ site.baseurl }}/docs/packages.html#updating
 [Docker for Windows]: https://docs.docker.com/engine/installation/windows/
 [AWS]: https://aws.amazon.com
-[Redis]: http://redis.io/
+[Redis]: https://redis.io
 [RabbitMQ]: https://www.rabbitmq.com/
 [text messaging interface]: {{ site.baseurl }}/docs/sms.html
 [web sockets]: https://flask-socketio.readthedocs.io/en/latest/
-[Celery]: http://www.celeryproject.org/
+[Celery]: https://docs.celeryq.dev/en/stable/
 [cron]: https://en.wikipedia.org/wiki/Cron
-[Supervisor]: http://supervisord.org/
+[Supervisor]: http://supervisord.org
 [Let's Encrypt]: https://letsencrypt.org/
 [syslog-ng]: https://en.wikipedia.org/wiki/Syslog-ng
-[Pandoc]: http://pandoc.org/
+[Pandoc]: https://pandoc.org
 [EC2]: https://aws.amazon.com/ec2/
 [S3]: https://aws.amazon.com/s3/
 [scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
@@ -1680,7 +1678,7 @@ All of these system administration headaches can be avoided by
 [SPF]: https://en.wikipedia.org/wiki/Sender_Policy_Framework
 [DKIM]: https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail
 [reverse DNS]: https://en.wikipedia.org/wiki/Reverse_DNS_lookup
-[submit a support request]: http://docs.aws.amazon.com/ses/latest/DeveloperGuide/request-production-access.html
+[submit a support request]: https://docs.aws.amazon.com/ses/latest/DeveloperGuide/request-production-access.html
 [`appname`]: {{ site.baseurl }}/docs/config.html#appname
 [pdfx]: https://www.ctan.org/pkg/pdfx?lang=en
 [LaTeX]: https://en.wikipedia.org/wiki/LaTeX
@@ -1690,7 +1688,7 @@ All of these system administration headaches can be avoided by
 [`onedrive`]: {{ site.baseurl }}/docs/config.html#onedrive
 [pip]: https://pip.pypa.io/en/stable/
 [OAuth]: https://oauth.net/1/
-[alembic]: http://alembic.zzzcomputing.com/en/latest/
+[alembic]: https://alembic.zzzcomputing.com/en/latest/
 [`github`]: {{ site.baseurl }}/docs/config.html#github
 [`server administrator email`]: {{ site.baseurl }}/docs/config.html#server administrator email
 [Google APIs]: https://developers.google.com/apis-explorer/#p/

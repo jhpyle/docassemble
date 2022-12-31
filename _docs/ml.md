@@ -1325,8 +1325,8 @@ object.)
 [background action]: {{ site.baseurl }}/docs/background.html#background
 [functions]: {{ site.baseurl }}/docs/functions.html
 [question]: {{ site.baseurl }}/docs/questions.html
-[machine learning]: http://en.wikipedia.org/wiki/Machine_learning
-[regression analysis]: http://en.wikipedia.org/wiki/Regression_analysis
+[machine learning]: https://en.wikipedia.org/wiki/Machine_learning
+[regression analysis]: https://en.wikipedia.org/wiki/Regression_analysis
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [sources folder]: {{ site.baseurl }}/docs/playground.html#sources
@@ -1378,7 +1378,7 @@ object.)
 [`machine learning storage`]: {{ site.baseurl }}/docs/initial.html#machine learning storage
 [`datatype`]: {{ site.baseurl }}/docs/fields.html#datatype
 [initial block]: {{ site.baseurl }}/docs/initial.html
-[sklearn]: http://scikit-learn.org/stable/
+[sklearn]: https://scikit-learn.org/stable/
 [Python dictionaries]: https://docs.python.org/3/library/stdtypes.html#dict
 [Train]: #train
 [`.format()` method]: https://docs.python.org/3/library/stdtypes.html#str.format

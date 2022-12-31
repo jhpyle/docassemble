@@ -2018,21 +2018,21 @@ adding the following to the definition of a field:
 
 * `min`: for `currency` and `number` data types, require a minimum
   value.  This is passed directly to the
-  [jQuery Validation Plugin](http://jqueryvalidation.org/min-method).
+  [jQuery Validation Plugin](https://jqueryvalidation.org/min-method).
 * <a name="max"></a>`max`: for `currency` and `number` data types,
   require a maximum value.  This is passed directly to the
-  [jQuery Validation Plugin](http://jqueryvalidation.org/max-method).
+  [jQuery Validation Plugin](https://jqueryvalidation.org/max-method).
 
 {% include side-by-side.html demo="min" %}
 
 * <a name="minlength"></a>`minlength`: require a minimum number of
   characters in a textbox, number of checkboxes checked, etc.  This
   uses the [jQuery Validation
-  Plugin](http://jqueryvalidation.org/minlength-method).
+  Plugin](https://jqueryvalidation.org/minlength-method).
 * <a name="maxlength"></a>`maxlength`: require a maximum number of
   characters in a textbox, number of checkboxes checked, etc.  This
   uses the [jQuery Validation
-  Plugin](http://jqueryvalidation.org/maxlength-method).
+  Plugin](https://jqueryvalidation.org/maxlength-method).
 
 {% include side-by-side.html demo="minlength" %}
 
@@ -3238,10 +3238,10 @@ why this needs to be done manually as opposed to automatically:
    editing.
 
 [configuration]: {{ site.baseurl }}/docs/config.html
-[select]: http://www.w3schools.com/tags/tag_select.asp
-[placeholder]: http://www.w3schools.com/tags/att_input_placeholder.asp
+[select]: https://www.w3schools.com/tags/tag_select.asp
+[placeholder]: https://www.w3schools.com/tags/att_input_placeholder.asp
 [code blocks]: {{ site.baseurl }}/docs/code.html
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [object]: {{ site.baseurl }}/docs/objects.html
@@ -3296,7 +3296,7 @@ why this needs to be done manually as opposed to automatically:
 [`task_not_yet_performed()`]: {{ site.baseurl }}/docs/functions.html#task_not_yet_performed
 [`css`]: {{ site.baseurl }}/docs/modifiers.html#css
 [`script`]: {{ site.baseurl }}/docs/modifiers.html#script
-[tooltip]: http://www.w3schools.com/tags/att_title.asp
+[tooltip]: https://www.w3schools.com/tags/att_title.asp
 [list]: https://docs.python.org/3/tutorial/datastructures.html
 [dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [dictionaries]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
@@ -3350,7 +3350,7 @@ why this needs to be done manually as opposed to automatically:
 [`datetime.time`]: https://docs.python.org/3/library/datetime.html#datetime.time
 [`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime
 [`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
-[`dateutil.parser.parse`]: http://dateutil.readthedocs.io/en/stable/parser.html#dateutil.parser.parse
+[`dateutil.parser.parse`]: https://dateutil.readthedocs.io/en/stable/parser.html#dateutil.parser.parse
 [`.replace_time()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.replace_time
 [`.replace()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.replace
 [`.format_date()`]: {{ site.baseurl }}/docs/objects.html#DADateTime.format_date
@@ -3389,7 +3389,7 @@ why this needs to be done manually as opposed to automatically:
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`default validation messages`]: {{ site.baseurl }}/docs/initial.html#default validation messages
 [screen parts]: {{ site.baseurl }}/docs/questions.html#screen parts
-[Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[Python expression]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [list comprehension]: https://docs.python.org/3.10/tutorial/datastructures.html#list-comprehensions
 [`continue button field`]: #continue button field
 [tuples]: https://docs.python.org/3.10/tutorial/datastructures.html#tuples-and-sequences
@@ -3411,7 +3411,7 @@ why this needs to be done manually as opposed to automatically:
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [`define()`]: {{ site.baseurl }}/docs/functions.html#define
 [`defined()`]: {{ site.baseurl }}/docs/functions.html#defined
-[jQuery Validation Plugin]: http://jqueryvalidation.org
+[jQuery Validation Plugin]: https://jqueryvalidation.org
 [jQuery.validator.addMethod()]: https://jqueryvalidation.org/jQuery.validator.addMethod/
 [`validation messages`]: #validation messages
 [Python object]: https://docs.python.org/3.10/tutorial/classes.html
@@ -3431,3 +3431,4 @@ why this needs to be done manually as opposed to automatically:
 [logic system]: {{ site.baseurl }}/docs/logic.html
 [`validation code`]: #validation code
 [Bootstrap colors]: https://getbootstrap.com/docs/5.2/customize/color/
+[Bootstrap]: https://getbootstrap.com/

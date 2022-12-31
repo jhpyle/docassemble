@@ -2832,11 +2832,11 @@ building your custom `jhpyle/docassemble` version so that it
 references a different base image.
 
 
-[Redis]: http://redis.io/
+[Redis]: https://redis.io/
 [Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/
 [Docker installation instructions for OS X]: https://docs.docker.com/engine/installation/mac/
 [Docker]: https://www.docker.com/
-[Amazon AWS]: http://aws.amazon.com
+[Amazon AWS]: https://aws.amazon.com
 [automated build]: https://docs.docker.com/docker-hub/builds/
 [scalability of docassemble]: {{ site.baseurl }}/docs/scalability.html
 [Amazon Linux]: https://aws.amazon.com/amazon-linux-ami/
@@ -2845,7 +2845,7 @@ references a different base image.
 [multi-server arrangement]: #multi server arrangement
 [EC2 Container Service]: https://aws.amazon.com/ecs/
 [S3]: https://aws.amazon.com/s3/
-[supervisor]: http://supervisord.org/
+[supervisor]: http://supervisord.org
 [hosted on Docker Hub]: https://hub.docker.com/r/jhpyle/docassemble/
 [Docker Hub]: https://hub.docker.com/
 [scalability]: {{ site.baseurl }}/docs/scalability.html
@@ -2893,7 +2893,7 @@ references a different base image.
 [template for the `env.list` file]: {{ site.github.repository_url }}/blob/master/Docker/env.list
 [ECS]: https://aws.amazon.com/ecs/
 [JSON]: https://en.wikipedia.org/wiki/JSON
-[PostgreSQL]: http://www.postgresql.org/
+[PostgreSQL]: https://www.postgresql.org/
 [HTTPS]: #https
 [Let's Encrypt]: https://letsencrypt.org/
 [using Let's Encrypt]: #letsencrypt
@@ -2909,7 +2909,7 @@ references a different base image.
 [`s3` section]: {{ site.baseurl }}/docs/config.html#s3
 [`azure` section]: {{ site.baseurl }}/docs/config.html#azure
 [Build your own private image]: #build
-[Redis]: http://redis.io/
+[Redis]: https://redis.io/
 [RabbitMQ]: https://www.rabbitmq.com/
 [Application Load Balancer]: https://aws.amazon.com/elasticloadbalancing/applicationloadbalancer/
 [IAM]: https://aws.amazon.com/iam/
@@ -2920,7 +2920,7 @@ references a different base image.
 [create your own Docker image]: #build
 [`certs`]: {{ site.baseurl }}/docs/config.html#certs
 [cron]: https://en.wikipedia.org/wiki/Cron
-[Python virtual environment]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+[Python virtual environment]: https://docs.python-guide.org/dev/virtualenvs/
 [configuration options]: #configuration options
 [configuration option]: #configuration options
 [`DBHOST`]: #DBHOST
@@ -2949,7 +2949,7 @@ references a different base image.
 [`DAWEBSOCKETSIP`]: #DAWEBSOCKETSIP
 [`DAWEBSOCKETSPORT`]: #DAWEBSOCKETSPORT
 [`DAUPDATEONSTART`]: #DAUPDATEONSTART
-[Celery]: http://www.celeryproject.org/
+[Celery]: https://docs.celeryq.dev/en/stable/
 [background processes]: {{ site.baseurl }}/docs/background.html#background
 [Windows PowerShell]: https://en.wikipedia.org/wiki/PowerShell
 [Terminal]: https://en.wikipedia.org/wiki/Terminal_(macOS)
@@ -2989,7 +2989,7 @@ references a different base image.
 [`docker volume create`]: https://docs.docker.com/engine/reference/commandline/volume_create/
 [Amazon Web Services]: https://aws.amazon.com
 [AWS]: https://aws.amazon.com
-[S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[S3 bucket]: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [WebSocket]: https://en.wikipedia.org/wiki/WebSocket
 [e-mails]: {{ site.baseurl }}/docs/background.html#email
@@ -3010,9 +3010,9 @@ references a different base image.
 [ssh]: https://en.wikipedia.org/wiki/Secure_Shell
 [CNAME record]: https://en.wikipedia.org/wiki/CNAME_record
 [A record]: https://en.wikipedia.org/wiki/List_of_DNS_record_types#A
-[Security Group]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
+[Security Group]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
 [HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
-[region]: http://docs.aws.amazon.com/general/latest/gr/rande.html
+[region]: https://docs.aws.amazon.com/general/latest/gr/rande.html
 [`secretkey`]: {{ site.baseurl }}/docs/config.html#secretkey
 [Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [`cross site domains`]: {{ site.baseurl }}/docs/config.html#cross site domains
@@ -3025,12 +3025,12 @@ references a different base image.
 [upgrading]: #upgrading
 [`Dockerfile`]: {{ site.github.repository_url }}/blob/master/Dockerfile
 [Logs]: {{ site.baseurl }}/docs/admin.html#logs
-[Supervisor]: http://supervisord.org/
+[Supervisor]: http://supervisord.org
 [syslog-ng]: https://en.wikipedia.org/wiki/Syslog-ng
 [database corruption]: #shutdown
 [debugging subsection]: {{ site.baseurl }}/docs/installation.html#debug
 [Traefik]: https://traefik.io/
-[Flask]: http://flask.pocoo.org/
+[Flask]: https://flask.pocoo.org/
 [third party providers]: {{ site.baseurl }}/deploy.html
 [troubleshooting]: #troubleshooting
 [`backup days`]: {{ site.baseurl }}/docs/config.html#backup days
@@ -3041,7 +3041,7 @@ references a different base image.
 [`less`]: https://kb.iu.edu/d/afsk#less
 [`nano`]: https://wiki.gentoo.org/wiki/Nano/Basics_Guide
 [`vi`]: https://www.engadget.com/2012/07/10/vim-how-to/
-[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[WSGI]: https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`expose websockets`]: {{ site.baseurl }}/docs/config.html#expose websockets
@@ -3066,7 +3066,7 @@ references a different base image.
 [`update on start`]: {{ site.baseurl }}/docs/config.html#update on start
 [`allow updates`]: {{ site.baseurl }}/docs/config.html#allow updates
 [`stable version`]: {{ site.baseurl }}/docs/config.html#stable version
-[`ssl_protocols`]: http://nginx.org/en/docs/http/configuring_https_servers.html
+[`ssl_protocols`]: https://nginx.org/en/docs/http/configuring_https_servers.html
 [`sql ping`]: {{ site.baseurl }}/docs/config.html#sql ping
 [with Kubernetes]: https://github.com/jhpyle/charts
 [Rook]: https://rook.io/docs/rook/v0.8/object.html
@@ -3101,7 +3101,7 @@ references a different base image.
 [`allow configuration editing`]: {{ site.baseurl }}/docs/config.html#allow configuration editing
 [`supervisor`]: {{ site.baseurl }}/docs/config.html#supervisor
 [Docker Desktop]: https://docs.docker.com/desktop/install/mac-install/
-[Pandoc]: http://johnmacfarlane.net/pandoc/
+[Pandoc]: https://pandoc.org
 [LibreOffice]: https://www.libreoffice.org/
 [containerd]: https://containerd.io/
 [runC]: https://github.com/opencontainers/runc

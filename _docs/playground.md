@@ -877,8 +877,8 @@ Then the editing screen will load.
 [Google Drive]: https://drive.google.com
 [OneDrive]: https://onedrive.live.com/about/en-us/
 [Emacs]: https://www.gnu.org/software/emacs/
-[Notepad++]: http://notepad-plus-plus.org/
-[Sublime Text]: http://www.sublimetext.com/
+[Notepad++]: https://notepad-plus-plus.org/
+[Sublime Text]: https://www.sublimetext.com/
 [`googledrive`]: {{ site.baseurl }}/docs/config.html#googledrive
 [`onedrive`]: {{ site.baseurl }}/docs/config.html#onedrive
 [Google Docs]: https://docs.google.com

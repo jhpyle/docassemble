@@ -48,9 +48,7 @@ introduce **docassemble**.
 [tutorial](https://richardbatstone.github.io/other/2020/01/11/DocAssembleInGCP.html)
 (1/11/2020) on how to install **docassemble** on [Google Cloud Platform](https://cloud.google.com).
 
-[Sam Harden](https://samharden.github.io/), who operates the
-[LegalTech School](https://www.youtube.com/channel/UCCFR4rpeXQIv2KwcvaPwweQ]) YouTube channel,
-has created tutorials on
+[Sam Harden](https://samharden.github.io/) has created tutorials on
 [How to Install Docassemble on Amazon Web Services](https://law.mit.edu/pub/howtoinstalldocassembleonaws) (12/6/2019),
 [How to Create a Simple Docassemble Interview](https://law.mit.edu/pub/howtocreateasimpledocassembleinterview) (12/6/2019),
 [Using Conditional Logic](https://law.mit.edu/pub/usingconditionallogicindocassembleinterviews) (12/6/2019),

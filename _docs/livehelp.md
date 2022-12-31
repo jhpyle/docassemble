@@ -425,7 +425,7 @@ The `get_chat_log()` takes two optional keyword arguments:
 * `timezone` - if you want the `datetime` values to be in a specific
   time zone, you can indicate the time zone with the `timezone`
   argument.  This should be a plain text time zone like
-  `'US/Eastern'`.  (See [`timezone_list()`] and the [`pytz`] module.)
+  `'US/Eastern'`.  (See [`timezone_list()`] and the [`zoneinfo`] module.)
 
 ## Live chat from the user's perspective
 
@@ -689,7 +689,7 @@ user will not longer see the calling instructions or the phone icon.
 [`datetime.datetime`]: https://docs.python.org/3/library/datetime.html#datetime.datetime
 [Coordinated Universal Time]: https://en.wikipedia.org/wiki/Coordinated_Universal_Time
 [`timezone_list()`]: {{ site.baseurl }}/docs/functions.html#timezone_list
-[`pytz`]: http://pytz.sourceforge.net/
+[`zoneinfo`]: https://docs.python.org/3.10/library/zoneinfo.html
 [WebSocket]: https://en.wikipedia.org/wiki/WebSocket
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`DAHOSTNAME`]: {{ site.baseurl }}/docs/docker.html#DAHOSTNAME

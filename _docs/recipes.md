@@ -2635,7 +2635,7 @@ The transformation is done by the [`button-checkboxes.css`] file.
 [`.set_data()`]: {{ site.baseurl }}/docs/objects.html#DARedis.set_data
 [`.get_data()`]: {{ site.baseurl }}/docs/objects.html#DARedis.get_data
 [Redis]: https://redis.io/
-[Celery]: http://www.celeryproject.org/
+[Celery]: https://docs.celeryq.dev/en/stable/
 [background task]: {{ site.baseurl }}/docs/background.html#background
 [background tasks]: {{ site.baseurl }}/docs/background.html#background
 [core document properties]: https://python-docx.readthedocs.io/en/latest/dev/analysis/features/coreprops.html
@@ -2658,7 +2658,7 @@ The transformation is done by the [`button-checkboxes.css`] file.
 [generic-document.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/generic-document.docx
 [`generic object` modifier]: {{ site.baseurl }}/docs/modifiers.html#generic object
 [`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
-[`force_ask()`]: {{ site.baseurl }}/docs/force_ask.html#force_ask
+[`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
 [`docassemble.demo:data/questions/sign.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/sign.yml
 [declaration_of_favorite_fruit.docx]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/declaration_of_favorite_fruit.docx
@@ -2690,7 +2690,7 @@ The transformation is done by the [`button-checkboxes.css`] file.
 [`default screen parts`]: {{ site.baseurl }}/docs/initial.html#default screen parts
 [screen part]: {{ site.baseurl }}/docs/questions.html#screen parts
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
 [Language Support]: {{ site.baseurl }}/docs/language.html
 [`store_variables_snapshot()`]: {{ site.baseurl }}/docs/functions.html#store_variables_snapshot
@@ -2701,10 +2701,10 @@ The transformation is done by the [`button-checkboxes.css`] file.
 [`index.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/index.py
 [`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
 [`read_records()`]: {{ site.baseurl }}/docs/functions.html#read_records
-[Flask]: http://flask.pocoo.org/
+[Flask]: https://flask.pocoo.org/
 [`set_parts()`]: {{ site.baseurl }}/docs/functions.html#set_parts
 [watermark]: https://en.wikipedia.org/wiki/Watermark
-[LaTeX]: http://www.latex-project.org/
+[LaTeX]: https://www.latex-project.org/
 [`draftwatermark`]: https://www.ctan.org/pkg/draftwatermark
 [default LaTeX template]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.tex
 [default metadata]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.yml

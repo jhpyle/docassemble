@@ -1312,13 +1312,13 @@ privileges and user identity of the [cron user].
 [`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
 [`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
 [`get_emails()`]: {{ site.baseurl }}/docs/functions.html#get_emails
-[Celery]: http://www.celeryproject.org/
+[Celery]: https://docs.celeryq.dev/en/stable/
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [Python]: https://www.python.org/
 [`action_argument()`]: {{ site.baseurl }}/docs/functions.html#action_argument
 [`action_arguments()`]: {{ site.baseurl }}/docs/functions.html#action_arguments
-[`alert()`]: http://www.w3schools.com/jsref/met_win_alert.asp
+[`alert()`]: https://www.w3schools.com/jsref/met_win_alert.asp
 [`background_action()`]: #background_action
 [`background_response()`]: #background_response
 [`background_response_action()`]: #background_response_action
@@ -1378,7 +1378,7 @@ privileges and user identity of the [cron user].
 [special user]: #cron user
 [special variable]: {{ site.baseurl }}/docs/special.html
 [task system]: {{ site.baseurl }}/docs/functions.html#tasks
-[virtualenv]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+[virtualenv]: https://docs.python-guide.org/dev/virtualenvs/
 [large text box]: {{ site.baseurl }}/docs/fields.html#area
 [Javascript functions]: {{ site.baseurl }}/docs/functions.html#javascript
 [`under`]: {{ site.baseurl }}/docs/questions.html#under

@@ -972,14 +972,14 @@ internal names include:
 
 [API]: {{ site.baseurl }}/docs/api.html
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [Profile]: {{ site.baseurl }}/docs/users.html#profile
 [Python dictionary]: https://docs.python.org/3/tutorial/datastructures.html#dictionaries
 [Python list]: https://docs.python.org/3/tutorial/datastructures.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [User List]: {{ site.baseurl }}/docs/users.html#user_list
-[VoiceRSS]: http://www.voicerss.org/
+[VoiceRSS]: https://www.voicerss.org/
 [`Address`]: {{ site.baseurl }}/docs/objects.html#Address
 [`Asset`]: {{ site.baseurl }}/docs/objects.html#Asset
 [`Case`]: {{ site.baseurl }}/docs/legal.html#Case
@@ -1034,7 +1034,7 @@ internal names include:
 [`RandomForestMachineLearner`]: {{ site.baseurl }}/docs/ml.html#RandomForestMachineLearner
 [`RelationshipTree`]: {{ site.baseurl }}/docs/objects.html#RelationshipTree
 [`RoleChangeTracker`]: {{ site.baseurl }}/docs/objects.html#RoleChangeTracker
-[`STOP_RENDERING`]: http://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template
+[`STOP_RENDERING`]: https://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template
 [`SVMMachineLearner`]: {{ site.baseurl }}/docs/ml.html#SVMMachineLearner
 [`SimpleTextMachineLearner`]: {{ site.baseurl }}/docs/ml.html
 [`Thing`]: {{ site.baseurl }}/docs/objects.html#Thing
@@ -1152,7 +1152,7 @@ internal names include:
 [`location_returned`]: {{ site.baseurl }}/docs/functions.html#location_returned
 [`log`]: {{ site.baseurl }}/docs/functions.html#log
 [`logic_explanation`]: {{ site.baseurl }}/docs/functions.html#logic_explanation
-[`loop`]: http://docs.makotemplates.org/en/latest/runtime.html#loop-context
+[`loop`]: https://docs.makotemplates.org/en/latest/runtime.html#loop-context
 [`m`]: {{ site.baseurl }}/docs/groups.html#i
 [`manage_privileges`]: {{ site.baseurl }}/docs/functions.html#manage_privileges
 [`map_of`]: {{ site.baseurl }}/docs/functions.html#map_of

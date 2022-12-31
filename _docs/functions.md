@@ -8122,8 +8122,8 @@ $(document).on('daPageLoad', function(){
 [packages]: {{ site.baseurl }}/docs/packages.html
 [modules folder]: {{ site.baseurl }}/docs/playground.html#modules
 [Playground]: {{ site.baseurl }}/docs/playground.html
-[Mako web site]: http://docs.makotemplates.org/en/latest/defs.html
-[Mako]: http://www.makotemplates.org/
+[Mako web site]: https://docs.makotemplates.org/en/latest/defs.html
+[Mako]: https://www.makotemplates.org/
 [Content-Type header]: https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 [Documents]: {{ site.baseurl }}/docs/documents.html
 [documents]: {{ site.baseurl }}/docs/documents.html
@@ -8144,7 +8144,7 @@ $(document).on('daPageLoad', function(){
 [Python set]: https://docs.python.org/3/library/stdtypes.html#set
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [Setting Variables]: {{ site.baseurl }}/docs/fields.html
-[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[WSGI]: https://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`Address`]: {{ site.baseurl }}/docs/objects.html#Address
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
@@ -8251,10 +8251,10 @@ $(document).on('daPageLoad', function(){
 [`returning_user()`]: #returning_user
 [UTC time]: https://en.wikipedia.org/wiki/Coordinated_Universal_Time
 [`timezone_list()`]: #timezone_list
-[`pytz`]: http://pytz.sourceforge.net/
+[`pytz`]: https://pytz.sourceforge.net/
 [`timezone` configuration]: {{ site.baseurl }}/docs/config.html#timezone
 [`datetime.timedelta`]: https://docs.python.org/3/library/datetime.html#datetime.timedelta
-[`dateutil.relativedelta.relativedelta`]: http://dateutil.readthedocs.io/en/stable/relativedelta.html
+[`dateutil.relativedelta.relativedelta`]: https://dateutil.readthedocs.io/en/stable/relativedelta.html
 [`datetime`]: https://docs.python.org/3/library/datetime.html#datetime.datetime
 [`action_argument()`]: #action_argument
 [`action_arguments()`]: #action_arguments
@@ -8280,9 +8280,9 @@ $(document).on('daPageLoad', function(){
 [`command()`]: #command
 [`message()`]: #message
 [`url_of()`]: #url_of
-[Python Imaging Library]: http://www.pythonware.com/products/pil/
+[Python Imaging Library]: https://en.wikipedia.org/wiki/Python_Imaging_Library
 [URL arguments]: {{ site.baseurl }}/docs/special.html#url_args
-[Celery]: http://www.celeryproject.org/
+[Celery]: https://docs.celeryq.dev/en/stable/
 [`background_action()`]: {{ site.baseurl }}/docs/background.html#background_action
 [`background_response()`]: {{ site.baseurl }}/docs/background.html#background_response
 [`background_response_action()`]: {{ site.baseurl }}/docs/background.html#background_response_action
@@ -8305,7 +8305,7 @@ $(document).on('daPageLoad', function(){
 [`country` configuration directive]: {{ site.baseurl }}/docs/config.html#country
 [`pycountry` package]: https://pypi.python.org/pypi/pycountry
 [`send_sms()`]: #send_sms
-[flash]: http://flask.pocoo.org/docs/0.11/patterns/flashing/
+[flash]: https://flask.pocoo.org/docs/0.11/patterns/flashing/
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
@@ -8314,7 +8314,7 @@ $(document).on('daPageLoad', function(){
 [`html`]: {{ site.baseurl }}/docs/fields.html#html
 [`css`]: {{ site.baseurl }}/docs/fields.html#css
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
-[`alert()`]: http://www.w3schools.com/jsref/met_win_alert.asp
+[`alert()`]: https://www.w3schools.com/jsref/met_win_alert.asp
 [multiple servers]: {{ site.baseurl }}/docs/scalability.html
 [special user]: {{ site.baseurl }}/docs/background.html#cron user
 [Redis]: https://redis.io/
@@ -8323,7 +8323,7 @@ $(document).on('daPageLoad', function(){
 [pickled]: https://docs.python.org/3/library/pickle.html
 [pickles]: https://docs.python.org/3/library/pickle.html
 [`db`]: {{ site.baseurl }}/docs/config.html#db
-[PostgreSQL]: http://www.postgresql.org/
+[PostgreSQL]: https://www.postgresql.org/
 [`checkin interval`]: {{ site.baseurl }}/docs/config.html#checkin interval
 [`all_variables()`]: #all_variables
 [form feed character]: https://en.wikipedia.org/wiki/Page_break#Form_feed
@@ -8337,7 +8337,7 @@ $(document).on('daPageLoad', function(){
 [`ocr languages`]: {{ site.baseurl }}/docs/config.html#ocr languages
 [`debian packages`]: {{ site.baseurl }}/docs/config.html#debian packages
 [`ocr dpi`]: {{ site.baseurl }}/docs/config.html#ocr dpi
-[pdftoppm]: http://www.foolabs.com/xpdf/download.html
+[pdftoppm]: https://www.foolabs.com/xpdf/download.html
 [`s3`]: {{ site.baseurl }}/docs/config.html#s3
 [`azure`]: {{ site.baseurl }}/docs/config.html#azure
 [`voicerss`]: {{ site.baseurl }}/docs/config.html#voicerss
@@ -8370,7 +8370,7 @@ $(document).on('daPageLoad', function(){
 [sources folder]: {{ site.baseurl }}/docs/playground.html#sources
 [`datetime.datetime`]: https://docs.python.org/3/library/datetime.html#datetime-objects
 [`__init__()`]: https://docs.python.org/3/reference/datamodel.html#object.__init__
-[document]: http://yaml.org/spec/1.2/spec.html#id2760395
+[document]: https://yaml.org/spec/1.2/spec.html#id2760395
 [MIME type]: https://en.wikipedia.org/wiki/Media_type
 [tuple]: https://en.wikibooks.org/wiki/Python_Programming/Tuples
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
@@ -8386,7 +8386,7 @@ $(document).on('daPageLoad', function(){
 [gathered]: {{ site.baseurl }}/docs/groups.html#gathering
 [`.instanceName`]: {{ site.baseurl }}/docs/objects.html#instanceName
 [`objects from file`]: {{ site.baseurl }}/docs/initial.html#objects from file
-[The YAML Format]: http://symfony.com/doc/current/components/yaml/yaml_format.html
+[The YAML Format]: https://symfony.com/doc/current/components/yaml/yaml_format.html
 [QR markup documentation]: {{ site.baseurl }}/docs/markup.html#qr
 [progress bar]: {{ site.baseurl }}/docs/initial.html#features
 [`progress`]: {{ site.baseurl}}/docs/modifiers.html#progress
@@ -8599,7 +8599,7 @@ $(document).on('daPageLoad', function(){
 [permissions]: {{ site.baseurl }}/docs/config.html#permissions
 [`.as_serializable()`]: {{ site.baseurl }}/docs/objects.html#DAObject.as_serializable
 [`datetime.time`]: https://docs.python.org/3/library/datetime.html#datetime.time
-[`set_variables()`]: set_variables
+[`set_variables()`]: #set_variables
 [`/api/stash_data`]: {{ site.baseurl }}/docs/api.html#stash_data
 [`/api/retrieve_stashed_data`]: {{ site.baseurl }}/docs/api.html#retrieve_stashed_data
 [`DAGoogleAPI`]: {{ site.baseurl }}/docs/objects.html#DAGoogleAPI

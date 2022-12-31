@@ -3705,7 +3705,7 @@ function.
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`url_of()`]: {{ site.baseurl }}/docs/functions.html#url_of
-[Redis]: http://redis.io/
+[Redis]: https://redis.io/
 [Cross-Origin Resource Sharing]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [CORS]: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
 [`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime

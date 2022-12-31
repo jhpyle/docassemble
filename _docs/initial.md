@@ -581,7 +581,7 @@ directory of that package.
 image sets:
   freepik:
     attribution: |
-      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+      Icon made by [Freepik](https://www.flaticon.com/authors/freepik)
     images:
       baby: crawling.svg
       people: users6.svg
@@ -2173,7 +2173,7 @@ features:
     - my-styles.css
     - https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css
   javascript:
-    - http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js
+    - https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js
     - https://cdnjs.cloudflare.com/ajax/libs/offline-js/0.7.18/offline.min.js
 {% endhighlight %}
 
@@ -2525,14 +2525,14 @@ This will cause the web application to run the JavaScript for the
 [package]: {{ site.baseurl }}/docs/packages.html
 [`html`]: {{ site.baseurl }}/docs/fields.html#html
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
-[Mako]: http://www.makotemplates.org/
+[Mako]: https://www.makotemplates.org/
 [language support]: {{ site.baseurl }}/docs/language.html
 [multiple languages]: {{ site.baseurl }}/docs/language.html
 [question modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [markup]: {{ site.baseurl }}/docs/markup.html
 [setting variables]: {{ site.baseurl }}/docs/fields.html
 [objects]: {{ site.baseurl }}/docs/objects.html
-[def]: http://docs.makotemplates.org/en/latest/defs.html
+[def]: https://docs.makotemplates.org/en/latest/defs.html
 [roles]: {{ site.baseurl }}/docs/roles.html
 [`progress`]: {{ site.baseurl }}/docs/modifiers.html#progress
 [`language` modifier]: {{ site.baseurl }}/docs/modifiers.html#language
@@ -2587,7 +2587,7 @@ This will cause the web application to run the JavaScript for the
 [BMP]: https://en.wikipedia.org/wiki/BMP_file_format
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`using()`]: {{ site.baseurl }}/docs/objects.html#DAObject.using
-[Bootstrap]: http://getbootstrap.com/
+[Bootstrap]: https://getbootstrap.com/
 [`inverse navbar` configuration directive]: {{ site.baseurl }}/docs/config.html#inverse navbar
 [`bootstrap theme` configuration directive]: {{ site.baseurl }}/docs/config.html#bootstrap theme
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
@@ -2622,7 +2622,7 @@ This will cause the web application to run the JavaScript for the
 [`show login` metadata specifier]: #show login
 [`show login`]: {{ site.baseurl }}/docs/config.html#show login
 [`reconsider()`]: {{ site.baseurl }}/docs/functions.html#reconsider
-[jQuery Validation Plugin]: http://jqueryvalidation.org
+[jQuery Validation Plugin]: https://jqueryvalidation.org
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`yesno`]: {{ site.baseurl }}/docs/fields.html#fields yesno
 [`uncheck others`]: {{ site.baseurl }}/docs/fields.html#uncheck others
@@ -2664,7 +2664,7 @@ This will cause the web application to run the JavaScript for the
 [editing an already-gathered list]: {{ site.baseurl }}/docs/groups.html#editing
 [groups]: {{ site.baseurl }}/docs/groups.html
 [Documents]: {{ site.baseurl }}/docs/documents.html
-[Python expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[Python expression]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [label and field]: {{ site.baseurl }}/docs/fields.html#label
 [variable name]: {{ site.baseurl }}/docs/fields.html#variable names
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
@@ -2672,8 +2672,8 @@ This will cause the web application to run the JavaScript for the
 [`docassemble.base:data/questions/examples/template-file.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/examples/template-file.yml
 [`docassemble.base:data/templates/disclaimer.md`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/disclaimer.md
 [`disclaimer.md`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/disclaimer.md
-[expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
-[Pandoc]: http://johnmacfarlane.net/pandoc/
+[expression]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[Pandoc]: https://pandoc.org
 [`table width`]: #table width
 [`features`]: #features
 [document]: {{ site.baseurl }}/docs/documents.html
@@ -2729,7 +2729,7 @@ This will cause the web application to run the JavaScript for the
 [`terms`]: {{ site.baseurl }}/docs/modifiers.html#terms
 [`auto terms`]: {{ site.baseurl }}/docs/modifiers.html#auto terms
 [`update_terms()`]: {{ site.baseurl }}/docs/functions.html#update_terms
-[Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.htmlmarkdown to docx
+[Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.html#markdown to docx
 [`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
 [provide CSS]: #css
 [adjust the CSS]: {{ site.baseurl }}/docs/config.html#bootstrap theme
