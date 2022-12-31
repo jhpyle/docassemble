@@ -60,7 +60,9 @@ setup(name='docassemble.demo',
       install_requires=[
           'docassemble==1.4.23',
           'docassemble.base==1.4.23',
-          'googledrivedownloader==0.4'
+          'googledrivedownloader==0.4',
+          'ics==0.7.2',
+          'matplotlib==3.5.2'
       ],
       zip_safe=False,
       package_data=find_package_data(where=os.path.join('docassemble', 'demo', ''), package='docassemble.demo')

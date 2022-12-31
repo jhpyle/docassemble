@@ -6820,10 +6820,13 @@ def index(action_argument=None, refer=None):
             post_data = {}
             disregard_input = True
     known_varnames = {}
+    all_invisible = False
     if '_varnames' in post_data:
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     if '_visible' in post_data and post_data['_visible'] != "":
         visible_field_names = json.loads(myb64unquote(post_data['_visible']))
+        if len(visible_field_names) == 0 and '_question_name' in post_data and len(known_varnames) > 0:
+            all_invisible = True
     else:
         visible_field_names = []
     known_varnames_visible = {}
@@ -6988,7 +6991,7 @@ def index(action_argument=None, refer=None):
             empty_fields = []
         authorized_fields = set()
     changed = False
-    if '_null_question' in post_data:
+    if '_null_question' in post_data or all_invisible:
         changed = True
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data:
         success = False

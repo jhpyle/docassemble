@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.4.24] - 2022-12-30
+
+### Added
+- Option for using `show if` in `action buttons`.
+### Fixed
+- Error with `pdf template file` and image inclusion introduced in
+  1.4.21.
+- Error with `.from_url()` method of `DAFile`.
+
 ## [1.4.23] - 2022-12-10
 
 ### Added

@@ -4445,16 +4445,16 @@ class DAFile(DAObject):
         self.retrieve()
         cookiefile = tempfile.NamedTemporaryFile(suffix='.txt')
         the_path = self.file_info['path']
-        f = open(the_path, 'wb')
-        c = pycurl.Curl()
-        c.setopt(c.URL, url)
-        c.setopt(c.FOLLOWLOCATION, True)
-        c.setopt(c.WRITEDATA, f)
-        c.setopt(pycurl.USERAGENT, server.daconfig.get('user agent', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36'))
-        c.setopt(pycurl.COOKIEFILE, cookiefile.name)
-        c.perform()
-        status_code = c.getinfo(pycurl.HTTP_CODE)
-        c.close()
+        with open(the_path, 'wb') as f:
+            c = pycurl.Curl()
+            c.setopt(c.URL, url)
+            c.setopt(c.FOLLOWLOCATION, True)
+            c.setopt(c.WRITEDATA, f)
+            c.setopt(pycurl.USERAGENT, server.daconfig.get('user agent', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36'))
+            c.setopt(pycurl.COOKIEFILE, cookiefile.name)
+            c.perform()
+            status_code = c.getinfo(pycurl.HTTP_CODE)
+            c.close()
         if status_code >= 400:
             raise Exception("from_url: Error %s" % (status_code,))
         self.retrieve()
@@ -5107,6 +5107,10 @@ class DAStaticFile(DAObject):
         self.package = docassemble.base.functions.this_thread.current_question.package
         super().init(*pargs, **kwargs)
 
+    def _populate(self):
+        if not hasattr(self, 'extension') or not hasattr(self, 'mimetype'):
+            self.extension, self.mimetype = server.get_ext_and_mimetype(self.filename)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+
     def get_alt_text(self):
         """Returns the alt text for the file.  If no alt text is defined, None
         is returned.
@@ -5121,6 +5125,7 @@ class DAStaticFile(DAObject):
         self.alt_text = alt_text
 
     def _get_unqualified_reference(self):
+        self._populate()
         if ':' not in self.filename and hasattr(self, 'package'):
             file_reference = self.package + ':'
             if '/' not in str(self.filename):
@@ -5134,6 +5139,7 @@ class DAStaticFile(DAObject):
         arguments width and alt_text.
 
         """
+        self._populate()
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return docassemble.base.file_docx.include_docx_template(self)

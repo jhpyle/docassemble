@@ -2002,33 +2002,33 @@ class Question:
             should_append = False
             if not isinstance(data['features'], dict):
                 raise DAError("A features section must be a dictionary." + self.idebug(data))
-            if data['features'].get('use catchall', False):
-                self.interview.options['use catchall'] = True
+            if 'use catchall' in data['features'] and isinstance(data['features']['use catchall'], bool):
+                self.interview.options['use catchall'] = data['features']['use catchall']
             if 'table width' in data['features']:
                 if not isinstance(data['features']['table width'], int):
                     raise DAError("Table width in features must be an integer." + self.idebug(data))
                 self.interview.table_width = data['features']['table width']
-            if 'progress bar' in data['features']:
-                self.interview.use_progress_bar = bool(data['features']['progress bar'])
-            if 'progress can go backwards' in data['features'] and data['features']['progress can go backwards']:
-                self.interview.options['strict progress'] = True
-            if 'show progress bar percentage' in data['features'] and data['features']['show progress bar percentage']:
-                self.interview.show_progress_bar_percentage = True
+            if 'progress bar' in data['features'] and isinstance(data['features']['progress bar'], bool):
+                self.interview.use_progress_bar = data['features']['progress bar']
+            if 'progress can go backwards' in data['features'] and isinstance(data['features']['progress can go backwards'], bool):
+                self.interview.options['strict progress'] = data['features']['progress can go backwards']
+            if 'show progress bar percentage' in data['features'] and isinstance(data['features']['show progress bar percentage'], bool):
+                self.interview.show_progress_bar_percentage = data['features']['show progress bar percentage']
             if 'progress bar method' in data['features'] and isinstance(data['features']['progress bar method'], str):
                 self.interview.progress_bar_method = data['features']['progress bar method']
             if 'progress bar multiplier' in data['features'] and isinstance(data['features']['progress bar multiplier'], (int, float)):
                 if data['features']['progress bar multiplier'] <= 0.0 or data['features']['progress bar multiplier'] >= 1.0:
                     raise DAError("progress bar multiplier in features must be between 0 and 1." + self.idebug(data))
                 self.interview.progress_bar_method = data['features']['progress bar multiplier']
-            if 'question back button' in data['features']:
-                self.interview.question_back_button = bool(data['features']['question back button'])
-            if 'question help button' in data['features']:
-                self.interview.question_help_button = bool(data['features']['question help button'])
-            if 'navigation back button' in data['features']:
-                self.interview.navigation_back_button = bool(data['features']['navigation back button'])
-            if 'go full screen' in data['features'] and data['features']['go full screen']:
+            if 'question back button' in data['features'] and isinstance(data['features']['question back button'], bool):
+                self.interview.question_back_button = data['features']['question back button']
+            if 'question help button' in data['features'] and isinstance(data['features']['question help button'], bool):
+                self.interview.question_help_button = data['features']['question help button']
+            if 'navigation back button' in data['features'] and isinstance(data['features']['navigation back button'], bool):
+                self.interview.navigation_back_button = data['features']['navigation back button']
+            if 'go full screen' in data['features'] and data['features']['go full screen'] is not None:
                 self.interview.force_fullscreen = data['features']['go full screen']
-            if 'navigation' in data['features'] and data['features']['navigation']:
+            if 'navigation' in data['features'] and isinstance(data['features']['navigation'], bool):
                 self.interview.use_navigation = data['features']['navigation']
             if 'small screen navigation' in data['features']:
                 if data['features']['small screen navigation'] == 'dropdown':
@@ -2036,10 +2036,10 @@ class Question:
                 else:
                     if not data['features']['small screen navigation']:
                         self.interview.use_navigation_on_small_screens = False
-            if 'centered' in data['features'] and not data['features']['centered']:
-                self.interview.flush_left = True
-            if data['features'].get('wide side by side', False):
-                self.interview.wide_side_by_side = True
+            if 'centered' in data['features'] and isinstance(data['features']['centered'], bool):
+                self.interview.flush_left = not data['features']['centered']
+            if 'wide side by side' in data['features'] and isinstance(data['features']['wide side by side'], bool):
+                self.interview.wide_side_by_side = data['features']['wide side by side']
             if 'maximum image size' in data['features']:
                 self.interview.max_image_size = eval(str(data['features']['maximum image size']))
             if 'image upload type' in data['features']:
@@ -2072,14 +2072,14 @@ class Question:
                 self.interview.options['hide navbar'] = data['features']['hide navbar']
             if 'hide standard menu' in data['features']:
                 self.interview.options['hide standard menu'] = data['features']['hide standard menu']
-            if 'labels above fields' in data['features']:
-                self.interview.options['labels above'] = bool(data['features']['labels above fields'])
-            if 'suppress autofill' in data['features']:
-                self.interview.options['suppress autofill'] = bool(data['features']['suppress autofill'])
-            if 'floating labels' in data['features']:
-                self.interview.options['floating labels'] = bool(data['features']['floating labels'])
-            if 'send question data' in data['features']:
-                self.interview.options['send question data'] = bool(data['features']['send question data'])
+            if 'labels above fields' in data['features'] and isinstance(data['features']['labels above fields'], bool):
+                self.interview.options['labels above'] = data['features']['labels above fields']
+            if 'suppress autofill' in data['features'] and isinstance(data['features']['suppress autofill'], bool):
+                self.interview.options['suppress autofill'] = data['features']['suppress autofill']
+            if 'floating labels' in data['features'] and isinstance(data['features']['floating labels'], bool):
+                self.interview.options['floating labels'] = data['features']['floating labels']
+            if 'send question data' in data['features'] and isinstance(data['features']['send question data'], bool):
+                self.interview.options['send question data'] = data['features']['send question data']
             if 'custom datatypes to load' in data['features']:
                 if isinstance(data['features']['custom datatypes to load'], str):
                     data['features']['custom datatypes to load'] = [data['features']['custom datatypes to load']]
@@ -2931,6 +2931,7 @@ class Question:
         if 'action buttons' in data:
             if isinstance(data['action buttons'], dict) and len(data['action buttons']) == 1 and 'code' in data['action buttons']:
                 self.action_buttons.append(compile(data['action buttons']['code'], '<action buttons code>', 'eval'))
+                self.find_fields_in(data['action buttons']['code'])
             else:
                 if not isinstance(data['action buttons'], list):
                     raise DAError("An action buttons specifier must be a list." + self.idebug(data))
@@ -2943,6 +2944,11 @@ class Question:
                         target = '_blank'
                     elif target is False:
                         target = '_self'
+                    if item.get('show if', None) is not None:
+                        showif = compile(str(item['show if']), '<action buttons show if code>', 'eval')
+                        self.find_fields_in(str(item['show if']))
+                    else:
+                        showif = None
                     label = item.get('label', None)
                     color = item.get('color', 'primary')
                     icon = item.get('icon', None)
@@ -2969,6 +2975,7 @@ class Question:
                     if not isinstance(forget_prior, bool):
                         raise DAError("The forget prior specifier in an action buttons item must refer to true or false." + self.idebug(data))
                     button = dict(action=TextObject(definitions + action, question=self), label=TextObject(definitions + label, question=self), color=TextObject(definitions + color, question=self))
+                    button['show if'] = showif
                     if target is not None:
                         button['target'] = TextObject(definitions + target, question=self)
                     else:
@@ -5170,6 +5177,13 @@ class Question:
             extras['action_buttons'] = []
             for item in self.action_buttons:
                 if isinstance(item, dict):
+                    showif = item.get('show if', None)
+                    if isinstance(showif, bool):
+                        if not showif:
+                            continue
+                    elif isinstance(showif, CodeType):
+                        if not eval(showif, user_dict):
+                            continue
                     label = item['label'].text(user_dict).strip()
                     given_arguments = item.get('arguments', {})
                     arguments = {}
@@ -5218,6 +5232,10 @@ class Question:
                             raise DAError("action buttons code included a color item that was not text or None")
                         if 'icon' in button and not isinstance(button['icon'], (str, NoneType)):
                             raise DAError("action buttons code included an icon item that was not text or None")
+                        showif = button.get('show if', None)
+                        if showif is not None:
+                            if not showif:
+                                continue
                         color = button.get('color', 'primary')
                         if color is None:
                             color = 'primary'

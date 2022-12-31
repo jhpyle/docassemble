@@ -4,10 +4,9 @@ import re
 import json
 import shutil
 from random import randint, random
-from behave import step, use_step_matcher  # pylint: disable=import-error
+from behave import step, use_step_matcher  # pylint: disable=import-error,no-name-in-module
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
@@ -641,6 +640,7 @@ def click_nth_choice_help(context, ordinal):
 def accept_alert(context):
     time.sleep(1)
     context.browser.switch_to.alert.accept()
+
 
 @step(r'I switch to the new tab')
 def switch_tab(context):

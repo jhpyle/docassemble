@@ -265,9 +265,10 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                 new_im.save(output, 'PNG')
                 overlay_pdf_file.write(img2pdf.convert(output.getvalue()))
                 overlay_pdf_file.close()
-            image_todo.append({'overlay_file': overlay_pdf_file.name, 'pageno': fields[field]['pageno']})
+            image_todo.append({'overlay_file': overlay_pdf_file.name, 'pageno': fields[field]['pageno'], 'field': field})
         if len(image_todo) > 0:
             for item in image_todo:
+                xone, yone, xtwo, ytwo = fields[item['field']]['rect']
                 logmessage("Trying to save to page " + repr(item['pageno'] - 1))
                 overlay_file = Pdf.open(item['overlay_file'])
                 overlay_page = overlay_file.pages[0]
