@@ -8063,7 +8063,7 @@ class Interview:
                                     command = variable + ' = objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ', use_objects=' + repr(use_objects) + ', package=' + repr(question.package) + ')'
                                     # logmessage("Running " + command)
                                     exec(command, user_dict)
-                            question.mark_as_answered(user_dict)
+                            user_dict['_internal']['answered'].add(question.name)
                         if question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict)):
                             if question.question_type == "data":
                                 if self.debug:
