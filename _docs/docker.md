@@ -390,13 +390,36 @@ need to be extremely careful about how you shut down your Docker
 container.  (See the section on [shutting down](#shutdown) to learn
 why.)
 
+When something goes wrong, the first thing to check is the server's
+log files. The error message that appears in the web browser often
+does not contain a complete explanation of the error; the details may
+be written to the log files and the user may only see a announcement
+that there was an error. The server maintains several different log
+files for different purposes. The most important log files are
+available in the web browser on the [Logs] screen.
+
+On the [Logs] screen, `docassemble.log` is the primary log file for
+**docassemble** itself. `uwsgi.log` is the log file for [uWSGI], the
+web server for Python applications. This file contains a log of HTTP
+requests and the output of subprocesses called by
+**docassemble**. `worker.log` is the log file for the [Celery] system,
+which runs [background processes]. The Package Management screen uses
+[background processes] to run package installation and upgrade
+operations, so if it fails without giving you a log of its operations,
+you can check `worker.log`.
+
 Normally, you will not need to access the running container in order
 to get **docassemble** to work, and all the log files you need will be
-available from [Logs] in the web browser.  However, you might want or
-need to gain access to the running container in some circumstances.
+available from [Logs] in the web browser. However, you might want or
+need to gain access to the running container in some circumstances,
+such as when the [Logs] interface is not available, or when you need
+to check a log file that isn't available at [Logs].
 
-To do so, find out the ID of the running container by doing
-[`docker ps`].  You will see output like the following:
+To access the Docker container, first connect to the host computer
+using the command line (the same way you connected to the host
+computer to run `docker run` initially). Then find out the ID of the
+running container by doing [`docker ps`].  You will see output like
+the following:
 
 {% highlight text %}
 CONTAINER ID  IMAGE  COMMAND  CREATED  STATUS  PORTS  NAMES
