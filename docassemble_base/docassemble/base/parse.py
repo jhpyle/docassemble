@@ -2697,7 +2697,7 @@ class Question:
                 else:
                     if not (isinstance(key, str) and isinstance(content, str)):
                         raise DAError("A default screen parts block must be a dictionary of text keys and text values." + self.idebug(data))
-                self.interview.default_screen_parts[self.language][key] = TextObject(definitions + str(content.strip()), question=self)
+                    self.interview.default_screen_parts[self.language][key] = TextObject(definitions + str(content.strip()), question=self)
         if 'default validation messages' in data:
             should_append = False
             if not isinstance(data['default validation messages'], dict):
@@ -6436,8 +6436,8 @@ class Question:
             result_list.append(result_dict)
         return (has_code, result_list)
 
-    def mark_as_answered(self, the_user_dict):
-        if self.is_mandatory or self.mandatory_code is not None:
+    def mark_as_answered(self, the_user_dict, force=False):
+        if force or self.is_mandatory or self.mandatory_code is not None:
             the_user_dict['_internal']['answered'].add(self.name)
 
     def sub_fields_used(self):
@@ -8063,7 +8063,7 @@ class Interview:
                                     command = variable + ' = objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ', use_objects=' + repr(use_objects) + ', package=' + repr(question.package) + ')'
                                     # logmessage("Running " + command)
                                     exec(command, user_dict)
-                            question.mark_as_answered(user_dict)
+                            question.mark_as_answered(user_dict, force=True)
                         if question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict)):
                             if question.question_type == "data":
                                 if self.debug:

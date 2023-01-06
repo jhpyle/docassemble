@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.4.25] - 2023-01-05
+
+### Fixed
+- Rolling backup files on S3 were copied to the wrong directory during
+  initialization.
+- Issue with `objects from file` blocks being run repeatedly if they
+  are not marked as `mandatory`.
+
 ## [1.4.24] - 2022-12-30
 
 ### Added

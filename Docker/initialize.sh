@@ -232,11 +232,11 @@ if [ "${RESTOREFROMBACKUP}" == "true" ]; then
 	    if [[ $CONTAINERROLE =~ .*:(all):.* ]]; then
 		if [[ $(s4cmd ls "s3://${S3BUCKET}/backup") ]]; then
 		    echo "initialize: Restoring backup information from S3" >&2
-		    s4cmd dsync "s3://${S3BUCKET}/backup" "${DA_ROOT}"
+		    s4cmd dsync "s3://${S3BUCKET}/backup" "${DA_ROOT}/backup"
 		fi
 	    elif [[ $(s4cmd ls "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}") ]]; then
 		echo "initialize: Restoring backup information from S3" >&2
-		s4cmd dsync "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}" "${DA_ROOT}/backup"
+		s4cmd dsync "s3://${S3BUCKET}/backup/${LOCAL_HOSTNAME}" "${DA_ROOT}/backup/${LOCAL_HOSTNAME}"
 	    fi
 	fi
 	if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(s4cmd ls "s3://${S3BUCKET}/apache") ]]; then

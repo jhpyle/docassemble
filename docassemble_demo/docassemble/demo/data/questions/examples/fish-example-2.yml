@@ -1,0 +1,34 @@
+metadata:
+  title: Custom objects from file
+  short title: Import
+  documentation: "https://docassemble.org/docs/functions.html#objects_from_file"
+  example start: 1
+  example end: 2
+---
+objects from file:
+  - fishes: fishes.yml
+---
+field: first_screen
+mandatory: true
+question: |
+  Fish summary
+subquestion: |
+  % for fish in fishes:
+  ${ fish } has
+  ${ fish.scales } scales.
+  
+  % endfor
+---
+mandatory: True
+code: |
+  fishes[1].scales = 700
+---
+mandatory: true
+question: |
+  Fish summary after change
+subquestion: |
+  % for fish in fishes:
+  ${ fish } has
+  ${ fish.scales } scales.
+  
+  % endfor
