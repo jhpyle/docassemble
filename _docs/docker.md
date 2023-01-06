@@ -1002,7 +1002,9 @@ your container for the new configuration to take effect.
   zone of the server.  The value of the variable is stored in
   `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
   run in order to set the system time zone.  The default is
-  `America/New_York`.  See the [`timezone`] configuration directive.
+  `America/New_York`. The time zone must exactly match the name of a
+  time zone in the [tz database].  See the [`timezone`] configuration
+  directive.
 * <a name="LOCALE"></a>`LOCALE`: You can use this to enable a locale
   on the server.  The value needs to match an entry in
   `/etc/locale.gen` on [Ubuntu].  These are the locale values that
@@ -3114,3 +3116,4 @@ references a different base image.
 [`certbot`]: https://certbot.eff.org/
 [SSH client]: https://www.ssh.com/academy/ssh/client
 [Apache]: https://httpd.apache.org/
+[tz database]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
