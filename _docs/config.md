@@ -4600,6 +4600,8 @@ zone will be set to the time zone of the server.
 timezone: America/Los_Angeles
 {% endhighlight %}
 
+For a list of valid time zones, see the [tz database].
+
 ## <a name="pypi"></a>Sharing packages on PyPI
 
 If you want users of your server to be able to publish packages to
@@ -6289,3 +6291,4 @@ and Facebook API keys.
 [Bootstrap alert]: https://getbootstrap.com/docs/5.2/components/alerts/
 [Bootstrap color]: https://getbootstrap.com/docs/5.2/customize/color/
 [Lightsail]: https://aws.amazon.com/lightsail/
+[tz database]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
