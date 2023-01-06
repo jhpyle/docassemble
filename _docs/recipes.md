@@ -761,7 +761,7 @@ Create a static file called `idle.js` with the following contents.
 {% highlight javascript %}
 var idleTime = 0;
 var idleInterval;
-$(document).on('daPageLoad', function(){
+$(document).ready(function(){
     idleInterval = setInterval(idleTimerIncrement, 60000);
     $(document).mousemove(function (e) {
         idleTime = 0;
