@@ -4602,6 +4602,9 @@ timezone: America/Los_Angeles
 
 For a list of valid time zones, see the [tz database].
 
+If you change the `timezone`, you need to do a `docker stop` and
+`docker start` so that the operating system recognizes the change.
+
 ## <a name="pypi"></a>Sharing packages on PyPI
 
 If you want users of your server to be able to publish packages to
