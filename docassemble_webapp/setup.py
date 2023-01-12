@@ -223,7 +223,6 @@ install_requires = [
     "sendgrid==6.9.7",
     "simplekv==0.14.1",
     "six==1.16.0",
-    "sklearn==0.0",
     "sniffio==1.2.0",
     "SocksiPy-branch==1.1",
     "sortedcontainers==2.4.0",
