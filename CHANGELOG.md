@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.26] - 2023-01-15
+
+### Fixed
+- Removed dependency on `sklearn`.
+- Issue with unicode values in `datatype: checkboxes`.
+
 ## [1.4.25] - 2023-01-05
 
 ### Fixed
