@@ -11134,7 +11134,7 @@ def index(action_argument=None, refer=None):
                 }
                 var convertedName;
                 try {
-                  convertedName = atob(checkboxName);
+                  convertedName = decodeURIComponent(escape(atob(checkboxName)));
                 }
                 catch (e) {
                   continue;
@@ -11168,7 +11168,7 @@ def index(action_argument=None, refer=None):
                 }
                 var convertedName;
                 try {
-                  convertedName = atob(checkboxName);
+                  convertedName = decodeURIComponent(escape(atob(checkboxName)));
                 }
                 catch (e) {
                   continue;

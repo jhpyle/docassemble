@@ -1,15 +1,14 @@
 $(document).on("daPageLoad", function () {
   $('input[type="date"]').each(function () {
     var dateElement = this;
-    $(dateElement).hide();
     $(dateElement).attr("type", "hidden");
-    var parentElement = $('<div class="form-row">');
-    var yearParent = $('<div class="col">');
-    var monthParent = $('<div class="col">');
-    var dayParent = $('<div class="col">');
-    var yearElement = $('<select class="form-control">');
-    var monthElement = $('<select class="form-control">');
-    var dayElement = $('<select class="form-control">');
+    var parentElement = $('<div class="row px-1">');
+    var monthParent = $('<div class="col-sm-5 px-0">');
+    var dayParent = $('<div class="col-sm-4 px-0">');
+    var yearParent = $('<div class="col-sm-3 px-0">');
+    var monthElement = $('<select class="form-select">');
+    var dayElement = $('<select class="form-select">');
+    var yearElement = $('<select class="form-select">');
     var today = new Date();
     var dateEntered;
     if ($(dateElement).val()) {
@@ -75,13 +74,20 @@ $(document).on("daPageLoad", function () {
       yearElement.append(opt);
     }
     function updateDate() {
-      $(dateElement).val(
-        $(yearElement).val() +
-          "-" +
-          $(monthElement).val() +
-          "-" +
-          $(dayElement).val()
-      );
+      if (
+        $(yearElement).val() != "" &&
+        $(monthElement).val() != "" &&
+        $(dayElement).val() != ""
+      ) {
+        $(dateElement).val(
+          $(yearElement).val() +
+            "-" +
+            $(monthElement).val() +
+            "-" +
+            $(dayElement).val()
+        );
+        $(dateElement).trigger("change");
+      }
     }
     $(dateElement).before(parentElement);
     $(monthParent).append(monthElement);
