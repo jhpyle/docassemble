@@ -572,6 +572,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     varnames = {}
     onchange = []
     autocomplete_info = []
+    validation_rules['ignore'] = None
     showUnderText = 'underText' in status.extras and len(status.attachments) == 0
     if status.using_navigation == 'vertical':
         grid_class = daconfig['grid classes']['vertical navigation']['body']
@@ -1150,7 +1151,6 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     if 'groups' not in validation_rules:
                         validation_rules['groups'] = {}
                     validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [the_saveas])
-                    validation_rules['ignore'] = None
                 if field.datatype not in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                     for key in ('minlength', 'maxlength'):
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:
@@ -1162,11 +1162,6 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                                 validation_rules['messages'][the_saveas][key] = field.validation_message(key, status, word("You cannot type more than %s characters."), parameters=tuple([status.extras[key][field.number]]))
                 if hasattr(field, 'inputtype') and field.inputtype == 'hidden':
                     validation_rules['rules'][the_saveas] = {'required': False}
-            if hasattr(field, 'inputtype'):
-                if field.inputtype in ['yesnoradio', 'noyesradio', 'radio']:
-                    validation_rules['ignore'] = None
-                elif field.inputtype in ('combobox', 'ajax'):
-                    validation_rules['ignore'] = []
             if hasattr(field, 'datatype'):
                 if field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and status.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras) or ('maxlength' in field.extras and 'maxlength' in status.extras)))):
                     if field.datatype.endswith('checkboxes'):
@@ -1240,9 +1235,6 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         if '_ignore' + str(field.number) not in validation_rules['messages']:
                             validation_rules['messages']['_ignore' + str(field.number)] = {}
                         validation_rules['messages']['_ignore' + str(field.number)]['checkatleast'] = field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple([strip_tags(unescaped_item)]))
-                    validation_rules['ignore'] = None
-                if field.datatype == 'object_radio' or (field.datatype == 'object' and hasattr(field, 'inputtype') and field.inputtype == 'radio'):
-                    validation_rules['ignore'] = None
                 if field.datatype == 'date':
                     validation_rules['rules'][the_saveas]['date'] = True
                     validation_rules['messages'][the_saveas]['date'] = field.validation_message('date', status, word("You need to enter a valid date."))
@@ -1569,10 +1561,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         field_container_class = ' da-field-container-dropdown'
                     output += '                <div class="row' + field_container_class + '"><div class="col' + daspaceafter + '"><select aria-labelledby="daMainQuestion" class="daspaceafter' + combobox + '"' + datadefault + ' name="' + escape_id(status.question.fields[0].saveas) + '" id="' + escape_id(status.question.fields[0].saveas) + '" required >' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
-                    validation_rules['ignore'] = []
                     validation_rules['messages'][status.question.fields[0].saveas] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
                 else:
-                    validation_rules['ignore'] = None
                     validation_rules['messages'][status.question.fields[0].saveas] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
             else:
@@ -1625,10 +1615,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         datadefault = ''
                     output += '                <div class="row"><div class="col' + daspaceafter + '"><select class="' + combobox + '"' + datadefault + ' name="X211bHRpcGxlX2Nob2ljZQ" required >' + "".join(inner_fieldlist) + '</select></div></div>\n'
                 if status.question.question_variety == 'combobox':
-                    validation_rules['ignore'] = []
                     validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': status.question.fields[0].validation_message('combobox required', status, word("You need to select one or type in a new value."))}
                 else:
-                    validation_rules['ignore'] = None
                     validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
                 validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': True}
             output += '                <div id="daerrorcontainer" style="display:none"></div>\n'

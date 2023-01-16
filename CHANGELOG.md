@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.27] - 2023-01-16
+
+### Changed
+- The `jQuery Validation Plugin` settings were adapted to always apply
+  validation to hidden elements.
+
 ## [1.4.26] - 2023-01-15
 
 ### Fixed
