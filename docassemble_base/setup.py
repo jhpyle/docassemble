@@ -90,7 +90,7 @@ install_requires = [
     "docxtpl==0.16.3",
     "et-xmlfile==1.1.0",
     "Flask-Mail==0.9.1",
-    "future==0.18.2",
+    "future==0.18.3",
     "geographiclib==1.52",
     "geopy==2.2.0",
     "google-api-core==2.7.2",
