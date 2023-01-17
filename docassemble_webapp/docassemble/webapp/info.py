@@ -233,7 +233,6 @@ system_packages = [
     "setuptools",
     "simplekv",
     "six",
-    "sklearn",
     "sniffio",
     "SocksiPy-branch",
     "sortedcontainers",
