@@ -3,6 +3,20 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.27](https://github.com/jhpyle/docassemble/releases/tag/v1.4.27) - 2023-01-16
+
+
+### Changed
+- The `jQuery Validation Plugin` settings were adapted to always apply
+  validation to hidden elements.
+
+## [1.4.26](https://github.com/jhpyle/docassemble/releases/tag/v1.4.26) - 2023-01-15
+
+
+### Fixed
+- Removed dependency on `sklearn`.
+- Issue with unicode values in `datatype: checkboxes`.
+
 ## [1.4.25](https://github.com/jhpyle/docassemble/releases/tag/v1.4.25) - 2023-01-05
 
 
