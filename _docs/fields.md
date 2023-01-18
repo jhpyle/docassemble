@@ -645,9 +645,17 @@ necessary information about the uploaded files.
 <a name="accept"></a>If you want to limit uploads to particular file
 types, you can use `accept` to specify [Python] code that returns a
 custom [accept] attribute.  The value of `accept` is passed directly
-into the [accept] attribute in the HTML.
+into the [accept] attribute in the HTML and into the [`accept` method]
+of the [jQuery Validation Plugin].
 
 {% include side-by-side.html demo="upload-accept" %}
+
+Note that the syntax is very specific: the double quotation marks are
+part of the string itself.
+
+Since the [`accept` method] of the [jQuery Validation Plugin] only
+works with MIME types, you can only specify MIME types here, not file
+extensions.
 
 <a name="maximum image size"></a>If your users upload digital photos
 into your interviews, the uploads may take a long time.  You can
@@ -3432,3 +3440,4 @@ why this needs to be done manually as opposed to automatically:
 [`validation code`]: #validation code
 [Bootstrap colors]: https://getbootstrap.com/docs/5.2/customize/color/
 [Bootstrap]: https://getbootstrap.com/
+[`accept` method]: https://jqueryvalidation.org/accept-method/
