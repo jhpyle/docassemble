@@ -743,3 +743,5 @@ function daGeolocate() {
     });
   }
 }
+
+function dagoogleapicallback() {}

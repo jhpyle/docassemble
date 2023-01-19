@@ -2431,11 +2431,11 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
             region = ''
         else:
             region = '&region=' + region
-        scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + region + '&libraries=places"></script>'
+        scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + region + '&libraries=places&callback=dagoogleapicallback"></script>'
         if as_javascript:
             output_js += """\
       var daScript = document.createElement('script');
-      daScript.src = "https://maps.googleapis.com/maps/api/js?key=""" + api_key + """&libraries=places";
+      daScript.src = "https://maps.googleapis.com/maps/api/js?key=""" + api_key + """&libraries=places&callback=dagoogleapicallback";
       document.head.appendChild(daScript);
 """
     if ga_id is not None:
@@ -8643,11 +8643,17 @@ def index(action_argument=None, refer=None):
           }
         }
       }
+      function atou(b64) {
+        return decodeURIComponent(escape(atob(b64)));
+      }
+      function utoa(data) {
+        return btoa(unescape(encodeURIComponent(data)));
+      }
       function dabtoa(str) {
-        return window.btoa(str).replace(/[\\n=]/g, '');
+        return window.utoa(str).replace(/[\\n=]/g, '');
       }
       function daatob(str) {
-        return window.atob(str);
+        return window.atou(str);
       }
       function hideTablist() {
         var anyTabs = $("#daChatAvailable").is(":visible")
@@ -11134,14 +11140,14 @@ def index(action_argument=None, refer=None):
                 }
                 var convertedName;
                 try {
-                  convertedName = decodeURIComponent(escape(atob(checkboxName)));
+                  convertedName = atou(checkboxName);
                 }
                 catch (e) {
                   continue;
                 }
-                var daNameOne = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
-                var daNameTwo = btoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '');
-                var daNameThree = btoa(baseName + '["' + convertedName + '"]').replace(/[\\n=]/g, '');
+                var daNameOne = utoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
+                var daNameTwo = utoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '');
+                var daNameThree = utoa(baseName + '["' + convertedName + '"]').replace(/[\\n=]/g, '');
                 daVarLookupRev[daNameOne] = daNameTwo;
                 daVarLookup[daNameTwo] = daNameOne;
                 daVarLookup[daNameThree] = daNameOne;
@@ -11168,13 +11174,13 @@ def index(action_argument=None, refer=None):
                 }
                 var convertedName;
                 try {
-                  convertedName = decodeURIComponent(escape(atob(checkboxName)));
+                  convertedName = atou(checkboxName);
                 }
                 catch (e) {
                   continue;
                 }
-                var daNameOne = btoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
-                var daNameTwo = btoa(baseName + "[" + convertedName + "]").replace(/[\\n=]/g, '')
+                var daNameOne = utoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
+                var daNameTwo = utoa(baseName + "[" + convertedName + "]").replace(/[\\n=]/g, '')
                 daVarLookupRev[daNameOne] = daNameTwo;
                 daVarLookup[daNameTwo] = daNameOne;
                 if (!daVarLookupRevMulti.hasOwnProperty(daNameOne)){
@@ -19042,8 +19048,6 @@ def get_repo_info(giturl):
 @login_required
 @roles_required(['developer', 'admin'])
 def get_git_branches():
-    if not app.config['ENABLE_PLAYGROUND']:
-        return ('File not found', 404)
     if 'url' not in request.args:
         return ('File not found', 404)
     giturl = request.args['url'].strip()
