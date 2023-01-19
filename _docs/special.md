@@ -369,7 +369,7 @@ Alternatively, you can set items manually:
 ---
 mandatory: True
 code: |
-  menu_items = [ {'url': 'http://google.com', 'label': 'Go to Google!'} ]
+  menu_items = [ {'url': 'https://google.com', 'label': 'Go to Google!'} ]
 ---
 {% endhighlight %}
 

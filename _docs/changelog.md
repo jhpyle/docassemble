@@ -3,6 +3,16 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.28](https://github.com/jhpyle/docassemble/releases/tag/v1.4.28) - 2023-01-19
+
+
+### Fixed
+- The "branch" drop-down on the Package Management page was not
+  working on production servers.
+- Follow-up fix to 1.4.26 change regarding unicode values in
+  `datatype: checkboxes`.
+- JavaScript warning message from Google API.
+
 ## [1.4.27](https://github.com/jhpyle/docassemble/releases/tag/v1.4.27) - 2023-01-16
 
 
