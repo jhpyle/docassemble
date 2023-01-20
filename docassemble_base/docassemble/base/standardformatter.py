@@ -2079,7 +2079,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         }
         var n = 0;
         if ($(this).data('disableothers')){
-          var id_list = JSON.parse(atob($(this).data('disableothers')));
+          var id_list = JSON.parse(decodeURIComponent(escape(atob($(this).data('disableothers')))));
           n = id_list.length;
         }
         if (n){

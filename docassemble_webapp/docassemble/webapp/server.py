@@ -8653,7 +8653,7 @@ def index(action_argument=None, refer=None):
         return window.utoa(str).replace(/[\\n=]/g, '');
       }
       function daatob(str) {
-        return window.atou(str);
+        return atou(str);
       }
       function hideTablist() {
         var anyTabs = $("#daChatAvailable").is(":visible")
@@ -8671,7 +8671,7 @@ def index(action_argument=None, refer=None):
         var allFields = [];
         for (var rawFieldName in daVarLookup){
           if (daVarLookup.hasOwnProperty(rawFieldName)){
-            var fieldName = atob(rawFieldName);
+            var fieldName = atou(rawFieldName);
             if (allFields.indexOf(fieldName) == -1){
               allFields.push(fieldName);
             }
@@ -8828,15 +8828,15 @@ def index(action_argument=None, refer=None):
             continue;
           }
           if (typeof daVarLookupRev[key] != "undefined"){
-            data[atob(daVarLookupRev[key])] = val;
+            data[atou(daVarLookupRev[key])] = val;
           }
           else{
-            data[atob(key)] = val;
+            data[atou(key)] = val;
           }
         }
         return JSON.stringify(data);
       }
-      var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
+      var daMessageLog = JSON.parse(atou(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
       function daPreloadImage(url){
         var img = new Image();
         img.src = url;
@@ -8879,14 +8879,14 @@ def index(action_argument=None, refer=None):
         data = {action: action, arguments: args};
         var url;
         if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          url = daPostURL + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
         }
         else{
           if (daLocationBar.indexOf('?') !== -1){
-            url = daLocationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+            url = daLocationBar + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
           }
           else {
-            url = daLocationBar + "?action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+            url = daLocationBar + "?action=" + encodeURIComponent(utoa(JSON_stringify(data)))
           }
         }
         return url;
@@ -8906,10 +8906,10 @@ def index(action_argument=None, refer=None):
         var data = {action: action, arguments: args};
         var url;
         if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          url = daPostURL + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
         }
         else{
-          url = daInterviewUrl + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          url = daInterviewUrl + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
         }
         return $.ajax({
           type: "GET",
@@ -8945,7 +8945,7 @@ def index(action_argument=None, refer=None):
           xhrFields: {
             withCredentials: true
           },
-          data: $.param({_action: btoa(JSON_stringify(data)), csrf_token: daCsrf, ajax: 1}),
+          data: $.param({_action: utoa(JSON_stringify(data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"), 1);
@@ -8979,7 +8979,7 @@ def index(action_argument=None, refer=None):
           xhrFields: {
             withCredentials: true
           },
-          data: $.param({_action: btoa(JSON_stringify(data)), _next_action_to_set: btoa(JSON_stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
+          data: $.param({_action: utoa(JSON_stringify(data)), _next_action_to_set: utoa(JSON_stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"), 1);
@@ -9363,7 +9363,7 @@ def index(action_argument=None, refer=None):
       function daUnfakeHtmlResponse(text){
         text = text.substr(text.indexOf('ABCDABOUNDARYSTARTABC') + 21);
         text = text.substr(0, text.indexOf('ABCDABOUNDARYENDABC')).replace(/\s/g, '');
-        text = atob(text);
+        text = atou(text);
         return text;
       }
       function daInjectTrim(handler){
@@ -9416,7 +9416,7 @@ def index(action_argument=None, refer=None):
             }
           }
         });
-        $(form).find("input[name='_visible']").val(btoa(JSON_stringify(visibleElements)));
+        $(form).find("input[name='_visible']").val(utoa(JSON_stringify(visibleElements)));
         $(form).each(function(){
           $(this).find(':input').off('change', daPushChanges);
         });
@@ -9534,7 +9534,7 @@ def index(action_argument=None, refer=None):
           var newFileList = Array();
           var nullFileList = Array();
           var fileArray = {keys: Array(), values: Object()};
-          var file_list = JSON.parse(atob($('input[name="_files"]').val()));
+          var file_list = JSON.parse(atou($('input[name="_files"]').val()));
           var inline_file_list = Array();
           var namesWithImages = Object();
           for (var i = 0; i < file_list.length; i++){
@@ -9566,12 +9566,12 @@ def index(action_argument=None, refer=None):
             namesWithImages[file_list[i]] = hasImages;
           }
           if (inline_file_list.length > 0){
-            var originalFileList = atob($('input[name="_files"]').val())
+            var originalFileList = atou($('input[name="_files"]').val())
             if (newFileList.length == 0 && nullFileList.length == 0){
               $('input[name="_files"]').remove();
             }
             else{
-              $('input[name="_files"]').val(btoa(JSON_stringify(newFileList.concat(nullFileList))));
+              $('input[name="_files"]').val(utoa(JSON_stringify(newFileList.concat(nullFileList))));
             }
             for (var i = 0; i < inline_file_list.length; i++){
               fileArray.keys.push(inline_file_list[i])
@@ -9752,7 +9752,7 @@ def index(action_argument=None, refer=None):
         $('<input>').attr({
           type: 'hidden',
           name: '_files_inline',
-          value: btoa(JSON_stringify(fileArray))
+          value: utoa(JSON_stringify(fileArray))
         }).appendTo($(form));
         for (var i = 0; i < inline_file_list.length; ++i){
           document.getElementById(inline_file_list[i]).disabled = true;
@@ -10024,7 +10024,7 @@ def index(action_argument=None, refer=None):
       }
       function daReviewAction(e){
         //action_perform_with_next($(this).data('action'), null, daNextAction);
-        var info = $.parseJSON(atob($(this).data('action')));
+        var info = $.parseJSON(atou($(this).data('action')));
         da_action_perform(info['action'], info['arguments']);
         e.preventDefault();
         return false;
@@ -10755,10 +10755,10 @@ def index(action_argument=None, refer=None):
         //  }
         //});
         $('select.damultiselect').each(function(){
-          var varname = atob($(this).data('varname'));
+          var varname = atou($(this).data('varname'));
           var theSelect = this;
           $(this).find('option').each(function(){
-            var theVal = atob($(this).data('valname'));
+            var theVal = atou($(this).data('valname'));
             var key = varname + '["' + theVal + '"]';
             if (!daVarLookupSelect[key]){
               daVarLookupSelect[key] = [];
@@ -11043,7 +11043,7 @@ def index(action_argument=None, refer=None):
         }
         $(".dauncheckspecificothers").on('change', function(){
           if ($(this).is(":checked")){
-            var theIds = $.parseJSON(atob($(this).data('unchecklist')));
+            var theIds = $.parseJSON(atou($(this).data('unchecklist')));
             var n = theIds.length;
             for (var i = 0; i < n; ++i){
               var elem = document.getElementById(theIds[i]);
@@ -11053,7 +11053,7 @@ def index(action_argument=None, refer=None):
           }
         });
         $(".dauncheckspecificothers").each(function(){
-          var theIds = $.parseJSON(atob($(this).data('unchecklist')));
+          var theIds = $.parseJSON(atou($(this).data('unchecklist')));
           var n = theIds.length;
           var oThis = this;
           for (var i = 0; i < n; ++i){
@@ -11106,7 +11106,7 @@ def index(action_argument=None, refer=None):
         daVarLookupMulti = Object();
         daVarLookupRevMulti = Object();
         if ($("input[name='_varnames']").length){
-          the_hash = $.parseJSON(atob($("input[name='_varnames']").val()));
+          the_hash = $.parseJSON(atou($("input[name='_varnames']").val()));
           for (var key in the_hash){
             if (the_hash.hasOwnProperty(key)){
               daVarLookup[the_hash[key]] = key;
@@ -11125,18 +11125,18 @@ def index(action_argument=None, refer=None):
         if ($("input[name='_checkboxes']").length){
           var patt = new RegExp(/\[B['"][^\]]*['"]\]$/);
           var pattRaw = new RegExp(/\[R['"][^\]]*['"]\]$/);
-          the_hash = $.parseJSON(atob($("input[name='_checkboxes']").val()));
+          the_hash = $.parseJSON(atou($("input[name='_checkboxes']").val()));
           for (var key in the_hash){
             if (the_hash.hasOwnProperty(key)){
-              var checkboxName = atob(key);
+              var checkboxName = atou(key);
               var baseName = checkboxName;
               if (patt.test(baseName)){
                 bracketPart = checkboxName.replace(/^.*(\[B?['"][^\]]*['"]\])$/, "$1");
                 checkboxName = checkboxName.replace(/^.*\[B?['"]([^\]]*)['"]\]$/, "$1");
                 baseName = baseName.replace(/^(.*)\[.*/, "$1");
                 var transBaseName = baseName;
-                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
-                  transBaseName = atob(daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')]);
+                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
+                  transBaseName = atou(daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')]);
                 }
                 var convertedName;
                 try {
@@ -11169,8 +11169,8 @@ def index(action_argument=None, refer=None):
                 checkboxName = checkboxName.replace(/^.*\[R?['"]([^\]]*)['"]\]$/, "$1");
                 baseName = baseName.replace(/^(.*)\[.*/, "$1");
                 var transBaseName = baseName;
-                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
-                  transBaseName = atob(daVarLookup[btoa(transBaseName).replace(/[\\n=]/g, '')]);
+                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
+                  transBaseName = atou(daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')]);
                 }
                 var convertedName;
                 try {
@@ -11202,14 +11202,14 @@ def index(action_argument=None, refer=None):
         }
         $(".dajsshowif").each(function(){
           var showIfDiv = this;
-          var jsInfo = JSON.parse(atob($(this).data('jsshowif')));
+          var jsInfo = JSON.parse(atou($(this).data('jsshowif')));
           var showIfSign = jsInfo['sign'];
           var showIfMode = jsInfo['mode'];
           var jsExpression = jsInfo['expression'];
           var n = jsInfo['vars'].length;
           for (var i = 0; i < n; ++i){
             var showIfVars = [];
-            var initShowIfVar = btoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
+            var initShowIfVar = utoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
             var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var elem = $("[name='" + initShowIfVarEscaped + "']");
             if (elem.length > 0){
@@ -11328,7 +11328,7 @@ def index(action_argument=None, refer=None):
           var showIfSign = $(this).data('showif-sign');
           var showIfMode = parseInt($(this).data('showif-mode'));
           var initShowIfVar = $(this).data('showif-var');
-          var varName = atob(initShowIfVar);
+          var varName = atou(initShowIfVar);
           var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           var elem = $("[name='" + initShowIfVarEscaped + "']");
           if (elem.length > 0){
@@ -11377,7 +11377,7 @@ def index(action_argument=None, refer=None):
                 }
                 else if (theVal != '' && $("input[name='" + showIfVarEscaped + "']:checked").hasClass("daobject")){
                   try{
-                    theVal = atob(theVal);
+                    theVal = atou(theVal);
                   }
                   catch(e){
                   }
@@ -11387,13 +11387,13 @@ def index(action_argument=None, refer=None):
                 theVal = $(this).val();
                 if (theVal != '' && $(this).hasClass("daobject")){
                   try{
-                    theVal = atob(theVal);
+                    theVal = atou(theVal);
                   }
                   catch(e){
                   }
                 }
               }
-              //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
+              //console.log("this is " + $(this).attr('id') + " and saveAs is " + atou(saveAs) + " and showIfVar is " + atou(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
               if(daShowIfCompare(theVal, showIfVal)){
                 if (showIfSign){
                   if ($(showIfDiv).data('isVisible') != '1'){
@@ -13290,17 +13290,23 @@ def observer():
           }, 500);
         }
       }
+      function atou(b64) {
+        return decodeURIComponent(escape(atob(b64)));
+      }
+      function utoa(data) {
+        return btoa(unescape(encodeURIComponent(data)));
+      }
       function dabtoa(str) {
-        return window.btoa(str).replace(/[\\n=]/g, '');
+        return utoa(str).replace(/[\\n=]/g, '');
       }
       function daatob(str) {
-        return window.atob(str);
+        return atou(str);
       }
       function getFields(){
         var allFields = [];
         for (var rawFieldName in daVarLookup){
           if (daVarLookup.hasOwnProperty(rawFieldName)){
-            var fieldName = atob(rawFieldName);
+            var fieldName = atou(rawFieldName);
             if (allFields.indexOf(fieldName) == -1){
               allFields.push(fieldName);
             }
@@ -13660,10 +13666,10 @@ def observer():
         data = {action: action, arguments: args};
         var url;
         if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          url = daPostURL + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
         }
         else{
-          url = daLocationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          url = daLocationBar + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
         }
         return url;
       }
@@ -13683,10 +13689,10 @@ def observer():
         var data = {action: action, arguments: args};
         var url;
         if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          url = daPostURL + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
         }
         else{
-          url = daLocationBar + "&action=" + encodeURIComponent(btoa(JSON_stringify(data)))
+          url = daLocationBar + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
         }
         return $.ajax({
           type: "GET",
@@ -13715,7 +13721,7 @@ def observer():
         return $.ajax({
           type: "POST",
           url: daLocationBar,
-          data: $.param({_action: btoa(JSON_stringify(data)), csrf_token: daCsrf, ajax: 1}),
+          data: $.param({_action: utoa(JSON_stringify(data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"), 1);
@@ -13746,7 +13752,7 @@ def observer():
         return $.ajax({
           type: "POST",
           url: daLocationBar,
-          data: $.param({_action: btoa(JSON_stringify(data)), _next_action_to_set: btoa(JSON_stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
+          data: $.param({_action: utoa(JSON_stringify(data)), _next_action_to_set: utoa(JSON_stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"), 1);
@@ -13832,10 +13838,10 @@ def observer():
           }
         });
         $('select.damultiselect').each(function(){
-          var varname = atob($(this).data('varname'));
+          var varname = atou($(this).data('varname'));
           var theSelect = this;
           $(this).find('option').each(function(){
-            var theVal = atob($(this).data('valname'));
+            var theVal = atou($(this).data('valname'));
             var key = varname + '["' + theVal + '"]';
             if (!daVarLookupSelect[key]){
               daVarLookupSelect[key] = [];
@@ -13885,14 +13891,14 @@ def observer():
         }
         $(".dajsshowif").each(function(){
           var showIfDiv = this;
-          var jsInfo = JSON.parse(atob($(this).data('jsshowif')));
+          var jsInfo = JSON.parse(atou($(this).data('jsshowif')));
           var showIfSign = jsInfo['sign'];
           var showIfMode = jsInfo['mode'];
           var jsExpression = jsInfo['expression'];
           var n = jsInfo['vars'].length;
           for (var i = 0; i < n; ++i){
             var showIfVars = [];
-            var initShowIfVar = btoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
+            var initShowIfVar = utoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
             var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var elem = $("[name='" + initShowIfVarEscaped + "']");
             if (elem.length > 0){
@@ -14011,7 +14017,7 @@ def observer():
           var showIfSign = $(this).data('showif-sign');
           var showIfMode = parseInt($(this).data('showif-mode'));
           var initShowIfVar = $(this).data('showif-var');
-          var varName = atob(initShowIfVar);
+          var varName = atou(initShowIfVar);
           var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           var elem = $("[name='" + initShowIfVarEscaped + "']");
           if (elem.length > 0){
@@ -14060,7 +14066,7 @@ def observer():
                 }
                 else if (theVal != '' && $("input[name='" + showIfVarEscaped + "']:checked").hasClass("daobject")){
                   try{
-                    theVal = atob(theVal);
+                    theVal = atou(theVal);
                   }
                   catch(e){
                   }
@@ -14070,13 +14076,13 @@ def observer():
                 theVal = $(this).val();
                 if (theVal != '' && $(this).hasClass("daobject")){
                   try{
-                    theVal = atob(theVal);
+                    theVal = atou(theVal);
                   }
                   catch(e){
                   }
                 }
               }
-              //console.log("this is " + $(this).attr('id') + " and saveAs is " + atob(saveAs) + " and showIfVar is " + atob(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
+              //console.log("this is " + $(this).attr('id') + " and saveAs is " + atou(saveAs) + " and showIfVar is " + atou(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
               if(daShowIfCompare(theVal, showIfVal)){
                 if (showIfSign){
                   if ($(showIfDiv).data('isVisible') != '1'){
@@ -18019,7 +18025,7 @@ def config_page():
         version = word("Version ") + str(python_version)
     else:
         version = word("Version ") + str(python_version) + ' (Python); ' + str(system_version) + ' (' + word('system') + ')'
-    response = make_response(render_template('pages/config.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.min.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      daCodeMirror.setOption("viewportMargin", Infinity);\n    </script>'), form=form), 200)
+    response = make_response(render_template('pages/config.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.min.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atou("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      daCodeMirror.setOption("viewportMargin", Infinity);\n    </script>'), form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -21683,7 +21689,7 @@ $( document ).ready(function() {
         page_title += " / " + playground_user.email
     if current_project != 'default':
         page_title += " / " + current_project
-    response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(playground_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=playground_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_setup + '<script>\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == \'\'){ $("#form button[name=\'submit\']").click(); event.preventDefault(); return false; } if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "' + ('yamlmixed' if daconfig.get('test yamlmixed mode') else 'yamlmixed') + '", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true, lineWrapping: ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + '});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    $("#my-form").trigger("reinitialize.areYouSure");\n      $("#daVariablesReport").on("shown.bs.modal", function () { daFetchVariableReport(); })\n    </script>'), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new), valid_form=str(valid_form), own_playground=bool(playground_user.id == current_user.id)), 200)
+    response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(playground_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=playground_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_setup + '<script>\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == \'\'){ $("#form button[name=\'submit\']").click(); event.preventDefault(); return false; } if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "' + ('yamlmixed' if daconfig.get('test yamlmixed mode') else 'yamlmixed') + '", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true, lineWrapping: ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + '});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atou("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    $("#my-form").trigger("reinitialize.areYouSure");\n      $("#daVariablesReport").on("shown.bs.modal", function () { daFetchVariableReport(); })\n    </script>'), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new), valid_form=str(valid_form), own_playground=bool(playground_user.id == current_user.id)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -21777,7 +21783,7 @@ def server_error(the_error):
     script = """
     <script>
       var daGlobalEval = eval;
-      var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
+      var daMessageLog = JSON.parse(atou(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
       var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
       if (!String.prototype.daSprintf){
         Object.defineProperty(String.prototype, "daSprintf", {

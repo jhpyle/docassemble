@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.29] - 2023-01-20
+
+### Fixed
+- Follow-up fix to 1.4.28 change regarding unicode values in
+  `js show if`.
+
 ## [1.4.28] - 2023-01-19
 
 ### Fixed
@@ -7,7 +13,8 @@
   working on production servers.
 - Follow-up fix to 1.4.26 change regarding unicode values in
   `datatype: checkboxes`.
-- JavaScript warning message from Google API.
+- JavaScript warning message from Google API regarding a callback
+  function.
 
 ## [1.4.27] - 2023-01-16
 
