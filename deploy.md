@@ -126,11 +126,13 @@ you, you can propose a project in the #questions channel of the [Slack
 group].  Consultants who are available for projects include:
 
 * [Lemma Legal Consulting]
+* [DocuMoose]
 
 [use Terminal]: https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-ssh-using-terminal
 [use PuTTY]: https://lightsail.aws.amazon.com/ls/docs/en_us/articles/lightsail-how-to-set-up-putty-to-connect-using-ssh
 [Amazon Lightsail]: https://aws.amazon.com/lightsail/
 [Lemma Legal Consulting]: https://lemmalegal.com
+[DocuMoose]: https://www.documoose.com
 [cluster]: {{ site.baseurl }}/docs/scalability.html
 [install]: {{ site.baseurl }}/docs/installation.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
