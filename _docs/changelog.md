@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.30](https://github.com/jhpyle/docassemble/releases/tag/v1.4.30) - 2023-01-23
+
+
+### Fixed
+- Scrolling issue when moving from one screen to another.
+- JavaScript bug.
+
 ## [1.4.29](https://github.com/jhpyle/docassemble/releases/tag/v1.4.29) - 2023-01-20
 
 
