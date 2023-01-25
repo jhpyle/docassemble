@@ -68,7 +68,16 @@ function daInitializeSignature() {
 function daResizeCanvas() {
   //var cheight = $(window).height()-($("#sigheader").height() + $("#sigtoppart").height() + $("#sigbottompart").height());
   setTimeout(function () {
+    // store current canvas content
+    var canvas = $("#dasigcanvas")[0];
+    var daCtx = canvas.getContext("2d");
+    var imgData = daCtx.getImageData(0, 0, canvas.width, canvas.height);
+
     daNewCanvas();
+
+    // restore previous canvas content onto new canvas element
+    daCtx = $("#dasigcanvas")[0].getContext("2d");
+    daCtx.putImageData(imgData, 0, 0);
   }, 200);
   //console.log("I resized");
   return;
