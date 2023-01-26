@@ -7,12 +7,11 @@ var daCtx,
 var daTheWidth;
 var daAspectRatio;
 var daTheBorders;
-var daIsEmpty;
+var daSigPad;
 
 function daInitializeSignature() {
   daAspectRatio = 0.4;
   daTheBorders = 30;
-  daIsEmpty = 1;
   setTimeout(function () {
     if (!isCanvasSupported()) {
       daPost({ da_success: 0, da_ajax: 1 });
@@ -23,61 +22,62 @@ function daInitializeSignature() {
         event.preventDefault();
       }
     });
-  }, 500);
-  $(window).on("resize", function () {
-    daResizeCanvas();
-  });
-  $(window).on("orientationchange", function () {
-    daResizeCanvas();
-  });
 
-  // $(".dasigpalette").click(function(){
-  //   $(".dasigpalette").css("border-color", "#777");
-  //   $(".dasigpalette").css("border-style", "solid");
-  //   $(this).css("border-color", "#fff");
-  //   $(this).css("border-style", "dashed");
-  //   daColor = $(this).css("background-color");
-  //   daCtx.beginPath();
-  //   daCtx.lineJoin="round";
-  //   daCtx.strokeStyle = daColor;
-  //   daCtx.fillStyle = daColor;
-  // });
-  $(".dasigclear").click(function (e) {
-    e.preventDefault();
-    daNewCanvas();
-    return false;
-  });
-  $(".dasigsave").click(function (e) {
-    e.preventDefault();
-    if (daIsEmpty && document.getElementById("da_sig_required").value == "1") {
-      $("#daerrormess").removeClass("dasignotshowing");
-      setTimeout(function () {
-        $("#daerrormess").addClass("dasignotshowing");
-      }, 3000);
-    } else {
-      $(".dasigclear").attr("disabled", true);
-      $(".dasigsave").attr("disabled", true);
-      daSaveCanvas();
-    }
-    return false;
-  });
+    $(window).on("resize", function () {
+      daResizeCanvas();
+    });
+    $(window).on("orientationchange", function () {
+      daResizeCanvas();
+    });
+
+    // $(".dasigpalette").click(function(){
+    //   $(".dasigpalette").css("border-color", "#777");
+    //   $(".dasigpalette").css("border-style", "solid");
+    //   $(this).css("border-color", "#fff");
+    //   $(this).css("border-style", "dashed");
+    //   daColor = $(this).css("background-color");
+    //   daCtx.beginPath();
+    //   daCtx.lineJoin="round";
+    //   daCtx.strokeStyle = daColor;
+    //   daCtx.fillStyle = daColor;
+    // });
+    $(".dasigclear").click(function (e) {
+      e.preventDefault();
+      daClearCanvas();
+      return false;
+    });
+    $(".dasigsave").click(function (e) {
+      e.preventDefault();
+      if (daCanvasIsEmpty() && document.getElementById("da_sig_required").value == "1") {
+        $("#daerrormess").removeClass("dasignotshowing");
+        setTimeout(function () {
+          $("#daerrormess").addClass("dasignotshowing");
+        }, 3000);
+      } else {
+        $(".dasigclear").attr("disabled", true);
+        $(".dasigsave").attr("disabled", true);
+        daSaveCanvas();
+      }
+      return false;
+    });
+  }, 500);
+}
+
+function daClearCanvas() {
+  daSigPad.clear();
+}
+
+function daCanvasIsEmpty() {
+  return daSigPad.isEmpty();
 }
 
 // function to setup a new canvas for drawing
-
 function daResizeCanvas() {
   //var cheight = $(window).height()-($("#sigheader").height() + $("#sigtoppart").height() + $("#sigbottompart").height());
   setTimeout(function () {
-    // store current canvas content
-    var canvas = $("#dasigcanvas")[0];
-    var daCtx = canvas.getContext("2d");
-    var imgData = daCtx.getImageData(0, 0, canvas.width, canvas.height);
-
+    // var data = daSigPad.toData();
     daNewCanvas();
-
-    // restore previous canvas content onto new canvas element
-    daCtx = $("#dasigcanvas")[0].getContext("2d");
-    daCtx.putImageData(imgData, 0, 0);
+    // daSigPad.fromData(data);
   }, 200);
   //console.log("I resized");
   return;
@@ -109,6 +109,7 @@ function daSaveCanvas() {
   //console.log(dataURL)
   daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
   daPost({ da_success: 1, da_the_image: dataURL, da_ajax: 1 });
+  // TODO: What's daSigPad like on multiple signature pages?
 }
 
 function daNewCanvas() {
@@ -148,17 +149,12 @@ function daNewCanvas() {
   }
 
   // setup canvas
-  // daCtx=document.getElementById("sigcanvas").getContext("2d");
-  $("#dasigcanvas").each(function () {
-    daCtx = $(this)[0].getContext("2d");
-    daCtx.strokeStyle = daColor;
-    daCtx.lineWidth = daTheWidth;
+  daSigPad = new SignaturePad($("#dasigcanvas")[0], {
+    dotSize: daTheWidth/2,
+    maxWidth: daTheWidth,
+    penColor: daColor
   });
 
-  // setup to trigger drawing on mouse or touch
-  $("#dasigcanvas").drawTouch();
-  $("#dasigcanvas").drawPointer();
-  $("#dasigcanvas").drawMouse();
   //$(document).on("touchend", function(event){event.preventDefault();});
   //$(document).on("touchcancel", function(event){event.preventDefault();});
   //$(document).on("touchstart", function(event){event.preventDefault();});
@@ -175,146 +171,6 @@ function daNewCanvas() {
     }
   }, 10);
 }
-
-// prototype to	start drawing on touch using canvas moveTo and lineTo
-$.fn.drawTouch = function () {
-  var start = function (e) {
-    e = e.originalEvent;
-    x = e.changedTouches[0].pageX - $("#dasigcanvas").offset().left;
-    y = e.changedTouches[0].pageY - $("#dasigcanvas").offset().top;
-    daCtx.beginPath();
-    daCtx.arc(x, y, 0.5 * daTheWidth, 0, 2 * Math.PI);
-    daCtx.fill();
-    daCtx.beginPath();
-    daCtx.lineJoin = "round";
-    daCtx.moveTo(x, y);
-    if (daIsEmpty) {
-      $(".dasigsave").prop("disabled", false);
-      daIsEmpty = 0;
-    }
-  };
-  var move = function (e) {
-    e.preventDefault();
-    e = e.originalEvent;
-    x = e.changedTouches[0].pageX - $("#dasigcanvas").offset().left;
-    y = e.changedTouches[0].pageY - $("#dasigcanvas").offset().top;
-    daCtx.lineTo(x, y);
-    daCtx.stroke();
-    if (daIsEmpty) {
-      daIsEmpty = 0;
-    }
-    //daCtx.fillRect(x-0.5*daTheWidth,y-0.5*daTheWidth,daTheWidth,daTheWidth);
-    //daCtx.beginPath();
-    //daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
-    //daCtx.fill();
-  };
-  var moveline = function (e) {
-    move(e);
-  };
-  var dot = function (e) {
-    e.preventDefault();
-    e = e.originalEvent;
-    daCtx.lineJoin = "round";
-    x = e.pageX - $("#dasigcanvas").offset().left;
-    y = e.pageY - $("#dasigcanvas").offset().top;
-    daCtx.beginPath();
-    daCtx.arc(x, y, 0.5 * daTheWidth, 0, 2 * Math.PI);
-    daCtx.fill();
-    daCtx.moveTo(x, y);
-    if (daIsEmpty) {
-      daIsEmpty = 0;
-    }
-    //daCtx.fillRect(x-0.5*daTheWidth,y-0.5*daTheWidth,daTheWidth,daTheWidth);
-    //console.log("Got click");
-  };
-  $(this).on("click", dot);
-  $(this).on("touchend", moveline);
-  $(this).on("touchcancel", moveline);
-  $(this).on("touchstart", start);
-  $(this).on("touchmove", move);
-};
-
-// prototype to	start drawing on pointer(microsoft ie) using canvas moveTo and lineTo
-$.fn.drawPointer = function () {
-  var start = function (e) {
-    e = e.originalEvent;
-    daCtx.beginPath();
-    daCtx.lineJoin = "round";
-    x = e.pageX - $("#dasigcanvas").offset().left;
-    y = e.pageY - $("#dasigcanvas").offset().top;
-    daCtx.moveTo(x, y);
-    if (daIsEmpty) {
-      daIsEmpty = 0;
-    }
-    //daCtx.arc(x, y, 0.5*daTheWidth, 0, 2*Math.PI);
-    //daCtx.fill();
-  };
-  var move = function (e) {
-    e.preventDefault();
-    e = e.originalEvent;
-    x = e.pageX - $("#dasigcanvas").offset().left;
-    y = e.pageY - $("#dasigcanvas").offset().top;
-    daCtx.lineTo(x, y);
-    daCtx.stroke();
-    daCtx.beginPath();
-    daCtx.arc(x, y, 0.5 * daTheWidth, 0, 2 * Math.PI);
-    daCtx.fill();
-    daCtx.beginPath();
-    daCtx.moveTo(x, y);
-    if (daIsEmpty) {
-      daIsEmpty = 0;
-    }
-  };
-  var moveline = function (e) {
-    move(e);
-  };
-  $(this).on("MSPointerDown", start);
-  $(this).on("MSPointerMove", move);
-  $(this).on("MSPointerUp", moveline);
-};
-
-// prototype to	start drawing on mouse using canvas moveTo and lineTo
-$.fn.drawMouse = function () {
-  var clicked = 0;
-  var start = function (e) {
-    clicked = 1;
-    x = e.pageX - $("#dasigcanvas").offset().left;
-    y = e.pageY - $("#dasigcanvas").offset().top;
-    daCtx.beginPath();
-    daCtx.arc(x, y, 0.5 * daTheWidth, 0, 2 * Math.PI);
-    daCtx.fill();
-    daCtx.beginPath();
-    daCtx.lineJoin = "round";
-    daCtx.moveTo(x, y);
-    if (daIsEmpty) {
-      daIsEmpty = 0;
-    }
-  };
-  var move = function (e) {
-    if (clicked) {
-      x = e.pageX - $("#dasigcanvas").offset().left;
-      y = e.pageY - $("#dasigcanvas").offset().top;
-      daCtx.lineTo(x, y);
-      daCtx.stroke();
-      daCtx.beginPath();
-      daCtx.arc(x, y, 0.5 * daTheWidth, 0, 2 * Math.PI);
-      daCtx.fill();
-      daCtx.beginPath();
-      daCtx.moveTo(x, y);
-      if (daIsEmpty) {
-        daIsEmpty = 0;
-      }
-    }
-  };
-  var stop = function (e) {
-    move(e);
-    clicked = 0;
-    return true;
-  };
-  $(this).on("mousedown", start);
-  $(this).on("mousemove", move);
-  $(window).on("mouseup", stop);
-};
 
 function daPost(params) {
   for (var key in params) {
