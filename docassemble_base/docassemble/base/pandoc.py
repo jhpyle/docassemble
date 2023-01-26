@@ -753,4 +753,6 @@ def concatenate_files(path_list, pdfa=False, password=None):
         original.save(pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
+    if password:
+        pdf_encrypt(pdf_file.name, password)
     return pdf_file.name

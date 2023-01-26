@@ -8,8 +8,7 @@ metadata:
 objects from file:
   - fishes: fishes.yml
 ---
-field: first_screen
-mandatory: true
+mandatory: True
 question: |
   Fish summary
 subquestion: |
@@ -18,12 +17,13 @@ subquestion: |
   ${ fish.scales } scales.
   
   % endfor
+continue button field: first_screen
 ---
 mandatory: True
 code: |
   fishes[1].scales = 700
 ---
-mandatory: true
+mandatory: True
 question: |
   Fish summary after change
 subquestion: |

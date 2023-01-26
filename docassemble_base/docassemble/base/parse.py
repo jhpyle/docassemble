@@ -2472,15 +2472,20 @@ class Question:
         if 'objects from file' in data:
             if not isinstance(data['objects from file'], list):
                 data['objects from file'] = [data['objects from file']]
-            if 'use objects' in data and data['use objects']:
-                self.question_type = 'objects_from_file_da'
+            self.question_type = 'objects_from_file'
+            if 'use objects' in data:
+                if isinstance(data['use objects'], (bool, NoneType)):
+                    self.use_objects = data['use objects']
+                else:
+                    data['use objects'] = str(data['use objects'])
+                    self.use_objects = compile(data['use objects'], '<use objects code>', 'eval')
+                    self.find_fields_in(data['use objects'])
             else:
-                self.question_type = 'objects_from_file'
-            self.objects_from_file = data['objects from file']
+                self.use_objects = True
             for item in data['objects from file']:
                 if isinstance(item, dict):
                     for key in item:
-                        self.fields.append(Field({'saveas': key, 'type': 'object_from_file', 'file': item[key]}))
+                        self.fields.append(Field({'saveas': key, 'type': 'object_from_file', 'extras': {'file_name': TextObject(definitions + item[key], question=self)}}))
                         if self.scan_for_variables:
                             self.fields_used.add(key)
                         else:
@@ -6436,8 +6441,8 @@ class Question:
             result_list.append(result_dict)
         return (has_code, result_list)
 
-    def mark_as_answered(self, the_user_dict, force=False):
-        if force or self.is_mandatory or self.mandatory_code is not None:
+    def mark_as_answered(self, the_user_dict):
+        if self.is_mandatory or self.mandatory_code is not None:
             the_user_dict['_internal']['answered'].add(self.name)
 
     def sub_fields_used(self):
@@ -6600,12 +6605,12 @@ class Question:
                                 the_template.save(docx_file.name)
                                 if result['update_references']:
                                     docassemble.base.pandoc.update_references(docx_file.name)
-                                if 'docx' in result['formats_to_use']:
-                                    result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                                 if 'pdf' in result['formats_to_use']:
                                     with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False) as pdf_file:
                                         docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_refs=result['update_references'], tagged=result['convert_to_tagged_pdf'], filename=result['filename'])
                                         result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+                                if 'docx' in result['formats_to_use']:
+                                    result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                             for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions']:
                                 if key in result:
                                     del result[key]
@@ -8053,17 +8058,6 @@ class Interview:
                         if question.name and question.name in user_dict['_internal']['answered']:
                             # logmessage("Skipping " + question.name + " because answered")
                             continue
-                        if question.question_type in ("objects_from_file", "objects_from_file_da"):
-                            if self.debug:
-                                interview_status.seeking.append({'question': question, 'reason': 'objects from file', 'time': time.time()})
-                            use_objects = question.question_type == "objects_from_file_da"
-                            for keyvalue in question.objects_from_file:
-                                for variable, the_file in keyvalue.items():
-                                    exec(import_core, user_dict)
-                                    command = variable + ' = objects_from_file("' + str(the_file) + '", name=' + repr(variable) + ', use_objects=' + repr(use_objects) + ', package=' + repr(question.package) + ')'
-                                    # logmessage("Running " + command)
-                                    exec(command, user_dict)
-                            question.mark_as_answered(user_dict, force=True)
                         if question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict)):
                             if question.question_type == "data":
                                 if self.debug:
@@ -8090,6 +8084,19 @@ class Interview:
                                 exec(import_core, user_dict)
                                 the_string = from_safeid(question.fields[0].saveas) + ' = objects_from_structure(' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
                                 exec(the_string, user_dict)
+                                question.mark_as_answered(user_dict)
+                            if question.question_type == "objects_from_file":
+                                if self.debug:
+                                    interview_status.seeking.append({'question': question, 'reason': 'objects from file', 'time': time.time()})
+                                if isinstance(question.use_objects, (bool, NoneType)):
+                                    use_objects = bool(question.use_objects)
+                                else:
+                                    use_objects = bool(eval(question.use_objects, user_dict))
+                                exec(import_core, user_dict)
+                                for field in question.fields:
+                                    command = variable + ' = objects_from_file("' + str(field.extras['file_name'].text(user_dict).strip()) + '", name=' + repr(from_safeid(field.saveas)) + ', use_objects=' + repr(use_objects) + ', package=' + repr(question.package) + ')'
+                                    # logmessage("Running " + command)
+                                    exec(command, user_dict)
                                 question.mark_as_answered(user_dict)
                             if question.question_type == "objects":
                                 if self.debug:
@@ -8600,6 +8607,47 @@ class Interview:
                         question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)
+                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                    if question.question_type == "objects_from_file":
+                        question.exec_setup(is_generic, the_x, iterators, user_dict)
+                        old_variable = None
+                        docassemble.base.functions.this_thread.current_question = question
+                        exec(import_core, user_dict)
+                        if isinstance(question.use_objects, (bool, NoneType)):
+                            use_objects = bool(question.use_objects)
+                        else:
+                            use_objects = bool(eval(question.use_objects, user_dict))
+                        for field in question.fields:
+                            variable = from_safeid(field.saveas)
+                            if variable != missing_var:
+                                continue
+                            the_file_name = field.extras['file_name'].text(user_dict).strip()
+                            was_defined = False
+                            try:
+                                exec("__oldvariable__ = " + str(missing_var), user_dict)
+                                old_variable = user_dict['__oldvariable__']
+                                exec("del " + str(missing_var), user_dict)
+                                was_defined = True
+                            except:
+                                pass
+                            command = variable + ' = objects_from_file("' + str(the_file_name) + '", name=' + repr(variable) + ', use_objects=' + repr(use_objects) + ', package=' + repr(question.package) + ')'
+                            exec(command, user_dict)
+                            if missing_var in variable_stack:
+                                variable_stack.remove(missing_var)
+                            try:
+                                eval(missing_var, user_dict)
+                            except:
+                                if was_defined:
+                                    try:
+                                        exec(str(missing_var) + " = __oldvariable__", user_dict)
+                                        exec("del __oldvariable__", user_dict)
+                                    except:
+                                        pass
+                                continue
+                        question.post_exec(user_dict)
+                        docassemble.base.functions.pop_current_variable()
+                        if old_variable is not None:
+                            question.invalidate_dependencies_of_variable(user_dict, missing_var, old_variable)
                         return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
                     if question.question_type == "objects":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
