@@ -7,7 +7,7 @@ var daCtx,
 var daTheWidth;
 var daAspectRatio;
 var daTheBorders;
-var daSignPad;
+var daSigPad;
 var daPrevCanvasWidth;
 
 function daInitializeSignature() {
@@ -66,24 +66,24 @@ function daInitializeSignature() {
 }
 
 function daClearCanvas() {
-  daSignPad.clear();
+  daSigPad.clear();
 }
 
 function daCanvasIsEmpty() {
-  return daSignPad.isEmpty();
+  return daSigPad.isEmpty();
 }
 
 // function to setup a new canvas for drawing
 function daResizeCanvas(){
   setTimeout(function () {
-    var lines = daSignPad.toData();
+    var lines = daSigPad.toData();
     daNewCanvas();
     var currWidth = $('#dasigcanvas').width();
     // Restore old content
     var scale = currWidth/daPrevCanvasWidth;
     daPrevCanvasWidth = currWidth;
     daScaleSignaturePad(lines, scale);
-    daSignPad.fromData(lines);
+    daSigPad.fromData(lines);
   }, 200);
   //console.log("I resized");
   return;
@@ -142,7 +142,7 @@ function daNewCanvas() {
   }
 
   // setup canvas
-  daSignPad = new SignaturePad($("#dasigcanvas")[0], {
+  daSigPad = new SignaturePad($("#dasigcanvas")[0], {
     dotSize: daTheWidth/1.75,
     maxWidth: daTheWidth,
     penColor: daColor
