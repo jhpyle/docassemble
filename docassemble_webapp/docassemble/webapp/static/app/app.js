@@ -7,7 +7,8 @@ var daCtx,
 var daTheWidth;
 var daAspectRatio;
 var daTheBorders;
-var daSigPad;
+var daSignPad;
+var daPrevCanvasWidth;
 
 function daInitializeSignature() {
   daAspectRatio = 0.4;
@@ -17,6 +18,7 @@ function daInitializeSignature() {
       daPost({ da_success: 0, da_ajax: 1 });
     }
     daNewCanvas();
+    daPrevCanvasWidth = $("#dasigcanvas").width();
     $(document).on("touchmove", function (event) {
       if (window.matchMedia("(max-width: 575px)").matches) {
         event.preventDefault();
@@ -64,52 +66,43 @@ function daInitializeSignature() {
 }
 
 function daClearCanvas() {
-  daSigPad.clear();
+  daSignPad.clear();
 }
 
 function daCanvasIsEmpty() {
-  return daSigPad.isEmpty();
+  return daSignPad.isEmpty();
 }
 
 // function to setup a new canvas for drawing
-function daResizeCanvas() {
-  //var cheight = $(window).height()-($("#sigheader").height() + $("#sigtoppart").height() + $("#sigbottompart").height());
+function daResizeCanvas(){
   setTimeout(function () {
-    // var data = daSigPad.toData();
+    var lines = daSignPad.toData();
     daNewCanvas();
-    // daSigPad.fromData(data);
+    var currWidth = $('#dasigcanvas').width();
+    // Restore old content
+    var scale = currWidth/daPrevCanvasWidth;
+    daPrevCanvasWidth = currWidth;
+    daScaleSignaturePad(lines, scale);
+    daSignPad.fromData(lines);
   }, 200);
   //console.log("I resized");
   return;
-  // var cheight = $(window).width()*daAspectRatio;
-  // if (cheight > $(window).height()-theTop){
-  //   cheight = $(window).height()-theTop;
-  // }
-  // if (cheight > 350){
-  //   cheight = 350;
-  // }
-  // var cwidth = $(window).width() - daTheBorders;
-
-  // $("#sigcontent").height(cheight);
-  // //$("#sigcontent").css('top', ($("#sigheader").height() + $("#sigtoppart").height()) + "px");
-  // //$("#sigbottompart").css('top', (cheight) + "px");
-  // $("#sigcanvas").width(cwidth);
-  // $("#sigcanvas").height(cheight);
-  // theTop = $("#sigcanvas").offset().top;
-  // theLeft = $("#sigcanvas").offset().left;
-  // daTheWidth = cwidth/100.0;
-  // if (daTheWidth < 1){
-  //   daTheWidth = 1;
-  // }
-  // return;
 }
+
+function daScaleSignaturePad (lines, scale) {
+  lines.forEach(line => {
+    line.points.forEach(point => {
+      point.x *= scale;
+      point.y *= scale;
+    });
+  });
+};
 
 function daSaveCanvas() {
   var dataURL = document.getElementById("dasigcanvas").toDataURL();
   //console.log(dataURL)
   daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
   daPost({ da_success: 1, da_the_image: dataURL, da_ajax: 1 });
-  // TODO: What's daSigPad like on multiple signature pages?
 }
 
 function daNewCanvas() {
@@ -149,7 +142,7 @@ function daNewCanvas() {
   }
 
   // setup canvas
-  daSigPad = new SignaturePad($("#dasigcanvas")[0], {
+  daSignPad = new SignaturePad($("#dasigcanvas")[0], {
     dotSize: daTheWidth/2,
     maxWidth: daTheWidth,
     penColor: daColor
@@ -159,7 +152,7 @@ function daNewCanvas() {
   //$(document).on("touchcancel", function(event){event.preventDefault();});
   //$(document).on("touchstart", function(event){event.preventDefault();});
   //$("meta[name=viewport]").attr('content', "width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0, user-scalable=0");
-  daIsEmpty = 1;
+
   setTimeout(function () {
     if (daJsEmbed) {
       $(daTargetDiv)[0].scrollTo(0, 1);
