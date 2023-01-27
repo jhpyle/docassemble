@@ -143,7 +143,7 @@ function daNewCanvas() {
 
   // setup canvas
   daSignPad = new SignaturePad($("#dasigcanvas")[0], {
-    dotSize: daTheWidth/2,
+    dotSize: daTheWidth/1.75,
     maxWidth: daTheWidth,
     penColor: daColor
   });
