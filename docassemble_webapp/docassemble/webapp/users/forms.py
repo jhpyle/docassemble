@@ -84,7 +84,7 @@ class MySignInForm(LoginForm):
             user_manager = current_app.user_manager
             user, user_email = user_manager.find_user_by_email(self.email.data)
             if user is None:
-                if daconfig.get('confirm registration', False):
+                if daconfig.get('confirm registration', False) or not daconfig.get('allow registration', False):
                     self.email.errors = []
                     self.email.errors.append(word("Incorrect Email and/or Password"))
                     self.password.errors = []

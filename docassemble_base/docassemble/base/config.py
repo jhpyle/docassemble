@@ -367,6 +367,20 @@ def load(**kwargs):
         daconfig['grid classes']['centered']['right small screen'] = 'd-block d-lg-none'
     if 'signature pen thickness scaling factor' not in daconfig:
         daconfig['signature pen thickness scaling factor'] = 1.0
+    if 'celery modules' in daconfig:
+        ok = True
+        if isinstance(daconfig['celery modules'], list):
+            for item in daconfig['celery modules']:
+                if not isinstance(item, str):
+                    ok = False
+                    break
+        else:
+            ok = False
+        if not ok:
+            config_error("celery modules must be a list of strings")
+            daconfig['celery modules'] = []
+    else:
+        daconfig['celery modules'] = []
     if isinstance(daconfig['signature pen thickness scaling factor'], int):
         daconfig['signature pen thickness scaling factor'] = float(daconfig['signature pen thickness scaling factor'])
     if not isinstance(daconfig['signature pen thickness scaling factor'], float):

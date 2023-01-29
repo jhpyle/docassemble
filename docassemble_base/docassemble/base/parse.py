@@ -677,6 +677,19 @@ class InterviewStatus:
                                         continue
                                     list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) + ']', from_safeid(other_field.saveas)))
                             the_field.uncheckothers = list_of_other_fields
+                        elif hasattr(the_field, 'checkothers') and the_field.checkothers:
+                            list_of_other_fields = []
+                            if isinstance(the_field.checkothers, list):
+                                for other_saveas in the_field.checkothers:
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) + ']', from_safeid(other_saveas)))
+                            else:
+                                for other_field in field_list:
+                                    if not hasattr(other_field, 'saveas'):
+                                        continue
+                                    if other_field.number == field.number or not (hasattr(other_field, 'inputtype') and other_field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']):
+                                        continue
+                                    list_of_other_fields.append(re.sub(iterator_re, '[' + str(list_indexno) + ']', from_safeid(other_field.saveas)))
+                            the_field.checkothers = list_of_other_fields
                     if hasattr(the_field, 'extras'):
                         if 'show_if_var' in the_field.extras:
                             the_field.extras['show_if_var'] = safeid(re.sub(r'\[' + self.extras['list_iterator'] + r'\]', '[' + str(list_indexno) + ']', from_safeid(the_field.extras['show_if_var'])))
@@ -1193,6 +1206,8 @@ class InterviewStatus:
                 the_field['disable_others'] = True
             if hasattr(field, 'uncheckothers') and field.uncheckothers is not False:
                 the_field['uncheck_others'] = True
+            elif hasattr(field, 'checkothers') and field.checkothers is not False:
+                the_field['check_others'] = True
             for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata', 'css class', 'address_autocomplete', 'label_above_field', 'floating_label'):
                 if key in self.extras and field.number in self.extras[key]:
                     if key in ('minlength', 'maxlength', 'min', 'max', 'step'):
@@ -1217,6 +1232,8 @@ class InterviewStatus:
                 the_default = None
             if self.question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes', 'object_radio')):
                 the_field['choices'] = self.get_choices_data(field, the_default, the_user_dict, encode=encode)
+            if hasattr(field, 'aota'):
+                the_field['all_of_the_above'] = docassemble.base.filter.markdown_to_html(self.extras['aota'][field.number], do_terms=False, status=self, verbatim=(not encode))
             if hasattr(field, 'nota'):
                 the_field['none_of_the_above'] = docassemble.base.filter.markdown_to_html(self.extras['nota'][field.number], do_terms=False, status=self, verbatim=(not encode))
             if field.number in self.extras['ok']:
@@ -1336,6 +1353,12 @@ class InterviewStatus:
                 else:
                     for pair in pairlist:
                         choice_list.append([pair['label'], saveas, pair['key']])
+                if hasattr(field, 'aota') and (field.datatype.endswith('checkboxes') and self.extras['aota'][field.number] is not False):
+                    if self.extras['aota'][field.number] is True:
+                        formatted_item = word("All of the above")
+                    else:
+                        formatted_item = self.extras['aota'][field.number]
+                    choice_list.append([formatted_item, None, None])
                 if hasattr(field, 'nota') and (field.datatype.endswith('checkboxes') and self.extras['nota'][field.number] is not False):  # or (field.datatype.endswith('multiselect') and self.extras['nota'][field.number] is True)
                     if self.extras['nota'][field.number] is True:
                         formatted_item = word("None of the above")
@@ -1423,6 +1446,12 @@ class InterviewStatus:
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             item['selected'] = True
                         choice_list.append(item)
+                if hasattr(field, 'aota') and self.extras['aota'][field.number] is not False:
+                    if self.extras['aota'][field.number] is True:
+                        formatted_item = word("All of the above")
+                    else:
+                        formatted_item = self.extras['aota'][field.number]
+                    choice_list.append(dict(label=docassemble.base.filter.markdown_to_html(formatted_item, trim=True, do_terms=False, status=self, verbatim=encode)))
                 if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
                     if self.extras['nota'][field.number] is True:
                         formatted_item = word("None of the above")
@@ -1555,6 +1584,8 @@ class Field:
             self.disableothers = data['disable others']
         if 'uncheck others' in data:
             self.uncheckothers = data['uncheck others']
+        if 'check others' in data:
+            self.checkothers = data['check others']
         if 'default' in data:
             self.default = data['default']
         if 'combobox action' in data:
@@ -1618,6 +1649,8 @@ class Field:
         #     self.css = data['css']
         if 'shuffle' in data:
             self.shuffle = data['shuffle']
+        if 'aota' in data:
+            self.aota = data['aota']
         if 'nota' in data:
             self.nota = data['nota']
         if 'required' in data:
@@ -4014,6 +4047,10 @@ class Question:
                         if not isinstance(field[key], (list, bool)):
                             raise DAError("An 'uncheck others' directive must be True, False, or a list of variable names." + self.idebug(data))
                         field_info['uncheck others'] = field[key]
+                    elif key == 'check others' and 'datatype' in field and field['datatype'] in ('yesno', 'yesnowide', 'noyes', 'noyeswide'):
+                        if not isinstance(field[key], (list, bool)):
+                            raise DAError("A 'check others' directive must be True, False, or a list of variable names." + self.idebug(data))
+                        field_info['check others'] = field[key]
                     elif key == 'datatype':
                         field_info['type'] = field[key]
                         if field[key] in ('yesno', 'yesnowide', 'noyes', 'noyeswide') and 'required' not in field_info:
@@ -4132,6 +4169,11 @@ class Question:
                         field_info['shuffle'] = field[key]
                     elif key == 'group':
                         field_info['group'] = field[key]
+                    elif key == 'all of the above' and 'datatype' in field and field['datatype'] in ('checkboxes', 'object_checkboxes'):
+                        if isinstance(field[key], bool):
+                            field_info['aota'] = field[key]
+                        else:
+                            field_info['aota'] = TextObject(definitions + interpret_label(field[key]), question=self)
                     elif key == 'none of the above' and 'datatype' in field and field['datatype'] in ('checkboxes', 'object_checkboxes', 'object_radio'):
                         if isinstance(field[key], bool):
                             field_info['nota'] = field[key]
@@ -4161,8 +4203,11 @@ class Question:
                             raise DAError("Missing or invalid variable name " + repr(field[key]) + " for key " + repr(key) + "." + self.idebug(data))
                         field_info['saveas'] = field[key]
                 if 'type' in field_info:
-                    if field_info['type'] in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and 'nota' not in field_info:
-                        field_info['nota'] = True
+                    if field_info['type'] in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
+                        if 'aota' not in field_info:
+                            field_info['aota'] = False
+                        if 'nota' not in field_info:
+                            field_info['nota'] = True
                     if field_info['type'] == 'object_radio' and 'nota' not in field_info:
                         field_info['nota'] = False
                 if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
@@ -6030,6 +6075,13 @@ class Question:
                                 extras['ok'][field.number] = False
                                 continue
                     extras['ok'][field.number] = True
+                    if hasattr(field, 'aota'):
+                        if 'aota' not in extras:
+                            extras['aota'] = {}
+                        if isinstance(field.aota, bool):
+                            extras['aota'][field.number] = field.aota
+                        else:
+                            extras['aota'][field.number] = field.aota.text(user_dict)
                     if hasattr(field, 'nota'):
                         if 'nota' not in extras:
                             extras['nota'] = {}

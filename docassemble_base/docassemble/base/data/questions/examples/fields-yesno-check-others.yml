@@ -1,0 +1,30 @@
+metadata:
+  title: Yes/no checkboxes with All of the above
+  short title: Yes/no
+  documentation: "https://docassemble.org/docs/fields.html#check others"
+---
+question: |
+  Please provide the following information.
+fields:
+  - "What is your favorite food?": favorite_food
+  - note: Check which foods you like.
+  - Apples: likes_apples
+    datatype: yesnowide
+  - Turnips: likes_turnips
+    datatype: yesnowide
+  - Both: likes_both_foods
+    datatype: yesnowide
+    check others: True
+---
+question: |
+  Thank you for that information.
+subquestion: |
+  You like ${ favorite_food }.
+  
+  % if likes_apples:
+  You like apples.
+  % endif
+  % if likes_turnips:
+  You like turnips.
+  % endif
+mandatory: True

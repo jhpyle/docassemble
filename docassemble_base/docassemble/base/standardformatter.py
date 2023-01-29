@@ -64,6 +64,7 @@ BUTTON_COLOR_QUESTION_HELP = daconfig['button colors'].get('question help', 'inf
 BUTTON_COLOR_BACK_TO_QUESTION = daconfig['button colors'].get('back to question', 'primary')
 DEFAULT_LABELAUTY_COLOR = daconfig['button colors'].get('labelauty', 'primary')
 DEFAULT_LABELAUTY_NOTA_COLOR = daconfig['button colors'].get('labelauty nota', DEFAULT_LABELAUTY_COLOR)
+DEFAULT_LABELAUTY_AOTA_COLOR = daconfig['button colors'].get('labelauty aota', DEFAULT_LABELAUTY_COLOR)
 
 
 def process_help(help_section, status, full_page=True):
@@ -1151,6 +1152,13 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     if 'groups' not in validation_rules:
                         validation_rules['groups'] = {}
                     validation_rules['groups'][the_saveas + '_group'] = ' '.join(uncheck_list + [the_saveas])
+                elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide'] and hasattr(field, 'checkothers') and field.checkothers is not False:
+                    if field.checkothers is True:
+                        the_query = '.dauncheckable:checked, .dauncheckothers:checked'
+                        check_list = [status.saveas_to_use[y.saveas] for y in field_list if y is not field and hasattr(y, 'saveas') and hasattr(y, 'inputtype') and y.inputtype in ['yesno', 'noyes', 'yesnowide', 'noyeswide']]
+                    else:
+                        check_list = [status.saveas_to_use[safeid(y)] for y in field.checkothers if safeid(y) in status.saveas_to_use]
+                        the_query = ', '.join(['#' + do_escape_id(x) + ':checked' for x in check_list + [the_saveas]])
                 if field.datatype not in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'):
                     for key in ('minlength', 'maxlength'):
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:
@@ -1218,6 +1226,16 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         else:
                             validation_rules['rules'][the_saveas] = checkbox_rules
                             validation_rules['messages'][the_saveas] = checkbox_messages
+                    if d_type == 'checkbox' and hasattr(field, 'aota') and status.extras['aota'][field.number] is not False:
+                        if status.extras['aota'][field.number] is True:
+                            formatted_item = word("All of the above")
+                            unescaped_item = formatted_item
+                        else:
+                            if hasattr(field, 'saveas') and field.saveas in status.embedded:
+                                formatted_item = markdown_to_html(str(status.extras['aota'][field.number]), status=status, trim=True, escape=False, do_terms=False)
+                            else:
+                                formatted_item = markdown_to_html(str(status.extras['aota'][field.number]), status=status, trim=True, escape=True, do_terms=False)
+                            unescaped_item = markdown_to_html(str(status.extras['aota'][field.number]), status=status, trim=False, escape=False, do_terms=False)
                     if d_type == 'checkbox' and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
                         if '_ignore' + str(field.number) not in validation_rules['rules']:
                             validation_rules['rules']['_ignore' + str(field.number)] = {}
@@ -2415,6 +2433,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 else:
                     legend_text = 'Checkboxes:'
                 output += '<fieldset class="da-field-checkboxes" role="group"><legend class="visually-hidden">' + word(legend_text) + '</legend>'
+            all_checked = True
             for pair in pairlist:
                 if 'image' in pair:
                     the_icon = icon_html(status, pair['image']) + ' '
@@ -2442,6 +2461,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     ischecked = ' checked'
                 elif defaultvalue is None:
                     ischecked = ''
+                    all_checked = False
                 elif isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue:
                     ischecked = ' checked'
                 elif isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]:
@@ -2454,11 +2474,25 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     ischecked = ' checked'
                 else:
                     ischecked = ''
+                    all_checked = False
                 if embedded:
                     inner_fieldlist.append('<input aria-label="' + formatted_item + '" class="dacheckbox-embedded dafield' + str(field.number) + ' danon-nota-checkbox' + css_class + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + '/>&nbsp;<label class="form-label" for="' + escape_id(saveas_string) + '_' + str(id_index) + '" />' + the_icon + formatted_item + '</label>')
                 else:
                     inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + css_color + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="' + 'dafield' + str(field.number) + ' danon-nota-checkbox da-to-labelauty checkbox-icon' + extra_checkbox + css_class + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + ' />', helptext, status))
                 id_index += 1
+            if 'aota' in status.extras and field.number in status.extras['aota'] and status.extras['aota'][field.number] is not False:
+                if all_checked:
+                    ischecked = ' checked'
+                else:
+                    ischecked = ''
+                if status.extras['aota'][field.number] is True:
+                    formatted_item = word("All of the above")
+                else:
+                    formatted_item = markdown_to_html(str(status.extras['aota'][field.number]), status=status, trim=True, escape=(not embedded), do_terms=False)
+                if embedded:
+                    inner_fieldlist.append('<input class="dafield' + str(field.number) + ' dacheckbox-embedded daaota-checkbox" id="_ignore_aota' + str(field.number) + '" type="checkbox" name="_ignore_aota' + str(field.number) + '"' + disable_others_data + '/>&nbsp;<label class="form-label" for="_ignore_aota' + str(field.number) + '">' + formatted_item + '</label>')
+                else:
+                    inner_fieldlist.append('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + DEFAULT_LABELAUTY_AOTA_COLOR + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' daaota-checkbox da-to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" name="_ignore_aota' + str(field.number) + '" ' + ischecked + disable_others_data + '/>')
             if 'nota' in status.extras and field.number in status.extras['nota'] and status.extras['nota'][field.number] is not False:
                 if defaultvalue_set and defaultvalue is None:
                     ischecked = ' checked'
@@ -2495,6 +2529,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 defaultvalue_printable = None
                 defaultvalue_is_printable = False
             if embedded:
+                all_checked = True
                 default_selected = False
                 for pair in pairlist:
                     if 'image' in pair:
@@ -2511,8 +2546,20 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                         default_selected = True
                     else:
                         ischecked = ''
+                        all_checked = False
                     inner_fieldlist.append('<input class="daradio-embedded' + css_class + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value=' + fix_double_quote(str(pair['key'])) + ischecked + disable_others_data + ' />&nbsp;<label class="form-label" for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
                     id_index += 1
+                if 'aota' in status.extras and field.number in status.extras['aota'] and status.extras['aota'][field.number] is not False:
+                    if status.extras['aota'][field.number] is True:
+                        formatted_item = word("All of the above")
+                    else:
+                        formatted_item = markdown_to_html(str(status.extras['aota'][field.number]), status=status, trim=True, escape=(not embedded), do_terms=False)
+                    if all_checked:
+                        ischecked = ' checked="checked"'
+                    else:
+                        ischecked = ''
+                    the_icon = ''
+                    inner_fieldlist.append('<input class="daradio-embedded' + daobject + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="" checked="checked"' + disable_others_data + ' />&nbsp;<label class="form-label" for="' + escape_id(saveas_string) + '_' + str(id_index) + '">' + the_icon + formatted_item + '</label>')
                 if 'nota' in status.extras and field.number in status.extras['nota'] and status.extras['nota'][field.number] is not False:
                     if status.extras['nota'][field.number] is True:
                         formatted_item = word("None of the above")
@@ -2528,6 +2575,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 output += " ".join(inner_fieldlist)
                 output += '</span>'
             else:
+                all_checked = True
                 default_selected = False
                 output += '<fieldset class="da-field-radio" role="radiogroup"' + req_aria + '><legend class="visually-hidden">' + word('Choices:') + '</legend>'
                 for pair in pairlist:
@@ -2551,8 +2599,21 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                         default_selected = True
                     else:
                         ischecked = ''
+                        all_checked = False
                     inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + css_color + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="da-to-labelauty' + daobject + extra_radio + css_class + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value=' + fix_double_quote(str(pair['key'])) + ischecked + disable_others_data + ' />', helptext, status))
                     id_index += 1
+                if 'aota' in status.extras and field.number in status.extras['aota'] and status.extras['aota'][field.number] is not False:
+                    if status.extras['aota'][field.number] is True:
+                        formatted_item = word("All of the above")
+                    else:
+                        formatted_item = markdown_to_html(str(status.extras['aota'][field.number]), status=status, trim=True, escape=(not embedded), do_terms=False)
+                    if all_checked:
+                        ischecked = ' checked="checked"'
+                    else:
+                        ischecked = ''
+                    the_icon = ''
+                    helptext = None
+                    inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + DEFAULT_LABELAUTY_AOTA_COLOR + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="da-to-labelauty' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value=""' + ischecked + disable_others_data + ' />', helptext, status))
                 if 'nota' in status.extras and field.number in status.extras['nota'] and status.extras['nota'][field.number] is not False:
                     if status.extras['nota'][field.number] is True:
                         formatted_item = word("None of the above")
@@ -2697,6 +2758,14 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                         uncheckdata = ' data-unchecklist=' + myb64doublequote(json.dumps(uncheck_list))
                     else:
                         uncheck = ' dauncheckothers'
+                        uncheckdata = ''
+                elif hasattr(field, 'checkothers') and field.checkothers is not False:
+                    if isinstance(field.checkothers, list):
+                        uncheck = ' dacheckspecificothers'
+                        check_list = [status.saveas_to_use[safeid(y)] for y in field.checkothers if safeid(y) in status.saveas_to_use]
+                        uncheckdata = ' data-checklist=' + myb64doublequote(json.dumps(check_list))
+                    else:
+                        uncheck = ' dacheckothers'
                         uncheckdata = ''
                 else:
                     uncheck = ' dauncheckable'

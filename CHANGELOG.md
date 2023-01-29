@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.4.31] - 2023-01-28
+
+### Added
+- The `all of the above` and `check others` modifiers for checkbox
+  fields.
+- The `celery modules` Configuration directive.
+- Recipe for calling background tasks from Flask endpoints.
+### Changed
+- When setting up two factor authentication with the authenticator
+  app, a code is shown in addition to a QR code.
+- The way that `objects from file` works has changed; it is no longer
+  treated as a `mandatory` block, but instead acts like an `objects`
+  block that is called upon when a variable is needed.
+
 ## [1.4.30] - 2023-01-23
 
 ### Fixed

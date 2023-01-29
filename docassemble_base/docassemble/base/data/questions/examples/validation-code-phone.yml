@@ -1,0 +1,19 @@
+metadata:
+  title: Validate and transform
+  short title: Validate
+  documentation: "https://docassemble.org/docs/fields.html#validation code"
+  example start: 1
+  example end: 1
+---
+question: |
+  What is your phone number?
+fields:
+  - Phone number: phone_number
+validation code: |
+  if not phone_number_is_valid(phone_number):
+    validation_error("Please enter a phone number in the format (xxx) xxx-xxxx", field="phone_number")
+  phone_number = phone_number_formatted(phone_number)
+---
+mandatory: True
+question: |
+  Your phone number is ${ phone_number }
