@@ -1130,6 +1130,7 @@ button colors:
   "back to question": info
   "labelauty": primary
   "labelauty nota": primary
+  "labelauty aota": primary
 {% endhighlight %}
 
 The above example lists the default colors.  The meanings of the keys
@@ -1191,6 +1192,8 @@ in this dictionary are as follows:
   radio button or checkbox list. Labelauty is the name of the JQuery
   add-on that is used to style radio buttons and checkboxes.
 * `labelauty nota`: refers to the default color of a selected "None of
+  the above" item in a checkbox list.
+* `labelauty aota`: refers to the default color of a selected "All of
   the above" item in a checkbox list.
 
 One reason to set `button colors` is to avoid biasing the user toward
@@ -2133,9 +2136,9 @@ default operating system locale.
 os locale: so_SO.UTF-8 UTF-8
 {% endhighlight %}
 
-The `os locale` must exactly match one of the commented lines (without
-the `#`) in `/etc/locale.gen` on an [Ubuntu]/[Debian] system. These
-are the locale values that [Ubuntu]/[Debian] recognizes.
+The `os locale` must exactly match one of the [locale values]
+that [Ubuntu]/[Debian] recognizes. The default value is `en_US.UTF-8
+UTF-8`, which is appropriate for servers in the United States.
 
 When the server starts, the value of `os locale` is appended to
 `/etc/locale.gen` (if not already there in uncommented form) and
@@ -2156,9 +2159,9 @@ other os locales:
   - es_MX.UTF-8 UTF-8
 {% endhighlight %}
 
-The `other os locales` must exactly match one of the commented lines
-(without the `#`) in `/etc/locale.gen` on an [Ubuntu]/[Debian] system.
-These are the locale values that [Ubuntu]/[Debian] recognizes.
+Each `other os locales` value must exactly match one of the [locale
+values] that [Ubuntu]/[Debian] recognizes (listed in the
+`/etc/locale.gen` file on an [Ubuntu]/[Debian] system).
 
 When the server starts, each of the `other os locales` is appended to
 `/etc/locale.gen` (if not already there in uncommented form) and
@@ -3894,7 +3897,7 @@ the feature to be available.
 
 {% highlight yaml %}
 two factor authentication:
-  allow for:
+  allowed for:
     - admin
     - developer
     - user
@@ -5541,6 +5544,51 @@ module, the module will still be loaded. `module blacklist` only
 affects the auto-loading of modules that happens when **docassemble**
 starts.
 
+## <a name="celery modules"></a>Modules to be loaded in Celery
+
+The [Celery] system, which handles background tasks, can be extended
+using the `celery modules` directive in order to support launching
+background tasks from [custom endpoints]. If you want to launch
+background tasks from inside of interview logic, the `celery modules`
+directive is not necessary and should not be used.
+
+The `celery modules` directive accepts a list of modules that [Celery]
+should load.
+
+{% highlight yaml %}
+celery modules:
+  - docassemble.mypackage.custombg
+{% endhighlight %}
+
+Here is an example of what such a module might look like:
+
+{% highlight python %}
+# do not pre-load
+from docassemble.webapp.worker_common import workerapp, bg_context, worker_controller as wc
+
+@workerapp.task
+def custom_comma_and_list(*pargs):
+    with bg_context():
+        return wc.util.comma_and_list(*pargs)
+{% endhighlight %}
+
+It is important to use the `# do not pre-load` directive on the first
+line so that **docassemble** will not load the module in the wrong order.
+
+The type of code that you can call within such a module is limited. It
+is important that you do not import docassemble modules like
+`docassemble.base.util` into a module loaded inside of Celery. If you
+want to access names from `docassemble.base.util`, do so in the manner
+shown above, where the function `comma_and_list()` in
+`docassemble.base.util` is accessed by calling
+`wc.util.comma_and_list()` inside of the `bg_context()` context.
+
+Even then, some code in `docassemble.base.util` may not work as you
+expect because it assumes that it is being called from within
+interview logic, where the identity of the current user is known and
+there is a specific session in a specific interview. Those
+circumstances are not present in the context of a custom API endpoint.
+
 ## <a name="config from"></a>Importing configuration directives
 
 The following sections, [Using AWS Secrets Manager](#aws_secrets) and
@@ -6295,3 +6343,5 @@ and Facebook API keys.
 [Bootstrap color]: https://getbootstrap.com/docs/5.2/customize/color/
 [Lightsail]: https://aws.amazon.com/lightsail/
 [tz database]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+[locale values]: {{ site.baseurl }}/img/locales.txt
+[custom endpoints]: {{ site.baseurl }}/docs/recipes.html#custom api

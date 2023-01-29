@@ -785,6 +785,21 @@ variable names of those fields instead of `True`.
 
 {% include side-by-side.html demo="fields-yesno-uncheck-others-list" %}
 
+<a name="check others"></a>Other times, when you are using a series of
+these checkboxes, you might want to have an "all of the above"
+selection.  To do this, add a field for the selection, and associate
+it with a variable.  (Your interview does not need to use the
+variable.)  Then modify the field with `check others: True`.
+
+{% include side-by-side.html demo="fields-yesno-check-others" %}
+
+This will cause the field to act as an "all of the above" field for
+all the other yes/no checkbox fields on the page.  If you want the
+field to only relate to specific other fields, use a list of the
+variable names of those fields instead of `True`.
+
+{% include side-by-side.html demo="fields-yesno-check-others-list" %}
+
 <a name="fields yesnoradio"></a>`datatype: yesnoradio` will show radio
 buttons offering choices "Yes" and "No."
 
@@ -1592,6 +1607,19 @@ of the above` in combination with [`show if`](#show if):
 
 {% include side-by-side.html demo="object-radio-nota" %}
 
+## <a name="all of the above"></a>`all of the above`
+
+If you use [`datatype: checkboxes`](#fields checkboxes), you can
+optionally include an "All of the above" option.
+
+{% include side-by-side.html demo="fields-checkboxes-aota" %}
+
+You can change the phrase from "All of the above" to something else,
+even a [Mako] expression.  Just set `all of the above` to the text you
+want to be displayed.
+
+{% include side-by-side.html demo="fields-mc-aota" %}
+
 ## <a name="shuffle"></a>`shuffle`
 
 `shuffle` can be used on multiple-choice fields (defined with
@@ -2187,17 +2215,14 @@ normally does; instead, the user will see an error.
 
 In addition to validating user input by raising an exception if
 something is wrong, you can use `validation code` to transform values
-into valid values without raising an error for the user.
+before they are saved in the interview answers.
 
 For example, this `validation code` normalizes the formatting of a
 phone number.
 
-{% highlight yaml %}
-validation code: |
-  phone_number = phone_number_formatted(phone_number)
-{% endhighlight %}
+{% include side-by-side.html demo="validation-code-phone" %}
 
-This `validation code` makes adjustments to object attributes if a
+The following `validation code` makes adjustments to object attributes if a
 user's income is less than zero.
 
 {% highlight yaml %}

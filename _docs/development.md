@@ -635,7 +635,7 @@ to install your altered version of the **docassemble** code.  This
 line will install all the packages:
 
 {% highlight bash %}
-pip install --no-deps --no-index --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble
+pip install --no-deps --no-index --force-reinstall --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble
 {% endhighlight %}
 
 The `--no-deps` and `--no-index` flags speed up the installation
@@ -686,9 +686,9 @@ Here are the contents of `www-compile.sh`:
 #! /bin/bash
 source /etc/profile
 source /usr/share/docassemble/local3.10/bin/activate
-pip install --no-deps --no-index --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble && touch /usr/share/docassemble/webapp/docassemble.wsgi
+pip install --no-deps --no-index --force-reinstall --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble && touch /usr/share/docassemble/webapp/docassemble.wsgi
 history -s "source /usr/share/docassemble/local3.10/bin/activate"
-history -s "pip install --no-deps --no-index --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble && touch /usr/share/docassemble/webapp/docassemble.wsgi"
+history -s "pip install --no-deps --no-index --force-reinstall --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo ./docassemble && touch /usr/share/docassemble/webapp/docassemble.wsgi"
 {% endhighlight %}
 
 When `compile.sh` runs, it will leave you logged in as `www-data` in

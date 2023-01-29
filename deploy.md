@@ -119,6 +119,27 @@ This is one possible method of deployment. If your goal is to embed a
 **docassemble** interview on a different web site, you may wish to use
 a different deployment strategy using a [web server and a reverse proxy].
 
+After following the deployment steps above, you should have a working
+server. If you plan on using the server in the long term, it is
+recommended you take additional steps:
+
+* Go to the User List from the menu. You will see there is one user on the
+  system, which is the administrator. The default adddress
+  `admin@admin.com` is obviously not a real e-mail address, so click
+  Edit and change the e-mail address to your e-mail address.
+* Set up [e-mail sending] and verify that it works.
+* If the server is public-facing, set [`confirm registration`] to
+  `True` or set [`allow registration`] to `False`.
+* Consider setting [`allow forgot password`] to `False` if you plan to
+  let users log in and you do not set [`multi_user`] to `True` in your
+  interviews.
+* Go to the Configuration and customize the following settings:
+  * [`exitpage`]
+  * [`server administrator email`]
+  * [`appname`]
+  * [`brandname`]
+  * [`default interview`]
+
 ## Consultants
 
 If you are interested in hiring someone to develop an interview for
@@ -146,3 +167,13 @@ group].  Consultants who are available for projects include:
 [web server and a reverse proxy]: {{ site.baseurl }}/docs/docker.html#forwarding
 [Namecheap]: https://www.namecheap.com/domains/
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
+[e-mail sending]: {{ site.baseurl }}/docs/config.html#mail
+[`exitpage`]: {{ site.baseurl }}/docs/config.html#exitpage
+[`server administrator email`]: {{ site.baseurl }}/docs/config.html#server administrator email
+[`confirm registration`]: {{ site.baseurl }}/docs/config.html#confirm registration
+[`allow registration`]: {{ site.baseurl }}/docs/config.html#allow registration
+[`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
+[`appname`]: {{ site.baseurl }}/docs/config.html#appname
+[`brandname`]: {{ site.baseurl }}/docs/config.html#brandname
+[`default interview`]: {{ site.baseurl }}/docs/config.html#default interview
+[`allow forgot password`]: {{ site.baseurl }}/docs/config.html#allow forgot password

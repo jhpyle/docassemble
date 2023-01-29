@@ -2436,7 +2436,7 @@ from flask import request, jsonify
 from flask_cors import cross_origin
 from docassemble.base.util import create_session, set_session_variables, interview_url
 from docassemble.webapp.app_object import app, csrf
-from docassemble.webapp.server import api_verify, jsonify_with_status, jsonify
+from docassemble.webapp.server import api_verify, jsonify_with_status
 
 @app.route('/create_prepopulate', methods=['POST'])
 @csrf.exempt
@@ -2465,6 +2465,121 @@ functions that you cannot call because they depend on that context
 
 The POST data may be in `application/json` or
 `application/x-www-form-urlencoded` format.
+
+## <a name="custom api background"></a>Running background tasks from endpoints
+
+**docassemble** has a [background tasks] system that can be called
+from inside of interview logic. The [`background_action()`] function
+cannot be called from a custom endpoint, however, because it
+depends upon the interview logic context.
+
+In order to run background tasks from a custom endpoint, you need to
+interface with [Celery] directly.
+
+First, you need to create a `.py` file that defines Celery task
+functions. In this example, the file is `custombg.py` in the
+`docassemble.mypackage` package:
+
+{% highlight python %}
+# do not pre-load
+from docassemble.webapp.worker_common import workerapp, bg_context, worker_controller as wc
+
+
+@workerapp.task
+def custom_add_four(operand):
+    return operand + 4
+
+
+@workerapp.task
+def custom_comma_and_list(*pargs):
+    with bg_context():
+        return wc.util.comma_and_list(*pargs)
+{% endhighlight %}
+
+The first line, `# do not pre-load`, is important. This file should
+not be loaded as an ordinary Python module. Instead, it should be
+loaded using the [`celery modules`] directive:
+
+{% highlight yaml %}
+celery modules:
+  - docassemble.mypackage.custombg
+{% endhighlight %}
+
+The [`celery modules`] directive ensures that the module will be
+loaded at the correct time and in the correct context.
+
+Then create a second Python file containing the code for your [Flask]
+endpoints. The following file is `testcustombg.py` in the
+`docassemble.mypackage` package.
+
+{% highlight python %}
+from flask import request, jsonify
+from flask_cors import cross_origin
+from docassemble.webapp.app_object import app, csrf
+from docassemble.webapp.server import api_verify, jsonify_with_status
+from docassemble.webapp.worker_common import workerapp
+from docassemble.base.config import in_celery
+if not in_celery:
+    from docassemble.mypackage.custombg import custom_add_four, custom_comma_and_list
+
+
+@app.route('/api/start_process', methods=['GET'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
+def start_process():
+    if not api_verify():
+        return jsonify_with_status({"success": False, "error_message": "Access denied."}, 403)
+    try:
+        operand = int(request.args['operand'])
+    except:
+        return jsonify_with_status({"success": False, "error_message": "Missing or invalid operand."}, 400)
+    task = custom_add_four.delay(operand)
+    return jsonify({"success": True, 'task_id': task.id})
+
+
+@app.route('/api/start_process_2', methods=['GET'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
+def start_process_2():
+    if not api_verify():
+        return jsonify_with_status({"success": False, "error_message": "Access denied."}, 403)
+    task = custom_comma_and_list.delay('foo', 'bar', 'foobar')
+    return jsonify({"success": True, 'task_id': task.id})
+
+
+@app.route('/api/poll_for_result', methods=['GET'])
+@csrf.exempt
+@cross_origin(origins='*', methods=['GET', 'HEAD'], automatic_options=True)
+def poll_for_result():
+    if not api_verify():
+        return jsonify_with_status({"success": False, "error_message": "Access denied."}, 403)
+    try:
+        result = workerapp.AsyncResult(id=request.args['task_id'])
+    except:
+        return jsonify_with_status({"success": False, "error_message": "Invalid task_id."}, 400)
+    if not result.ready():
+        return jsonify({"success": True, "ready": False})
+    if result.failed():
+        return jsonify({"success": False, "ready": True})
+    return jsonify({"success": True, "ready": True, "answer": result.get()})
+{% endhighlight %}
+
+To prevent a circularity in module loading, it is important to refrain
+from importing the background task module,
+`docassemble.mypackage.custombg`, into this module if `in_celery` is
+true (meaning that [Celery] rather than the web application is loading
+the `docassemble.mypackage.custombg` module). Although this creates a
+situation where `custom_add_four` and `custom_comma_and_list` are
+undefined when `in_celery` is true, this does not matter because the
+code for your endpoints will never be called by [Celery].
+
+The `custom_add_four` and `custom_comma_and_list` functions are called
+in the standard [Celery] fashion. See the [Celery] documentation for
+more information about using [Celery].
+
+The `testcustombg.py` file above demonstrates how you can create
+separate API endpoints for starting a long-running process and polling
+for its result.
 
 # <a name="screen parts"></a>Synchronizing screen parts with interview answers
 
@@ -2722,3 +2837,5 @@ The transformation is done by the [`button-checkboxes.css`] file.
 [`graph.py`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/graph.py
 [`graph.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/templates/graph.docx
 [`button-checkboxes.css`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/static/button-checkboxes.css
+[`background_action()`]: {{ site.baseurl }}/docs/background.html#background_action
+[`celery modules`]: {{ site.baseurl }}/docs/config.html#celery modules

@@ -1029,12 +1029,13 @@ your container for the new configuration to take effect.
   time zone in the [tz database].  See the [`timezone`] configuration
   directive.
 * <a name="LOCALE"></a>`LOCALE`: You can use this to enable a locale
-  on the server.  The value needs to match an entry in
-  `/etc/locale.gen` on [Ubuntu].  These are the locale values that
-  [Ubuntu]/[Debian] recognizes.  When the server starts, the value of
-  `LOCALE` is appended to `/etc/locale.gen` and `locale-gen` and
-  `update-locale` are run.  The default is `en_US.UTF-8 UTF-8`.  See
-  the [`os locale`] configuration directive.
+  on the server.  The value needs to exactly match one of the valid
+  [locale values] that [Ubuntu]/[Debian] recognizes (listed in the
+  `/etc/locale.gen` file on an [Ubuntu]/[Debian] system).  When the
+  server starts, the value of `LOCALE` is appended to
+  `/etc/locale.gen` and `locale-gen` and `update-locale` are run.  The
+  default is `en_US.UTF-8 UTF-8`.  See the [`os locale`] configuration
+  directive.
 * <a name="OTHERLOCALES"></a>`OTHERLOCALES`: You can use this to set
   up other locales on the system besides the default locale.  Set this
   to a comma separated list of locales.  The values need to match
@@ -3140,3 +3141,4 @@ references a different base image.
 [SSH client]: https://www.ssh.com/academy/ssh/client
 [Apache]: https://httpd.apache.org/
 [tz database]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+[locale values]: {{ site.baseurl }}/img/locales.txt

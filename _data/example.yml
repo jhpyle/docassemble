@@ -5695,6 +5695,24 @@
       In Python, `likes_fruit` is
       `${ repr(likes_fruit) }`.
     mandatory: True
+"fields-checkboxes-aota":
+  "height": !!int |-
+    424
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Please tell me what you think.
+    fields:
+      - "Select the fruits you like": likes_fruit
+        datatype: checkboxes
+        choices:
+          - Apples
+          - Peaches
+          - Pears
+        all of the above: True
+        none of the above: False
+      - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-code":
   "height": !!int |-
     416
@@ -6195,6 +6213,24 @@
                     {'label': "Pears",
                      'value': 'pear'}
                   ]
+"fields-mc-aota":
+  "height": !!int |-
+    354
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Please fill in the following information.
+    fields:
+      - Requested options: car_options
+        datatype: checkboxes
+        choices:
+          - Sunroof
+          - Automatic transmission
+          - Heated seats
+        all of the above: |
+          I want to pay a lot
+        none of the above: False
 "fields-mc-exclude":
   "height": !!int |-
     270
@@ -6372,6 +6408,54 @@
         datatype: yesno
       - Turnips: dislikes_turnips
         datatype: noyes
+"fields-yesno-check-others":
+  "height": !!int |-
+    442
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Please provide the following information.
+    fields:
+      - "What is your favorite food?": favorite_food
+      - note: Check which foods you like.
+      - Apples: likes_apples
+        datatype: yesnowide
+      - Turnips: likes_turnips
+        datatype: yesnowide
+      - Both: likes_both_foods
+        datatype: yesnowide
+        check others: True
+"fields-yesno-check-others-list":
+  "height": !!int |-
+    630
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Please provide the following information.
+    fields:
+      - "What is your favorite food?": favorite_food
+      - note: Check which foods you like.
+      - Apples: likes_apples
+        datatype: yesno
+      - Turnips: likes_turnips
+        datatype: yesno
+      - Both: likes_both_foods
+        datatype: yesno
+        check others:
+          - likes_turnips
+          - likes_apples
+      - note: Check which rocks you like.
+      - Granite: likes_granite
+        datatype: yesno
+      - Obsidian: likes_obsidian
+        datatype: yesno
+      - I like both of these rocks: likes_both_rocks
+        datatype: yesno
+        check others:
+          - likes_granite
+          - likes_obsidian
 "fields-yesno-help":
   "height": !!int |-
     392
@@ -10415,7 +10499,7 @@
           - antagonist
 "object-checkboxes":
   "height": !!int |-
-    270
+    322
   "width": !!int |-
     488
   "yaml": |-
@@ -10465,7 +10549,7 @@
         - antagonist
 "object-checkboxes-default":
   "height": !!int |-
-    270
+    322
   "width": !!int |-
     488
   "yaml": |-
@@ -10738,7 +10822,7 @@
       ${ shipping.on_one_line() }.
 "object-radio-nota":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -15730,6 +15814,20 @@
         content: |
           Hello, world!
     mandatory: True
+"validation-code-phone":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      What is your phone number?
+    fields:
+      - Phone number: phone_number
+    validation code: |
+      if not phone_number_is_valid(phone_number):
+        validation_error("Please enter a phone number in the format (xxx) xxx-xxxx", field="phone_number")
+      phone_number = phone_number_formatted(phone_number)
 "validation-error":
   "height": !!int |-
     240
@@ -16556,7 +16654,7 @@
       - has_standing: DADict.using(auto_gather=False)
 "customdate":
   "height": !!int |-
-    252
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -16981,12 +17079,20 @@
       % endfor
 "fish-example":
   "height": !!int |-
-    144
+    146
   "width": !!int |-
     488
   "yaml": "code: |\n  fishes = objects_from_file(\"fishes.yml\")\n---\nmandatory:\
     \ true\nquestion: |\n  Fish summary\nsubquestion: |\n  % for fish in fishes:\n\
     \  ${ fish } has\n  ${ fish.scales } scales.\n  \n  % endfor"
+"fish-example-2":
+  "height": !!int |-
+    202
+  "width": !!int |-
+    488
+  "yaml": "objects from file:\n  - fishes: fishes.yml\n---\nmandatory: True\nquestion:\
+    \ |\n  Fish summary\nsubquestion: |\n  % for fish in fishes:\n  ${ fish } has\n\
+    \  ${ fish.scales } scales.\n  \n  % endfor\ncontinue button field: first_screen"
 "flags":
   "yaml": |-
     image sets:
