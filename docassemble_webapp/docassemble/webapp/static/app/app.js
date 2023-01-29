@@ -99,7 +99,7 @@ function daScaleSignaturePad (lines, scale) {
 };
 
 function daSaveCanvas() {
-  var dataURL = document.getElementById("dasigcanvas").toDataURL();
+  var dataURL = daSigPad.toDataURL("image/png");
   //console.log(dataURL)
   daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
   daPost({ da_success: 1, da_the_image: dataURL, da_ajax: 1 });
