@@ -22912,7 +22912,7 @@ def playground_css_bundle():
 def js_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['app', 'signature_pad.min.js'], ['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js']]:
+    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js'], ['app', 'signature_pad.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -22945,7 +22945,7 @@ def js_admin_bundle():
 def js_bundle_wrap():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = '(function($) {'
-    for parts in [['app', 'signature_pad.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js']]:
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js'], ['app', 'signature_pad.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -22957,7 +22957,7 @@ def js_bundle_wrap():
 def js_bundle_no_query():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['app', 'signature_pad.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js']]:
+    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js'], ['app', 'signature_pad.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
