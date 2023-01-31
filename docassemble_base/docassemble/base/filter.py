@@ -1269,16 +1269,7 @@ def rtf_two_col(match):
     return table_text + '[MANUALSKIP]'
 
 
-def emoji_html(text, status=None, question=None, images=None):
-    # logmessage("Got to emoji_html")
-    if status is not None and question is None:
-        question = status.question
-    if images is None:
-        images = question.interview.images
-    if text in images:
-        if status is not None and images[text].attribution is not None:
-            status.attributions.add(images[text].attribution)
-        return image_url(images[text].get_reference(), word('icon'), '1em', emoji=True, question=question)
+def get_icon_html(text):
     icons_setting = docassemble.base.functions.get_config('default icons', None)
     if icons_setting == 'font awesome':
         m = re.search(r'^(fa[a-z])-fa-(.*)', text)
@@ -1290,6 +1281,22 @@ def emoji_html(text, status=None, question=None, images=None):
         return '<i class="' + the_prefix + ' fa-' + str(text) + '"></i>'
     if icons_setting == 'material icons':
         return '<i class="da-material-icons">' + str(text) + '</i>'
+    return None
+
+
+def emoji_html(text, status=None, question=None, images=None):
+    # logmessage("Got to emoji_html")
+    if status is not None and question is None:
+        question = status.question
+    if images is None:
+        images = question.interview.images
+    if text in images:
+        if status is not None and images[text].attribution is not None:
+            status.attributions.add(images[text].attribution)
+        return image_url(images[text].get_reference(), word('icon'), '1em', emoji=True, question=question)
+    icon_html = get_icon_html(text)
+    if icon_html:
+        return icon_html
     return ":" + str(text) + ":"
 
 

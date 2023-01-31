@@ -10,7 +10,7 @@ from html.parser import HTMLParser
 from docassemble.base.functions import word, get_currency_symbol, comma_and_list, server, custom_types, get_locale
 from docassemble.base.util import format_date, format_datetime, format_time
 # from docassemble.base.generate_key import random_string
-from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape, process_target
+from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape, process_target, get_icon_html
 from docassemble.base.parse import Question
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
@@ -130,11 +130,8 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
         is_decoration = True
         the_image = status.question.interview.images.get(name, None)
         if the_image is None:
-            if daconfig.get('default icons', None) == 'font awesome':
-                return '<i class="' + daconfig.get('font awesome prefix', 'fas') + ' fa-' + str(name) + '"></i>'
-            if daconfig.get('default icons', None) == 'material icons':
-                return '<i class="da-material-icons">' + str(name) + '</i>'
-            return ''
+            icon = get_icon_html(str(name))
+            return icon if icon else ""
         if the_image.attribution is not None:
             status.attributions.add(the_image.attribution)
         url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
@@ -693,10 +690,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         if the_image.attribution is not None:
                             status.attributions.add(the_image.attribution)
                         decorations.append('<img alt="" class="daiconfloat" style="' + sizing + '" src="' + url + '"/>')
-                elif daconfig.get('default icons', None) == 'font awesome':
-                    decorations.append('<span style="font-size: ' + str(DECORATION_SIZE) + str(DECORATION_UNITS) + '" class="dadecoration"><i class="' + daconfig.get('font awesome prefix', 'fas') + ' fa-' + str(decoration['image']) + '"></i></span>')
-                elif daconfig.get('default icons', None) == 'material icons':
-                    decorations.append('<span style="font-size: ' + str(DECORATION_SIZE) + str(DECORATION_UNITS) + '" class="dadecoration"><i class="da-material-icons">' + str(decoration['image']) + '</i></span>')
+                else:
+                  icon = get_icon_html(str(decoration["image"]))
+                  if icon:
+                      decorations.append('<span style="font-size: ' + str(DECORATION_SIZE) + str(DECORATION_UNITS) + '" class="dadecoration">' + icon + '</span>')
     if len(decorations) > 0:
         decoration_text = decorations[0]
     else:
