@@ -3701,7 +3701,7 @@ def get_folder_id(folder_name):
     service = api.drive_service()
     response = service.files().list(spaces="drive",
         fields="nextPageToken, files(id, name)",
-        q="mimeType='application/vnd.google-apps.folder' and sharedWithMe and name='" + unicode(folder_name) + "'").execute()
+        q="mimeType='application/vnd.google-apps.folder' and sharedWithMe and name='" + str(folder_name) + "'").execute()
     folder_id = None
     for item in response.get('files', []):
         folder_id = item['id']
@@ -3715,7 +3715,7 @@ def get_file_id(filename, folder_name):
     file_id = None
     response = service.files().list(spaces="drive",
         fields="nextPageToken, files(id, name)",
-        q="mimeType!='application/vnd.google-apps.folder' and '" + str(folder_id) + "' in parents and name='" + unicode(filename) + "'").execute()
+        q="mimeType!='application/vnd.google-apps.folder' and '" + str(folder_id) + "' in parents and name='" + str(filename) + "'").execute()
     for item in response.get('files', []):
         file_id = item['id']
     return file_id
