@@ -1,7 +1,7 @@
 {% extends 'base_templates/page_base_half.html' %}
 
 {% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_submit_field, render_checkbox_field, render_multiselect_field %}
+{% from "base_templates/form_macros.html" import render_field, render_select_field, render_submit_field, render_checkbox_field, render_multiselect_field %}
 
 <h1>{{ word('Edit User Profile') }}</h1>
 
@@ -44,7 +44,7 @@
     {{ render_field(form.subdivisionthird) }}
     {{ render_field(form.organization) }}
     {{ render_field(form.language) }}
-    {{ render_field(form.timezone) }}
+    {{ render_select_field(form.timezone) }}
     {{ render_submit_field(form.submit) }}
     {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
     </div>

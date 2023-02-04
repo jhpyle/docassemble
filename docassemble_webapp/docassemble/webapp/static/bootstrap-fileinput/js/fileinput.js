@@ -450,7 +450,7 @@
             char3 = array[i++];
             out += String.fromCharCode(
               ((c & 0x0f) << 12) | // jshint ignore:line
-              ((char2 & 0x3f) << 6) | // jshint ignore:line
+                ((char2 & 0x3f) << 6) | // jshint ignore:line
                 ((char3 & 0x3f) << 0)
             ); // jshint ignore:line
             break;
@@ -2421,7 +2421,7 @@
           indicatorError:
             '<i class="glyphicon glyphicon-exclamation-sign text-danger"></i>',
           indicatorLoading:
-            '<i class="glyphicon glyphicon-hourglass text-muted"></i>',
+            '<i class="glyphicon glyphicon-hourglass text-body-secondary"></i>',
           indicatorPaused:
             '<i class="glyphicon glyphicon-pause text-primary"></i>',
           indicatorNewTitle: "Not uploaded yet",
@@ -5542,7 +5542,7 @@
         $zone.prepend(
           '<div class="' +
             self.dropZoneTitleClass +
-            ' text-muted">' +
+            ' text-body-secondary">' +
             title +
             "</div>"
         );

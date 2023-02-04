@@ -1,0 +1,15 @@
+metadata:
+  title: Continue button
+  example start: 1
+  example end: 3
+  documentation: "https://docassemble.org/docs/questions.html#continue"
+---
+mandatory: True
+question: |
+  Please note that this app is only right for you if
+  you are a bear.
+buttons:
+  - I am not a bear: exit
+  - Continue: continue
+
+  

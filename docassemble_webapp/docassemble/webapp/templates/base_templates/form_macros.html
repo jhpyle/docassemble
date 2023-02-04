@@ -1,10 +1,10 @@
-{% macro render_file_field(field, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, multiple=False) -%}
+{% macro render_file_field(field, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, multiple=False, accept=None) -%}
 <div class="da-form-group {% if field.errors %}da-group-has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   {%- if label_visible %}
   {% if not label %}{% set label=field.label.text %}{% endif %}
   <label class="form-label" for="{{ field.id }}">{{ label|safe }}</label>
   {% endif %}
-  <input alt="{{ word('You can upload a file here') }}" type="file" class="form-control" name="{{ field.id }}" id="{{ field.id }}"{% if multiple %} multiple{% endif %}/>
+  <input alt="{{ word('You can upload a file here') }}" type="file" class="form-control" name="{{ field.id }}" id="{{ field.id }}"{% if accept %}accept="{{ accept }}"{% endif %}{% if multiple %} multiple{% endif %}/>
   {% for e in field.errors %}
   <div class="invalid-feedback d-block">{{ e }}</div>
   {% endfor %}

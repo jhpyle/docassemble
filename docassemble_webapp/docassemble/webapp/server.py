@@ -64,7 +64,7 @@ import docassemble.base.core  # for backward-compatibility with data pickled in 
 
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 import docassemble.webapp.backend
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, write_ml_source, fix_ml_files, is_package_ml, file_set_attributes, file_user_access, file_privilege_access, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, update_session, get_session_uids, project_name, directory_for, add_project
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, write_ml_source, fix_ml_files, is_package_ml, file_set_attributes, file_user_access, file_privilege_access, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, update_session, get_session_uids, project_name, directory_for, add_project, mail_configs
 import docassemble.webapp.clicksend
 import docassemble.webapp.telnyx
 from docassemble.webapp.core.models import Uploads, UploadsUserAuth, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage
@@ -2869,7 +2869,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
         inner_div_extra = ''
     if a_class is None:
         a_class = 'nav-link danavlink'
-        muted_class = ' text-muted'
+        muted_class = ' text-body-secondary'
     else:
         muted_class = ''
     # logmessage("navigation_bar: starting: " + str(section))
@@ -3059,7 +3059,7 @@ def progress_bar(progress, interview):
         percentage = str(int(progress)) + '%'
     else:
         percentage = ''
-    return '<div class="progress mt-2"><div class="progress-bar" aria-label="' + noquote(word('Interview Progress')) + '" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n'
+    return '<div class="progress mt-2" role="progressbar" aria-label="' + noquote(word('Interview Progress')) + '" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n'
 
 
 def get_unique_name(filename, secret):
@@ -3135,13 +3135,17 @@ def release_lock(user_code, filename):
 def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, extra_class=None):  # pylint: disable=unused-argument
     if 'inverse navbar' in status.question.interview.options:
         if status.question.interview.options['inverse navbar']:
-            inverse = 'navbar-dark bg-dark '
+            inverse = 'bg-dark '
+            theme = ' data-bs-theme="dark"'
         else:
             inverse = 'bg-light '
+            theme = ''
     elif daconfig.get('inverse navbar', True):
-        inverse = 'navbar-dark bg-dark '
+        inverse = 'bg-dark '
+        theme = ' data-bs-theme="dark"'
     else:
         inverse = 'bg-light '
+        theme = ''
     if 'jsembed' in docassemble.base.functions.this_thread.misc:
         fixed_top = ''
     else:
@@ -3149,7 +3153,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if extra_class is not None:
         fixed_top += ' ' + extra_class
     navbar = """\
-    <div class="navbar""" + fixed_top + """ navbar-expand-md """ + inverse + '"' + """ role="banner">
+    <div class="navbar""" + fixed_top + """ navbar-expand-md """ + inverse + '"' + theme + """ role="banner">
       <div class="container danavcontainer justify-content-start">
 """
     if status.question.can_go_back and steps > 1:
@@ -4887,10 +4891,10 @@ class TwitterSignIn(OAuthSignIn):
         return social_id, username, email, {'name': me.get('name', None)}
 
 
-@flaskbabel.localeselector
-def get_locale():
-    translations = [str(translation) for translation in flaskbabel.list_translations()]
-    return request.accept_languages.best_match(translations)
+# @flaskbabel.localeselector
+# def get_locale():
+#     translations = [str(translation) for translation in flaskbabel.list_translations()]
+#     return request.accept_languages.best_match(translations)
 
 
 def get_user_object(user_id):
@@ -6428,6 +6432,13 @@ def resume():
     return redirect(url_for('index', **post_data))
 
 
+def json64unquote(text):
+    try:
+        return json.loads(myb64unquote(text))
+    except:
+        return {}
+
+
 def tidy_action(action):
     result = {}
     if not isinstance(action, dict):
@@ -6574,10 +6585,10 @@ def index(action_argument=None, refer=None):
         yaml_filename = final_default_yaml_filename
     action = None
     if '_action' in request.form and 'in error' not in session:
-        action = tidy_action(json.loads(myb64unquote(request.form['_action'])))
+        action = tidy_action(json64unquote(request.form['_action']))
         no_defs = True
     elif 'action' in request.args and 'in error' not in session:
-        action = tidy_action(json.loads(myb64unquote(request.args['action'])))
+        action = tidy_action(json64unquote(request.args['action']))
         no_defs = True
     elif action_argument:
         action = tidy_action(action_argument)
@@ -7030,7 +7041,7 @@ def index(action_argument=None, refer=None):
             worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             for email_address in re.split(r' *[,;] *', attachment_email_address):
                 try:
-                    result = docassemble.webapp.worker.email_attachments.delay(user_code, email_address, attachment_info, docassemble.base.functions.get_language(), subject=interview_status.extras.get('email_subject', None), body=interview_status.extras.get('email_body', None), html=interview_status.extras.get('email_html', None))
+                    result = docassemble.webapp.worker.email_attachments.delay(user_code, email_address, attachment_info, docassemble.base.functions.get_language(), subject=interview_status.extras.get('email_subject', None), body=interview_status.extras.get('email_body', None), html=interview_status.extras.get('email_html', None), config=interview.consolidated_metadata.get('email config', None))
                     r.rpush(worker_key, result.id)
                     success = True
                 except Exception as errmess:
@@ -7073,7 +7084,7 @@ def index(action_argument=None, refer=None):
                     files_to_zip.append(str(the_attachment['file'][the_format]))
                     attached_file_count += 1
             the_zip_file = docassemble.base.util.zip_file(*files_to_zip, filename=zip_file_name)
-            response = send_file(the_zip_file.path(), mimetype='application/zip', as_attachment=True, attachment_filename=zip_file_name)
+            response = send_file(the_zip_file.path(), mimetype='application/zip', as_attachment=True, download_name=zip_file_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             if response_wrapper:
                 response_wrapper(response)
@@ -7580,8 +7591,12 @@ def index(action_argument=None, refer=None):
                     key = '_internal["answers"][' + repr(interview.questions_by_name[question_name].extended_question_name(user_dict)) + ']'
                     if is_integer.match(str(post_data[orig_key])):
                         the_choice = int(str(post_data[orig_key]))
-                        if len(interview.questions_by_name[question_name].fields[0].choices) > the_choice and 'key' in interview.questions_by_name[question_name].fields[0].choices[the_choice] and hasattr(interview.questions_by_name[question_name].fields[0].choices[the_choice]['key'], 'question_type') and interview.questions_by_name[question_name].fields[0].choices[the_choice]['key'].question_type in ('restart', 'exit', 'logout', 'exit_logout', 'leave'):
-                            special_question = interview.questions_by_name[question_name].fields[0].choices[the_choice]['key']
+                        if len(interview.questions_by_name[question_name].fields[0].choices) > the_choice and 'key' in interview.questions_by_name[question_name].fields[0].choices[the_choice] and hasattr(interview.questions_by_name[question_name].fields[0].choices[the_choice]['key'], 'question_type'):
+                            if interview.questions_by_name[question_name].fields[0].choices[the_choice]['key'].question_type in ('restart', 'exit', 'logout', 'exit_logout', 'leave'):
+                                special_question = interview.questions_by_name[question_name].fields[0].choices[the_choice]['key']
+                            elif interview.questions_by_name[question_name].fields[0].choices[the_choice]['key'].question_type == 'continue' and 'continue button field' in interview.questions_by_name[question_name].fields[0].extras:
+                                key = interview.questions_by_name[question_name].fields[0].extras['continue button field']
+                                data = 'True'
         if is_date:
             try:
                 exec("import docassemble.base.util", user_dict)
@@ -10415,7 +10430,7 @@ def index(action_argument=None, refer=None):
           else if (message.priority == 'javascript'){
             daGlobalEval(message.message);
           }
-          else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'info' || message.priority == 'secondary' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
+          else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'tertiary' || message.priority == 'info' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
             da_flash(message.message, message.priority);
           }
           else{
@@ -11941,6 +11956,86 @@ def index(action_argument=None, refer=None):
           var before_comparator = new Date(params[0]);
           var after_comparator = new Date(params[1]);
           if (date >= before_comparator && date <= after_comparator) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      });
+      $.validator.addMethod('mintime', function(value, element, params){
+        if (value == null || value == ''){
+          return true;
+        }
+        try {
+          var time = new Date('1970-01-01T' + value + 'Z');
+          var comparator = new Date('1970-01-01T' + params + 'Z');
+          if (time >= comparator) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      });
+      $.validator.addMethod('maxtime', function(value, element, params){
+        if (value == null || value == ''){
+          return true;
+        }
+        try {
+          var time = new Date('1970-01-01T' + value + 'Z');
+          var comparator = new Date('1970-01-01T' + params + 'Z');
+          if (time <= comparator) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      });
+      $.validator.addMethod('minmaxtime', function(value, element, params){
+        if (value == null || value == ''){
+          return true;
+        }
+        try {
+          var time = new Date('1970-01-01T' + value + 'Z');
+          var before_comparator = new Date('1970-01-01T' + params[0] + 'Z');
+          var after_comparator = new Date('1970-01-01T' + params[1] + 'Z');
+          if (time >= before_comparator && time <= after_comparator) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      });
+      $.validator.addMethod('mindatetime', function(value, element, params){
+        if (value == null || value == ''){
+          return true;
+        }
+        try {
+          var datetime = new Date(value + 'Z');
+          var comparator = new Date(params + 'Z');
+          if (datetime >= comparator) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      });
+      $.validator.addMethod('maxdatetime', function(value, element, params){
+        if (value == null || value == ''){
+          return true;
+        }
+        try {
+          var datetime = new Date(value + 'Z');
+          var comparator = new Date(params + 'Z');
+          if (datetime <= comparator) {
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      });
+      $.validator.addMethod('minmaxdatetime', function(value, element, params){
+        if (value == null || value == ''){
+          return true;
+        }
+        try {
+          var datetime = new Date(value + 'Z');
+          var before_comparator = new Date(params[0] + 'Z');
+          var after_comparator = new Date(params[1] + 'Z');
+          if (datetime >= before_comparator && datetime <= after_comparator) {
             return true;
           }
         } catch (e) {}
@@ -16566,7 +16661,7 @@ def create_playground_package():
                 session['serverstarttime'] = START_TIME
                 return redirect(url_for('update_package_wait', next=url_for('playground_packages', project=current_project, file=current_package)))
                 # return redirect(url_for('playground_packages', file=current_package))
-            response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
+            response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, download_name=nice_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return response
     response = make_response(render_template('pages/create_playground_package.html', current_project=current_project, version_warning=version_warning, bodyclass='daadminbody', form=form, current_package=current_package, package_names=file_list['playgroundpackages'], tab_title=word('Playground Packages'), page_title=word('Playground Packages')), 200)
@@ -16823,7 +16918,7 @@ class Fruit(DAObject):
         saved_file.save()
         saved_file.finalize()
         shutil.rmtree(directory)
-        response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
+        response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, download_name=nice_name)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         flash(word("Package created"), 'success')
         return response
@@ -22062,7 +22157,7 @@ def server_error(the_error):
           else if (message.priority == 'javascript'){
             daGlobalEval(message.message);
           }
-          else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'info' || message.priority == 'secondary' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
+          else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'tertiary' || message.priority == 'info' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
             da_flash(message.message, message.priority);
           }
           else{
@@ -22225,7 +22320,7 @@ def logfile(filename):
             the_file, headers = urlretrieve("http://" + LOGSERVER + ':8082/' + urllibquote(filename))  # pylint: disable=unused-variable
         except:
             return ('File not found', 404)
-    response = send_file(the_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0)
+    response = send_file(the_file, as_attachment=True, mimetype='text/plain', download_name=filename, max_age=0)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -22255,7 +22350,7 @@ def logs():
                 zf.writestr(info, fp.read())
         zf.close()
         zip_file_name = re.sub(r'[^A-Za-z0-9_]+', '', app.config['APP_NAME']) + '_logs.zip'
-        response = send_file(zip_archive.name, mimetype='application/zip', as_attachment=True, attachment_filename=zip_file_name)
+        response = send_file(zip_archive.name, mimetype='application/zip', as_attachment=True, download_name=zip_file_name)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
     the_file = request.args.get('file', None)
@@ -22558,7 +22653,7 @@ def utilities():
                     worksheet.write_string(row, 3, val, wrapping)
                     row += 1
                 workbook.close()
-                response = send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, attachment_filename=xlsx_filename)
+                response = send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=xlsx_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return response
             elif form.systemfiletype.data == 'XLIFF 1.2':
@@ -22589,7 +22684,7 @@ def utilities():
                     indexno += 1
                 temp_file.write(ET.tostring(xliff))
                 temp_file.close()
-                response = send_file(temp_file.name, mimetype='application/xml', as_attachment=True, attachment_filename=xliff_filename)
+                response = send_file(temp_file.name, mimetype='application/xml', as_attachment=True, download_name=xliff_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return response
             elif form.systemfiletype.data == 'XLIFF 2.0':
@@ -22620,7 +22715,7 @@ def utilities():
                     indexno += 1
                 temp_file.write(ET.tostring(xliff))
                 temp_file.close()
-                response = send_file(temp_file.name, mimetype='application/xml', as_attachment=True, attachment_filename=xliff_filename)
+                response = send_file(temp_file.name, mimetype='application/xml', as_attachment=True, download_name=xliff_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return response
         if 'pdfdocxfile' in request.files and request.files['pdfdocxfile'].filename:
@@ -23038,7 +23133,7 @@ def train():
             if len(output) > 0:
                 the_json_file = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix=".json", delete=False, encoding='utf-8')
                 json.dump(output, the_json_file, sort_keys=True, indent=2)
-                response = send_file(the_json_file, mimetype='application/json', as_attachment=True, attachment_filename=json_filename)
+                response = send_file(the_json_file, mimetype='application/json', as_attachment=True, download_name=json_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return response
             flash(word("No data existed in training set.  JSON file not created."), "error")
@@ -25391,7 +25486,7 @@ def translation_file():
                 worksheet.set_row(row, 15*(num_lines + 1))
             row += 1
         workbook.close()
-        response = send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, attachment_filename=xlsx_filename)
+        response = send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=xlsx_filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
     if form.filetype.data.startswith('XLIFF'):
@@ -25568,7 +25663,7 @@ def translation_file():
             flash(word("Bad file format"), 'error')
             return redirect(url_for('utilities'))
         if len(xliff_files) == 1:
-            response = send_file(xliff_files[0][0].name, mimetype='application/xml', as_attachment=True, attachment_filename=xliff_files[0][1])
+            response = send_file(xliff_files[0][0].name, mimetype='application/xml', as_attachment=True, download_name=xliff_files[0][1])
         else:
             zip_file = tempfile.NamedTemporaryFile(suffix='.zip', delete=False)
             zip_file_name = docassemble.base.functions.space_to_underscore(os.path.splitext(os.path.basename(re.sub(r'.*:', '', yaml_filename)))[0]) + "_" + tr_lang + ".zip"
@@ -25578,7 +25673,7 @@ def translation_file():
                     with open(item[0].name, 'rb') as fp:
                         zf.writestr(info, fp.read())
                 zf.close()
-            response = send_file(zip_file.name, mimetype='application/xml', as_attachment=True, attachment_filename=zip_file_name)
+            response = send_file(zip_file.name, mimetype='application/xml', as_attachment=True, download_name=zip_file_name)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
     flash(word("Bad file format"), 'error')
@@ -29156,7 +29251,8 @@ def api_interview():
         params = urllib.parse.parse_qs(parts.query)
         if params.get('action', '') != '':
             try:
-                action = tidy_action(json.loads(myb64unquote(params['action'])))
+                action = tidy_action(json64unquote(params['action']))
+                assert len(action) > 0
             except:
                 return jsonify_with_status(word("Invalid action."), 400)
         url_args = {}

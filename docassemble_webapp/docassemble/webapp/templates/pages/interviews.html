@@ -41,7 +41,7 @@
               {%- for interview in interviews %}
               {%- if not interview['metadata'].get('hidden', False) %}
                 <tr>
-                  <td>{% if interview['valid'] %}<a href="{{ url_for('index', i=interview['filename'], session=interview['session'], from_list=1) }}">{{ interview['title'] | safe }}</a>{% else %}{{ interview['title'] | safe }}{% endif %}{% if interview['subtitle'] %}<br><span class="text-muted dainterviewsubtitle">{{ interview['subtitle'] | safe}}</span>{% endif %}</td>
+                  <td>{% if interview['valid'] %}<a href="{{ url_for('index', i=interview['filename'], session=interview['session'], from_list=1) }}">{{ interview['title'] | safe }}</a>{% else %}{{ interview['title'] | safe }}{% endif %}{% if interview['subtitle'] %}<br><span class="text-body-secondary dainterviewsubtitle">{{ interview['subtitle'] | safe}}</span>{% endif %}</td>
                   {%- if tags_used %}
                   <td>{% for tag in interview['tags'] %}<a class="dabadge btn btn-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}</td>
                   {%- endif %}

@@ -487,6 +487,7 @@ class RandomForestMachineLearner(MachineLearner):
         success = False
         data = []
         depend_data = []
+        detected_columns = set()
         for record in db.session.execute(select(MachineLearning).where(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > ml_thread.lastmodtime[self.group_id]))).scalars().all():  # noqa: E712 # pylint: disable=singleton-comparison
             if record.independent is None or record.dependent is None:
                 continue
@@ -514,6 +515,7 @@ class RandomForestMachineLearner(MachineLearner):
             if not isinstance(indep_var, dict):
                 raise Exception("RandomForestMachineLearner: independent variable was not a dictionary")
             for key, val in indep_var.items():
+                detected_columns.add(key)
                 if isinstance(val, str):
                     val = str(val)
                 if key in ml_thread.learners[self.group_id]['indep_type']:
@@ -531,7 +533,7 @@ class RandomForestMachineLearner(MachineLearner):
             data.append(indep_var)
             success = True
         if success:
-            df = pd.DataFrame(data)
+            df = pd.DataFrame(data, columns=sorted(detected_columns))
             for key, val in ml_thread.learners[self.group_id]['indep_type'].items():
                 if val is str:
                     df[key] = pd.Series(df[key], dtype="category")
@@ -572,7 +574,7 @@ class RandomForestMachineLearner(MachineLearner):
                 if val not in ml_thread.learners[self.group_id]['indep_categories'][key]:
                     val = np.nan
             indep_to_use[key] = val
-        df = pd.DataFrame([indep_to_use])
+        df = pd.DataFrame([indep_to_use], columns=sorted(indep_to_use.keys()))
         for key, val in indep_to_use.items():
             if ml_thread.learners[self.group_id]['indep_type'][key] is str:
                 # df[key] = pd.Series(df[key]).astype('category', categories=ml_thread.learners[self.group_id]['indep_categories'][key])

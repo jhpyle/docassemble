@@ -1,0 +1,61 @@
+metadata:
+  title: Data structure
+  documentation: "https://docassemble.org/docs/initial.html#data"
+  example start: 1
+  example end: 1
+---
+variable name: people
+use objects: objects
+gathered: False
+data:
+  object: Individual
+  module: docassemble.base.util
+  items:
+    - name:
+        object: IndividualName
+        item:
+          first: Fred
+          last: Smith
+      email: fred@example.com
+      allergies:
+        - peanuts
+        - subway tokens
+      skills:
+        - guessing pennies
+    - name:
+        object: IndividualName
+        item:
+          first: Larry
+          last: Jones
+      email: larry@example.com
+      allergies: []
+      skills:
+        - stapling
+        - making ${ 'coffee' }
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  % for item in people:
+  ${ item } is at ${ item.email } and is good at ${ item.skills }
+  but has trouble with ${ item.allergies }.
+  % endfor
+---
+code: |
+  people.there_is_another = False
+---
+code: |
+  people[i].skills.there_is_another = False
+---
+code: |
+  people[i].allergies.there_is_another = False
+---
+question: |
+  Does ${ people[i] } have any allergies?
+yesno: people[i].allergies.there_are_any
+---
+question: |
+  Tell me about ${ people[i].possessive(ordinal(j)) } allergy.
+fields:
+  - Allergic to: people[i].allergies[j]

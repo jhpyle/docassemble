@@ -1,4 +1,5 @@
 from io import IOBase as FileType
+import copy
 import codecs
 import json
 import math
@@ -15,7 +16,7 @@ from Cryptodome.Cipher import AES
 from dateutil import tz
 from flask import session, url_for as base_url_for
 from flask_login import current_user
-from flask_mail import Mail as FlaskMail, Message  # noqa: F401 # pylint: disable=unused-import
+from docassemble.webapp.da_flask_mail import Message  # noqa: F401 # pylint: disable=unused-import
 from flask_wtf.csrf import generate_csrf
 from sqlalchemy import or_, and_, select, delete
 import ruamel.yaml
@@ -34,6 +35,7 @@ from docassemble.webapp.file_number import get_new_file_number
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.webapp.fixpickle import fix_pickle_obj, fix_pickle_dict
 from docassemble.webapp.mailgun_mail import Mail as MailgunMail
+from docassemble.webapp.da_flask_mail import FlaskMail
 from docassemble.webapp.packages.models import PackageAuth
 from docassemble.webapp.screenreader import to_text
 from docassemble.webapp.sendgrid_mail import Mail as SendgridMail
@@ -190,16 +192,91 @@ def absolute_filename(the_file):
         return playground
     return None
 
-if 'mailgun domain' in daconfig['mail'] and 'mailgun api key' in daconfig['mail']:
-    mail = MailgunMail(app)
-elif 'sendgrid api key' in daconfig['mail'] and daconfig['mail']['sendgrid api key']:
-    mail = SendgridMail(app)
-else:
-    mail = FlaskMail(app)
+def get_mail_config():
+    the_mail_configs = {}
+    default_config = None
+    for mail_config in daconfig['mail']:
+        if mail_config.get('name', None) == 'default':
+            default_config = mail_config
+    if default_config is None and len(daconfig['mail']) > 0:
+        default_config = daconfig['mail'][0]
+    if default_config is None:
+        default_config = {'username': None, 'password': None, 'default sender': None, 'server': 'localhost', 'port': 25, 'use ssl': False, 'use tls': True}
+    app.config['MAIL_USERNAME'] = default_config.get('username', None)
+    app.config['MAIL_PASSWORD'] = default_config.get('password', None)
+    app.config['MAIL_DEFAULT_SENDER'] = default_config.get('default sender', None)
+    app.config['MAIL_SERVER'] = default_config.get('server', 'localhost')
+    app.config['MAIL_PORT'] = default_config.get('port', 25)
+    app.config['MAIL_USE_SSL'] = default_config.get('use ssl', False)
+    app.config['MAIL_USE_TLS'] = default_config.get('use tls', True)
+    count = 0
+    for mail_config in daconfig['mail']:
+        the_config = copy.deepcopy(mail_config)
+        if the_config.get('mailgun api key', None):
+            try:
+                the_config['mailgun api url'] = mail_config.get('mailgun api url', 'https://api.mailgun.net/v3/%s/messages.mime') % mail_config.get('mailgun domain', 'NOT_USING_MAILGUN')
+            except:
+                the_config['mailgun api url'] = 'https://api.mailgun.net/v3/%s/messages.mime' % (mail_config.get('mailgun domain', 'NOT_USING_MAILGUN'),)
+        if not the_config.get('name', None):
+            the_config['name'] = 'config' + str(count)
+        the_mail_configs[the_config['name']] = the_config
+        if 'default' not in the_mail_configs and mail_config is default_config:
+            the_mail_configs['default'] = the_config
+        count += 1
+    if 'default' not in the_mail_configs:
+        the_mail_configs['default'] = default_config
+    for config_name, mail_config in the_mail_configs.items():
+        if mail_config.get('mailgun domain', None) and mail_config.get('mailgun api key', None):
+            mail_class = MailgunMail
+            config = {
+                'MAILGUN_API_URL': mail_config['mailgun api url'],
+                'MAILGUN_API_KEY': mail_config['mailgun api key'],
+                'MAIL_DEFAULT_SENDER': mail_config.get('default sender', None),
+                'MAIL_DEBUG': app.config.get('MAIL_DEBUG', False),
+                'MAIL_MAX_EMAILS': app.config.get('MAIL_MAX_EMAILS'),
+                'MAIL_SUPPRESS_SEND': app.config.get('MAIL_SUPPRESS_SEND', False),
+                'MAIL_ASCII_ATTACHMENTS': app.config.get('MAIL_ASCII_ATTACHMENTS', False)
+            }
+        elif 'sendgrid api key' in mail_config and mail_config['sendgrid api key']:
+            mail_class = SendgridMail
+            config = {
+                'SENDGRID_API_KEY': mail_config['sendgrid api key'],
+                'MAIL_DEFAULT_SENDER': mail_config.get('default sender', None),
+                'MAIL_DEBUG': app.config.get('MAIL_DEBUG', False),
+                'MAIL_MAX_EMAILS': app.config.get('MAIL_MAX_EMAILS'),
+                'MAIL_SUPPRESS_SEND': app.config.get('MAIL_SUPPRESS_SEND', False),
+                'MAIL_ASCII_ATTACHMENTS': app.config.get('MAIL_ASCII_ATTACHMENTS', False)
+            }
+        else:
+            mail_class = FlaskMail
+            config = {
+                'MAIL_SERVER': mail_config.get('server', 'localhost'),
+                'MAIL_USERNAME': mail_config.get('username', None),
+                'MAIL_PASSWORD': mail_config.get('password', None),
+                'MAIL_PORT': mail_config.get('port', 25),
+                'MAIL_USE_TLS': mail_config.get('use tls', True),
+                'MAIL_USE_SSL': mail_config.get('use ssl', False),
+                'MAIL_DEFAULT_SENDER': mail_config.get('default sender', None),
+                'MAIL_DEBUG': app.config.get('MAIL_DEBUG', False),
+                'MAIL_MAX_EMAILS': app.config.get('MAIL_MAX_EMAILS'),
+                'MAIL_SUPPRESS_SEND': app.config.get('MAIL_SUPPRESS_SEND', False),
+                'MAIL_ASCII_ATTACHMENTS': app.config.get('MAIL_ASCII_ATTACHMENTS', False)
+            }
+        if config_name == 'default':
+            mail_config['mail'] = mail_class(app=app, config=config)
+        else:
+            mail_config['mail'] = mail_class(config=config)
+    return the_mail_configs
 
 
-def da_send_mail(the_message):
-    mail.send(the_message)
+mail_configs = get_mail_config()
+
+
+def da_send_mail(the_message, config='default'):
+    if config not in mail_configs:
+        logmessage("invalid mail configuration " + config)
+        config = 'default'
+    mail_configs[config]['mail'].send(the_message)
 
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')

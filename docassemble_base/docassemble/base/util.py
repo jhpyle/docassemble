@@ -60,7 +60,7 @@ import babel.dates
 import phonenumbers
 from bs4 import BeautifulSoup
 import i18naddress
-from flask_mail import Message
+from docassemble.webapp.da_flask_mail import Message
 from pyzbar.pyzbar import decode
 from docxtpl import InlineImage, Subdoc, DocxTemplate
 # import tablib
@@ -2456,7 +2456,7 @@ class DAList(DAObject):
         """Returns HTML for adding an item to a list"""
         if color is None:
             color = server.daconfig['button colors'].get('add', 'secondary')
-        if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
+        if color not in ('primary', 'secondary', 'tertiary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
             color = 'success'
         if size not in ('sm', 'md', 'lg'):
             size = 'sm'
@@ -3411,7 +3411,7 @@ class DADict(DAObject):
         """Returns HTML for adding an item to a dict"""
         if color is None:
             color = server.daconfig['button colors'].get('add', 'secondary')
-        if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
+        if color not in ('primary', 'secondary', 'tertiary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
             color = 'success'
         if size not in ('sm', 'md', 'lg'):
             size = 'sm'
@@ -5747,6 +5747,44 @@ def setify(item, output=None):
     return output
 
 
+def objects_from_data(data, recursive=True, gathered=True, name=None, use_objects=False, package=None):
+    if name is None:
+        frame = inspect.stack()[1][0]
+        # logmessage("co_name is " + str(frame.f_code.co_names))
+        the_names = frame.f_code.co_names
+        if len(the_names) == 2:
+            thename = the_names[1]
+        else:
+            thename = None
+        del frame
+    else:
+        thename = name
+    if package is None and docassemble.base.functions.this_thread.current_question is not None:
+        package = docassemble.base.functions.this_thread.current_question.package
+    if thename is None:
+        objects = DAList('objects')
+        objects.set_random_instance_name()
+    else:
+        objects = DAList(thename)
+    new_objects = recurse_obj(data, recursive=recursive, use_objects=True)
+    objects.gathered = True
+    objects.revisit = True
+    is_singular = True
+    if isinstance(new_objects, list):
+        is_singular = False
+        for obj in new_objects:
+            objects.append(obj)
+    else:
+        objects.append(new_objects)
+    if is_singular and len(objects.elements) == 1:
+        objects = objects.elements[0]
+    if thename is not None and isinstance(objects, DAObject):
+        objects._set_instance_name_recursively(thename)
+    if isinstance(objects, (DAList, DADict, DASet)) and not gathered:
+        objects._reset_gathered_recursively()
+    return objects
+
+
 def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_objects=False, package=None):
     """A utility function for initializing a group of objects from a YAML file written in a certain format."""
     if isinstance(file_ref, DAFileCollection):
@@ -5775,7 +5813,8 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_ob
     if file_info is None or 'path' not in file_info:
         raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
     if thename is None:
-        objects = DAList()
+        objects = DAList('objects')
+        objects.set_random_instance_name()
     else:
         objects = DAList(thename)
     objects.gathered = True
@@ -5947,7 +5986,7 @@ class DAContext(DADict):
 da_context_keys = set(['question', 'document', 'docx', 'pdf', 'pandoc'])
 
 
-def objects_from_structure(target, root=None):
+def objects_from_structure(target, root=None, gathered=True):
     if isinstance(target, dict):
         target_keys = set(target.keys())
         if len(target_keys) > 0 and len(target_keys.intersection(da_context_keys)) >= 2 and len(target_keys.difference(da_context_keys)) == 0:
@@ -5958,16 +5997,18 @@ def objects_from_structure(target, root=None):
             return new_context
         new_dict = DADict('abc_dict')
         for key, val in target.items():
-            new_dict[key] = objects_from_structure(val)
-        new_dict.gathered = True
+            new_dict[key] = objects_from_structure(val, gathered=gathered)
+        if gathered:
+            new_dict.gathered = True
         if root:
             new_dict._set_instance_name_recursively(root)
         return new_dict
     if isinstance(target, list):
         new_list = DAList('abc_list')
         for val in target.__iter__():  # pylint: disable=unnecessary-dunder-call
-            new_list.append(objects_from_structure(val))
-        new_list.gathered = True
+            new_list.append(objects_from_structure(val), gathered=gathered)
+        if gathered:
+            new_list.gathered = True
         if root:
             new_list._set_instance_name_recursively(root)
         return new_list
@@ -7123,6 +7164,7 @@ class RoleChangeTracker(DAObject):
         for key, val in kwargs.items():  # pylint: disable=unused-variable
             if 'to' in val:
                 need(val['to'].email)
+        config = kwargs.get('config', None)
         for role_needed in roles_needed:
             # logmessage("One role needed is " + str(role_needed))
             if role_needed == self.last_role:
@@ -7134,7 +7176,7 @@ class RoleChangeTracker(DAObject):
                 if 'to' in email_info and 'email' in email_info:
                     # logmessage("I have email info on " + str(role_needed))
                     try:
-                        result = send_email(to=email_info['to'], html=email_info['email'].content, subject=email_info['email'].subject)
+                        result = send_email(to=email_info['to'], html=email_info['email'].content, subject=email_info['email'].subject, config=config)
                     except DAError:
                         result = False
                     if result:
@@ -8430,8 +8472,12 @@ def send_fax(fax_number, file_object, config='default', country=None):
     return FaxStatus(server.send_fax(fax_string(fax_number, country=country), file_object, config, country=country))
 
 
-def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, task_persistent=False, attachments=None, mailgun_variables=None, dry_run=False):
+def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, task_persistent=False, attachments=None, mailgun_variables=None, dry_run=False, config=None):
     """Sends an e-mail and returns whether sending the e-mail was successful."""
+    if config is None:
+        config = docassemble.base.functions.this_thread.interview.consolidated_metadata.get('email config', None)
+    if not config:
+        config = 'default'
     if attachments is None:
         attachments = []
     if (not isinstance(attachments, (DAList, DASet, abc.Iterable))) or isinstance(attachments, str):
@@ -8531,7 +8577,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
     if success:
         try:
             logmessage("send_email: starting to send")
-            server.send_mail(msg)
+            server.send_mail(msg, config=config)
             logmessage("send_email: finished sending")
         except Exception as errmess:
             logmessage("send_email: sending mail failed with error of " + " type " + str(errmess.__class__.__name__) + ": " + str(errmess))
@@ -9224,7 +9270,7 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
     """Returns HTML for a button that visits a particular URL."""
     if not isinstance(label, str):
         label = 'Edit'
-    if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
+    if color not in ('primary', 'secondary', 'tertiary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
         color = 'dark'
     if size not in ('sm', 'md', 'lg'):
         size = 'sm'

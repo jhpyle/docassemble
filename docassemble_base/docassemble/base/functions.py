@@ -52,7 +52,8 @@ import docassemble_pattern.it  # pylint: disable=import-error,no-name-in-module
 import docassemble_pattern.nl  # pylint: disable=import-error,no-name-in-module
 from pylatex.utils import escape_latex
 # import operator
-import da_pkg_resources as pkg_resources
+# import da_pkg_resources as pkg_resources
+import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun, DAError

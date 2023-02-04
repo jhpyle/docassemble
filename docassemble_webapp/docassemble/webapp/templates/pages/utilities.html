@@ -26,7 +26,7 @@
 
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
-  {{ render_file_field(form.pdfdocxfile) }}
+  {{ render_file_field(form.pdfdocxfile, accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf") }}
   {{ render_submit_field(form.scan) }}
 </form>
 

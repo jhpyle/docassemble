@@ -1255,12 +1255,18 @@
 "You must type at least %s characters.": Null
 "You need to be logged in to access this interview.": Null
 "You need to enter a complete e-mail address.": Null
+"You need to enter a date and time between %s and %s.": Null
+"You need to enter a date and time on or after %s.": Null
+"You need to enter a date and time on or before %s.": Null
 "You need to enter a date between %s and %s.": Null
 "You need to enter a date on or after %s.": Null
 "You need to enter a date on or before %s.": Null
 "You need to enter a number.": Null
 "You need to enter a number that is at least %s.": Null
 "You need to enter a number that is at most %s.": Null
+"You need to enter a time at or after %s.": Null
+"You need to enter a time at or before %s.": Null
+"You need to enter a time between %s and %s.": Null
 "You need to enter a valid date and time.": Null
 "You need to enter a valid date.": Null
 "You need to enter a valid number.": Null

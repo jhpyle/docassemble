@@ -1,0 +1,29 @@
+metadata:
+  title: Data structure
+  documentation: "https://docassemble.org/docs/initial.html#data from code"
+  example start: 1
+  example end: 2
+---
+variable name: the_object
+use objects: objects
+data from code:
+  object: Thing
+  module: docassemble.base.util
+  item:
+    name:
+      object: Name
+      module: docassemble.base.util
+      item:
+        text: |
+          the_name
+    size: |
+      4 * unit_size
+---
+mandatory: True
+question: |
+  The object is ${ the_object } and its size is
+  ${ the_object.size }.
+---
+code: |
+  the_name = "rocks"
+  unit_size=2

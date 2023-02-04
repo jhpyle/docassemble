@@ -830,8 +830,25 @@ def load(**kwargs):
         except:
             config_error("websockets port must be an integer")
             del daconfig['websockets port']
-    if 'mail' not in daconfig:
-        daconfig['mail'] = {}
+    if 'mail' in daconfig:
+        if isinstance(daconfig['mail'], dict):
+            if not daconfig['mail'].get('name', None):
+                daconfig['mail']['name'] = 'default'
+            daconfig['mail'] = [daconfig['mail']]
+        elif isinstance(daconfig['mail'], list):
+            ok = True
+            for item in daconfig['mail']:
+                if not isinstance(item, dict):
+                    config_error("mail must be a dictionary or a list of dictionaries")
+                    ok = False
+                    break
+            if not ok:
+                daconfig['mail'] = []
+        else:
+            config_error("mail must be a dictionary or a list of dictionaries")
+            daconfig['mail'] = []
+    else:
+        daconfig['mail'] = []
     if 'dispatch' not in daconfig:
         daconfig['dispatch'] = {}
     if not isinstance(daconfig['dispatch'], dict):

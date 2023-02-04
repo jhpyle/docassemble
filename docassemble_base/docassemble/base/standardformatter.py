@@ -10,7 +10,7 @@ from html.parser import HTMLParser
 from docassemble.base.functions import word, get_currency_symbol, comma_and_list, server, custom_types, get_locale
 from docassemble.base.util import format_date, format_datetime, format_time
 # from docassemble.base.generate_key import random_string
-from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape, process_target
+from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape, process_target, get_icon_html
 from docassemble.base.parse import Question
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
@@ -130,11 +130,8 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
         is_decoration = True
         the_image = status.question.interview.images.get(name, None)
         if the_image is None:
-            if daconfig.get('default icons', None) == 'font awesome':
-                return '<i class="' + daconfig.get('font awesome prefix', 'fas') + ' fa-' + str(name) + '"></i>'
-            if daconfig.get('default icons', None) == 'material icons':
-                return '<i class="da-material-icons">' + str(name) + '</i>'
-            return ''
+            icon = get_icon_html(str(name))
+            return icon if icon else ""
         if the_image.attribution is not None:
             status.attributions.add(the_image.attribution)
         url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
@@ -693,10 +690,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         if the_image.attribution is not None:
                             status.attributions.add(the_image.attribution)
                         decorations.append('<img alt="" class="daiconfloat" style="' + sizing + '" src="' + url + '"/>')
-                elif daconfig.get('default icons', None) == 'font awesome':
-                    decorations.append('<span style="font-size: ' + str(DECORATION_SIZE) + str(DECORATION_UNITS) + '" class="dadecoration"><i class="' + daconfig.get('font awesome prefix', 'fas') + ' fa-' + str(decoration['image']) + '"></i></span>')
-                elif daconfig.get('default icons', None) == 'material icons':
-                    decorations.append('<span style="font-size: ' + str(DECORATION_SIZE) + str(DECORATION_UNITS) + '" class="dadecoration"><i class="da-material-icons">' + str(decoration['image']) + '</i></span>')
+                else:
+                  icon = get_icon_html(str(decoration["image"]))
+                  if icon:
+                      decorations.append('<span style="font-size: ' + str(DECORATION_SIZE) + str(DECORATION_UNITS) + '" class="dadecoration">' + icon + '</span>')
     if len(decorations) > 0:
         decoration_text = decorations[0]
     else:
@@ -848,7 +845,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 #     continue
                 if field.datatype == 'button' and hasattr(field, 'label') and field.number in status.helptexts:
                     color = status.question.interview.options.get('review button color', BUTTON_COLOR_REVIEW)
-                    if color not in ('link', 'danger', 'warning', 'info', 'primary', 'secondary', 'light', 'dark', 'success'):
+                    if color not in ('link', 'danger', 'warning', 'info', 'primary', 'secondary', 'tertiary', 'light', 'dark', 'success'):
                         color = BUTTON_COLOR_REVIEW
                     icon = status.question.interview.options.get('review button icon', 'fas fa-pencil-alt')
                     if isinstance(icon, str) and icon != '':
@@ -1282,9 +1279,55 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 if field.datatype == 'time':
                     validation_rules['rules'][the_saveas]['time'] = True
                     validation_rules['messages'][the_saveas]['time'] = field.validation_message('time', status, word("You need to enter a valid time."))
+                    if hasattr(field, 'extras') and 'min' in field.extras and 'min' in status.extras and 'max' in field.extras and 'max' in status.extras and field.number in status.extras['min'] and field.number in status.extras['max']:
+                        validation_rules['rules'][the_saveas]['minmaxtime'] = [format_time(status.extras['min'][field.number], format='HH:mm'), format_time(status.extras['max'][field.number], format='HH:mm')]
+                        validation_rules['messages'][the_saveas]['minmaxtime'] = field.validation_message('time minmax', status, word("You need to enter a time between %s and %s."), parameters=(format_time(status.extras['min'][field.number], format='short'), format_time(status.extras['max'][field.number], format='short')))
+                    else:
+                        was_defined = {}
+                        for key in ['min', 'max']:
+                            if hasattr(field, 'extras') and key in field.extras and key in status.extras and field.number in status.extras[key]:
+                                was_defined[key] = True
+                                # logmessage("Adding validation rule for " + str(key))
+                                validation_rules['rules'][the_saveas][key + 'time'] = format_time(status.extras[key][field.number], format='HH:mm')
+                                if key == 'min':
+                                    validation_rules['messages'][the_saveas]['mintime'] = field.validation_message('time min', status, word("You need to enter a time at or after %s."), parameters=tuple([format_time(status.extras[key][field.number], format='short')]))
+                                elif key == 'max':
+                                    validation_rules['messages'][the_saveas]['maxtime'] = field.validation_message('time max', status, word("You need to enter a time at or before %s."), parameters=tuple([format_time(status.extras[key][field.number], format='short')]))
+                        if len(was_defined) == 0 and 'default time min' in status.question.interview.options and 'default time max' in status.question.interview.options:
+                            validation_rules['rules'][the_saveas]['minmaxtime'] = [format_time(status.question.interview.options['default time min'], format='HH:mm'), format_time(status.question.interview.options['default time max'], format='HH:mm')]
+                            validation_rules['messages'][the_saveas]['minmaxtime'] = field.validation_message('time minmax', status, word("You need to enter a time between %s and %s."), parameters=(format_time(status.question.interview.options['default time min'], format='short'), format_time(status.question.interview.options['default time max'], format='short')))
+                        elif 'max' not in was_defined and 'default time max' in status.question.interview.options:
+                            validation_rules['rules'][the_saveas]['maxtime'] = format_time(status.question.interview.options['default time max'], format='HH:mm')
+                            validation_rules['messages'][the_saveas]['maxtime'] = field.validation_message('time max', status, word("You need to enter a time at or before %s."), parameters=tuple([format_time(status.question.interview.options['default time max'], format='short')]))
+                        elif 'min' not in was_defined and 'default time min' in status.question.interview.options:
+                            validation_rules['rules'][the_saveas]['mintime'] = format_time(status.question.interview.options['default time min'], format='HH:mm')
+                            validation_rules['messages'][the_saveas]['mintime'] = field.validation_message('time min', status, word("You need to enter a time at or after %s."), parameters=tuple([format_time(status.question.interview.options['default time min'], format='short')]))
                 if field.datatype in ['datetime', 'datetime-local']:
                     validation_rules['rules'][the_saveas]['datetime'] = True
                     validation_rules['messages'][the_saveas]['datetime'] = field.validation_message('datetime', status, word("You need to enter a valid date and time."))
+                    if hasattr(field, 'extras') and 'min' in field.extras and 'min' in status.extras and 'max' in field.extras and 'max' in status.extras and field.number in status.extras['min'] and field.number in status.extras['max']:
+                        validation_rules['rules'][the_saveas]['minmaxdatetime'] = [format_datetime(status.extras['min'][field.number], format='yyyy-MM-ddTHH:mm'), format_datetime(status.extras['max'][field.number], format='yyyy-MM-ddTHH:mm')]
+                        validation_rules['messages'][the_saveas]['minmaxdatetime'] = field.validation_message('datetime minmax', status, word("You need to enter a date and time between %s and %s."), parameters=(format_datetime(status.extras['min'][field.number], format='yyyy-MM-dd HH:mm'), format_datetime(status.extras['max'][field.number], format='yyyy-MM-dd HH:mm')))
+                    else:
+                        was_defined = {}
+                        for key in ['min', 'max']:
+                            if hasattr(field, 'extras') and key in field.extras and key in status.extras and field.number in status.extras[key]:
+                                was_defined[key] = True
+                                # logmessage("Adding validation rule for " + str(key))
+                                validation_rules['rules'][the_saveas][key + 'datetime'] = format_datetime(status.extras[key][field.number], format='yyyy-MM-ddTHH:mm')
+                                if key == 'min':
+                                    validation_rules['messages'][the_saveas]['mindatetime'] = field.validation_message('datetime min', status, word("You need to enter a date and time on or after %s."), parameters=tuple([format_datetime(status.extras[key][field.number], format='yyyy-MM-dd HH:mm')]))
+                                elif key == 'max':
+                                    validation_rules['messages'][the_saveas]['maxdatetime'] = field.validation_message('datetime max', status, word("You need to enter a date and time on or before %s."), parameters=tuple([format_datetime(status.extras[key][field.number], format='yyyy-MM-dd HH:mm')]))
+                        if len(was_defined) == 0 and 'default datetime min' in status.question.interview.options and 'default datetime max' in status.question.interview.options:
+                            validation_rules['rules'][the_saveas]['minmaxdatetime'] = [format_datetime(status.question.interview.options['default datetime min'], format='yyyy-MM-ddTHH:mm'), format_datetime(status.question.interview.options['default datetime max'], format='yyyy-MM-ddTHH:mm')]
+                            validation_rules['messages'][the_saveas]['minmaxdatetime'] = field.validation_message('datetime minmax', status, word("You need to enter a date and time between %s and %s."), parameters=(format_datetime(status.question.interview.options['default datetime min'], format='yyyy-MM-dd HH:mm'), format_datetime(status.question.interview.options['default datetime max'], format='yyyy-MM-dd HH:mm')))
+                        elif 'max' not in was_defined and 'default datetime max' in status.question.interview.options:
+                            validation_rules['rules'][the_saveas]['maxdatetime'] = format_datetime(status.question.interview.options['default datetime max'], format='yyyy-MM-ddTHH:mm')
+                            validation_rules['messages'][the_saveas]['maxdatetime'] = field.validation_message('datetime max', status, word("You need to enter a date and time on or before %s."), parameters=tuple([format_datetime(status.question.interview.options['default datetime max'], format='yyyy-MM-dd HH:mm')]))
+                        elif 'min' not in was_defined and 'default datetime min' in status.question.interview.options:
+                            validation_rules['rules'][the_saveas]['mindatetime'] = format_datetime(status.question.interview.options['default datetime min'], format='yyyy-MM-ddTHH:mm')
+                            validation_rules['messages'][the_saveas]['mindatetime'] = field.validation_message('datetime min', status, word("You need to enter a date and time on or after %s."), parameters=tuple([format_datetime(status.question.interview.options['default datetime min'], format='yyyy-MM-dd HH:mm')]))
                 if field.datatype == 'email':
                     validation_rules['rules'][the_saveas]['email'] = True
                     if status.extras['required'][field.number]:
@@ -2228,6 +2271,22 @@ def double_to_single_newline(text):
     return text
 
 
+def is_in_checkbox(field, defaultvalue, pair):
+    if isinstance(defaultvalue, (list, set)):
+        the_list = defaultvalue
+    elif hasattr(defaultvalue, 'elements') and isinstance(defaultvalue.elements, (list, set)):
+        the_list = defaultvalue.elements
+    else:
+        return False
+    if field.datatype in ('object_multiselect', 'object_checkboxes'):
+        varname = from_safeid(pair['key'])
+        for item in the_list:
+            if hasattr(item, 'instanceName') and item.instanceName == varname:
+                return True
+        return False
+    return str(pair['key']) in defaultvalue
+
+
 def input_for(status, field, wide=False, embedded=False, floating_label=None):
     output = str()
     if field.number in status.defaults:
@@ -2343,14 +2402,12 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
             for idx, p in zip(group_order, pairlist):
                 if not p.get('group') in groups:
                     groups[p.get('group')] = idx
-
             if using_shuffle:
                 pairlist = sorted(pairlist, key=lambda p: (groups[p.get('group')], random.random()))
             else:
                 pairlist = sorted(pairlist, key=lambda p: groups[p.get('group')])
         elif using_shuffle:
             random.shuffle(pairlist)
-
         if field.datatype in ['multiselect', 'object_multiselect']:
             if field.datatype == 'object_multiselect':
                 daobject = ' damultiselect daobject'
@@ -2394,7 +2451,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     isselected = ' selected="selected"'
                 elif defaultvalue is None:
                     isselected = ''
-                elif isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue:
+                elif is_in_checkbox(field, defaultvalue, pair):
                     isselected = ' selected="selected"'
                 elif isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]:
                     isselected = ' selected="selected"'
@@ -2452,7 +2509,6 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     inner_field = safeid(from_safeid(saveas_string) + "[B" + myb64quote(pair['key']) + "]")
                 else:
                     inner_field = safeid(from_safeid(saveas_string) + "[R" + myb64quote(repr(pair['key'])) + "]")
-                # logmessage("I've got a " + repr(pair['label']))
                 formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                 def_key = from_safeid(saveas_string) + "[" + repr(pair['key']) + "]"
                 if def_key in status.other_defaults and status.other_defaults[def_key]:
@@ -2462,7 +2518,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 elif defaultvalue is None:
                     ischecked = ''
                     all_checked = False
-                elif isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue:
+                elif is_in_checkbox(field, defaultvalue, pair):
                     ischecked = ' checked'
                 elif isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]:
                     ischecked = ' checked'
@@ -2924,10 +2980,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 defaultstring = ' value="' + format_time(defaultvalue, format='HH:mm') + '"'
                 default_val = format_time(defaultvalue, format='HH:mm')
             elif isinstance(defaultvalue, datetime.datetime):
-                if field.datatype == 'datetime':
-                    defaultstring = ' value="' + format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm') + '"'
-                    default_val = format_date(defaultvalue, format='yyyy-MM-dd HH:mm')
-                elif field.datatype == 'datetime-local':
+                if field.datatype in ('datetime', 'datetime-local'):
                     defaultstring = ' value="' + format_datetime(defaultvalue, format='yyyy-MM-ddTHH:mm') + '"'
                     default_val = format_date(defaultvalue, format='yyyy-MM-dd HH:mm')
                 else:

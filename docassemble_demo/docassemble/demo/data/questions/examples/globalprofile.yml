@@ -34,7 +34,7 @@ review:
       % if defined('profile.user.name.first'):
       ${ profile.user }
       % else:
-      <span class="text-muted">Your name has not been defined.</span>
+      <span class="text-body-secondary">Your name has not been defined.</span>
       % endif
   - label: Edit
     field: screen['address']
@@ -44,7 +44,7 @@ review:
       % if defined('profile.user.address.address'):
       ${ profile.user.address.block() }
       % else:
-      <span class="text-muted">You have not yet provided your address.</span>
+      <span class="text-body-secondary">You have not yet provided your address.</span>
       % endif
   - label: Edit
     fields: screen['preferences']
@@ -58,7 +58,7 @@ review:
 
       Screen mode: ${ profile.preferences.screen_mode }.
       % else:
-      <span class="text-muted">Your preferences have not been set yet.</span>
+      <span class="text-body-secondary">Your preferences have not been set yet.</span>
       % endif
 skip undefined: False
 ---

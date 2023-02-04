@@ -3,8 +3,9 @@
 import time
 import requests
 from requests.auth import HTTPBasicAuth
-from flask_mail import Message, BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
 from docassemble.base.logger import logmessage
+from docassemble.webapp.da_flask_mail import Message
+from flask_mail import BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
 
 
 class Connection:
@@ -20,6 +21,8 @@ class Connection:
 
     def send(self, message, envelope_from=None):  # pylint: disable=unused-argument
         assert message.send_to, "No recipients have been added"
+        if message.sender is None:
+            message.sender = self.mail.default_sender
         assert message.sender, (
                 "The message does not specify a sender and a default sender "
                 "has not been configured")
@@ -76,9 +79,8 @@ class _MailMixin:
         self.send(Message(*args, **kwargs))
 
     def connect(self):
-        app = getattr(self, "app", None) or current_app
         try:
-            return Connection(app.extensions['mail'])
+            return Connection(self.state)
         except KeyError:
             raise RuntimeError("The curent application was not configured with Flask-Mail")
 
@@ -98,10 +100,10 @@ class _Mail(_MailMixin):
 
 class Mail(_MailMixin):
 
-    def __init__(self, app=None):
+    def __init__(self, app=None, config=None):
         self.app = app
-        if app is not None:
-            self.state = self.init_app(app)
+        if app is not None or config is not None:
+            self.state = self.init_app(app=app, config=config)
         else:
             self.state = None
 
@@ -115,10 +117,15 @@ class Mail(_MailMixin):
             config.get('MAIL_ASCII_ATTACHMENTS', False)
         )
 
-    def init_app(self, app):
-        state = self.init_mail(app.config, app.debug, app.testing)
-        app.extensions = getattr(app, 'extensions', {})
-        app.extensions['mail'] = state
+    def init_app(self, app=None, config=None):
+        if app is not None:
+            if config is None:
+                config = app.config
+            state = self.init_mail(config, app.debug, app.testing)
+            app.extensions = getattr(app, 'extensions', {})
+            app.extensions['mail'] = state
+        else:
+            state = self.init_mail(config, False, False)
         return state
 
     def __getattr__(self, name):

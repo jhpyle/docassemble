@@ -1624,6 +1624,8 @@ class Field:
             self.image_generator = data['image_generator']
         if 'extras' in data:
             self.extras = data['extras']
+        else:
+            self.extras = {}
         if 'selections' in data:
             self.selections = data['selections']
         if 'boolean' in data:
@@ -2532,10 +2534,23 @@ class Question:
                 self.fields_used.add(data['variable name'].strip())
             else:
                 self.other_fields_used.add(data['variable name'].strip())
-            if 'use objects' in data and data['use objects']:
-                self.question_type = 'data_da'
+            if 'use objects' in data:
+                if data['use objects'] == 'objects':
+                    self.use_objects = 'objects'
+                else:
+                    self.use_objects = bool(data['use objects'])
             else:
-                self.question_type = 'data'
+                self.use_objects = False
+            if 'gathered' in data:
+                if isinstance(data['gathered'], (bool, NoneType)):
+                    self.gathered = data['gathered']
+                else:
+                    data['gathered'] = str(data['gathered'])
+                    self.gathered = compile(data['gathered'], '<gathered code>', 'eval')
+                    self.find_fields_in(data['gathered'])
+            else:
+                self.gathered = True
+            self.question_type = 'data'
             self.fields.append(Field({'saveas': data['variable name'].strip(), 'type': 'data', 'data': self.recursive_dataobject(data['data'])}))
         if 'data from code' in data and 'variable name' in data:
             if not isinstance(data['variable name'], str):
@@ -2544,11 +2559,24 @@ class Question:
                 self.fields_used.add(data['variable name'])
             else:
                 self.other_fields_used.add(data['variable name'])
-            if 'use objects' in data and data['use objects']:
-                self.question_type = 'data_from_code_da'
+            if 'use objects' in data:
+                if data['use objects'] == 'objects':
+                    self.use_objects = 'objects'
+                else:
+                    self.use_objects = bool(data['use objects'])
             else:
-                self.question_type = 'data_from_code'
-            self.fields.append(Field({'saveas': data['variable name'], 'type': 'data_from_code', 'data': self.recursive_data_from_code(data['data from code'])}))
+                self.use_objects = False
+            if 'gathered' in data:
+                if isinstance(data['gathered'], (bool, NoneType)):
+                    self.gathered = data['gathered']
+                else:
+                    data['gathered'] = str(data['gathered'])
+                    self.gathered = compile(data['gathered'], '<gathered code>', 'eval')
+                    self.find_fields_in(data['gathered'])
+            else:
+                self.gathered = True
+            self.question_type = 'data_from_code'
+            self.fields.append(Field({'saveas': data['variable name'], 'type': 'data_from_code', 'data': self.recursive_data_from_code(data['data from code'], objects=self.use_objects)}))
         if 'objects' in data:
             if not isinstance(data['objects'], list):
                 data['objects'] = [data['objects']]
@@ -3378,9 +3406,19 @@ class Question:
         if 'choices' in data or 'buttons' in data or 'dropdown' in data or 'combobox' in data:
             if 'field' in data:
                 uses_field = True
+                uses_continue_button_field = False
                 data['field'] = data['field'].strip()
+                if invalid_variable_name(data['field']):
+                    raise DAError("Missing or invalid variable name " + repr(data['field']) + "." + self.idebug(data))
             else:
                 uses_field = False
+                if 'continue button field' in data:
+                    data['continue button field'] = data['continue button field'].strip()
+                    if invalid_variable_name(data['continue button field']):
+                        raise DAError("Missing or invalid variable name " + repr(data['continue button field']) + "." + self.idebug(data))
+                    uses_continue_button_field = True
+                else:
+                    uses_continue_button_field = False
             shuffle = bool('shuffle' in data and data['shuffle'])
             if 'choices' in data or 'dropdown' in data or 'combobox' in data:
                 if 'choices' in data:
@@ -3412,9 +3450,6 @@ class Question:
                         raise DAError("A validation messages indicator must be a dictionary of text keys and text values." + self.idebug(data))
                     field_data['validation messages'][validation_key] = TextObject(definitions + str(validation_message).strip(), question=self)
             if uses_field:
-                data['field'] = data['field'].strip()
-                if invalid_variable_name(data['field']):
-                    raise DAError("Missing or invalid variable name " + repr(data['field']) + "." + self.idebug(data))
                 if self.scan_for_variables:
                     self.fields_used.add(data['field'])
                 else:
@@ -3428,6 +3463,14 @@ class Question:
                     field_data['type'] = 'boolean'
                 elif is_threestate(field_data):
                     field_data['type'] = 'threestate'
+            if uses_continue_button_field:
+                if self.scan_for_variables:
+                    self.fields_used.add(data['continue button field'])
+                else:
+                    self.other_fields_used.add(data['continue button field'])
+                if 'extras' not in field_data:
+                    field_data['extras'] = {}
+                field_data['extras']['continue button field'] = data['continue button field']
             self.fields.append(Field(field_data))
             self.question_type = 'multiple_choice'
         elif 'continue button field' in data and 'fields' not in data and 'yesno' not in data and 'noyes' not in data and 'yesnomaybe' not in data and 'noyesmaybe' not in data and 'signature' not in data:
@@ -4673,23 +4716,24 @@ class Question:
             for need_code in self.need:
                 eval(need_code, the_user_dict)
 
-    def recursive_data_from_code(self, target):
+    def recursive_data_from_code(self, target, objects=False, plain=False):
         if isinstance(target, dict) or (hasattr(target, 'elements') and isinstance(target.elements, dict)):
             new_dict = {}
+            indicates_object = 'object' in target and ('items' in target or 'item' in target)
             for key, val in target.items():
-                new_dict[key] = self.recursive_data_from_code(val)
+                new_dict[key] = self.recursive_data_from_code(val, objects=objects, plain=bool(objects == 'objects' and indicates_object and key in ('module', 'object')))
             return new_dict
         if isinstance(target, list) or (hasattr(target, 'elements') and isinstance(target.elements, list)):
             new_list = []
             for val in target.__iter__():  # pylint: disable=unnecessary-dunder-call
-                new_list.append(self.recursive_data_from_code(val))
+                new_list.append(self.recursive_data_from_code(val, objects=objects))
             return new_list
         if isinstance(target, set) or (hasattr(target, 'elements') and isinstance(target.elements, set)):
             new_set = set()
             for val in target.__iter__():  # pylint: disable=unnecessary-dunder-call
-                new_set.add(self.recursive_data_from_code(val))
+                new_set.add(self.recursive_data_from_code(val, objects=objects))
             return new_set
-        if isinstance(target, (bool, float, int, NoneType)):
+        if plain or isinstance(target, (bool, float, int, NoneType)):
             return target
         self.find_fields_in(target)
         return compile(target, '<expression>', 'eval')
@@ -5312,7 +5356,7 @@ class Question:
                         label = button['label']
                         extras['action_buttons'].append(dict(action=action, label=label, color=color, icon=icon, placement=placement, css_class=css_class, target=target))
             for item in extras['action_buttons']:
-                if color not in ('primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
+                if color not in ('primary', 'secondary', 'tertiary', 'success', 'danger', 'warning', 'info', 'light', 'dark', 'link'):
                     raise DAError("color in action buttons not valid: " + repr(color))
         if hasattr(self, 'question_metadata'):
             extras['questionMetadata'] = recursive_eval_textobject_or_primitive(self.question_metadata, user_dict)
@@ -6278,7 +6322,7 @@ class Question:
                                     elif varname in old_user_dict:
                                         del old_user_dict[varname]
                                 try:
-                                    defaults[field.number] = eval(from_safeid(field.saveas), old_user_dict)
+                                    defaults[field.number] = eval(substitute_vars(from_safeid(field.saveas), self.is_generic, the_x, iterators), old_user_dict)
                                 except:
                                     defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
                             else:
@@ -8114,28 +8158,38 @@ class Interview:
                             if question.question_type == "data":
                                 if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'data', 'time': time.time()})
-                                the_string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
+                                if isinstance(question.gathered, (bool, NoneType)):
+                                    gathered = question.gathered
+                                else:
+                                    gathered = eval(question.gathered, user_dict)
+                                thename = from_safeid(question.fields[0].saveas)
+                                if question.use_objects == 'objects':
+                                    user_dict['_DADATA'] = docassemble.base.util.objects_from_data(recursive_eval_dataobject(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, use_objects=True, package=question.package)
+                                elif question.use_objects:
+                                    user_dict['_DADATA'] = docassemble.base.util.objects_from_structure(recursive_eval_dataobject(question.fields[0].data, user_dict), root=thename, gathered=gathered)
+                                else:
+                                    user_dict['_DADATA'] = recursive_eval_dataobject(question.fields[0].data, user_dict)
+                                the_string = thename + ' = _DADATA'
                                 exec(the_string, user_dict)
-                                question.mark_as_answered(user_dict)
-                            if question.question_type == "data_da":
-                                if self.debug:
-                                    interview_status.seeking.append({'question': question, 'reason': 'data', 'time': time.time()})
-                                exec(import_core, user_dict)
-                                the_string = from_safeid(question.fields[0].saveas) + ' = objects_from_structure(' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
-                                exec(the_string, user_dict)
+                                del user_dict['_DADATA']
                                 question.mark_as_answered(user_dict)
                             if question.question_type == "data_from_code":
                                 if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'data', 'time': time.time()})
-                                the_string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict))
+                                if isinstance(question.gathered, (bool, NoneType)):
+                                    gathered = question.gathered
+                                else:
+                                    gathered = eval(question.gathered, user_dict)
+                                thename = from_safeid(question.fields[0].saveas)
+                                if question.use_objects == 'objects':
+                                    user_dict['_DADATAFROMCODE'] = docassemble.base.util.objects_from_data(recursive_eval_data_from_code(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, use_objects=True, package=question.package)
+                                elif question.use_objects:
+                                    user_dict['_DADATAFROMCODE'] = docassemble.base.util.objects_from_structure(recursive_eval_data_from_code(question.fields[0].data, user_dict), root=thename, gathered=gathered)
+                                else:
+                                    user_dict['_DADATAFROMCODE'] = recursive_eval_data_from_code(question.fields[0].data, user_dict)
+                                the_string = thename + ' = _DADATAFROMCODE'
                                 exec(the_string, user_dict)
-                                question.mark_as_answered(user_dict)
-                            if question.question_type == "data_from_code_da":
-                                if self.debug:
-                                    interview_status.seeking.append({'question': question, 'reason': 'data', 'time': time.time()})
-                                exec(import_core, user_dict)
-                                the_string = from_safeid(question.fields[0].saveas) + ' = objects_from_structure(' + repr(recursive_eval_data_from_code(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
-                                exec(the_string, user_dict)
+                                del user_dict['_DADATAFROMCODE']
                                 question.mark_as_answered(user_dict)
                             if question.question_type == "objects_from_file":
                                 if self.debug:
@@ -8621,17 +8675,18 @@ class Interview:
                     if question.question_type == "data":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         old_values = question.get_old_values(user_dict)
-                        the_string = from_safeid(question.fields[0].saveas) + ' = ' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict))
-                        exec(the_string, user_dict)
-                        question.post_exec(user_dict)
-                        docassemble.base.functions.pop_current_variable()
-                        question.invalidate_dependencies(user_dict, old_values)
-                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
-                    if question.question_type == "data_da":
-                        question.exec_setup(is_generic, the_x, iterators, user_dict)
-                        old_values = question.get_old_values(user_dict)
-                        exec(import_core, user_dict)
-                        the_string = from_safeid(question.fields[0].saveas) + ' = objects_from_structure(' + repr(recursive_eval_dataobject(question.fields[0].data, user_dict)) + ', root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
+                        if isinstance(question.gathered, (bool, NoneType)):
+                            gathered = question.gathered
+                        else:
+                            gathered = eval(question.gathered, user_dict)
+                        thename = from_safeid(question.fields[0].saveas)
+                        if question.use_objects == 'objects':
+                            user_dict['_DADATA'] = docassemble.base.util.objects_from_data(recursive_eval_dataobject(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, use_objects=True, package=question.package)
+                        elif question.use_objects:
+                            user_dict['_DADATA'] = docassemble.base.util.objects_from_structure(recursive_eval_dataobject(question.fields[0].data, user_dict), root=thename, gathered=gathered)
+                        else:
+                            user_dict['_DADATA'] = recursive_eval_dataobject(question.fields[0].data, user_dict)
+                        the_string = thename + ' = _DADATA'
                         exec(the_string, user_dict)
                         question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
@@ -8640,20 +8695,18 @@ class Interview:
                     if question.question_type == "data_from_code":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         old_values = question.get_old_values(user_dict)
-                        user_dict['_DADATAFROMCODE'] = recursive_eval_data_from_code(question.fields[0].data, user_dict)
-                        the_string = from_safeid(question.fields[0].saveas) + ' = _DADATAFROMCODE'
-                        exec(the_string, user_dict)
-                        del user_dict['_DADATAFROMCODE']
-                        question.post_exec(user_dict)
-                        docassemble.base.functions.pop_current_variable()
-                        question.invalidate_dependencies(user_dict, old_values)
-                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
-                    if question.question_type == "data_from_code_da":
-                        question.exec_setup(is_generic, the_x, iterators, user_dict)
-                        old_values = question.get_old_values(user_dict)
-                        exec(import_core, user_dict)
-                        user_dict['_DADATAFROMCODE'] = recursive_eval_data_from_code(question.fields[0].data, user_dict)
-                        the_string = from_safeid(question.fields[0].saveas) + ' = objects_from_structure(_DADATAFROMCODE, root=' + repr(from_safeid(question.fields[0].saveas)) + ')'
+                        if isinstance(question.gathered, (bool, NoneType)):
+                            gathered = question.gathered
+                        else:
+                            gathered = eval(question.gathered, user_dict)
+                        thename = from_safeid(question.fields[0].saveas)
+                        if question.use_objects == 'objects':
+                            user_dict['_DADATAFROMCODE'] = docassemble.base.util.objects_from_data(recursive_eval_data_from_code(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, use_objects=True, package=question.package)
+                        elif question.use_objects:
+                            user_dict['_DADATAFROMCODE'] = docassemble.base.util.objects_from_structure(recursive_eval_data_from_code(question.fields[0].data, user_dict), root=thename, gathered=gathered)
+                        else:
+                            user_dict['_DADATAFROMCODE'] = recursive_eval_data_from_code(question.fields[0].data, user_dict)
+                        the_string = thename + ' = _DADATAFROMCODE'
                         exec(the_string, user_dict)
                         del user_dict['_DADATAFROMCODE']
                         question.post_exec(user_dict)

@@ -11,13 +11,6 @@ app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'do
 app.config['SHOW_PROFILE'] = bool(daconfig.get('show profile link', True))
 app.config['SHOW_MY_INTERVIEWS'] = bool(daconfig.get('show interviews link', True))
 app.config['SHOW_DISPATCH'] = bool(len(daconfig['dispatch']) and daconfig.get('show dispatch link', False) > 0)
-app.config['MAIL_USERNAME'] = daconfig['mail'].get('username', None)
-app.config['MAIL_PASSWORD'] = daconfig['mail'].get('password', None)
-app.config['MAIL_DEFAULT_SENDER'] = daconfig['mail'].get('default sender', None)
-app.config['MAIL_SERVER'] = daconfig['mail'].get('server', 'localhost')
-app.config['MAIL_PORT'] = daconfig['mail'].get('port', 25)
-app.config['MAIL_USE_SSL'] = daconfig['mail'].get('use ssl', False)
-app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use tls', True)
 # app.config['ADMINS'] = [daconfig.get('admin address', None)]
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
 app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
@@ -100,12 +93,6 @@ connect_string = docassemble.webapp.database.connection_string()
 alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
 app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
-try:
-    app.config['MAILGUN_API_URL'] = daconfig['mail'].get('mailgun api url', 'https://api.mailgun.net/v3/%s/messages.mime') % daconfig['mail'].get('mailgun domain', 'NOT_USING_MAILGUN')
-except:
-    app.config['MAILGUN_API_URL'] = 'https://api.mailgun.net/v3/%s/messages.mime' % (daconfig['mail'].get('mailgun domain', 'NOT_USING_MAILGUN'),)
-app.config['MAILGUN_API_KEY'] = daconfig['mail'].get('mailgun api key', None)
-app.config['SENDGRID_API_KEY'] = daconfig['mail'].get('sendgrid api key', None)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 app.config['ENABLE_MANAGE_ACCOUNT'] = daconfig.get('user can delete account', True)
 app.config['ENABLE_REQUEST_DEVELOPER_ACCOUNT'] = daconfig.get('user can request developer account', True)

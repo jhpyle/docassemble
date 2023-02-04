@@ -1,0 +1,85 @@
+metadata:
+  title: Free navigation
+---
+features:
+  navigation: True
+  navigation back button: False
+---
+sections:
+  - identity: About you
+  - fruit: Fruit
+  - vegetables: Vegetables
+    subsections:
+      - legumes: Legumes
+      - root_veggies: Root vegetables
+  - Conclusion
+progressive: False
+---
+objects:
+  - user: Individual
+---
+section: identity
+continue button field: identity
+question: About you
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+  - Address: user.address.address
+    address autocomplete: True
+  - Unit: user.address.unit
+    required: False
+  - City: user.address.city
+  - State: user.address.state
+    code: states_list()
+  - Zip: user.address.zip
+check in: autosave
+---
+section: fruit
+continue button field: fruit
+question: Fruit
+fields:
+  - Favorite fruit: favorite_fruit
+check in: autosave
+---
+section: vegetables
+continue button field: vegetables
+question: Vegetables
+fields:
+  - Favorite vegetable: favorite_vegetable
+check in: autosave
+---
+section: legumes
+continue button field: legumes
+question: Legumes
+fields:
+  - Favorite legume: favorite_legume
+check in: autosave
+---
+section: root_veggies
+continue button field: root_veggies
+question: Root vegetables
+fields:
+  - Favorite root vegetable: favorite_root_vegetable
+check in: autosave
+---
+mandatory: True
+section: Conclusion
+question: Conclusion
+subquestion: |
+  ${ user },
+
+  You live at ${ user.address.on_one_line() }.
+
+  You like ${ favorite_fruit }.
+
+  Your vegetable preferences are for a pot of
+  ${ favorite_vegetable } stew with
+  ${ favorite_legume } and
+  ${ favorite_root_vegetable }.
+---
+event: autosave
+code: |
+  set_save_status('overwrite')
+  for variable_name, variable_value in action_arguments().items():
+    if variable_value:
+      define(variable_name, variable_value)

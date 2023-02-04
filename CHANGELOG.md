@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.4.33] - 2023-02-05
+
+### Changed
+- Updated Python and JavaScript dependencies.
+- Added support for using `min` and `max` with `datatype: time` and
+  `datatype: datetime`.
+- The `data` and `data from code` blocks can be used with an `objects:
+  objects` modifier, which will cause the data structure to be
+  interpreted in the manner of `objects_from_file()`. A `gathered`
+  modifier is also supported.
+- `continue button field` can now be used with `buttons` where one of
+  the items under `buttons` is `continue`.
+- The Configuration directive `mail` now accepts a list of
+  configurations, and `send_mail()` now accepts a `config` keyword
+  parameter.
+### Fixed
+- Removed code that transformed `\\_` into `__` in Markdown.
+- Ensured that dropdown options are free of HTML.
+- Default values of object-based fields did not appear in all
+  circumstances.
+- The `editable: False` option for `pdf template file` now shows
+  better formatting of fields.
+
 ## [1.4.32] - 2023-01-28
 
 ### Fixed

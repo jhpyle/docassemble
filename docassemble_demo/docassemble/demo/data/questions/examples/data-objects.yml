@@ -1,0 +1,42 @@
+metadata:
+  title: Data structure
+  documentation: "https://docassemble.org/docs/initial.html#data"
+  example start: 1
+  example end: 2
+---
+variable name: people
+use objects: objects
+data:
+  object: Individual
+  module: docassemble.base.util
+  items:
+    - name:
+        object: IndividualName
+        item:
+          first: Fred
+          last: Smith
+      email: fred@example.com
+      allergies:
+        - peanuts
+        - subway tokens
+      skills:
+        - guessing pennies
+    - name:
+        object: IndividualName
+        item:
+          first: Larry
+          last: Jones
+      email: larry@example.com
+      allergies: []
+      skills:
+        - stapling
+        - making ${ 'coffee' }
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  % for item in people:
+  ${ item } is at ${ item.email } and is good at ${ item.skills }
+  but has trouble with ${ item.allergies }.
+  % endfor

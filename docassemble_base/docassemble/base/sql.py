@@ -2,6 +2,7 @@ import copy
 import os
 # import sys
 import json
+import sqlalchemy
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import server, this_thread
 from docassemble.base.util import DAList, DAObjectPlusParameters
@@ -488,7 +489,7 @@ def upgrade_db(url, py_file, engine, version_table=None, name=None, conn_args=No
     alembic_cfg.set_main_option("sqlalchemy.url", url)
     alembic_cfg.set_main_option("connect_args", json.dumps(conn_args))
     alembic_cfg.set_main_option("script_location", alembic_path)
-    if not engine.has_table(version_table):
+    if not sqlalchemy.inspect(engine).has_table(version_table):
         command.stamp(alembic_cfg, "head")
     command.upgrade(alembic_cfg, "head")
 

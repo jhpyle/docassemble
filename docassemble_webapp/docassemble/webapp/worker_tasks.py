@@ -927,11 +927,13 @@ def update_packages(restart=True):
 
 
 @workerapp.task
-def email_attachments(user_code, email_address, attachment_info, language, subject=None, body=None, html=None):
+def email_attachments(user_code, email_address, attachment_info, language, subject=None, body=None, html=None, config=None):
     success = False
     worker_controller.initialize()
     url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
     url = url_root + 'interview'
+    if config is None:
+        config = 'default'
     with worker_controller.flaskapp.app_context():
         with worker_controller.flaskapp.test_request_context(base_url=url_root, path=url):
             worker_controller.functions.reset_local_variables()
@@ -964,7 +966,7 @@ def email_attachments(user_code, email_address, attachment_info, language, subje
             if success_attach:
                 try:
                     logmessage("Starting to send")
-                    worker_controller.da_send_mail(msg)
+                    worker_controller.da_send_mail(msg, config=config)
                     logmessage("Finished sending")
                     success = True
                 except Exception as errmess:

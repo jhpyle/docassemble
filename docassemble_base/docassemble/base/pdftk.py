@@ -6,6 +6,7 @@ import os
 import string
 import codecs
 import logging
+from xfdfgen import Xfdf
 from io import BytesIO
 import pikepdf
 import img2pdf
@@ -24,6 +25,7 @@ from pdfminer.pdfpage import PDFPage
 logging.getLogger('pdfminer').setLevel(logging.ERROR)
 
 PDFTK_PATH = 'pdftk'
+QPDF_PATH = 'qpdf'
 
 
 def set_pdftk_path(path):
@@ -188,43 +190,86 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
     for key, val in data_strings:
         data_dict[key] = val
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-    if template_password:
-        pdf = Pdf.open(template, password=template_password)
+    if pdfa or not editable:
+        fdf = Xfdf(pdf_url, data_dict)
+        # fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
+        fdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".xfdf", delete=False)
+        # fdf_file.write(fdf)
+        fdf_file.close()
+        fdf.write_xfdf(fdf_file.name)
+        if template_password is not None:
+            template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+            qpdf_subprocess_arguments = [QPDF_PATH, '--decrypt', '--password=' + template_password, template, template_file.name]
+            try:
+                result = subprocess.run(qpdf_subprocess_arguments, timeout=60, check=False).returncode
+            except subprocess.TimeoutExpired:
+                result = 1
+                logmessage("fill_template: call to qpdf took too long")
+            if result != 0:
+                logmessage("Failed to decrypt PDF template " + str(template))
+                raise DAError("Call to qpdf failed for template " + str(template) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
+            template = template_file.name
+        subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name]
+        # logmessage("Arguments are " + str(subprocess_arguments))
+        if len(images) > 0:
+            subprocess_arguments.append('need_appearances')
+        else:
+            subprocess_arguments.append('flatten')
+        completed_process = None
+        try:
+            completed_process = subprocess.run(subprocess_arguments, timeout=600, check=False, capture_output=True)
+            result = completed_process.returncode
+        except subprocess.TimeoutExpired:
+            result = 1
+            logmessage("fill_template: call to pdftk fill_form took too long")
+        if result != 0:
+            logmessage("Failed to fill PDF form " + str(template))
+            pdftk_error_msg = (f": {completed_process.stderr}") if completed_process else ""
+            raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments) + pdftk_error_msg)
+        if len(images) > 0:
+            temp_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
+            shutil.copyfile(pdf_file.name, temp_pdf_file.name)
+            pdf = Pdf.open(temp_pdf_file.name)
     else:
-        pdf = Pdf.open(template)
-    pdf.Root.AcroForm.NeedAppearances = True
-    for page in pdf.pages:
-        if not hasattr(page, 'Annots'):
-            continue
-        for the_annot in page.Annots:
-            for field, value in data_dict.items():
-                annot = the_annot
-                while not hasattr(annot, "FT") and hasattr(annot, 'Parent'):
-                    annot = annot.Parent
-                if not (hasattr(annot, "T") and hasattr(annot, "FT")):
-                    continue
-                if field != str(annot.T):
-                    continue
-                field_type = str(annot.FT)
-                if field_type == "/Tx":
-                    the_string = pikepdf.String(value)
-                    annot.V = the_string
-                    annot.DV = the_string
-                elif field_type == "/Btn":
-                    if hasattr(annot, "A"):
+        if template_password:
+            pdf = Pdf.open(template, password=template_password)
+        else:
+            pdf = Pdf.open(template)
+        pdf.Root.AcroForm.NeedAppearances = True
+        for page in pdf.pages:
+            if not hasattr(page, 'Annots'):
+                continue
+            for the_annot in page.Annots:
+                for field, value in data_dict.items():
+                    annot = the_annot
+                    while not hasattr(annot, "FT") and hasattr(annot, 'Parent'):
+                        annot = annot.Parent
+                    if not (hasattr(annot, "T") and hasattr(annot, "FT")):
                         continue
-                    the_name = pikepdf.Name('/' + value)
-                    annot.AS = the_name
-                    annot.V = the_name
-                    annot.DV = the_name
-                elif field_type == "/Ch":
-                    opt_list = [str(item) for item in annot.Opt]
-                    if value not in opt_list:
-                        opt_list.append(value)
-                        annot.Opt = pikepdf.Array(opt_list)
-                    the_string = pikepdf.String(value)
-                    annot.V = the_string
-                    annot.DV = the_string
+                    if field != str(annot.T):
+                        continue
+                    field_type = str(annot.FT)
+                    if field_type == "/Tx":
+                        the_string = pikepdf.String(value)
+                        annot.V = the_string
+                        annot.DV = the_string
+                    elif field_type == "/Btn":
+                        if hasattr(annot, "A"):
+                            continue
+                        the_name = pikepdf.Name('/' + value)
+                        annot.AS = the_name
+                        annot.V = the_name
+                        annot.DV = the_name
+                    elif field_type == "/Ch":
+                        opt_list = [str(item) for item in annot.Opt]
+                        if value not in opt_list:
+                            opt_list.append(value)
+                            annot.Opt = pikepdf.Array(opt_list)
+                        the_string = pikepdf.String(value)
+                        annot.V = the_string
+                        annot.DV = the_string
+        if len(images) == 0:
+            pdf.save(pdf_file.name)
     if len(images) > 0:
         fields = {}
         for field, default, pageno, rect, field_type, export_value in the_fields:
@@ -273,15 +318,13 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                 overlay_file = Pdf.open(item['overlay_file'])
                 overlay_page = overlay_file.pages[0]
                 pdf.pages[item['pageno'] - 1].add_overlay(overlay_page, rect=pikepdf.Rectangle(xone, yone, xtwo, ytwo))
-    if not editable:
-        pdf.generate_appearance_streams()
-        pdf.flatten_annotations()
-    if password:
-        pdf.save(pdf_file.name, encryption=pikepdf.Encryption(user="user password", owner=password, allow=pikepdf.Permissions(extract=False)))
-    else:
         pdf.save(pdf_file.name)
+    if (pdfa or not editable) and len(images) > 0:
+        flatten_pdf(pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
+    if password:
+        pdf_encrypt(pdf_file.name, password)
     return pdf_file.name
 
 

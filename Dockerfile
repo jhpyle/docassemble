@@ -52,44 +52,44 @@ bash -c \
 && cp /usr/local/bin/unoconv /usr/bin/unoconv \
 && /usr/bin/python3 -m venv --copies /usr/share/docassemble/local3.10 \
 && source /usr/share/docassemble/local3.10/bin/activate \
-&& pip3 install --upgrade pip==21.1 \
-&& pip3 install --upgrade wheel==0.37.1 \
-&& pip3 install --upgrade mod_wsgi==4.9.3 \
+&& pip3 install --upgrade pip==23.0 \
+&& pip3 install --upgrade wheel==0.38.4 \
+&& pip3 install --upgrade mod_wsgi==4.9.4 \
 && pip3 install --upgrade \
-   acme==1.26.0 \
-   certbot-apache==1.15.0 \
-   certbot-nginx==1.15.0 \
-   certbot==1.15.0 \
-   certifi==2021.10.8 \
-   cffi==1.15.0 \
-   charset-normalizer==2.0.12 \
-   click==8.1.2 \
+   acme==2.2.0 \
+   certbot==2.2.0 \
+   certbot-apache==2.2.0 \
+   certbot-nginx==2.2.0 \
+   certifi==2022.12.7 \
+   cffi==1.15.1 \
+   charset-normalizer==3.0.1 \
+   click==8.1.3 \
    ConfigArgParse==1.5.3 \
-   configobj==5.0.6 \
-   cryptography==36.0.2 \
-   distro==1.7.0 \
-   idna==3.3 \
-   joblib==1.1.0 \
+   configobj==5.0.8 \
+   cryptography==38.0.4 \
+   distro==1.8.0 \
+   idna==3.4 \
+   joblib==1.2.0 \
    josepy==1.13.0 \
-   nltk==3.7 \
+   nltk==3.8.1 \
    parsedatetime==2.6 \
    pycparser==2.21 \
-   PyOpenSSL==22.0.0 \
-   pyparsing==3.0.8 \
+   pyOpenSSL==23.0.0 \
+   pyparsing==3.0.9 \
    pyRFC3339==1.1 \
-   python-augeas==0.5.0 \
-   pytz==2022.1 \
-   regex==2022.3.15 \
-   requests-toolbelt==0.9.1 \
-   requests==2.27.1 \
+   python-augeas==1.1.0 \
+   pytz==2022.7.1 \
+   regex==2022.10.31 \
+   requests==2.28.2 \
+   requests-toolbelt==0.10.1 \
    six==1.16.0 \
-   tqdm==4.64.0 \
-   urllib3==1.26.9 \
-   zope.component==5.0.1 \
-   zope.event==4.5.0 \
-   zope.hookable==5.1.0 \
-   zope.interface==5.4.0 \
-&& pip3 install --use-feature=in-tree-build \
+   tqdm==4.64.1 \
+   urllib3==1.26.14 \
+   zope.component==5.1.0 \
+   zope.event==4.6 \
+   zope.hookable==5.4 \
+   zope.interface==5.5.2 \
+&& pip3 install \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \
@@ -123,8 +123,8 @@ RUN bash -c \
 "source /usr/share/docassemble/local3.10/bin/activate \
 && python /tmp/docassemble/Docker/nltkdownload.py \
 && cd /var/www/nltk_data/corpora \
-&& unzip wordnet.zip \
-&& unzip omw-1.4.zip"
+&& unzip -o wordnet.zip \
+&& unzip -o omw-1.4.zip"
 
 USER root
 RUN rm -rf /tmp/docassemble

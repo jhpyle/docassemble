@@ -372,7 +372,7 @@
         '" ' +
         aria +
         ">" +
-        '<span class="labelauty-unchecked-image text-muted">' +
+        '<span class="labelauty-unchecked-image text-body-secondary">' +
         uncheck_icon +
         "</span>" +
         '<span class="labelauty-unchecked">' +
@@ -406,7 +406,7 @@
         '" ' +
         aria +
         ">" +
-        '<span class="labelauty-unchecked-image text-muted">' +
+        '<span class="labelauty-unchecked-image text-body-secondary">' +
         uncheck_icon +
         "</span>" +
         '<span class="labelauty-checked-image">' +
@@ -417,4 +417,4 @@
 
     return block;
   }
-})(jQuery);
+})(window.jQuery);
