@@ -43,6 +43,97 @@ write raw HTML like this instead of a [Markdown] hyperlink:
 Check out <a target="_self" href="https://docassemble.org">the web site</a>
 {% endhighlight %}
 
+## <a name="avoiding"></a>When you don't want text interpreted as Markdown
+
+Markdown interprets characters like `>`, `*`, `_`, `#`, `.`, and
+spaces at the beginning of a line as formatting marks. However,
+sometimes you want to use these characters literally. For example:
+
+* `# of items` means "number of items," not a section heading.
+* `> 18` means "over eighteen," not a block-quoted "18."
+
+Or you might want to write:
+
+{% highlight text %}
+The fourth and sixth rules are the most stringent.
+
+4. Brush your teeth before going to bed.
+
+6. Don't run red lights.
+{% endhighlight %}
+
+and Markdown will give you:
+
+1. Brush your teeth before going to bed.
+2. Don't run red lights.
+
+If you don't want text to be transformed by the Markdown formatter,
+you can insert the escape character `\` before a special character to
+indicate that you do not want the Markdown formatter to interpret the
+special character as a formatting mark.
+
+{% highlight text %}
+\# of items`
+
+\> 18`
+
+The fourth and sixth rules are the most stringent.
+
+4\. Brush your teeth before going to bed.
+
+6\. Don't run red lights.
+{% endhighlight %}
+
+This will result in the text you want:
+
+\# of items
+
+\> 18
+
+The fourth and sixth rules are the most stringent.
+
+4\. Brush your teeth before going to bed.
+
+6\. Don't run red lights.
+
+These are the rules of Markdown. When you are writing Markdown inside
+of [YAML], you need to account for the fact that [YAML] processes the
+`\` character in special ways in certain circumstances. Inside of a
+[YAML] double-quoted string, you need to write `\\#`, `\\>`, and `\\.`
+instead of `\#`, `\>`, and `\.`
+
+{% highlight yaml %}
+question: What do you choose?
+fields:
+  - Item: the_item
+    input type: radio
+    choices:
+      - "\\> 18": over_eighteen
+      - "< 60": under_sixty
+      - "\\# of items": number_of_items
+      - "b \\*a\\* c": with_asterisks
+      - "b \\_a\\_ c": with_underscores
+{% endhighlight %}
+
+Inside of a [YAML] block quote, or inside of single quotes, or when
+you do not indicate a quoting method, you only need to use one `\`
+character.
+
+{% highlight yaml %}
+question: |
+  Please choose b \_a\_ c
+fields:
+  - Item: the_item
+    input type: radio
+    choices:
+      - 'b \_a\_ c': with_underscores
+      - c \_a\_ a: also_with_underscores
+{% endhighlight %}
+
+Using quotation marks in [YAML] is usually a good idea, because [YAML]
+has a lot of complicated rules, and you never know when the
+punctuation in your text is going to trigger one of those rules.
+
 ## <a name="markdownhtml"></a>Mixing Markdown with HTML
 
 Markdown is not a syntax for formatting; it is a deliberately

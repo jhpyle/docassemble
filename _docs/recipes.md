@@ -2700,6 +2700,21 @@ buttons that are grey when unselected and red when selected
 
 The transformation is done by the [`button-checkboxes.css`] file.
 
+# <a name="free nav"></a>One screen per section with navigation
+
+Normally, when [`sections`] is used for navigation, the user cannot
+skip to a future section; a section heading will be unclickable until
+that section has been encountered in the course of the interview
+logic. However, if you set `progressive` to false, the section
+headings are always clickable.
+
+This interview demonstrates this, and also demonstrates some `check
+in` code that saves the values of fields even if the user clicks a
+section heading without clicking the Continue button.
+
+{% include demo-side-by-side.html demo="free-nav" %}
+
+[`sections`]: {{ site.baseurl }}/docs/initial.html#sections
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
 [`demo-basic-questions.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/demo-basic-questions.yml

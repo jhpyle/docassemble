@@ -14,8 +14,8 @@
  */
 
 #toc, .toc, .mw-warning {
-    background-color: #F9F9F9;
-    border: 1px solid #AAAAAA;
+    /* background-color: #F9F9F9; */
+    /* border: 1px solid #AAAAAA; */
     font-size: 95%;
     padding: 5px;
     border-collapse: separate;
@@ -33,12 +33,12 @@
 #toc ul, .toc ul {
     list-style-image: none;
     list-style-type: none;
-    margin-left: 0;
-    padding-left: 0;
+    /* margin-left: 0; */
+    padding-left: 1em;
     text-align: left;
 }
 #toc ul ul, .toc ul ul {
-    margin: 0 0 0 2em;
+    margin: 0 0 0 1em;
 }
 #toc .toctoggle, .toc .toctoggle {
     font-size: 94%;

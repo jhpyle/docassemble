@@ -3210,6 +3210,31 @@
       The ${ user_favorite_fruit } has
       ${ nice_number(fruits[user_favorite_fruit]['seeds']) }
       seeds.
+"data-code-objects":
+  "height": !!int |-
+    64
+  "width": !!int |-
+    488
+  "yaml": |-
+    variable name: the_object
+    use objects: objects
+    data from code:
+      object: Thing
+      module: docassemble.base.util
+      item:
+        name:
+          object: Name
+          module: docassemble.base.util
+          item:
+            text: |
+              the_name
+        size: |
+          4 * unit_size
+    ---
+    mandatory: True
+    question: |
+      The object is ${ the_object } and its size is
+      ${ the_object.size }.
 "data-simple":
   "height": !!int |-
     170
@@ -9587,6 +9612,19 @@
       What is your favorite food?
     fields:
       - no label: favorite_food
+"mandatory-continue":
+  "height": !!int |-
+    154
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: True
+    question: |
+      Please note that this app is only right for you if
+      you are a bear.
+    buttons:
+      - I am not a bear: exit
+      - Continue: continue
 "manual-attachment-list":
   "height": !!int |-
     291
@@ -16712,6 +16750,82 @@
     \ way that the \"Back\" button works. You may wish to\n  use `prevent going back:\
     \ True` strategically throughout your\n  interview so that the user is not confused.\n\
     buttons:\n  - Restart: restart"
+"data-objects":
+  "height": !!int |-
+    178
+  "width": !!int |-
+    488
+  "yaml": |-
+    variable name: people
+    use objects: objects
+    data:
+      object: Individual
+      module: docassemble.base.util
+      items:
+        - name:
+            object: IndividualName
+            item:
+              first: Fred
+              last: Smith
+          email: fred@example.com
+          allergies:
+            - peanuts
+            - subway tokens
+          skills:
+            - guessing pennies
+        - name:
+            object: IndividualName
+            item:
+              first: Larry
+              last: Jones
+          email: larry@example.com
+          allergies: []
+          skills:
+            - stapling
+            - making ${ 'coffee' }
+    ---
+    mandatory: True
+    question: |
+      Summary
+    subquestion: |
+      % for item in people:
+      ${ item } is at ${ item.email } and is good at ${ item.skills }
+      but has trouble with ${ item.allergies }.
+      % endfor
+"data-objects-gathered":
+  "height": !!int |-
+    154
+  "width": !!int |-
+    488
+  "yaml": |-
+    variable name: people
+    use objects: objects
+    gathered: False
+    data:
+      object: Individual
+      module: docassemble.base.util
+      items:
+        - name:
+            object: IndividualName
+            item:
+              first: Fred
+              last: Smith
+          email: fred@example.com
+          allergies:
+            - peanuts
+            - subway tokens
+          skills:
+            - guessing pennies
+        - name:
+            object: IndividualName
+            item:
+              first: Larry
+              last: Jones
+          email: larry@example.com
+          allergies: []
+          skills:
+            - stapling
+            - making ${ 'coffee' }
 "demo-multi-sign":
   "height": !!int |-
     262
@@ -17125,6 +17239,129 @@
     \ }.\n\n    My favorite vegetable is\n    ${ favorite_vegetable }.\n\n    I solemnly\
     \ swear that the\n    foregoing is true and\n    correct.\n\n    ${ user.signature.show(width=\"\
     2in\") }\n\n    ${ user }"
+"free-nav":
+  "height": !!int |-
+    608
+  "width": !!int |-
+    488
+  "yaml": |-
+    features:
+      navigation: True
+      navigation back button: False
+    ---
+    objects:
+      - user: Individual
+    ---
+    # likes_mushrooms is False at first
+    # so that the mushrooms section is
+    # hidden by default.
+    mandatory: True
+    code: |
+      likes_mushrooms = False
+      nav.progressive = False
+    ---
+    # make sure that the sections are
+    # set every time the screen loads.
+    # The sections_set variable depends
+    # on likes_mushrooms, so if the
+    # likes_mushrooms variables changes,
+    # sections_set becomes undefined.
+    initial: True
+    code: |
+      sections_set
+    ---
+    depends on: likes_mushrooms
+    code: |
+      nav.set_sections(
+        [{"identity": "About you"},
+         {"fruit": "Fruit"},
+         {"vegetables": "Vegetables",
+          "subsections": [
+              {"legumes": "Legumes"},
+              {"root_veggies": "Root vegetables"}
+            ]
+         }] \
+         + ([{'mushrooms': "Mushrooms"}] if likes_mushrooms else []) \
+         + ["Conclusion"])
+      sections_set = True
+    ---
+    mandatory: True
+    section: Conclusion
+    question: Conclusion
+    subquestion: |
+      ${ user },
+
+      You live at ${ user.address.on_one_line() }.
+
+      You like ${ favorite_fruit }.
+
+      Your vegetable preferences are for a pot of
+      ${ favorite_vegetable } stew with
+      % if likes_mushrooms:
+      ${ favorite_mushroom },
+      % endif
+      ${ favorite_legume } and
+      ${ favorite_root_vegetable }.
+    ---
+    section: identity
+    continue button field: identity
+    question: About you
+    fields:
+      - First name: user.name.first
+      - Last name: user.name.last
+      - Likes mushrooms: likes_mushrooms
+        datatype: yesnoradio
+      - Address: user.address.address
+        address autocomplete: True
+      - Unit: user.address.unit
+        required: False
+      - City: user.address.city
+      - State: user.address.state
+        code: states_list()
+      - Zip: user.address.zip
+    check in: autosave
+    ---
+    section: fruit
+    continue button field: fruit
+    question: Fruit
+    fields:
+      - Favorite fruit: favorite_fruit
+    check in: autosave
+    ---
+    section: vegetables
+    continue button field: vegetables
+    question: Vegetables
+    fields:
+      - Favorite vegetable: favorite_vegetable
+    check in: autosave
+    ---
+    section: legumes
+    continue button field: legumes
+    question: Legumes
+    fields:
+      - Favorite legume: favorite_legume
+    check in: autosave
+    ---
+    section: root_veggies
+    continue button field: root_veggies
+    question: Root vegetables
+    fields:
+      - Favorite root vegetable: favorite_root_vegetable
+    check in: autosave
+    ---
+    section: mushrooms
+    continue button field: mushrooms
+    question: Mushrooms
+    fields:
+      - Favorite mushroom: favorite_mushroom
+    check in: autosave
+    ---
+    event: autosave
+    code: |
+      set_save_status('overwrite')
+      for variable_name, variable_value in action_arguments().items():
+        if variable_value:
+          define(variable_name, variable_value)
 "fruits-database":
   "height": !!int |-
     176
@@ -17239,7 +17476,7 @@
           % if defined('profile.user.name.first'):
           ${ profile.user }
           % else:
-          <span class="text-muted">Your name has not been defined.</span>
+          <span class="text-body-secondary">Your name has not been defined.</span>
           % endif
       - label: Edit
         field: screen['address']
@@ -17249,7 +17486,7 @@
           % if defined('profile.user.address.address'):
           ${ profile.user.address.block() }
           % else:
-          <span class="text-muted">You have not yet provided your address.</span>
+          <span class="text-body-secondary">You have not yet provided your address.</span>
           % endif
       - label: Edit
         fields: screen['preferences']
@@ -17263,7 +17500,7 @@
 
           Screen mode: ${ profile.preferences.screen_mode }.
           % else:
-          <span class="text-muted">Your preferences have not been set yet.</span>
+          <span class="text-body-secondary">Your preferences have not been set yet.</span>
           % endif
     skip undefined: False
     ---

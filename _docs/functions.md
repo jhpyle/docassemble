@@ -1948,6 +1948,14 @@ All of the arguments to `send_email()` are [keyword arguments]:
   e-mail sending process.  You would use this if you wanted to make
   sure that all of the variables `send_email()` needs are defined
   before you actually send the e-mail.  The default is `False`.
+* `config` can be set to the `name` of an e-mail configuration if you
+  are using [multiple e-mail configurations] in your
+  [Configuration]. This allows you to contol which e-mail server or
+  provider is used to send the e-mail. Alternatively, you can set a
+  default e-mail configuration for the interview using [`email
+  config`] in the [`metadata`], in which case any call to
+  `send_email()` within the interview will use that e-mail
+  configuration.
 
 If you use [`Individual`] objects as recipients, `send_email()` will
 use the `name` and `email` attributes of the listed [`Individual`]s to
@@ -8616,3 +8624,5 @@ $(document).on('daPageLoad', function(){
 [`action_call()` JavaScript function]: js_action_call
 [locale conventions]: https://docs.python.org/3/library/locale.html#locale.localeconv
 [VoiceRSS Configuration]: {{ site.baseurl }}/docs/config.html#voicerss
+[multiple e-mail configurations]: {{ site.baseurl }}/docs/config.html#mail multiple
+[`email config`]: {{ site.baseurl }}/docs/initial.html#email config

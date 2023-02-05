@@ -254,6 +254,11 @@ variable] to present a special screen that shows a picture.  This
 screen does not set any variable, but the user can click the button to
 "continue" with the normal course of the interview.
 
+The `continue` button can also be used with a `question` that is shown
+because it is [`mandatory`].
+
+{% include side-by-side.html demo="mandatory-continue" %}
+
 While using `continue` can be useful sometimes, it is generally not a
 good idea to structure interviews around `question`s that use
 `continue`.  These `question`s cannot use the [`generic object`

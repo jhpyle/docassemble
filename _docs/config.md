@@ -1999,6 +1999,60 @@ mail:
   sendgrid api key: s8_MK.S.GmtjGD6krnOl4FkkPGTYe3I8fHqIi2NGZ057k7S-ZhuQfOF2ItWYBW97w6Kzu
 {% endhighlight %}
 
+### <a name="mail multiple"></a>Using multiple mail configurations
+
+You can configure multiple mail configurations and then choose which
+configuration you want to use for a particular interview or when you
+call [`send_email()`].
+
+For example, suppose that you wanted to send e-mail from an account
+belonging to ABC, Inc. in one interview and send e-mail from an
+account belonging to DEF, Inc. in another interview.
+
+You could set your configuration as follows:
+
+{% highlight yaml %}
+mail:
+  - default sender: '"ABC, Inc." <helpdesk@mg.abc.com>'
+    sendgrid api key: s8_MK.S.GmtjGD6krnOl4FkkPGTYe3I8fHqIi2NGZ057k7S-ZhuQfOF2ItWYBW97w6Kzu
+    name: abc
+  - default sender: '"DEF, Inc." <info@mg.def.com>'
+    mailgun api key: key-b21b28f6e29be1f463478238d172813e
+    mailgun domain: mg.example.com
+    name: def
+{% endhighlight %}
+
+Then, in the interview that should use ABC, Inc.'s server, you would
+set the [`email config`] to `abc`
+
+{% highlight yaml %}
+metadata:
+  email config: abc
+{% endhighlight %}
+
+In the interview that should use DEF, Inc.'s server, you would
+set the [`email config`] to `def`
+
+{% highlight yaml %}
+metadata:
+  email config: def
+{% endhighlight %}
+
+You could also specify the e-mail configuration in a call to
+[`send_email()`]:
+
+{% highlight python %}
+send_email(to=recipient, sender=sales_associate, template=offer_template, config='def')
+{% endhighlight %}
+
+When you are using multiple e-mail configurations, keep in mind that
+**docassemble** sometimes sends e-mail outside of the interview
+context, such as user invitation e-mails, error notifications, forgot
+password e-mails, etc. In these situations, **docassemble** will use
+the default configuration, which is the configuration tagged with
+`name: default`, or if no configuration has `default` as the `name`,
+the first configuration will be used.
+
 ## <a name="default interview"></a>Default interview
 
 If no [interview] is specified in the URL when the web browser first
@@ -6242,8 +6296,8 @@ and Facebook API keys.
 [multi-user interview]: {{ site.baseurl }}/docs/special.html#multi_user
 [multi-user interviews]: {{ site.baseurl }}/docs/special.html#multi_user
 [`show dispatch link`]: #show dispatch link
-[`short title`]: {{ site.baseurl }}/docs/initial.html#metadata
-[`title`]: {{ site.baseurl }}/docs/initial.html#metadata
+[`short title`]: {{ site.baseurl }}/docs/initial.html#short title
+[`title`]: {{ site.baseurl }}/docs/initial.html#title
 [`sessions are unique`]: {{ site.baseurl }}/docs/initial.html#sessions are unique
 [`hidden`]: {{ site.baseurl }}/docs/initial.html#hidden
 [`action_button_html()`]: {{ site.baseurl }}/docs/functions.html#action_button_html
@@ -6345,3 +6399,5 @@ and Facebook API keys.
 [tz database]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [locale values]: {{ site.baseurl }}/img/locales.txt
 [custom endpoints]: {{ site.baseurl }}/docs/recipes.html#custom api
+[`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
+[`email config`]: {{ site.baseurl }}/docs/initial.html#email config

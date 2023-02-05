@@ -15,6 +15,11 @@
     <link href="{{ '/bootstrap5/css/main.css' | prepend: site.baseurl }}" rel="stylesheet">
     <link href="{{ '/tocmd-generator/css/toc.css' | prepend: site.baseurl }}" rel="stylesheet">
     <script defer src="{{ '/fontawesome/js/all.min.js' | prepend: site.baseurl }}"></script>
+    <script>
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+      }
+    </script>
     <title>{% if page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}</title>
     {%- if page.description %}
     <meta name="description" content="{{ page.description }}">

@@ -443,6 +443,17 @@ indicate the default language of a YAML file is the [`default
 language`] block, rather than `metadata`; the purpose of the
 `metadata` is to specify an interview-wide default.
 
+<a name="email config"></a>If you have more than one e-mail configuration
+under [`mail`], you can specify an `email config` to use in the interview.
+
+{% highlight yaml %}
+metadata:
+  email config: abc
+{% endhighlight %}
+
+This will affect the functioning of the [`attachment`] block's e-mail
+feature, as well as the [`send_email()`] function.
+
 ## <a name="overlapping metadata"></a>Effect of multiple `metadata` blocks
 
 An interview can contain multiple metadata blocks.  Values in later
@@ -763,9 +774,9 @@ structures.  You can also use [Mako] in the data structure.
 
 {% include side-by-side.html demo="data" %}
 
-`data` blocks do not work the same way as [`template`] blocks.  The
+`data` blocks do not work the same way as [`template`] blocks. The
 [Mako] templating in a `data` block is evaluated at the time the
-variable indicted by `variable name` is defined.  The text stored in
+variable indicted by `variable name` is defined. The text stored in
 the data structure is the result of processing the [Mako] templating.
 The [Mako] templating is not re-evaluated automatically each time a
 [`question`] is shown.
@@ -790,6 +801,21 @@ example:
 
 {% include demo-side-by-side.html demo="context" %}
 
+If you set `use objects: objects`, then the data structure under
+`data` will be evaluated as though it were a file imported by the
+[`objects_from_file()` function].
+
+{% include demo-side-by-side.html demo="data-objects" %}
+
+By default, if objects created with `use objects: True` or `use
+objects: objects` contain [`DAList`] or [`DADict`] objects, these
+objects will have their `.gathered` attributes set to `True`. If you
+want to leave `.gathered` undefined, set `gathered: False`. In the
+following interview, `gathered: False` is set so that the user can be
+asked to fill in missing items.
+
+{% include demo-side-by-side.html demo="data-objects-gathered" %}
+
 # <a name="data from code"></a>Storing structured `data` in a variable using code
 
 The `data from code` block works just like the [`data`] block, except
@@ -802,6 +828,13 @@ that [Python] code is used instead of text or [Mako] markup.
 The [`use objects`] modifier can also be used with `data from code`.
 
 {% include demo-side-by-side.html demo="context-code" %}
+
+The `data from code` block also supports `use objects: objects`.
+
+{% include side-by-side.html demo="data-code-objects" %}
+
+The `gathered: False` modifier is also supported when `use objects` is
+set to `True` or set to `objects`.
 
 # <a name="reset"></a>Keeping variables fresh: `reset`
 
@@ -2723,7 +2756,6 @@ This will cause the web application to run the JavaScript for the
 [`allow robots`]: {{ site.baseurl }}/docs/config.html#allow robots
 [Jekyll]: https://jekyllrb.com/
 [GitHub Pages]: https://pages.github.com/
-[GitHub repository]: {{ site.github.repository_url }}
 [`/api/session/question` API endpoint]: {{ site.baseurl }}/docs/api.html#session_question
 [API]: {{ site.baseurl }}/docs/api.html
 [`terms`]: {{ site.baseurl }}/docs/modifiers.html#terms
@@ -2743,3 +2775,5 @@ This will cause the web application to run the JavaScript for the
 [`help` field modifier]: {{ site.baseurl }}/docs/fields.html#help
 [floating labels]: https://getbootstrap.com/docs/5.2/forms/floating-labels/
 [`pickle`]: https://docs.python.org/3/library/pickle.html
+[`mail`]: {{ site.baseurl }}/docs/config.html#mail multiple
+[GitHub repository]: {{ site.github.repository_url }}
