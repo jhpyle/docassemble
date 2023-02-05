@@ -2241,17 +2241,17 @@ def proc_example_list(example_list, package, directory, examples):
                 else:
                     initial_block = 0
                 if start_block > initial_block:
-                    result['before_html'] = highlight("\n---\n".join(blocks[initial_block:start_block]) + "\n---", YamlLexer(), HtmlFormatter())
+                    result['before_html'] = highlight("\n---\n".join(blocks[initial_block:start_block]) + "\n---", YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight'))
                     has_context = True
                 else:
                     result['before_html'] = ''
                 if len(blocks) > end_block:
-                    result['after_html'] = highlight("---\n" + "\n---\n".join(blocks[end_block:len(blocks)]), YamlLexer(), HtmlFormatter())
+                    result['after_html'] = highlight("---\n" + "\n---\n".join(blocks[end_block:len(blocks)]), YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight'))
                     has_context = True
                 else:
                     result['after_html'] = ''
                 result['source'] = "\n---\n".join(blocks[start_block:end_block])
-                result['html'] = highlight(result['source'], YamlLexer(), HtmlFormatter())
+                result['html'] = highlight(result['source'], YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight'))
                 result['has_context'] = has_context
             else:
                 logmessage("proc_example_list: no blocks in " + example_file)
@@ -3135,17 +3135,17 @@ def release_lock(user_code, filename):
 def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, extra_class=None):  # pylint: disable=unused-argument
     if 'inverse navbar' in status.question.interview.options:
         if status.question.interview.options['inverse navbar']:
-            inverse = 'bg-dark '
+            inverse = 'bg-dark'
             theme = ' data-bs-theme="dark"'
         else:
-            inverse = 'bg-light '
-            theme = ''
+            inverse = 'bg-body-tertiary'
+            theme = ' data-bs-theme="light"'
     elif daconfig.get('inverse navbar', True):
-        inverse = 'bg-dark '
+        inverse = 'bg-dark'
         theme = ' data-bs-theme="dark"'
     else:
-        inverse = 'bg-light '
-        theme = ''
+        inverse = 'bg-body-tertiary'
+        theme = ' data-bs-theme="light"'
     if 'jsembed' in docassemble.base.functions.this_thread.misc:
         fixed_top = ''
     else:
@@ -8452,6 +8452,10 @@ def index(action_argument=None, refer=None):
       if (typeof($) == 'undefined'){
         var $ = jQuery.noConflict();
       }
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+      }
+      var daRequestPending = false;
       var isAndroid = /android/i.test(navigator.userAgent.toLowerCase());
       var daMapInfo = null;
       var daThicknessScalingFactor = """ + str(daconfig.get("signature pen thickness scaling factor")) + """;
@@ -8953,6 +8957,7 @@ def index(action_argument=None, refer=None):
         }
         var data = {action: action, arguments: args};
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
+        daRequestPending = true;
         return $.ajax({
           type: "POST",
           url: daInterviewUrl,
@@ -8987,6 +8992,7 @@ def index(action_argument=None, refer=None):
         }
         var data = {action: action, arguments: args};
         daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
+        daRequestPending = true;
         return $.ajax({
           type: "POST",
           url: daInterviewUrl,
@@ -9708,6 +9714,7 @@ def index(action_argument=None, refer=None):
           form.submit();
         }
         else{
+          daRequestPending = true;
           $.ajax({
             type: "POST",
             url: daInterviewUrl,
@@ -9732,6 +9739,7 @@ def index(action_argument=None, refer=None):
       }
       function daSignatureSubmit(event){
         $(this).find("input[name='ajax']").val(1);
+        daRequestPending = true;
         $.ajax({
           type: "POST",
           url: daInterviewUrl,
@@ -9785,6 +9793,7 @@ def index(action_argument=None, refer=None):
           form.submit();
         }
         else{
+          daRequestPending = true;
           $.ajax({
             type: "POST",
             url: daInterviewUrl,
@@ -9819,6 +9828,7 @@ def index(action_argument=None, refer=None):
         return true;
       }
       function daProcessAjaxError(xhr, status, error){
+        daRequestPending = false;
         if (xhr.responseType == undefined || xhr.responseType == '' || xhr.responseType == 'text'){
           var theHtml = xhr.responseText;
           if (theHtml == undefined){
@@ -9877,6 +9887,7 @@ def index(action_argument=None, refer=None):
         $(daTargetDiv).html(data);
       }
       function daProcessAjax(data, form, doScroll, actionURL){
+        daRequestPending = false;
         daInformedChanged = false;
         if (daDisable != null){
           clearTimeout(daDisable);
@@ -10010,6 +10021,11 @@ def index(action_argument=None, refer=None):
         return false;
       }
       function daEmbeddedAction(e){
+        if (daRequestPending){
+          e.preventDefault();
+          $(this).blur();
+          return false;
+        }
         if ($(this).hasClass("daremovebutton")){
           if (confirm(""" + json.dumps(word("Are you sure you want to delete this item?")) + """)){
             return true;
@@ -10020,6 +10036,7 @@ def index(action_argument=None, refer=None):
         }
         var actionData = decodeURIComponent($(this).data('embaction'));
         var theURL = $(this).attr("href");
+        daRequestPending = true;
         $.ajax({
           type: "POST",
           url: daInterviewUrl,
@@ -10045,6 +10062,11 @@ def index(action_argument=None, refer=None):
         return false;
       }
       function daReviewAction(e){
+        if (daRequestPending){
+          e.preventDefault();
+          $(this).blur();
+          return false;
+        }
         //action_perform_with_next($(this).data('action'), null, daNextAction);
         var info = $.parseJSON(atou($(this).data('action')));
         da_action_perform(info['action'], info['arguments']);
@@ -10162,6 +10184,7 @@ def index(action_argument=None, refer=None):
         }
       }
       function daRefreshSubmit(){
+        daRequestPending = true;
         $.ajax({
           type: "POST",
           url: daInterviewUrl,
@@ -10973,6 +10996,7 @@ def index(action_argument=None, refer=None):
           else{
             url = $("#dabackbutton").attr('action');
           }
+          daRequestPending = true;
           $.ajax({
             type: "POST",
             url: url,
@@ -11020,6 +11044,11 @@ def index(action_argument=None, refer=None):
           return true;
         });
         $(".danavlinks a.daclickable").click(function(e){
+          if (daRequestPending){
+            e.preventDefault();
+            $(this).blur();
+            return false;
+          }
           var the_key = $(this).data('key');
           da_action_perform("_da_priority_action", {_action: the_key});
           e.preventDefault();
@@ -12393,7 +12422,7 @@ def index(action_argument=None, refer=None):
         if (not hasattr(interview_status.question, 'source_code')) or interview_status.question.source_code is None:
             output += '          <p>' + word('unavailable') + '</p>'
         else:
-            output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
+            output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight'))
         if len(interview_status.seeking) > 1:
             output += '          <h4>' + word('How question came to be asked') + '</h4>' + "\n"
             output += get_history(interview, interview_status)
@@ -12600,7 +12629,7 @@ def get_history(interview, interview_status):
                 if (not hasattr(stage['question'], 'source_code')) or stage['question'].source_code is None:
                     output += word('(embedded question, source code not available)')
                 else:
-                    output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
+                    output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight'))
             elif 'variable' in stage:
                 output += '          <h5>Needed definition of <code class="da-variable-needed">' + str(stage['variable']) + "</code>" + the_time + "</h5>\n"
             elif 'done' in stage:
@@ -18278,7 +18307,7 @@ def view_source():
         logmessage("view_source: no source: " + str(errmess))
         return ('File not found', 404)
     header = source_path
-    response = make_response(render_template('pages/view_source.html', version_warning=None, bodyclass='daadminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.min.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="highlight dafullheight")))), 200)
+    response = make_response(render_template('pages/view_source.html', version_warning=None, bodyclass='daadminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.min.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="bg-light highlight dahighlight dafullheight")))), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -18818,7 +18847,7 @@ def playground_files():
         list_header = word("Existing module files")
         edit_header = word('Edit module files')
         description = 'You can use this page to add Python module files (.py files) that you want to include in your interviews using <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> or <a target="_blank" href="https://docassemble.org/docs/initial.html#imports"><code>imports</code></a>.'
-        lowerdescription = Markup("""<p>To use this in an interview, write a <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).</p>""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter()))
+        lowerdescription = Markup("""<p>To use this in an interview, write a <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).</p>""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight')))
         after_text = None
     if scroll:
         extra_command = """

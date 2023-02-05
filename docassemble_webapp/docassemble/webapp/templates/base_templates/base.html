@@ -76,7 +76,7 @@
     <link href="{{ url_for('static', filename='app/app.min.css', v=config['DA_VERSION']) }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
   </head>
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar{% if footer_content %} da-pad-for-footer{% endif %}">
-    <div class="navbar fixed-top navbar-expand-md {% if config['INVERSE_NAVBAR'] %}bg-dark{% else %}bg-light{% endif %}"{% if config['INVERSE_NAVBAR'] %} data-bs-theme="dark"{% endif %} role="banner">
+    <div class="navbar fixed-top navbar-expand-md {% if config['INVERSE_NAVBAR'] %}bg-dark{% else %}bg-body-tertiary{% endif %}"{% if config['INVERSE_NAVBAR'] %} data-bs-theme="dark"{% else %} data-bs-theme="light"{% endif %} role="banner">
       <div class="{% if userclass %}{{ config['CONTAINER_CLASS'] }} danavcontainer{% else %}{{ config['CONTAINER_CLASS'] }}{% endif %} danavcontainer justify-content-start">
         {% if back_button %}{{ back_button }}{% endif %}{% if request.path == "/playground" %}<div class="dropdown"><div class="navbar-brand dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ page_title }}</div><ul class="dropdown-menu daheightlim" aria-labelledby="dropdownMenuButton">{% if current_project != 'default' %}<li><a class="dropdown-item" href="?project=default"><i class="fas fa-archive"></i> {{ word("Default Playground") }}</a></li>{% endif %}{% for project in projects %}{% if project != current_project %}<li><a class="dropdown-item" href="?project={{ project }}"><i class="fas fa-archive"></i> {{ project }}</a></li>{% endif %}{% endfor %}<li><a class="dropdown-item" href="{{ url_for('playground_project', project=current_project) }}"><i class="fas fa-tasks"></i> {{ word('Manage Projects') }}</a></li>{% if config['ENABLE_SHARING_PLAYGROUNDS'] %}<li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{{ url_for('playground_select') }}"><i class="fas fa-eye"></i> {{ word("Browse Other Playgrounds") }}</a></li>{% endif %}</ul></div>{% else %}<a class="navbar-brand" href="#">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>{% endif %}
         {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}
@@ -176,6 +176,9 @@
 
     <script src="{{ url_for('static', filename='app/adminbundle.js', v=config['DA_VERSION']) }}"></script>
     <script>
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+      }
       var daWhichButton = null;
       $( document ).ready(function(){
         {%- if request.path in ["/user/sign-in", "/user/register", "/user/forgot-password"] %}

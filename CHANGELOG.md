@@ -4,6 +4,7 @@
 
 ### Changed
 - Updated Python and JavaScript dependencies.
+- Upgraded Bootstrap to version 5.3.
 - Added support for using `min` and `max` with `datatype: time` and
   `datatype: datetime`.
 - The `data` and `data from code` blocks can be used with an `objects:
