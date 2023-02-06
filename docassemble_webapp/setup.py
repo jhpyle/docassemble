@@ -78,7 +78,7 @@ install_requires = [
     "eventlet==0.33.3",
     "exceptiongroup==1.1.0",
     "Flask==2.2.2",
-    "flask-babel==3.0.1",
+    "Flask-Babel==3.0.1",
     "Flask-Cors==3.0.10",
     "Flask-Login==0.6.2",
     "Flask-Mail==0.9.1",

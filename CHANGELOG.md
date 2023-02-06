@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.35] - 2023-02-06
+
+### Fixed
+- Issue with package upgrading.
+
 ## [1.4.34] - 2023-02-06
 
 ### Fixed
