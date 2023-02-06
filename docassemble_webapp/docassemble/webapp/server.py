@@ -3136,16 +3136,16 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if 'inverse navbar' in status.question.interview.options:
         if status.question.interview.options['inverse navbar']:
             inverse = 'bg-dark'
-            theme = ' data-bs-theme="dark"'
+            theme = 'dark'
         else:
             inverse = 'bg-body-tertiary'
-            theme = ' data-bs-theme="light"'
+            theme = 'light'
     elif daconfig.get('inverse navbar', True):
         inverse = 'bg-dark'
-        theme = ' data-bs-theme="dark"'
+        theme = 'dark'
     else:
         inverse = 'bg-body-tertiary'
-        theme = ' data-bs-theme="light"'
+        theme = 'light'
     if 'jsembed' in docassemble.base.functions.this_thread.misc:
         fixed_top = ''
     else:
@@ -3153,17 +3153,18 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if extra_class is not None:
         fixed_top += ' ' + extra_class
     navbar = """\
-    <div class="navbar""" + fixed_top + """ navbar-expand-md """ + inverse + '"' + theme + """ role="banner">
-      <div class="container danavcontainer justify-content-start">
+    <div data-bs-theme=""" + '"' + theme + '"' + """>
+      <div class="navbar""" + fixed_top + """ navbar-expand-md """ + inverse + '"' + """ role="banner">
+        <div class="container danavcontainer justify-content-start">
 """
     if status.question.can_go_back and steps > 1:
         if status.question.interview.navigation_back_button:
             navbar += """\
-        <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><button class="navbar-brand navbar-nav dabackicon dabackbuttoncolor me-3" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span class="nav-link"><i class="fas fa-chevron-left"></i><span class="daback">""" + status.cornerback + """</span></span></button></form>
+          <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><button class="navbar-brand navbar-nav dabackicon dabackbuttoncolor me-3" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span class="nav-link"><i class="fas fa-chevron-left"></i><span class="daback">""" + status.cornerback + """</span></span></button></form>
 """
         else:
             navbar += """\
-        <form hidden style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
+          <form hidden style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/></form>
 """
     if status.title_url:
         if str(status.title_url_opens_in_other_window) == 'False':
@@ -3171,11 +3172,11 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         else:
             target = ' target="_blank"'
         navbar += """\
-        <a id="dapagetitle" class="navbar-brand danavbar-title dapointer" href=""" + '"' + status.title_url + '"' + target + """><span class="d-none d-lg-block">""" + status.display_title + """</span><span class="d-block d-lg-none">""" + status.display_short_title + """</span></a>
+          <a id="dapagetitle" class="navbar-brand danavbar-title dapointer" href=""" + '"' + status.title_url + '"' + target + """><span class="d-none d-lg-block">""" + status.display_title + """</span><span class="d-block d-lg-none">""" + status.display_short_title + """</span></a>
 """
     else:
         navbar += """\
-        <span id="dapagetitle" class="navbar-brand danavbar-title"><span class="d-none d-lg-block">""" + status.display_title + """</span><span class="d-block d-lg-none">""" + status.display_short_title + """</span></span>
+          <span id="dapagetitle" class="navbar-brand danavbar-title"><span class="d-none d-lg-block">""" + status.display_title + """</span><span class="d-block d-lg-none">""" + status.display_short_title + """</span></span>
 """
     help_message = word("Help is available")
     help_label = None
@@ -3203,7 +3204,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         source_button = ''
         source_menu_item = ''
     hidden_question_button = '<li class="nav-item visually-hidden-focusable"><button class="btn btn-link nav-link active da-no-outline" id="daquestionlabel" data-bs-toggle="tab" data-bs-target="#daquestion">' + word('Question') + '</button></li>'
-    navbar += '        ' + source_button + '<ul id="nav-bar-tab-list" class="nav navbar-nav damynavbar-right" role="tablist">' + hidden_question_button
+    navbar += '          ' + source_button + '<ul id="nav-bar-tab-list" class="nav navbar-nav damynavbar-right" role="tablist">' + hidden_question_button
     if len(status.interviewHelpText) > 0 or (len(status.helpText) > 0 and not status.question.interview.question_help_button):
         if status.question.helptext is None or status.question.interview.question_help_button:
             navbar += '<li class="nav-item" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" data-bs-target="#dahelp" data-bs-toggle="tab" role="tab" id="dahelptoggle" title=' + json.dumps(help_message) + '>' + help_label + '</button></li>'
@@ -3214,11 +3215,11 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     navbar += '<li hidden class="nav-item dainvisible" id="daPhoneAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" role="tab" title=' + json.dumps(phone_message) + ' class="btn btn-link nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-phone da-chat-active"></i><span class="visually-hidden">' + phone_sr + '</span></button></li>' + \
               '<li class="nav-item dainvisible" id="daChatAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" class="btn btn-link nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-comment-alt"></i><span class="visually-hidden">' + chat_sr + '</span></button></li></ul>'
     navbar += """
-        <button id="damobile-toggler" type="button" class="navbar-toggler ms-auto" data-bs-toggle="collapse" data-bs-target="#danavbar-collapse">
-          <span class="navbar-toggler-icon"></span><span class="visually-hidden">""" + word("Display the menu") + """</span>
-        </button>
-        <div class="collapse navbar-collapse" id="danavbar-collapse">
-          <ul class="navbar-nav ms-auto">
+          <button id="damobile-toggler" type="button" class="navbar-toggler ms-auto" data-bs-toggle="collapse" data-bs-target="#danavbar-collapse">
+            <span class="navbar-toggler-icon"></span><span class="visually-hidden">""" + word("Display the menu") + """</span>
+          </button>
+          <div class="collapse navbar-collapse" id="danavbar-collapse">
+            <ul class="navbar-nav ms-auto">
 """
     navbar += status.nav_item
     if 'menu_items' in status.extras:
@@ -3257,7 +3258,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if show_login:
         if current_user.is_anonymous:
             if custom_menu:
-                navbar += '            <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-end" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
+                navbar += '              <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-end" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
             else:
                 if daconfig.get('login link style', 'normal') == 'button':
                     if ALLOW_REGISTRATION:
@@ -3265,16 +3266,16 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                             register_url = url_for('user.register', next=url_for('index', **index_params))
                         else:
                             register_url = url_for('user.register')
-                        navbar += '            <li class="nav-item"><a class="nav-link" href="' + register_url + '">' + word('Sign up') + '</a></li>'
-                        navbar += '            <li class="nav-item"><a class="nav-link d-block d-md-none" href="' + login_url + '">' + word('Sign in') + '</a>'
+                        navbar += '              <li class="nav-item"><a class="nav-link" href="' + register_url + '">' + word('Sign up') + '</a></li>'
+                        navbar += '              <li class="nav-item"><a class="nav-link d-block d-md-none" href="' + login_url + '">' + word('Sign in') + '</a>'
 
                 else:
-                    navbar += '            <li class="nav-item"><a class="nav-link" href="' + login_url + '">' + sign_in_text + '</a></li>'
+                    navbar += '              <li class="nav-item"><a class="nav-link" href="' + login_url + '">' + sign_in_text + '</a></li>'
         else:
             if (custom_menu is False or custom_menu == '') and status.question.interview.options.get('hide standard menu', False):
-                navbar += '            <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
+                navbar += '              <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
             else:
-                navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-end" aria-labelledby="damenuLabel">'
+                navbar += '              <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-end" aria-labelledby="damenuLabel">'
                 if custom_menu:
                     navbar += custom_menu
                 if not status.question.interview.options.get('hide standard menu', False):
@@ -3314,17 +3315,18 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                 navbar += '</div></li>'
     else:
         if custom_menu:
-            navbar += '            <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-end">' + custom_menu
+            navbar += '              <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-end">' + custom_menu
             if not status.question.interview.options.get('hide standard menu', False):
                 navbar += '<a class="dropdown-item" href="' + exit_href() + '">' + status.exit_label + '</a>'
             navbar += '</div></li>'
         else:
-            navbar += '            <li class="nav-item"><a class="nav-link" href="' + exit_href() + '">' + status.exit_label + '</a></li>'
+            navbar += '              <li class="nav-item"><a class="nav-link" href="' + exit_href() + '">' + status.exit_label + '</a></li>'
     navbar += """
-          </ul>"""
+            </ul>"""
     if daconfig.get('login link style', 'normal') == 'button' and show_login and current_user.is_anonymous and not custom_menu:
-        navbar += '\n          <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ms-3 d-none d-md-block" href="' + login_url + '">' + word('Sign in') + '</a>'
+        navbar += '\n            <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ms-3 d-none d-md-block" href="' + login_url + '">' + word('Sign in') + '</a>'
     navbar += """
+          </div>
         </div>
       </div>
     </div>
