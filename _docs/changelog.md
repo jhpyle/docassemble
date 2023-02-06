@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.34](https://github.com/jhpyle/docassemble/releases/tag/v1.4.34) - 2023-02-06
+
+
+### Fixed
+- Small screen menu button had wrong color.
+- E-mail sending bug introduced in 1.4.33.
+
 ## [1.4.33](https://github.com/jhpyle/docassemble/releases/tag/v1.4.33) - 2023-02-05
 
 
