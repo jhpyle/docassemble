@@ -78,7 +78,7 @@ install_requires = [
     "colorama==0.4.6",
     "commonmark==0.9.1",
     "convertapi==1.5.0",
-    "cryptography==38.0.4",
+    "cryptography==39.0.1",
     "cssselect2==0.7.0",
     "da-pkg-resources==0.0.1",
     "defusedxml==0.7.1",
