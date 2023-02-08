@@ -58,11 +58,11 @@ body.dainactive .form-control{
     background-color: #f2dede;
 }
 
-body.dainactive > div > .navbar-dark {
+body.dainactive > div > div > .navbar {
     background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
 }
 
-body.dacontrolled > div > .navbar-dark {
+body.dacontrolled > div > div > .navbar {
     background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
 }
 
@@ -1575,7 +1575,7 @@ div.daconstraintlist div + div {
     cursor: crosshair;
     padding: 0;
 }
-.dasignature > div > .navbar {
+.dasignature .danavbarcontainer {
     display: none;
 }
 .dasignature > div > .daright {
@@ -1598,7 +1598,7 @@ div.daconstraintlist div + div {
     body.dasignature.navbarhidden {
 	padding-top: 0px;
     }
-    .dasignature > div > .navbar {
+    .dasignature .danavbarcontainer {
         display: block;
     }
     .dasignature > div > > .daright {

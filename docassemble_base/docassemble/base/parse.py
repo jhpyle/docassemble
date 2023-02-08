@@ -497,6 +497,7 @@ class InterviewStatus:
         checkboxes = {}
         saveas_by_number = {}
         saveas_to_use = {}
+        varnames = {}
         if self.extras.get('list_collect', False) is not False:
             list_collect_list = self.extras['list_collect'].instanceName
         else:
@@ -524,6 +525,7 @@ class InterviewStatus:
             the_field_list = self.get_field_list()
             for field in the_field_list:
                 if hasattr(field, 'saveas'):
+                    varnames[safeid('_field_' + str(field.number))] = field.saveas
                     if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in self.extras) or 'show_if_js' in field.extras)) or (hasattr(field, 'disableothers') and field.disableothers):
                         the_saveas = safeid('_field_' + str(field.number))
                     else:
@@ -601,7 +603,7 @@ class InterviewStatus:
             datatypes[self.question.fields[0].saveas] = "boolean"
         elif self.question.question_type == "multiple_choice" and hasattr(self.question.fields[0], 'datatype'):
             datatypes[self.question.fields[0].saveas] = self.question.fields[0].datatype
-        return {'datatypes': datatypes, 'hiddens': hiddens, 'files': files, 'ml_info': ml_info, 'checkboxes': checkboxes, 'list_collect_list': list_collect_list, 'orig_sought': orig_sought, 'fields_saveas': fields_saveas, 'signature_saveas': signature_saveas}
+        return {'datatypes': datatypes, 'hiddens': hiddens, 'files': files, 'ml_info': ml_info, 'checkboxes': checkboxes, 'list_collect_list': list_collect_list, 'orig_sought': orig_sought, 'fields_saveas': fields_saveas, 'signature_saveas': signature_saveas, 'varnames': varnames}
 
     def do_sleep(self):
         if hasattr(self.question, 'sleep'):

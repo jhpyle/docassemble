@@ -1530,9 +1530,12 @@ class DAList(DAObject):
 
     def init(self, *pargs, **kwargs):
         self.elements = []
-        self.auto_gather = True
-        self.ask_number = False
-        self.minimum_number = None
+        if 'auto_gather' not in kwargs:
+            self.auto_gather = True
+        if 'ask_number' not in kwargs:
+            self.ask_number = False
+        if 'minimum_number' not in kwargs:
+            self.minimum_number = None
         if 'set_instance_name' in kwargs:
             set_instance_name = kwargs['set_instance_name']
             del kwargs['set_instance_name']
@@ -1567,8 +1570,9 @@ class DAList(DAObject):
             del kwargs['complete_attribute']
         if not hasattr(self, 'complete_attribute'):
             self.complete_attribute = None
-        if 'ask_object_type' in kwargs:
+        if 'ask_object_type' in kwargs and kwargs['ask_object_type']:
             self.ask_object_type = True
+            del kwargs['ask_object_type']
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
         super().init(*pargs, **kwargs)

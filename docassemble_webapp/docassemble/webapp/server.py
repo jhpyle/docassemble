@@ -3153,7 +3153,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     if extra_class is not None:
         fixed_top += ' ' + extra_class
     navbar = """\
-    <div data-bs-theme=""" + '"' + theme + '"' + """>
+    <div class="danavbarcontainer" data-bs-theme=""" + '"' + theme + '"' + """>
       <div class="navbar""" + fixed_top + """ navbar-expand-md """ + inverse + '"' + """ role="banner">
         <div class="container danavcontainer justify-content-start">
 """
@@ -8774,6 +8774,12 @@ def index(action_argument=None, refer=None):
         else if ($(elem).attr('type') == "radio"){
           var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           var wasSet = false;
+          if (val === true){
+            val = 'True';
+          }
+          if (val === false){
+            val = 'False';
+          }
           $("input[name='" + fieldNameEscaped + "']").each(function(){
             if ($(this).val() == val){
               if ($(this).prop('checked') != true){
@@ -9529,7 +9535,7 @@ def index(action_argument=None, refer=None):
           $(this).prop('disabled', true);
         });
         daWhichButton = null;
-        if (daSubmitter != null){
+        if (daSubmitter != null && daSubmitter.name && $('input[name="' + daSubmitter.name + '"]').length == 0){
           $('<input>').attr({
             type: 'hidden',
             name: daSubmitter.name,
@@ -10006,7 +10012,7 @@ def index(action_argument=None, refer=None):
             window.location = actionURL;
           }
           $("input[name='ajax']").remove();
-          if (daSubmitter != null){
+          if (daSubmitter != null && daSubmitter.name && $('input[name="' + daSubmitter.name + '"]').length == 0){
             var input = $("<input>")
               .attr("type", "hidden")
               .attr("name", daSubmitter.name).val(daSubmitter.value);
@@ -13610,6 +13616,12 @@ def observer():
         else if ($(elem).attr('type') == "radio"){
           var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           var wasSet = false;
+          if (val === true){
+            val = 'True';
+          }
+          if (val === false){
+            val = 'False';
+          }
           $("input[name='" + fieldNameEscaped + "']").each(function(){
             if ($(this).val() == val){
               if ($(this).prop('checked') != true){

@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.36] - 2023-02-08
+
+### Fixed
+- CSS issue on small screens.
+
 ## [1.4.35] - 2023-02-06
 
 ### Fixed
