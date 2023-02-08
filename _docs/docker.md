@@ -2751,7 +2751,6 @@ If you are using [S3] or [Azure blob storage], files are not stored in
 `/usr/share/docassemble/files`; disk space is likely only going to be
 an issue if you are using a [Docker volume] for [data storage].
 
-
 The following three lines will stop all containers, remove all
 containers, and then remove all of the images that [Docker] created
 during the build process.
@@ -2776,17 +2775,31 @@ Note that if you try to run these commands, you might get an error
 like `"docker stop" requires at least 1 argument.` This is harmless;
 it happens when the part inside `$()` does not return any output.
 
-
-
-Thus, so long as you are using [data storage], and you aren't running
-any applications other than **docassemble** using Docker, it is
-recommended that you perform a system upgrade by running:
-
 If you don't know what you are doing, do not follow the instructions
 above and instead get help, or spend time learning how [Docker] works
 before you attempt this. Doing `docker rm` permanently deletes your
 server, so it's not something you should be doing unless you know for
 a fact that your data are backed up in [data storage].
+
+Once the old images and containers are deleted, you can upgrade to the
+new system version of **docassemble** by running the same `docker run`
+command that you ran previously. For example, it might be:
+
+{% highlight text %}
+docker run --env-file=env.list \
+-v dabackup:/usr/share/docassemble/backup \
+-d -p 80:80 -p 443:443 --stop-timeout 600 \
+jhpyle/docassemble
+{% endhighlight %}
+
+or, if you are using S3 or Azure Blob Storage, you wouldn't use a
+`dabackup` volume:
+
+{% highlight text %}
+docker run --env-file=env.list \
+-d -p 80:80 -p 443:443 --stop-timeout 600 \
+jhpyle/docassemble
+{% endhighlight %}
 
 If your host OS is old, you may want to upgrade your host OS and
 Docker itself while the **docassemble** server is stopped. You may
@@ -2805,6 +2818,9 @@ docker run --rm -v dabackup:/from alpine ash -c "cd /from ; tar -cf - . " | ssh 
 4. Start a new container from the latest **docassemble** image using
    `docker run`.
 
+If you are using S3 or Azure Blob Storage, you can just delete the
+host machine and start a new machine. Just remember to save the
+contents of your `env.list` file, if you were using one.
 
 # <a name="downgrading"></a>Installing an earlier version of **docassemble** when using Docker
 

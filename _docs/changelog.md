@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.36](https://github.com/jhpyle/docassemble/releases/tag/v1.4.36) - 2023-02-08
+
+
+### Fixed
+- CSS issue on small screens.
+
 ## [1.4.35](https://github.com/jhpyle/docassemble/releases/tag/v1.4.35) - 2023-02-06
 
 
