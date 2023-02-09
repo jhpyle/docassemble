@@ -269,19 +269,22 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                         if hasattr(annot, "A"):
                             continue
                         the_name = pikepdf.Name('/' + value)
-                        annot.AS = the_name
                         annot.V = the_name
                         annot.DV = the_name
                         # Could be radio button: if it is, set the appearance stream of the
                         # correct child annot
                         if (annot_kid is not None and hasattr(annot_kid, "AP")
                                 and hasattr(annot_kid.AP, "N")):
+                            annot.AS = the_name
                             if the_name in annot_kid.AP.N.keys():
                                 annot_kid.AS = the_name
                             else:
                                 for off in ["/Off", "/off"]:
                                     if off in annot_kid.AP.N.keys():
                                         annot_kid.AS = off
+                        elif (hasattr(annot, "AP") and hasattr(annot.AP, "N")):
+                            if the_name in annot.AP.N.keys():
+                                annot.AS = the_name
                     elif field_type == "/Ch":
                         opt_list = [str(item) for item in annot.Opt]
                         if value not in opt_list:
