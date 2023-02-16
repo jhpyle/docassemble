@@ -262,7 +262,7 @@ install_requires = [
     "wcwidth==0.2.6",
     "webdriver-manager==3.8.5",
     "webencodings==0.5.1",
-    "Werkzeug==2.2.2",
+    "Werkzeug==2.2.3",
     "wrapt==1.14.1",
     "wsproto==1.2.0",
     "WTForms==3.0.1",
