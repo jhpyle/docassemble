@@ -3,6 +3,16 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.37](https://github.com/jhpyle/docassemble/releases/tag/v1.4.37) - 2023-02-17
+
+
+### Added
+- The `auto color scheme` Configuration directive.
+
+### Fixed
+- Issue with double quotation marks in variable names under `objects`
+  and `objects from file`.
+
 ## [1.4.36](https://github.com/jhpyle/docassemble/releases/tag/v1.4.36) - 2023-02-08
 
 

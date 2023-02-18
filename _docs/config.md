@@ -1091,6 +1091,22 @@ inverse navbar: False
 You can also control this on a per-interview basis with the
 [`inverse navbar` feature].
 
+## <a name="auto color scheme"></a>Automatic color scheme switching
+
+By default, if the OS or browser indicates that the user is using a
+"dark" color scheme, **docassemble** will activate the "dark" color
+scheme in Bootstrap by adding `data-bs-theme="dark"` to the `<html>`
+element. (This does not apply if the interview is embedded in a
+`<div>`.)
+
+If you do not want the "dark" color scheme to be activated
+automatically, set `auto color scheme` to `False`. The default value
+is `True`.
+
+{% highlight yaml %}
+auto color scheme: False
+{% endhighlight %}
+
 ## <a name="button colors"></a>Button color
 
 The colors of buttons in the **docassemble** user interface can be
