@@ -112,6 +112,7 @@ app.config['SOCIAL'] = daconfig['social']
 app.config['OG_LOCALE'] = re.sub(r'\..*', '', daconfig.get('locale', 'en_US.utf8'))
 app.config['ENABLE_MONITOR'] = daconfig.get('enable monitor', True)
 app.config['INVERSE_NAVBAR'] = bool(daconfig.get('inverse navbar', True))
+app.config['AUTO_COLOR_SCHEME'] = bool(daconfig.get('auto color scheme', True))
 app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)
 app.config['ENABLE_SHARING_PLAYGROUNDS'] = daconfig.get('enable sharing playgrounds', False)
 app.config['ALLOW_LOG_VIEWING'] = daconfig.get('allow log viewing', True)

@@ -178,9 +178,11 @@
 
     <script src="{{ url_for('static', filename='app/adminbundle.js', v=config['DA_VERSION']) }}"></script>
     <script>
+      {%- if config['AUTO_COLOR_SCHEME'] %}
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.setAttribute('data-bs-theme', 'dark');
       }
+      {%- endif %}
       var daWhichButton = null;
       $( document ).ready(function(){
         {%- if request.path in ["/user/sign-in", "/user/register", "/user/forgot-password"] %}

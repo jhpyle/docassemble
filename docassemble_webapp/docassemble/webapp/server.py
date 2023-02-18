@@ -8450,12 +8450,17 @@ def index(action_argument=None, refer=None):
                 location_bar = url_for('index', **index_params)
         index_params_external = copy.copy(index_params)
         index_params_external['_external'] = True
-        the_js = """\
-      if (typeof($) == 'undefined'){
-        var $ = jQuery.noConflict();
-      }
+        if daconfig.get("auto color scheme", True) and not is_js:
+            color_scheme = """\
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.setAttribute('data-bs-theme', 'dark');
+      }
+"""
+        else:
+            color_scheme = ""
+        the_js = color_scheme + """\
+      if (typeof($) == 'undefined'){
+        var $ = jQuery.noConflict();
       }
       var daRequestPending = false;
       var isAndroid = /android/i.test(navigator.userAgent.toLowerCase());
@@ -18861,7 +18866,7 @@ def playground_files():
         list_header = word("Existing module files")
         edit_header = word('Edit module files')
         description = 'You can use this page to add Python module files (.py files) that you want to include in your interviews using <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> or <a target="_blank" href="https://docassemble.org/docs/initial.html#imports"><code>imports</code></a>.'
-        lowerdescription = Markup("""<p>To use this in an interview, write a <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).</p>""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight')))
+        lowerdescription = Markup("""<p>To use this in an interview, write a <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).</p>""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight')) + """<p>If you wish to refer to this module from another package, you can use a fully qualified reference.</p>""" + highlight('---\nmodules:\n  - ' + "docassemble.playground" + str(playground_user.id) + project_name(current_project) + "." + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight')))
         after_text = None
     if scroll:
         extra_command = """

@@ -7435,6 +7435,20 @@ def illegal_variable_name(var):
     return detector.illegal
 
 
+def double_to_single(text):
+    if text.startswith('[') and text.endswith(']'):
+        try:
+            text = '[' + repr(eval(text[1:-1], {})) + ']'
+        except:
+            pass
+    return text
+
+
+def variables_equivalent(a, b):
+    a_parts = [double_to_single(x) for x in match_brackets_or_dot.split(a) if x != '']
+    b_parts = [double_to_single(x) for x in match_brackets_or_dot.split(b) if x != '']
+    return a_parts == b_parts
+
 class Interview:
 
     def __init__(self, **kwargs):
@@ -8726,7 +8740,7 @@ class Interview:
                             use_objects = bool(eval(question.use_objects, user_dict))
                         for field in question.fields:
                             variable = from_safeid(field.saveas)
-                            if variable != missing_var:
+                            if not variables_equivalent(variable, missing_var):
                                 continue
                             the_file_name = field.extras['file_name'].text(user_dict).strip()
                             was_defined = False
@@ -8764,7 +8778,7 @@ class Interview:
                         for keyvalue in question.objects:
                             # logmessage("In a for loop for keyvalue")
                             for variable, object_type_name in keyvalue.items():
-                                if variable != missing_var:
+                                if not variables_equivalent(variable, missing_var):
                                     continue
                                 was_defined = False
                                 try:

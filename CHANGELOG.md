@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.4.37] - 2023-02-17
+
+### Added
+- The `auto color scheme` Configuration directive.
+### Fixed
+- Issue with double quotation marks in variable names under `objects`
+  and `objects from file`.
+
 ## [1.4.36] - 2023-02-08
 
 ### Fixed
