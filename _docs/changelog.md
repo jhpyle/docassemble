@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.38](https://github.com/jhpyle/docassemble/releases/tag/v1.4.38) - 2023-02-20
+
+
+### Fixed
+- Issue with SendGrid e-mail sending.
+
 ## [1.4.37](https://github.com/jhpyle/docassemble/releases/tag/v1.4.37) - 2023-02-17
 
 

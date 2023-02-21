@@ -3571,14 +3571,21 @@ you can set `analytics id` within the `google` directive:
 
 {% highlight yaml %}
 google:
-  analytics id: UA-77777777-1
+  analytics id: G-9876543210
 {% endhighlight %}
 
 When this is configured, [JavaScript] for [Google Analytics] will be
 inserted into your interview pages, and [pageview] events will be sent
 to [Google Analytics] for any `question` that has an [`id`] defined.
-These [pageview] events will record a view on an artificial path.  For
-example, suppose you have the following question:
+
+If you are using [Google Analytics 4], set the `analytics id` to the GA4
+"measurement ID" (beginning with `G-`). If you are using Google's
+older system, set the `analytics id` to the "tracking ID" (beginning
+with `UA-`).
+
+The [pageview] events that **docassemble** sends will record a view on
+an artificial path.  For example, suppose you have the following
+question:
 
 {% highlight yaml %}
 id: lead certification
@@ -6417,3 +6424,4 @@ and Facebook API keys.
 [custom endpoints]: {{ site.baseurl }}/docs/recipes.html#custom api
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
 [`email config`]: {{ site.baseurl }}/docs/initial.html#email config
+[Google Analytics 4]: https://developers.google.com/analytics/devguides/collection/ga4
