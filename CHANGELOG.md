@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.38] - 2023-02-20
+
+### Fixed
+- Issue with SendGrid e-mail sending.
+
 ## [1.4.37] - 2023-02-17
 
 ### Added

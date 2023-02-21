@@ -98,12 +98,6 @@ class _MailMixin:
     def send_message(self, *args, **kwargs):
         self.send(Message(*args, **kwargs))
 
-    def connect(self):
-        try:
-            return Connection(self.state)
-        except KeyError:
-            raise RuntimeError("The curent application was not configured with Flask-Mail")
-
 
 class _Mail(_MailMixin):
 
@@ -141,10 +135,16 @@ class Mail(_MailMixin):
                 config = app.config
             state = self.init_mail(config, app.debug, app.testing)
             app.extensions = getattr(app, 'extensions', {})
-            app.extensions['mail'] = state
+            app.extensions['mail'] = self
         else:
             state = self.init_mail(config, False, False)
         return state
 
     def __getattr__(self, name):
         return getattr(self.state, name, None)
+
+    def connect(self):
+        try:
+            return Connection(self.state)
+        except KeyError:
+            raise RuntimeError("The curent application was not configured with Flask-Mail")

@@ -165,7 +165,6 @@ system_packages = [
     "parse-type",
     "parsedatetime",
     "passlib",
-    "pathlib",
     "pdfminer.six",
     "phonenumbers",
     "pikepdf",

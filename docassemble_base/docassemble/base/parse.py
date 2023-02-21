@@ -3823,7 +3823,7 @@ class Question:
                 if len(field) == 1 and 'code' in field:
                     field_info['type'] = 'fields_code'
                     self.find_fields_in(field['code'])
-                    field_info['extras'] = dict(fields_code=compile(field['code'], '<fields code>', 'eval'))
+                    field_info['extras'] = {'fields_code': compile(field['code'], '<fields code>', 'eval')}
                     self.fields.append(Field(field_info))
                     field_number += 1
                     if 'current_field' in docassemble.base.functions.this_thread.misc:
@@ -5207,7 +5207,7 @@ class Question:
         new_interview_source = InterviewSourceString(content='')
         new_interview = new_interview_source.get_interview()
         reproduce_basics(self.interview, new_interview)
-        return Question(dict(question='n/a', fields=field_list), new_interview, source=new_interview_source, package=self.package)
+        return Question({'question': 'n/a', 'fields': field_list}, new_interview, source=new_interview_source, package=self.package)
 
     def get_fields_and_sub_fields_used(self, user_dict):
         result = set()
