@@ -9987,6 +9987,7 @@ def index(action_argument=None, refer=None):
           if ($("html").attr("lang") != data.lang){
             $("html").attr("lang", data.lang);
           }
+          $(document).trigger('daPageLoad');
           if (daReloader != null){
             clearTimeout(daReloader);
           }
@@ -11769,7 +11770,6 @@ def index(action_argument=None, refer=None):
           daSegmentEvent();
         }
         hideTablist();
-        $(document).trigger('daPageLoad');
       }
       $(document).ready(function(){
         daInitialize(1);
@@ -11818,6 +11818,7 @@ def index(action_argument=None, refer=None):
             }
           });
         }
+        $(document).trigger('daPageLoad');
       });
       $(window).ready(daUpdateHeight);
       $(window).resize(daUpdateHeight);
@@ -14491,7 +14492,6 @@ def observer():
             $(self).remove();
           });
         }, 3000);
-        $(document).trigger('daPageLoad');
       }
       $( document ).ready(function(){
         daInitialize(1);
@@ -14637,6 +14637,7 @@ def observer():
             });
         }
         daObserverChangesInterval = setInterval(daPushChanges, """ + str(CHECKIN_INTERVAL) + """);
+        $(document).trigger('daPageLoad');
     });
     </script>
 """  # noqa: W605

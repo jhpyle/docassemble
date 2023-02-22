@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.39] - 2023-02-22
+
+### Fixed
+- Moved the `daPageLoad` event trigger until after the setup of the
+  jQuery Validation Plugin.
+
 ## [1.4.38] - 2023-02-20
 
 ### Fixed
