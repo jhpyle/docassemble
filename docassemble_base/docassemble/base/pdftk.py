@@ -60,7 +60,7 @@ def fieldsorter(x):
     return (x[2], y_coord, x_coord)
 
 
-def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
+def recursively_add_fields(fields, id_to_page, outfields, prefix='', parent_ft=None):
     if isinstance(fields, PDFObjRef):
         fields = resolve1(fields)
     for i in fields:
@@ -69,6 +69,10 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
             field = resolve1(field)
         try:
             name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
+            if field_type is None:
+                widget_type = str(field.get("Type"))
+                if widget_type == "/'Annot'" or widget_type == "/Annot":
+                    field_type = parent_ft
         except:
             logmessage("Skipping field " + repr(field))
             continue
@@ -131,12 +135,12 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix=''):
         kids = field.get('Kids')
         if kids:
             if name is None:
-                recursively_add_fields(kids, id_to_page, outfields, prefix=prefix)
+                recursively_add_fields(kids, id_to_page, outfields, prefix=prefix, parent_ft=field_type)
             else:
                 if prefix == '':
-                    recursively_add_fields(kids, id_to_page, outfields, prefix=name)
+                    recursively_add_fields(kids, id_to_page, outfields, prefix=name, parent_ft=field_type)
                 else:
-                    recursively_add_fields(kids, id_to_page, outfields, prefix=prefix + '.' + name)
+                    recursively_add_fields(kids, id_to_page, outfields, prefix=prefix + '.' + name, parent_ft=field_type)
         else:
             if prefix != '' and name is not None:
                 outfields.append((prefix + '.' + name, default, pageno, rect, field_type, export_value))
