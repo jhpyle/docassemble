@@ -172,22 +172,32 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
     for field, default, pageno, rect, field_type, export_value in the_fields:  # pylint: disable=unused-variable
         field_type = re.sub(r'[^/A-Za-z]', '', str(field_type))
         if field_type in ('/Btn', "/'Btn'"):
-            export_values[field] = export_value or default_export_value or 'Yes'
+            if field in export_values.keys():
+                export_values[field].append(export_value or default_export_value or 'Yes')
+            else:
+                export_values[field] = [export_value or default_export_value or 'Yes']
     if len(export_values) > 0:
         new_data_strings = []
         for key, val in data_strings:
-            if key in export_values:
-                if str(val) in ('Yes', 'yes', 'True', 'true', 'On', 'on', export_values[key]):
-                    val = export_values[key]
-                else:
-                    if export_values[key] == 'On':
+            if key in export_values and len(export_values[key]) > 0:
+                if len(export_values[key]) > 1:
+                    # Implies a radio button, so val should stay the same. Just turn things off
+                    # if it doesn't match any value
+                    if val not in export_values[key]:
                         val = 'Off'
-                    elif export_values[key] == 'on':
-                        val = 'off'
-                    elif export_values[key] == 'yes':
-                        val = 'no'
+                else:
+                    export_val = export_values[key][0]
+                    if str(val) in ('Yes', 'yes', 'True', 'true', 'On', 'on', export_val):
+                        val = export_val
                     else:
-                        val = 'No'
+                        if export_val == 'On':
+                            val = 'Off'
+                        elif export_val == 'on':
+                            val = 'off'
+                        elif export_val == 'yes':
+                            val = 'no'
+                        else:
+                            val = 'No'
             new_data_strings.append((key, val))
         data_strings = new_data_strings
     data_dict = {}
@@ -246,7 +256,9 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
             for the_annot in page.Annots:
                 for field, value in data_dict.items():
                     annot = the_annot
-                    while not hasattr(annot, "FT") and hasattr(annot, 'Parent'):
+                    annot_kid = None
+                    while not (hasattr(annot, "FT") and hasattr(annot, "T")) and hasattr(annot, 'Parent'):
+                        annot_kid = annot
                         annot = annot.Parent
                     if not (hasattr(annot, "T") and hasattr(annot, "FT")):
                         continue
@@ -261,9 +273,22 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                         if hasattr(annot, "A"):
                             continue
                         the_name = pikepdf.Name('/' + value)
-                        annot.AS = the_name
                         annot.V = the_name
                         annot.DV = the_name
+                        # Could be radio button: if it is, set the appearance stream of the
+                        # correct child annot
+                        if (annot_kid is not None and hasattr(annot_kid, "AP")
+                                and hasattr(annot_kid.AP, "N")):
+                            annot.AS = the_name
+                            if the_name in annot_kid.AP.N.keys():
+                                annot_kid.AS = the_name
+                            else:
+                                for off in ["/Off", "/off"]:
+                                    if off in annot_kid.AP.N.keys():
+                                        annot_kid.AS = off
+                        elif (hasattr(annot, "AP") and hasattr(annot.AP, "N")):
+                            if the_name in annot.AP.N.keys():
+                                annot.AS = the_name
                     elif field_type == "/Ch":
                         opt_list = [str(item) for item in annot.Opt]
                         if value not in opt_list:
