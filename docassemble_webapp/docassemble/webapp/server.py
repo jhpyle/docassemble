@@ -28246,6 +28246,10 @@ def api_restart_status():
     the_key = 'da:restart_status:' + str(code)
     task_data = r.get(the_key)
     if task_data is None:
+        # Try again with install_status
+        the_key = 'da:install_status:' + str(code)
+        task_data = r.get(the_key)
+    if task_data is None:
         return jsonify(status='unknown')
     task_info = json.loads(task_data.decode())
     if START_TIME <= task_info['server_start_time']:
