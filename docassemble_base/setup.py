@@ -132,7 +132,7 @@ install_requires = [
     "lxml==4.9.2",
     "Mako==1.2.4",
     "Markdown==3.3.6",
-    "markdown-it-py==2.1.0",
+    "markdown-it-py==2.2.0",
     "MarkupSafe==2.1.2",
     "mdurl==0.1.2",
     "mdx-smartypants==1.5.1",
