@@ -16497,6 +16497,7 @@ def create_playground_package():
                 os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
                 # git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
                 git_prefix = "GIT_SSH=" + ssh_script.name + " "
+                git_env = dict(os.environ, GIT_SSH=ssh_script.name)
                 ssh_url = commit_repository.get('ssh_url', None)
                 # github_url = commit_repository.get('html_url', None)
                 commit_branch = commit_repository.get('default_branch', GITHUB_BRANCH)
@@ -16560,14 +16561,14 @@ def create_playground_package():
                         raise DAError("create_playground_package: error running git remote add origin.  " + output)
                     output += "Doing " + git_prefix + "git push -u origin " + '"' + commit_branch + '"' + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git push -u origin " + '"' + commit_branch + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(["git", "push", "-u", "origin ", commit_branch], cwd=packagedir, stderr=subprocess.STDOUT, env=git_env).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running first git push.  " + output)
                 else:
                     output += "Doing " + git_prefix + "git clone " + ssh_url + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git clone " + ssh_url, cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(["git", "clone", ssh_url], cwd=directory, stderr=subprocess.STDOUT, env=git_env).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git clone.  " + output)
@@ -16576,7 +16577,7 @@ def create_playground_package():
                 if pulled_already:
                     output += "Doing git checkout " + commit_code + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git checkout " + '"' + commit_code + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(["git", "checkout", commit_code], cwd=packagedir, stderr=subprocess.STDOUT, env=git_env).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         # raise DAError("create_playground_package: error running git checkout.  " + output)
@@ -16613,7 +16614,7 @@ def create_playground_package():
                         branch = the_branch
                 output += "Doing git checkout -b " + tempbranch + "\n"
                 try:
-                    output += subprocess.check_output(git_prefix + "git checkout -b " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    output += subprocess.check_output(["git", "checkout", "-b", tempbranch], cwd=packagedir, stderr=subprocess.STDOUT, env=git_env).decode()
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("create_playground_package: error running git checkout.  " + output)
@@ -16637,21 +16638,21 @@ def create_playground_package():
                     raise DAError("create_playground_package: error running git commit.  " + output)
                 output += "Trying git checkout " + the_branch + "\n"
                 try:
-                    output += subprocess.check_output(git_prefix + "git checkout " + '"' + the_branch + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                    output += subprocess.check_output(["git", "checkout", the_branch], cwd=packagedir, stderr=subprocess.STDOUT, env=git_env).decode()
                     branch_exists = True
                 except subprocess.CalledProcessError:
                     branch_exists = False
                 if not branch_exists:
                     output += "Doing git checkout -b " + the_branch + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git checkout -b " + '"' + the_branch + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(["git", "checkout", "-b", the_branch], cwd=packagedir, stderr=subprocess.STDOUT, env=git_env).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git checkout -b " + the_branch + ".  " + output)
                 else:
                     output += "Doing git merge --squash " + tempbranch + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git merge --squash " + tempbranch, cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(["git", "merge", "--squash", tempbranch], cwd=packagedir, stderr=subprocess.STDOUT, env=git_env).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git merge --squash " + tempbranch + ".  " + output)
@@ -16664,14 +16665,14 @@ def create_playground_package():
                 if branch:
                     output += "Doing " + git_prefix + "git push --set-upstream origin " + str(branch) + "\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git push --set-upstream origin " + '"' + str(branch) + '"', cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(["git", "push", "--set-upstream", "origin", str(branch)], cwd=packagedir, stderr=subprocess.STDOUT, env=git_env).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git push.  " + output)
                 else:
                     output += "Doing " + git_prefix + "git push\n"
                     try:
-                        output += subprocess.check_output(git_prefix + "git push", cwd=packagedir, stderr=subprocess.STDOUT, shell=True).decode()
+                        output += subprocess.check_output(["git", "push"], cwd=packagedir, stderr=subprocess.STDOUT, env=git_env).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git push.  " + output)
@@ -19440,9 +19441,9 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
         branch = None
     if branch:
         branch = secure_git_branchname(branch)
-        branch_option = '-b "' + branch + '" '
+        branch_option = ['-b', branch]
     else:
-        branch_option = ''
+        branch_option = []
     need_to_restart = False
     extracted = {}
     data_files = dict(templates=[], static=[], sources=[], interviews=[], modules=[], questions=[])
@@ -19470,9 +19471,10 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
             os.chmod(ssh_script.name, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
             # git_prefix = "GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -i \"" + str(private_key_file) + "\"' "
             git_prefix = "GIT_SSH=" + ssh_script.name + " "
-            output += "Doing " + git_prefix + "git clone " + branch_option + github_url + "\n"
+            git_env = dict(os.environ, GIT_SSH=ssh_script.name)
+            output += "Doing " + git_prefix + "git clone " + " ".join(branch_option) + github_url + "\n"
             try:
-                output += subprocess.check_output(git_prefix + "git clone " + branch_option + '"' + github_url + '"', cwd=directory, stderr=subprocess.STDOUT, shell=True).decode()
+                output += subprocess.check_output(["git", "clone"] + branch_option + [github_url], cwd=directory, stderr=subprocess.STDOUT, env=git_env).decode()
             except subprocess.CalledProcessError as err:
                 output += err.output.decode()
                 return dict(action="error", message="error running git clone.  " + output)
