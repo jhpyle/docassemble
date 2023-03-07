@@ -62,16 +62,20 @@
     template: function () {
       //console.log('template');
       if (this.options.bsVersion == "2") {
-        return '<div class="combobox-container"><input type="hidden" /> ' +
-            '<div class="input-append"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
-            '<span class="add-on dropdown-toggle"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>';
+        return (
+          '<div class="combobox-container"><input type="hidden" /> ' +
+          '<div class="input-append"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
+          '<span class="add-on dropdown-toggle"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>'
+        );
       } else {
-        return '<div class="combobox-container"> <input type="hidden" /> ' +
-            '<div class="input-group"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
-            '<div class="input-group-append"> ' +
-              '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-expanded="false" aria-controls="id_controls">' +
-                '<span class="fas fa-caret-down"></span><span class="fas fa-xmark"></span>' +
-              '</button> </div> </div> </div>';
+        return (
+          '<div class="combobox-container"> <input type="hidden" /> ' +
+          '<div class="input-group"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
+          '<div class="input-group-append"> ' +
+          '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-expanded="false" aria-controls="id_controls">' +
+          '<span class="fas fa-caret-down"></span><span class="fas fa-xmark"></span>' +
+          "</button> </div> </div> </div>"
+        );
       }
     },
 
@@ -127,7 +131,10 @@
       if (this.options.appendId !== "undefined") {
         // keep the source id on the input, otherwise the label (which refers to it by id) will be lost
         this.$element.attr("id", this.$source.attr("id"));
-        this.$source.attr("id", this.$source.attr("id") + this.options.appendId);
+        this.$source.attr(
+          "id",
+          this.$source.attr("id") + this.options.appendId
+        );
         daComboBoxes[this.$element.attr("id")] = this;
       }
       this.$menu.attr("id", this.$element.attr("id") + "menu");
@@ -136,8 +143,14 @@
       this.$element.attr("aria-owns", this.$menu.attr("id"));
       this.$button.attr("aria-controls", this.$menu.attr("id"));
       this.$button.attr("aria-label", this.$source.attr("aria-label"));
-      this.$button.attr("aria-labelledby", this.$source.attr("aria-labelledby"));
-      this.$button.attr("aria-describedby", this.$source.attr("aria-describedby"));
+      this.$button.attr(
+        "aria-labelledby",
+        this.$source.attr("aria-labelledby")
+      );
+      this.$button.attr(
+        "aria-describedby",
+        this.$source.attr("aria-describedby")
+      );
       this.$element.attr("placeholder", this.options.placeholder);
       this.$target.prop("name", this.$source.prop("name"));
       this.$target.val(this.$source.val());
@@ -220,7 +233,7 @@
       this.process(this.source);
     },
 
-    process: function(items) {
+    process: function (items) {
       var that = this;
 
       items = $.grep(items, function (item) {
@@ -280,8 +293,10 @@
       var that = this;
 
       items = $(items).map(function (i, item) {
-        i = $(that.options.item).attr("data-value", item).attr("aria-label", item);
-        i.attr("id", that.$element.attr("id") + "-option-" + item)
+        i = $(that.options.item)
+          .attr("data-value", item)
+          .attr("aria-label", item);
+        i.attr("id", that.$element.attr("id") + "-option-" + item);
         i.html(that.highlighter(item));
         return i[0];
       });
@@ -291,12 +306,12 @@
       return this;
     },
 
-    setActive: function(elem) {
+    setActive: function (elem) {
       elem.addClass("active").attr("aria-selected", true);
       this.$element.attr("aria-activedescendant", elem.attr("id"));
     },
 
-    swapActive: function(oldElem, newElem) {
+    swapActive: function (oldElem, newElem) {
       oldElem.removeClass("active").attr("aria-selected", false);
       this.setActive(newElem);
     },
@@ -437,7 +452,7 @@
       //console.log('fixMenuScroll');
       var active = this.$menu.find(".active");
       if (active.length) {
-        this.$element.attr("aria-activedescendant", active.attr("id"))
+        this.$element.attr("aria-activedescendant", active.attr("id"));
         var top = active.position().top;
         var bottom = top + active.height();
         var scrollTop = this.$menu.scrollTop();
@@ -626,8 +641,9 @@
 
   $.fn.combobox.defaults = {
     bsVersion: "5",
-    menu: '<ul role="listbox" class="typeahead typeahead-long dropdown-menu"></ul>',
-    item: '<li role="option" class="dropdown-item"></li>',
+    menu:
+      '<ul role="listbox" class="typeahead typeahead-long dropdown-menu"></ul>',
+    item: '<li role="option" class="dropdown-item dapointer"></li>',
     appendId: "combobox",
     clearIfNoMatch: false,
   };

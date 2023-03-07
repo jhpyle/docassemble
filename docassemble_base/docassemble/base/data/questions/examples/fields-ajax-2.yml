@@ -17,7 +17,7 @@ code: |
   set_save_status('ignore')
   original = action_argument('wordstart')
   wordstart = original.lower()
-  results = list()
+  results = []
   for key, val in {'x234': 'Apple', 'y432': 'Orange', 'h293': 'Peach'}.items():
     if key == original:
       json_response([[key, val]])

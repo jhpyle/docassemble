@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.4.40] - 2023-03-
+
+### Changed
+- The `analytics id` subdirective of `google` can refer to a list of
+  IDs, all of which will be configured.
+
+### Fixed
+- The `state_name()` function did not work with countries that lack
+  "state" abbreviations.
+- Cursor was not pointer over combobox drop-down items.
+
 ## [1.4.39] - 2023-02-22
 
 ### Fixed

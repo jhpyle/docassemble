@@ -368,7 +368,7 @@ def state_name(state_code, country_code=None):
     if country_code is None:
         country_code = get_country() or 'US'
     for subdivision in pycountry.subdivisions.get(country_code=country_code):
-        m = re.search(r'-([A-Z]+)$', subdivision.code)
+        m = re.search(r'-([A-Z0-9]+)$', subdivision.code)
         if m and m.group(1) == state_code:
             return word(subdivision.name)
     return state_code

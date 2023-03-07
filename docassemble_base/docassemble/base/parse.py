@@ -7288,7 +7288,7 @@ class Question:
                         if len(entry) > 1:
                             if key in ['default', 'help', 'image', 'group', 'css class', 'color']:
                                 continue
-                            if 'key' in entry and 'label' in entry and key != 'key':
+                            if 'label' in entry and (('key' in entry and key != 'key') or ('value' in entry and key != 'value')):
                                 continue
                             for standard_key in ('default', 'css class', 'color', 'group', 'help'):
                                 if standard_key in entry:
@@ -7306,8 +7306,11 @@ class Question:
                                     the_item['image'] = dict(type='url', value=entry['image'].url_for())
                                 else:
                                     the_item['image'] = dict(type='decoration', value=TextObject(entry['image'], question=self))
-                            if 'key' in entry and 'label' in entry:
-                                the_item['key'] = TextObject(entry['key'], question=self, translate=False)
+                            if 'label' in entry and ('key' in entry or 'value' in entry):
+                                if 'key' in entry:
+                                    the_item['key'] = TextObject(entry['key'], question=self, translate=False)
+                                elif 'value' in entry:
+                                    the_item['value'] = TextObject(entry['value'], question=self, translate=False)
                                 the_item['label'] = TextObject(entry['label'], question=self)
                                 result.append(the_item)
                                 continue

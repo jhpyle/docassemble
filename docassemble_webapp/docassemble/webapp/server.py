@@ -2421,9 +2421,9 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
     else:
         api_key = None
     if ga_configured and interview_status.question.interview.options.get('analytics on', True):
-        ga_id = google_config.get('analytics id')
+        ga_ids = google_config.get('analytics id')
     else:
-        ga_id = None
+        ga_ids = None
     output_js = ''
     if api_key is not None:
         region = google_config.get('region', None)
@@ -2438,9 +2438,9 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
       daScript.src = "https://maps.googleapis.com/maps/api/js?key=""" + api_key + """&libraries=places&callback=dagoogleapicallback";
       document.head.appendChild(daScript);
 """
-    if ga_id is not None:
+    if ga_ids is not None:
         the_js = """\
-      window.dataLayer = window.dataLayer || [];
+      var dataLayer = window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       function daPageview(){
@@ -2449,8 +2449,11 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
           idToUse = daQuestionID['ga'];
         }
         if (idToUse != null){
-          if (!daGAConfigured){
-            gtag('config', """ + json.dumps(ga_id) + """, {'send_page_view': false""" + (", 'cookie_flags': 'SameSite=None;Secure'" if app.config['SESSION_COOKIE_SECURE'] else '') + """});
+          if (!daGAConfigured){"""
+        for ga_id in ga_ids:
+            the_js += """
+            gtag('config', """ + json.dumps(ga_id) + """, {'send_page_view': false""" + (", 'cookie_flags': 'SameSite=None;Secure'" if app.config['SESSION_COOKIE_SECURE'] else '') + """});"""
+        the_js += """
             daGAConfigured = true;
           }
           gtag('set', 'page_path', """ + json.dumps(interview_package + "/" + interview_filename + "/") + """ + idToUse.replace(/[^A-Za-z0-9]+/g, '_'));
@@ -2459,7 +2462,7 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
       }
 """
         scripts += """
-    <script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_ids[0] + """"></script>
     <script>
 """ + the_js + """
     </script>
@@ -8417,15 +8420,15 @@ def index(action_argument=None, refer=None):
         the_checkin_interval = interview.options.get('checkin interval', CHECKIN_INTERVAL)
         if interview.options.get('analytics on', True):
             if ga_configured:
-                ga_id = google_config.get('analytics id')
+                ga_ids = google_config.get('analytics id')
             else:
-                ga_id = None
+                ga_ids = None
             if 'segment id' in daconfig:
                 segment_id = daconfig['segment id']
             else:
                 segment_id = None
         else:
-            ga_id = None
+            ga_ids = None
             segment_id = None
         page_sep = "#page"
         if refer is None:
@@ -8498,7 +8501,7 @@ def index(action_argument=None, refer=None):
       var daShowingSpinner = false;
       var daSpinnerTimeout = null;
       var daSubmitter = null;
-      var daUsingGA = """ + ("true" if ga_id is not None else 'false') + """;
+      var daUsingGA = """ + ("true" if ga_ids is not None else 'false') + """;
       var daGAConfigured = false;
       var daUsingSegment = """ + ("true" if segment_id is not None else 'false') + """;
       var daDoAction = """ + do_action + """;
@@ -22496,7 +22499,7 @@ def request_developer():
         body = "User " + str(current_user.email) + " (" + str(current_user.id) + ") has requested developer privileges.\n\n"
         if form.reason.data:
             body += "Reason given: " + str(form.reason.data) + "\n\n"
-        body += "Go to " + url_for('edit_user_profile_page', the_id=current_user.id, _external=True) + " to change the user's privileges."
+        body += "Go to " + url_for('edit_user_profile_page', user_id=current_user.id, _external=True) + " to change the user's privileges."
         msg = Message("Request for developer account from " + str(current_user.email), recipients=recipients, body=body)
         if len(recipients) == 0:
             flash(word('No administrators could be found.'), 'error')
@@ -29590,20 +29593,6 @@ def api_interview():
             output['setup']['googleAnalytics'] = dict(enable=True, ga_id=google_config.get('analytics id'), prefix=interview_package + '/' + interview_filename)
         else:
             output['setup']['googleAnalytics'] = dict(enable=False)
-        # <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=places"></script>'
-        # window.dataLayer = window.dataLayer || [];
-        # function gtag(){dataLayer.push(arguments);}
-        # gtag('js', new Date());
-        # function daPageview(){
-        #   var idToUse = daQuestionID['id'];
-        #   if (daQuestionID['ga'] != undefined && daQuestionID['ga'] != null){
-        #     idToUse = daQuestionID['ga'];
-        #   }
-        #   if (idToUse != null){
-        #     gtag('config', """ + json.dumps(ga_id) + """, {""" + ("'cookie_flags': 'SameSite=None;Secure', " if app.config['SESSION_COOKIE_SECURE'] else '') + """'page_path': """ + json.dumps(interview_package) + """ + "/" + """ + json.dumps(interview_filename) + """ + "/" + idToUse.replace(/[^A-Za-z0-9]+/g, '_')});
-        #   }
-        # }
-        # <script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """"></script>
     return jsonify(output)
 
 

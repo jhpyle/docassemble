@@ -308,6 +308,20 @@ def load(**kwargs):
             daconfig['google'] = {}
     else:
         daconfig['google'] = {}
+    if 'analytics id' in daconfig['google']:
+        if isinstance(daconfig['google']['analytics id'], str):
+            daconfig['google']['analytics id'] = [daconfig['google']['analytics id']]
+        if isinstance(daconfig['google']['analytics id'], list):
+            new_list = []
+            for item in daconfig['google']['analytics id']:
+                if isinstance(item, str):
+                    new_list.append(item)
+            if len(new_list) > 0:
+                daconfig['google']['analytics id'] = new_list
+            else:
+                daconfig['google']['analytics id'] = None
+        else:
+            daconfig['google']['analytics id'] = None
     if 'grid classes' in daconfig:
         if not isinstance(daconfig['grid classes'], dict):
             config_error("The Configuration directive grid classes must be a dictionary.")
