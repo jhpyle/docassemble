@@ -2256,6 +2256,10 @@ state abbreviation provided.
 
 {% include side-by-side.html demo="state" %}
 
+Like `states_list()`, `state_name()` accepts an optional keyword
+parameter `country_code` that determines which country is used to find
+the state name.
+
 When working with states, it is a good idea to store state names in
 this abbreviated format.
 
@@ -4684,7 +4688,7 @@ The [`create_user()`] function also accepts an optional keyword
 parameter `privileges`, which can be set to the name of a [privilege]
 (e.g., `'advocate'`) or a list of [privileges] (e.g., `['advocate',
 'trainer']`). Non-`admin` users do not have the power to confer
-privileges of `admin`, `developer`, or `advocate.
+privileges of `admin`, `developer`, or `advocate`.
 
 The function also accepts an optional keyword parameter `info`, which
 is expected to be a dictionary containing information about the new

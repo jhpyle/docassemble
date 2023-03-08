@@ -3,6 +3,22 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.40](https://github.com/jhpyle/docassemble/releases/tag/v1.4.40) - 2023-03-07
+
+
+### Changed
+- The `analytics id` subdirective of `google` can refer to a list of
+  IDs, all of which will be configured.
+
+
+### Fixed
+- The `state_name()` function did not work with countries that lack
+  "state" abbreviations.
+- Cursor was not pointer over combobox drop-down items.
+- Better handling of radio buttons in PDF files.
+- Support for `/` characters in GitHub branch names.
+- Better method of calling `git`.
+
 ## [1.4.39](https://github.com/jhpyle/docassemble/releases/tag/v1.4.39) - 2023-02-22
 
 
