@@ -9977,7 +9977,9 @@ def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=N
                 raise Exception("document with extension " + doc.extension + " is not a readable image file")
             if doc.extension == 'pdf':
                 # doc.page_path(1, 'page')
-                for i in range(len(Pdf.open(doc.path()).pages)):
+                with Pdf.open(doc.path()) as tmp_pdf:
+                    page_count = len(tmp_pdf.pages)
+                for i in range(page_count):
                     if f is not None and i + 1 < f:
                         continue
                     if l is not None and i + 1 > l:
@@ -9985,7 +9987,9 @@ def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=N
                     todo.append(dict(doc=doc, page=i+1, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code, user=user, pdf=pdf, preserve_color=preserve_color))
             elif doc.extension in ("docx", "doc", "odt", "rtf"):
                 doc_conv = pdf_concatenate(doc)
-                for i in range(len(Pdf.open(doc_conv.path()).pages)):
+                with Pdf.open(doc_conv.path()) as tmp_pdf:
+                    page_count = len(tmp_pdf.pages)
+                for i in range(page_count):
                     if f is not None and i + 1 < f:
                         continue
                     if l is not None and i + 1 > l:
