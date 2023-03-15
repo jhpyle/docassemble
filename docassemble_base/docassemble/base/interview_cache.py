@@ -1,3 +1,4 @@
+from docassemble.base.error import DAException
 import docassemble.base.parse
 
 cache = {}
@@ -5,7 +6,7 @@ cache = {}
 
 def get_interview(path):
     if path is None:
-        raise Exception("Tried to load interview source with no path")
+        raise DAException("Tried to load interview source with no path")
     if cache_valid(path):
         the_interview = cache[path]['interview']
         the_interview.from_cache = True

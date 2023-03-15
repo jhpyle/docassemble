@@ -93,4 +93,4 @@ attachment:
     "address_block": ${ adverse_party.address_block() }
     "signature": ${ user.signature }
   code: |
-    dict(full_name=user.name.full())
+    {'full_name': user.name.full()}

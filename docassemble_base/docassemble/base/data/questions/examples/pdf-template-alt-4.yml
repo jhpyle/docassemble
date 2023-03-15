@@ -68,7 +68,7 @@ attachment:
   code: letter_variables
 ---
 code: |
-  letter_variables = dict()
+  letter_variables = {}
   letter_variables['letter_date'] = today()
   if letter_type == 'threat':
     letter_variables['subject_line'] = "Litigation hold"

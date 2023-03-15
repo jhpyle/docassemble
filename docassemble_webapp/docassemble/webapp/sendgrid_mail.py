@@ -4,6 +4,7 @@ import base64
 import time
 from docassemble.base.functions import word
 from docassemble.base.logger import logmessage
+from docassemble.base.error import DAException
 from docassemble.webapp.da_flask_mail import Message
 from flask_mail import BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
 from sendgrid import SendGridAPIClient
@@ -65,7 +66,7 @@ class Connection:
                 logmessage(repr(response.body))
             except:
                 pass
-            raise Exception("Failed to send e-mail message to SendGrid")
+            raise DAException("Failed to send e-mail message to SendGrid")
         email_dispatched.send(message, app=current_app._get_current_object())
 
     def send_message(self, *args, **kwargs):

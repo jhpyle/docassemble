@@ -5,6 +5,7 @@ import re
 import time
 import dateutil
 from sqlalchemy import or_, and_, select
+cron_type = ''
 if __name__ == "__main__":
     import docassemble.base.config
     cron_type = 'cron_daily'
@@ -142,7 +143,7 @@ def clear_old_interviews():
                 delta = nowtime - record.modtime
                 # logmessage("clear_old_interviews: delta days is " + str(delta.days))
                 if delta.days > days:
-                    stale.append(dict(key=record.key, filename=record.filename))
+                    stale.append({'key': record.key, 'filename': record.filename})
             if results_count == 0:
                 break
             for item in stale:
@@ -165,7 +166,7 @@ def clear_old_interviews():
             delta = nowtime - record.modtime
             # logmessage("clear_old_interviews: delta days is " + str(delta.days))
             if delta.days > interview_delete_days:
-                stale.append(dict(key=record.key, filename=record.filename))
+                stale.append({'key': record.key, 'filename': record.filename})
         if results_count == 0:
             break
         for item in stale:
@@ -182,7 +183,7 @@ def run_cron(the_cron_type):
         cron_types.append(str(the_cron_type) + "_background")
     cron_user = get_cron_user()
     cron_user_id = cron_user.id
-    user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user_id, the_user_id=cron_user_id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None, session_uid='cron', device_id='cron')
+    user_info = {'is_anonymous': False, 'is_authenticated': True, 'email': cron_user.email, 'theid': cron_user_id, 'the_user_id': cron_user_id, 'roles': [role.name for role in cron_user.roles], 'firstname': cron_user.first_name, 'lastname': cron_user.last_name, 'nickname': cron_user.nickname, 'country': cron_user.country, 'subdivisionfirst': cron_user.subdivisionfirst, 'subdivisionsecond': cron_user.subdivisionsecond, 'subdivisionthird': cron_user.subdivisionthird, 'organization': cron_user.organization, 'location': None, 'session_uid': 'cron', 'device_id': 'cron'}
     base_url = docassemble.base.config.daconfig.get('url root', 'http://localhost') + docassemble.base.config.daconfig.get('root', '/')
     path_url = base_url + 'interview'
     with app.app_context():
@@ -211,7 +212,7 @@ def run_cron(the_cron_type):
                     if len(records) == 0:
                         break
                     for indexno, key, the_filename, dictionary, steps in records:
-                        docassemble.base.functions.this_thread.current_info = dict(user=user_info, session=key, secret=None, yaml_filename=the_filename, url=base_url, url_root=path_url, encrypted=False, action=None, interface='cron', arguments={})
+                        docassemble.base.functions.this_thread.current_info = {'user': user_info, 'session': key, 'secret': None, 'yaml_filename': the_filename, 'url': base_url, 'url_root': path_url, 'encrypted': False, 'action': None, 'interface': 'cron', 'arguments': {}}
                         last_index = indexno
                         try:
                             the_dict = unpack_dictionary(dictionary)
@@ -227,7 +228,7 @@ def run_cron(the_cron_type):
                             else:
                                 try:
                                     docassemble.base.functions.reset_local_variables()
-                                    ci = dict(user=user_info, session=key, secret=None, yaml_filename=the_filename, url=base_url, url_root=path_url, encrypted=False, action=cron_type_to_use, interface='cron', arguments={})
+                                    ci = {'user': user_info, 'session': key, 'secret': None, 'yaml_filename': the_filename, 'url': base_url, 'url_root': path_url, 'encrypted': False, 'action': cron_type_to_use, 'interface': 'cron', 'arguments': {}}
                                     docassemble.base.functions.this_thread.current_info = ci
                                     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
                                     obtain_lock_patiently(key, the_filename)
@@ -240,7 +241,7 @@ def run_cron(the_cron_type):
                                         interview_status.do_sleep()
                                     elif interview_status.question.question_type == "backgroundresponseaction":
                                         new_action = interview_status.question.action
-                                        interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=key, secret=None, yaml_filename=the_filename, url=None, url_root=None, encrypted=False, action=new_action['action'], arguments=new_action['arguments'], interface='cron'))
+                                        interview_status = docassemble.base.parse.InterviewStatus(current_info={'user': user_info, 'session': key, 'secret': None, 'yaml_filename': the_filename, 'url': None, 'url_root': None, 'encrypted': False, 'action': new_action['action'], 'arguments': new_action['arguments'], 'interface': 'cron'})
                                         try:
                                             interview.assemble(the_dict, interview_status)
                                         except:

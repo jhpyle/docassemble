@@ -15,6 +15,7 @@ import PIL
 from docassemble.base.logger import logmessage
 from docassemble.base.rtfng.object.picture import Image
 from docassemble.base.functions import server, word
+from docassemble.base.error import DAException
 import docassemble.base.functions
 from docassemble.base import pandoc
 from bs4 import BeautifulSoup
@@ -94,7 +95,7 @@ def get_max_width_points():
 #     return
 
 # def blank_file_finder(*args, **kwargs):
-#     return(dict(filename="invalid"))
+#     return({'filename': "invalid"})
 
 # file_finder = blank_file_finder
 
@@ -243,7 +244,7 @@ def rtf_filter(text, metadata=None, styles=None, question=None):
     formatting_stack = []
     for line in lines:
         if re.search(r'\[SAVE\]', line):
-            formatting_stack.append(dict(spacing_command=spacing_command, after_space=after_space, default_indentation=default_indentation, indentation_command=indentation_command))
+            formatting_stack.append({'spacing_command': spacing_command, 'after_space': after_space, 'default_indentation': default_indentation, 'indentation_command': indentation_command})
         elif re.search(r'\[RESTORE\]', line):
             if len(formatting_stack) > 0:
                 prior_values = formatting_stack.pop()
@@ -1893,10 +1894,10 @@ def qr_include_docx_template(match):
 def ensure_valid_filename(filename):
     m = re.search(r'[\\/\&\`:;,~\'\"\*\?\<\>\|]', filename)
     if m:
-        raise Exception("Filename contained invalid character " + repr(m.group(1)))
+        raise DAException("Filename contained invalid character " + repr(m.group(1)))
     for char in filename:
         if ord(char) < 32 or ord(char) >= 127:
-            raise Exception("Filename contained invalid character " + repr(char))
+            raise DAException("Filename contained invalid character " + repr(char))
     return True
 
 

@@ -35,7 +35,7 @@ def instances_for_service(service):
     return instances
 
 def get_target_groups():
-    result = dict()
+    result = {}
     for tg in elb.describe_target_groups().get('TargetGroups', list()):
         result[tg['TargetGroupName']] = tg['TargetGroupArn']
     return result
@@ -130,7 +130,7 @@ def shutdown_unused_ec2_instances():
         else:
             break
 
-dispatch = dict(shutdown_unused_ec2_instances=shutdown_unused_ec2_instances, update_ec2_instances=update_ec2_instances, connect_string=connect_string, shut_down=shut_down, start_up=start_up, fix_registered_instances=fix_registered_instances, update_desired_count=update_desired_count)
+dispatch = {'shutdown_unused_ec2_instances': shutdown_unused_ec2_instances, 'update_ec2_instances': update_ec2_instances, 'connect_string': connect_string, 'shut_down': shut_down, 'start_up': start_up, 'fix_registered_instances': fix_registered_instances, 'update_desired_count': update_desired_count}
 
 arguments = copy.deepcopy(sys.argv)
 

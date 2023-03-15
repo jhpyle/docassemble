@@ -14,6 +14,7 @@ import numpy as np
 import yaml
 from docassemble_pattern.vector import KNN, SVM, PORTER, Document
 from docassemble.base.util import DAObject, DAList, DADict
+from docassemble.base.error import DAException
 # from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import get_info_from_file_reference
 from docassemble.webapp.core.models import MachineLearning
@@ -46,7 +47,7 @@ class MachineLearningEntry(DAObject):
     def save(self):
         """Saves the entry to the data set.  The independent variable must be
         defined in order to save."""
-        args = dict(independent=self.independent)
+        args = {'independent': self.independent}
         if hasattr(self, 'dependent') and self.dependent is not None:
             args['dependent'] = self.dependent
         if hasattr(self, 'key'):
@@ -69,7 +70,7 @@ class MachineLearner:
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0:
             if ':' in pargs[0]:
-                raise Exception("MachineLearner: you cannot use a colon in a machine learning name")
+                raise DAException("MachineLearner: you cannot use a colon in a machine learning name")
             question = docassemble.base.functions.get_current_question()
             if question is not None:
                 self.group_id = question.interview.get_ml_store() + ':' + pargs[0]
@@ -104,7 +105,7 @@ class MachineLearner:
         self._initialize()
         output = []
         for entry in self.classified_entries(key=key):
-            the_entry = dict(independent=entry.independent, dependent=entry.dependent)
+            the_entry = {'independent': entry.independent, 'dependent': entry.dependent}
             if entry.info is not None:
                 the_entry['info'] = entry.info
             output.append(the_entry)
@@ -112,7 +113,7 @@ class MachineLearner:
             return json.dumps(output, sort_keys=True, indent=4)
         if output_format == 'yaml':
             return yaml.safe_dump(output, default_flow_style=False)
-        raise Exception("Unknown output format " + str(output_format))
+        raise DAException("Unknown output format " + str(output_format))
 
     def dependent_in_use(self, key=None):
         in_use = set()
@@ -141,7 +142,7 @@ class MachineLearner:
         file_info = get_info_from_file_reference(fileref, folder='sources')
         if 'fullpath' not in file_info or file_info['fullpath'] is None or not os.path.exists(file_info['fullpath']):
             return
-            # raise Exception("File reference " + str(fileref) + " is invalid")
+            # raise DAException("File reference " + str(fileref) + " is invalid")
         with open(file_info['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
         if 'mimetype' in file_info and file_info['mimetype'] == 'application/json':
@@ -193,7 +194,7 @@ class MachineLearner:
         self._initialize()
         existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, id=the_id)).scalar()
         if existing_entry is None:
-            raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
+            raise DAException("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
         if existing_entry.dependent:
             dependent = fix_pickle_obj(codecs.decode(bytearray(existing_entry.dependent, encoding='utf-8'), 'base64'))
             if dependent is not None:
@@ -250,7 +251,7 @@ class MachineLearner:
         else:
             the_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, id=the_id)).scalar()
             if the_entry is None:
-                raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
+                raise DAException("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
             existing = True
         if 'dependent' in kwargs:
             depend = codecs.encode(pickle.dumps(kwargs['dependent']), 'base64').decode()
@@ -280,7 +281,7 @@ class MachineLearner:
         existing_entry = db.session.execute(select(MachineLearning).filter_by(group_id=self.group_id, id=the_id).with_for_update()).scalar()
         if existing_entry is None:
             db.session.commit()
-            raise Exception("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
+            raise DAException("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
         existing_entry.modtime = datetime.datetime.utcnow()
         if the_dependent is None:
             existing_entry.dependent = None
@@ -477,7 +478,7 @@ class RandomForestMachineLearner(MachineLearner):
         if not reset and (self.group_id not in ml_thread.reset_counter or self.reset_counter != ml_thread.reset_counter[self.group_id]):
             reset = True
         if hasattr(self, 'group_id') and (reset or self.group_id not in ml_thread.learners):
-            ml_thread.learners[self.group_id] = dict(learner=self._learner(), dep_type=None, indep_type={}, indep_categories={}, dep_categories=None)
+            ml_thread.learners[self.group_id] = {'learner': self._learner(), 'dep_type': None, 'indep_type': {}, 'indep_categories': {}, 'dep_categories': None}
         super()._initialize(reset=reset)
 
     def _train_from_db(self):
@@ -504,16 +505,16 @@ class RandomForestMachineLearner(MachineLearner):
                     elif isinstance(depend_var, float) and ml_thread.learners[self.group_id]['dep_type'] is int:
                         ml_thread.learners[self.group_id]['dep_type'] = float
                     else:
-                        raise Exception("RandomForestMachineLearner: dependent variable type was not consistent")
+                        raise DAException("RandomForestMachineLearner: dependent variable type was not consistent")
             else:
                 if not isinstance(depend_var, (str, int, bool, float)):
-                    raise Exception("RandomForestMachineLearner: dependent variable type was not a standard variable type")
+                    raise DAException("RandomForestMachineLearner: dependent variable type was not a standard variable type")
                 ml_thread.learners[self.group_id]['dep_type'] = type(depend_var)
             depend_data.append(depend_var)
             if isinstance(indep_var, DADict):
                 indep_var = indep_var.elements
             if not isinstance(indep_var, dict):
-                raise Exception("RandomForestMachineLearner: independent variable was not a dictionary")
+                raise DAException("RandomForestMachineLearner: independent variable was not a dictionary")
             for key, val in indep_var.items():
                 detected_columns.add(key)
                 if isinstance(val, str):
@@ -525,10 +526,10 @@ class RandomForestMachineLearner(MachineLearner):
                         elif isinstance(val, float) and ml_thread.learners[self.group_id]['indep_type'][key] is int:
                             ml_thread.learners[self.group_id]['indep_type'][key] = float
                         else:
-                            raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not consistent")
+                            raise DAException("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not consistent")
                 else:
                     if not isinstance(val, (str, int, bool, float)):
-                        raise Exception("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not a standard variable type")
+                        raise DAException("RandomForestMachineLearner: independent variable type for key " + repr(key) + " was not a standard variable type")
                     ml_thread.learners[self.group_id]['indep_type'][key] = type(val)
             data.append(indep_var)
             success = True
@@ -554,7 +555,7 @@ class RandomForestMachineLearner(MachineLearner):
         if isinstance(indep, DADict):
             indep = indep.elements
         if not isinstance(indep, dict):
-            raise Exception("RandomForestMachineLearner: independent variable was not a dictionary")
+            raise DAException("RandomForestMachineLearner: independent variable was not a dictionary")
         indep = process_independent_data(indep)
         indep_to_use = {}
         for key, val in indep.items():
@@ -567,9 +568,9 @@ class RandomForestMachineLearner(MachineLearner):
                     elif isinstance(val, float) and ml_thread.learners[self.group_id]['indep_type'][key] is int:
                         ml_thread.learners[self.group_id]['indep_type'][key] = float
                     else:
-                        raise Exception("RandomForestMachineLearner: the independent variable type for key " + repr(key) + " was not consistent.  Stored was " + str(ml_thread.learners[self.group_id]['indep_type'][key]) + " and type was " + str(type(val)))
+                        raise DAException("RandomForestMachineLearner: the independent variable type for key " + repr(key) + " was not consistent.  Stored was " + str(ml_thread.learners[self.group_id]['indep_type'][key]) + " and type was " + str(type(val)))
             else:
-                raise Exception("RandomForestMachineLearner: independent variable key " + repr(key) + " was not recognized")
+                raise DAException("RandomForestMachineLearner: independent variable key " + repr(key) + " was not recognized")
             if isinstance(val, str):
                 if val not in ml_thread.learners[self.group_id]['indep_categories'][key]:
                     val = np.nan
@@ -630,13 +631,13 @@ class RandomForestMachineLearner(MachineLearner):
 #     re_prefix = re.compile(r'^' + prefix + ':')
 #     for record in db.session.query(MachineLearning).filter(MachineLearning.group_id.like(prefix + '%')).group_by(MachineLearning.group_id):
 #         the_group_id = re_prefix.sub('', record.group_id)
-#         output[the_group_id].append(dict(independent=record.independent, dependent=record.dependent))
+#         output[the_group_id].append({'independent': record.independent, 'dependent': record.dependent})
 #     if output_format == 'json':
 #         return json.dumps(output, sort_keys=True, indent=4)
 #     elif output_format == 'yaml':
 #         return yaml.safe_dump(output, default_flow_style=False)
 #     else:
-#         raise Exception("Unknown output format " + str(output_format))
+#         raise DAException("Unknown output format " + str(output_format))
 
 
 def process_independent_data(data):
@@ -645,10 +646,10 @@ def process_independent_data(data):
         if isinstance(val, (DADict, dict)):
             for subkey, subval in val.items():
                 if not isinstance(subval, (str, bool, int, float)):
-                    raise Exception('RandomForestMachineLearner: invalid data type ' + subval.__class__.__name__ + ' in data')
+                    raise DAException('RandomForestMachineLearner: invalid data type ' + subval.__class__.__name__ + ' in data')
                 result[key + '_' + subkey] = subval
         else:
             if not isinstance(val, (str, bool, int, float)):
-                raise Exception('RandomForestMachineLearner: invalid data type ' + subval.__class__.__name__ + ' in data')
+                raise DAException('RandomForestMachineLearner: invalid data type ' + subval.__class__.__name__ + ' in data')
             result[key] = val
     return result

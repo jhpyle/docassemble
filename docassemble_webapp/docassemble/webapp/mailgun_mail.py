@@ -3,6 +3,7 @@
 import time
 import requests
 from requests.auth import HTTPBasicAuth
+from docassemble.base.error import DAException
 from docassemble.base.logger import logmessage
 from docassemble.webapp.da_flask_mail import Message
 from flask_mail import BadHeaderError, sanitize_addresses, email_dispatched, contextmanager, current_app
@@ -37,7 +38,7 @@ class Connection:
         response = requests.post(self.mail.api_url,
                                  auth=HTTPBasicAuth('api', self.mail.api_key),
                                  data=data,
-                                 files={'message': ('mime_message', message.as_string())})
+                                 files={'message': ('mime_message', message.as_string())}, timeout=120)
         if response.status_code >= 400:
             logmessage("Mailgun status code: " + str(response.status_code))
             logmessage("Mailgun response headers: " + repr(response.headers))
@@ -45,7 +46,7 @@ class Connection:
                 logmessage(repr(response.body))
             except:
                 pass
-            raise Exception("Failed to send e-mail message to " + self.mail.api_url)
+            raise DAException("Failed to send e-mail message to " + self.mail.api_url)
         email_dispatched.send(message, app=current_app._get_current_object())
 
     def send_message(self, *args, **kwargs):
@@ -90,6 +91,7 @@ class _Mail(_MailMixin):
         self.debug = debug
         self.suppress = suppress
         self.ascii_attachments = ascii_attachments
+
 
 class Mail(_MailMixin):
 

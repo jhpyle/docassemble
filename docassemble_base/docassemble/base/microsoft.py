@@ -8,6 +8,7 @@ import yaml
 from azure.storage.blob import BlobServiceClient, BlobSasPermissions, ContentSettings, generate_blob_sas
 from azure.identity import ManagedIdentityCredential
 from azure.keyvault.secrets import SecretClient
+from docassemble.base.error import DAException
 
 logger = logging.getLogger('azure.mgmt.resource')
 logger.setLevel(logging.WARNING)
@@ -39,7 +40,7 @@ class azureobject:
             self.container = azure_config['container']
             self.container_client = self.service_client.get_container_client(azure_config['container'])
         else:
-            raise Exception("Cannot connect to Azure without account name, account key, and container specified")
+            raise DAException("Cannot connect to Azure without account name, account key, and container specified")
 
     def get_key(self, key_name):
         new_key = azurekey(self, key_name, load=False)
@@ -181,7 +182,7 @@ class azuresecret:
             if len(secret_match.groups()) > 3:
                 self.reference_secret_version = secret_match.groups()[3]
         else:
-            raise Exception("Invalid format for Azure Key Vault reference value in configuration!")
+            raise DAException("Invalid format for Azure Key Vault reference value in configuration!")
 
     def get_secret_from_vault(self):
         self.secret = self.secret_client.get_secret(self.reference_secret_name, self.reference_secret_version)

@@ -39,13 +39,13 @@ def main():
     # fp.write("Subject was " + str(subject) + "\n")
     to_recipients = []
     for recipient in getaddresses(msg.get_all('to', []) + msg.get_all('resent-to', [])):
-        to_recipients.append(dict(name=recipient[0], address=recipient[1]))
+        to_recipients.append({'name': recipient[0], 'address': recipient[1]})
     cc_recipients = []
     for recipient in getaddresses(msg.get_all('cc', []) + msg.get_all('resent-cc', [])):
-        cc_recipients.append(dict(name=recipient[0], address=recipient[1]))
+        cc_recipients.append({'name': recipient[0], 'address': recipient[1]})
     recipients = []
     for recipient in getaddresses(msg.get_all('to', []) + msg.get_all('cc', []) + msg.get_all('resent-to', []) + msg.get_all('resent-cc', [])):
-        recipients.append(dict(name=recipient[0], address=recipient[1]))
+        recipients.append({'name': recipient[0], 'address': recipient[1]})
     if addr_to is None and len(recipients) > 0:
         addr_to = recipients[0]['address']
     # fp.write("recipients are " + str(recipients) + "\n")
@@ -65,21 +65,21 @@ def main():
     # saved_file_email = SavedFile(file_number, fix=True)
     if addr_from is not None:
         # fp.write("parsed from: " + str(parseaddr(addr_from)[1]) + "\n")
-        addr_from = dict(name=parseaddr(addr_from)[0], address=parseaddr(addr_from)[1])
+        addr_from = {'name': parseaddr(addr_from)[0], 'address': parseaddr(addr_from)[1]}
     else:
-        addr_from = dict(empty=True)
+        addr_from = {'empty': True}
     if addr_return_path is not None:
         # fp.write("parsed return_path: " + str(parseaddr(addr_return_path)[1]) + "\n")
-        addr_return_path = dict(name=parseaddr(addr_return_path)[0], address=parseaddr(addr_return_path)[1])
+        addr_return_path = {'name': parseaddr(addr_return_path)[0], 'address': parseaddr(addr_return_path)[1]}
     else:
-        addr_return_path = dict(empty=True)
+        addr_return_path = {'empty': True}
     # fp.write("return_path is " + str(addr_return_path) + "\n")
     if addr_reply_to is not None:
         # fp.write("parsed reply-to: " + str(parseaddr(addr_reply_to)[1]) + "\n")
-        addr_reply_to = dict(name=parseaddr(addr_reply_to)[0], address=parseaddr(addr_reply_to)[1])
+        addr_reply_to = {'name': parseaddr(addr_reply_to)[0], 'address': parseaddr(addr_reply_to)[1]}
         # fp.write("reply-to is " + str(addr_reply_to) + "\n")
     else:
-        addr_reply_to = dict(empty=True)
+        addr_reply_to = {'empty': True}
     # fp.write("reply-to is " + str(addr_reply_to) + "\n")
     msg_current_time = datetime.datetime.now()
     if raw_date is not None:
@@ -126,13 +126,13 @@ def main():
     if record.user_id is not None:
         user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(id=record.user_id)).scalar()
     if user is None:
-        user_info = dict(email=None, the_user_id='t' + str(record.temp_user_id), theid=record.temp_user_id, roles=[])
+        user_info = {'email': None, 'the_user_id': 't' + str(record.temp_user_id), 'theid': record.temp_user_id, 'roles': []}
     else:
         role_list = [role.name for role in user.roles]
         if len(role_list) == 0:
             role_list = ['user']
-        user_info = dict(email=user.email, roles=role_list, the_user_id=user.id, theid=user.id, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization)
-    docassemble.webapp.worker.background_action.delay(record.filename, user_info, record.uid, None, None, None, dict(action='incoming_email', arguments=dict(id=email_record.id)), extra=None)
+        user_info = {'email': user.email, 'roles': role_list, 'the_user_id': user.id, 'theid': user.id, 'firstname': user.first_name, 'lastname': user.last_name, 'nickname': user.nickname, 'country': user.country, 'subdivisionfirst': user.subdivisionfirst, 'subdivisionsecond': user.subdivisionsecond, 'subdivisionthird': user.subdivisionthird, 'organization': user.organization}
+    docassemble.webapp.worker.background_action.delay(record.filename, user_info, record.uid, None, None, None, {'action': 'incoming_email', 'arguments': {'id': email_record.id}}, extra=None)
 
 
 def save_attachment(uid, yaml_filename, filename, email_id, index, content_type, extension, content):

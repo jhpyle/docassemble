@@ -1,0 +1,45 @@
+metadata:
+  title: Update dropdown
+  short title: Dropdown
+  documentation: "https://docassemble.org/docs/background.html#background_response"
+  example start: 1
+  example end: 2
+---
+question: |
+  Where do you live?
+fields:
+  - Country: country
+    code: countries_list()
+  - State: state
+    code: |
+      states_list(country_code=showifdef('country', 'US', prior=True)) \
+      or \
+      ['N/A']
+    js enable if: val('country')
+check in: update_states_list
+---
+event: update_states_list
+code: |
+  if action_argument('_changed') == 'country':
+    background_response(
+      {
+        'state':
+          {
+            'choices': \
+              states_list(country_code=action_argument('country')) \
+              or \
+              ['N/A']
+          }
+      }, 'fields')
+  background_response()
+---
+mandatory: True
+question: |
+  You live in
+  ${ state_name(state, country_code=country) }
+  in
+  ${ country_name(country) }.
+subquestion: |
+  Your country code is `${ country }`.
+
+  Your state code is `${ state }`.

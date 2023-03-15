@@ -29,7 +29,7 @@ fields:
 ---
 mandatory: True
 code: |
-  new_section = dict()
+  new_section = {}
   new_section[new_keyword] = new_name
   the_sections = nav.get_sections()
   the_sections.append(new_section)

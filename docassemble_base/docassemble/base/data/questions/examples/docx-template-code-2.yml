@@ -79,9 +79,9 @@ attachment:
   filename: letter
   docx template file: letter_template_code.docx
   code: |
-    dict(full_name=user.name.full(),
-         letter_date=format_date(today()),
-         phone_number='202-555-1234',
-         subject_matter=subject_matter,
-         address_block=adverse_party.address_block(),
-         signature=user.signature)
+    {'full_name': user.name.full(),
+     'letter_date': format_date(today()),
+     'phone_number': '202-555-1234',
+     'subject_matter': subject_matter,
+     'address_block': adverse_party.address_block(),
+     'signature': user.signature}

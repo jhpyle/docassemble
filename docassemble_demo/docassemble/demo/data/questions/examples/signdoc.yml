@@ -557,7 +557,7 @@ code: |
   document_templates[i].advocate_date_fields = [item for item in document_templates[i].date_fields if not document_templates[i].date_fields_to_use[item]]
 ---
 code: |
-  fields = dict()
+  fields = {}
   for field_name in document_templates[i].signature_fields_to_use.true_values():
     fields[field_name] = signature
   for field_name in document_templates[i].advocate_signature_fields_to_use.true_values():
@@ -639,7 +639,7 @@ code: |
     attachment_list = [item.signed_document.pdf]
     if item.file.mimetype != 'application/pdf':
       attachment_list.append(item.signed_document.docx)
-  params = dict(to=advocate, template=email_template, attachments=attachment_list)
+  params = {'to': advocate, 'template': email_template, 'attachments': attachment_list}
   if legal_server_id:
     params['cc'] = legal_server_id + '@' + get_config('legal server domain')
   send_email(**params)

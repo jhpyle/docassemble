@@ -10,6 +10,7 @@ from pikepdf import Pdf
 from PIL import Image
 from docassemble.base.generate_key import random_lower_string
 from docassemble.base.logger import logmessage
+from docassemble.base.error import DAException
 import docassemble.base.config
 import docassemble.base.functions
 from docassemble.webapp.core.models import Uploads, UploadsUserAuth, UploadsRoleAuth
@@ -235,7 +236,7 @@ def add_info_about_file(filename, basename, result):
                     result['width'] = float(dimen[2]) - float(dimen[0])
                     result['height'] = float(dimen[3]) - float(dimen[1])
         except:
-            raise Exception("problem reading " + str(filename))
+            raise DAException("problem reading " + str(filename))
             # logmessage('add_info_about_file: could not read ' + str(filename))
 
 

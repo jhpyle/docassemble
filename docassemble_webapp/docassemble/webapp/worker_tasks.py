@@ -120,7 +120,7 @@ def sync_with_google_drive(user_id):
                 subdirs = []
                 page_token = None
                 while True:
-                    param = dict(spaces="drive", fields="nextPageToken, files(id, name)", q="mimeType='application/vnd.google-apps.folder' and trashed=false and name='" + section + "' and '" + str(the_folder) + "' in parents")
+                    param = {'spaces': 'drive', 'fields': 'nextPageToken, files(id, name)', 'q': "mimeType: 'application/vnd.google-apps.folder' and trashed=false and name='" + section + "' and '" + str(the_folder) + "' in parents"}
                     if page_token is not None:
                         param['pageToken'] = page_token
                     response = service.files().list(**param).execute()
@@ -153,7 +153,7 @@ def sync_with_google_drive(user_id):
                 gd_zero[section] = set()
                 page_token = None
                 while True:
-                    param = dict(spaces="drive", fields="nextPageToken, files(id, mimeType, name, modifiedTime, trashed, size)", q="'" + str(subdir) + "' in parents")
+                    param = {'spaces': "drive", 'fields': "nextPageToken, files(id, mimeType, name, modifiedTime, trashed, size)", 'q': "'" + str(subdir) + "' in parents"}
                     if page_token is not None:
                         param['pageToken'] = page_token
                     response = service.files().list(**param).execute()
@@ -184,7 +184,7 @@ def sync_with_google_drive(user_id):
                 for subdir_name, subdir_id in gd_dirlist[section].items():
                     page_token = None
                     while True:
-                        param = dict(spaces="drive", fields="nextPageToken, files(id, name, modifiedTime, trashed, size)", q="mimeType!='application/vnd.google-apps.folder' and '" + str(subdir_id) + "' in parents")
+                        param = {'spaces': "drive", 'fields': "nextPageToken, files(id, name, modifiedTime, trashed, size)", 'q': "mimeType!='application/vnd.google-apps.folder' and '" + str(subdir_id) + "' in parents"}
                         if page_token is not None:
                             param['pageToken'] = page_token
                         response = service.files().list(**param).execute()
@@ -653,7 +653,7 @@ def sync_with_onedrive(user_id):
                         the_modtime = iso_from_epoch(local_modtimes[section][f])
                         logmessage("post-finalize: updating OD modtime on file " + str(f) + " to " + str(the_modtime))
                         headers = {'Content-Type': 'application/json'}
-                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps(dict(fileSystemInfo={"createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime}), sort_keys=True))
+                        r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps({'fileSystemInfo': {"createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime}}, sort_keys=True))
                         if int(r['status']) != 200:
                             return worker_controller.functions.ReturnValue(ok=False, error="error updating OneDrive file in subfolder " + section + " " + str(r['status']) + ": " + content.decode(), restart=False)
                         od_modtimes[section][f] = local_modtimes[section][f]
@@ -755,8 +755,8 @@ def ocr_dummy(doc, indexno, **kwargs):
                 worker_controller.login_user(user_object, remember=False)
             worker_controller.set_request_active(False)
             if doc._is_pdf():
-                return worker_controller.functions.ReturnValue(ok=True, value=dict(indexno=indexno, doc=doc))
-            return worker_controller.functions.ReturnValue(ok=True, value=dict(indexno=indexno, doc=worker_controller.util.pdf_concatenate(doc)))
+                return worker_controller.functions.ReturnValue(ok=True, value={'indexno': indexno, 'doc': doc})
+            return worker_controller.functions.ReturnValue(ok=True, value={'indexno': indexno, 'doc': worker_controller.util.pdf_concatenate(doc)})
 
 
 @workerapp.task
@@ -809,7 +809,7 @@ def ocr_finalize(*pargs, **kwargs):
                         user_object = worker_controller.get_user_object(user_info['theid'])
                         worker_controller.login_user(user_object, remember=False)
                     # logmessage("ocr_finalize: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code))
-                    the_current_info = dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, interface='worker')
+                    the_current_info = {'user': user_info, 'session': session_code, 'secret': secret, 'yaml_filename': yaml_filename, 'url': url, 'url_root': url_root, 'interface': 'worker'}
                     worker_controller.functions.this_thread.current_info = the_current_info
                     worker_controller.set_request_active(False)
                     worker_controller.obtain_lock_patiently(session_code, yaml_filename)
@@ -1066,8 +1066,8 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             worker_controller.set_request_active(False)
             if action['action'] == 'incoming_email':
                 if 'id' in action['arguments']:
-                    action['arguments'] = dict(email=worker_controller.retrieve_email(action['arguments']['id']))
-            the_current_info = dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=True, action=action['action'], interface='worker', arguments=action['arguments'])
+                    action['arguments'] = {'email': worker_controller.retrieve_email(action['arguments']['id'])}
+            the_current_info = {'user': user_info, 'session': session_code, 'secret': secret, 'yaml_filename': yaml_filename, 'url': url, 'url_root': url_root, 'encrypted': True, 'action': action['action'], 'interface': 'worker', 'arguments': action['arguments']}
             worker_controller.functions.this_thread.current_info = the_current_info
             interview = worker_controller.interview_cache.get_interview(yaml_filename)
             worker_controller.obtain_lock_patiently(session_code, yaml_filename)
@@ -1138,7 +1138,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 start_time = time.time()
                 new_action = interview_status.question.action
                 # logmessage("new action is " + repr(new_action))
-                the_current_info = dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=True, interface='worker', action=new_action['action'], arguments=new_action['arguments'])
+                the_current_info = {'user': user_info, 'session': session_code, 'secret': secret, 'yaml_filename': yaml_filename, 'url': url, 'url_root': url_root, 'encrypted': True, 'interface': 'worker', 'action': new_action['action'], 'arguments': new_action['arguments']}
                 worker_controller.functions.this_thread.current_info = the_current_info
                 worker_controller.obtain_lock_patiently(session_code, yaml_filename)
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)

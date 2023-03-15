@@ -8,7 +8,7 @@ import yaml
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.base.util import DAObject, DADict, DAList
-from docassemble.base.error import DAError
+from docassemble.base.error import DAError, DAException
 import docassemble.base.functions
 import docassemble.base.parse
 import docassemble.base.pdftk
@@ -463,7 +463,7 @@ class Playground(PlaygroundSection):
         pg_packages = PlaygroundSection('packages')
         content = pg_packages.read_file(pkgname)
         if content is None:
-            raise Exception("package " + str(pkgname) + " not found")
+            raise DAException("package " + str(pkgname) + " not found")
         info = yaml.load(content, Loader=yaml.FullLoader)
         author_info = {}
         author_info['author name'] = self.current_info['user']['firstname'] + " " + self.current_info['user']['lastname']
@@ -529,7 +529,7 @@ class Playground(PlaygroundSection):
         names_used = names_used.difference(undefined_names)
         all_names = names_used | undefined_names | fields_used
         all_names_reduced = all_names.difference(set(['url_args', 'device_local', 'session_local', 'user_local']))
-        return dict(names_used=names_used, undefined_names=undefined_names, fields_used=fields_used, all_names=all_names, all_names_reduced=all_names_reduced)
+        return {'names_used': names_used, 'undefined_names': undefined_names, 'fields_used': fields_used, 'all_names': all_names, 'all_names_reduced': all_names_reduced}
 
 
 def fix_variable_name(match):

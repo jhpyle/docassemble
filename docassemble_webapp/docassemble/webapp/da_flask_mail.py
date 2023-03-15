@@ -7,6 +7,7 @@ class Connection(FlaskConnection):
             message.sender = self.mail.default_sender
         super().send(message, envelope_from=envelope_from)
 
+
 class FlaskMail(Mail):
 
     def __init__(self, app=None, config=None):

@@ -8,19 +8,19 @@ mandatory: True
 code: |
   rf = RandomForestMachineLearner('fruit', use_initial_file=True)
   if rf.is_empty():
-    rf.add_to_training_set(dict(a=1, b=2.0, c=3.0, d='A'), 'apple')
-    rf.add_to_training_set(dict(a=0.9, b=2, c=3.0, d='A'), 'apple')
-    rf.add_to_training_set(dict(a=0.8, b=2.0, c=3.0, d='A'), 'apple')
-    rf.add_to_training_set(dict(a=1.0, b=2.1, c=3, d='B'), 'apple')
-    rf.add_to_training_set(dict(a=1.2, b=2.0, c=3.1, d='A'), 'apple')
-    rf.add_to_training_set(dict(a=1.0, b=7.0, c=3.0, d='B'), 'orange')
-    rf.add_to_training_set(dict(a=0.9, b=6.9, c=3.0, d='A'), 'orange')
-    rf.add_to_training_set(dict(a=0.8, b=6.7, c=2.9, d='B'), 'orange')
-    rf.add_to_training_set(dict(a=1.0, b=7.1, c=2.95, d='B'), 'orange')
-    rf.add_to_training_set(dict(a=1.05, b=6.8, c=3.1, d='B'), 'orange')
+    rf.add_to_training_set({'a': 1, 'b': 2.0, 'c': 3.0, 'd': 'A'}, 'apple')
+    rf.add_to_training_set({'a': 0.9, 'b': 2, 'c': 3.0, 'd': 'A'}, 'apple')
+    rf.add_to_training_set({'a': 0.8, 'b': 2.0, 'c': 3.0, 'd': 'A'}, 'apple')
+    rf.add_to_training_set({'a': 1.0, 'b': 2.1, 'c': 3, 'd': 'B'}, 'apple')
+    rf.add_to_training_set({'a': 1.2, 'b': 2.0, 'c': 3.1, 'd': 'A'}, 'apple')
+    rf.add_to_training_set({'a': 1.0, 'b': 7.0, 'c': 3.0, 'd': 'B'}, 'orange')
+    rf.add_to_training_set({'a': 0.9, 'b': 6.9, 'c': 3.0, 'd': 'A'}, 'orange')
+    rf.add_to_training_set({'a': 0.8, 'b': 6.7, 'c': 2.9, 'd': 'B'}, 'orange')
+    rf.add_to_training_set({'a': 1.0, 'b': 7.1, 'c': 2.95, 'd': 'B'}, 'orange')
+    rf.add_to_training_set({'a': 1.05, 'b': 6.8, 'c': 3.1, 'd': 'B'}, 'orange')
 ---
 code: |
-  sample_data = dict(a=1, b=3.8, c=3.1, d='B')
+  sample_data = {'a': 1, 'b': 3.8, 'c': 3.1, 'd': 'B'}
   predictions = rf.predict(sample_data, probabilities=True)
 ---
 mandatory: True

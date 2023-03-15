@@ -12,6 +12,10 @@ class DAAttributeError(AttributeError):
     pass
 
 
+class DAException(Exception):
+    pass
+
+
 class DAError(Exception):
 
     def __init__(self, value, code=501):
@@ -102,7 +106,7 @@ class ForcedNameError(NameError):
                                 if invalid_variable_name(the_var_stripped):
                                     raise DAError("force_ask: missing or invalid variable name " + repr(the_var) + ".")
                                 clean_list.append([the_var_stripped, the_val])
-                        self.set_action(dict(action='_da_set', arguments=dict(variables=clean_list), context=the_context))
+                        self.set_action({'action': '_da_set', 'arguments': {'variables': clean_list}, 'context': the_context})
                     if 'follow up' in arg:
                         if isinstance(arg['follow up'], str):
                             arg['follow up'] = [arg['follow up']]
@@ -114,7 +118,7 @@ class ForcedNameError(NameError):
                             var_saveas = var.strip()
                             if invalid_variable_name(var_saveas):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(var_saveas) + ".")
-                            self.set_action(dict(action=var, arguments={}, context=the_context))
+                            self.set_action({'action': var, 'arguments': {}, 'context': the_context})
                     for command in ('undefine', 'invalidate', 'recompute'):
                         if command not in arg:
                             continue
@@ -131,15 +135,15 @@ class ForcedNameError(NameError):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(undef_saveas) + ".")
                             clean_list.append(undef_saveas)
                         if command == 'invalidate':
-                            self.set_action(dict(action='_da_invalidate', arguments=dict(variables=clean_list), context=the_context))
+                            self.set_action({'action': '_da_invalidate', 'arguments': {'variables': clean_list}, 'context': the_context})
                         else:
-                            self.set_action(dict(action='_da_undefine', arguments=dict(variables=clean_list), context=the_context))
+                            self.set_action({'action': '_da_undefine', 'arguments': {'variables': clean_list}, 'context': the_context})
                         if command == 'recompute':
-                            self.set_action(dict(action='_da_compute', arguments=dict(variables=clean_list), context=the_context))
+                            self.set_action({'action': '_da_compute', 'arguments': {'variables': clean_list}, 'context': the_context})
                 else:
                     raise DAError("Dictionaries passed to force_ask must have keys of 'action' and 'argument' only.")
             else:
-                self.set_action(dict(action=arg, arguments={}, context=the_context))
+                self.set_action({'action': arg, 'arguments': {}, 'context': the_context})
         if kwargs.get('gathering', False):
             self.next_action = None
         if first_is_plain:
@@ -238,7 +242,7 @@ class BackgroundResponseError(Exception):
 
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0 and len(kwargs) > 0:
-            self.backgroundresponse = dict(pargs=list(pargs), kwargs=kwargs)
+            self.backgroundresponse = {'pargs': list(pargs), 'kwargs': kwargs}
         elif len(pargs) > 1:
             self.backgroundresponse = list(pargs)
         elif len(pargs) == 1:
@@ -258,7 +262,7 @@ class BackgroundResponseError(Exception):
 class BackgroundResponseActionError(Exception):
 
     def __init__(self, *pargs, **kwargs):
-        self.action = dict(arguments={})
+        self.action = {'arguments': {}}
         if len(pargs) == 0:
             self.action['action'] = None
         else:

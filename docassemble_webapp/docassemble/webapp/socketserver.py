@@ -169,7 +169,7 @@ def interview_start_being_controlled(data):
         session_id = session_info['uid']
         the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
         key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-        rr.publish(key, json.dumps(dict(message='start_being_controlled', key=re.sub(r'^da:input:uid:', 'da:session:uid:', key))))
+        rr.publish(key, json.dumps({'message': 'start_being_controlled', 'key': re.sub(r'^da:input:uid:', 'da:session:uid:', key)}))
 
 
 @socketio.on('chat_log', namespace='/wsinterview')
@@ -205,7 +205,7 @@ def chat_log(data):
 def handle_message(message):
     session_info = get_session(message['i'])
     if session_info is not None:
-        rr.publish(session_info['uid'], json.dumps(dict(origin='client', room=request.sid, message=message['data'])))
+        rr.publish(session_info['uid'], json.dumps({'origin': 'client', 'room': request.sid, 'message': message['data']}))
 
 
 @socketio.on('terminate', namespace='/wsinterview')
@@ -213,7 +213,7 @@ def terminate_interview_connection():
     logmessage("terminate_interview_connection")
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
-    #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
+    #     rr.publish(request.sid, json.dumps({'origin': 'client', 'message': 'KILL', 'sid': request.sid}))
     socketio.emit('terminate', {}, namespace='/wsinterview', room=request.sid)
     # disconnect()
 
@@ -258,18 +258,18 @@ def chat_message(data):
             person = None
         modtime = nice_utc_date(nowtime)
         if person is None:
-            rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id='t' + str(temp_user_id), message=dict(id=record.id, temp_user_id=record.temp_user_id, modtime=modtime, message=data['data'], roles=['user'], mode=chat_mode))))
+            rr.publish(request.sid, json.dumps({'origin': 'client', 'messagetype': 'chat', 'sid': request.sid, 'yaml_filename': yaml_filename, 'uid': session_id, 'user_id': 't' + str(temp_user_id), 'message': {'id': record.id, 'temp_user_id': record.temp_user_id, 'modtime': modtime, 'message': data['data'], 'roles': ['user'], 'mode': chat_mode}}))
         else:
             role_list = [role.name for role in person.roles]
             if len(role_list) == 0:
                 role_list = ['user']
-            rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=role_list, mode=chat_mode))))
+            rr.publish(request.sid, json.dumps({'origin': 'client', 'messagetype': 'chat', 'sid': request.sid, 'yaml_filename': yaml_filename, 'uid': session_id, 'user_id': user_id, 'message': {'id': record.id, 'user_id': record.user_id, 'first_name': person.first_name, 'last_name': person.last_name, 'email': person.email, 'modtime': modtime, 'message': data['data'], 'roles': role_list, 'mode': chat_mode}}))
     # logmessage('received chat message from sid ' + str(request.sid) + ': ' + data['data'])
 
 
 def wait_for_channel(the_rr, channel):
     times = 0
-    while times < 5 and the_rr.publish(channel, json.dumps(dict(messagetype='ping'))) == 0:
+    while times < 5 and the_rr.publish(channel, json.dumps({'messagetype': 'ping'})) == 0:
         times += 1
         time.sleep(0.5)
     if times >= 5:
@@ -283,7 +283,7 @@ def on_interview_connect():
         logmessage("Client connected on interview")
         join_room(request.sid)
         interview_connect(request.args['i'])
-        rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
+        rr.publish('da:monitor', json.dumps({'messagetype': 'refreshsessions'}))
 
 
 @socketio.on('connectagain', namespace='/wsinterview')
@@ -291,7 +291,7 @@ def on_interview_reconnect(data):
     with session_scope():
         logmessage("Client reconnected on interview")
         interview_connect(data['i'])
-        rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
+        rr.publish('da:monitor', json.dumps({'messagetype': 'refreshsessions'}))
         socketio.emit('reconnected', {}, namespace='/wsinterview', room=request.sid)
 
 
@@ -355,12 +355,12 @@ def interview_connect(yaml_filename):
                     if is_help and found_help:
                         continue
                     # logmessage("Trying to pub to " + str(partner_sid) + " from " + str(pkey))
-                    listeners = rr.publish(partner_sid, json.dumps(dict(messagetype='chatready', uid=session_id, i=yaml_filename, userid=the_user_id, secret=secret, sid=request.sid)))
+                    listeners = rr.publish(partner_sid, json.dumps({'messagetype': 'chatready', 'uid': session_id, 'i': yaml_filename, 'userid': the_user_id, 'secret': secret, 'sid': request.sid}))
                     # logmessage("Listeners: " + str(listeners))
                     if re.match(r'^da:interviewsession.*', pkey):
-                        rr.publish(request.sid, json.dumps(dict(messagetype='chatready', sid=partner_sid)))
+                        rr.publish(request.sid, json.dumps({'messagetype': 'chatready', 'sid': partner_sid}))
                     else:
-                        rr.publish(request.sid, json.dumps(dict(messagetype='chatpartner', sid=partner_sid)))
+                        rr.publish(request.sid, json.dumps({'messagetype': 'chatpartner', 'sid': partner_sid}))
                     if listeners > 0:
                         if is_help:
                             found_help = True
@@ -386,7 +386,7 @@ def on_interview_manual_disconnect(data):
         rr.delete('da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id))
         key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         rr.expire(key, 10)
-        rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
+        rr.publish(request.sid, json.dumps({'origin': 'client', 'message': 'KILL', 'sid': request.sid}))
 
 
 @socketio.on('disconnect', namespace='/wsinterview')
@@ -397,7 +397,7 @@ def on_interview_disconnect():
 def get_current_info(yaml_filename, session_id, secret):
     url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
     url = url_root + 'interview'
-    return dict(user=dict(is_anonymous=False, is_authenticated=True, email='admin@admin.com', theid=1, the_user_id=1, roles=['admin'], firstname='Admin', lastname='User', nickname='', country='', subdivisionfirst='', subdivisionsecond='', subdivisionthird='', organization='', location=None, session_uid='admin', device_id='admin'), session=session_id, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=True, action=None, interface='chat', arguments={})
+    return {'user': {'is_anonymous': False, 'is_authenticated': True, 'email': 'admin@admin.com', 'theid': 1, 'the_user_id': 1, 'roles': ['admin'], 'firstname': 'Admin', 'lastname': 'User', 'nickname': '', 'country': '', 'subdivisionfirst': '', 'subdivisionsecond': '', 'subdivisionthird': '', 'organization': '', 'location': None, 'session_uid': 'admin', 'device_id': 'admin'}, 'session': session_id, 'secret': secret, 'yaml_filename': yaml_filename, 'url': url, 'url_root': url_root, 'encrypted': True, 'action': None, 'interface': 'chat', 'arguments': {}}
 
 
 def get_dict(yaml_filename):
@@ -480,7 +480,7 @@ def monitor_thread(sid=None, user_id=None):
                     logmessage("  monitor unsubscribed from all")
                     pubsub.unsubscribe()
                     for interview_sid in listening_sids:
-                        r.publish(interview_sid, json.dumps(dict(messagetype='departure', sid=sid)))
+                        r.publish(interview_sid, json.dumps({'messagetype': 'departure', 'sid': sid}))
                     break
                 if item['channel'].decode() != 'da:monitor':
                     pubsub.unsubscribe(item['channel'].decode())
@@ -567,7 +567,7 @@ def on_monitor_disconnect():
             rr.expire('da:callforward:' + the_code, 5)
         rr.expire(key, 5)
     rr.expire('da:monitor:chatpartners:' + str(user_id), 5)
-    rr.publish(request.sid, json.dumps(dict(message='KILL', sid=request.sid)))
+    rr.publish(request.sid, json.dumps({'message': 'KILL', 'sid': request.sid}))
 
 
 @socketio.on('terminate', namespace='/monitor')
@@ -575,7 +575,7 @@ def terminate_monitor_connection():
     logmessage("terminate_monitor_connection")
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
-    #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
+    #     rr.publish(request.sid, json.dumps({'origin': 'client', 'message': 'KILL', 'sid': request.sid}))
     socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
     # disconnect()
 
@@ -593,7 +593,7 @@ def monitor_block(data):
     sid = rr.get(re.sub(r'^da:session:', 'da:interviewsession:', key))
     if sid is not None:
         sid = sid.decode()
-        rr.publish(sid, json.dumps(dict(messagetype='block', sid=request.sid)))
+        rr.publish(sid, json.dumps({'messagetype': 'block', 'sid': request.sid}))
         logmessage("Blocking")
     else:
         logmessage("Could not block because could not get sid")
@@ -614,7 +614,7 @@ def monitor_unblock(data):
     sid = rr.get(re.sub(r'^da:session:', 'da:interviewsession:', key))
     if sid is not None:
         sid = sid.decode()
-        rr.publish(sid, json.dumps(dict(messagetype='chatpartner', sid=request.sid)))
+        rr.publish(sid, json.dumps({'messagetype': 'chatpartner', 'sid': request.sid}))
     socketio.emit('unblock', {'key': key}, namespace='/monitor', room=request.sid)
 
 
@@ -844,7 +844,7 @@ def monitor_chat_message(data):
         role_list = [role.name for role in person.roles]
         if len(role_list) == 0:
             role_list = ['user']
-        rr.publish(sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=chat_user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=role_list, mode=chat_mode))))
+        rr.publish(sid, json.dumps({'origin': 'client', 'messagetype': 'chat', 'sid': request.sid, 'yaml_filename': yaml_filename, 'uid': session_id, 'user_id': chat_user_id, 'message': {'id': record.id, 'user_id': record.user_id, 'first_name': person.first_name, 'last_name': person.last_name, 'email': person.email, 'modtime': modtime, 'message': data['data'], 'roles': role_list, 'mode': chat_mode}}))
     # logmessage('received chat message on monitor from sid ' + str(request.sid) + ': ' + data['data'])
 
 
@@ -986,11 +986,11 @@ def start_control(message):
         int_sid = rr.get(int_key)
         if int_sid is not None:
             int_sid = int_sid.decode()
-            rr.publish(int_sid, json.dumps(dict(messagetype='controllerstart')))
+            rr.publish(int_sid, json.dumps({'messagetype': 'controllerstart'}))
     else:
         logmessage('That key ' + key + ' is already taken')
         key = 'da:session:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
-        # rr.publish('da:monitor', json.dumps(dict(messagetype='abortcontroller', key=key)))
+        # rr.publish('da:monitor', json.dumps({'messagetype': 'abortcontroller', 'key': key}))
         socketio.emit('abortcontrolling', {'key': key}, namespace='/observer', room=request.sid)
 
 
@@ -1012,7 +1012,7 @@ def stop_control(message):
         if sid is not None:
             sid = sid.decode()
             logmessage("Calling controllerexit 1")
-            rr.publish(sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
+            rr.publish(sid, json.dumps({'messagetype': 'controllerexit', 'sid': request.sid}))
     else:
         pipe.execute()
 
@@ -1035,7 +1035,7 @@ def observer_changes(message):
     else:
         sid = sid.decode()
         logmessage('observerChanges: sid exists at ' + time.strftime("%Y-%m-%d %H:%M:%S"))
-        rr.publish(sid, json.dumps(dict(messagetype='controllerchanges', sid=request.sid, clicked=message.get('clicked', None), parameters=message['parameters'])))
+        rr.publish(sid, json.dumps({'messagetype': 'controllerchanges', 'sid': request.sid, 'clicked': message.get('clicked', None), 'parameters': message['parameters']}))
         # sid=request.sid, yaml_filename=str(message['i']), uid=str(message['uid']), user_id=str(message['userid'])
         self_key = 'da:control:sid:' + str(request.sid)
         key = 'da:control:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
@@ -1063,8 +1063,8 @@ def on_observer_disconnect():
     if other_sid is not None:
         other_sid = other_sid.decode()
         logmessage("Calling controllerexit 2")
-        rr.publish(other_sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
-    rr.publish(request.sid, json.dumps(dict(message='KILL', sid=request.sid)))
+        rr.publish(other_sid, json.dumps({'messagetype': 'controllerexit', 'sid': request.sid}))
+    rr.publish(request.sid, json.dumps({'message': 'KILL', 'sid': request.sid}))
 
 
 @socketio.on('terminate', namespace='/observer')
@@ -1072,7 +1072,7 @@ def terminate_observer_connection():
     logmessage("terminate_observer_connection")
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
-    #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
+    #     rr.publish(request.sid, json.dumps({'origin': 'client', 'message': 'KILL', 'sid': request.sid}))
     socketio.emit('terminate', {}, namespace='/observer', room=request.sid)
     # disconnect()
 

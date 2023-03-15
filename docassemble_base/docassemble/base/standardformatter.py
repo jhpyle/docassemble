@@ -14,6 +14,7 @@ from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_
 from docassemble.base.parse import Question
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
+from docassemble.base.error import DAException
 equals_byte = bytes('=', 'utf-8')
 
 NoneType = type(None)
@@ -99,7 +100,7 @@ def tracker_tag(status):
     if status.question.name:
         output += '                <input type="hidden" name="_question_name" value=' + json.dumps(status.question.name, ensure_ascii=False) + '/>\n'
     # if 'orig_action' in status.current_info:
-    #     output += '                <input type="hidden" name="_action_context" value=' + myb64doublequote(json.dumps(dict(action=status.current_info['orig_action'], arguments=status.current_info['orig_arguments']))) + '/>\n'
+    #     output += '                <input type="hidden" name="_action_context" value=' + myb64doublequote(json.dumps({'action': status.current_info['orig_action'], 'arguments': status.current_info['orig_arguments']})) + '/>\n'
     output += '                <input type="hidden" name="_tracker" value=' + json.dumps(str(status.tracker)) + '/>\n'
     if 'track_location' in status.extras and status.extras['track_location']:
         output += '                <input type="hidden" id="da_track_location" name="_track_location" value=""/>\n'
@@ -139,7 +140,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
         is_decoration = False
         url = name['value']
     if url is None:
-        raise Exception("Could not find filename " + str(the_image.filename) + " for image " + str(name) + " in package " + str(the_image.package))
+        raise DAException("Could not find filename " + str(the_image.filename) + " for image " + str(name) + " in package " + str(the_image.package))
     sizing = 'width:' + str(width_value) + str(width_units) + ';'
     if is_decoration:
         filename = server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
@@ -304,7 +305,7 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
         if field is None:
             logmessage("as_sms: field seemed to be defined already?")
             field = status.question.fields[0]
-            # return dict(question=qoutput, help=None, next=next_variable)
+            # return {'question': qoutput, 'help': None, 'next': next_variable}
         else:
             reached_field = False
             for the_field in field_list:
@@ -537,13 +538,13 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
             items.append(word("menu items"))
         qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type ? to see") + " " + comma_and_list(items) + "." + 'XXXXMESSAGE_AREAXXXX', qoutput)
     # if status.question.question_type == 'deadend':
-    #     return dict(question=qoutput, help=houtput)
+    #     return {'question': qoutput, 'help': houtput}
     if len(status.attachments) > 0:
         if len(status.attachments) > 1:
             qoutput += "\n" + word("Your documents are attached.")
         else:
             qoutput += "\n" + word("Your document is attached.")
-    return dict(question=qoutput, help=houtput, next=next_variable)
+    return {'question': qoutput, 'help': houtput, 'next': next_variable}
 
 
 def embed_input(status, variable):
@@ -691,9 +692,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                             status.attributions.add(the_image.attribution)
                         decorations.append('<img alt="" class="daiconfloat" style="' + sizing + '" src="' + url + '"/>')
                 else:
-                  icon = get_icon_html(str(decoration["image"]))
-                  if icon:
-                      decorations.append('<span style="font-size: ' + str(DECORATION_SIZE) + str(DECORATION_UNITS) + '" class="dadecoration">' + icon + '</span>')
+                    icon = get_icon_html(str(decoration["image"]))
+                    if icon:
+                        decorations.append('<span style="font-size: ' + str(DECORATION_SIZE) + str(DECORATION_UNITS) + '" class="dadecoration">' + icon + '</span>')
     if len(decorations) > 0:
         decoration_text = decorations[0]
     else:
@@ -927,7 +928,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     elif isinstance(status.extras['address_autocomplete'][field.number], dict):
                         autocomplete_info.append([the_saveas, status.extras['address_autocomplete'][field.number]])
                     else:
-                        raise Exception("address autocomplete must refer to a boolean value or a dictionary of options")
+                        raise DAException("address autocomplete must refer to a boolean value or a dictionary of options")
         seen_extra_header = False
         for field in field_list:
             if hasattr(field, 'collect_type'):
@@ -1370,7 +1371,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         if custom_types[field.datatype]['jq_message'] is not None:
                             if isinstance(custom_types[field.datatype]['jq_rule'], list):
                                 if not isinstance(custom_types[field.datatype]['jq_message'], dict):
-                                    raise Exception("jq_message must be a dictionary if jq_rule is list")
+                                    raise DAException("jq_message must be a dictionary if jq_rule is list")
                                 the_messages = custom_types[field.datatype]['jq_message']
                             else:
                                 if isinstance(custom_types[field.datatype]['jq_message'], dict):
@@ -1378,7 +1379,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                                 elif isinstance(custom_types[field.datatype]['jq_message'], str):
                                     the_messages = {custom_types[field.datatype]['jq_rule']: custom_types[field.datatype]['jq_message']}
                                 else:
-                                    raise Exception("jq_message must be a dictionary or a string")
+                                    raise DAException("jq_message must be a dictionary or a string")
                             for rule_name, the_message in the_messages.items():
                                 validation_rules['messages'][the_saveas][rule_name] = field.validation_message(rule_name, status, word(the_message))
                         for rule_name in to_enable:
@@ -2236,7 +2237,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         # elif 'api key' in google_config:
         #     api_key = google_config.get('api key')
         # else:
-        #     raise Exception('google API key not provided')
+        #     raise DAException('google API key not provided')
         # status.extra_scripts.append('<script async defer src="https://maps.googleapis.com/maps/api/js?key=' + urllibquote(api_key) + '&callback=daInitMap"></script>')
     return master_output
 
@@ -2388,7 +2389,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
         if field.choicetype in ['compute', 'manual']:
             pairlist = list(status.selectcompute[field.number])
         else:
-            raise Exception("Unknown choicetype " + field.choicetype)
+            raise DAException("Unknown choicetype " + field.choicetype)
         using_opt_groups = all('group' in pair for pair in pairlist)
         using_shuffle = hasattr(field, 'shuffle') and field.shuffle
         # Using optgroups, each option has an associated group
@@ -2779,7 +2780,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 else:
                     output += '<fieldset class="da-field-radio" role="radiogroup"' + req_aria + '><legend class="visually-hidden">' + word('Choices:') + '</legend>'
                 if field.sign > 0:
-                    for pair in [dict(key='True', label=status.question.yes()), dict(key='False', label=status.question.no())]:
+                    for pair in [{'key': 'True', 'label': status.question.yes()}, {'key': 'False', 'label': status.question.no()}]:
                         formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             ischecked = ' checked="checked"'
@@ -2791,7 +2792,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                             inner_fieldlist.append('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + DEFAULT_LABELAUTY_COLOR + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="da-to-labelauty' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value=' + fix_double_quote(str(pair['key'])) + ischecked + disable_others_data + ' />')
                         id_index += 1
                 else:
-                    for pair in [dict(key='False', label=status.question.yes()), dict(key='True', label=status.question.no())]:
+                    for pair in [{'key': 'False', 'label': status.question.yes()}, {'key': 'True', 'label': status.question.no()}]:
                         formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             ischecked = ' checked="checked"'
@@ -2862,7 +2863,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
             else:
                 output += '<fieldset class="field-radio" role="radiogroup"' + req_aria + '><legend class="visually-hidden">' + word('Choices:') + '</legend>'
             if field.sign > 0:
-                for pair in [dict(key='True', label=status.question.yes()), dict(key='False', label=status.question.no()), dict(key='None', label=status.question.maybe())]:
+                for pair in [{'key': 'True', 'label': status.question.yes()}, {'key': 'False', 'label': status.question.no()}, {'key': 'None', 'label': status.question.maybe()}]:
                     formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                     if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                         ischecked = ' checked="checked"'
@@ -2874,7 +2875,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                         inner_fieldlist.append('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + DEFAULT_LABELAUTY_COLOR + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="da-to-labelauty' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value=' + fix_double_quote(str(pair['key'])) + ischecked + disable_others_data + ' />')
                     id_index += 1
             else:
-                for pair in [dict(key='False', label=status.question.yes()), dict(key='True', label=status.question.no()), dict(key='None', label=status.question.maybe())]:
+                for pair in [{'key': 'False', 'label': status.question.yes()}, {'key': 'True', 'label': status.question.no()}, {'key': 'None', 'label': status.question.maybe()}]:
                     formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                     if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                         ischecked = ' checked="checked"'

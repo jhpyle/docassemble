@@ -81,7 +81,7 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
     new_action['arguments']['error_message'] = error_message
     new_action['arguments']['error_trace'] = error_trace
     new_action['arguments']['variables'] = variables
-    the_current_info = dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments'])
+    the_current_info = {'user': user_info, 'session': session_code, 'secret': secret, 'yaml_filename': yaml_filename, 'url': url, 'url_root': url_root, 'encrypted': is_encrypted, 'interface': 'worker', 'action': new_action['action'], 'arguments': new_action['arguments']}
     worker_controller.functions.this_thread.current_info = the_current_info
     worker_controller.obtain_lock(session_code, yaml_filename)
     steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)

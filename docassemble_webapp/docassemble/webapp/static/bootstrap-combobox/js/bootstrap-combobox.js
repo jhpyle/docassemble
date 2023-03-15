@@ -98,6 +98,7 @@
       //console.log('parse');
       var that = this,
         map = {},
+        revMap = {},
         source = [],
         selected = false,
         selectedValue = "";
@@ -108,6 +109,7 @@
           return;
         }
         map[option.text()] = option.val();
+        revMap[option.val()] = option.text();
         source.push(option.text());
         if (option.prop("selected")) {
           selected = option.text();
@@ -115,11 +117,15 @@
         }
       });
       this.map = map;
+      this.revMap = revMap;
       if (selected) {
         this.$element.val(selected);
         this.$target.val(selectedValue);
         this.$container.addClass("combobox-selected");
         this.selected = true;
+      } else {
+        this.$container.removeClass("combobox-selected");
+        this.selected = false;
       }
       return source;
     },
@@ -186,6 +192,32 @@
       this.$container.addClass("combobox-selected");
       this.selected = true;
       this.hide();
+      return;
+    },
+
+    manualSelect: function (val) {
+      //console.log("manualSelect");
+      var oldVal;
+      var found = false;
+      this.$container.parent().find(".da-has-error").remove();
+      if (val !== "" && this.revMap[val] !== undefined) {
+        this.$element.val(this.revMap[val]);
+        found = true;
+      } else {
+        this.$element.val(val);
+      }
+      oldVal = this.$target.val();
+      if (oldVal != val) {
+        this.$target.val(val);
+      }
+      oldVal = this.$source.val();
+      if (oldVal != val) {
+        this.$source.val(val).trigger("change");
+      }
+      if (val !== "" && found) {
+        this.$container.addClass("combobox-selected");
+        this.selected = true;
+      }
       return;
     },
 

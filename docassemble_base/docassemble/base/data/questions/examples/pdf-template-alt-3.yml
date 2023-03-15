@@ -56,7 +56,7 @@ mandatory: True
 question: Here is your document.
 attachment:
   pdf template file: letter.pdf
-  code:
-    dict(letter_date=today(), 
-         subject_line=subject_of_letter, 
-         recipient_address=recipient.address_block())
+  code: |
+    {'letter_date': today(), 
+     'subject_line': subject_of_letter, 
+     'recipient_address': recipient.address_block()}

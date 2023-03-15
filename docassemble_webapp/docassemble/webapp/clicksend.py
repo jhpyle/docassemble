@@ -4,6 +4,7 @@ import clicksend_client
 from clicksend_client import FaxMessage
 from clicksend_client.rest import ApiException
 from docassemble.base.logger import logmessage
+from docassemble.base.error import DAException
 
 
 def send_fax(fax_number, the_file, config, country=None):
@@ -20,34 +21,34 @@ def send_fax(fax_number, the_file, config, country=None):
         try:
             api_response = api_instance.uploads_post(upload_file, 'fax')
         except ApiException as e:
-            raise Exception("Exception when calling UploadApi->uploads_post: %s\n" % e)
+            raise DAException("Exception when calling UploadApi->uploads_post: %s\n" % e)
         try:
             response = ast.literal_eval(api_response)
         except:
             logmessage(api_response)
-            raise Exception("Exception when calling UploadApi->uploads_post: response could not be parsed: " + api_response)
+            raise DAException("Exception when calling UploadApi->uploads_post: response could not be parsed: " + api_response)
         if response.get('http_code', 0) != 200:
             logmessage(api_response)
-            raise Exception("Exception when calling UploadApi->uploads_post: response code not 200: " + api_response)
+            raise DAException("Exception when calling UploadApi->uploads_post: response code not 200: " + api_response)
         if '_url' not in response:
             logmessage(api_response)
-            raise Exception("Exception when calling UploadApi->uploads_post: url not returned " + api_response)
+            raise DAException("Exception when calling UploadApi->uploads_post: url not returned " + api_response)
         file_url = response['_url']
     fax_message = clicksend_client.FaxMessageCollection(file_url=file_url, messages=fax_message_list)
     try:
         api_response = api_instance.fax_send_post(fax_message)
     except ApiException as e:
-        raise Exception("Exception when calling FAXApi->fax_send_post: %s\n" % e)
+        raise DAException("Exception when calling FAXApi->fax_send_post: %s\n" % e)
     try:
         response = ast.literal_eval(api_response)
     except:
         logmessage(api_response)
-        raise Exception("Exception when calling FAXApi->fax_send_post: response could not be parsed: " + api_response)
+        raise DAException("Exception when calling FAXApi->fax_send_post: response could not be parsed: " + api_response)
     if response.get('http_code', 0) != 200:
         logmessage(api_response)
-        raise Exception("Exception when calling FAXApi->fax_send_post: response code not 200: " + api_response)
+        raise DAException("Exception when calling FAXApi->fax_send_post: response code not 200: " + api_response)
     try:
         response['data']['messages'][0]['message_id']
     except:
-        raise Exception("Exception when calling FAXApi->fax_send_post: message_id not in response" + api_response)
+        raise DAException("Exception when calling FAXApi->fax_send_post: message_id not in response" + api_response)
     return response['data']['messages'][0]

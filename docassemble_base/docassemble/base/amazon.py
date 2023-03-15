@@ -130,7 +130,7 @@ class s3key:
         self.last_modified = resp['LastModified']
 
     def generate_url(self, expires, content_type=None, display_filename=None, inline=False):
-        params = dict(Bucket=self.s3_object.bucket_name, Key=self.key_obj.key)
+        params = {'Bucket': self.s3_object.bucket_name, 'Key': self.key_obj.key}
         if content_type is not None:
             params['ResponseContentType'] = content_type
         if display_filename is not None:

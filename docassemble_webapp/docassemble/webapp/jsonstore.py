@@ -51,7 +51,7 @@ def read_answer_json(user_code, filename, tags=None, all_tags=False):
     if all_tags:
         entries = []
         for entry in JsonDb.execute(select(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags)).scalars():
-            entries.append(dict(data=entry.data, tags=entry.tags, modtime=entry.modtime))
+            entries.append({'data': entry.data, 'tags': entry.tags, 'modtime': entry.modtime})
         return entries
     existing_entry = JsonDb.execute(select(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags)).scalar()
     if existing_entry is not None:

@@ -105,7 +105,7 @@ class SigningProcess(DAObject):
             raise Exception("There was a reference to a signer that is not a person.")
         if signer not in [y['signer'] for y in self.info_by_code.values()]:
             code = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
-            self.info_by_code[code] = dict(signed=False, signer=signer)
+            self.info_by_code[code] = {'signed': False, 'signer': signer}
 
     def _code_for(self, signer):
         self._verify_signer(signer)

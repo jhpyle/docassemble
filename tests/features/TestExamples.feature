@@ -8934,7 +8934,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.demo:data/questions/examples/prevent-dependency-satisfaction.yml"
     Then I should see the phrase "How tasty is it?"
     And I click the button "Continue"
-    Then I should see the phrase "Exception: Reference to undefined variable in context where dependency satisfaction not allowed"
+    Then I should see the phrase "Reference to undefined variable in context where dependency satisfaction not allowed"
 
   Scenario: Test the interview "DOM"
     Given I start the interview "docassemble.demo:data/questions/examples/pytojs-dom.yml"

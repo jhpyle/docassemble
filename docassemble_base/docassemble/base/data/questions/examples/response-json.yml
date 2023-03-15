@@ -13,7 +13,7 @@ code: |
 ---
 event: query_fruit
 code: |
-  data = dict(fruit=favorite_fruit, pieces=number_of_pieces)
+  data = {'fruit': favorite_fruit, 'pieces': number_of_pieces}
   json_response(data)
 ---
 mandatory: True

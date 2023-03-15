@@ -36,7 +36,7 @@ list_types = ['1', 'A', 'a', 'I', 'i']
 
 def image_for_docx(fileref, question, tpl, width=None):
     if fileref.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile', 'DAStaticFile'):
-        file_info = dict(fullpath=fileref.path())
+        file_info = {'fullpath': fileref.path()}
     else:
         file_info = server.file_finder(fileref, question=question)
     if 'path' in file_info and 'extension' in file_info:
@@ -234,7 +234,7 @@ def roman_numeral(number):
 class SoupParser:
 
     def __init__(self, tpl):
-        self.paragraphs = [dict(params=dict(style='p', indentation=0, list_number=1), runs=[RichText('')])]
+        self.paragraphs = [{'params': {'style': 'p', 'indentation': 0, 'list_number': 1}, 'runs': [RichText('')]}]
         self.current_paragraph = self.paragraphs[-1]
         self.run = self.current_paragraph['runs'][-1]
         self.bold = False
@@ -261,7 +261,7 @@ class SoupParser:
             self.list_number += 1
             return
         # logmessage("new_paragraph where style is " + self.style + " and indentation is " + str(self.indentation))
-        self.current_paragraph = dict(params=dict(style=self.style, indentation=self.indentation, list_number=self.list_number), runs=[RichText('')])
+        self.current_paragraph = {'params': {'style': self.style, 'indentation': self.indentation, 'list_number': self.list_number}, 'runs': [RichText('')]}
         self.set_attribs(classes, styles)
         self.list_number += 1
         self.paragraphs.append(self.current_paragraph)

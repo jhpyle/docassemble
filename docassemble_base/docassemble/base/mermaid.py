@@ -5,6 +5,7 @@ import re
 import subprocess
 
 from os.path import expanduser
+from docassemble.base.error import DAException
 from docassemble.base.functions import get_config
 from docassemble.base.util import DAFile
 from docassemble.base.logger import logmessage
@@ -16,9 +17,9 @@ def mmdc(input_text, file_format='svg', flags=None):
     if flags is None:
         flags = {}
     if not isinstance(flags, dict):
-        raise Exception("mmdc: flags not a dictionary")
+        raise DAException("mmdc: flags not a dictionary")
     if not isinstance(file_format, str) or re.search(r'[^a-z]', file_format) or len(file_format) == 0:
-        raise Exception("mmdc: invalid file format")
+        raise DAException("mmdc: invalid file format")
     if not isinstance(input_text, str):
         input_text = str(input_text)
     logmessage("Writing:\n" + input_text)
@@ -36,9 +37,9 @@ def mmdc(input_text, file_format='svg', flags=None):
         output = subprocess.check_output(commands, stderr=subprocess.STDOUT).decode()
     except subprocess.CalledProcessError as err:
         output = err.output.decode()
-        raise Exception("mmdc: there was an error.  " + output)
+        raise DAException("mmdc: there was an error.  " + output)
     if os.path.getsize(output_file.name) == 0:
-        raise Exception("mmdc: the command did not produce any output.  " + output)
+        raise DAException("mmdc: the command did not produce any output.  " + output)
     obj = DAFile()
     obj.set_random_instance_name()
     obj.initialize(extension=file_format)

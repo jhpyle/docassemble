@@ -21,9 +21,7 @@ def create_app():
     alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
     the_app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
     if alchemy_connect_string.startswith('postgres'):
-        the_app.config['SQLALCHEMY_ENGINE_OPTIONS'] = dict(
-            connect_args=docassemble.webapp.database.connect_args()
-        )
+        the_app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'connect_args': docassemble.webapp.database.connect_args()}
     the_app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
     the_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     the_db = docassemble.webapp.db_object.init_flask()

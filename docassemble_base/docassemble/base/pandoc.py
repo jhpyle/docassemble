@@ -16,7 +16,7 @@ from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 from docassemble.base.pdfa import pdf_to_pdfa
 from docassemble.base.pdftk import pdf_encrypt
-from docassemble.base.error import DAError
+from docassemble.base.error import DAError, DAException
 import convertapi
 import requests
 from pikepdf import Pdf
@@ -61,23 +61,23 @@ def cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password):
     }
     if password:
         data['tasks']['task-1']['password'] = password
-    r = requests.post("https://api.cloudconvert.com/v2/jobs", json=data, headers=headers)
+    r = requests.post("https://api.cloudconvert.com/v2/jobs", json=data, headers=headers, timeout=6000)
     resp = r.json()
     if 'data' not in resp:
         logmessage("cloudconvert_to_pdf: create job returned " + repr(r.text))
-        raise Exception("cloudconvert_to_pdf: failed to create job")
+        raise DAException("cloudconvert_to_pdf: failed to create job")
     uploaded = False
     for task in resp['data']['tasks']:
         if task['name'] == 'import-1':
-            r = requests.post(task['result']['form']['url'], data=task['result']['form']['parameters'], files={'file': open(from_file, 'rb')})
+            r = requests.post(task['result']['form']['url'], data=task['result']['form']['parameters'], files={'file': open(from_file, 'rb')}, timeout=6000)
             uploaded = True
     if not uploaded:
-        raise Exception("cloudconvert_to_pdf: failed to upload")
+        raise DAException("cloudconvert_to_pdf: failed to upload")
     r = requests.get("https://sync.api.cloudconvert.com/v2/jobs/%s" % (resp['data']['id'],), headers=headers, timeout=60)
     wait_resp = r.json()
     if 'data' not in wait_resp:
         logmessage("cloudconvert_to_pdf: wait returned " + repr(r.text))
-        raise Exception("Failed to wait on job")
+        raise DAException("Failed to wait on job")
     ok = False
     for task in wait_resp['data']['tasks']:
         if task['operation'] == "export/url":
@@ -85,7 +85,7 @@ def cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password):
                 urllib.request.urlretrieve(file_result['url'], to_file)
                 ok = True
     if not ok:
-        raise Exception("cloudconvert failed")
+        raise DAException("cloudconvert failed")
 
 
 def convertapi_to_pdf(from_file, to_file):
@@ -228,7 +228,7 @@ class MyPandoc:
         if not os.path.isdir(latex_conversion_directory):
             os.makedirs(latex_conversion_directory)
         if not os.path.isdir(latex_conversion_directory):
-            raise Exception("Could not create latex conversion directory")
+            raise DAException("Could not create latex conversion directory")
         icc_profile_in_temp = os.path.join(tempfile.gettempdir(), 'sRGB_IEC61966-2-1_black_scaled.icc')
         if not os.path.isfile(icc_profile_in_temp):
             shutil.copyfile(docassemble.base.functions.standard_template_filename('sRGB_IEC61966-2-1_black_scaled.icc'), icc_profile_in_temp)
@@ -254,7 +254,7 @@ class MyPandoc:
         try:
             msg = subprocess.check_output(subprocess_arguments, cwd=tempfile.gettempdir(), stderr=subprocess.STDOUT).decode('utf-8', 'ignore')
         except subprocess.CalledProcessError as err:
-            raise Exception("Failed to assemble file: " + err.output.decode())
+            raise DAException("Failed to assemble file: " + err.output.decode())
         if msg:
             self.pandoc_message = msg
         os.remove(temp_file.name)
@@ -271,7 +271,7 @@ class MyPandoc:
                     docx_outfile = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                     success = rtf_to_docx(temp_outfile.name, docx_outfile.name)
                     if not success:
-                        raise Exception("Could not convert RTF to DOCX.")
+                        raise DAException("Could not convert RTF to DOCX.")
                     temp_outfile = docx_outfile
             if self.output_filename is not None:
                 shutil.copyfile(temp_outfile.name, self.output_filename)
@@ -288,7 +288,7 @@ class MyPandoc:
         if not os.path.isdir(latex_conversion_directory):
             os.makedirs(latex_conversion_directory)
         if not os.path.isdir(latex_conversion_directory):
-            raise Exception("Could not create latex conversion directory")
+            raise DAException("Could not create latex conversion directory")
         if self.output_format in ("pdf", "tex", "rtf", "rtf to docx", "epub", "docx"):
             self.convert_to_file(question)
         else:

@@ -1,11 +1,11 @@
 import os
 from docassemble.base.config import daconfig
-from docassemble.base.error import DAError
+from docassemble.base.error import DAError, DAException
 
 
 def alchemy_url(db_config):
     if db_config not in daconfig or (not isinstance(daconfig[db_config], dict)) or 'name' not in daconfig[db_config]:
-        raise Exception("alchemy_url: missing or invalid configuration for " + db_config)
+        raise DAException("alchemy_url: missing or invalid configuration for " + db_config)
     dbuser = daconfig[db_config].get('user', None)
     dbpassword = daconfig[db_config].get('password', None)
     dbhost = daconfig[db_config].get('host', None)
@@ -41,7 +41,7 @@ def alchemy_url(db_config):
 
 def connect_args(db_config):
     if db_config not in daconfig or (not isinstance(daconfig[db_config], dict)) or 'name' not in daconfig[db_config]:
-        raise Exception("connect_args: missing or invalid configuration for " + db_config)
+        raise DAException("connect_args: missing or invalid configuration for " + db_config)
     alchemy_connect_args = {}
     dbprefix = daconfig[db_config].get('prefix', 'postgresql+psycopg2://')
     if dbprefix.startswith('postgres'):

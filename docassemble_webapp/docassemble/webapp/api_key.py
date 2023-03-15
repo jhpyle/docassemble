@@ -5,7 +5,7 @@ from docassemble.webapp.daredis import r
 
 
 def add_specific_api_key(name, api_key, user_id, secret_key):
-    info = dict(name=name, method='none', constraints=[])
+    info = {'name': name, 'method': 'none', 'constraints': []}
     if not (isinstance(api_key, str) and len(api_key) == 32):
         return False
     info['last_four'] = api_key[-4:]

@@ -6,13 +6,13 @@ import os
 import string
 import codecs
 import logging
-from xfdfgen import Xfdf
 from io import BytesIO
+from xfdfgen import Xfdf
 import pikepdf
 import img2pdf
 from pikepdf import Pdf
 from PIL import Image
-from docassemble.base.error import DAError
+from docassemble.base.error import DAError, DAException
 from docassemble.base.pdfa import pdf_to_pdfa
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import word
@@ -71,7 +71,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix='', parent_ft=N
             name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
             if field_type is None:
                 widget_type = str(field.get("Type"))
-                if widget_type == "/'Annot'" or widget_type == "/Annot":
+                if widget_type in ("/'Annot'", "/Annot"):
                     field_type = parent_ft
         except:
             logmessage("Skipping field " + repr(field))
@@ -497,6 +497,6 @@ def extract_pages(input_path, output_path, first, last):
     try:
         result = subprocess.run(subprocess_arguments, timeout=60, check=False).returncode
     except subprocess.TimeoutExpired:
-        raise Exception("call to pdftk took too long where arguments were " + " ".join(subprocess_arguments))
+        raise DAException("call to pdftk took too long where arguments were " + " ".join(subprocess_arguments))
     if result != 0:
-        raise Exception("call to pdftk failed where arguments were " + " ".join(subprocess_arguments))
+        raise DAException("call to pdftk failed where arguments were " + " ".join(subprocess_arguments))

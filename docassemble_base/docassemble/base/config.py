@@ -550,7 +550,7 @@ def load(**kwargs):
                 if isinstance(item, str):
                     new_item = cleanup_filename(item)
                     if new_item:
-                        new_admin_interviews.append(dict(interview=new_item))
+                        new_admin_interviews.append({'interview': new_item})
                 elif isinstance(item, dict) and 'interview' in item and isinstance(item['interview'], str):
                     item['interview'] = cleanup_filename(item['interview'])
                     if item['interview'] is not None:
@@ -624,7 +624,7 @@ def load(**kwargs):
         if daconfig['vim'] and 'keymap' not in daconfig:
             daconfig['keymap'] = 'vim'
     if 'db' not in daconfig:
-        daconfig['db'] = dict(name="docassemble", user="docassemble", password="abc123")
+        daconfig['db'] = {'name': "docassemble", 'user': "docassemble", 'password': "abc123"}
     dbtableprefix = daconfig['db'].get('table prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
@@ -780,12 +780,12 @@ def load(**kwargs):
     daconfig['authorized registration domains'] = authorized_domains
     if 'two factor authentication' in daconfig:
         if isinstance(daconfig['two factor authentication'], bool):
-            daconfig['two factor authentication'] = dict(enable=daconfig['two factor authentication'])
+            daconfig['two factor authentication'] = {'enable': daconfig['two factor authentication']}
         if not isinstance(daconfig['two factor authentication'], dict):
             config_error('two factor authentication must be boolean or a dict')
             daconfig['two factor authentication'] = {}
     else:
-        daconfig['two factor authentication'] = dict(enable=False)
+        daconfig['two factor authentication'] = {'enable': False}
     if 'allowed for' in daconfig['two factor authentication']:
         if not isinstance(daconfig['two factor authentication']['allowed for'], list):
             config_error("two factor authentication allowed for must be in the form of a list")

@@ -16,11 +16,12 @@ from Cryptodome.Cipher import AES
 from dateutil import tz
 from flask import session, url_for as base_url_for
 from flask_login import current_user
-from docassemble.webapp.da_flask_mail import Message  # noqa: F401 # pylint: disable=unused-import
 from flask_wtf.csrf import generate_csrf
 from sqlalchemy import or_, and_, select, delete
 import ruamel.yaml
 import tzlocal
+from docassemble.base.error import DAException
+from docassemble.webapp.da_flask_mail import Message  # noqa: F401 # pylint: disable=unused-import
 from docassemble.base.functions import pickleable_objects
 from docassemble.base.config import daconfig, hostname
 from docassemble.base.generate_key import random_bytes, random_alphanumeric
@@ -92,7 +93,7 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
         except:
             uid = unattached_uid()
     if uid is None:
-        raise Exception("save_numbered_file: uid not defined")
+        raise DAException("save_numbered_file: uid not defined")
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
     new_file = SavedFile(file_number, extension=extension, fix=True, should_not_exist=True)
@@ -154,7 +155,7 @@ def write_ml_source(playground, playground_number, current_project, filename, fi
             the_dependent = record.dependent
             if the_dependent is not None:
                 the_dependent = fix_pickle_obj(codecs.decode(bytearray(the_dependent, encoding='utf-8'), 'base64'))
-            the_entry = dict(independent=the_independent, dependent=the_dependent)
+            the_entry = {'independent': the_independent, 'dependent': the_dependent}
             if record.key is not None:
                 the_entry['key'] = record.key
             output[parts[2]].append(the_entry)
@@ -191,6 +192,7 @@ def absolute_filename(the_file):
         write_ml_source(playground, match.group(1), match.group(2), filename)
         return playground
     return None
+
 
 def get_mail_config():
     the_mail_configs = {}
@@ -312,12 +314,12 @@ def sql_get(key, secret=None):
             try:
                 result = decrypt_object(record.value, secret)
             except:
-                raise Exception("Unable to decrypt stored object.")
+                raise DAException("Unable to decrypt stored object.")
         else:
             try:
                 result = unpack_object(record.value)
             except:
-                raise Exception("Unable to unpack stored object.")
+                raise DAException("Unable to unpack stored object.")
         return result
     return None
 
@@ -580,9 +582,9 @@ docassemble.base.functions.update_server(cloud=cloud,
 if platform.machine() == 'x86_64':
     docassemble.base.functions.update_server(google_api=docassemble.webapp.google_api)
 
-initial_dict = dict(_internal=dict(session_local={}, device_local={}, user_local={}, dirty={}, progress=0, tracker=0, docvar={}, doc_cache={}, steps=1, steps_offset=0, secret=None, informed={}, livehelp=dict(availability='unavailable', mode='help', roles=[], partner_roles=[]), answered=set(), answers={}, objselections={}, starttime=None, modtime=None, accesstime={}, tasks={}, gather=[], event_stack={}, misc={}), url_args={}, nav=docassemble.base.functions.DANav())
+initial_dict = {'_internal': {'session_local': {}, 'device_local': {}, 'user_local': {}, 'dirty': {}, 'progress': 0, 'tracker': 0, 'docvar': {}, 'doc_cache': {}, 'steps': 1, 'steps_offset': 0, 'secret': None, 'informed': {}, 'livehelp': {'availability': 'unavailable', 'mode': 'help', 'roles': [], 'partner_roles': []}, 'answered': set(), 'answers': {}, 'objselections': {}, 'starttime': None, 'modtime': None, 'accesstime': {}, 'tasks': {}, 'gather': [], 'event_stack': {}, 'misc': {}}, 'url_args': {}, 'nav': docassemble.base.functions.DANav()}
 # else:
-#    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers={}, objselections={}), url_args={})
+#    initial_dict = {'_internal': {'tracker': 0, 'steps_offset': 0, 'answered': set(), 'answers': {}, 'objselections': {}}, 'url_args': {}}
 if 'initial_dict' in daconfig:
     initial_dict.update(daconfig['initial dict'])
 docassemble.base.parse.set_initial_dict(initial_dict)
@@ -711,7 +713,7 @@ def parse_the_user_id(the_user_id):
         if m.group(1) == 't':
             return None, int(m.group(2))
         return int(m.group(2)), None
-    raise Exception("Invalid user ID")
+    raise DAException("Invalid user ID")
 
 
 def safe_pickle(the_object):
@@ -1062,9 +1064,9 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 role_list = [role.name for role in person.roles]
                 if len(role_list) == 0:
                     role_list = ['user']
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=role_list))
+                messages.append({'id': record.id, 'is_self': is_self, 'temp_owner_id': record.temp_owner_id, 'temp_user_id': record.temp_user_id, 'owner_id': record.owner_id, 'user_id': record.user_id, 'first_name': person.first_name, 'last_name': person.last_name, 'email': person.email, 'modtime': modtime, 'message': message, 'roles': role_list})
             else:
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
+                messages.append({'id': record.id, 'is_self': is_self, 'temp_owner_id': record.temp_owner_id, 'temp_user_id': record.temp_user_id, 'owner_id': record.owner_id, 'user_id': record.user_id, 'modtime': modtime, 'message': message, 'roles': ['user']})
     else:
         if chat_mode in ['peer', 'peerhelp']:
             records = db.session.execute(select(ChatLog).where(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.temp_owner_id == chat_person_id))).order_by(ChatLog.id)).scalars().all()  # noqa: E712 # pylint: disable=singleton-comparison
@@ -1093,9 +1095,9 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 role_list = [role.name for role in person.roles]
                 if len(role_list) == 0:
                     role_list = ['user']
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=role_list))
+                messages.append({'id': record.id, 'is_self': is_self, 'temp_owner_id': record.temp_owner_id, 'temp_user_id': record.temp_user_id, 'owner_id': record.owner_id, 'user_id': record.user_id, 'first_name': person.first_name, 'last_name': person.last_name, 'email': person.email, 'modtime': modtime, 'message': message, 'roles': role_list})
             else:
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
+                messages.append({'id': record.id, 'is_self': is_self, 'temp_owner_id': record.temp_owner_id, 'temp_user_id': record.temp_user_id, 'owner_id': record.owner_id, 'user_id': record.user_id, 'modtime': modtime, 'message': message, 'roles': ['user']})
     return messages
 
 
@@ -1104,7 +1106,7 @@ def file_set_attributes(file_number, **kwargs):
     upload = db.session.execute(select(Uploads).filter_by(indexno=file_number).with_for_update()).scalar()
     if upload is None:
         db.session.commit()
-        raise Exception("file_set_attributes: file number " + str(file_number) + " not found.")
+        raise DAException("file_set_attributes: file number " + str(file_number) + " not found.")
     if 'private' in kwargs and kwargs['private'] in [True, False] and upload.private != kwargs['private']:
         upload.private = kwargs['private']
     if 'persistent' in kwargs and kwargs['persistent'] in [True, False] and upload.persistent != kwargs['persistent']:
@@ -1160,7 +1162,7 @@ def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow
     if disallow_all:
         db.session.execute(delete(UploadsUserAuth).filter_by(uploads_indexno=file_number))
     if not (allow_user_id or allow_email or disallow_user_id or disallow_email or disallow_all):
-        result = dict(user_ids=[], emails=[], temp_user_ids=[])
+        result = {'user_ids': [], 'emails': [], 'temp_user_ids': []}
         for auth in db.session.execute(select(UploadsUserAuth.user_id, UploadsUserAuth.temp_user_id, UserModel.email).outerjoin(UserModel, UploadsUserAuth.user_id == UserModel.id).where(UploadsUserAuth.uploads_indexno == file_number)).scalars().all():
             if auth.user_id is not None:
                 result['user_ids'].append(auth.user_id)
@@ -1242,7 +1244,7 @@ def get_session(i):
     if i in session['sessions']:
         return session['sessions'][i]
     if 'i' in session and 'uid' in session:  # TEMPORARY
-        session['sessions'][session['i']] = dict(uid=session['uid'], encrypted=session.get('encrypted', True), key_logged=session.get('key_logged', False), chatstatus=session.get('chatstatus', 'off'))
+        session['sessions'][session['i']] = {'uid': session['uid'], 'encrypted': session.get('encrypted', True), 'key_logged': session.get('key_logged', False), 'chatstatus': session.get('chatstatus', 'off')}
         if i == session['i']:
             delete_obsolete()
             return session['sessions'][i]
@@ -1272,14 +1274,14 @@ def update_session(i, uid=None, encrypted=None, key_logged=None, chatstatus=None
         session['sessions'] = {}
     if i not in session['sessions'] or uid is not None:
         if uid is None:
-            raise Exception("update_session: cannot create new session without a uid")
+            raise DAException("update_session: cannot create new session without a uid")
         if encrypted is None:
             encrypted = True
         if key_logged is None:
             key_logged = False
         if chatstatus is None:
             chatstatus = 'off'
-        session['sessions'][i] = dict(uid=uid, encrypted=encrypted, key_logged=key_logged, chatstatus=chatstatus)
+        session['sessions'][i] = {'uid': uid, 'encrypted': encrypted, 'key_logged': key_logged, 'chatstatus': chatstatus}
     else:
         if uid is not None:
             session['sessions'][i]['uid'] = uid

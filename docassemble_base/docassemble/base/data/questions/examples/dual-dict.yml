@@ -10,7 +10,7 @@ code: |
   fruit.object_type = DAObject
   fruit.initializeObject('a')
   fruit['a'].seed_info = DAObject("fruit['a']")
-  fruit['a'].seed_info.tally = dict()
+  fruit['a'].seed_info.tally = {}
   fruit['a'].seed_info.tally['b'] = DAObject("fruit['a'].seed_info.tally['b']")
   fruit['a'].seed_info.tally['b'].molecules = DAList("fruit['a'].seed_info.tally['b'].molecules")
   fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[0]"))

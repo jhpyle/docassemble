@@ -4,6 +4,7 @@ from google.oauth2 import service_account
 import google.cloud.storage
 import google.cloud.vision
 from docassemble.base.config import daconfig
+from docassemble.base.error import DAException
 from oauth2client.service_account import ServiceAccountCredentials
 
 logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
@@ -18,7 +19,7 @@ else:
 def google_api_credentials(scope):
     """Returns an OAuth2 credentials object for the given scope."""
     if credential_info is None:
-        raise Exception("google service account credentials not defined in configuration")
+        raise DAException("google service account credentials not defined in configuration")
     if scope is None:
         scope = ['https://www.googleapis.com/auth/drive']
     if not isinstance(scope, list):
@@ -29,7 +30,7 @@ def google_api_credentials(scope):
 def google_cloud_credentials():
     """Returns google.oauth2.service_account.Credentials that can be used with the google.cloud API."""
     if credential_info is None:
-        raise Exception("google service account credentials not defined in configuration")
+        raise DAException("google service account credentials not defined in configuration")
     return service_account.Credentials.from_service_account_info(credential_info)
 
 

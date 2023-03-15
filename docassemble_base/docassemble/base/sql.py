@@ -6,7 +6,7 @@ import sqlalchemy
 from docassemble.base.logger import logmessage
 from docassemble.base.functions import server, this_thread
 from docassemble.base.util import DAList, DAObjectPlusParameters
-from docassemble.base.error import DAAttributeError
+from docassemble.base.error import DAAttributeError, DAException
 from alembic.config import Config
 from alembic import command
 
@@ -78,7 +78,7 @@ class SQLObject:
         filters = []
         for key, val in kwargs.items():
             if not hasattr(cls._model, key):
-                raise Exception("filter: class " + cls.__name__ + " does not have column " + key)
+                raise DAException("filter: class " + cls.__name__ + " does not have column " + key)
             filters.append(getattr(cls._model, key) == val)
         for db_entry in list(cls._session.query(cls._model).filter(*filters).order_by(cls._model.id).all()):
             if cls._model.__name__ in this_thread.misc['dbcache'] and db_entry.id in this_thread.misc['dbcache'][cls._model.__name__]:
@@ -361,7 +361,7 @@ class SQLObject:
 
     def has_child(self, rel_name, rel):
         if not (self.ready() and rel.ready()):
-            raise Exception("has_child: cannot retrieve data")
+            raise DAException("has_child: cannot retrieve data")
         info = self._child_mapping[rel_name]
         model = info['relationship_class']._model
         db_entry = self._session.query(model).filter(model.getattr(info['parent_column']) == self.id, model.getattr(info['child_column']) == rel.id).first()
@@ -381,7 +381,7 @@ class SQLObject:
 
     def get_child(self, rel_name, instance_name=None):
         if not self.ready():
-            raise Exception("get_child: cannot retrieve data")
+            raise DAException("get_child: cannot retrieve data")
         info = self._child_mapping[rel_name]
         model = info['relationship_class']._model
         if instance_name:
@@ -400,7 +400,7 @@ class SQLObject:
 
     def del_child(self, rel_name, child):
         if not (self.ready() and child.ready()):
-            raise Exception("del_child: cannot retrieve data")
+            raise DAException("del_child: cannot retrieve data")
         info = self._child_mapping[rel_name]
         model = info['relationship_class']._model
         self._session.query(model).filter(model.getattr(info['parent_column']) == self.id, model.getattr(info['child_column']) == child.id).delete()
@@ -408,7 +408,7 @@ class SQLObject:
 
     def has_parent(self, rel_name, rel):
         if not (self.ready() and rel.ready()):
-            raise Exception("has_parent: cannot retrieve data")
+            raise DAException("has_parent: cannot retrieve data")
         info = self._parent_mapping[rel_name]
         model = info['relationship_class']._model
         db_entry = self._session.query(model).filter(model.getattr(info['child_column']) == self.id, model.getattr(info['parent_column']) == rel.id).first()
@@ -428,7 +428,7 @@ class SQLObject:
 
     def get_parent(self, rel_name, instance_name=None):
         if not self.ready():
-            raise Exception("get_parent: cannot retrieve data")
+            raise DAException("get_parent: cannot retrieve data")
         info = self._parent_mapping[rel_name]
         model = info['relationship_class']._model
         if instance_name:
@@ -447,7 +447,7 @@ class SQLObject:
 
     def del_parent(self, rel_name, parent):
         if not (self.ready() and parent.ready()):
-            raise Exception("del_parent: cannot retrieve data")
+            raise DAException("del_parent: cannot retrieve data")
         info = self._parent_mapping[rel_name]
         model = info['relationship_class']._model
         self._session.query(model).filter(model.getattr(info['child_column']) == self.id, model.getattr(info['parent_column']) == parent.id).delete()
@@ -515,7 +515,7 @@ class SQLObjectRelationship(SQLObject):
     @classmethod
     def filter_by_parent(cls, instance_name, parent):
         if not parent.ready():
-            raise Exception("filter_by_parent: cannot retrieve data")
+            raise DAException("filter_by_parent: cannot retrieve data")
         filters = {}
         filters[cls._parent[2]] = parent.id
         return cls.filter(instance_name, **filters)
@@ -523,7 +523,7 @@ class SQLObjectRelationship(SQLObject):
     @classmethod
     def filter_by_child(cls, instance_name, child):
         if not child.ready():
-            raise Exception("filter_by_child: cannot retrieve data")
+            raise DAException("filter_by_child: cannot retrieve data")
         filters = {}
         filters[cls._child[2]] = child.id
         return cls.filter(instance_name, **filters)
@@ -531,7 +531,7 @@ class SQLObjectRelationship(SQLObject):
     @classmethod
     def filter_by_parent_child(cls, instance_name, parent, child):
         if not (child.ready() and parent.ready()):
-            raise Exception("filter_by_parent_child: cannot retrieve data")
+            raise DAException("filter_by_parent_child: cannot retrieve data")
         filters = {}
         filters[cls._parent[2]] = parent.id
         filters[cls._child[2]] = child.id
@@ -549,7 +549,7 @@ class SQLObjectRelationship(SQLObject):
             return getattr(getattr(self, self._parent[1]), 'id')
         if column == self._child[2]:
             return getattr(getattr(self, self._child[1]), 'id')
-        raise Exception("Invalid column " + column)
+        raise DAException("Invalid column " + column)
 
     def db_set(self, column, value):
         if column == self._parent[2]:

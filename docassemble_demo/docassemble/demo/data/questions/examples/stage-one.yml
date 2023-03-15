@@ -25,7 +25,7 @@ code: |
   user.name.first
   favorite_fruit
   session_id = create_session(part_two)
-  set_session_variables(part_two, session_id, dict(user=user, favorite_fruit=favorite_fruit), overwrite=True)
+  set_session_variables(part_two, session_id, {'user': user, 'favorite_fruit': favorite_fruit}, overwrite=True)
   new_session_created = True
 ---
 event: final_screen
