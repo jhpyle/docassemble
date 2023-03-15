@@ -846,8 +846,8 @@ def image_as_rtf(match, question=None):
                 server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
         if 'pages' not in file_info:
             try:
-                reader = Pdf.open(file_info['path'] + '.pdf')
-                file_info['pages'] = len(reader.pages)
+                with Pdf.open(file_info['path'] + '.pdf') as reader:
+                    file_info['pages'] = len(reader.pages)
             except:
                 file_info['pages'] = 1
         max_pages = 1 + int(file_info['pages'])
@@ -1047,8 +1047,8 @@ def image_url(file_reference, alt_text, width, emoji=False, question=None, exter
                     sf.finalize()
             if 'pages' not in file_info:
                 try:
-                    reader = Pdf.open(file_info['path'] + '.pdf')
-                    file_info['pages'] = len(reader.pages)
+                    with Pdf.open(file_info['path'] + '.pdf') as reader:
+                        file_info['pages'] = len(reader.pages)
                 except:
                     file_info['pages'] = 1
             the_image_url = server.url_finder(file_reference, size="screen", page=1, _question=question, _external=external)
@@ -1063,10 +1063,10 @@ def image_url(file_reference, alt_text, width, emoji=False, question=None, exter
             else:
                 the_alt_text = alt_text
             try:
-                reader = Pdf.open(file_info['path'] + '.pdf')
-                layout_width = str(reader.pages[0].mediabox[2] - reader.pages[0].mediabox[0])
-                layout_height = str(reader.pages[0].mediabox[3] - reader.pages[0].mediabox[1])
-                output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" width=' + layout_width + ' height=' + layout_height + ' style="' + width_string + '; height: auto;" src="' + the_image_url + '"/></a>'
+                with Pdf.open(file_info['path'] + '.pdf') as reader:
+                    layout_width = str(reader.pages[0].mediabox[2] - reader.pages[0].mediabox[0])
+                    layout_height = str(reader.pages[0].mediabox[3] - reader.pages[0].mediabox[1])
+                    output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" width=' + layout_width + ' height=' + layout_height + ' style="' + width_string + '; height: auto;" src="' + the_image_url + '"/></a>'
             except:
                 output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" style="' + width_string + '; height: auto;" src="' + the_image_url + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
