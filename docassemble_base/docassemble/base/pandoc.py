@@ -746,11 +746,11 @@ def concatenate_files(path_list, pdfa=False, password=None):
     if len(new_path_list) == 1:
         shutil.copyfile(new_path_list[0], pdf_file.name)
     else:
-        original = Pdf.open(new_path_list[0])
-        for additional_file in new_path_list[1:]:
-            additional_pdf = Pdf.open(additional_file)
-            original.pages.extend(additional_pdf.pages)
-        original.save(pdf_file.name)
+        with Pdf.open(new_path_list[0]) as original:
+            for additional_file in new_path_list[1:]:
+                with Pdf.open(additional_file) as additional_pdf:
+                    original.pages.extend(additional_pdf.pages)
+            original.save(pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
     if password:

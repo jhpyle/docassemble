@@ -344,9 +344,9 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
             for item in image_todo:
                 xone, yone, xtwo, ytwo = fields[item['field']]['rect']
                 logmessage("Trying to save to page " + repr(item['pageno'] - 1))
-                overlay_file = Pdf.open(item['overlay_file'])
-                overlay_page = overlay_file.pages[0]
-                pdf.pages[item['pageno'] - 1].add_overlay(overlay_page, rect=pikepdf.Rectangle(xone, yone, xtwo, ytwo))
+                with Pdf.open(item['overlay_file']) as overlay_file:
+                    overlay_page = overlay_file.pages[0]
+                    pdf.pages[item['pageno'] - 1].add_overlay(overlay_page, rect=pikepdf.Rectangle(xone, yone, xtwo, ytwo))
         pdf.save(pdf_file.name)
     if (pdfa or not editable) and len(images) > 0:
         flatten_pdf(pdf_file.name)
@@ -480,6 +480,8 @@ def overlay_pdf(main_file, logo_file, out_file, first_page=None, last_page=None,
                 continue
         main_pdf.pages[page_no].add_overlay(logo_pdf.pages[logo_page - 1])
     main_pdf.save(out_file)
+    logo_pdf.close()
+    main_pdf.close()
 
 
 def apply_qpdf(filename):

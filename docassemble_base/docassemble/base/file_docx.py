@@ -694,8 +694,8 @@ def pdf_pages(file_info, width):
             server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
     if 'pages' not in file_info:
         try:
-            reader = Pdf.open(file_info['path'] + '.pdf')
-            file_info['pages'] = len(reader.pages)
+            with Pdf.open(file_info['path'] + '.pdf') as reader:
+                file_info['pages'] = len(reader.pages)
         except:
             file_info['pages'] = 1
     max_pages = 1 + int(file_info['pages'])
