@@ -6984,10 +6984,10 @@ called from the [`init()`] method of each class after the call to
 ### <a name="sqlobject class methods"></a>Class methods
 
 <a name="SQLObject.by_id"></a>If you have the `id` of a [SQL] record
-and you want to obtain the corresponding to that ID, you can call the
-`by_id()` class method.  If your class name is `Customer`, and the id
-is `customer_id`, you would call `Customer.by_id(customer_id)`, and
-the result would be a `Customer` object.  If an object for this `id`
+and you want to obtain a [Python] object corresponding to that ID, 
+you can call the `by_id()` class method.  If your class name is `Customer`, 
+and the id is `customer_id`, you would call `Customer.by_id(customer_id)`, 
+and the result would be a `Customer` object.  If an object for this `id`
 is already present in the interview answers, that object will be
 returned.  If the object does not already exist, a new object will be
 returned, and its [`instanceName`] will be random.  If no object could
