@@ -299,6 +299,7 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                         annot.DV = the_string
         if len(images) == 0:
             pdf.save(pdf_file.name)
+            pdf.close()
     if len(images) > 0:
         fields = {}
         for field, default, pageno, rect, field_type, export_value in the_fields:
@@ -348,6 +349,7 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                     overlay_page = overlay_file.pages[0]
                     pdf.pages[item['pageno'] - 1].add_overlay(overlay_page, rect=pikepdf.Rectangle(xone, yone, xtwo, ytwo))
         pdf.save(pdf_file.name)
+        pdf.close()
     if (pdfa or not editable) and len(images) > 0:
         flatten_pdf(pdf_file.name)
     if pdfa:

@@ -196,30 +196,30 @@ def get_info_from_file_reference(file_reference, **kwargs):
 def add_info_about_file(filename, basename, result):
     if result['extension'] == 'pdf':
         try:
-            reader = Pdf.open(filename)
-            result['encrypted'] = reader.is_encrypted
-            try:
-                if '/AcroForm' in reader.trailer['/Root']:
-                    result['acroform'] = True
-                else:
+            with Pdf.open(filename) as reader:
+                result['encrypted'] = reader.is_encrypted
+                try:
+                    if '/AcroForm' in reader.trailer['/Root']:
+                        result['acroform'] = True
+                    else:
+                        result['acroform'] = False
+                except:
                     result['acroform'] = False
-            except:
-                result['acroform'] = False
-            result['pages'] = len(reader.pages)
+                result['pages'] = len(reader.pages)
         except:
             result['pages'] = 1
     elif os.path.isfile(basename + '.pdf'):
         try:
-            reader = Pdf.open(basename + '.pdf')
-            result['encrypted'] = reader.is_encrypted
-            try:
-                if '/AcroForm' in reader.trailer['/Root']:
-                    result['acroform'] = True
-                else:
+            with Pdf.open(basename + '.pdf') as reader:
+                result['encrypted'] = reader.is_encrypted
+                try:
+                    if '/AcroForm' in reader.trailer['/Root']:
+                        result['acroform'] = True
+                    else:
+                        result['acroform'] = False
+                except:
                     result['acroform'] = False
-            except:
-                result['acroform'] = False
-            result['pages'] = len(reader.pages)
+                result['pages'] = len(reader.pages)
         except:
             result['pages'] = 1
     elif result['extension'] in ['png', 'jpg', 'gif']:

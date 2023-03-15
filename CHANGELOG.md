@@ -24,6 +24,9 @@
   `value` and `choices`. The `choices` will replace the options in the
   dropdown for that field.
 
+### Fixed
+- Upgraded `pikepdf` and fixed issue with way it is called.
+
 ## [1.4.40] - 2023-03-07
 
 ### Changed
