@@ -3583,6 +3583,16 @@ If you are using [Google Analytics 4], set the `analytics id` to the GA4
 older system, set the `analytics id` to the "tracking ID" (beginning
 with `UA-`).
 
+It is possible to use both a `UA-` and `G-` ID at the same time if
+`analytics id` refers to a list of IDs.
+
+{% highlight yaml %}
+google:
+  analytics id:
+    - G-9876543210
+    - UA-77777777-1
+{% endhighlight %}
+
 The [pageview] events that **docassemble** sends will record a view on
 an artificial path.  For example, suppose you have the following
 question:

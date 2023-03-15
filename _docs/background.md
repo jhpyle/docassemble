@@ -347,7 +347,8 @@ background_response([{'target': 'top_area', 'content': "Hello, world!"}, {'targe
 {% endhighlight %}
 
 Instead of writing HTML to areas of the screen, you can set the values
-of input fields:
+of input fields by calling `background_response()` with a dictionary
+of field values, followed by `'fields'`:
 
 {% highlight python %}
 background_response({'favorite_fruit': 'apple', 'likes_vegetables': True}, 'fields')
@@ -712,6 +713,8 @@ run quickly (in less than four seconds).
 You can also use `check in` to communicate information back to the
 screen.
 
+### <a name="target_template"></a>Template blocks
+
 In the example above, [`check in`] referred to a [`code`] block.  In
 the example below, [`check in`] refers to a [`template`] block.  The
 `content` of the [`template`] is inserted into the user's screen in an
@@ -749,6 +752,8 @@ at the end of your [`code`]:
 
 {% include side-by-side.html demo="target-code-template" %}
 
+### <a name="background_response_target"></a>Populating targets with background_response()
+
 Another way to send messages to the user's screen is to use [`code`]
 to plug raw [HTML] into `[TARGET ...]` areas:
 
@@ -767,6 +772,8 @@ can do so by calling [`background_response()`] with a [list] of
 
 {% include side-by-side.html demo="target-code-multiple" %}
 
+### <a name="background_response_fields"></a>Populating fields with background_response()
+
 Another way to communicate results to the user's screen is to populate
 input elements.  If you call `background_response()` with a
 [dictionary] as the first parameter and `'fields'` as the second
@@ -778,12 +785,114 @@ should be the values that you want the fields to have.  For example:
 
 {% include side-by-side.html demo="ajax-calc" %}
 
-By setting the second parameter to `'flash'` and the first parameter
-to a message, you can "flash" a message at the top of the user's
-screen.  In this example, a message is flashed as soon as the user
-enters a favorite fruit.
+### <a name="background_response_choices"></a>Populating dropdown choices with background_response()
+
+You can also use the `'fields'` form of `background_response()` to
+change the options in a dropdown list of a field on the screen. To do
+this, call `background_response()` as though you are setting the value
+of the dropdown field, but in place of the value, substitute a Python
+dictionary with the keys `choices` and `value`. The `choices` key
+should refer to a data structure containing the options that the
+dropdown list will have. The `value` key is optional, but if it is
+included it will cause the indicated value to be selected.
+
+{% include side-by-side.html demo="country-state" %}
+
+The data structure indicated by `choices` can be:
+
+* a list of strings, in which case each string will be used as both
+  the label and the value;
+* a dictionary mapping values to labels;
+* a list of single-item dictionaries mapping values to labels;
+* a list of two-item lists, where the first item is the value and the
+  second item is the label.
+
+In this example, `choices` is being set to the output of
+`states_list()`, which returns a Python `dict` that maps state
+abbreviations to state names. Since there are some countries that do
+not have states, it is possible that the Python `dict` will be
+empty. If a dropdown field is required but has no choices, the user
+will not be able to continue. In this example, the Python code
+`or {'N/A': country_name(action_argument('country'))}` follows after
+the call to `states_list()`, ensuring that there always at least one
+choice.
+
+When designing a screen like this, it is important to keep in mind the
+different scenarios in which the screen might be shown, and to ensure
+that the screen displays correctly in each context. The contexts
+include:
+
+1. The user arrives at the screen for the first time, and the Python
+   variables `country` and `state` are undefined.
+2. The user arrives at the screen by clicking the Back button on the
+   next screen. In this scenario, the Python variables `country` and
+   `state` are undefined, but **docassemble** will use the values the
+   user previously entered as default values for the fields.
+3. The user arrives at the screen as part of a review process, and the
+   Python variables `country` and `state` are defined.
+
+When the screen first loads, the "State" dropdown field is populated
+with:
+
+{% highlight python %}
+states_list(country_code=showifdef('country', 'US', prior=True)) or ['N/A']
+{% endhighlight %}
+
+Obtaining the country code with [`showifdef()`] is important because
+the country may or may not be defined. If the Python variable
+`country` is not defined, the list of states for the country `'US'` is
+used. If `states_list()` returns an empty dictionary, the `or ['N/A']`
+ensures that there is at least one choice. It is important that the
+the "State" dropdown is populated with one or more choices when the
+screen first loads, because **docassemble**'s standard behavior when a
+dropdown has no choices is to omit the field from the screen and
+define the variable as `None` when the user presses "Continue."
+
+When the user arrives at the screen for the first time, and the
+"Country" field is not populated, the State dropdown will be disabled
+due to `js enable if: val('country')`. When the user selects a
+country, the `change` event on the Country field will be triggered,
+causing the State dropdown to become enabled and the `check in` action
+to run with the `_changed` argument set to `'country'`. When the
+`check in` action returns a response to the browser, the list of
+choices for the "State" field will be updated. Thus, it does not
+matter what the initial choices of the "State" field are, since the
+user will not see them. But it is important that there are initial
+choices, because otherwise **docassemble** will assume that the field
+should be omitted from the screen entirely.
+
+The call to `showifdef()` uses the special `prior=True` keyword
+parameter, which means that if the user arrived at the screen after
+pressing the Back button, `showifdef()` will return the value of
+`country` that the user had previously entered. This is important
+because when the user arrives at the screen by pressing the Back
+button, **docassemble** will populate the "Country" field with the
+value of `country` that the user previously entered, and the list of
+states should correspond with that `country`.
+
+Note that `check in` code runs whenever any field on the screen
+changes, and also runs every six seconds. To avoid unnecessary changes
+to the screen, the `check in` code only returns a substantial response
+if `action_argument('_changed') == 'country'`. It is important that
+screen updates only happen at the particular times when you want them
+to happen, because otherwise screen elements may update while the user
+is interacting with them, resulting in a glitchy user experience.
+
+As you can see from the above example, updating screens by making
+asynchronous calls to the server is complicated. By using separate
+screens to gather related variables, you can save yourself a lot of
+time that could be put to a more productive use.
+
+### <a name="background_response_flash"></a>Showing messages with background_response()
+
+By setting the second parameter of `background_response()` to
+`'flash'` and the first parameter to a message, you can "flash" a
+message at the top of the user's screen.  In this example, a message
+is flashed as soon as the user enters a favorite fruit.
 
 {% include side-by-side.html demo="ajax-flash" %}
+
+### <a name="background_response_javascript"></a>Running JavaScript with background_response()
 
 Another way to communicate results to the user's screen is to use
 [JavaScript].  If you call `background_response()` with some
@@ -797,6 +906,8 @@ a message for the user.
 
 See the [Javascript functions] section for more information about
 things you can do with [JavaScript].
+
+### <a name="background_response_refresh"></a>Refreshing the screen with background_response()
 
 Another strategy is to use `check in` code to cause a refresh of the
 user's screen.  If your `check in` code ends with
@@ -1414,3 +1525,4 @@ privileges and user identity of the [cron user].
 [port 465]: https://en.wikipedia.org/wiki/SMTPS
 [change]: https://developer.mozilla.org/en-US/docs/Web/Events/change
 [`docker exec`]: https://docs.docker.com/engine/reference/commandline/exec/
+[`showifdef()`]: {{ site.baseurl }}/docs/functions.html#showifdef

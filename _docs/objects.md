@@ -3532,9 +3532,9 @@ that `None` is returned in case the request is not successful.
 <a name="DAWebError"></a>There are special values of `on_failure` that
 you might want to use:
 
-* if you set `on_failure` to `text`, then the UTF-8-decoded text
+* if you set `on_failure` to `'text'`, then the UTF-8-decoded text
   response is returned.
-* if you set `on_failure` to `content`, then the raw (not UTF-8 decoded)
+* if you set `on_failure` to `'content'`, then the raw (not UTF-8 decoded)
   response is returned.
 * if you set `on_failure` to `'raise'`, then if
   the request is unsuccessful, an exception of type `DAWebError` is
@@ -3596,15 +3596,12 @@ use:
   `on_success=content` and then passing the result to the
   [`write()`](#DAFile.write) method of the `DAFile` class, along with
   `binary=True`.
-* if you set `on_failure` to `'raise'`, then if
-  the request is unsuccessful, an exception of type `DAWebError` is
-  raised, which you can trap:
 
-The `on_success`
-feature also supports the special `'raise'` result, in case you want
-to inspect the output of a successful call.  Although if you are this
-interested in inspecting the results of a successful call, you should
-probably be writing custom methods that call [`requests`] directly.
+The `on_success` feature also supports the special `'raise'` result,
+in case you want to inspect the output of a successful call.  Although
+if you are this interested in inspecting the results of a successful
+call, you should probably be writing custom methods that call
+[`requests`] directly.
 
 ## <a name="DAGoogleAPI"></a>DAGoogleAPI
 

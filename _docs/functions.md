@@ -105,6 +105,12 @@ So, the `defined()` function is available, but using it is not
 advisable unless it is impossible to substitute real facts for your
 conditional statement.
 
+The `defined()` function accepts an optional keyword argument
+`prior`. If you set `prior=True`, then on screens that loaded because
+the user pressed the Back button, `defined()` will look in the previous
+set of interview answers (the set that was deleted by pressing the
+Back button) to see if the variable was defined.
+
 ## <a name="value"></a>value()
 
 The `value()` function returns the value of a variable, where the name
@@ -131,6 +137,12 @@ entirely different.  The first will treat the value of the
 `meaning_of_life` variable as a variable name.  So if you set
 `meaning_of_life = 'chocolate'`, then `value(meaning_of_life)` will
 attempt to find the value of the variable `chocolate`.
+
+The `value()` function accepts an optional keyword argument
+`prior`. If you set `prior=True`, then on screens that loaded because
+the user pressed the Back button, `value()` will look in the previous
+set of interview answers (the set that was deleted by pressing the
+Back button) for the value of the variable.
 
 The `value()` function is relatively inefficient.  If you can use
 regular Python expressions instead of `value()`, you should do so.
@@ -1487,6 +1499,11 @@ The `action_arguments()` function returns a dictionary with any
 arguments that were passed when the user clicked on a link generated
 by [`url_action()`] or [`interview_url_action()`].
 
+When a `check in` action takes place, `action_arguments()` returns the
+fields on the screen. Although the special arguments `_initial` and
+`changed` can be read with [`action_argument()`], the
+`action_arguments()` function does not return these values.
+
 ## <a name="action_argument"></a>action_argument()
 
 The `action_argument()` function is like [`action_arguments()`],
@@ -1716,6 +1733,18 @@ parameters:
    possible values, see above (these are the "special uses" of
    [`url_of()`]).  If `url_args` are supplied, these will be included
    in the resulting URL.
+
+In addition to expiring after `expire` seconds, the URL expires
+immediately after first use. The best way to use a `login_url` link is
+by creating the URL and then immediately redirecting the user to the
+URL. If you share the URL with the user directly, there is a chance
+that the URL could expire before the user has a chance to click on
+it. Some software visits URL for purposes of rendering a URL preview
+box, and if the software visits the URL before the user does, the
+software will invalidate the URL.
+
+An API version of the `login_url` feature is available at
+[`/api/login_url`].
 
 ## <a name="url_ask"></a>url_ask()
 
@@ -4346,6 +4375,12 @@ of the variable is only returned if the variable is defined.
 * `showifdef('favorite_fruit', 'no fruit')` returns the value of the
   variable `favorite_fruit` if the variable `favorite_fruit` is
   defined, and otherwise returns the text `no fruit`.
+
+The `showifdef()` function accepts an optional keyword argument
+`prior`. If you set `prior=True`, then on screens that loaded because
+the user pressed the Back button, `showifdef()` will look in the previous
+set of interview answers (the set that was deleted by pressing the
+Back button) to see if the variable was defined.
 
 # <a name="admin"></a>Administrative functions
 
@@ -7978,6 +8013,14 @@ itself.
 
 {% include side-by-side.html demo="getField" %}
 
+If a field consists of multiple radio buttons or checkboxes,
+`getField()` returns the first element. If you need to select all of
+the elements, you can use the `name` of the element to find the group:
+
+{% highlight javascript %}
+document.getElementsByName(getField('favorite_fruit').name)
+{% endhighlight %}
+
 You can also access this function under the name `daGetField()`, which
 can be useful if you are embedding **docassemble** and there is a name
 conflict.
@@ -8630,3 +8673,4 @@ $(document).on('daPageLoad', function(){
 [VoiceRSS Configuration]: {{ site.baseurl }}/docs/config.html#voicerss
 [multiple e-mail configurations]: {{ site.baseurl }}/docs/config.html#mail multiple
 [`email config`]: {{ site.baseurl }}/docs/initial.html#email config
+[`/api/login_url`]: {{ site.baseurl }}/docs/api.html#login_url

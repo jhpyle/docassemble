@@ -2761,6 +2761,39 @@
       ${ country_name(user_country) },
       which is abbreviated
       ${ user_country }.
+"country-state":
+  "height": !!int |-
+    230
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Where do you live?
+    fields:
+      - Country: country
+        code: countries_list()
+      - State: state
+        code: |
+          states_list(country_code=showifdef('country', 'US', prior=True)) \
+          or \
+          ['N/A']
+        js enable if: val('country')
+    check in: update_states_list
+    ---
+    event: update_states_list
+    code: |
+      if action_argument('_changed') == 'country':
+        background_response(
+          {
+            'state':
+              {
+                'choices': \
+                  states_list(country_code=action_argument('country')) \
+                  or \
+                  ['N/A']
+              }
+          }, 'fields')
+      background_response()
 "cron":
   "height": !!int |-
     266
@@ -4550,7 +4583,7 @@
         "address_block": ${ adverse_party.address_block() }
         "signature": ${ user.signature }
       code: |
-        dict(full_name=user.name.full())
+        {'full_name': user.name.full()}
 "docx-template-code-2":
   "yaml": |-
     mandatory: True
@@ -4561,12 +4594,12 @@
       filename: letter
       docx template file: letter_template_code.docx
       code: |
-        dict(full_name=user.name.full(),
-             letter_date=format_date(today()),
-             phone_number='202-555-1234',
-             subject_matter=subject_matter,
-             address_block=adverse_party.address_block(),
-             signature=user.signature)
+        {'full_name': user.name.full(),
+         'letter_date': format_date(today()),
+         'phone_number': '202-555-1234',
+         'subject_matter': subject_matter,
+         'address_block': adverse_party.address_block(),
+         'signature': user.signature}
 "docx-template-multiple":
   "yaml": |-
     question: |
@@ -4646,7 +4679,7 @@
       fruit.object_type = DAObject
       fruit.initializeObject('a')
       fruit['a'].seed_info = DAObject("fruit['a']")
-      fruit['a'].seed_info.tally = dict()
+      fruit['a'].seed_info.tally = {}
       fruit['a'].seed_info.tally['b'] = DAObject("fruit['a'].seed_info.tally['b']")
       fruit['a'].seed_info.tally['b'].molecules = DAList("fruit['a'].seed_info.tally['b'].molecules")
       fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[0]"))
@@ -5667,7 +5700,7 @@
       set_save_status('ignore')
       original = action_argument('wordstart')
       wordstart = original.lower()
-      results = list()
+      results = []
       for key, val in {'x234': 'Apple', 'y432': 'Orange', 'h293': 'Peach'}.items():
         if key == original:
           json_response([[key, val]])
@@ -5848,7 +5881,7 @@
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-default-4":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -5863,7 +5896,7 @@
           - Pears
         default:
           code: |
-            dict(Pears=False, Peaches=False, Apples=True)
+            {'Pears': False, 'Peaches': False, 'Apples': True}
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-default-5":
   "height": !!int |-
@@ -11718,8 +11751,8 @@
   "width": !!int |-
     488
   "yaml": "mandatory: True\nquestion: Here is your document.\nattachment:\n  pdf template\
-    \ file: letter.pdf\n  code:\n    dict(letter_date=today(), \n         subject_line=subject_of_letter,\
-    \ \n         recipient_address=recipient.address_block())"
+    \ file: letter.pdf\n  code: |\n    {'letter_date': today(), \n     'subject_line':\
+    \ subject_of_letter, \n     'recipient_address': recipient.address_block()}"
 "pdf-template-alt-4":
   "height": !!int |-
     218
@@ -11733,7 +11766,7 @@
       code: letter_variables
     ---
     code: |
-      letter_variables = dict()
+      letter_variables = {}
       letter_variables['letter_date'] = today()
       if letter_type == 'threat':
         letter_variables['subject_line'] = "Litigation hold"
@@ -12696,7 +12729,7 @@
   "yaml": |-
     mandatory: True
     code: |
-      data = dict(fruit='apple', pieces=2)
+      data = {'fruit': 'apple', 'pieces': 2}
       response(json.dumps(data), content_type="application/json")
 "response-hello":
   "yaml": |-
@@ -12709,8 +12742,8 @@
   "width": !!int |-
     488
   "yaml": "objects:\n  - user: Individual\n---\nmandatory: True\ncode: |\n  multi_user\
-    \ = True\n---\nevent: query_fruit\ncode: |\n  data = dict(fruit=favorite_fruit,\
-    \ pieces=number_of_pieces)\n  json_response(data)\n---\nmandatory: True\nquestion:\
+    \ = True\n---\nevent: query_fruit\ncode: |\n  data = {'fruit': favorite_fruit,\
+    \ 'pieces': number_of_pieces}\n  json_response(data)\n---\nmandatory: True\nquestion:\
     \ |\n  You currently have\n  ${ nice_number(number_of_pieces) }\n  ${ noun_plural('piece',\
     \ number_of_pieces) }\n  of\n  ${ noun_singular(favorite_fruit) }.\nsubquestion:\
     \ |\n  Use\n  [this link](${ interview_url_action('query_fruit') })\n  to query\
@@ -13552,7 +13585,7 @@
     ---
     mandatory: True
     code: |
-      new_section = dict()
+      new_section = {}
       new_section[new_keyword] = new_name
       the_sections = nav.get_sections()
       the_sections.append(new_section)
@@ -14898,18 +14931,18 @@
     read only: important
 "table-read-only-2":
   "height": !!int |-
-    386
+    385
   "width": !!int |-
     488
   "yaml": |-
     mandatory: True
     code: |
       fruit.appendObject()
-      fruit[-1].important = dict(delete=True, edit=False)
+      fruit[-1].important = {'delete': True, 'edit': False}
       fruit[-1].name.text = 'Apple'
       fruit[-1].seeds = 10
       fruit.appendObject()
-      fruit[-1].important = dict(delete=False, edit=True)
+      fruit[-1].important = {'delete': False, 'edit': True}
       fruit[-1].name.text = 'Orange'
       fruit[-1].seeds = 5
     ---
@@ -19350,7 +19383,7 @@
         docx template file: quotes-in-code.docx
 "random-forest":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -19358,19 +19391,19 @@
     code: |
       rf = RandomForestMachineLearner('fruit', use_initial_file=True)
       if rf.is_empty():
-        rf.add_to_training_set(dict(a=1, b=2.0, c=3.0, d='A'), 'apple')
-        rf.add_to_training_set(dict(a=0.9, b=2, c=3.0, d='A'), 'apple')
-        rf.add_to_training_set(dict(a=0.8, b=2.0, c=3.0, d='A'), 'apple')
-        rf.add_to_training_set(dict(a=1.0, b=2.1, c=3, d='B'), 'apple')
-        rf.add_to_training_set(dict(a=1.2, b=2.0, c=3.1, d='A'), 'apple')
-        rf.add_to_training_set(dict(a=1.0, b=7.0, c=3.0, d='B'), 'orange')
-        rf.add_to_training_set(dict(a=0.9, b=6.9, c=3.0, d='A'), 'orange')
-        rf.add_to_training_set(dict(a=0.8, b=6.7, c=2.9, d='B'), 'orange')
-        rf.add_to_training_set(dict(a=1.0, b=7.1, c=2.95, d='B'), 'orange')
-        rf.add_to_training_set(dict(a=1.05, b=6.8, c=3.1, d='B'), 'orange')
+        rf.add_to_training_set({'a': 1, 'b': 2.0, 'c': 3.0, 'd': 'A'}, 'apple')
+        rf.add_to_training_set({'a': 0.9, 'b': 2, 'c': 3.0, 'd': 'A'}, 'apple')
+        rf.add_to_training_set({'a': 0.8, 'b': 2.0, 'c': 3.0, 'd': 'A'}, 'apple')
+        rf.add_to_training_set({'a': 1.0, 'b': 2.1, 'c': 3, 'd': 'B'}, 'apple')
+        rf.add_to_training_set({'a': 1.2, 'b': 2.0, 'c': 3.1, 'd': 'A'}, 'apple')
+        rf.add_to_training_set({'a': 1.0, 'b': 7.0, 'c': 3.0, 'd': 'B'}, 'orange')
+        rf.add_to_training_set({'a': 0.9, 'b': 6.9, 'c': 3.0, 'd': 'A'}, 'orange')
+        rf.add_to_training_set({'a': 0.8, 'b': 6.7, 'c': 2.9, 'd': 'B'}, 'orange')
+        rf.add_to_training_set({'a': 1.0, 'b': 7.1, 'c': 2.95, 'd': 'B'}, 'orange')
+        rf.add_to_training_set({'a': 1.05, 'b': 6.8, 'c': 3.1, 'd': 'B'}, 'orange')
     ---
     code: |
-      sample_data = dict(a=1, b=3.8, c=3.1, d='B')
+      sample_data = {'a': 1, 'b': 3.8, 'c': 3.1, 'd': 'B'}
       predictions = rf.predict(sample_data, probabilities=True)
 "random-forest-interview":
   "height": !!int |-
@@ -20086,7 +20119,7 @@
       user.name.first
       favorite_fruit
       session_id = create_session(part_two)
-      set_session_variables(part_two, session_id, dict(user=user, favorite_fruit=favorite_fruit), overwrite=True)
+      set_session_variables(part_two, session_id, {'user': user, 'favorite_fruit': favorite_fruit}, overwrite=True)
       new_session_created = True
     ---
     event: final_screen

@@ -845,9 +845,9 @@ from the keys, you can specify the choices in the following manner:
 
 {% include side-by-side.html demo="fields-checkboxes-different-labels" %}
 
-The [`all_true()`], [`all_false()`], [`any_true()`] and
-[`any_false()`] methods of [`DADict`] can be used to analyze the
-values set by a checkboxes field.  For example:
+The [`all_true()`], [`all_false()`], [`any_true()`], [`any_false()`],
+[`true_values()`], and [`false_values()`] methods of [`DADict`] can be
+used to analyze the values set by a checkboxes field.  For example:
 
 {% highlight yaml %}
 mandatory: True
@@ -3375,6 +3375,8 @@ why this needs to be done manually as opposed to automatically:
 [`all_false()`]: {{ site.baseurl }}/docs/objects.html#DADict.all_false
 [`any_true()`]: {{ site.baseurl }}/docs/objects.html#DADict.any_true
 [`any_false()`]: {{ site.baseurl }}/docs/objects.html#DADict.any_false
+[`true_values()`]: {{ site.baseurl }}/docs/objects.html#DADict.true_values
+[`false_values()`]: {{ site.baseurl }}/docs/objects.html#DADict.false_values
 [`Address`]: {{ site.baseurl }}/docs/objects.html#address autocomplete
 [`google maps api key`]: {{ site.baseurl }}/docs/config.html#google
 [Place Autocomplete]: https://developers.google.com/places/web-service/autocomplete

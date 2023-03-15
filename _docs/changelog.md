@@ -3,6 +3,35 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.41](https://github.com/jhpyle/docassemble/releases/tag/v1.4.41) - 2023-03-14
+
+
+### Changed
+- The `check in` feature now sends two additional action arguments,
+  `_changed` and `_initial`. These arguments are not reported by
+  `action_arguments()` but can be retrieved with `action_argument()`.
+- The `defined()`, `value()`, and `showifdef()` functions now accept a
+  keyword argument `prior` which can be set to `True` in order to
+  correctly handle situations where the user has just clicked the Back
+  button and it is necessary to know the value that a variable had
+  prior to the user pressing the Back button. If `prior` is `True`,
+  the set of interview answers that was just discarded will be
+  accessed first, and then the current interview answers will be
+  accessed. In situations where the user has not just pressed the Back
+  button, setting `prior` to `True` has no effect.
+- The `countries_list()` and `states_list()` functions now return
+  alphabetically sorted results. `states_list()` returns an empty
+  dictionary when the `country_code` is invalid.
+- When the second argument of `background_response()` is `'fields'`,
+  and the first argument is a dictionary of variable names and values,
+  the value of a dropdown field can be set to a dictionary with keys
+  `value` and `choices`. The `choices` will replace the options in the
+  dropdown for that field.
+
+
+### Fixed
+- Upgraded `pikepdf` and fixed issue with way it is called.
+
 ## [1.4.40](https://github.com/jhpyle/docassemble/releases/tag/v1.4.40) - 2023-03-07
 
 
