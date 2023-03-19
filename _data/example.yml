@@ -1926,6 +1926,11 @@
           'value': 'does not understand',
           'css class': 'clueless',
           'color': 'danger'},
+         {'label': "I object",
+          'value': 'objects',
+          'css class': 'ornery',
+          'show if': is_annoying,
+          'color': 'danger'},
          {'label': "I'm not sure",
           'value': 'unsure',
           'css class': 'unsure',
@@ -2034,6 +2039,25 @@
     buttons:
       - Buy it: purchaser
       - Lease it: borrower
+"buttons-show-if":
+  "height": !!int |-
+    122
+  "width": !!int |-
+    488
+  "yaml": |-
+    field: target_variable
+    question: Which flour shall we use?
+    buttons:
+      - value: almond
+        label: Almond
+      - value: oat
+        label: Oat
+      - value: wheat
+        label: Wheat
+        show if: gluten_tolerant
+      - value: spelt
+        label: Spelt
+        show if: gluten_tolerant
 "buttons-variation-1":
   "height": !!int |-
     122
@@ -2354,6 +2378,11 @@
           'help': "For hippies.",
           'css class': "clogs",
           'color': "warning"},
+         {'crocs': "Crocs",
+          'help': "For teenagers",
+          'show if': not is_adult,
+          'css class': "crocs",
+          'color': "warning"},
          {'other': "Other",
           'default': True,
           'help': "Because the other types suck.",
@@ -2374,6 +2403,31 @@
         image: calendar
       - "Where?": where
         image: map
+"choices-show-if":
+  "height": !!int |-
+    122
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Are you proper?
+    yesno: is_proper
+    ---
+    question: |
+      What type of shoes do you wear?
+    field: target_variable
+    choices:
+      - Dress shoes: dress_shoes
+        show if: is_proper
+      - Boat shoes: boat_shoes
+        show if: is_proper
+      - Sneakers: sneakers
+        show if: not is_proper
+      - Sandals: sandals
+        show if: not is_proper
+      - Crocs: crocs
+        show if: not is_proper
+      - Other: other
 "choices-with-default":
   "height": !!int |-
     298
@@ -13138,7 +13192,7 @@
       - note: |
           We suspect you prefer
           ${ fruit } to ${ vegetable }.
-    field: answers_reviewed
+    continue button field: answers_reviewed
 "right":
   "height": !!int |-
     146

@@ -3,6 +3,19 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.42](https://github.com/jhpyle/docassemble/releases/tag/v1.4.42) - 2023-03-19
+
+
+### Added
+- The `revoke()` method of the object returned from
+  `background_action()`.
+
+
+### Changed
+- When listing choices in a multiple choice question, you can use
+  `show if` to conditionally include the choice in the list of
+  choices.
+
 ## [1.4.41](https://github.com/jhpyle/docassemble/releases/tag/v1.4.41) - 2023-03-14
 
 

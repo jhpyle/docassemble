@@ -184,6 +184,9 @@ called `the_task`.  This variable can be used in the following ways:
       is useful if the task failed because a necessary variable was
       undefined; in that case, the first item in this list will be the
       name of this undefined variable.
+* `the_task.revoke()` will terminate the task. If you only want to
+  remove the task from the queue if it has not started running yet,
+  you can set the optional keyword argument `terminate` to `False`.
 
 [Celery] will start trying to run the `bg_task` [action] as soon as
 possible after `background_action()` is called.  If a lot of other

@@ -161,6 +161,13 @@ The `color` should refer to one of the [Bootstrap colors] (`primary`,
 `secondary`, `success`, `danger`, `warning`, `info`, `light`, `link`,
 or `dark`).
 
+If you want one of the choices to be shown or not shown conditionally,
+you can use `show if` to specify a [Python expression]. If the
+expression evaluates to true, then the choice will be included, and if
+it evaluates to false, it will be excluded.
+
+{% include side-by-side.html demo="buttons-show-if" %}
+
 ### <a name="code generated buttons"></a>Using code to generate the choices
 
 A powerful feature of `buttons` (which also works with
@@ -193,7 +200,8 @@ specified with code:
 Instead of using key-value pairs to represent what the variable is set
 to and the label, you can use `value` and `label` as
 keys in the dictionary. You can also use the dictionary keys `css
-class` and `color` to modify the appearance of the buttons.
+class` and `color` to modify the appearance of the buttons, and `show
+if` to conditionally include the button.
 
 {% include side-by-side.html demo="buttons-code-list-label-value" %}
 
@@ -245,6 +253,12 @@ You can customize the appearance of a particular item by specifying
 The `color` should refer to one of the [Bootstrap colors] (`primary`,
 `secondary`, `success`, `danger`, `warning`, `info`, `light`, `link`,
 or `dark`).
+
+If you want a choice to be included conditionally, you can use `show
+if` to specify a [Python expression] that indicates when the choice
+should be included or not.
+
+{% include side-by-side.html demo="choices-show-if" %}
 
 These customizations can also be specified when building a list of
 choices using code:
