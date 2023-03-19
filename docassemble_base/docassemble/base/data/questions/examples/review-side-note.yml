@@ -46,7 +46,7 @@ review:
   - note: |
       We suspect you prefer
       ${ fruit } to ${ vegetable }.
-field: answers_reviewed
+continue button field: answers_reviewed
 ---
 question: |
   What is your favorite fruit?

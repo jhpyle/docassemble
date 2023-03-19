@@ -1,0 +1,28 @@
+metadata:
+  title: Conditional buttons
+  documentation: "https://docassemble.org/docs/fields.html#field with buttons"
+  example start: 2
+  example end: 2
+---
+question: |
+  Are you able to digest gluten?
+yesno: gluten_tolerant
+---
+field: target_variable
+question: Which flour shall we use?
+buttons:
+  - value: almond
+    label: Almond
+  - value: oat
+    label: Oat
+  - value: wheat
+    label: Wheat
+    show if: gluten_tolerant
+  - value: spelt
+    label: Spelt
+    show if: gluten_tolerant
+---
+question: Result of question
+subquestion: |
+  The variable is ${ target_variable }.
+mandatory: True

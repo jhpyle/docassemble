@@ -19,6 +19,11 @@ choices:
       'help': "For hippies.",
       'css class': "clogs",
       'color': "warning"},
+     {'crocs': "Crocs",
+      'help': "For teenagers",
+      'show if': not is_adult,
+      'css class': "crocs",
+      'color': "warning"},
      {'other': "Other",
       'default': True,
       'help': "Because the other types suck.",
@@ -29,3 +34,6 @@ question: Result of question
 subquestion: |
   target_variable is: "${ target_variable }"
 mandatory: True
+---
+code: |
+  is_adult = True

@@ -2038,6 +2038,9 @@ class MyAsyncResult:
             self._cached_result = BackgroundResult(server.worker_convert(self.obj).get())
         return self._cached_result.value
 
+    def revoke(self, terminate=True):
+        return server.worker_convert(self.obj).revoke(terminate=terminate)
+
 
 def worker_caller(func, ui_notification, action):
     # logmessage("Got to worker_caller in functions")

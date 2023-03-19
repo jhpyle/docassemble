@@ -19723,7 +19723,10 @@ def get_github_username_and_email():
     if not credentials or credentials.invalid:
         raise DAException('GitHub integration expired.')
     http = credentials.authorize(httplib2.Http())
-    resp, content = http.request("https://api.github.com/user", "GET")
+    try:
+        resp, content = http.request("https://api.github.com/user", "GET")
+    except:
+        return None, None, None
     if int(resp['status']) == 200:
         info = json.loads(content.decode('utf-8', 'ignore'))
         github_user_name = info.get('login', None)

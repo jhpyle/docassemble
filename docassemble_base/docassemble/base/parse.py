@@ -1405,7 +1405,11 @@ class InterviewStatus:
                                 item['image'] = self.icon_url(pair['image']['value'])
                         else:
                             item['image'] = self.icon_url(pair['image'])
-                    choice_list.append(item)
+                    showif = True
+                    if 'show if' in pair:
+                        showif = bool(pair['show if'])
+                    if showif:
+                        choice_list.append(item)
             elif hasattr(field, 'choicetype'):
                 if field.choicetype in ('compute', 'manual'):
                     pairlist = list(self.selectcompute[field.number])
@@ -1419,7 +1423,11 @@ class InterviewStatus:
                         for standard_key in ('help', 'css class', 'color'):
                             if standard_key in pair:
                                 item[standard_key] = pair[standard_key]
-                        choice_list.append(item)
+                        showif = True
+                        if 'show if' in pair:
+                            showif = bool(pair['show if'])
+                        if showif:
+                            choice_list.append(item)
                 elif field.datatype in ('object', 'object_radio'):
                     for pair in pairlist:
                         item = {'label': docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'value': from_safeid(pair['key'])}
@@ -1430,7 +1438,11 @@ class InterviewStatus:
                         for standard_key in ('help', 'css class', 'color'):
                             if standard_key in pair:
                                 item[standard_key] = pair[standard_key]
-                        choice_list.append(item)
+                        showif = True
+                        if 'show if' in pair:
+                            showif = bool(pair['show if'])
+                        if showif:
+                            choice_list.append(item)
                 elif field.datatype in ('multiselect', 'checkboxes'):
                     for pair in pairlist:
                         item = {'label': docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'variable_name': saveas + "[" + repr(pair['key']) + "]", 'value': True}
@@ -1441,7 +1453,11 @@ class InterviewStatus:
                         for standard_key in ('help', 'css class', 'color'):
                             if standard_key in pair:
                                 item[standard_key] = pair[standard_key]
-                        choice_list.append(item)
+                        showif = True
+                        if 'show if' in pair:
+                            showif = bool(pair['show if'])
+                        if showif:
+                            choice_list.append(item)
                 else:
                     for pair in pairlist:
                         item = {'label': docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'value': pair['key']}
@@ -1473,8 +1489,9 @@ class InterviewStatus:
                 for sub_item in ('css class', 'color', 'help', 'default', 'group'):
                     if sub_item in choice:
                         item[sub_item] = choice[sub_item]
-                choice_list.append(item)
-                indexno += 1
+                if pair.get('show if', True):
+                    choice_list.append(item)
+                    indexno += 1
         return choice_list
 
     def flush_left(self):
@@ -5945,7 +5962,11 @@ class Question:
                                 else:
                                     new_item['key'] = choice['key']
                                 new_item['label'] = choice['label'].text(user_dict)
-                                selectcompute[field.number].append(new_item)
+                                showif = True
+                                if 'show if' in choice:
+                                    showif = bool(eval(choice['show if'], user_dict))
+                                if showif:
+                                    selectcompute[field.number].append(new_item)
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
                         elif test_for_objects:
@@ -6033,7 +6054,10 @@ class Question:
                                 for sub_item in ('help', 'css class', 'color', 'default', 'group'):
                                     if sub_item in candidate:
                                         new_item[sub_item] = candidate[sub_item].text(user_dict)
-                                if new_item['key'] not in to_exclude:
+                                showif = True
+                                if 'show if' in candidate:
+                                    showif = bool(eval(candidate['show if'], user_dict))
+                                if showif and new_item['key'] not in to_exclude:
                                     selectcompute[field.number].append(new_item)
                         else:
                             selectcompute[field.number] = []
@@ -6047,7 +6071,11 @@ class Question:
                                 for sub_item in ('help', 'css class', 'color', 'default', 'group'):
                                     if sub_item in item:
                                         new_item[sub_item] = item[sub_item].text(user_dict)
-                                selectcompute[field.number].append(new_item)
+                                showif = True
+                                if 'show if' in item:
+                                    showif = bool(eval(item['show if'], user_dict))
+                                if showif:
+                                    selectcompute[field.number].append(new_item)
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
                         else:
@@ -6067,7 +6095,11 @@ class Question:
                             else:
                                 new_item['key'] = item['key']
                             new_item['label'] = item['label'].text(user_dict)
-                            selectcompute[field.number].append(new_item)
+                            showif = True
+                            if 'show if' in item:
+                                showif = bool(eval(item['show if'], user_dict))
+                            if showif:
+                                selectcompute[field.number].append(new_item)
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
                         else:
@@ -6087,8 +6119,13 @@ class Question:
                                 new_item['key'] = item['key'].text(user_dict)
                             else:
                                 new_item['key'] = item['key']
-                            selectcompute[field.number].append(new_item)
-                        only_empty_fields_exist = False
+                            showif = True
+                            if 'show if' in item:
+                                showif = bool(eval(item['show if'], user_dict))
+                            if showif:
+                                selectcompute[field.number].append(new_item)
+                        if len(selectcompute[field.number]) > 0:
+                            only_empty_fields_exist = False
                     else:
                         only_empty_fields_exist = False
                 if len(self.fields) > 0 and only_empty_fields_exist:
@@ -6497,6 +6534,10 @@ class Question:
                 if len(the_dict) > 1:
                     if key in ('image', 'css class', 'color', 'help', 'default', 'group', 'label'):
                         result_dict[key] = TextObject(value, question=self)
+                        continue
+                    if key == 'show if':
+                        result_dict['show if'] = compile(str(value), '<choices show if code>', 'eval')
+                        self.find_fields_in(str(value))
                         continue
                 if uses_field:
                     if key == 'code':
@@ -7288,13 +7329,16 @@ class Question:
                     the_item = {}
                     for key in entry:
                         if len(entry) > 1:
-                            if key in ['default', 'help', 'image', 'group', 'css class', 'color']:
+                            if key in ['default', 'help', 'image', 'group', 'css class', 'color', 'show if']:
                                 continue
                             if 'label' in entry and (('key' in entry and key != 'key') or ('value' in entry and key != 'value')):
                                 continue
                             for standard_key in ('default', 'css class', 'color', 'group', 'help'):
                                 if standard_key in entry:
                                     the_item[standard_key] = TextObject(entry[standard_key], question=self)
+                            if entry.get('show if', None) is not None:
+                                the_item['show if'] = compile(str(entry['show if']), '<choices show if code>', 'eval')
+                                self.find_fields_in(str(entry['show if']))
                             if 'image' in entry:
                                 if entry['image'].__class__.__name__ == 'DAFile':
                                     entry['image'].retrieve()
@@ -7312,7 +7356,7 @@ class Question:
                                 if 'key' in entry:
                                     the_item['key'] = TextObject(entry['key'], question=self, translate=False)
                                 elif 'value' in entry:
-                                    the_item['value'] = TextObject(entry['value'], question=self, translate=False)
+                                    the_item['key'] = TextObject(entry['value'], question=self, translate=False)
                                 the_item['label'] = TextObject(entry['label'], question=self)
                                 result.append(the_item)
                                 continue
@@ -9451,7 +9495,7 @@ def process_selections(data, exclude=None):
                 the_item = {}
                 for key in entry:
                     if len(entry) > 1:
-                        if key in ('default', 'help', 'image', 'label', 'group', 'css class', 'color'):
+                        if key in ('default', 'help', 'image', 'label', 'group', 'css class', 'color', 'show if'):
                             continue
                         for standard_key in ('css class', 'color', 'default', 'help', 'group'):
                             if standard_key in entry:
@@ -9477,18 +9521,18 @@ def process_selections(data, exclude=None):
                     if key == 'value' and 'label' in entry:
                         the_item['key'] = entry[key]
                         the_item['label'] = entry['label']
-                        if entry[key] not in to_exclude and ((not isinstance(entry['label'], bool)) or entry['label'] is True):
+                        if entry.get('show if', True) and entry[key] not in to_exclude and ((not isinstance(entry['label'], bool)) or entry['label'] is True):
                             result.append(the_item)
                     else:
                         the_item['key'] = key
                         the_item['label'] = entry[key]
                         is_not_boolean = False
                         for key, val in entry.items():
-                            if key in ('default', 'help', 'image', 'label', 'group', 'css class', 'color'):
+                            if key in ('default', 'help', 'image', 'label', 'group', 'css class', 'color', 'show if'):
                                 continue
                             if val not in (True, False):
                                 is_not_boolean = True
-                        if key not in to_exclude and (is_not_boolean or entry[key] is True):
+                        if entry.get('show if', True) and key not in to_exclude and (is_not_boolean or entry[key] is True):
                             result.append(the_item)
             if (isinstance(entry, (list, tuple)) or (hasattr(entry, 'elements') and isinstance(entry.elements, list))) and len(entry) > 0:
                 if entry[0] not in to_exclude:
