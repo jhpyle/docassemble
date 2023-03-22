@@ -12830,10 +12830,10 @@ def speak_file():
     audio_file = None
     filename = request.args.get('i', None)
     if filename is None:
-        abort(400)
+        return ('You must pass the filename (i) to read it out loud', 400)
     session_info = get_session(filename)
     if session_info is None:
-        abort(400)
+        return ("You must include a session to read a screen out loud", 400)
     key = session_info['uid']
     # encrypted = session_info['encrypted']
     question = request.args.get('question', None)
