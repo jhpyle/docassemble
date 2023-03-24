@@ -8,7 +8,6 @@ question: |
   Your use of this system does not
   mean that you have a lawyer.  Do
   you understand this?
-datatype: boolean
 buttons:
   code: |
     [{'label': "I understand",
