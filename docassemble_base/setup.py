@@ -69,7 +69,7 @@ install_requires = [
     "botocore==1.29.64",
     "cachetools==5.3.0",
     "cairocffi==1.4.0",
-    "CairoSVG==2.6.0",
+    "CairoSVG==2.7.0",
     "certifi==2022.12.7",
     "cffi==1.15.1",
     "chardet==5.1.0",
