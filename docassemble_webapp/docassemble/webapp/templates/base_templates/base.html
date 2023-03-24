@@ -87,6 +87,9 @@
           {%- endif %}
           <div class="collapse navbar-collapse" id="danavbar-collapse">
             <ul class="navbar-nav ms-auto">
+              {%- if navigation_bar_html %}
+              {{ navigation_bar_html }}
+              {%- endif %}
               {%- if not current_user.is_anonymous %}
               <li class="nav-item dropdown show">
                 <a href="#" id="navbarDropdown" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user_designator(current_user) }}</a>

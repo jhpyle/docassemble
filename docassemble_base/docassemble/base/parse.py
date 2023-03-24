@@ -1489,7 +1489,7 @@ class InterviewStatus:
                 for sub_item in ('css class', 'color', 'help', 'default', 'group'):
                     if sub_item in choice:
                         item[sub_item] = choice[sub_item]
-                if pair.get('show if', True):
+                if choice.get('show if', True):
                     choice_list.append(item)
                     indexno += 1
         return choice_list

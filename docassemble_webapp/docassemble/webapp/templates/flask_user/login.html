@@ -7,6 +7,9 @@
 {%- if extra_js is not defined %}
 {%- set extra_js = get_part('login page extra javascript') %}
 {%- endif %}
+{%- if navigation_bar_html is not defined %}
+{%- set navigation_bar_html = get_part('login page navigation bar html') %}
+{%- endif %}
 {%- extends 'flask_user/public_base.html' %}
 {%- block content %}
 {%- from "base_templates/form_macros.html" import render_field, render_checkbox_field, render_submit_field, myrender_hidden_field %}

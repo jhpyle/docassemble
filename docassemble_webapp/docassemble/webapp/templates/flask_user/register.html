@@ -3,6 +3,7 @@
 {%- set tab_title = get_part('register page tab title', word('Register')) %}
 {%- set extra_css = get_part('register page extra css') %}
 {%- set extra_js = get_part('register page extra javascript') %}
+{%- set navigation_bar_html = get_part('register page navigation bar html') %}
 {%- extends 'flask_user/public_base.html' %}
 {%- block content %}
 {%- from "base_templates/form_macros.html" import render_field, render_submit_field, render_select_field, myrender_hidden_field %}

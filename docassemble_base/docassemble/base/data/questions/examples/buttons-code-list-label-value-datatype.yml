@@ -12,26 +12,17 @@ datatype: boolean
 buttons:
   code: |
     [{'label': "I understand",
-      'value': 'understands',
+      'value': True,
       'css class': 'good',
       'color': 'success'},
      {'label': "I do not understand",
-      'value': 'does not understand',
+      'value': False,
       'css class': 'clueless',
-      'color': 'danger'},
-     {'label': "I object",
-      'value': 'objects',
-      'css class': 'ornery',
-      'show if': is_annoying,
-      'color': 'danger'},
-     {'label': "I'm not sure",
-      'value': 'unsure',
-      'css class': 'unsure',
-      'color': 'warning'}]
+      'color': 'danger'}]
 ---
 question: Result of question
 subquestion: |
-  target_variable is: "${ target_variable }"
+  target_variable is: `${ repr(target_variable) }`
 mandatory: True
 ---
 code: |

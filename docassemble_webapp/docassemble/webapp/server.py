@@ -1513,7 +1513,7 @@ def get_page_parts():
             the_page_parts['global footer'] = {'*': Markup(str(daconfig['global footer']))}
 
     for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password page', 'forgot password page', 'change password page', '404 page'):
-        for part_key in ('title', 'tab title', 'extra css', 'extra javascript', 'heading', 'pre', 'submit', 'post', 'footer'):
+        for part_key in ('title', 'tab title', 'extra css', 'extra javascript', 'heading', 'pre', 'submit', 'post', 'footer', 'navigation bar html'):
             key = page_key + ' ' + part_key
             if key in daconfig:
                 if isinstance(daconfig[key], dict):
@@ -6407,9 +6407,12 @@ def launch():
     data = json.loads(data.decode())
     if data.get('once', False):
         r.delete(the_key)
-    args = {}
+    if 'url_args' in data:
+        args = data['url_args']
+    else:
+        args = {}
     for key, val in request.args.items():
-        if key != 'session':
+        if key not in ('session', 'c'):
             args[key] = val
     args['i'] = data['i']
     if 'session' in data:
@@ -28176,6 +28179,8 @@ def api_resume_url():
         info['session'] = session_id
     if one_time:
         info['once'] = True
+    if len(url_args):
+        info['url_args'] = url_args
     while True:
         code = random_string(32)
         the_key = 'da:resume_interview:' + code

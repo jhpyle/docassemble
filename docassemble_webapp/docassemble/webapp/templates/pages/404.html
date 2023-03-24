@@ -3,6 +3,7 @@
 {%- set tab_title = get_part('404 page tab title', word('404 Not Found')) %}
 {%- set extra_css = get_part('404 page extra css') %}
 {%- set extra_js = get_part('404 page extra javascript') %}
+{%- set navigation_bar_html = get_part('404 page navigation bar html') %}
 {%- extends "flask_user/public_base.html" %}
 {%- block content %}
 <h1>{{ get_part('404 page heading', word('Not Found')) }}</h1>
