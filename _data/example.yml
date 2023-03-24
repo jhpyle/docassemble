@@ -1935,6 +1935,28 @@
           'value': 'unsure',
           'css class': 'unsure',
           'color': 'warning'}]
+"buttons-code-list-label-value-datatype":
+  "height": !!int |-
+    187
+  "width": !!int |-
+    488
+  "yaml": |-
+    field: target_variable
+    question: |
+      Your use of this system does not
+      mean that you have a lawyer.  Do
+      you understand this?
+    datatype: boolean
+    buttons:
+      code: |
+        [{'label': "I understand",
+          'value': True,
+          'css class': 'good',
+          'color': 'success'},
+         {'label': "I do not understand",
+          'value': False,
+          'css class': 'clueless',
+          'color': 'danger'}]
 "buttons-code-list-partial":
   "height": !!int |-
     186

@@ -212,6 +212,15 @@ or `dark`).
 As explained [below](#image button), you can also use code to
 [decorate the buttons with images](#image button).
 
+If you need the variable to have a data type other than text, you need
+to specify a `datatype`.
+
+{% include side-by-side.html demo="buttons-code-list-label-value-datatype" %}
+
+The possible `datatype` values include `boolean` (`True` or `False`),
+`threestate` (`True`, `False`, or `None`), and other
+[data types](#data types).
+
 ### <a name="boolean buttons"></a>True/False buttons
 
 You can use `buttons` as an alternative to [`yesno`] where you want
@@ -1473,10 +1482,9 @@ element within a [`fields`] question.
 ## <a name="help"></a>`help`
 
 You can provide contextual help to the user regarding the meaning of a
-field using the `help` field modifier.  The label will be green to
-indicate that it can be clicked on, and the value of `help` will
-appear on the screen when the user clicks the green text.  You can use
-[Mako] templates within `help` text.
+field using the `help` field modifier. A question mark icon can be
+clicked on to show the `help` text in a popup.  You can use [Mako]
+templates within `help` text.
 
 {% include side-by-side.html demo="text-help" %}
 
@@ -1860,7 +1868,7 @@ You can use any JavaScript expression that evaluates to `true` or `false` with
 the `js show if` feature, but your expression **must** mention the variable that
 you want to watch with the `val()` function at least once. Docassemble scans
 your expression for the use of `val("some_variable")` in order to know which
-variables on-screen need to be monitored for changes. 
+variables on-screen need to be monitored for changes.
 
 The variable mentioned inside `val()` must be a literal string to tell
 Docassemble to monitor it. Your expression is parsed, but is not evaluated, when
@@ -2192,7 +2200,7 @@ fields:
     validate: |
       lambda y: True if not y.isnumeric() else validation_error("Please include a unit. E.g., 180 pounds")
   - Height: height
-    validate: | 
+    validate: |
       lambda y: True if not y.isnumeric() else validation_error("Please include a unit. E.g., 6 feet 1 inch")
 {% endhighlight %}
 

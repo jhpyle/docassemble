@@ -3,6 +3,17 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.43](https://github.com/jhpyle/docassemble/releases/tag/v1.4.43) - 2023-03-24
+
+
+### Added
+- `navigation bar html` option for administrative page screen parts.
+
+
+### Fixed
+- Bug introduced in 1.4.42.
+- Issue with `/api/resume_url` when URL parameters are provided.
+
 ## [1.4.42](https://github.com/jhpyle/docassemble/releases/tag/v1.4.42) - 2023-03-19
 
 

@@ -549,6 +549,14 @@ The aspects of the page that can be manipulated are:
 * `tab title`: the [HTML] title, which is displayed in the web browser
   tab.
 * `title`: the title of the page in the navigation bar.
+* `navigation bar html`: raw [HTML] tags that you can insert into the
+  navigation bar. The contents will be placed inside of a `<ul>` in a
+  `<div>`:
+  `<div class="collapse navbar-collapse" id="danavbar-collapse"><ul class="navbar-nav ms-auto">`.
+  For best results, use `<li class="nav-item">` elements containing
+  `<a class="nav-link" href="#">` elements. On large screens, the
+  items will appear in the navigation bar, and on small screens, the
+  items will appear as menu items.
 * `heading`: the large font heading that displays the title of the
   page in the main body of the page.
 * `pre`: text that appears after the heading but before the rest of
