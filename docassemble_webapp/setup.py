@@ -207,7 +207,7 @@ install_requires = [
     "qrcode==7.4.1",
     "rauth==0.7.3",
     "readme-renderer==37.3",
-    "redis==4.4.2",
+    "redis==4.5.3",
     "regex==2022.10.31",
     "reportlab==3.6.12",
     "repoze.lru==0.7",
