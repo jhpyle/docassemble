@@ -20,11 +20,3 @@
 		if supervisorctl --serverurl http://localhost:9001 status syslogng | grep -q RUNNING ; then supervisorctl --serverurl http://localhost:9001 restart syslogng > /dev/null ; fi
 	endscript
 }
-/var/log/supervisor/* {
-        daily
-        missingok
-	size 5M
-        rotate 7
-        notifempty
-	create 600 root root
-}

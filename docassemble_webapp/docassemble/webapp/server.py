@@ -11180,10 +11180,12 @@ def index(action_argument=None, refer=None):
             if ($(box).hasClass('danotshowing')){
               toggler = $('<a href="#" class="toggler" role="button" aria-pressed="false">');
               $('<i class="fas fa-caret-right">').appendTo(toggler);
+              $('<span class="visually-hidden">""" + word("Toggle") + """</span>').appendTo(toggler);
             }
             else{
               toggler = $('<a href="#" class="toggler" role="button" aria-pressed="true">');
               $('<i class="fas fa-caret-down">').appendTo(toggler);
+              $('<span class="visually-hidden">""" + word("Toggle") + """</span>').appendTo(toggler);
             }
             toggler.appendTo(prev);
             toggler.on('click', function(e){

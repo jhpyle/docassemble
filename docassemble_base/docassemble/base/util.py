@@ -24,7 +24,7 @@ import zipfile
 import pycurl  # pylint: disable=import-error
 import requests
 import yaml
-from requests.auth import HTTPDigestAuth, HTTPBasicAuth
+from requests.auth import HTTPDigestAuth, HTTPBasicAuth, AuthBase
 from requests.exceptions import RequestException
 import httplib2
 import oauth2client.client
@@ -6191,6 +6191,16 @@ class DAStore(DAObject):
         return server.server_sql_keys(self._get_base_key() + ':')
 
 
+class BearerAuth(AuthBase):
+    def __init__(self, token):
+        self.token = token
+
+    def __call__(self, r):
+        if "Authorization" not in r.headers:
+            r.headers["Authorization"] = "Bearer " + str(self.token)
+        return r
+
+
 class DAWeb(DAObject):
     """A class used to call external APIs"""
 
@@ -6245,6 +6255,8 @@ class DAWeb(DAObject):
                 return HTTPBasicAuth(auth['username'], auth['password'])
             if auth['type'] == 'digest':
                 return HTTPDigestAuth(auth['username'], auth['password'])
+            if auth['type'] == 'bearer':
+                return BearerAuth(auth['token'])
         return auth
 
     def _get_headers(self, new_headers):
@@ -6561,6 +6573,10 @@ class DAGoogleAPI(DAObject):
         """Returns a Google Drive service object using google-api-python-client."""
         return apiclient.discovery.build('drive', 'v3', http=self.http('https://www.googleapis.com/auth/drive'))
 
+    def sheets_service(self):
+        """Returns a Google Sheets service object using google-api-python-client."""
+        return apiclient.discovery.build('sheets', 'v4', http=self.http('https://www.googleapis.com/auth/spreadsheets.readonly'))
+
     def cloud_credentials(self, scope):
         """Returns a google.oauth2.service_account credentials object for the given scope."""
         return server.google_api.google_cloud_credentials(scope)
@@ -6574,7 +6590,7 @@ class DAGoogleAPI(DAObject):
         return server.google_api.google_cloud_storage_client()
 
     def google_cloud_vision_client(self):
-        """Returns an google.cloud.vision.ImageAnnotatorClient object."""
+        """Returns a google.cloud.vision.ImageAnnotatorClient object."""
         return server.google_api.google_cloud_vision_client()
 
 

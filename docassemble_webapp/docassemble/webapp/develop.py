@@ -2,6 +2,7 @@ import re
 from flask_wtf import FlaskForm
 from docassemble.base.functions import LazyWord as word
 from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField, BooleanField
+import packaging
 
 
 class NonValidatingSelectField(SelectField):
@@ -20,6 +21,13 @@ def validate_project_name(form, field):  # pylint: disable=unused-argument
 def validate_name(form, field):  # pylint: disable=unused-argument
     if re.search(r'[^A-Za-z0-9\-]', field.data):
         raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9, hyphen'))
+
+
+def validate_package_version(form, field):  # pylint: disable=unused-argument
+    try:
+        packaging.version.Version(field.data)
+    except packaging.version.InvalidVersion:
+        raise ValidationError(word('Version number does not conform to PEP 440'))
 
 
 def validate_package_name(form, field):  # pylint: disable=unused-argument
@@ -141,7 +149,7 @@ class PlaygroundPackagesForm(FlaskForm):
     author_name = StringField(word('Author Name'), validators=[validators.Length(min=0, max=255)])
     author_email = StringField(word('Author E-mail'), validators=[validators.Length(min=0, max=255)])
     description = StringField(word('Description'), validators=[validators.Length(min=0, max=255)], default="A docassemble extension.")
-    version = StringField(word('Version'), validators=[validators.Length(min=0, max=255)], default="0.0.1")
+    version = StringField(word('Version'), validators=[validators.Length(min=0, max=255), validate_package_version], default="0.0.1")
     url = StringField(word('URL'), validators=[validators.Length(min=0, max=255)], default="")
     dependencies = SelectMultipleField(word('Dependencies'))
     interview_files = SelectMultipleField(word('Interview files'))

@@ -8792,6 +8792,7 @@ class Interview:
                             user_dict['_DADATA'] = recursive_eval_dataobject(question.fields[0].data, user_dict)
                         the_string = thename + ' = _DADATA'
                         exec(the_string, user_dict)
+                        del user_dict['_DADATA']
                         question.post_exec(user_dict)
                         docassemble.base.functions.pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)

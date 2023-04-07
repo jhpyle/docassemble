@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.4.44] - 2023-04-
+
+### Added
+- Validation of package versions in the Packages folder of the
+  Playground.
+- The `bearer` authentication option for `DAWeb`.
+- The `sheets_service()` method of `DAGoogleAPI`.
+
+### Fixed
+- Issue with rotation of `supervisord.log`.
+- Accessibility problem with toggler in the sections interface.
+
 ## [1.4.43] - 2023-03-24
 
 ### Added

@@ -671,6 +671,7 @@
 "One or more e-mail addresses (separated by newlines)": Null
 "Only the last 30 lines are shown.  Download the file to see the previous lines.": Null
 "Open another log file": Null
+"Open": Null
 "operator": Null
 "operators": Null
 "Organization": Null
@@ -1189,6 +1190,7 @@
 "Verify your phone": Null
 "Version ": Null
 "Version": Null
+"Version number does not conform to PEP 440": Null
 "Viet Nam": Null
 "View documentation": Null
 "Virgin Islands, British": Null
