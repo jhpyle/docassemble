@@ -66,7 +66,7 @@ bash -c \
    click==8.1.3 \
    ConfigArgParse==1.5.3 \
    configobj==5.0.8 \
-   cryptography==38.0.4 \
+   cryptography==39.0.1 \
    distro==1.8.0 \
    idna==3.4 \
    joblib==1.2.0 \
@@ -74,7 +74,7 @@ bash -c \
    nltk==3.8.1 \
    parsedatetime==2.6 \
    pycparser==2.21 \
-   pyOpenSSL==23.0.0 \
+   pyOpenSSL==23.1.1 \
    pyparsing==3.0.9 \
    pyRFC3339==1.1 \
    python-augeas==1.1.0 \
