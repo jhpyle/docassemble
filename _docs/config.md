@@ -3543,10 +3543,13 @@ If you want to integrate with [Google Docs] or [Google Drive], you can
 add `service account credentials`, which is a [JSON] object you obtain
 from the [Google Developers Console].
 
-To do this, go on the [Google Developers Console] and create an "app."
-Within this app, create a [service account].  When you create the
-service account, you will be provided with "credentials."  Download
-the [JSON] (not p12) credential file for the service account.
+To do this, go on the [Google Developers Console] and create a "project"
+(or use a project you have already created). Under "Enabled APIs and
+Services," enable the [Google Sheets API], the [Google Drive API], and
+any other APIs you might want to use. Within the project, create a
+[service account]. When you create the service account, you will be
+provided with "credentials."  Download the [JSON] (not p12) credential
+file for the service account.
 
 Then, in the configuration, set `service account credentials` under
 [`google`] to the literal contents of the [JSON] file you downloaded.
@@ -6443,3 +6446,5 @@ and Facebook API keys.
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
 [`email config`]: {{ site.baseurl }}/docs/initial.html#email config
 [Google Analytics 4]: https://developers.google.com/analytics/devguides/collection/ga4
+[Google Sheets API]: https://developers.google.com/sheets/api/guides/concepts
+[Google Drive API]: https://developers.google.com/drive/api/guides/about-sdk

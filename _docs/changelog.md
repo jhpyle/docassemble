@@ -3,6 +3,26 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.44](https://github.com/jhpyle/docassemble/releases/tag/v1.4.44) - 2023-04-09
+
+
+### Added
+- The `bearer` authentication option for `DAWeb`.
+- The `sheets_service()` method of `DAGoogleAPI`.
+- Google Fonts (system upgrade required).
+
+
+### Changed
+- Package versions in the Packages folder of the Playground must be
+  valid Python version numbers.
+- Upgraded `cryptography`, `redis`, and `pikepdf`.
+- Upgraded Pandoc (system upgrade required).
+
+
+### Fixed
+- Issue with rotation of `supervisord.log`.
+- Accessibility problem with toggler in the sections interface.
+
 ## [1.4.43](https://github.com/jhpyle/docassemble/releases/tag/v1.4.43) - 2023-03-24
 
 

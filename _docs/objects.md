@@ -3433,7 +3433,19 @@ To use [Basic Auth], set `type` to `'basic'`.  To use [Digest Auth],
 set `type` to `'digest'`.  If you don't specify a `type`, `'basic'` is
 assumed.
 
-It is generally a good idea not to put passwords in source codes.  You
+Similarly, if your API uses [bearer token authentication], you can set
+`auth` to a dictionary where `'type'` is `'bearer'` and `'token'` is
+your bearer token.
+
+{% highlight yaml %}
+objects:
+  - web: |
+      DAWeb.using(base_url='https://api.example.com', 
+                  auth={'type': 'bearer', 
+                        'token': 'uweoDS0iBfirGwesB.8d29230fa55b5c5deb2f87a82b3f6d2f4ab25c2b7e34b563d3b8fb84532c254b'})
+{% endhighlight %}
+
+It is generally a good idea not to put passwords in source code.  You
 can store your credentials in the [Configuration] and use the
 `get_config()` function to retrieve them.  You can put this in your
 Configuration:
@@ -7369,3 +7381,4 @@ the `_uid` of the table rather than the `id`.
 [`.convert_to()`]: #DAFile.convert_to
 [`docassemble.demo`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo
 [`docassemble.webapp`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp
+[bearer token authentication]: https://swagger.io/docs/specification/authentication/bearer-authentication/
