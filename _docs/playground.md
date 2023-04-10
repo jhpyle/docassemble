@@ -704,19 +704,17 @@ location of your server.
 
 ## <a name="word addin online install"></a>Installing the sidebar in Word Online
 
-To use the Playground sidebar in Word Online, go to the Admin "app,"
-also known as the "Microsoft 365 admin center."  Under "Settings,"
-select "Services & add-ins."  Click "+ Deploy Add-In."  It should take
-you to a dialog box where you can upload an XML file.  Select "I have
-the manifest file (.xml) on this device," click "Browse," and then
-select the XML manifest file that you downloaded from your
-**docassemble** server.
+To use the Playground sidebar in Word Online, you can "side load" the
+add-in following [Microsoft's instructions](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/sideload-office-add-ins-for-testing).
 
-If you are using Word Online as part of an organization, your system
-administrator may need to carry out these steps for you.  The system
-administrator can choose to enable the add-in for all users or just
-you.  Note that it may take a few minutes for the installation to
-become effective.
+If you are an Office 365 administrator for an organization, you can
+install the add-in and make it available to the users in your
+organization. Go to the Admin "app," also known as the "Microsoft 365
+admin center."  Under "Settings," select "Services & add-ins."  Click
+"+ Deploy Add-In."  It should take you to a dialog box where you can
+upload an XML file.  Select "I have the manifest file (.xml) on this
+device," click "Browse," and then select the XML manifest file that
+you downloaded from your **docassemble** server.
 
 Once the add-in is installed, you can open a Word file.  To show the
 sidebar, go to the "Insert" menu and select "Office Add-ins."  The
