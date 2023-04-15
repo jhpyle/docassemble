@@ -25,7 +25,7 @@ For high performance, you can run **docassemble** using a [cluster] of
 machines. However, for the vast majority of deployments, a single
 machine works fine.
 
-## Example of a deployment
+## <a name="example"></a>Example of a deployment
 
 Here is an example of one way to get a **docassemble** server up and
 running on the internet:
@@ -140,7 +140,7 @@ recommended you take additional steps:
   * [`brandname`]
   * [`default interview`]
 
-## Consultants
+## <a name="consultants"></a>Consultants
 
 If you are interested in hiring someone to develop an interview for
 you, you can propose a project in the #questions channel of the [Slack

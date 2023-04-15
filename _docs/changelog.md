@@ -3,6 +3,17 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.45](https://github.com/jhpyle/docassemble/releases/tag/v1.4.45) - 2023-04-14
+
+
+### Changed
+- Failure to convert DOCX to PDF will raise an Exception.
+
+
+### Fixed
+- JavaScript issue with the "None of the above" checkboxes when
+  choice-specific `help` is applied to a checkbox choice.
+
 ## [1.4.44](https://github.com/jhpyle/docassemble/releases/tag/v1.4.44) - 2023-04-09
 
 

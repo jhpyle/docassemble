@@ -159,7 +159,13 @@ then deploy the **docassemble** Docker container inside that virtual
 machine; the operating system of that virtual machine, which is likely
 a flavor of Linux, should be recent.)  You may encounter
 difficult-to-diagnose problems if **docassemble**'s OS and software do
-not fully function inside the host operating system.
+not fully function inside the host operating system. It is difficult
+to predict what these errors will be. If you run the latest
+**docassemble** image on an OS that is older than Ubuntu 22, it is
+likely that you will encounter problems, if not right away then at a
+later point in time. The software in the **docassemble** image and
+Python packages is continually updated, and the latest versions of
+software may expect the latest versions of operating system.
 
 # <a name="single server arrangement"></a>Quick start
 

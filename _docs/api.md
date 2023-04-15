@@ -1886,14 +1886,14 @@ interview is evaluated and a [JSON] representation of the current
 question is returned.  However, if the `question` data value is set to
 `0`, this step is skipped and an empty response is returned.
 
-### Defining dates
+### <a name="session_post_dates"></>Defining dates
 
 If a variable value is in [ISO 8601] format (e.g.,
 `2019-06-13T21:40:32.000Z`), then the variable will be converted from
 text into a [`DADateTime`] object.  If you do not want dates to be
 converted, set the `raw` parameter to `1`.
 
-### Defining whole objects
+### <a name="session_post_objects"></>Defining whole objects
 
 If a variable value is a [JSON] object with keys `_class` and
 `instanceName`, then the variable will be converted into a [Python]
@@ -2031,7 +2031,7 @@ Data structures with `instanceName` and `_class` attributes
 are not as robust as the [pickle] system that **docassemble** uses
 internally.
 
-### Uploading files
+### <a name="session_post_uploading"></>Uploading files
 
 You can upload files along with a [POST] request to the `/api/session`
 endpoint.  In HTTP, a [POST] request can contain one or more file

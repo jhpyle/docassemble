@@ -4,12 +4,12 @@ title: Special variables
 short_title: Special Variables
 ---
 
-# Variables set by **docassemble**
+# <a name="variables"></a>Variables set by **docassemble**
 
 There are some special variables that **docassemble** sets in every
 interview's variable store.
 
-## <a name="_internal"></a>_internal
+## <a name="_internal"></a>internal
 
 `_internal` is a [Python dictionary] that is used by **docassemble**
 but that is not intended to be used in interviews.
@@ -245,7 +245,7 @@ offers to sets [`role_event`], and ask that question.  **docassemble**
 will set the variable `role_needed` to a list of roles capable of
 answering the next question in the interview.
 
-# Variables used when finding blocks to set variables
+# <a name="iterators"></a>Variables used when finding blocks to set variables
 
 The following variables are set by **docassemble** in the course of
 searching for blocks that will define variables.
@@ -261,7 +261,7 @@ searching for blocks that will define variables.
 You should never set these variables yourself; they will be set for
 you before your blocks are used.
 
-# Variables that interviews can set
+# <a name="settable"></a>Variables that interviews can set
 
 ## <a name="role"></a>role
 
@@ -381,7 +381,7 @@ on and off during the course of the interview as necessary.
 This variable should be set to `True` if you want to allow the server
 to run [scheduled tasks] from your interview.
 
-# Variables that stand in for events
+# <a name="events"></a>Variables that stand in for events
 
 **docassemble** interviews ask questions or run code when required by
 [interview logic] and also when caused to do so by [events] and

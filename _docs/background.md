@@ -661,7 +661,7 @@ refers to a [`DAFileCollection`] object, which is passed from the
 background task to the user interview, and in the user interview, the
 object is known as `the_letter`.
 
-## Comparison with scheduled tasks
+## <a name="cf_scheduled_tasks"></a>Comparison with scheduled tasks
 
 **docassemble** also has a [scheduled tasks] feature, which is similar
 to the [background processes] feature in that the code runs in the
@@ -677,7 +677,7 @@ disabled in the interview.  These restrictions do not apply to
 
 # <a name="check in"></a>Processing interim user input
 
-## Communicating interim information to the interview
+## <a name="check in communicating"></a>Communicating interim information to the interview
 
 If you set the `check in` modifier on a [`question`], the user's
 browser will "check in" with the interview every few seconds and run
@@ -1139,7 +1139,7 @@ argument to the [`docassemble.webapp.cron`] module.  The variable name
 is passed to the interview exactly as though it were the name of an
 [action] given by [`url_action()`].
 
-## What the "cron" module does
+## <a name="cron"></a>What the "cron" module does
 
 The [`docassemble.webapp.cron`] module does two things:
 
@@ -1161,7 +1161,7 @@ Note that interviews can be deleted from the system two other ways:
 2. If the user goes to the Interviews page and clicks a "Delete"
    button next to a listed interview, or clicks "Delete all."
 
-### Running scheduled tasks
+### <a name="running scheduled"></a>Running scheduled tasks
 
 The [`docassemble.webapp.cron`] looks at every interview in the system
 for which [server-side encryption] has been turned off.  (Disabling
@@ -1365,7 +1365,7 @@ receive e-mails.  If you are using [Docker], this involves:
 See the [e-mail setup] section of the [installation] instructions for
 details about how the e-mail receiving feature works.
 
-## Running code in the background when an e-mail arrives
+## <a name="code email"></a>Running code in the background when an e-mail arrives
 
 If you want, you can set up your interview to run [`code`] in the
 background whenever an e-mail is sent to one of your interview's

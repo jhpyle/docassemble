@@ -4,27 +4,27 @@ title: Support
 short_title: Support
 ---
 
-# Slack
+# <a name="slack"></a>Slack
 
 To get help from the community of developers and other users, join the
 [**docassemble** Slack group].  If you would prefer not to ask a
 question to the group, you can send a private message in the Slack to
 the developer, Jonathan Pyle.
 
-# Mailing list
+# <a name="mailing"></a>Mailing list
 
 It is also a good idea to join the [docassemble mailing list].  The
 mailing list is much less active than the [Slack] group, but it will
 allow you to receive important announcements if you don't check the
 [Slack group] every day.
 
-# Help with deployment and development
+# <a name="help"></a>Help with deployment and development
 
 If deploying a web app and writing "code" are barriers, there are
 [third party providers] who provide platforms based on **docassemble**
 and offer "no code" tools for deployment and development.
 
-# Tutorials
+# <a name="tutorials"></a>Tutorials
 
 There are video recordings of the June 2020 [Docacon training
 conference](https://docacon.com), where there was a "beginner
@@ -59,7 +59,7 @@ created a [tutorial video](https://www.youtube.com/watch?v=1lfufLU5N7w) (3/10/20
 that walks through the process of installing **docassemble** on [Microsoft Azure]
 and running an interview that accesses a SQL server.
 
-# Bugs
+# <a name="bugs"></a>Bugs
 
 If you find a bug, please [submit an issue on GitHub].  Keep in mind
 that not all error messages represent bugs; it might be the case that
