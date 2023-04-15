@@ -10994,14 +10994,14 @@ def index(action_argument=None, refer=None):
           daShowingHelp = 0;""" + debug_readability_question + """
         });
         $("input.daaota-checkbox").click(function(){
-          $(this).parent().find('input.danon-nota-checkbox').each(function(){
+          $(this).parents('fieldset').find('input.danon-nota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', true);
             if (existing_val != true){
               $(this).trigger('change');
             }
           });
-          $(this).parent().find('input.danota-checkbox').each(function(){
+          $(this).parents('fieldset').find('input.danota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -11010,14 +11010,14 @@ def index(action_argument=None, refer=None):
           });
         });
         $("input.danota-checkbox").click(function(){
-          $(this).parent().find('input.danon-nota-checkbox').each(function(){
+          $(this).parents('fieldset').find('input.danon-nota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
               $(this).trigger('change');
             }
           });
-          $(this).parent().find('input.daaota-checkbox').each(function(){
+          $(this).parents('fieldset').find('input.daaota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -11026,7 +11026,7 @@ def index(action_argument=None, refer=None):
           });
         });
         $("input.danon-nota-checkbox").click(function(){
-          $(this).parent().find('input.danota-checkbox').each(function(){
+          $(this).parents('fieldset').find('input.danota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -11034,7 +11034,7 @@ def index(action_argument=None, refer=None):
             }
           });
           if (!$(this).prop('checked')){
-            $(this).parent().find('input.daaota-checkbox').each(function(){
+            $(this).parents('fieldset').find('input.daaota-checkbox').each(function(){
               var existing_val = $(this).prop('checked');
               $(this).prop('checked', false);
               if (existing_val != false){
@@ -11998,7 +11998,7 @@ def index(action_argument=None, refer=None):
               }
             }
             else if (element.hasClass('danon-nota-checkbox')){
-              element.parent().append(error);
+              element.parents('fieldset').append(error);
             }
             else {
               error.insertAfter(element);
@@ -14154,14 +14154,14 @@ def observer():
           return new bootstrap.Popover(daPopoverTriggerEl, {trigger: "focus", html: true});
         });
         $("input.daaota-checkbox").click(function(){
-          $(this).parent().find('input.danon-nota-checkbox').each(function(){
+          $(this).parents('fieldset').find('input.danon-nota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', true);
             if (existing_val != true){
               $(this).trigger('change');
             }
           });
-          $(this).parent().find('input.danota-checkbox').each(function(){
+          $(this).parents('fieldset').find('input.danota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -14170,14 +14170,14 @@ def observer():
           });
         });
         $("input.danota-checkbox").click(function(){
-          $(this).parent().find('input.danon-nota-checkbox').each(function(){
+          $(this).parents('fieldset').find('input.danon-nota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
               $(this).trigger('change');
             }
           });
-          $(this).parent().find('input.daaota-checkbox').each(function(){
+          $(this).parents('fieldset').find('input.daaota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -14186,7 +14186,7 @@ def observer():
           });
         });
         $("input.danon-nota-checkbox").click(function(){
-          $(this).parent().find('input.danota-checkbox').each(function(){
+          $(this).parents('fieldset').find('input.danota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -14194,7 +14194,7 @@ def observer():
             }
           });
           if (!$(this).prop('checked')){
-            $(this).parent().find('input.daaota-checkbox').each(function(){
+            $(this).parents('fieldset').find('input.daaota-checkbox').each(function(){
               var existing_val = $(this).prop('checked');
               $(this).prop('checked', false);
               if (existing_val != false){

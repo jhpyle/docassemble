@@ -421,19 +421,19 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                     tries = 5
                 logmessage("Finished libreoffice after {:.4f} seconds.".format(time.time() - start_time))
                 docassemble.base.functions.server.applock('release', 'libreoffice')
-        if os.path.isfile(to_file):
+        if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
             break
         time.sleep(0.1)
-        if os.path.isfile(to_file):
+        if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
             break
         time.sleep(0.1)
-        if os.path.isfile(to_file):
+        if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
             break
         time.sleep(0.1)
-        if os.path.isfile(to_file):
+        if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
             break
         time.sleep(0.1)
-        if os.path.isfile(to_file):
+        if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
             break
         result = 1
         tries += 1
@@ -448,6 +448,8 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             else:
                 logmessage("Retrying cloudconvert")
             time.sleep(tries*random.random())
+    if os.path.isfile(to_file) and os.path.getsize(to_file) == 0:
+        result = 1
     if result == 0:
         if password:
             pdf_encrypt(to_file, password)
@@ -737,7 +739,8 @@ def concatenate_files(path_list, pdfa=False, password=None):
                 ext = 'doc'
             elif mimetype == 'application/vnd.oasis.opendocument.text':
                 ext = 'odt'
-            word_to_pdf(path, ext, new_pdf_file.name, pdfa=False)
+            if not word_to_pdf(path, ext, new_pdf_file.name, pdfa=False):
+                raise DAException('Failure to convert DOCX to PDF')
             new_path_list.append(new_pdf_file.name)
         elif mimetype == 'application/pdf':
             new_path_list.append(path)
