@@ -7448,7 +7448,10 @@ def index(action_argument=None, refer=None):
                             raise DAValidationError(word("You need to enter a valid value."))
                     except DAValidationError as err:
                         validated = False
-                        field_error[orig_key] = word(err)
+                        if key in key_to_orig_key:
+                            field_error[key_to_orig_key[key]] = word(str(err))
+                        else:
+                            field_error[orig_key] = word(str(err))
                         new_values[key] = repr(data)
                         continue
                     test_data = info['class'].transform(data)
@@ -7577,7 +7580,10 @@ def index(action_argument=None, refer=None):
                             raise DAValidationError(word("You need to enter a valid value."))
                     except DAValidationError as err:
                         validated = False
-                        field_error[orig_key] = word(str(err))
+                        if key in key_to_orig_key:
+                            field_error[key_to_orig_key[key]] = word(str(err))
+                        else:
+                            field_error[orig_key] = word(str(err))
                         new_values[key] = repr(data)
                         continue
                     test_data = info['class'].transform(data)
@@ -13328,6 +13334,7 @@ def do_serve_uploaded_page(number, page, download=False, size='page'):
     try:
         the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
         filename = the_file.page_path(page, size)
+        assert filename is not None
     except Exception as err:
         logmessage("Could not make thumbnail: " + err.__class__.__name__ + ": " + str(err))
         filename = None

@@ -10287,7 +10287,9 @@ builtin_jinja_filters = {
     'redact': docassemble.base.functions.redact,
     'verbatim': docassemble.base.functions.verbatim,
     'map': map_filter,
-    'chain': chain_filter
+    'chain': chain_filter,
+    'any': any,
+    'all': all
 }
 
 registered_jinja_filters = {}
