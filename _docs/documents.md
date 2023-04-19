@@ -1080,6 +1080,8 @@ either discussed above or are the names of [functions].
 * `RichText`
 * `add_separators`
 * `alpha`
+* `all`
+* `any`
 * `capitalize`
 * `chain`
 * `comma_and_list`

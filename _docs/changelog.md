@@ -3,6 +3,17 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.46](https://github.com/jhpyle/docassemble/releases/tag/v1.4.46) - 2023-04-19
+
+
+### Changed
+- Added `all` and `any` as Jinja2 filters.
+
+
+### Fixed
+- Issue with placement of server-side validation messages when a
+  custom data type has a `show if`.
+
 ## [1.4.45](https://github.com/jhpyle/docassemble/releases/tag/v1.4.45) - 2023-04-14
 
 
