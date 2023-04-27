@@ -5778,7 +5778,7 @@ def restart_session():
         secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
-    docassemble.base.functions.this_thread.current_info = current_info(yaml=yaml_filename, req=request, interface='vars', device_id=request.cookies.get('ds', None), session_uid=current_user.email)
+    docassemble.base.functions.this_thread.current_info = current_info(yaml=yaml_filename, req=request, interface='vars', device_id=request.cookies.get('ds', None), session_uid=current_user.email if hasattr(current_user, 'email') else None)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
     except:
@@ -16957,7 +16957,7 @@ include README.md
 """
         setupcfg = """\
 [metadata]
-description-file = README
+description_file = README
 """
         setuppy = """\
 import os

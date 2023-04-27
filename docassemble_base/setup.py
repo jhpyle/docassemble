@@ -185,7 +185,7 @@ install_requires = [
     "qrcode==7.4.1",
     "readme-renderer==37.3",
     "regex==2022.10.31",
-    "reportlab==3.6.12",
+    "reportlab==3.6.13",
     "repoze.lru==0.7",
     "requests==2.28.2",
     "requests-oauthlib==1.3.1",
