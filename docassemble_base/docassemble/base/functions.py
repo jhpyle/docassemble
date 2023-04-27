@@ -3577,7 +3577,7 @@ def store_variables_snapshot(data=None, include_internal=False, key=None, persis
 def all_variables(simplify=True, include_internal=False, special=False, make_copy=False):
     """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
     if special == 'titles':
-        return this_thread.interview.get_title(get_user_dict())
+        return this_thread.interview.get_title(get_user_dict(), adapted=True)
     if special == 'metadata':
         return copy.deepcopy(this_thread.interview.consolidated_metadata)
     if special == 'tags':

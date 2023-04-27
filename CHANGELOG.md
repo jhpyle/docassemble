@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.4.47] - 2023-04-
+
+### Changed
+- Names for keys in the dictionary returned by 
+  `all_variables(special='title')` now correspond with the names used
+  to set the values (with backward compatibility).
+
+### Fixed
+- Issue with file inputs not enabling and disabling.
+
 ## [1.4.46] - 2023-04-19
 
 ### Changed

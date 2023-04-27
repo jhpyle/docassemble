@@ -48,7 +48,7 @@ from docassemble.base import __version__ as da_version
 import docassemble.base.filter
 import docassemble.base.pdftk
 import docassemble.base.file_docx
-from docassemble.base.error import DAError, DANotFoundError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError, DAAttributeError, DAIndexError
+from docassemble.base.error import DAError, DANotFoundError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError, DAAttributeError, DAIndexError, DAException
 import docassemble.base.functions
 import docassemble.base.util
 from docassemble.base.functions import pickleable_objects, word, get_language, RawValue, get_config
@@ -7760,7 +7760,7 @@ class Interview:
                     tags.add(tag)
         return tags
 
-    def get_title(self, the_user_dict, status=None, converter=None):
+    def get_title(self, the_user_dict, status=None, converter=None, adapted=False):
         if converter is None:
             def converter(y):
                 return y
@@ -7769,23 +7769,47 @@ class Interview:
         for title_name, title_abb in mapping:
             if '_internal' in the_user_dict and title_name in the_user_dict['_internal'] and the_user_dict['_internal'][title_name] is not None:
                 title[title_abb] = str(the_user_dict['_internal'][title_name]).strip()
+                if adapted and title_abb != title_name:
+                    title[title_name] = title[title_abb]
             elif status is not None and (title_name + ' text') in status.extras and status.extras[title_name + ' text'] is not None:
                 if title_name in ('exit link', 'exit url', 'title url', 'title url opens in other window'):
                     title[title_abb] = status.extras[title_name + ' text']
                 else:
                     title[title_abb] = converter(status.extras[title_name + ' text'], title_name)
+                if adapted and title_abb != title_name:
+                    title[title_name] = title[title_abb]
                 the_user_dict['_internal'][title_name + ' default'] = title[title_abb]
             elif status is None and (title_name + ' default') in the_user_dict['_internal'] and the_user_dict['_internal'][title_name + ' default'] is not None:
                 title[title_abb] = the_user_dict['_internal'][title_name + ' default']
+                if adapted and title_abb != title_name:
+                    title[title_name] = title[title_abb]
         base_lang = get_language()
         if base_lang in self.default_title:
             for key, val in self.default_title[base_lang].items():
                 if key not in title:
                     title[key] = val
+                    if adapted:
+                        if key == 'full':
+                            title['title'] = val
+                        elif key == 'short':
+                            title['short title'] = val
+                        elif key == 'tab':
+                            title['tab title'] = val
+                        elif key == 'sub':
+                            title['subtitle'] = val
         if '*' in self.default_title:
             for key, val in self.default_title['*'].items():
                 if key not in title:
                     title[key] = val
+                    if adapted:
+                        if key == 'full':
+                            title['title'] = val
+                        elif key == 'short':
+                            title['short title'] = val
+                        elif key == 'tab':
+                            title['tab title'] = val
+                        elif key == 'sub':
+                            title['subtitle'] = val
         return title
 
     def allowed_to_access(self, is_anonymous=False, has_roles=None):

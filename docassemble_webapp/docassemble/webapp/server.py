@@ -10608,6 +10608,14 @@ def index(action_argument=None, refer=None):
                 daComboBoxes[$(this).attr('id')].enable();
               }
             }
+            else if ($(this).hasClass('dafile')){
+              if (value){
+                $(this).data("fileinput").disable();
+              }
+              else{
+                $(this).data("fileinput").enable();
+              }
+            }
             else {
               $(this).prop("disabled", value);
             }
@@ -10804,6 +10812,7 @@ def index(action_argument=None, refer=None):
         //   e.preventDefault();
         //   $(this).tab('show');
         // });
+        $("input.dafile").fileinput({theme: "fas", language: document.documentElement.lang});
         $(".datableup,.databledown").click(function(e){
           e.preventDefault();
           $(this).blur();
@@ -10837,6 +10846,9 @@ def index(action_argument=None, refer=None):
         $(".dacollectextra").find('input.combobox').each(function(){
           daComboBoxes[$(this).attr('id')].disable();
         });
+        $(".dacollectextra").find('input.dafile').each(function(){
+          $(this).data("fileinput").disable();
+        });
         $("#da-extra-collect").on('click', function(){
           $("<input>").attr({
             type: 'hidden',
@@ -10855,6 +10867,9 @@ def index(action_argument=None, refer=None):
             $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
             $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
                daComboBoxes[$(this).attr('id')].enable();
+            });
+            $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
+              $(this).data("fileinput").enable();
             });
             $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
             $(this).parent().find("span.dacollectnum").removeClass("dainvisible");
@@ -10877,6 +10892,9 @@ def index(action_argument=None, refer=None):
           $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
             daComboBoxes[$(this).attr('id')].disable();
           });
+          $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
+            $(this).data("fileinput").disable();
+          });
           $(this).parent().find("button.dacollectadd").removeClass("dainvisible");
           $(this).parent().find("span.dacollectnum").addClass("dainvisible");
           $(this).addClass("dainvisible");
@@ -10891,6 +10909,9 @@ def index(action_argument=None, refer=None):
           $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
             daComboBoxes[$(this).attr('id')].disable();
           });
+          $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
+            $(this).data("fileinput").disable();
+          });
           $(this).parent().find("button.dacollectunremove").removeClass("dainvisible");
           $(this).parent().find("span.dacollectremoved").removeClass("dainvisible");
           $(this).addClass("dainvisible");
@@ -10904,6 +10925,9 @@ def index(action_argument=None, refer=None):
           $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
           $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
             daComboBoxes[$(this).attr('id')].enable();
+          });
+          $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
+            $(this).data("fileinput").enable();
           });
           $(this).parent().find("button.dacollectremoveexisting").removeClass("dainvisible");
           $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
@@ -11049,7 +11073,6 @@ def index(action_argument=None, refer=None):
             });
           }
         });
-        $("input.dafile").fileinput({theme: "fas", language: document.documentElement.lang});
         $('select.combobox').combobox();
         $('select.da-ajax-combobox').combobox({clearIfNoMatch: true});
         $('input.da-ajax-combobox').each(function(){
@@ -11516,6 +11539,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
                     });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").enable();
+                    });
                   }
                   else{
                     if ($(showIfDiv).data('isVisible') != '0'){
@@ -11528,6 +11554,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].disable();
+                    });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").disable();
                     });
                   }
                 }
@@ -11544,6 +11573,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].disable();
                     });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").disable();
+                    });
                   }
                   else{
                     if ($(showIfDiv).data('isVisible') != '1'){
@@ -11556,6 +11588,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
+                    });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").enable();
                     });
                   }
                 }
@@ -11675,6 +11710,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
                     });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").enable();
+                    });
                   }
                 }
                 else{
@@ -11688,6 +11726,9 @@ def index(action_argument=None, refer=None):
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                   $(showIfDiv).find('input.combobox').each(function(){
                     daComboBoxes[$(this).attr('id')].disable();
+                  });
+                  $(showIfDiv).find('input.dafile').each(function(){
+                    $(this).data("fileinput").disable();
                   });
                 }
               }
@@ -11718,6 +11759,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
+                    });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").enable();
                     });
                   }
                 }
@@ -13450,6 +13494,14 @@ def observer():
                 daComboBoxes[$(this).attr('id')].enable();
               }
             }
+            else if ($(this).hasClass('dafile')){
+              if (value){
+                $(this).data("fileinput").disable();
+              }
+              else{
+                $(this).data("fileinput").enable();
+              }
+            }
             else {
               $(this).prop("disabled", value);
             }
@@ -14328,6 +14380,9 @@ def observer():
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
                     });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").enable();
+                    });
                   }
                   else{
                     if ($(showIfDiv).data('isVisible') != '0'){
@@ -14340,6 +14395,9 @@ def observer():
                     $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].disable();
+                    });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").disable();
                     });
                   }
                 }
@@ -14356,6 +14414,9 @@ def observer():
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].disable();
                     });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").disable();
+                    });
                   }
                   else{
                     if ($(showIfDiv).data('isVisible') != '1'){
@@ -14368,6 +14429,9 @@ def observer():
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
+                    });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").enable();
                     });
                   }
                 }
@@ -14485,6 +14549,9 @@ def observer():
                   $(showIfDiv).find('input.combobox').each(function(){
                     daComboBoxes[$(this).attr('id')].enable();
                   });
+                  $(showIfDiv).find('input.dafile').each(function(){
+                    $(this).data("fileinput").enable();
+                  });
                 }
                 else{
                   if ($(showIfDiv).data('isVisible') != '0'){
@@ -14497,6 +14564,9 @@ def observer():
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                   $(showIfDiv).find('input.combobox').each(function(){
                     daComboBoxes[$(this).attr('id')].disable();
+                  });
+                  $(showIfDiv).find('input.dafile').each(function(){
+                    $(this).data("fileinput").disable();
                   });
                 }
               }
@@ -14513,6 +14583,9 @@ def observer():
                   $(showIfDiv).find('input.combobox').each(function(){
                     daComboBoxes[$(this).attr('id')].disable();
                   });
+                  $(showIfDiv).find('input.dafile').each(function(){
+                    $(this).data("fileinput").disable();
+                  });
                 }
                 else{
                   if ($(showIfDiv).data('isVisible') != '1'){
@@ -14525,6 +14598,9 @@ def observer():
                   $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                   $(showIfDiv).find('input.combobox').each(function(){
                     daComboBoxes[$(this).attr('id')].enable();
+                  });
+                  $(showIfDiv).find('input.dafile').each(function(){
+                    $(this).data("fileinput").enable();
                   });
                 }
               }
@@ -23807,7 +23883,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                     tags = interview.get_tags(dictionary)
                 else:
                     interview_title = interview.get_title({'_internal': {}})
-                    tags = interview.get_tags({'_internal':{}})
+                    tags = interview.get_tags({'_internal': {}})
                 metadata = copy.deepcopy(interview.consolidated_metadata)
             elif interview_valid:
                 interview_title = interview.get_title({'_internal': {}})
