@@ -62,9 +62,9 @@ import docassemble.base.util
 from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile, DAObject, DAFileCollection, DAStaticFile, DADict, DAList
 import docassemble.base.core  # for backward-compatibility with data pickled in earlier versions
 
-from docassemble.webapp.app_object import app, csrf, flaskbabel
+from docassemble.webapp.app_object import app, csrf
 import docassemble.webapp.backend
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, write_ml_source, fix_ml_files, is_package_ml, file_set_attributes, file_user_access, file_privilege_access, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, update_session, get_session_uids, project_name, directory_for, add_project, mail_configs
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_number_with_uids, da_send_mail, get_new_file_number, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, save_numbered_file, generate_csrf, get_info_from_file_reference, write_ml_source, fix_ml_files, is_package_ml, file_set_attributes, file_user_access, file_privilege_access, url_if_exists, get_person, Message, url_for, encrypt_object, decrypt_object, delete_user_data, delete_temp_user_data, clear_session, clear_specific_session, guess_yaml_filename, get_session, update_session, get_session_uids, project_name, directory_for, add_project
 import docassemble.webapp.clicksend
 import docassemble.webapp.telnyx
 from docassemble.webapp.core.models import Uploads, UploadsUserAuth, SpeakList, Supervisors, Shortener, Email, EmailAttachment, MachineLearning, GlobalObjectStorage
@@ -5781,7 +5781,7 @@ def restart_session():
     if current_user.is_authenticated:
         temp_session_uid = current_user.email
     elif 'tempuser' in session:
-        temp_sesion_uid = 't' + str(session['tempuser'])
+        temp_session_uid = 't' + str(session['tempuser'])
     else:
         temp_session_uid = random_string(16)
     docassemble.base.functions.this_thread.current_info = current_info(yaml=yaml_filename, req=request, interface='vars', device_id=request.cookies.get('ds', None), session_uid=temp_session_uid)
@@ -6808,7 +6808,7 @@ def index(action_argument=None, refer=None):
             if not url_args_changed:
                 old_url_args = copy.deepcopy(user_dict['url_args'])
                 url_args_changed = True
-            exec("url_args[" + repr(argname) + "] = " + repr(request.args.get(argname)), user_dict)
+            user_dict['url_args'][argname] = request.args.get(argname)
         if url_args_changed:
             if old_url_args == user_dict['url_args']:
                 url_args_changed = False
@@ -7213,7 +7213,7 @@ def index(action_argument=None, refer=None):
     for orig_key in post_data:
         if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '', '_collect', '_collect_delete', '_list_collect_list', '_null_question') or orig_key.startswith('_ignore'):
             continue
-        data = post_data[orig_key]
+        raw_data = post_data[orig_key]
         try:
             key = myb64unquote(orig_key)
         except:
@@ -7332,103 +7332,104 @@ def index(action_argument=None, refer=None):
         is_ml = False
         is_date = False
         is_object = False
-        test_data = data
+        test_data = raw_data
         if real_key in known_datatypes:
             if known_datatypes[real_key] in ('boolean', 'multiselect', 'checkboxes'):
-                if data == "True":
+                if raw_data == "True":
                     data = "True"
                     test_data = True
-                elif data == "False":
+                elif raw_data == "False":
                     data = "False"
                     test_data = False
                 else:
                     data = "None"
                     test_data = None
             elif known_datatypes[real_key] == 'threestate':
-                if data == "True":
+                if raw_data == "True":
                     data = "True"
                     test_data = True
-                elif data == "False":
+                elif raw_data == "False":
                     data = "False"
                     test_data = False
                 else:
                     data = "None"
                     test_data = None
             elif known_datatypes[real_key] in ('date', 'datetime', 'datetime-local'):
-                if isinstance(data, str):
-                    data = data.strip()
-                    if data != '':
+                if isinstance(raw_data, str):
+                    raw_data = raw_data.strip()
+                    if raw_data != '':
                         try:
-                            dateutil.parser.parse(data)
+                            dateutil.parser.parse(raw_data)
                         except:
                             validated = False
                             if known_datatypes[real_key] == 'date':
                                 field_error[orig_key] = word("You need to enter a valid date.")
                             else:
                                 field_error[orig_key] = word("You need to enter a valid date and time.")
-                            new_values[key] = repr(data)
+                            new_values[key] = repr(raw_data)
                             continue
-                        test_data = data
+                        test_data = raw_data
                         is_date = True
-                        data = 'docassemble.base.util.as_datetime(' + repr(data) + ')'
+                        data = 'docassemble.base.util.as_datetime(' + repr(raw_data) + ')'
                     else:
                         data = repr('')
                 else:
                     data = repr('')
             elif known_datatypes[real_key] == 'time':
-                if isinstance(data, str):
-                    data = data.strip()
-                    if data != '':
+                if isinstance(raw_data, str):
+                    raw_data = raw_data.strip()
+                    if raw_data != '':
                         try:
-                            dateutil.parser.parse(data)
+                            dateutil.parser.parse(raw_data)
                         except:
                             validated = False
                             field_error[orig_key] = word("You need to enter a valid time.")
-                            new_values[key] = repr(data)
+                            new_values[key] = repr(raw_data)
                             continue
-                        test_data = data
+                        test_data = raw_data
                         is_date = True
-                        data = 'docassemble.base.util.as_datetime(' + repr(data) + ').time()'
+                        data = 'docassemble.base.util.as_datetime(' + repr(raw_data) + ').time()'
                     else:
                         data = repr('')
                 else:
                     data = repr('')
             elif known_datatypes[real_key] == 'integer':
-                data = data.replace(',', '')
-                if data.strip() == '':
-                    data = 0
+                raw_data = raw_data.replace(',', '')
+                if raw_data.strip() == '':
+                    raw_data = '0'
                 try:
-                    test_data = int(data)
+                    test_data = int(raw_data)
                 except:
                     validated = False
                     field_error[orig_key] = word("You need to enter a valid number.")
-                    new_values[key] = repr(data)
+                    new_values[key] = repr(raw_data)
                     continue
-                data = "int(" + repr(data) + ")"
+                data = "int(" + repr(raw_data) + ")"
             elif known_datatypes[real_key] in ('ml', 'mlarea'):
                 is_ml = True
+                data = raw_data
             elif known_datatypes[real_key] in ('number', 'float', 'currency', 'range'):
-                data = data.replace('%', '')
-                data = data.replace(',', '')
-                if data == '':
-                    data = 0.0
+                raw_data = raw_data.replace('%', '')
+                raw_data = raw_data.replace(',', '')
+                if raw_data == '':
+                    raw_data = 0.0
                 try:
-                    test_data = float(data)
+                    test_data = float(raw_data)
                 except:
                     validated = False
                     field_error[orig_key] = word("You need to enter a valid number.")
-                    new_values[key] = repr(data)
+                    new_values[key] = repr(raw_data)
                     continue
-                data = "float(" + repr(data) + ")"
+                data = "float(" + repr(raw_data) + ")"
             elif known_datatypes[real_key] in ('object', 'object_radio'):
-                if data == '' or set_to_empty:
+                if raw_data == '' or set_to_empty:
                     continue
-                data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
+                data = "_internal['objselections'][" + repr(key) + "][" + repr(raw_data) + "]"
             elif known_datatypes[real_key] in ('object_multiselect', 'object_checkboxes') and bracket_expression is not None:
-                if data not in ('True', 'False', 'None') or set_to_empty:
+                if raw_data not in ('True', 'False', 'None') or set_to_empty:
                     continue
                 do_append = True
-                if data == 'False':
+                if raw_data == 'False':
                     do_opposite = True
                 data = "_internal['objselections'][" + repr(from_safeid(real_key)) + "][" + repr(bracket_expression) + "]"
             elif set_to_empty in ('object_multiselect', 'object_checkboxes'):
@@ -7444,13 +7445,13 @@ def index(action_argument=None, refer=None):
                         continue
                     test_data = info['class'].empty()
                     if is_object:
-                        user_dict['__DANEWOBJECT'] = data
+                        user_dict['__DANEWOBJECT'] = raw_data
                         data = '__DANEWOBJECT'
                     else:
                         data = repr(test_data)
                 else:
                     try:
-                        if not info['class'].validate(data):
+                        if not info['class'].validate(raw_data):
                             raise DAValidationError(word("You need to enter a valid value."))
                     except DAValidationError as err:
                         validated = False
@@ -7458,117 +7459,119 @@ def index(action_argument=None, refer=None):
                             field_error[key_to_orig_key[key]] = word(str(err))
                         else:
                             field_error[orig_key] = word(str(err))
-                        new_values[key] = repr(data)
+                        new_values[key] = repr(raw_data)
                         continue
-                    test_data = info['class'].transform(data)
+                    test_data = info['class'].transform(raw_data)
                     if is_object:
                         user_dict['__DANEWOBJECT'] = test_data
                         data = '__DANEWOBJECT'
                     else:
                         data = repr(test_data)
             elif known_datatypes[real_key] == 'raw':
-                if data == "None" and set_to_empty is not None:
+                if raw_data == "None" and set_to_empty is not None:
                     test_data = None
                     data = "None"
                 else:
-                    test_data = data
+                    test_data = raw_data
                     data = repr(data)
             else:
-                if isinstance(data, str):
-                    data = BeautifulSoup(data, "html.parser").get_text('\n')
-                if data == "None" and set_to_empty is not None:
+                if isinstance(raw_data, str):
+                    raw_data = BeautifulSoup(raw_data, "html.parser").get_text('\n')
+                if raw_data == "None" and set_to_empty is not None:
                     test_data = None
                     data = "None"
                 else:
-                    test_data = data
-                    data = repr(data)
+                    test_data = raw_data
+                    data = repr(raw_data)
             if known_datatypes[real_key] in ('object_multiselect', 'object_checkboxes'):
                 do_append = True
+                data = raw_data
         elif orig_key in known_datatypes:
             if known_datatypes[orig_key] in ('boolean', 'multiselect', 'checkboxes'):
-                if data == "True":
+                if raw_data == "True":
                     data = "True"
                     test_data = True
-                elif data == "False":
+                elif raw_data == "False":
                     data = "False"
                     test_data = False
                 else:
                     data = "None"
                     test_data = None
             elif known_datatypes[orig_key] == 'threestate':
-                if data == "True":
+                if raw_data == "True":
                     data = "True"
                     test_data = True
-                elif data == "False":
+                elif raw_data == "False":
                     data = "False"
                     test_data = False
                 else:
                     data = "None"
                     test_data = None
             elif known_datatypes[orig_key] in ('date', 'datetime'):
-                if isinstance(data, str):
-                    data = data.strip()
-                    if data != '':
+                if isinstance(raw_data, str):
+                    raw_data = raw_data.strip()
+                    if raw_data != '':
                         try:
-                            dateutil.parser.parse(data)
+                            dateutil.parser.parse(raw_data)
                         except:
                             validated = False
                             if known_datatypes[orig_key] == 'date':
                                 field_error[orig_key] = word("You need to enter a valid date.")
                             else:
                                 field_error[orig_key] = word("You need to enter a valid date and time.")
-                            new_values[key] = repr(data)
+                            new_values[key] = repr(raw_data)
                             continue
-                        test_data = data
+                        test_data = raw_data
                         is_date = True
-                        data = 'docassemble.base.util.as_datetime(' + repr(data) + ')'
+                        data = 'docassemble.base.util.as_datetime(' + repr(raw_data) + ')'
                     else:
                         data = repr('')
                 else:
                     data = repr('')
             elif known_datatypes[orig_key] == 'time':
-                if isinstance(data, str):
-                    data = data.strip()
-                    if data != '':
+                if isinstance(raw_data, str):
+                    raw_data = raw_data.strip()
+                    if raw_data != '':
                         try:
-                            dateutil.parser.parse(data)
+                            dateutil.parser.parse(raw_data)
                         except:
                             validated = False
                             field_error[orig_key] = word("You need to enter a valid time.")
-                            new_values[key] = repr(data)
+                            new_values[key] = repr(raw_data)
                             continue
-                        test_data = data
+                        test_data = raw_data
                         is_date = True
-                        data = 'docassemble.base.util.as_datetime(' + repr(data) + ').time()'
+                        data = 'docassemble.base.util.as_datetime(' + repr(raw_data) + ').time()'
                     else:
                         data = repr('')
                 else:
                     data = repr('')
             elif known_datatypes[orig_key] == 'integer':
-                data = data.replace(',', '')
-                if data.strip() == '':
-                    data = 0
+                raw_data = raw_data.replace(',', '')
+                if raw_data.strip() == '':
+                    raw_data = '0'
                 try:
-                    test_data = int(data)
+                    test_data = int(raw_data)
                 except:
                     validated = False
                     field_error[orig_key] = word("You need to enter a valid number.")
-                    new_values[key] = repr(data)
+                    new_values[key] = repr(raw_data)
                     continue
-                data = "int(" + repr(data) + ")"
+                data = "int(" + repr(raw_data) + ")"
             elif known_datatypes[orig_key] in ('ml', 'mlarea'):
                 is_ml = True
+                data = raw_data
             elif known_datatypes[orig_key] in ('number', 'float', 'currency', 'range'):
-                data = data.replace(',', '')
-                data = data.replace('%', '')
-                if data == '':
-                    data = 0.0
-                test_data = float(data)
-                data = "float(" + repr(data) + ")"
+                raw_data = raw_data.replace(',', '')
+                raw_data = raw_data.replace('%', '')
+                if raw_data == '':
+                    raw_data = '0.0'
+                test_data = float(raw_data)
+                data = "float(" + repr(raw_data) + ")"
             elif known_datatypes[orig_key] in ('object', 'object_radio'):
-                if data == '' or set_to_empty:
+                if raw_data == '' or set_to_empty:
                     continue
-                data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
+                data = "_internal['objselections'][" + repr(key) + "][" + repr(raw_data) + "]"
             elif set_to_empty in ('object_multiselect', 'object_checkboxes'):
                 continue
             elif real_key in known_datatypes and known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):
@@ -7582,7 +7585,7 @@ def index(action_argument=None, refer=None):
                     data = repr(test_data)
                 else:
                     try:
-                        if not info['class'].validate(data):
+                        if not info['class'].validate(raw_data):
                             raise DAValidationError(word("You need to enter a valid value."))
                     except DAValidationError as err:
                         validated = False
@@ -7590,19 +7593,19 @@ def index(action_argument=None, refer=None):
                             field_error[key_to_orig_key[key]] = word(str(err))
                         else:
                             field_error[orig_key] = word(str(err))
-                        new_values[key] = repr(data)
+                        new_values[key] = repr(raw_data)
                         continue
-                    test_data = info['class'].transform(data)
+                    test_data = info['class'].transform(raw_data)
                     data = repr(test_data)
             else:
-                if isinstance(data, str):
-                    data = data.strip()
-                test_data = data
-                data = repr(data)
+                if isinstance(raw_data, str):
+                    raw_data = raw_data.strip()
+                test_data = raw_data
+                data = repr(raw_data)
         elif key == "_multiple_choice":
-            data = "int(" + repr(data) + ")"
+            data = "int(" + repr(raw_data) + ")"
         else:
-            data = repr(data)
+            data = repr(raw_data)
         if key == "_multiple_choice":
             if '_question_name' in post_data:
                 question_name = post_data['_question_name']
@@ -12628,7 +12631,7 @@ def index(action_argument=None, refer=None):
     pipe.execute()
     if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
         inputkey = 'da:input:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-        r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
+        r.publish(inputkey, json.dumps({'message': 'newpage', key: key}))
     if is_json:
         data = {'browser_title': interview_status.tabtitle, 'lang': interview_language, 'csrf_token': generate_csrf(), 'steps': steps, 'allow_going_back': allow_going_back, 'message_log': docassemble.base.functions.get_message_log(), 'id_dict': question_id_dict}
         data.update(interview_status.as_data(user_dict))
@@ -19615,19 +19618,20 @@ def fix_package_folder():
 
 
 def secure_git_branchname(branch):
-  """Makes an input branch name a valid git branch name, and also strips out
+    """Makes an input branch name a valid git branch name, and also strips out
   things that would interpolated in bash."""
-  # The rules of what's allowed in a git branch name are: https://git-scm.com/docs/git-check-ref-format
-  branch = unicodedata.normalize("NFKD", branch)
-  branch = branch.encode("ascii", "ignore").decode("ascii")
-  branch = re.compile(r"[\u0000-\u0020]|(\")|(@{)|(\.\.)|[\u0170~ ^:?*$`[\\]|(//+)").sub("", branch)
-  branch = branch.strip("/")
-  # Can include a slash, but no slash-separated component can begin with a dot `.` or end with `.lock`
-  branch = "/".join([re.compile(r"\.lock$").sub("", component.lstrip('.')) for component in branch.split("/")])
-  branch = branch.rstrip(".")
-  if branch == "@":
-    branch = "_"
-  return branch
+    # The rules of what's allowed in a git branch name are: https://git-scm.com/docs/git-check-ref-format
+    branch = unicodedata.normalize("NFKD", branch)
+    branch = branch.encode("ascii", "ignore").decode("ascii")
+    branch = re.compile(r"[\u0000-\u0020]|(\")|(@{)|(\.\.)|[\u0170~ ^:?*$`[\\]|(//+)").sub("", branch)
+    branch = branch.strip("/")
+    # Can include a slash, but no slash-separated component can begin with a dot `.` or end with `.lock`
+    branch = "/".join([re.compile(r"\.lock$").sub("", component.lstrip('.')) for component in branch.split("/")])
+    branch = branch.rstrip(".")
+    if branch == "@":
+        branch = "_"
+    return branch
+
 
 def do_playground_pull(area, current_project, github_url=None, branch=None, pypi_package=None, can_publish_to_github=False, github_email=None, pull_only=False):
     playground_user = get_playground_user()
@@ -27227,6 +27231,8 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     #     logmessage("No event stack.")
     if event_list is not None and len(event_list) and 'event_stack' in user_dict['_internal'] and session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
         for event_name in event_list:
+            if illegal_variable_name(event_name):
+                raise DAException("Illegal value as event name.")
             if user_dict['_internal']['event_stack'][session_uid][0]['action'] == event_name:
                 user_dict['_internal']['event_stack'][session_uid].pop(0)
                 # logmessage("Popped " + str(event_name))
@@ -27333,7 +27339,7 @@ def create_new_interview(yaml_filename, secret, url_args=None, referer=None, req
         for key, val in url_args.items():
             if isinstance(val, str):
                 val = val.encode('unicode_escape').decode()
-            exec("url_args['" + key + "'] = " + repr(val), user_dict)
+            user_dict['url_args'][key] = val
     device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
     session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
     ci = current_info(yaml=yaml_filename, req=req, secret=secret, device_id=device_id, session_uid=session_uid)
@@ -30015,7 +30021,7 @@ def pypi_status(packagename):
     result = {}
     pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
     try:
-        response = requests.get(url_sanitize(pypi_url + '/' + str(packagename) + '/json'))
+        response = requests.get(url_sanitize(pypi_url + '/' + str(packagename) + '/json'), timeout=30)
         assert response.status_code == 200
     except AssertionError:
         if response.status_code == 404:
@@ -30023,6 +30029,8 @@ def pypi_status(packagename):
             result['exists'] = False
         else:
             result['error'] = response.status_code
+    except requests.exceptions.Timeout:
+        result['error'] = 'timeout'
     except:
         result['error'] = 'unknown'
     else:

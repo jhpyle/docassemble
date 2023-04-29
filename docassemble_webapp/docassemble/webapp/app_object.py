@@ -37,9 +37,9 @@ def create_app():
             the_app.wsgi_app = ProxyFix(the_app.wsgi_app)
     if 'cross site domains' in daconfig:
         CORS(the_app, origins=daconfig['cross site domains'], supports_credentials=True)
-    return the_app, the_csrf, the_babel
+    return the_app, the_csrf
 
 if docassemble.base.functions.server_context.context == 'websockets':
     from docassemble.webapp.app_socket import app  # pylint: disable=unused-import
 else:
-    app, csrf, flaskbabel = create_app()
+    app, csrf = create_app()

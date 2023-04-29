@@ -161,7 +161,6 @@ install_requires = [
     "portalocker==2.7.0",
     "proto-plus==1.22.2",
     "protobuf==4.21.12",
-    "py==1.11.0",
     "pyasn1==0.4.8",
     "pyasn1-modules==0.2.8",
     "pycountry==22.3.5",

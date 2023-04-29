@@ -179,7 +179,6 @@ system_packages = [
     "protobuf",
     "psutil",
     "psycopg2-binary",
-    "py",
     "pyasn1",
     "pyasn1-modules",
     "pycountry",
