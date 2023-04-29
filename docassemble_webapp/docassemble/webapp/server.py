@@ -5778,7 +5778,13 @@ def restart_session():
         secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
-    docassemble.base.functions.this_thread.current_info = current_info(yaml=yaml_filename, req=request, interface='vars', device_id=request.cookies.get('ds', None), session_uid=current_user.email if hasattr(current_user, 'email') else None)
+    if current_user.is_authenticated:
+        temp_session_uid = current_user.email
+    elif 'tempuser' in session:
+        temp_sesion_uid = 't' + str(session['tempuser'])
+    else:
+        temp_session_uid = random_string(16)
+    docassemble.base.functions.this_thread.current_info = current_info(yaml=yaml_filename, req=request, interface='vars', device_id=request.cookies.get('ds', None), session_uid=temp_session_uid)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
     except:
