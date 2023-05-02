@@ -91,7 +91,7 @@ install_requires = [
     "docxtpl==0.16.6",
     "et-xmlfile==1.1.0",
     "exceptiongroup==1.1.0",
-    "Flask==2.2.2",
+    "Flask==2.3.2",
     "Flask-Mail==0.9.1",
     "future==0.18.3",
     "geographiclib==2.0",
