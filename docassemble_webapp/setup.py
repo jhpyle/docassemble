@@ -77,7 +77,7 @@ install_requires = [
     "et-xmlfile==1.1.0",
     "eventlet==0.33.3",
     "exceptiongroup==1.1.0",
-    "Flask==2.2.2",
+    "Flask==2.3.2",
     "Flask-Babel==3.0.1",
     "Flask-Cors==3.0.10",
     "Flask-Login==0.6.2",
