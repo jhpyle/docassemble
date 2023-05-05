@@ -1041,12 +1041,12 @@ bootstrap theme: https://bootswatch.com/5/minty/bootstrap.min.css
 {% endhighlight %}
 
 There are many alternative [Bootstrap] themes available on
-[Bootswatch].  (Use [Bootstrap] 4 themes, not [Bootstrap] 3 themes.)
-Note that you may need to use apply additional [CSS] changes in order
-to get a [Bootstrap] theme to work with **docassemble**.  For example,
-by default **docassemble** assumes that the navigation bar is 56
-pixels in height.  But if your theme makes the navigation bar 66
-pixels tall, you will need to add the following styles:
+[Bootswatch].  (Use [Bootstrap] 5 themes.) Note that you may need to
+use apply additional [CSS] changes in order to get a [Bootstrap] theme
+to work with **docassemble**. For example, by default **docassemble**
+assumes that the navigation bar is 56 pixels in height. But if your
+theme makes the navigation bar 66 pixels tall, you will need to add
+the following styles:
 
 {% highlight css %}
 .da-pad-for-navbar {
