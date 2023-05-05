@@ -264,7 +264,13 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
     for package in packages.values():
         # logmessage("check_for_updates: processing package id " + str(package.id))
         # logmessage("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion))
-        if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and version.parse(package.packageversion) > version.parse(installs[package.id].packageversion)):
+        try:
+            pack_vers = version.parse(package.packageversion)
+            inst_vers = version.parse(installs[package.id].packageversion)
+        except packaging.version.InvalidVersion:
+            pack_vers = version.parse('1.0.0')
+            inst_vers = version.parse('1.0.0')
+        if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and pack_vers > inst_vers):
             logmessage("check_for_updates: a new version of " + package.name + " is needed because the necessary package version, " + str(package.packageversion) + ", is ahead of the installed version, " + str(installs[package.id].packageversion) + " after " + str(time.time() - start_time) + " seconds")
             new_version_needed = True
         else:

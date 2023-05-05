@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.48] - 2023-05-05
+
+### Fixed
+- Avoid exceptions based on invalid version names.
+- Issue with Playground variable parser.
+
 ## [1.4.47] - 2023-04-29
 
 ### Changed

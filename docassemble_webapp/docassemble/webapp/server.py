@@ -3978,7 +3978,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
     for var in fields_used:
         the_var = var
         while '.' in the_var:
-            the_var = re.sub(r'(.*)\..*$', r'\1', the_var)
+            the_var = re.sub(r'(.*)\..*$', r'\1', the_var, flags=re.DOTALL)
             implicitly_defined.add(the_var)
     for var in ('_internal', '__object_type', '_DAOBJECTDEFAULTDA'):
         undefined_names.discard(var)
