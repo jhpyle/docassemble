@@ -7485,7 +7485,6 @@ def index(action_argument=None, refer=None):
                     data = repr(raw_data)
             if known_datatypes[real_key] in ('object_multiselect', 'object_checkboxes'):
                 do_append = True
-                data = raw_data
         elif orig_key in known_datatypes:
             if known_datatypes[orig_key] in ('boolean', 'multiselect', 'checkboxes'):
                 if raw_data == "True":
