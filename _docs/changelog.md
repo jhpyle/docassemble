@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.49](https://github.com/jhpyle/docassemble/releases/tag/v1.4.49) - 2023-05-07
+
+
+### Changed
+- A `unoconv` job will not be submitted while another `unoconv` job is
+  still running.
+
 ## [1.4.48](https://github.com/jhpyle/docassemble/releases/tag/v1.4.48) - 2023-05-05
 
 
