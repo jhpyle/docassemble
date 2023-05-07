@@ -1485,7 +1485,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         if escape is True:
             result = noquote_match.sub('&quot;', result)
         if escape == 'option':
-            result = re.sub(r'\n\r', ' ', BeautifulSoup(result).get_text()).strip()
+            result = re.sub(r'\n\r', ' ', BeautifulSoup(result, 'html.parser').get_text()).strip()
         result = lt_match.sub('&lt;', result)
         result = gt_match.sub('&gt;', result)
         if escape is True:

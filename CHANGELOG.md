@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.49] - 2023-05-07
+
+### Changed
+- A `unoconv` job will not be submitted while another `unoconv` job is
+  still running.
+
 ## [1.4.48] - 2023-05-05
 
 ### Fixed

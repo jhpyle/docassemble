@@ -30361,11 +30361,11 @@ def start_of_line(expression, i):
     return True
 
 
-def applock(action, application):
+def applock(action, application, maxtime=4):
     key = 'da:applock:' + application + ':' + hostname
     if action == 'obtain':
         found = False
-        count = 4
+        count = maxtime
         while count > 0:
             record = r.get(key)
             if record:
@@ -30381,7 +30381,7 @@ def applock(action, application):
             r.delete(key)
         pipe = r.pipeline()
         pipe.set(key, 1)
-        pipe.expire(key, 4)
+        pipe.expire(key, maxtime)
         pipe.execute()
     elif action == 'release':
         r.delete(key)

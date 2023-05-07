@@ -400,17 +400,19 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
         if use_libreoffice:
             start_time = time.time()
             if UNOCONV_AVAILABLE:
-                # logmessage("Trying unoconv with " + repr(subprocess_arguments))
+                docassemble.base.functions.server.applock('obtain', 'unoconv', maxtime=6)
+                logmessage("Trying unoconv with " + repr(subprocess_arguments))
                 try:
                     result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
                 except subprocess.TimeoutExpired:
                     logmessage("word_to_pdf: unoconv took too long")
                     result = 1
                     tries = 5
+                docassemble.base.functions.server.applock('release', 'unoconv', maxtime=6)
                 logmessage("Finished unoconv after {:.4f} seconds.".format(time.time() - start_time))
             else:
                 initialize_libreoffice()
-                # logmessage("Trying libreoffice with " + repr(subprocess_arguments))
+                logmessage("Trying libreoffice with " + repr(subprocess_arguments))
                 docassemble.base.functions.server.applock('obtain', 'libreoffice')
                 logmessage("Obtained libreoffice lock after {:.4f} seconds.".format(time.time() - start_time))
                 try:
@@ -421,21 +423,23 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                     tries = 5
                 logmessage("Finished libreoffice after {:.4f} seconds.".format(time.time() - start_time))
                 docassemble.base.functions.server.applock('release', 'libreoffice')
-        if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
-            break
-        time.sleep(0.1)
-        if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
-            break
-        time.sleep(0.1)
-        if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
-            break
-        time.sleep(0.1)
-        if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
-            break
-        time.sleep(0.1)
-        if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
-            break
-        result = 1
+        if result == 0:
+            time.sleep(0.1)
+            if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
+                break
+            time.sleep(0.1)
+            if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
+                break
+            time.sleep(0.1)
+            if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
+                break
+            time.sleep(0.1)
+            if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
+                break
+            time.sleep(0.1)
+            if os.path.isfile(to_file) and os.path.getsize(to_file) > 0:
+                break
+            result = 1
         tries += 1
         if tries < num_tries:
             if use_libreoffice:
