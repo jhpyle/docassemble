@@ -9,7 +9,6 @@ import re
 import shutil
 import time
 import fcntl
-import packaging
 from packaging import version
 import docassemble.base.config
 from docassemble.base.config import daconfig
@@ -268,7 +267,7 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
         try:
             pack_vers = version.parse(package.packageversion)
             inst_vers = version.parse(installs[package.id].packageversion)
-        except packaging.version.InvalidVersion:
+        except:
             pack_vers = version.parse('1.0.0')
             inst_vers = version.parse('1.0.0')
         if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and pack_vers > inst_vers):
