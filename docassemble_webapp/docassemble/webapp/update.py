@@ -9,6 +9,7 @@ import re
 import shutil
 import time
 import fcntl
+import packaging
 from packaging import version
 import docassemble.base.config
 from docassemble.base.config import daconfig
