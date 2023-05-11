@@ -181,8 +181,13 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
         for key, val in data_strings:
             if key in export_values and len(export_values[key]) > 0:
                 if len(export_values[key]) > 1:
-                    # Implies a radio button, so val should stay the same. Just turn things off
-                    # if it doesn't match any value
+                    # Implies a radio button, so val should stay the same. Check for yes vs True, since
+                    # parse.py turns "true" into "yes".
+                    # Just turn things off if it doesn't match any value
+                    if 'True' in export_values[key] and (val == "Yes" or val == "yes"):
+                        val = 'True'
+                    if 'False' in export_values[key] and (val == "No" or val == "no"):
+                        val = 'False'
                     if val not in export_values[key]:
                         val = 'Off'
                 else:
