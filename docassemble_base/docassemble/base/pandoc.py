@@ -286,7 +286,10 @@ class MyPandoc:
     def convert(self, question):
         latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'conv')
         if not os.path.isdir(latex_conversion_directory):
-            os.makedirs(latex_conversion_directory)
+            try:
+                os.makedirs(latex_conversion_directory)
+            except:
+                pass
         if not os.path.isdir(latex_conversion_directory):
             raise DAException("Could not create latex conversion directory")
         if self.output_format in ("pdf", "tex", "rtf", "rtf to docx", "epub", "docx"):

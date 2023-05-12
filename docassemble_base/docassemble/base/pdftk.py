@@ -109,7 +109,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix='', parent_ft=N
             export_value = 'Yes'
             try:
                 for key in list(field['AP']['N'].keys()):
-                    if key in ('Off', 'off', 'No', 'no'):
+                    if key in ('Off', 'off'): #, 'No', 'no'
                         continue
                     export_value = key
                     break

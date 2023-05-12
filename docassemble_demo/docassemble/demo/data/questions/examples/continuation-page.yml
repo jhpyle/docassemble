@@ -1,0 +1,51 @@
+metadata:
+  title: Continuation page
+  short title: continuation
+  documentation: "https://docassemble.org/docs/recipes.html#continuation"
+  example start: 1
+  example end: 3
+---
+objects:
+  - fruits: DAList.using(there_are_any=True)
+---
+question: |
+  What is your ${ ordinal(i) } favorite fruit?
+fields:
+  - Fruit: fruits[i]
+---
+question: |
+  Do you have other favorite fruits besides ${ fruits }?
+subquestion: |
+  Hint: enter at least five.
+yesno: fruits.there_is_another
+---
+mandatory: True
+question: |
+  Fruit form
+attachment code: |
+  [fruit_form] + ([continuation_form] if fruits.number() > 4 else [])
+---
+attachment:
+  name: Official favorite fruits
+  filename: Official_Favorite_Fruits
+  variable name: fruit_form
+  pdf template file: Official_Favorite_Fruits.pdf
+  fields:
+    - fruit_one: ${ fruits.item(0) }
+    - fruit_two: ${ fruits.item(1) }
+    - fruit_three: ${ fruits.item(2) }
+    - fruit_four: ${ fruits.item(3) }
+---
+attachment:
+  name: Continuation page
+  filename: Official_Favorite_Fruits_continued
+  variable name: continuation_form
+  valid formats:
+    - pdf
+  content: |
+    In addition to the fruits listed on the Official Favorite Fruits form,
+    the following fruits are also favorites.
+    
+    % for indexno, fruit in enumerate(fruits[4:]):
+    ${ indexno + 5 }. ${ fruit }
+    % endfor

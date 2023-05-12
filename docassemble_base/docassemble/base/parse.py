@@ -7653,17 +7653,25 @@ class Interview:
                             self.onchange_todo[field_name].append({'target': self.onchange[attempt['vari']], 'context': attempt})
                         question.fields_for_onchange.add(field_name)
 
-    def invalidate_dependencies(self, field_name, the_user_dict, old_values):
+    def invalidate_dependencies(self, field_name, the_user_dict, old_values, history=None, force=False):
+        if history is None:
+            history = set()
+        if field_name in history:
+            return
+        invalidated = set()
         try:
             current_value = eval(field_name, the_user_dict)
         except:
             return
-        try:
-            if current_value == old_values[field_name]:
-                return
+        if force:
             do_invalidation = True
-        except:
-            do_invalidation = False
+        else:
+            try:
+                if current_value == old_values[field_name]:
+                    return
+                do_invalidation = True
+            except:
+                do_invalidation = False
         if do_invalidation:
             if field_name in self.invalidation_todo:
                 for info in self.invalidation_todo[field_name]:
@@ -7681,10 +7689,17 @@ class Interview:
                     except:
                         continue
                     try:
-                        exec("del " + unqualified_variable, the_user_dict)
-                        # logmessage("Interview.invalidate_dependencies: deleted " + unqualified_variable)
+                        invalidated.add(unqualified_variable)
                     except:
                         pass
+        history.add(field_name)
+        for var_name in invalidated:
+            self.invalidate_dependencies(var_name, the_user_dict, old_values, history=history, force=True)
+        for var_name in invalidated:
+            try:
+                exec("del " + var_name, the_user_dict)
+            except:
+                pass
         if field_name in self.onchange_todo:
             if 'alpha' not in the_user_dict:
                 self.load_util(the_user_dict)
