@@ -128,7 +128,7 @@ def fix_subdoc(masterdoc, subdoc_info):
 
 def include_docx_template(template_file, **kwargs):
     """Include the contents of one docx file inside another docx file."""
-    use_jinja = kwargs.get('_use_jinja2', True)
+    use_jinja = kwargs.pop('_use_jinja2', True)
     if this_thread.evaluation_context is None:
         return 'ERROR: not in a docx file'
     if template_file.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile', 'DAStaticFile'):
@@ -144,11 +144,7 @@ def include_docx_template(template_file, **kwargs):
         del kwargs['_inline']
     else:
         single_paragraph = False
-    if 'change_numbering' in kwargs:
-        change_numbering = bool(kwargs['change_numbering'])
-        del kwargs['change_numbering']
-    else:
-        change_numbering = True
+    change_numbering = bool(kwargs.pop('change_numbering', True))
 
     # We need to keep a copy of the subdocs so we can fix up the master template in the end (in parse.py)
     # Given we're half way through processing the template, we can't fix the master template here
