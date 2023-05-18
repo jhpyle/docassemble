@@ -19,7 +19,8 @@ from docassemble.base.config import daconfig
 from docassemble.base.generate_key import random_alphanumeric
 from docassemble_flask_user import current_user, login_required, roles_required, emails
 from sqlalchemy import and_, not_, select
-from flask import make_response, redirect, render_template, request, flash, current_app, Markup, url_for
+from flask import make_response, redirect, render_template, request, flash, current_app, url_for
+from markupsafe import Markup
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 PAGINATION_LIMIT = daconfig.get('pagination limit', 100)

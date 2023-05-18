@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.4.51] - 2023-05-17
+
+### Changed
+- Upgraded Flask.
+- `depends on` will now invalidate dependencies.
+
+### Fixed
+- Allow use of True and False as radio button values in `pdf template
+  file` document assembly.
+- Allow `_use_jinja2` in `include_docx_template()`.
+
 ## [1.4.50] - 2023-05-08
 
 ### Fixed

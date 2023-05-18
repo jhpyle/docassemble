@@ -103,7 +103,8 @@ from docassemble_flask_user import UserManager, SQLAlchemyAdapter
 from docassemble_flask_user import login_required, roles_required, user_logged_in, user_changed_password, user_registered
 from docassemblekvsession import KVSessionExtension
 from docassemble_textstat.textstat import textstat
-from flask import make_response, abort, render_template, render_template_string, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
+from flask import make_response, abort, render_template, render_template_string, request, session, send_file, redirect, current_app, get_flashed_messages, flash, jsonify, Response, g
+from markupsafe import Markup
 from flask_cors import cross_origin
 from flask_login import LoginManager
 from flask_login import login_user, logout_user, current_user
@@ -1078,7 +1079,7 @@ def logout():
         if current_user.social_id.startswith('keycloak$') and 'oauth' in daconfig and 'keycloak' in daconfig['oauth'] and 'domain' in daconfig['oauth']['keycloak']:
             if next_url.startswith('/'):
                 next_url = get_base_url() + next_url
-            next_url = ('https://' + daconfig['oauth']['keycloak']['domain'] + '/auth/realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/logout?' + urlencode({'post_logout_redirect_uri': next_url}))
+            next_url = ('https://' + daconfig['oauth']['keycloak']['domain'] + '/realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/logout?' + urlencode({'post_logout_redirect_uri': next_url}))
     docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
     delete_session_info()
@@ -4825,8 +4826,8 @@ class KeycloakSignIn(OAuthSignIn):
             name='keycloak',
             client_id=self.consumer_id,
             client_secret=self.consumer_secret,
-            authorize_url='https://' + str(self.consumer_domain) + '/auth/realms/' + str(realm) + '/protocol/openid-connect/auth',
-            access_token_url='https://' + str(self.consumer_domain) + '/auth/realms/' + str(realm) + '/protocol/openid-connect/token',
+            authorize_url='https://' + str(self.consumer_domain) + '/realms/' + str(realm) + '/protocol/openid-connect/auth',
+            access_token_url='https://' + str(self.consumer_domain) + '/realms/' + str(realm) + '/protocol/openid-connect/token',
             base_url='https://' + str(self.consumer_domain)
         )
 
@@ -4848,7 +4849,7 @@ class KeycloakSignIn(OAuthSignIn):
                   'grant_type': 'authorization_code',
                   'redirect_uri': self.get_callback_url()}
         )
-        me = oauth_session.get('auth/realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/userinfo').json()
+        me = oauth_session.get('realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/userinfo').json()
         # logmessage("keycloak returned " + json.dumps(me))
         user_id = me.get('sub')
         social_id = 'keycloak$' + str(user_id)
@@ -6245,11 +6246,6 @@ def checkin():
             return jsonify_with_cache(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
         return jsonify_with_cache(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
     return jsonify_with_cache(success=False)
-
-
-@app.before_first_request
-def setup_celery():
-    docassemble.webapp.worker.workerapp.set_current()
 
 
 @app.before_request

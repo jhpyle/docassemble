@@ -18,6 +18,7 @@ def create_app():
     from docassemble.base.config import daconfig  # pylint: disable=import-outside-toplevel
     import docassemble.webapp.database  # pylint: disable=import-outside-toplevel,redefined-outer-name
     import docassemble.webapp.db_object  # pylint: disable=import-outside-toplevel,redefined-outer-name
+    import docassemble.webapp.worker_common  # pylint: disable=import-outside-toplevel
     alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
     the_app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
     if alchemy_connect_string.startswith('postgres'):
@@ -37,6 +38,7 @@ def create_app():
             the_app.wsgi_app = ProxyFix(the_app.wsgi_app)
     if 'cross site domains' in daconfig:
         CORS(the_app, origins=daconfig['cross site domains'], supports_credentials=True)
+    docassemble.webapp.worker_common.workerapp.set_current()
     return the_app, the_csrf
 
 if docassemble.base.functions.server_context.context == 'websockets':
