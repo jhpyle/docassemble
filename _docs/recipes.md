@@ -2714,6 +2714,14 @@ section heading without clicking the Continue button.
 
 {% include demo-side-by-side.html demo="free-nav" %}
 
+# <a name="continuation"></a>Adding a continuation page to a PDF form
+
+If you have a PDF form that only allows a few lines for a list of
+things, you can conditionally generate a continuation page. Here is
+one way to do it.
+
+{% include demo-side-by-side.html demo="continuation-page" %}
+
 [`sections`]: {{ site.baseurl }}/docs/initial.html#sections
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if

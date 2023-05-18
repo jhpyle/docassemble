@@ -3,6 +3,25 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.52](https://github.com/jhpyle/docassemble/releases/tag/v1.4.52) - 2023-05-17
+
+
+### Changed
+- Upgraded Flask.
+- `depends on` will now invalidate dependencies.
+
+
+### Fixed
+- Allow use of True and False as radio button values in `pdf template
+  file` document assembly.
+- Allow `_use_jinja2` in `include_docx_template()`.
+
+## [1.4.51](https://github.com/jhpyle/docassemble/releases/tag/v1.4.51) - 2023-05-08
+
+
+### Fixed
+- Bug introduced in 1.4.48.
+
 ## [1.4.50](https://github.com/jhpyle/docassemble/releases/tag/v1.4.50) - 2023-05-08
 
 
