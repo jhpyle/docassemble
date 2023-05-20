@@ -80,7 +80,6 @@ install_requires = [
     "convertapi==1.5.0",
     "cryptography==39.0.1",
     "cssselect2==0.7.0",
-    "da-pkg-resources==0.0.1",
     "defusedxml==0.7.1",
     "deprecation==2.1.0",
     "Docassemble-Pattern==3.6.6",

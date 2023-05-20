@@ -2,6 +2,8 @@ import sys
 import os
 import time
 import datetime
+from pathlib import Path
+import importlib.resources
 import docassemble.base.config
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
@@ -25,7 +27,6 @@ from sqlalchemy.sql import text
 # import random
 # import string
 from docassemble_flask_user import UserManager, SQLAlchemyAdapter
-import pkg_resources
 from alembic.config import Config
 from alembic import command
 
@@ -242,8 +243,8 @@ def main():
                     changed = True
                 if changed:
                     db.session.commit()
-            packagedir = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), 'docassemble/webapp')
-            if not os.path.isdir(packagedir):
+            packagedir = importlib.resources.files('docassemble.webapp')
+            if not packagedir.is_dir():
                 sys.exit("path for running alembic could not be found")
             alembic_cfg = Config(os.path.join(packagedir, 'alembic.ini'))
             alembic_cfg.set_main_option("sqlalchemy.url", alchemy_connection_string())

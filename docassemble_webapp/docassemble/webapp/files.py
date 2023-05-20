@@ -558,10 +558,7 @@ def make_package_dir(pkgname, info, author_info, directory=None, current_project
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
     dependencies = ", ".join(map(lambda x: repr(x + get_version_suffix(x)), sorted(info['dependencies'])))
     initpy = """\
-try:
-    __import__('pkg_resources').declare_namespace(__name__)
-except ImportError:
-    __path__ = __import__('pkgutil').extend_path(__path__, __name__)
+__import__('pkg_resources').declare_namespace(__name__)
 
 """
     licensetext = str(info['license'])

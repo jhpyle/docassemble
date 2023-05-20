@@ -58,7 +58,6 @@ system_packages = [
     "crayons",
     "cryptography",
     "cssselect2",
-    "da-pkg-resources",
     "defusedxml",
     "Deprecated",
     "deprecation",

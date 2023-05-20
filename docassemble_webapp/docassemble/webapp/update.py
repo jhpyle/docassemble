@@ -338,7 +338,6 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
         if returnval != 0:
             logmessage("Return value was not good" + " after " + str(time.time() - start_time) + " seconds")
             ok = False
-        # pip._vendor.pkg_resources._initialize_master_working_set()
         if full:
             pip_info = get_pip_info(package.name, start_time=start_time)
             real_name = pip_info['Name']

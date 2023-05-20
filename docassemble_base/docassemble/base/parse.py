@@ -146,7 +146,7 @@ class DAFileSystemLoader(FileSystemLoader):
         if ':' not in template:
             return super().get_source(environment, template)
         template_path = None
-        for the_filename in [docassemble.base.functions.package_question_filename(template), docassemble.base.functions.standard_question_filename(template), docassemble.base.functions.server.absolute_filename(template)]:
+        for the_filename in question_path_options(template):
             if the_filename is not None:
                 template_path = the_filename
                 break
@@ -295,7 +295,7 @@ class InterviewSourceFile(InterviewSource):
     def __init__(self, **kwargs):
         self.playground = None
         if 'filepath' in kwargs:
-            if re.search(r'SavedFile', str(type(kwargs['filepath']))):
+            if kwargs['filepath'].__class__.__name__.endswith('SavedFile'):
                 self.playground = kwargs['filepath']
                 if self.playground.subdir and self.playground.subdir != 'default':
                     self.playground_file = os.path.join(self.playground.subdir, self.playground.filename)
@@ -305,7 +305,7 @@ class InterviewSourceFile(InterviewSource):
                 if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):
                     self.set_filepath(self.playground.path)
                 else:
-                    raise DAError("Reference to invalid playground path")
+                    raise DAError("Reference to invalid playground path: " + repr(self.playground.path))
             else:
                 self.set_filepath(kwargs['filepath'])
         else:
@@ -7386,13 +7386,25 @@ def emoji_matcher_html(obj):
     return (lambda x: docassemble.base.filter.emoji_html(x.group(1), images=obj.interview.images))
 
 
+def question_path_options(path):
+    n = 0
+    while n < 3:
+        if n == 0:
+            yield docassemble.base.functions.package_question_filename(path)
+        elif n == 1:
+            yield docassemble.base.functions.standard_question_filename(path)
+        elif n == 2:
+            yield docassemble.base.functions.server.absolute_filename(path)
+        n += 1
+
+
 def interview_source_from_string(path, **kwargs):
     if path is None:
         raise DAError("Passed None to interview_source_from_string")
     # logmessage("Trying to find " + path)
     path = re.sub(r'(docassemble.playground[0-9]+[^:]*:)data/questions/(.*)', r'\1\2', path)
-    for the_filename in [docassemble.base.functions.package_question_filename(path), docassemble.base.functions.standard_question_filename(path), docassemble.base.functions.server.absolute_filename(path)]:
-        # logmessage("Trying " + repr(the_filename) + " with path " + repr(path))
+    for the_filename in question_path_options(path):
+        logmessage("Trying " + repr(the_filename) + " with path " + repr(path))
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update(**kwargs):

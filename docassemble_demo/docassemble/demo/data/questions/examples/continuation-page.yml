@@ -45,7 +45,7 @@ attachment:
   content: |
     In addition to the fruits listed on the Official Favorite Fruits form,
     the following fruits are also favorites.
-    
+
     % for indexno, fruit in enumerate(fruits[4:]):
     ${ indexno + 5 }. ${ fruit }
     % endfor

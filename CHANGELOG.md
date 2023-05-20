@@ -1,6 +1,14 @@
 # Change Log
 
-## [1.4.51] - 2023-05-17
+## [1.4.53] - 2023-05-20
+
+### Added
+- The `delete` keyword parameter to `set_session_variables()`.
+
+### Changed
+- Use `importlib.resources` instead of `pkg_resources`.
+
+## [1.4.52] - 2023-05-17
 
 ### Changed
 - Upgraded Flask.
@@ -10,6 +18,11 @@
 - Allow use of True and False as radio button values in `pdf template
   file` document assembly.
 - Allow `_use_jinja2` in `include_docx_template()`.
+
+## [1.4.51] - 2023-05-08
+
+### Fixed
+- Bug introduced in 1.4.48.
 
 ## [1.4.50] - 2023-05-08
 

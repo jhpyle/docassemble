@@ -5,10 +5,10 @@ import socket
 import threading
 import base64
 import json
+import importlib.metadata
 from packaging import version
 import yaml
 import httplib2
-import pkg_resources
 import boto3
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
@@ -407,7 +407,7 @@ def load(**kwargs):
     daconfig['config file'] = filename
     if 'modules' not in daconfig:
         daconfig['modules'] = os.getenv('DA_PYTHON', '/usr/share/docassemble/local' + str(sys.version_info.major) + '.' + str(sys.version_info.minor))
-    daconfig['python version'] = str(pkg_resources.get_distribution("docassemble.base").version)
+    daconfig['python version'] = importlib.metadata.version("docassemble.base")
     version_file = daconfig.get('version file', '/usr/share/docassemble/webapp/VERSION')
     if os.path.isfile(version_file) and os.access(version_file, os.R_OK):
         with open(version_file, 'r', encoding='utf-8') as fp:

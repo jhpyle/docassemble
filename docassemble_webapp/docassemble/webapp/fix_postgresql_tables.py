@@ -1,7 +1,8 @@
 import os
 import sys
+from pathlib import Path
+import importlib.resources
 import psycopg2
-import pkg_resources
 import docassemble.base.config
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
@@ -66,7 +67,7 @@ def main():
     if schema_file is None:
         schema_file = os.getenv('DBSCHEMAFILE', None)
         if not (schema_file and os.path.isfile(schema_file)):
-            schema_file = pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.webapp'), "docassemble/webapp/data/db-schema.txt")
+            schema_file = Path(importlib.resources.files('docassemble.webapp'), 'data', 'db-schema.txt')
 
     conn = psycopg2.connect(database=db_name, user=db_user, password=db_password, host=db_host, port=db_port)
     cur = conn.cursor()
@@ -87,7 +88,7 @@ def main():
         logmessage("fix_postgresql_tables: skipping because alembic is in use.")
         return
     desired_columns = {}
-    with open(schema_file, 'r', encoding='utf-8') as f:
+    with schema_file.open('r', encoding='utf-8') as f:
         for line in f:
             read_in(line.rstrip(), desired_columns)
 

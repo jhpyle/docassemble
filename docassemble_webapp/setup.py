@@ -60,7 +60,6 @@ install_requires = [
     "crayons==0.4.0",
     "cryptography==39.0.1",
     "cssselect2==0.7.0",
-    "da-pkg-resources==0.0.1",
     "defusedxml==0.7.1",
     "Deprecated==1.2.13",
     "deprecation==2.1.0",

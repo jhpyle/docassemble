@@ -16,6 +16,8 @@ import random
 from collections.abc import Iterable
 from unicodedata import normalize
 from enum import Enum
+from pathlib import Path
+import importlib.resources
 import astunparse
 # import sys
 import tzlocal
@@ -52,8 +54,6 @@ import docassemble_pattern.it  # pylint: disable=import-error,no-name-in-module
 import docassemble_pattern.nl  # pylint: disable=import-error,no-name-in-module
 from pylatex.utils import escape_latex
 # import operator
-# import da_pkg_resources as pkg_resources
-import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun, DAError
@@ -3724,20 +3724,12 @@ def qr_code(string, width=None, alt_text=None):
     return '[QR ' + string + ', ' + width + ', ' + str(alt_text) + ']'
 
 
-def pkg_resources_resource_filename(package_or_requirement, resource_name):
-    try:
-        result = pkg_resources.resource_filename(package_or_requirement, resource_name)  # pylint: disable=not-callable
-    except:
-        return None
-    return result
-
-
 def standard_template_filename(the_file):
-    try:
-        return pkg_resources_resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/templates/" + str(the_file))
-    except:
-        # logmessage("Error retrieving data file")
-        return None
+    path = Path(importlib.resources.files('docassemble.base'), 'data', 'templates', str(the_file))
+    if path.exists():
+        return str(path)
+    # logmessage("Error retrieving data file")
+    return None
 
 
 def package_template_filename(the_file, **kwargs):
@@ -3757,15 +3749,14 @@ def package_template_filename(the_file, **kwargs):
             return abs_file.path
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
-        try:
-            return pkg_resources_resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
-        except:
-            return None
+        path = Path(importlib.resources.files(parts[0]), parts[1])
+        if path.exists():
+            return str(path)
     return None
 
 
 def standard_question_filename(the_file):
-    return pkg_resources_resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/questions/" + str(the_file))
+    return str(Path(importlib.resources.files('docassemble.base'), 'data', 'questions', str(the_file)))
 
 
 def package_data_filename(the_file):
@@ -3793,9 +3784,10 @@ def package_data_filename(the_file):
             if abs_file is None:
                 return None
             return abs_file.path
-        try:
-            result = pkg_resources_resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
-        except:
+        path = Path(importlib.resources.files(parts[0]), parts[1])
+        if path.exists():
+            result = str(path)
+        else:
             result = None
     # if result is None or not os.path.isfile(result):
     #    result = server.absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', the_file)).path
@@ -3807,10 +3799,9 @@ def package_question_filename(the_file):
     if len(parts) == 2:
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/questions/' + parts[1]
-        try:
-            return pkg_resources_resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
-        except:
-            return None
+        path = Path(importlib.resources.files(parts[0]), parts[1])
+        if path.exists():
+            return str(path)
     return None
 
 # def default_absolute_filename(the_file):
@@ -5138,13 +5129,18 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True)
     return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=simplify)
 
 
-def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None, overwrite=False, process_objects=False):
+def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None, overwrite=False, process_objects=False, delete=None):
     """Sets variables in the interview dictionary for the given interview session."""
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise DAError("You cannot set variables in the current interview session")
     if secret is None:
         secret = this_thread.current_info.get('secret', None)
-    server.set_session_variables(yaml_filename, session_id, variables, secret=secret, question_name=question_name, post_setting=not overwrite, process_objects=process_objects)
+    if delete is not None:
+        if isinstance(delete, str):
+            delete = [delete]
+        else:
+            delete = list(delete)
+    server.set_session_variables(yaml_filename, session_id, variables, secret=secret, del_variables=delete, question_name=question_name, post_setting=not overwrite, process_objects=process_objects)
 
 
 def run_action_in_session(yaml_filename, session_id, action, arguments=None, secret=None, persistent=False, overwrite=False):
