@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.55] - 2023-05-21
+
+### Fixed
+- Issue with the "Run" button in the variables sidebar in the
+  Playground, introduced by the upgrade of Flask in 1.4.52.
+
 ## [1.4.54] - 2023-05-21
 
 ### Fixed

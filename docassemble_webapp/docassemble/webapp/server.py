@@ -20908,12 +20908,12 @@ var shareBaseUrl = '""" + url_for('index', i='docassemble.playground' + str(play
 
 function updateRunLink(){
   if (currentProject == 'default'){
-    $("#daRunButton").attr("href", interviewBaseUrl.replace('%3A.yml', ':' + $("#daVariables").val()));
-    $("a.da-example-share").attr("href", shareBaseUrl.replace('%3A.yml', ':' + $("#daVariables").val()));
+    $("#daRunButton").attr("href", interviewBaseUrl.replace(':.yml', ':' + $("#daVariables").val()));
+    $("a.da-example-share").attr("href", shareBaseUrl.replace(':.yml', ':' + $("#daVariables").val()));
   }
   else{
-    $("#daRunButton").attr("href", interviewBaseUrl.replace('%3A.yml', currentProject + ':' + $("#daVariables").val()));
-    $("a.da-example-share").attr("href", shareBaseUrl.replace('%3A.yml', currentProject + ':' + $("#daVariables").val()));
+    $("#daRunButton").attr("href", interviewBaseUrl.replace(':.yml', currentProject + ':' + $("#daVariables").val()));
+    $("a.da-example-share").attr("href", shareBaseUrl.replace(':.yml', currentProject + ':' + $("#daVariables").val()));
   }
 }
 
