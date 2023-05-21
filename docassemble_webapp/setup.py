@@ -278,7 +278,7 @@ else:
 
 setup(name='docassemble.webapp',
       version='1.4.53',
-      python_requires='>=3.8',
+      python_requires='>=3.9',
       description=('The web application components of the docassemble system.'),
       long_description=read("README.md"),
       long_description_content_type='text/markdown',

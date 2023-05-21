@@ -47,7 +47,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 
 setup(name='docassemble.demo',
       version='1.4.53',
-      python_requires='>=3.8',
+      python_requires='>=3.9',
       description=('A demonstration package for docassemble.'),
       long_description=read("README.md"),
       long_description_content_type='text/markdown',

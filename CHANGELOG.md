@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.4.54] - 2023-05-21
+
+### Fixed
+- Updated `setup.py` to require Python 3.10. Version 1.4.53 has been
+  deleted from PyPI so that users with Python 3.8 cannot upgrade past
+  1.4.52.
+
 ## [1.4.53] - 2023-05-21
 
 ### Added
