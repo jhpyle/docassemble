@@ -5041,7 +5041,7 @@ Then the following statements will be executed in the interview
 session dictionary:
 
 {% highlight python %}
-defense['latches'] = False
+defense['laches'] = False
 client.phone_number = '202-555-3434'
 {% endhighlight %}
 
@@ -5063,6 +5063,7 @@ parameters:
 * `secret`
 * `overwrite`
 * `process_objects`
+* `delete`
 
 If you set `question_name` to the ID of a question in the interview,
 the question will be marked as answered.  You can obtain the ID of a
@@ -5088,6 +5089,13 @@ the [`set_variables()`] function, which also accepts a
 `process_objects` keyword parameter. By default,
 [`set_session_variables()`] does not process the variables as
 **docassemble** objects.
+
+The parameter `delete` can be set to a list of variables in the
+interview answers of the other session that you want to undefine.
+
+{% highlight python %}
+set_session_variables(filename, session_id, {}, delete=["defense['estoppel']", "client.paid"])
+{% endhighlight %}
 
 For an [API] version of this function, see the [POST method of
 `/api/session`].

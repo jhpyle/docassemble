@@ -3,6 +3,16 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.53](https://github.com/jhpyle/docassemble/releases/tag/v1.4.53) - 2023-05-21
+
+
+### Added
+- The `delete` keyword parameter to `set_session_variables()`.
+
+
+### Changed
+- Use `importlib.resources` instead of `pkg_resources`.
+
 ## [1.4.52](https://github.com/jhpyle/docassemble/releases/tag/v1.4.52) - 2023-05-17
 
 
