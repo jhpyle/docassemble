@@ -476,7 +476,7 @@ def upgrade_db(url, py_file, engine, version_table=None, name=None, conn_args=No
     packagedir = os.path.dirname(os.path.abspath(py_file))
     alembic_path = os.path.join(packagedir, name)
     if not os.path.isdir(alembic_path):
-        logmessage(name + " directory not found in package directory " + packagedir)
+        # logmessage(name + " directory not found in package directory " + packagedir)
         return
     ini_file = os.path.join(packagedir, name + '.ini')
     if not os.path.isfile(ini_file):

@@ -3725,7 +3725,10 @@ def qr_code(string, width=None, alt_text=None):
 
 
 def standard_template_filename(the_file):
-    path = Path(importlib.resources.files('docassemble.base'), 'data', 'templates', str(the_file))
+    try:
+        path = Path(importlib.resources.files('docassemble.base'), 'data', 'templates', str(the_file))
+    except:
+        return None
     if path.exists():
         return str(path)
     # logmessage("Error retrieving data file")
@@ -3749,14 +3752,20 @@ def package_template_filename(the_file, **kwargs):
             return abs_file.path
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
-        path = Path(importlib.resources.files(parts[0]), parts[1])
+        try:
+            path = Path(importlib.resources.files(parts[0]), parts[1])
+        except:
+            return None
         if path.exists():
             return str(path)
     return None
 
 
 def standard_question_filename(the_file):
-    return str(Path(importlib.resources.files('docassemble.base'), 'data', 'questions', str(the_file)))
+    try:
+        return str(Path(importlib.resources.files('docassemble.base'), 'data', 'questions', str(the_file)))
+    except:
+        return None
 
 
 def package_data_filename(the_file):
@@ -3784,7 +3793,10 @@ def package_data_filename(the_file):
             if abs_file is None:
                 return None
             return abs_file.path
-        path = Path(importlib.resources.files(parts[0]), parts[1])
+        try:
+            path = Path(importlib.resources.files(parts[0]), parts[1])
+        except:
+            return None
         if path.exists():
             result = str(path)
         else:
@@ -3799,7 +3811,10 @@ def package_question_filename(the_file):
     if len(parts) == 2:
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/questions/' + parts[1]
-        path = Path(importlib.resources.files(parts[0]), parts[1])
+        try:
+            path = Path(importlib.resources.files(parts[0]), parts[1])
+        except:
+            return None
         if path.exists():
             return str(path)
     return None

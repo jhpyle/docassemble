@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.4.53] - 2023-05-20
+## [1.4.53] - 2023-05-21
 
 ### Added
 - The `delete` keyword parameter to `set_session_variables()`.

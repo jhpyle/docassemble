@@ -305,7 +305,24 @@ class InterviewSourceFile(InterviewSource):
                 if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):
                     self.set_filepath(self.playground.path)
                 else:
-                    raise DAError("Reference to invalid playground path: " + repr(self.playground.path))
+                    logmessage("Details of playground path reference:")
+                    logmessage("Keyword arguments were " + repr(kwargs))
+                    for attribute in ['file_number', 'fixed', 'section', 'filename', 'extension', 'directory', 'path', 'modtimes', 'keydict', 'subdir']:
+                        if hasattr(self.playground, attribute):
+                            logmessage(attribute + " is " + repr(getattr(self.playground, attribute)))
+                        else:
+                            logmessage(attribute + " did not exist")
+                    if os.path.exists(self.playground.path):
+                        if os.path.isfile(self.playground.path):
+                            if os.access(self.playground.path, os.R_OK):
+                                logmessage("path is a file and is readable")
+                            else:
+                                logmessage("path is a file but is not readable")
+                        else:
+                            logmessage("path was not a file")
+                    else:
+                        logmessage("path did not exist")
+                    raise DAError("Reference to invalid playground path.")
             else:
                 self.set_filepath(kwargs['filepath'])
         else:
@@ -7404,7 +7421,6 @@ def interview_source_from_string(path, **kwargs):
     # logmessage("Trying to find " + path)
     path = re.sub(r'(docassemble.playground[0-9]+[^:]*:)data/questions/(.*)', r'\1\2', path)
     for the_filename in question_path_options(path):
-        logmessage("Trying " + repr(the_filename) + " with path " + repr(path))
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update(**kwargs):

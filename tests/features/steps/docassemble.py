@@ -7,6 +7,7 @@ from random import randint, random
 from behave import step, use_step_matcher  # pylint: disable=import-error,no-name-in-module
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
@@ -43,7 +44,7 @@ def click_inside(context):
     elem = WebDriverWait(context.browser, 10).until(
         EC.presence_of_element_located((By.ID, "dasigcanvas"))
     )
-    action = webdriver.common.action_chains.ActionChains(context.browser)
+    action = ActionChains(context.browser)
     action.move_to_element_with_offset(elem, 20, 20)
     action.click()
     action.perform()
@@ -130,6 +131,7 @@ def launch_interview(context, interview_name):
 @step(r'I start the interview "(?P<interview_name>[^"]+)"')
 def start_interview(context, interview_name):
     do_wait(context)
+    context.interview_name = interview_name
     context.browser.get(context.da_path + "/interview?i=" + interview_name + '&reset=2')
     context.browser.wait_for_it()
     elems = context.browser.find_elements(By.XPATH, '//h1[text()="Error"]')
@@ -173,22 +175,25 @@ def click_button(context, button_name):
     do_wait(context)
     success = False
     try:
-        context.browser.find_element(By.XPATH, '//button[text()="' + button_name + '"]').click()
+        element = context.browser.find_element(By.XPATH, '//button[text()="' + button_name + '"]')
+        context.browser.execute_script('$(arguments[0]).click()', element)
         success = True
     except:
         pass
     if not success:
         for elem in context.browser.find_elements(By.XPATH, '//a[text()="' + button_name + '"]'):
-            try:
-                elem.click()
-                success = True
-            except:
-                pass
-            if success:
-                break
+            if elem.is_displayed():
+                try:
+                    context.browser.execute_script('$(arguments[0]).click()', elem)
+                    success = True
+                except:
+                    pass
+                if success:
+                    break
     if not success:
         try:
-            context.browser.find_element(By.XPATH, '//button/span[text()="' + button_name + '"]').click()
+            elem = context.browser.find_element(By.XPATH, '//button/span[text()="' + button_name + '"]')
+            context.browser.execute_script('$(arguments[0]).click()', elem)
             success = True
         except:
             pass
@@ -645,3 +650,8 @@ def accept_alert(context):
 @step(r'I switch to the new tab')
 def switch_tab(context):
     context.browser.switch_to.window(context.browser.window_handles[-1])
+
+
+@step(r'I scroll to the bottom')
+def scroll_bottom(context):
+    context.browser.execute_script("window.scrollTo(0,document.body.scrollHeight)")
