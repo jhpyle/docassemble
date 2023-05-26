@@ -1877,7 +1877,7 @@ Since this function returns `[QR ...]` [markup], if you want to use it
 within a [`docx template file`], you will need to use the `markdown`
 filter:
 
-> {{ "{{p qr_code(url) | markdown }}" }}
+> {% raw %}{{p qr_code(url) \| markdown }}{% endraw %}
 {: .blockquote}
 
 Note that if you want to include a QR code that points to an interview
