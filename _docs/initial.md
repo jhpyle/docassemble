@@ -34,7 +34,7 @@ the name of the author.  It must be a [YAML] dictionary, but each the
 dictionary items can contain any arbitrary [YAML] structure.
 
 <a name="title"></a>If a `title` is defined, it will be displayed in
-the navigation bar in the web app.
+the main navigation bar in the web app.
 
 <a name="short title"></a>If a `short title` is provided, it will be
 displayed in place of the `title` when the size of the screen is
@@ -67,17 +67,17 @@ interview you developed and they don't want your logo taking up half
 of their screen.
 
 <a name="navigation bar html"></a>If `navigation bar html` is
-provided, the contents will be inserted into the navigation bar.  It
-will be inserted into a `<ul class="nav navbar-nav">` element, so for
-best results, the [HTML] should consist of one or more items in a form
-like `<li class="nav-item"><a class="nav-link"
-href="/some_link">Label</a></li>`.  For more information about how
+provided, the contents will be inserted into the main navigation bar.
+It will be inserted into a `<ul class="nav navbar-nav">` element, so
+for best results, the [HTML] should consist of one or more items in a
+form like `<li class="nav-item"><a class="nav-link"
+href="/some_link">Label</a></li>`. For more information about how
 these [CSS] classes work, see the documentation for the [Bootstrap
-Navbar].  On small screens, the HTML is shown when the user clicks the
-toggler icon.  You may wish to use `d-none d-md-block` classes to hide
-the HTML when the screen is small.  Make sure your HTML does not
-contain any errors, or else the [HTML] of the entire screen could be
-affected.
+Navbar]. On small screens, the HTML is shown in the menu when the user
+clicks the toggler icon. You may wish to use `d-none d-md-block`
+classes to hide the HTML when the screen is small. Make sure your HTML
+does not contain any errors, or else the [HTML] of the entire screen
+could be affected.
 
 <a name="tab title"></a>If a `tab title` is provided, it will be
 displayed as the title of the browser tab.  Otherwise, the `title`
@@ -116,7 +116,7 @@ is called.
 These values can be overridden using the [`set_parts()` function].
 
 The `metadata` block and the [`set_parts()` function] can be used to
-modify other aspects of the navigation bar.
+modify other aspects of the main navigation bar.
 
 <a name="exit link"></a>If an `exit link` is provided, the behavior of
 the "Exit" link can be modified.  (The "Exit" menu option is displayed
@@ -1515,8 +1515,8 @@ See the [question modifiers] section for an explanation of how audio and video
 file references work.
 
 You can also provide a `label` as part of the `interview help`.  This
-label will be used instead of the word "Help" in the navigation bar as
-a label for the "Help" tab.
+label will be used instead of the word "Help" in the main navigation
+bar as a label for the "Help" tab.
 
 {% highlight yaml %}
 ---
@@ -1870,10 +1870,10 @@ The `features` block sets some optional features of the interview.
 ## <a name="debug"></a>Whether debugging features are available
 
 If the [`debug` directive] in the [Configuration] is `True`, then by
-default, the navigation bar will contain a "Source" link that shows
-information about how the interview arrived at the question being
-shown.  If the [`debug` directive] is `False`, then this will not be
-shown.
+default, the main navigation bar will contain a "Source" link that
+shows information about how the interview arrived at the question
+being shown.  If the [`debug` directive] is `False`, then this will
+not be shown.
 
 This can be overridden in the `features` by setting `debug` to `True`
 or `False` depending on the behavior you want.
@@ -1977,16 +1977,17 @@ features:
 
 ## <a name="navigation bar"></a>Navigation bar
 
-The `navigation` feature controls whether a navigation bar is
-shown during the interview.  You can use the [`sections`] initial
-block or the [`nav.set_sections()`] function to define the sections of
-your interview.  The [`section`] modifier or the [`nav.set_section()`]
+The `navigation` feature controls whether a secondary navigation bar
+is shown during the interview to show users the sections of the
+interview. You can use the [`sections`] initial block or the
+[`nav.set_sections()`] function to define the sections of your
+interview. The [`section`] modifier or the [`nav.set_section()`]
 function can be used to change the current section.
 
 {% include side-by-side.html demo="sections" %}
 
-If you want the navigation bar to be horizontal across the top
-of the page, set `navigation` to `horizontal`:
+If you want the secondary navigation bar to be horizontal across the
+top of the page, set `navigation` to `horizontal`:
 
 {% include side-by-side.html demo="sections-horizontal" %}
 
@@ -2135,6 +2136,19 @@ code: |
     {'label': 'Saved Sessions', 'url': url_of('interviews')}
   ]
 {% endhighlight %}
+
+## <a name="hide corner interface"></a>Hiding the menu and login interface entirely
+
+The interface in the upper-right corner lets the user log in, or shows
+a menu, or shows the exit button. This interface can be removed by
+setting `hide corner interface` to `True`.
+
+{% highlight yaml %}
+features:
+  hide corner interface: True
+{% endhighlight %}
+
+Items you have created with [`navigation bar html`] will not be affected.
 
 ## <a name="javascript"></a><a name="css"></a>Javascript and CSS files
 
@@ -2600,6 +2614,7 @@ This will cause the web application to run the JavaScript for the
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [`navigation bar`]: #navigation bar
+[`navigation bar html`]: #navigation bar html
 [`nav.set_sections()`]: {{ site.baseurl }}/docs/functions.html#DANav.set_sections
 [action]: {{ site.baseurl }}/docs/functions.html#actions
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format

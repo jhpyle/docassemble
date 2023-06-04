@@ -770,7 +770,7 @@ interview-by-interview basis using [`required privileges`].
 ## <a name="administrative interviews">Administrative interviews</a>
 
 The `administrative interviews` directive adds hyperlinks to
-interviews to the main menu.
+interviews (or other things) to the main menu.
 
 Suppose you have two interviews, `inspect.yml` and `manage.yml`, that
 you use frequently.  You can list them in the [Configuration] as
@@ -804,8 +804,8 @@ If a [`required privileges for listing`] specifier does not exist, the
 [`required privileges`] specifier will be used to determine if the
 link in the menu is shown.
 
-The names and privileges that will be used for purposes of the main
-menu can be overridden by specifying an item in the `administrative
+The titles and privileges that will be used for purposes of the menu
+can be overridden by specifying an item in the `administrative
 interviews` list in the form of a [YAML] dictionary instead of the
 name of the interview file.  For example:
 
@@ -825,15 +825,15 @@ administrative interviews:
 {% endhighlight %}
 
 When listing an item in dictionary form, only the `interview` key is
-required.  The `title` key can be set to a single name, or to a [YAML]
+required. The `title` key can be set to a single name, or to a [YAML]
 dictionary where the keys are languages and the values are the titles
 to be used for that language.
 
-The hyperlinks from the menu contain the `&new_session=1`, which means
-that a new session will be started every time the user clicks the
-interview.  In many situations, you will not want the clicking of the
-link from the menu to result in a proliferation of interview
-sessions.  You may want to set up the `metadata` of your
+The hyperlinks from the menu will contain the `&new_session=1` URL
+parameter, which means that a new session will be started every time
+the user clicks the interview.  In many situations, you will not want
+the clicking of the link from the menu to result in a proliferation of
+interview sessions.  You may want to set up the `metadata` of your
 administrative interviews as follows:
 
 {% highlight yaml %}
@@ -861,6 +861,30 @@ using [`action_button_html()`].  Or if you need multiple screens, you
 can have a variable to keep track of the current screen, and then use
 [`menu_items`] and [`url_action()`] to provide the user with a menu
 for navigating from screen to screen.
+
+The `administrative interviews` directive can also be used to add URLs
+of your own choosing to the menu. Provide a dictionary with keys for
+`url` and `title`:
+
+{% highlight yaml %}
+administrative interviews:
+  - url: https://secret.example.com/
+    title: Secret Site
+{% endhighlight %}
+
+As with `interview` entries, you can specify the title in different
+languages, and you can limit the appearance of the menu item based on
+the user's privileges. For example:
+
+{% highlight yaml %}
+administrative interviews:
+  - url: https://portal.example.com/
+    title:
+      en: Portal
+      es: El Portal
+    required privileges:
+      - admin
+{% endhighlight %}
 
 ## <a name="resume interview after login"></a>Always go back to the current interview after logging in
 

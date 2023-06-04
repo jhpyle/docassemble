@@ -3,6 +3,37 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.56](https://github.com/jhpyle/docassemble/releases/tag/v1.4.56) - 2023-06-04
+
+
+### Added
+- The `hide corner interface` option under `features`.
+
+
+### Changed
+- The `administrative interviews` Configuration directive now accepts
+  items that add custom URLs to the menu.
+- `force_ask()` or `reconsider()` will now attempt to act on the
+  intrinsic name of the referenced variable rather than the literal
+  string passed to the function.
+- The functions `format_date()`, `format_datetime()`, `format_time()`,
+  `month_of()`, `year_of()`, `day_of()`, `dow_of()`, `qr_code()` are
+  now available as Jinja2 filters.
+- The JavaScript functions `var()`, `getField()`, `setField()`, and
+  `getFields()` were modified to work better with multiple choice
+  fields. `getField()` now returns the `<fieldset>` parent element
+  rather than the first input element. `val()` will return an array of
+  answers for a checkbox or multiselect. Object-based fields use
+  instance names as values.
+
+
+### Fixed
+- Items under `administrative interviews` will now appear for users
+  who are not logged in if the permissions allow anonymous users to
+  see the item.
+- When a `datatype: checkboxes` field has `required: False`, the "None
+  of the above" selection does not need to be selected.
+
 ## [1.4.55](https://github.com/jhpyle/docassemble/releases/tag/v1.4.55) - 2023-05-21
 
 
