@@ -123,7 +123,7 @@
                   {%- endif %}
                   {%- for item in config['ADMIN_INTERVIEWS'] %}
                     {%- if item.can_use() %}
-                  <a class="dropdown-item" href="{{ url_for_interview(i=item.interview, new_session='1') }}">{{ item.get_title(current_language) }}</a>
+                  <a class="dropdown-item" href="{{ item.get_url() }}">{{ item.get_title(current_language) }}</a>
                     {%- endif %}
                   {%- endfor %}
                   {%- if config['SHOW_MY_INTERVIEWS'] or current_user.has_roles(['admin']) %}

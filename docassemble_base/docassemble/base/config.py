@@ -551,10 +551,47 @@ def load(**kwargs):
                     new_item = cleanup_filename(item)
                     if new_item:
                         new_admin_interviews.append({'interview': new_item})
-                elif isinstance(item, dict) and 'interview' in item and isinstance(item['interview'], str):
-                    item['interview'] = cleanup_filename(item['interview'])
-                    if item['interview'] is not None:
-                        new_admin_interviews.append(item)
+                elif isinstance(item, dict):
+                    if 'interview' in item and isinstance(item['interview'], str):
+                        item['interview'] = cleanup_filename(item['interview'])
+                        if item['interview'] is not None:
+                            new_admin_interviews.append(item)
+                    elif 'url' in item and isinstance(item['url'], str) and 'title' in item:
+                        new_item = {'url': item['url']}
+                        if isinstance(item['title'], str):
+                            new_item['label'] = {'*': item['title']}
+                        elif isinstance(item['title'], dict):
+                            ok = True
+                            for lang, label in item['title'].items():
+                                if not (isinstance(lang, str) and isinstance(label, str)):
+                                    ok = False
+                                    break
+                            if not ok:
+                                config_error("Invalid title data type in administrative interviews.")
+                                continue
+                            new_item['label'] = item['title']
+                        else:
+                            config_error("Invalid title data type in administrative interviews.")
+                            continue
+                        if 'required privileges' in item:
+                            if not isinstance(item['required privileges'], list):
+                                config_error("Invalid required privileges data type in administrative interviews.")
+                                continue
+                            ok = True
+                            for role_item in item['required privileges']:
+                                if not isinstance(role_item, str):
+                                    ok = False
+                                    break
+                            if not ok:
+                                config_error("Invalid data type in administrative interviews.")
+                                continue
+                            new_item['roles'] = item['required privileges']
+                        else:
+                            new_item['roles'] = None
+                        new_item['require_login'] = bool(item.get('require login', False))
+                        new_admin_interviews.append(new_item)
+                    else:
+                        config_error("Unrecognized item in administrative interviews.")
             daconfig['administrative interviews'] = new_admin_interviews
         else:
             del daconfig['administrative interviews']

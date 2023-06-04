@@ -1237,7 +1237,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     if d_type == 'checkbox' and hasattr(field, 'nota') and status.extras['nota'][field.number] is not False:
                         if '_ignore' + str(field.number) not in validation_rules['rules']:
                             validation_rules['rules']['_ignore' + str(field.number)] = {}
-                        if 'checkatleast' not in validation_rules['rules']['_ignore' + str(field.number)]:
+                        if status.extras['required'][field.number] and 'checkatleast' not in validation_rules['rules']['_ignore' + str(field.number)]:
                             validation_rules['rules']['_ignore' + str(field.number)]['checkatleast'] = [str(field.number), 1]
                         if status.extras['nota'][field.number] is True:
                             formatted_item = word("None of the above")
@@ -1250,7 +1250,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                             unescaped_item = markdown_to_html(str(status.extras['nota'][field.number]), status=status, trim=False, escape=False, do_terms=False)
                         if '_ignore' + str(field.number) not in validation_rules['messages']:
                             validation_rules['messages']['_ignore' + str(field.number)] = {}
-                        validation_rules['messages']['_ignore' + str(field.number)]['checkatleast'] = field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple([strip_tags(unescaped_item)]))
+                        if status.extras['required'][field.number]:
+                            validation_rules['messages']['_ignore' + str(field.number)]['checkatleast'] = field.validation_message('checkboxes required', status, word("Check at least one option, or check “%s”"), parameters=tuple([strip_tags(unescaped_item)]))
                 if field.datatype == 'date':
                     validation_rules['rules'][the_saveas]['date'] = True
                     validation_rules['messages'][the_saveas]['date'] = field.validation_message('date', status, word("You need to enter a valid date."))
@@ -1395,6 +1396,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 elif field.datatype == 'threestate':
                     checkboxes[field.saveas] = 'None'
                 elif field.datatype in ['multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes']:
+                    is_object = field.datatype.startswith('object')
                     if field.choicetype in ['compute', 'manual']:
                         pairlist = list(status.selectcompute[field.number])
                     else:
@@ -1403,7 +1405,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if isinstance(pair['key'], str):
-                            checkboxes[safeid(from_safeid(field.saveas) + "[B" + myb64quote(pair['key']) + "]")] = 'False'
+                            if is_object:
+                                checkboxes[safeid(from_safeid(field.saveas) + "[O" + myb64quote(pair['key']) + "]")] = 'False'
+                            else:
+                                checkboxes[safeid(from_safeid(field.saveas) + "[B" + myb64quote(pair['key']) + "]")] = 'False'
                         else:
                             checkboxes[safeid(from_safeid(field.saveas) + "[R" + myb64quote(repr(pair['key'])) + "]")] = 'False'
                 elif not status.extras['required'][field.number]:
@@ -1540,6 +1545,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         validation_rules['errorElement'] = "span"
         validation_rules['errorLabelContainer'] = "#daerrorcontainer"
         if status.question.question_variety in ["radio", "dropdown", "combobox"]:
+            if hasattr(status.question.fields[0], 'saveas'):
+                varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
             if status.question.question_variety == "radio":
                 verb = 'check'
                 output += '                <fieldset class="da-field-' + status.question.question_variety + '">\n                  <legend class="visually-hidden">' + word("Choices (choose one):") + "</legend>\n"
@@ -2411,8 +2418,10 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
             random.shuffle(pairlist)
         if field.datatype in ['multiselect', 'object_multiselect']:
             if field.datatype == 'object_multiselect':
+                is_object = True
                 daobject = ' damultiselect daobject'
             else:
+                is_object = False
                 daobject = ' damultiselect'
             if embedded:
                 emb_text = 'class="dainput-embedded' + daobject + '" '
@@ -2440,7 +2449,10 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     the_options += f'<optgroup label="{pair_group}">'
                     last_group = pair_group
                 if isinstance(pair['key'], str):
-                    inner_field = safeid(from_safeid(saveas_string) + "[B" + myb64quote(pair['key']) + "]")
+                    if is_object:
+                        inner_field = safeid(from_safeid(saveas_string) + "[O" + myb64quote(pair['key']) + "]")
+                    else:
+                        inner_field = safeid(from_safeid(saveas_string) + "[B" + myb64quote(pair['key']) + "]")
                     key_data = ' data-valname=' + myb64doublequote(pair['key'])
                 else:
                     inner_field = safeid(from_safeid(saveas_string) + "[R" + myb64quote(repr(pair['key'])) + "]")
@@ -2479,6 +2491,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
             if field.datatype in ['object_multiselect']:
                 output += '<input type="hidden" name="' + safeid(from_safeid(field.saveas) + ".gathered") + '" value="True"' + disable_others_data + '/>'
         elif field.datatype in ['checkboxes', 'object_checkboxes']:
+            is_object = field.datatype == 'object_checkboxes'
             # if len(pairlist) == 0:
             #    return '<input type="hidden" name="' + safeid(from_safeid(saveas_string))+ '" value="None"/>'
             inner_fieldlist = []
@@ -2490,7 +2503,11 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     legend_text = 'Checkboxes (select at least one):'
                 else:
                     legend_text = 'Checkboxes:'
-                output += '<fieldset class="da-field-checkboxes" role="group"><legend class="visually-hidden">' + word(legend_text) + '</legend>'
+                if is_object:
+                    output += '<fieldset class="da-field-checkboxes daobject"'
+                else:
+                    output += '<fieldset class="da-field-checkboxes"'
+                output += ' data-varname=' + myb64doublequote(from_safeid(field.saveas)) + ' role="group"><legend class="visually-hidden">' + word(legend_text) + '</legend>'
             all_checked = True
             for pair in pairlist:
                 if 'image' in pair:
@@ -2507,9 +2524,15 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     css_color = DEFAULT_LABELAUTY_COLOR
                 helptext = pair.get('help', None)
                 if isinstance(pair['key'], str):
-                    inner_field = safeid(from_safeid(saveas_string) + "[B" + myb64quote(pair['key']) + "]")
+                    if is_object:
+                        inner_field = safeid(from_safeid(saveas_string) + "[O" + myb64quote(pair['key']) + "]")
+                        cbtype = "O"
+                    else:
+                        inner_field = safeid(from_safeid(saveas_string) + "[B" + myb64quote(pair['key']) + "]")
+                        cbtype = "B"
                 else:
                     inner_field = safeid(from_safeid(saveas_string) + "[R" + myb64quote(repr(pair['key'])) + "]")
+                    cbtype = "R"
                 formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)
                 def_key = from_safeid(saveas_string) + "[" + repr(pair['key']) + "]"
                 if def_key in status.other_defaults and status.other_defaults[def_key]:
@@ -2533,9 +2556,9 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                     ischecked = ''
                     all_checked = False
                 if embedded:
-                    inner_fieldlist.append('<input aria-label="' + formatted_item + '" class="dacheckbox-embedded dafield' + str(field.number) + ' danon-nota-checkbox' + css_class + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + '/>&nbsp;<label class="form-label" for="' + escape_id(saveas_string) + '_' + str(id_index) + '" />' + the_icon + formatted_item + '</label>')
+                    inner_fieldlist.append('<input aria-label="' + formatted_item + '" class="dacheckbox-embedded dafield' + str(field.number) + ' danon-nota-checkbox' + css_class + '" data-cbtype="' + cbtype + '"' + ' data-cbvalue=' + myb64quote(pair['key']) + 'id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + '/>&nbsp;<label class="form-label" for="' + escape_id(saveas_string) + '_' + str(id_index) + '" />' + the_icon + formatted_item + '</label>')
                 else:
-                    inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + css_color + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="' + 'dafield' + str(field.number) + ' danon-nota-checkbox da-to-labelauty checkbox-icon' + extra_checkbox + css_class + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + ' />', helptext, status))
+                    inner_fieldlist.append(help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + css_color + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="' + 'dafield' + str(field.number) + ' danon-nota-checkbox da-to-labelauty checkbox-icon' + extra_checkbox + css_class + '"' + ' data-cbtype="' + cbtype + '"' + ' data-cbvalue=' + myb64quote(pair['key']) + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + ' />', helptext, status))
                 id_index += 1
             if 'aota' in status.extras and field.number in status.extras['aota'] and status.extras['aota'][field.number] is not False:
                 if all_checked:
@@ -2861,7 +2884,7 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
             if embedded:
                 output += '<span class="da-embed-threestate-wrapper">'
             else:
-                output += '<fieldset class="field-radio" role="radiogroup"' + req_aria + '><legend class="visually-hidden">' + word('Choices:') + '</legend>'
+                output += '<fieldset class="da-field-radio" role="radiogroup"' + req_aria + '><legend class="visually-hidden">' + word('Choices:') + '</legend>'
             if field.sign > 0:
                 for pair in [{'key': 'True', 'label': status.question.yes()}, {'key': 'False', 'label': status.question.no()}, {'key': 'None', 'label': status.question.maybe()}]:
                     formatted_item = markdown_to_html(str(pair['label']), status=status, trim=True, escape=(not embedded), do_terms=False)

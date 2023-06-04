@@ -512,9 +512,9 @@ extraneous_var = re.compile(r'^x\.|^x\[')
 key_requires_preassembly = re.compile(r'^(session_local\.|device_local\.|user_local\.|x\.|x\[|_multiple_choice|.*\[[ijklmn]\])')
 # match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
 # match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
-match_brackets = re.compile(r'\[[BR]?\'[^\]]*\'\]$')
-match_inside_and_outside_brackets = re.compile(r'(.*)(\[[BR]?\'[^\]]*\'\])$')
-match_inside_brackets = re.compile(r'\[([BR]?)\'([^\]]*)\'\]')
+match_brackets = re.compile(r'\[[BRO]?\'[^\]]*\'\]$')
+match_inside_and_outside_brackets = re.compile(r'(.*)(\[[BRO]?\'[^\]]*\'\])$')
+match_inside_brackets = re.compile(r'\[([BRO]?)\'([^\]]*)\'\]')
 valid_python_var = re.compile(r'^[A-Za-z][A-Za-z0-9\_]*$')
 valid_python_exp = re.compile(r'^[A-Za-z][A-Za-z0-9\_\.]*$')
 
@@ -2833,7 +2833,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
 
 
 def process_bracket_expression(match):
-    if match.group(1) in ('B', 'R'):
+    if match.group(1) in ('B', 'R', 'O'):
         try:
             inner = codecs.decode(repad(bytearray(match.group(2), encoding='utf-8')), 'base64').decode('utf-8')
         except:
@@ -3203,7 +3203,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
     source_message = word("Information for the developer")
     if debug_mode:
         source_button = '<div class="nav-item navbar-nav d-none d-md-block"><button class="btn btn-link nav-link da-no-outline" title=' + json.dumps(source_message) + ' id="dasourcetoggle" data-bs-toggle="collapse" data-bs-target="#dasource"><i class="fas fa-code"></i></button></div>'
-        source_menu_item = '<a class="dropdown-item d-block d-lg-none navbar" title=' + json.dumps(source_message) + ' href="#dasource" data-bs-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
+        source_menu_item = '<a class="dropdown-item d-block d-lg-none" title=' + json.dumps(source_message) + ' href="#dasource" data-bs-toggle="collapse" aria-expanded="false" aria-controls="source">' + word('Source') + '</a>'
     else:
         source_button = ''
         source_menu_item = ''
@@ -3248,9 +3248,9 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                     else:
                         custom_menu += '<a class="dropdown-item' + menu_item_classes + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
         else:
-            custom_menu = False
+            custom_menu = ""
     else:
-        custom_menu = False
+        custom_menu = ""
     if ALLOW_REGISTRATION:
         sign_in_text = word('Sign in or sign up to save answers')
     else:
@@ -3259,76 +3259,79 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         login_url = url_for('user.login', next=url_for('index', **index_params))
     else:
         login_url = url_for('user.login')
-    if show_login:
-        if current_user.is_anonymous:
-            if custom_menu:
-                navbar += '              <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-end" aria-labelledby="damenuLabel">' + custom_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
-            else:
-                if daconfig.get('login link style', 'normal') == 'button':
-                    if ALLOW_REGISTRATION:
-                        if daconfig.get('resume interview after login', False):
-                            register_url = url_for('user.register', next=url_for('index', **index_params))
-                        else:
-                            register_url = url_for('user.register')
-                        navbar += '              <li class="nav-item"><a class="nav-link" href="' + register_url + '">' + word('Sign up') + '</a></li>'
-                        navbar += '              <li class="nav-item"><a class="nav-link d-block d-md-none" href="' + login_url + '">' + word('Sign in') + '</a>'
-
+    if not status.question.interview.options.get('hide corner interface', False):
+        admin_menu = ''
+        if not status.question.interview.options.get('hide standard menu', False):
+            for item in app.config['ADMIN_INTERVIEWS']:
+                if item.can_use() and item.is_not(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')):
+                    admin_menu += '<a class="dropdown-item" href="' + item.get_url() + '">' + item.get_title(docassemble.base.functions.get_language()) + '</a>'
+        if show_login:
+            if current_user.is_anonymous:
+                if custom_menu or admin_menu:
+                    navbar += '              <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-end" aria-labelledby="damenuLabel">' + custom_menu + admin_menu + '<a class="dropdown-item" href="' + login_url + '">' + sign_in_text + '</a></div></li>'
                 else:
-                    navbar += '              <li class="nav-item"><a class="nav-link" href="' + login_url + '">' + sign_in_text + '</a></li>'
-        else:
-            if (custom_menu is False or custom_menu == '') and status.question.interview.options.get('hide standard menu', False):
-                navbar += '              <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
-            else:
-                navbar += '              <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-end" aria-labelledby="damenuLabel">'
-                if custom_menu:
-                    navbar += custom_menu
-                if not status.question.interview.options.get('hide standard menu', False):
-                    if current_user.has_role('admin', 'developer'):
-                        navbar += source_menu_item
-                    if current_user.has_role('admin', 'advocate') and app.config['ENABLE_MONITOR']:
-                        navbar += '<a class="dropdown-item" href="' + url_for('monitor') + '">' + word('Monitor') + '</a>'
-                    if current_user.has_role('admin', 'developer', 'trainer'):
-                        navbar += '<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
-                    if current_user.has_role('admin', 'developer'):
-                        if app.config['ALLOW_UPDATES']:
-                            navbar += '<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
-                        if app.config['ALLOW_LOG_VIEWING']:
-                            navbar += '<a class="dropdown-item" href="' + url_for('logs') + '">' + word('Logs') + '</a>'
-                        if app.config['ENABLE_PLAYGROUND']:
-                            navbar += '<a class="dropdown-item" href="' + url_for('playground_page') + '">' + word('Playground') + '</a>'
-                        navbar += '<a class="dropdown-item" href="' + url_for('utilities') + '">' + word('Utilities') + '</a>'
-                    if current_user.has_role('admin', 'advocate') or current_user.can_do('access_user_info'):
-                        navbar += '<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
-                    if current_user.has_role('admin') and app.config['ALLOW_CONFIGURATION_EDITING']:
-                        navbar += '<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
-                    if app.config['SHOW_DISPATCH']:
-                        navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a>'
-                    for item in app.config['ADMIN_INTERVIEWS']:
-                        if item.can_use() and docassemble.base.functions.this_thread.current_info.get('yaml_filename', '') != item.interview:
-                            navbar += '<a class="dropdown-item" href="' + url_for_interview(i=item.interview, new_session='1') + '">' + item.get_title(docassemble.base.functions.get_language()) + '</a>'
-                    if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
-                        navbar += '<a class="dropdown-item" href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a>'
-                    if current_user.has_role('admin', 'developer'):
-                        navbar += '<a class="dropdown-item" href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a>'
+                    if daconfig.get('login link style', 'normal') == 'button':
+                        if ALLOW_REGISTRATION:
+                            if daconfig.get('resume interview after login', False):
+                                register_url = url_for('user.register', next=url_for('index', **index_params))
+                            else:
+                                register_url = url_for('user.register')
+                            navbar += '              <li class="nav-item"><a class="nav-link" href="' + register_url + '">' + word('Sign up') + '</a></li>'
+                            navbar += '              <li class="nav-item"><a class="nav-link d-block d-md-none" href="' + login_url + '">' + word('Sign in') + '</a>'
                     else:
-                        if app.config['SHOW_PROFILE'] or current_user.has_role('admin', 'developer'):
+                        navbar += '              <li class="nav-item"><a class="nav-link" href="' + login_url + '">' + sign_in_text + '</a></li>'
+            else:
+                if custom_menu == '' and status.question.interview.options.get('hide standard menu', False):
+                    navbar += '              <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
+                else:
+                    navbar += '              <li class="nav-item dropdown"><a class="nav-link dropdown-toggle d-none d-md-block" href="#" data-bs-toggle="dropdown" role="button" id="damenuLabel" aria-haspopup="true" aria-expanded="false">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a><div class="dropdown-menu dropdown-menu-end" aria-labelledby="damenuLabel">'
+                    if custom_menu:
+                        navbar += custom_menu
+                    if not status.question.interview.options.get('hide standard menu', False):
+                        if current_user.has_role('admin', 'developer'):
+                            navbar += source_menu_item
+                        if current_user.has_role('admin', 'advocate') and app.config['ENABLE_MONITOR']:
+                            navbar += '<a class="dropdown-item" href="' + url_for('monitor') + '">' + word('Monitor') + '</a>'
+                        if current_user.has_role('admin', 'developer', 'trainer'):
+                            navbar += '<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
+                        if current_user.has_role('admin', 'developer'):
+                            if app.config['ALLOW_UPDATES']:
+                                navbar += '<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
+                            if app.config['ALLOW_LOG_VIEWING']:
+                                navbar += '<a class="dropdown-item" href="' + url_for('logs') + '">' + word('Logs') + '</a>'
+                            if app.config['ENABLE_PLAYGROUND']:
+                                navbar += '<a class="dropdown-item" href="' + url_for('playground_page') + '">' + word('Playground') + '</a>'
+                            navbar += '<a class="dropdown-item" href="' + url_for('utilities') + '">' + word('Utilities') + '</a>'
+                        if current_user.has_role('admin', 'advocate') or current_user.can_do('access_user_info'):
+                            navbar += '<a class="dropdown-item" href="' + url_for('user_list') + '">' + word('User List') + '</a>'
+                        if current_user.has_role('admin') and app.config['ALLOW_CONFIGURATION_EDITING']:
+                            navbar += '<a class="dropdown-item" href="' + url_for('config_page') + '">' + word('Configuration') + '</a>'
+                        if app.config['SHOW_DISPATCH']:
+                            navbar += '<a class="dropdown-item" href="' + url_for('interview_start') + '">' + word('Available Interviews') + '</a>'
+                        navbar += admin_menu
+                        if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
+                            navbar += '<a class="dropdown-item" href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a>'
+                        if current_user.has_role('admin', 'developer'):
                             navbar += '<a class="dropdown-item" href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a>'
-                        elif current_user.social_id.startswith('local') and app.config['ALLOW_CHANGING_PASSWORD']:
-                            navbar += '<a class="dropdown-item" href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a>'
-                    navbar += '<a class="dropdown-item" href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a>'
-                navbar += '</div></li>'
-    else:
-        if custom_menu:
-            navbar += '              <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-end">' + custom_menu
-            if not status.question.interview.options.get('hide standard menu', False):
-                navbar += '<a class="dropdown-item" href="' + exit_href() + '">' + status.exit_label + '</a>'
-            navbar += '</div></li>'
+                        else:
+                            if app.config['SHOW_PROFILE'] or current_user.has_role('admin', 'developer'):
+                                navbar += '<a class="dropdown-item" href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a>'
+                            elif current_user.social_id.startswith('local') and app.config['ALLOW_CHANGING_PASSWORD']:
+                                navbar += '<a class="dropdown-item" href="' + url_for('user.change_password') + '">' + word('Change Password') + '</a>'
+                        navbar += '<a class="dropdown-item" href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a>'
+                    navbar += '</div></li>'
         else:
-            navbar += '              <li class="nav-item"><a class="nav-link" href="' + exit_href() + '">' + status.exit_label + '</a></li>'
-    navbar += """
+            if custom_menu or admin_menu:
+                navbar += '              <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" class="dropdown-toggle d-none d-md-block" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '</a><div class="dropdown-menu dropdown-menu-end">' + custom_menu + admin_menu
+                if not status.question.interview.options.get('hide standard menu', False):
+                    navbar += '<a class="dropdown-item" href="' + exit_href() + '">' + status.exit_label + '</a>'
+                navbar += '</div></li>'
+            else:
+                navbar += '              <li class="nav-item"><a class="nav-link" href="' + exit_href() + '">' + status.exit_label + '</a></li>'
+        navbar += """
             </ul>"""
-    if daconfig.get('login link style', 'normal') == 'button' and show_login and current_user.is_anonymous and not custom_menu:
-        navbar += '\n            <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ms-3 d-none d-md-block" href="' + login_url + '">' + word('Sign in') + '</a>'
+        if daconfig.get('login link style', 'normal') == 'button' and show_login and current_user.is_anonymous and not custom_menu:
+            navbar += '\n            <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ms-3 d-none d-md-block" href="' + login_url + '">' + word('Sign in') + '</a>'
     navbar += """
           </div>
         </div>
@@ -7233,7 +7236,7 @@ def index(action_argument=None, refer=None):
             real_key = safeid(key)
             b_match = match_inside_brackets.search(match.group(2))
             if b_match:
-                if b_match.group(1) in ('B', 'R'):
+                if b_match.group(1) in ('B', 'R', 'O'):
                     try:
                         bracket_expression = from_safeid(b_match.group(2))
                     except:
@@ -8527,6 +8530,8 @@ def index(action_argument=None, refer=None):
       var daVarLookupMulti = Object();
       var daVarLookupRevMulti = Object();
       var daVarLookupSelect = Object();
+      var daVarLookupCheckbox = Object();
+      var daVarLookupOption = Object();
       var daTargetDiv;
       var daComboBoxes = Object();
       var daGlobalEval = eval;
@@ -8734,6 +8739,21 @@ def index(action_argument=None, refer=None):
         }
       }
       function getField(fieldName, notInDiv){
+        if (daVarLookupCheckbox[fieldName]){
+          var n = daVarLookupCheckbox[fieldName].length;
+          for (var i = 0; i < n; ++i){
+            var elem = daVarLookupCheckbox[fieldName][i].checkboxes[0].elem;
+            if (!$(elem).prop('disabled')){
+              var showifParents = $(elem).parents(".dajsshowif,.dashowif");
+              if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
+                if (notInDiv && $.contains(notInDiv, elem)){
+                  continue;
+                }
+                return daVarLookupCheckbox[fieldName][i].fieldset;
+              }
+            }
+          }
+        }
         if (daVarLookupSelect[fieldName]){
           var n = daVarLookupSelect[fieldName].length;
           for (var i = 0; i < n; ++i){
@@ -8767,6 +8787,12 @@ def index(action_argument=None, refer=None):
               }
               returnVal = possibleElements[i];
             }
+          }
+        }
+        if ($(returnVal).hasClass('da-to-labelauty') && $(returnVal).parents('fieldset').length > 0){
+          var fieldSet = $(returnVal).parents('fieldset')[0];
+          if (!$(fieldSet).hasClass('da-field-checkbox') && !$(fieldSet).hasClass('da-field-checkboxes')){
+            return fieldSet;
           }
         }
         return returnVal;
@@ -8812,37 +8838,38 @@ def index(action_argument=None, refer=None):
         }
       }
       var daSetChoices = setChoices;
-      function setField(fieldName, val){
+      function setField(fieldName, theValue){
         var elem = daGetField(fieldName);
         if (elem == null){
           console.log('setField: reference to non-existent field ' + fieldName);
           return;
         }
+        if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-radio")){
+          elem = $(elem).find('input')[0];
+        }
         if ($(elem).attr('type') == "checkbox"){
-          if (val){
+          if (theValue){
             if ($(elem).prop('checked') != true){
-              $(elem).prop('checked', true);
-              $(elem).trigger('change');
+              $(elem).click();
             }
           }
           else{
             if ($(elem).prop('checked') != false){
-              $(elem).prop('checked', false);
-              $(elem).trigger('change');
+              $(elem).click();
             }
           }
         }
         else if ($(elem).attr('type') == "radio"){
           var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           var wasSet = false;
-          if (val === true){
-            val = 'True';
+          if (theValue === true){
+            theValue = 'True';
           }
-          if (val === false){
-            val = 'False';
+          if (theValue === false){
+            theValue = 'False';
           }
           $("input[name='" + fieldNameEscaped + "']").each(function(){
-            if ($(this).val() == val){
+            if ($(this).val() == theValue){
               if ($(this).prop('checked') != true){
                 $(this).prop('checked', true);
                 $(this).trigger('change');
@@ -8852,24 +8879,97 @@ def index(action_argument=None, refer=None):
             }
           });
           if (!wasSet){
-            console.log('setField: could not set radio button ' + fieldName + ' to ' + val);
+            console.log('setField: could not set radio button ' + fieldName + ' to ' + theValue);
           }
         }
         else if ($(elem).attr('type') == "hidden"){
-          if ($(elem).val() != val){
+          if ($(elem).val() != theValue){
             if ($(elem).parents('.combobox-container').length > 0){
               var comboInput = $(elem).parents('.combobox-container').first().find('input.combobox').first();
-              daComboBoxes[$(comboInput).attr('id')].manualSelect(val);
+              daComboBoxes[$(comboInput).attr('id')].manualSelect(theValue);
             }
             else{
-              $(elem).val(val);
+              $(elem).val(theValue);
+              $(elem).trigger('change');
+            }
+          }
+        }
+        else if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-checkboxes")){
+          if (!Array.isArray(theValue)){
+            throw new Error('setField: value must be an array');
+          }
+          var n = theValue.length;
+          $(elem).find('input').each(function(){
+            if ($(this).hasClass('danota-checkbox')){
+              $(this).prop('checked', n == 0);
+              $(this).trigger('change');
+              return;
+            }
+            if ($(this).hasClass('daaota-checkbox')){
+              $(this).prop('checked', false);
+              $(this).trigger('change');
+              return;
+            }
+            if ($(this).attr('name').substr(0, 7) === '_ignore'){
+              return;
+            }
+            var theVal = atou($(this).data('cbvalue'));
+            if ($(elem).hasClass("daobject")){
+              theVal = atou(theVal);
+            }
+            var oldVal = $(this).prop('checked') == true;
+            var newVal = false;
+            for (var i = 0; i < n; ++i){
+              if (theValue[i] == theVal){
+                newVal = true;
+              }
+            }
+            if (oldVal != newVal){
+              $(this).click();
+            }
+          });
+        }
+        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('damultiselect')){
+          if (daVarLookupSelect[fieldName]){
+            var n = daVarLookupSelect[fieldName].length;
+            for (var i = 0; i < n; ++i){
+              if (daVarLookupSelect[fieldName][i].select === elem){
+                var oldValue = $(daVarLookupSelect[fieldName][i].option).prop('selected') == true;
+                if (oldValue != theValue){
+                  $(daVarLookupSelect[fieldName][i].option).prop('selected', theValue);
+                  $(elem).trigger('change');
+                }
+              }
+            }
+          }
+          else{
+            if (!Array.isArray(theValue)){
+              throw new Error('setField: value must be an array');
+            }
+            var n = theValue.length;
+            var changed = false;
+            $(elem).find('option').each(function(){
+              var thisVal = daVarLookupOption[$(this).val()];
+              var oldVal = $(this).prop('selected') == true;
+              var newVal = false;
+              for (var i = 0; i < n; ++i){
+                if (thisVal == theValue[i]){
+                  newVal = true;
+                }
+              }
+              if (newVal !== oldVal){
+                changed = true;
+                $(this).prop('selected', newVal);
+              }
+            });
+            if (changed){
               $(elem).trigger('change');
             }
           }
         }
         else{
-          if ($(elem).val() != val){
-            $(elem).val(val);
+          if ($(elem).val() != theValue){
+            $(elem).val(theValue);
             $(elem).trigger('change');
           }
         }
@@ -8879,6 +8979,9 @@ def index(action_argument=None, refer=None):
         var elem = daGetField(fieldName);
         if (elem == null){
           return null;
+        }
+        if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-radio")){
+          elem = $(elem).find('input')[0];
         }
         if ($(elem).attr('type') == "checkbox"){
           if ($(elem).prop('checked')){
@@ -8903,12 +9006,41 @@ def index(action_argument=None, refer=None):
             }
           }
         }
-        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('damultiselect') && daVarLookupSelect[fieldName]){
-          var n = daVarLookupSelect[fieldName].length;
-          for (var i = 0; i < n; ++i){
-            if (daVarLookupSelect[fieldName][i].select === elem){
-              return $(daVarLookupSelect[fieldName][i].option).prop('selected');
+        else if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-checkboxes")){
+          var cbSelected = [];
+          $(elem).find('input').each(function(){
+            if ($(this).attr('name').substr(0,7) === '_ignore'){
+              return;
             }
+            var theVal = atou($(this).data('cbvalue'));
+            if ($(elem).hasClass("daobject")){
+              theVal = atou(theVal);
+            }
+            if ($(this).prop('checked')){
+              cbSelected.push(theVal);
+            }
+          });
+          return cbSelected;
+        }
+        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('damultiselect')){
+          if (daVarLookupSelect[fieldName]){
+            var n = daVarLookupSelect[fieldName].length;
+            for (var i = 0; i < n; ++i){
+              if (daVarLookupSelect[fieldName][i].select === elem){
+                return $(daVarLookupSelect[fieldName][i].option).prop('selected');
+              }
+            }
+          }
+          else{
+            var selectedVals = [];
+            $(elem).find('option').each(function(){
+              if ($(this).prop('selected')){
+                if (daVarLookupOption[$(this).val()]){
+                  selectedVals.push(daVarLookupOption[$(this).val()]);
+                }
+              }
+            });
+            return selectedVals;
           }
         }
         else{
@@ -10951,22 +11083,50 @@ def index(action_argument=None, refer=None):
         //  }
         //});
         $('select.damultiselect').each(function(){
+          var isObject = $(this).hasClass('daobject');
           var varname = atou($(this).data('varname'));
           var theSelect = this;
           $(this).find('option').each(function(){
             var theVal = atou($(this).data('valname'));
+            if (isObject){
+              theVal = atou(theVal);
+            }
             var key = varname + '["' + theVal + '"]';
             if (!daVarLookupSelect[key]){
               daVarLookupSelect[key] = [];
             }
-            daVarLookupSelect[key].push({'select': theSelect, 'option': this});
+            daVarLookupSelect[key].push({'select': theSelect, 'option': this, 'value': theVal});
             key = varname + "['" + theVal + "']"
             if (!daVarLookupSelect[key]){
               daVarLookupSelect[key] = [];
             }
-            daVarLookupSelect[key].push({'select': theSelect, 'option': this});
+            daVarLookupSelect[key].push({'select': theSelect, 'option': this, 'value': theVal});
           });
         })
+        $('fieldset.da-field-checkboxes').each(function(){
+          var isObject = $(this).hasClass('daobject');
+          var varname = atou($(this).data('varname'));
+          var cbList = [];
+          if (!daVarLookupCheckbox[varname]){
+            daVarLookupCheckbox[varname] = [];
+          }
+          $(this).find('input').each(function(){
+            if ($(this).attr('name').substr(0,7) === '_ignore'){
+              return;
+            }
+            var theVal = atou($(this).data('cbvalue'));
+            var theType = $(this).data('cbtype');
+            var key;
+            if (theType == 'R'){
+              key = varname + '[' + theVal + ']';
+            }
+            else {
+              key = varname + '["' + theVal + '"]';
+            }
+            cbList.push({'variable': key, 'value': theVal, 'type': theType, 'elem': this})
+          });
+          daVarLookupCheckbox[varname].push({'fieldset': this, 'checkboxes': cbList, 'isObject': isObject});
+        });
         $('.dacurrency').each(function(){
           var theVal = $(this).val().toString();
           if (theVal.indexOf('.') >= 0){
@@ -11397,6 +11557,7 @@ def index(action_argument=None, refer=None):
         daVarLookupRev = Object();
         daVarLookupMulti = Object();
         daVarLookupRevMulti = Object();
+        daVarLookupOption = Object();
         if ($("input[name='_varnames']").length){
           the_hash = $.parseJSON(atou($("input[name='_varnames']").val()));
           for (var key in the_hash){
@@ -11416,6 +11577,7 @@ def index(action_argument=None, refer=None):
         }
         if ($("input[name='_checkboxes']").length){
           var patt = new RegExp(/\[B['"][^\]]*['"]\]$/);
+          var pattObj = new RegExp(/\[O['"][^\]]*['"]\]$/);
           var pattRaw = new RegExp(/\[R['"][^\]]*['"]\]$/);
           the_hash = $.parseJSON(atou($("input[name='_checkboxes']").val()));
           for (var key in the_hash){
@@ -11440,9 +11602,11 @@ def index(action_argument=None, refer=None):
                 var daNameOne = utoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
                 var daNameTwo = utoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '');
                 var daNameThree = utoa(baseName + '["' + convertedName + '"]').replace(/[\\n=]/g, '');
+                var daNameBase = utoa(baseName).replace(/[\\n=]/g, '');
                 daVarLookupRev[daNameOne] = daNameTwo;
                 daVarLookup[daNameTwo] = daNameOne;
                 daVarLookup[daNameThree] = daNameOne;
+                daVarLookupOption[key] = convertedName;
                 if (!daVarLookupRevMulti.hasOwnProperty(daNameOne)){
                   daVarLookupRevMulti[daNameOne] = [];
                 }
@@ -11455,6 +11619,50 @@ def index(action_argument=None, refer=None):
                   daVarLookupMulti[daNameThree] = [];
                 }
                 daVarLookupMulti[daNameThree].push(daNameOne);
+                if (!daVarLookupMulti.hasOwnProperty(daNameBase)){
+                  daVarLookupMulti[daNameBase] = [];
+                }
+                daVarLookupMulti[daNameBase].push(daNameOne);
+              }
+              else if (pattObj.test(baseName)){
+                bracketPart = checkboxName.replace(/^.*(\[O?['"][^\]]*['"]\])$/, "$1");
+                checkboxName = checkboxName.replace(/^.*\[O?['"]([^\]]*)['"]\]$/, "$1");
+                baseName = baseName.replace(/^(.*)\[.*/, "$1");
+                var transBaseName = baseName;
+                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
+                  transBaseName = atou(daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')]);
+                }
+                var convertedName;
+                try {
+                  convertedName = atou(atou(checkboxName));
+                }
+                catch (e) {
+                  continue;
+                }
+                var daNameOne = utoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
+                var daNameTwo = utoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '');
+                var daNameThree = utoa(baseName + '["' + convertedName + '"]').replace(/[\\n=]/g, '');
+                var daNameBase = utoa(baseName).replace(/[\\n=]/g, '');
+                daVarLookupRev[daNameOne] = daNameTwo;
+                daVarLookup[daNameTwo] = daNameOne;
+                daVarLookup[daNameThree] = daNameOne;
+                daVarLookupOption[key] = convertedName;
+                if (!daVarLookupRevMulti.hasOwnProperty(daNameOne)){
+                  daVarLookupRevMulti[daNameOne] = [];
+                }
+                daVarLookupRevMulti[daNameOne].push(daNameTwo);
+                if (!daVarLookupMulti.hasOwnProperty(daNameTwo)){
+                  daVarLookupMulti[daNameTwo] = [];
+                }
+                daVarLookupMulti[daNameTwo].push(daNameOne);
+                if (!daVarLookupMulti.hasOwnProperty(daNameThree)){
+                  daVarLookupMulti[daNameThree] = [];
+                }
+                daVarLookupMulti[daNameThree].push(daNameOne);
+                if (!daVarLookupMulti.hasOwnProperty(daNameBase)){
+                  daVarLookupMulti[daNameBase] = [];
+                }
+                daVarLookupMulti[daNameBase].push(daNameOne);
               }
               else if (pattRaw.test(baseName)){
                 bracketPart = checkboxName.replace(/^.*(\[R?['"][^\]]*['"]\])$/, "$1");
@@ -11473,8 +11681,10 @@ def index(action_argument=None, refer=None):
                 }
                 var daNameOne = utoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
                 var daNameTwo = utoa(baseName + "[" + convertedName + "]").replace(/[\\n=]/g, '')
+                var daNameBase = utoa(baseName).replace(/[\\n=]/g, '');
                 daVarLookupRev[daNameOne] = daNameTwo;
                 daVarLookup[daNameTwo] = daNameOne;
+                daVarLookupOption[key] = convertedName;
                 if (!daVarLookupRevMulti.hasOwnProperty(daNameOne)){
                   daVarLookupRevMulti[daNameOne] = [];
                 }
@@ -11483,6 +11693,10 @@ def index(action_argument=None, refer=None):
                   daVarLookupMulti[daNameTwo] = [];
                 }
                 daVarLookupMulti[daNameTwo].push(daNameOne);
+                if (!daVarLookupMulti.hasOwnProperty(daNameBase)){
+                  daVarLookupMulti[daNameBase] = [];
+                }
+                daVarLookupMulti[daNameBase].push(daNameOne);
               }
             }
           }
@@ -13453,12 +13667,14 @@ def observer():
       var daDisable = null;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
       var daShowIfInProcess = false;
-      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_null_question'];
+      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_list_collect_list', '_null_question'];
       var daVarLookup = Object();
       var daVarLookupRev = Object();
       var daVarLookupMulti = Object();
       var daVarLookupRevMulti = Object();
       var daVarLookupSelect = Object();
+      var daVarLookupCheckbox = Object();
+      var daVarLookupOption = Object();
       var daTargetDiv = "#dabody";
       var daLocationBar = """ + json.dumps(url_for('index', i=i)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
@@ -13729,6 +13945,21 @@ def observer():
         }
       }
       function getField(fieldName, notInDiv){
+        if (daVarLookupCheckbox[fieldName]){
+          var n = daVarLookupCheckbox[fieldName].length;
+          for (var i = 0; i < n; ++i){
+            var elem = daVarLookupCheckbox[fieldName][i].checkboxes[0].elem;
+            if (!$(elem).prop('disabled')){
+              var showifParents = $(elem).parents(".dajsshowif,.dashowif");
+              if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
+                if (notInDiv && $.contains(notInDiv, elem)){
+                  continue;
+                }
+                return daVarLookupCheckbox[fieldName][i].fieldset;
+              }
+            }
+          }
+        }
         if (daVarLookupSelect[fieldName]){
           var n = daVarLookupSelect[fieldName].length;
           for (var i = 0; i < n; ++i){
@@ -13754,7 +13985,7 @@ def observer():
         }
         var returnVal = null;
         for (var i = 0; i < possibleElements.length; ++i){
-          if (!$(possibleElements[i]).prop('disabled')){
+          if (!$(possibleElements[i]).prop('disabled') || $(possibleElements[i]).parents(".file-input.is-locked").length > 0 ){
             var showifParents = $(possibleElements[i]).parents(".dajsshowif,.dashowif");
             if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
               if (notInDiv && $.contains(notInDiv, possibleElements[i])){
@@ -13764,40 +13995,87 @@ def observer():
             }
           }
         }
+        if ($(returnVal).hasClass('da-to-labelauty') && $(returnVal).parents('fieldset').length > 0){
+          var fieldSet = $(returnVal).parents('fieldset')[0];
+          if (!$(fieldSet).hasClass('da-field-checkbox') && !$(fieldSet).hasClass('da-field-checkboxes')){
+            return fieldSet;
+          }
+        }
         return returnVal;
       }
       var daGetField = getField;
-      function setField(fieldName, val){
+      function setChoices(fieldName, choices){
+        var elem = daGetField(fieldName);
+        if (elem == null){
+          console.log("setChoices: reference to non-existent field " + fieldName);
+          return;
+        }
+        var isCombobox = ($(elem).attr('type') == "hidden" && $(elem).parents('.combobox-container').length > 0);
+        if (isCombobox){
+          var comboInput = $(elem).parents('.combobox-container').first().find('input.combobox').first();
+          var comboObject = daComboBoxes[$(comboInput).attr('id')];
+          var oldComboVal = comboObject.$target.val();
+          elem = comboObject.$source;
+        }
+        if ($(elem).prop('tagName') != "SELECT"){
+          console.log("setField: field " + fieldName + " is not a dropdown field");
+          return;
+        }
+        var oldVal = $(elem).val();
+        $(elem).find("option[value!='']").each(function(){
+          $(this).remove();
+        });
+        var n = choices.length;
+        for (var i = 0; i < n; i++){
+          var opt = $("<option>");
+          opt.val(choices[i][0]);
+          opt.text(choices[i][1]);
+          if (oldVal == choices[i][0]){
+            opt.attr("selected", "selected")
+          }
+          $(elem).append(opt);
+        }
+        if (isCombobox){
+          comboObject.refresh();
+          comboObject.clearTarget();
+          if (oldComboVal != ""){
+            daSetField(fieldName, oldComboVal);
+          }
+        }
+      }
+      var daSetChoices = setChoices;
+      function setField(fieldName, theValue){
         var elem = daGetField(fieldName);
         if (elem == null){
           console.log('setField: reference to non-existent field ' + fieldName);
           return;
         }
+        if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-radio")){
+          elem = $(elem).find('input')[0];
+        }
         if ($(elem).attr('type') == "checkbox"){
-          if (val){
+          if (theValue){
             if ($(elem).prop('checked') != true){
-              $(elem).prop('checked', true);
-              $(elem).trigger('change');
+              $(elem).click();
             }
           }
           else{
             if ($(elem).prop('checked') != false){
-              $(elem).prop('checked', false);
-              $(elem).trigger('change');
+              $(elem).click();
             }
           }
         }
         else if ($(elem).attr('type') == "radio"){
           var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           var wasSet = false;
-          if (val === true){
-            val = 'True';
+          if (theValue === true){
+            theValue = 'True';
           }
-          if (val === false){
-            val = 'False';
+          if (theValue === false){
+            theValue = 'False';
           }
           $("input[name='" + fieldNameEscaped + "']").each(function(){
-            if ($(this).val() == val){
+            if ($(this).val() == theValue){
               if ($(this).prop('checked') != true){
                 $(this).prop('checked', true);
                 $(this).trigger('change');
@@ -13807,27 +14085,111 @@ def observer():
             }
           });
           if (!wasSet){
-            console.log('setField: could not set radio button ' + fieldName + ' to ' + val);
+            console.log('setField: could not set radio button ' + fieldName + ' to ' + theValue);
+          }
+        }
+        else if ($(elem).attr('type') == "hidden"){
+          if ($(elem).val() != theValue){
+            if ($(elem).parents('.combobox-container').length > 0){
+              var comboInput = $(elem).parents('.combobox-container').first().find('input.combobox').first();
+              daComboBoxes[$(comboInput).attr('id')].manualSelect(theValue);
+            }
+            else{
+              $(elem).val(theValue);
+              $(elem).trigger('change');
+            }
+          }
+        }
+        else if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-checkboxes")){
+          if (!Array.isArray(theValue)){
+            throw new Error('setField: value must be an array');
+          }
+          var n = theValue.length;
+          $(elem).find('input').each(function(){
+            if ($(this).hasClass('danota-checkbox')){
+              $(this).prop('checked', n == 0);
+              $(this).trigger('change');
+              return;
+            }
+            if ($(this).hasClass('daaota-checkbox')){
+              $(this).prop('checked', false);
+              $(this).trigger('change');
+              return;
+            }
+            if ($(this).attr('name').substr(0, 7) === '_ignore'){
+              return;
+            }
+            var theVal = atou($(this).data('cbvalue'));
+            if ($(elem).hasClass("daobject")){
+              theVal = atou(theVal);
+            }
+            var oldVal = $(this).prop('checked') == true;
+            var newVal = false;
+            for (var i = 0; i < n; ++i){
+              if (theValue[i] == theVal){
+                newVal = true;
+              }
+            }
+            if (oldVal != newVal){
+              $(this).click();
+            }
+          });
+        }
+        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('damultiselect')){
+          if (daVarLookupSelect[fieldName]){
+            var n = daVarLookupSelect[fieldName].length;
+            for (var i = 0; i < n; ++i){
+              if (daVarLookupSelect[fieldName][i].select === elem){
+                var oldValue = $(daVarLookupSelect[fieldName][i].option).prop('selected') == true;
+                if (oldValue != theValue){
+                  $(daVarLookupSelect[fieldName][i].option).prop('selected', theValue);
+                  $(elem).trigger('change');
+                }
+              }
+            }
+          }
+          else{
+            if (!Array.isArray(theValue)){
+              throw new Error('setField: value must be an array');
+            }
+            var n = theValue.length;
+            var changed = false;
+            $(elem).find('option').each(function(){
+              var thisVal = daVarLookupOption[$(this).val()];
+              var oldVal = $(this).prop('selected') == true;
+              var newVal = false;
+              for (var i = 0; i < n; ++i){
+                if (thisVal == theValue[i]){
+                  newVal = true;
+                }
+              }
+              if (newVal !== oldVal){
+                changed = true;
+                $(this).prop('selected', newVal);
+              }
+            });
+            if (changed){
+              $(elem).trigger('change');
+            }
           }
         }
         else{
-          if ($(elem).val() != val){
-            $(elem).val(val);
+          if ($(elem).val() != theValue){
+            $(elem).val(theValue);
             $(elem).trigger('change');
           }
         }
       }
       var daSetField = setField;
       function val(fieldName){
-        var elem = getField(fieldName);
+        var elem = daGetField(fieldName);
         if (elem == null){
           return null;
         }
-        var showifParents = $(elem).parents(".dajsshowif");
-        if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
-          theVal = null;
+        if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-radio")){
+          elem = $(elem).find('input')[0];
         }
-        else if ($(elem).attr('type') == "checkbox"){
+        if ($(elem).attr('type') == "checkbox"){
           if ($(elem).prop('checked')){
             theVal = true;
           }
@@ -13848,6 +14210,43 @@ def observer():
             else if (theVal == 'False'){
               theVal = false;
             }
+          }
+        }
+        else if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-checkboxes")){
+          var cbSelected = [];
+          $(elem).find('input').each(function(){
+            if ($(this).attr('name').substr(0,7) === '_ignore'){
+              return;
+            }
+            var theVal = atou($(this).data('cbvalue'));
+            if ($(elem).hasClass("daobject")){
+              theVal = atou(theVal);
+            }
+            if ($(this).prop('checked')){
+              cbSelected.push(theVal);
+            }
+          });
+          return cbSelected;
+        }
+        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('damultiselect')){
+          if (daVarLookupSelect[fieldName]){
+            var n = daVarLookupSelect[fieldName].length;
+            for (var i = 0; i < n; ++i){
+              if (daVarLookupSelect[fieldName][i].select === elem){
+                return $(daVarLookupSelect[fieldName][i].option).prop('selected');
+              }
+            }
+          }
+          else{
+            var selectedVals = [];
+            $(elem).find('option').each(function(){
+              if ($(this).prop('selected')){
+                if (daVarLookupOption[$(this).val()]){
+                  selectedVals.push(daVarLookupOption[$(this).val()]);
+                }
+              }
+            });
+            return selectedVals;
           }
         }
         else{
@@ -14282,22 +14681,50 @@ def observer():
           }
         });
         $('select.damultiselect').each(function(){
+          var isObject = $(this).hasClass('daobject');
           var varname = atou($(this).data('varname'));
           var theSelect = this;
           $(this).find('option').each(function(){
             var theVal = atou($(this).data('valname'));
+            if (isObject){
+              theVal = atou(theVal);
+            }
             var key = varname + '["' + theVal + '"]';
             if (!daVarLookupSelect[key]){
               daVarLookupSelect[key] = [];
             }
-            daVarLookupSelect[key].push({'select': theSelect, 'option': this});
+            daVarLookupSelect[key].push({'select': theSelect, 'option': this, 'value': theVal});
             key = varname + "['" + theVal + "']"
             if (!daVarLookupSelect[key]){
               daVarLookupSelect[key] = [];
             }
-            daVarLookupSelect[key].push({'select': theSelect, 'option': this});
+            daVarLookupSelect[key].push({'select': theSelect, 'option': this, 'value': theVal});
           });
         })
+        $('fieldset.da-field-checkboxes').each(function(){
+          var isObject = $(this).hasClass('daobject');
+          var varname = atou($(this).data('varname'));
+          var cbList = [];
+          if (!daVarLookupCheckbox[varname]){
+            daVarLookupCheckbox[varname] = [];
+          }
+          $(this).find('input').each(function(){
+            if ($(this).attr('name').substr(0,7) === '_ignore'){
+              return;
+            }
+            var theVal = atou($(this).data('cbvalue'));
+            var theType = $(this).data('cbtype');
+            var key;
+            if (theType == 'R'){
+              key = varname + '[' + theVal + ']';
+            }
+            else {
+              key = varname + '["' + theVal + '"]';
+            }
+            cbList.push({'variable': key, 'value': theVal, 'type': theType, 'elem': this})
+          });
+          daVarLookupCheckbox[varname].push({'fieldset': this, 'checkboxes': cbList, 'isObject': isObject});
+        });
         $('.dacurrency').each(function(){
           var theVal = $(this).val().toString();
           if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
@@ -27592,8 +28019,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
                     if app.config['SHOW_DISPATCH']:
                         menu_items.append({'href': url_for('interview_start'), 'anchor': word('Available Interviews')})
                     for item in app.config['ADMIN_INTERVIEWS']:
-                        if item.can_use() and docassemble.base.functions.this_thread.current_info.get('yaml_filename', '') != item.interview:
-                            menu_items.append({'href': url_for_interview(i=item.interview, new_session='1'), 'anchor': item.get_title(docassemble.base.functions.get_language())})
+                        if item.can_use() and item.is_not(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')):
+                            menu_items.append({'href': item.get_url(), 'anchor': item.get_title(docassemble.base.functions.get_language())})
                     if app.config['SHOW_MY_INTERVIEWS'] or current_user.has_role('admin'):
                         menu_items.append({'href': url_for('interview_list'), 'anchor': word('My Interviews')})
                     if current_user.has_role('admin', 'developer'):
@@ -30676,6 +31103,9 @@ else:
 
 class AdminInterview:
 
+    def is_not(self, interview):
+        return self.interview == interview
+
     def can_use(self):
         if self.require_login and current_user.is_anonymous:
             return False
@@ -30692,7 +31122,49 @@ class AdminInterview:
     def get_title(self, language):
         if isinstance(self.title, str):
             return word(self.title, language=language)
-        return self.title.get(language, word(self.title, language=language))
+        if language in self.title:
+            return self.title[language]
+        if '*' in self.title:
+            return self.title['*']
+        if DEFAULT_LANGUAGE in self.title:
+            return self.title[DEFAULT_LANGUAGE]
+        for lang, title in self.title.items():  # pylint: disable=unused-variable
+            return word(title, language=language)
+
+    def get_url(self):
+        return url_for_interview(i=self.interview, new_session='1')
+
+
+class MenuItem:
+
+    def is_not(self, interview):  # pylint: disable=unused-argument
+        return True
+
+    def can_use(self):
+        if self.require_login and current_user.is_anonymous:
+            return False
+        if self.roles is None:
+            return True
+        if current_user.is_anonymous:
+            if 'anonymous' in self.roles:
+                return True
+            return False
+        if current_user.has_roles(self.roles):
+            return True
+        return False
+
+    def get_title(self, language):
+        if language in self.label:
+            return self.label[language]
+        if '*' in self.label:
+            return self.label['*']
+        if DEFAULT_LANGUAGE in self.label:
+            return self.label[DEFAULT_LANGUAGE]
+        for lang, label in self.label.items():  # pylint: disable=unused-variable
+            return word(label, language=language)
+
+    def get_url(self):
+        return self.url
 
 
 def set_admin_interviews():
@@ -30701,6 +31173,13 @@ def set_admin_interviews():
         if isinstance(daconfig['administrative interviews'], list):
             for item in daconfig['administrative interviews']:
                 if isinstance(item, dict):
+                    if 'url' in item and 'label' in item and isinstance(item['url'], str) and isinstance(item['label'], dict):
+                        menu_item = MenuItem()
+                        menu_item.url = item['url']
+                        menu_item.label = item['label']
+                        menu_item.roles = item['roles']
+                        menu_item.require_login = item['require_login']
+                        admin_interviews.append(menu_item)
                     if 'interview' in item and isinstance(item['interview'], str):
                         try:
                             interview = docassemble.base.interview_cache.get_interview(item['interview'])
@@ -30770,9 +31249,12 @@ def set_admin_interviews():
                         else:
                             admin_interview.roles = None
                         admin_interview.require_login = False
-                        for metadata in interview.metadata:
-                            if 'require login' in metadata:
-                                admin_interview.require_login = bool(metadata['require login'])
+                        if 'require login' in item and item['require login'] is not None:
+                            admin_interview.require_login = bool(item['require login'])
+                        else:
+                            for metadata in interview.metadata:
+                                if 'require login' in metadata:
+                                    admin_interview.require_login = bool(metadata['require login'])
                         admin_interviews.append(admin_interview)
                     else:
                         logmessage("item in administrative interviews must contain a valid interview name")
