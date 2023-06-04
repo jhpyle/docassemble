@@ -1838,6 +1838,8 @@ It accepts the following optional keyword arguments:
 The `qr_code()` function allows you to include the `[QR ...]` [markup] statement
 using [Python].
 
+It has two optional parameters: `width` and `alt_text`.
+
 {% include side-by-side.html demo="qr-code" %}
 
 These two questions are equivalent:
@@ -1875,7 +1877,7 @@ Since this function returns `[QR ...]` [markup], if you want to use it
 within a [`docx template file`], you will need to use the `markdown`
 filter:
 
-> {% raw %}{%p qr_code(url) | markdown %}{% endraw %}
+> {% raw %}{{p qr_code(url) \| markdown }}{% endraw %}
 {: .blockquote}
 
 Note that if you want to include a QR code that points to an interview
