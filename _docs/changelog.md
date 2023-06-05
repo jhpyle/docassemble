@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.57](https://github.com/jhpyle/docassemble/releases/tag/v1.4.57) - 2023-06-05
+
+
+### Fixed
+- Modified the change that 1.4.56 made to `force_ask()` and
+  `reconsider()` to work better with objects with random instance
+  names.
+
 ## [1.4.56](https://github.com/jhpyle/docassemble/releases/tag/v1.4.56) - 2023-06-04
 
 
