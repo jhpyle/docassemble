@@ -80,7 +80,7 @@ bash -c \
    python-augeas==1.1.0 \
    pytz==2022.7.1 \
    regex==2022.10.31 \
-   requests==2.28.2 \
+   requests==2.31.0 \
    requests-toolbelt==0.10.1 \
    six==1.16.0 \
    tqdm==4.64.1 \

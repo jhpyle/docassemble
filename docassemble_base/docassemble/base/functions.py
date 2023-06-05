@@ -5320,7 +5320,7 @@ def intrinsic_name_of(var_name):
     while i > 0:
         try:
             item = value(var_name)
-            if isinstance(item, DAObject):
+            if isinstance(item, DAObject) and item.has_nonrandom_instance_name:
                 var_name = item.instanceName
                 break
         except:
@@ -5341,7 +5341,7 @@ def intrinsic_names_of(*pargs):
         while i > 0:
             try:
                 item = value(var_name)
-                if isinstance(item, DAObject):
+                if isinstance(item, DAObject) and item.has_nonrandom_instance_name:
                     var_name = item.instanceName
                     break
             except:
