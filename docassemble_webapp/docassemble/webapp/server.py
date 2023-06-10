@@ -22888,7 +22888,7 @@ def server_error(the_error):
 
 @app.route('/bundle.css', methods=['GET'])
 def css_bundle():
-    base_path = Path(importlib.resources.files('docassemble.webapp'), 'data', 'static')
+    base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
     for parts in [['bootstrap-fileinput', 'css', 'fileinput.min.css'], ['labelauty', 'source', 'jquery-labelauty.min.css'], ['bootstrap-combobox', 'css', 'bootstrap-combobox.min.css'], ['bootstrap-slider', 'dist', 'css', 'bootstrap-slider.min.css'], ['app', 'app.min.css']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
@@ -22899,7 +22899,7 @@ def css_bundle():
 
 @app.route('/playgroundbundle.css', methods=['GET'])
 def playground_css_bundle():
-    base_path = Path(importlib.resources.files('docassemble.webapp'), 'data', 'static')
+    base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
     for parts in [['codemirror', 'lib', 'codemirror.css'], ['codemirror', 'addon', 'search', 'matchesonscrollbar.css'], ['codemirror', 'addon', 'display', 'fullscreen.css'], ['codemirror', 'addon', 'scroll', 'simplescrollbars.css'], ['codemirror', 'addon', 'hint', 'show-hint.css'], ['app', 'pygments.min.css'], ['bootstrap-fileinput', 'css', 'fileinput.min.css']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
@@ -22910,7 +22910,7 @@ def playground_css_bundle():
 
 @app.route('/bundle.js', methods=['GET'])
 def js_bundle():
-    base_path = Path(importlib.resources.files('docassemble.webapp'), 'data', 'static')
+    base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
     for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
@@ -22921,7 +22921,7 @@ def js_bundle():
 
 @app.route('/playgroundbundle.js', methods=['GET'])
 def playground_js_bundle():
-    base_path = Path(importlib.resources.files('docassemble.webapp'), 'data', 'static')
+    base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
     for parts in [['areyousure', 'jquery.are-you-sure.js'], ['codemirror', 'lib', 'codemirror.js'], ['codemirror', 'addon', 'search', 'searchcursor.js'], ['codemirror', 'addon', 'scroll', 'annotatescrollbar.js'], ['codemirror', 'addon', 'search', 'matchesonscrollbar.js'], ['codemirror', 'addon', 'display', 'fullscreen.js'], ['codemirror', 'addon', 'edit', 'matchbrackets.js'], ['codemirror', 'addon', 'hint', 'show-hint.js'], ['codemirror', 'mode', 'yaml', 'yaml.js'], ['codemirror', 'mode', 'python', 'python.js'], ['yamlmixed', 'yamlmixed.js'], ['codemirror', 'mode', 'markdown', 'markdown.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
@@ -22932,7 +22932,7 @@ def playground_js_bundle():
 
 @app.route('/adminbundle.js', methods=['GET'])
 def js_admin_bundle():
-    base_path = Path(importlib.resources.files('docassemble.webapp'), 'data', 'static')
+    base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
     for parts in [['app', 'jquery.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
@@ -22943,7 +22943,7 @@ def js_admin_bundle():
 
 @app.route('/bundlewrapjquery.js', methods=['GET'])
 def js_bundle_wrap():
-    base_path = Path(importlib.resources.files('docassemble.webapp'), 'data', 'static')
+    base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = '(function($) {'
     for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
@@ -22955,7 +22955,7 @@ def js_bundle_wrap():
 
 @app.route('/bundlenojquery.js', methods=['GET'])
 def js_bundle_no_query():
-    base_path = Path(importlib.resources.files('docassemble.webapp'), 'data', 'static')
+    base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
     for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
@@ -31180,7 +31180,7 @@ def set_admin_interviews():
                         menu_item.roles = item['roles']
                         menu_item.require_login = item['require_login']
                         admin_interviews.append(menu_item)
-                    if 'interview' in item and isinstance(item['interview'], str):
+                    elif 'interview' in item and isinstance(item['interview'], str):
                         try:
                             interview = docassemble.base.interview_cache.get_interview(item['interview'])
                         except:

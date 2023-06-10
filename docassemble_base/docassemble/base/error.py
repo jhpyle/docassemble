@@ -2,7 +2,7 @@ import re
 
 
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
-
+match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
 
 class DAIndexError(IndexError):
     pass
@@ -69,6 +69,24 @@ def invalid_variable_name(varname):
     return False
 
 
+def intrinsic_name_of(var_name, the_user_dict):
+    from docassemble.base.util import DAObject  # pylint: disable=import-outside-toplevel
+    expression_as_list = [x for x in match_brackets_or_dot.split(var_name) if x != '']
+    n = len(expression_as_list)
+    i = n
+    while i > 0:
+        try:
+            item = eval(var_name, the_user_dict)
+            if isinstance(item, DAObject) and item.has_nonrandom_instance_name:
+                var_name = item.instanceName
+                break
+        except:
+            pass
+        i -= 1
+        var_name = ''.join(expression_as_list[0:i])
+    return var_name + (''.join(expression_as_list[i:n]))
+
+
 class ForcedNameError(NameError):
 
     def __init__(self, *pargs, **kwargs):
@@ -83,6 +101,7 @@ class ForcedNameError(NameError):
                 the_context[var_name] = the_user_dict[var_name]
         first_is_plain = bool(isinstance(the_args[0], str))
         self.next_action = []
+        evaluate = kwargs.get('evaluate', False)
         while len(the_args) > 0:
             arg = the_args.pop(0)
             if isinstance(arg, dict):
@@ -118,6 +137,8 @@ class ForcedNameError(NameError):
                             var_saveas = var.strip()
                             if invalid_variable_name(var_saveas):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(var_saveas) + ".")
+                            if evaluate:
+                                var = intrinsic_name_of(var, the_user_dict)
                             self.set_action({'action': var, 'arguments': {}, 'context': the_context})
                     for command in ('undefine', 'invalidate', 'recompute'):
                         if command not in arg:
@@ -133,6 +154,8 @@ class ForcedNameError(NameError):
                             undef_saveas = undef_var.strip()
                             if invalid_variable_name(undef_saveas):
                                 raise DAError("force_ask: missing or invalid variable name " + repr(undef_saveas) + ".")
+                            if evaluate:
+                                undef_saveas = intrinsic_name_of(undef_saveas, the_user_dict)
                             clean_list.append(undef_saveas)
                         if command == 'invalidate':
                             self.set_action({'action': '_da_invalidate', 'arguments': {'variables': clean_list}, 'context': the_context})
@@ -143,6 +166,8 @@ class ForcedNameError(NameError):
                 else:
                     raise DAError("Dictionaries passed to force_ask must have keys of 'action' and 'argument' only.")
             else:
+                if evaluate:
+                    arg = intrinsic_name_of(arg, the_user_dict)
                 self.set_action({'action': arg, 'arguments': {}, 'context': the_context})
         if kwargs.get('gathering', False):
             self.next_action = None

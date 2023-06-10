@@ -613,7 +613,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             help_label = status.question.help()
         help_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + (status.extras.get('help button color', None) or BUTTON_COLOR_QUESTION_HELP) + ' ' + BUTTON_CLASS + '  danonsubmit" data-bs-toggle="collapse" data-bs-target="#daquestionhelp" aria-expanded="false" aria-controls="daquestionhelp">' + help_label + '</button>'
         if status.question.question_type == "signature":
-            help_button_area = '<div class="d-none d-sm-block"><div class="collapse daquestionhelp" id="daquestionhelp">'
+            help_button_area = '<div class="d-none d-sm-block da-d-sm-block"><div class="collapse daquestionhelp" id="daquestionhelp">'
         else:
             help_button_area = '<div class="collapse daquestionhelp" id="daquestionhelp">'
         for help_section in status.helpText:
@@ -704,23 +704,36 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     output = str()
     if the_progress_bar:
         if status.question.question_type == "signature":
-            the_progress_bar = re.sub(r'class="row"', 'class="d-none d-sm-block"', the_progress_bar)
+            the_progress_bar = re.sub(r'class="row"', 'class="d-none d-sm-block da-d-sm-block"', the_progress_bar)
         output += the_progress_bar
     if status.question.question_type == "signature":
-        if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
-            back_clear_button = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + (status.extras.get('back button color', None) or BUTTON_COLOR_BACK) + ' dasignav-left dasignavbutton daquestionbackbutton danonsubmit">' + status.question.back() + '</button>'
+        if 'inverse navbar' in status.question.interview.options:
+            if status.question.interview.options['inverse navbar']:
+                inverse = 'bg-dark'
+                theme = 'dark'
+            else:
+                inverse = 'bg-body-tertiary'
+                theme = 'light'
+        elif daconfig.get('inverse navbar', True):
+            inverse = 'bg-dark'
+            theme = 'dark'
         else:
-            back_clear_button = '<a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_CLEAR + ' dasignav-left dasignavbutton dasigclear">' + word('Clear') + '</a>'
-        output += '            <div class="dasigpage" id="dasigpage">\n              <div class="dasigshowsmallblock dasigheader d-block d-sm-none" id="dasigheader">\n                <div class="dasiginnerheader">\n                  ' + back_clear_button + '\n                  <a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + continue_button_color + ' dasignav-right dasignavbutton dasigsave">' + continue_label + '</a>\n                  <div id="dasigtitle" class="dasigtitle">'
+            inverse = 'bg-body-tertiary'
+            theme = 'light'
+        # if status.question.interview.question_back_button and status.question.can_go_back and steps > 1:
+        #     back_clear_button = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_CLEAR + ' dasignav-left dasignavbutton daquestionbackbutton danonsubmit">' + status.question.back() + '</button>'
+        # else:
+        back_clear_button = '<a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_CLEAR + ' dasignav-left dasignavbutton dasigclear">' + word('Clear') + '</a>'
+        output += '            <div class="dasigpage" id="dasigpage">\n              <div data-bs-theme="' + theme + '">\n                <div class="dasigshowsmallblock dasigheader d-block d-sm-none da-d-sm-none ' + inverse + '" id="dasigheader" role="banner">\n                  <div class="dasiginnerheader">\n                    ' + back_clear_button + '\n                    <a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + continue_button_color + ' dasignav-right dasignavbutton dasigsave">' + continue_label + '</a>\n                    <div id="dasigtitle" class="dasigtitle">'
         if status.questionText:
             output += markdown_to_html(status.questionText, trim=True, status=status)
         else:
             output += word('Sign Your Name')
-        output += '</div>\n                </div>\n              </div>\n              <div class="dasigtoppart" id="dasigtoppart">\n                <div id="daerrormess" class="dasigerrormessage dasignotshowing">' + word("You must sign your name to continue.") + '</div>\n'
+        output += '</div>\n                  </div>\n                </div>\n              </div>\n              <div class="dasigtoppart" id="dasigtoppart">\n                <div id="daerrormess" class="dasigerrormessage dasignotshowing">' + word("You must sign your name to continue.") + '</div>\n'
         if status.pre:
-            output += '                <div class="d-none d-sm-block">' + markdown_to_html(status.pre, trim=False, status=status) + '</div>\n'
+            output += '                <div class="d-none d-sm-block da-d-sm-block">' + markdown_to_html(status.pre, trim=False, status=status) + '</div>\n'
         if status.questionText:
-            output += '                <div class="da-page-header d-none d-sm-block"><h1 class="h3">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+            output += '                <div class="da-page-header d-none d-sm-block da-d-sm-block"><h1 class="h3">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         output += '              </div>'
         if status.subquestionText:
             output += '                <div id="dasigmidpart" class="dasigmidpart da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
@@ -728,12 +741,12 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += '\n              <div id="dasigmidpart" class="dasigmidpart"></div>'
         output += '\n              <div id="dasigcontent"' + (' aria-required="true"' if status.extras['required'][0] else '') + '><p class="form-control" style="text-align:center;padding:0;">' + word('Loading.  Please wait . . . ') + '</p></div>\n              <div class="dasigbottompart" id="dasigbottompart">\n                '
         if showUnderText:
-            output += '                <div class="d-none d-sm-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-sm-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'
+            output += '                <div class="d-none d-sm-block da-d-sm-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-sm-none da-d-sm-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'
         output += "\n              </div>"
         if status.submit:
-            output += '                <div class="d-none d-sm-block">' + markdown_to_html(status.submit, trim=False, status=status) + '</div>\n'
+            output += '                <div class="d-none d-sm-block da-d-sm-block">' + markdown_to_html(status.submit, trim=False, status=status) + '</div>\n'
         output += """
-              <fieldset class="da-button-set d-none d-sm-block da-signature">
+              <fieldset class="da-button-set d-none d-sm-block da-d-sm-block da-signature">
                 <legend class="visually-hidden">""" + word('Press one of the following buttons:') + """</legend>
                 <div class="dasigbuttons mt-3">""" + back_button + additional_buttons_before + """
                   <a href="#" role="button" class="btn """ + BUTTON_STYLE + continue_button_color + ' ' + BUTTON_CLASS + """ dasigsave">""" + continue_label + """</a>
@@ -749,7 +762,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         output += '            </div>\n            <form aria-labelledBy="dasigtitle" action="' + root + '" id="dasigform" method="POST">' + saveas_part + '<input type="hidden" id="da_sig_required" value="' + ('1' if status.extras['required'][0] else '0') + '"/><input type="hidden" id="da_ajax" name="ajax" value="0"/><input type="hidden" id="da_the_image" name="_the_image" value=""/><input type="hidden" id="da_success" name="_success" value="0"/>'
         output += tracker_tag(status)
         output += '            </form>\n'
-        output += '            <div class="d-block d-md-none"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></div>'
+        output += '            <div class="d-block d-sm-none da-d-sm-none"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></div>'
     elif status.question.question_type in ["yesno", "yesnomaybe"]:
         # varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype

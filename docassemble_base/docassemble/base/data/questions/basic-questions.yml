@@ -362,28 +362,7 @@ comment: |
   user, it will ask "What is your name?"  If the object is called
   village_idiot, it will ask "What is the village idiot's name?"
 ---
-generic list object: Individual
-question: |
-  What is the name of the ${ x[i].object_name() }?
-fields:
-  - First Name: x[i].name.first
-  - Middle Name: x[i].name.middle
-    required: False
-  - Last Name: x[i].name.last
-  - Suffix: x[i].name.suffix
-    required: False
-    code: |
-      name_suffix()
-comment: |
-  Generic questions can also use indices, for example to fill out the
-  names of a list of people.  (E.g., case.plaintiff.)
-
-  This example also illustrates how the author can control whether the
-  user can leave a field blank.  By default, all fields are required,
-  but the author can add required: False to a field to indicate that
-  the field can be left blank.
----
-generic list object: Individual
+generic object: Individual
 question: |
   What is ${ x.possessive(ordinal(i) + " child") }'s name?
 fields:

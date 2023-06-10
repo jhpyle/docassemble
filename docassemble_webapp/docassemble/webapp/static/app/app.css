@@ -1484,7 +1484,10 @@ div.daconstraintlist div + div {
     text-align: center;
 }
 
-@media (max-width: 575px) {
+@media (max-width: 575px) and (orientation: landscape) {
+    .dasignature .danavbarcontainer {
+	display: none;
+    }
     body.dasignature {
 	position: fixed;
 	top: 0px;
@@ -1549,13 +1552,16 @@ div.daconstraintlist div + div {
     .dasigpost {
 	display: none;
     }
+    .dasignature > div > .daright {
+	display: none;
+    }
+    .dasignature > div > .daattributions {
+	display: none;
+    }
 }
 
-.dasigheader, .dasigfooter{
+.dasigheader{
     position: fixed;
-    background-color: #222;
-    background-image: linear-gradient(to bottom,#3c3c3c 0,#222 100%);
-    background-repeat: repeat-x;
 }
 
 .dasignav-left {
@@ -1575,38 +1581,12 @@ div.daconstraintlist div + div {
     cursor: crosshair;
     padding: 0;
 }
-.dasignature .danavbarcontainer {
-    display: none;
-}
-.dasignature > div > .daright {
-    display: none;
-}
-.dasignature > div > .daattributions {
-    display: none;
-}
+
 .dasighidesmall {
     display: none;
 }
 .dasigshowsmallblock {
     display: block;
-}
-
-@media (min-width: 576px) {
-    body.dasignature.da-pad-for-navbar {
-	padding-top: 66px;
-    }
-    body.dasignature.navbarhidden {
-	padding-top: 0px;
-    }
-    .dasignature .danavbarcontainer {
-        display: block;
-    }
-    .dasignature > div > > .daright {
-        display: block;
-    }
-    .dasignature > div > .daattributions {
-        display: block;
-    }
 }
 
 .dasigerrormessage {
@@ -1847,4 +1827,13 @@ a.dadisabled {
 }
 
 .danavlinknopad {
+}
+
+@media (orientation: portrait) {
+    .da-d-sm-block {
+	display: block !important;
+    }
+    .da-d-sm-none {
+	display: none !important;
+    }
 }

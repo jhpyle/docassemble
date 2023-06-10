@@ -1095,7 +1095,7 @@ class InterviewStatus:
             }
         validation_rules_used = set()
         file_fields = []
-        for field in self.question.fields:
+        for field in self.question.get_fields_and_sub_fields(the_user_dict):
             the_field = {}
             the_field['number'] = field.number
             if hasattr(field, 'saveas'):
@@ -5282,7 +5282,7 @@ class Question:
         for the_field in self.undefine:
             docassemble.base.functions.undefine(the_field)
         if len(self.reconsider) > 0:
-            docassemble.base.functions.reconsider(*self.reconsider)
+            docassemble.base.functions.reconsider(*[substitute_vars(item, self.is_generic, the_x, iterators) for item in self.reconsider])
         if self.section:
             docassemble.base.functions.this_thread.current_section = self.section.text(user_dict).strip()
         question_text = self.content.text(user_dict).rstrip()
@@ -6423,7 +6423,7 @@ class Question:
                 if 'email_html' not in extras:
                     extras['email_html'] = '<html><body>' + template.content_as_html(external=True) + '</body></html>'
                     extras['email_body'] = BeautifulSoup(extras['email_html'], "html.parser").get_text('\n')
-            attachment_text = self.processed_attachments(user_dict)  # , the_x=the_x, iterators=iterators
+            attachment_text = self.processed_attachments(user_dict)
         else:
             attachment_text = []
         if test_for_objects:
@@ -6665,8 +6665,9 @@ class Question:
             try:
                 existing_object = eval(attachment['variable_name'], the_user_dict)
                 for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html', 'raw'):
-                    if hasattr(existing_object, doc_format):
-                        the_file = getattr(existing_object, doc_format)
+                    attr_doc_format = 'docx' if doc_format == 'rtf to docx' else doc_format
+                    if hasattr(existing_object, attr_doc_format):
+                        the_file = getattr(existing_object, attr_doc_format)
                         for key in ('extension', 'mimetype', 'content', 'markdown', 'raw'):
                             if hasattr(the_file, key):
                                 result[key][doc_format] = getattr(the_file, key)
@@ -6813,16 +6814,8 @@ class Question:
             if attachment['variable_name']:
                 the_string = "from docassemble.base.util import DAFile, DAFileCollection"
                 exec(the_string, the_user_dict)
-                variable_name = attachment['variable_name']
-                m = re.search(r'^(.*)\.([A-Za-z0-9\_]+)$', attachment['variable_name'])
-                if m:
-                    base_var = m.group(1)
-                    attrib = m.group(2)
-                    the_var = eval(base_var, the_user_dict)
-                    if hasattr(the_var, 'instanceName'):
-                        variable_name = the_var.instanceName + '.' + attrib
+                variable_name = substitute_vars_from_user_dict(docassemble.base.functions.intrinsic_name_of(attachment['variable_name'], the_user_dict=the_user_dict), the_user_dict, is_generic=self.is_generic)
                 the_string = variable_name + " = DAFileCollection(" + repr(variable_name) + ")"
-                # logmessage("Executing " + string)
                 exec(the_string, the_user_dict)
                 the_name = attachment['name'].text(the_user_dict).strip()
                 the_filename = attachment['filename'].text(the_user_dict).strip()
@@ -8445,7 +8438,7 @@ class Interview:
                         # logmessage("assemble: got a ForcedNameError for " + str(the_exception.name))
                         follow_mc = False
                         seeking_question = True
-                        exception_name = docassemble.base.functions.intrinsic_name_of(the_exception.name)
+                        exception_name = the_exception.name
                         if the_exception.next_action is not None and not interview_status.checkin:
                             if 'event_stack' not in user_dict['_internal']:
                                 user_dict['_internal']['event_stack'] = {}
@@ -9250,7 +9243,7 @@ class Interview:
                     follow_mc = False
                     seeking_question = True
                     # logmessage("Seeking question is True")
-                    exception_name = docassemble.base.functions.intrinsic_name_of(the_exception.name)
+                    exception_name = the_exception.name
                     newMissingVariable = exception_name
                     if the_exception.next_action is not None and not interview_status.checkin:
                         if 'event_stack' not in user_dict['_internal']:
@@ -9538,6 +9531,15 @@ def substitute_vars_action(action, is_generic, the_x, iterators):
             new_list.append(substitute_vars_action(item, is_generic, the_x, iterators))
         return new_list
     return action
+
+
+def substitute_vars_from_user_dict(var, the_user_dict, is_generic=False):
+    if is_generic and 'x' in the_user_dict and the_user_dict['x'] is not None:
+        var = re.sub(r'^x\b', the_user_dict['x'].instanceName, var)
+    for item in list_of_indices:
+        if item in the_user_dict:
+            var = re.sub(r'\[' + item + r'\]', '[' + repr(the_user_dict[item]) + ']', var)
+    return var
 
 
 def reproduce_basics(interview, new_interview):
