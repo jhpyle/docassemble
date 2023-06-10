@@ -322,11 +322,6 @@ assembly process, each variable will only be recomputed one time.
 
 {% include side-by-side.html demo="reconsider-function" %}
 
-Using this function is computationally more efficient than using the
-[`reconsider`] modifier or the [`reset`] initial block because
-[`reconsider`] and [`reset`] cause code to run every time the screen
-loads.
-
 ## <a name="need"></a>need()
 
 The `need()` function takes one or more variables as arguments and
@@ -464,6 +459,41 @@ of pending actions.
 Here is an example that demonstrates the effect of `forget_prior`.
 
 {% include side-by-side.html demo="force-ask-forget-prior" %}
+
+`force_ask()` accepts the optional keyword parameter `evaluate`. If
+`evaluate` is set to `True`, then the variable names given to
+`force_ask()` will be evaluated to determine their intrinsic
+names. For example, if you have:
+
+{% highlight yaml %}
+objects:
+  - plaintiffs: DAList.using(object_type=Individual)
+  - defendants: DAList.using(object_type=Individual)
+---
+code: |
+  if been_sued:
+    user = defendants[0]
+  else:
+    user = plaintiffs[0]
+---
+mandatory: True
+code: |
+  user.name.first
+{% endhighlight %}
+
+Then if you do `force_ask('user.name.first')`, then **docassemble**
+will look for a `question` that literally defines
+`user.name.first`. However, if you actually want **docassemble** to
+look for a `question` that defines `plaintiffs[0].name.first` or
+`defendants[0].name.first`, then you can call
+`force_ask('user.name.first', evaluate=True)`. Then **docassemble**
+will inspect `user`, then `user.name`, and it will find that the
+`.instanceName` of `user.name` is, e.g., `plaintiffs[0].name`, and it
+will look for a question that defines `plaintiffs[0].name.first`.
+
+Instead of using `evaluate`, you could instead write
+`force_ask(user.name.attr_name('first'))`. This ensures that
+`force_ask()` is called on the correct name for the attribute.
 
 A function that is related to `force_ask()` is [`force_gather()`].
 [`force_gather()`] cannot force the-reasking of a question to define a
