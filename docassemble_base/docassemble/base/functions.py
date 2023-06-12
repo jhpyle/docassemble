@@ -4472,6 +4472,7 @@ def _defined_internal(var, caller: DefCaller, alt=None, prior=False):
     cum_variable = ''
     if caller.is_pure():
         this_thread.probing = True
+    has_random_instance_name = False
     for elem in components:
         if elem[0] == 'name':
             cum_variable = elem[1]
@@ -4492,7 +4493,15 @@ def _defined_internal(var, caller: DefCaller, alt=None, prior=False):
             if caller.is_pure():
                 this_thread.probing = False
                 return failure_val
-            getattr(eval(base_var, the_user_dict), elem[1])
+            the_cum = eval(base_var, the_user_dict)
+            try:
+                if not the_cum.has_nonrandom_instance_name:
+                    has_random_instance_name = True
+            except:
+                pass
+            if has_random_instance_name:
+                force_ask_nameerror(cum_variable)
+            getattr(the_cum, elem[1])
         elif elem[0] == 'index':
             try:
                 the_index = eval(elem[1], the_user_dict)
@@ -4530,6 +4539,13 @@ def _defined_internal(var, caller: DefCaller, alt=None, prior=False):
             if caller.is_pure():
                 this_thread.probing = False
                 return failure_val
+            try:
+                if not the_cum.has_nonrandom_instance_name:
+                    has_random_instance_name = True
+            except:
+                pass
+            if has_random_instance_name:
+                force_ask_nameerror(cum_variable)
             the_cum[the_index]
     if caller.is_pure():
         this_thread.probing = False

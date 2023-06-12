@@ -2034,7 +2034,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                       <input type="hidden" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>"""
                     else:
                         output += """
-                      <div class="da-form-group row"><div class="col"><input alt=""" + fix_double_quote(word("Check box") + ", " + editable_name) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>&nbsp;<label for="da_attachment_include_editable" class="danobold form-label">""" + editable_name + '</label></div></div>\n'
+                      <div class="row da-form-group"><div class="col"><div class="form-check"><input class="form-check-input" alt=""" + fix_double_quote(word("Check box") + ", " + editable_name) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_download_include_editable"/><label for="da_download_include_editable" class="danobold form-check-label">""" + editable_name + '</label></div></div></div>\n'
                 output += """
                       <button class="btn """ + BUTTON_STYLE + BUTTON_COLOR_DOWNLOAD + """" type="submit">""" + word('Download All') + '</button>\n                      <input type="hidden" name="_download_attachments" value="1"/>'
                 output += """
