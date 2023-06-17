@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.60] - 2023-06-17
+
+### Fixed
+
+- Bug with `datatype: raw`.
+
 ## [1.4.59] - 2023-06-12
 
 ### Fixed

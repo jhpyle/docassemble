@@ -35,6 +35,10 @@ if [[ $PGVERSION == 14* ]]; then
     PGVERSION=14
 fi
 
+if [[ $PGVERSION == 15* ]]; then
+    PGVERSION=15
+fi
+
 chown -R postgres.postgres /etc/postgresql
 chown -R postgres.postgres /var/lib/postgresql
 chown -R postgres.postgres /var/run/postgresql

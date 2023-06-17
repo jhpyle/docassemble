@@ -1,170 +1,170 @@
-speaklist|upload|integer||
-speaklist|encrypted|boolean||true
-package|active|boolean||true
-machinelearning|modtime|timestamp without time zone||
-package_auth|id|integer||nextval('package_auth_id_seq'::regclass)
-package_auth|package_id|integer||
-package_auth|user_id|integer||
-install|id|integer||nextval('install_id_seq'::regclass)
-shortener|id|integer||nextval('shortener_id_seq'::regclass)
-machinelearning|active|boolean||false
-install|version|integer||
-globalobjectstorage|id|integer||nextval('globalobjectstorage_id_seq'::regclass)
-shortener|user_id|integer||
-shortener|temp_user_id|integer||
-install|package_id|integer||
-shortener|index|integer||
-shortener|modtime|timestamp without time zone||now()
-role|id|integer||nextval('role_id_seq'::regclass)
-jsonstorage|id|integer||nextval('jsonstorage_id_seq'::regclass)
-email|datetime_received|timestamp without time zone||
-supervisors|id|integer||nextval('supervisors_id_seq'::regclass)
-machinelearning|id|integer||nextval('machinelearning_id_seq'::regclass)
-jsonstorage|data|jsonb||
-supervisors|start_time|timestamp without time zone||now()
-globalobjectstorage|encrypted|boolean||true
-uploads|indexno|integer||nextval('uploads_indexno_seq'::regclass)
-jsonstorage|modtime|timestamp without time zone||now()
-jsonstorage|persistent|boolean||false
-objectstorage|id|integer||nextval('objectstorage_id_seq'::regclass)
-uploads|private|boolean||true
-uploads|persistent|boolean||false
-uploadsroleauth|id|integer||nextval('uploadsroleauth_id_seq'::regclass)
-uploadsroleauth|uploads_indexno|integer||
-uploadsroleauth|role_id|integer||
-uploadsuserauth|id|integer||nextval('uploadsuserauth_id_seq'::regclass)
-uploadsuserauth|uploads_indexno|integer||
-uploadsuserauth|user_id|integer||
-uploadsuserauth|temp_user_id|integer||
-tempuser|id|integer||nextval('tempuser_id_seq'::regclass)
-user_auth|id|integer||nextval('user_auth_id_seq'::regclass)
-user_auth|user_id|integer||
-globalobjectstorage|user_id|integer||
-globalobjectstorage|temp_user_id|integer||
-user_invite|id|integer||nextval('user_invite_id_seq'::regclass)
-chatlog|id|integer||nextval('chatlog_id_seq'::regclass)
-user_invite|role_id|integer||
-user_invite|invited_by_user_id|integer||
-package|id|integer||nextval('package_id_seq'::regclass)
-user_roles|id|integer||nextval('user_roles_id_seq'::regclass)
-user_roles|user_id|integer||
-user_roles|role_id|integer||
-userdict|indexno|integer||nextval('userdict_indexno_seq'::regclass)
-attachments|question|integer||
-attachments|id|integer||nextval('attachments_id_seq'::regclass)
-chatlog|user_id|integer||
-userdict|user_id|integer||
-userdict|encrypted|boolean||true
-userdict|modtime|timestamp without time zone||
-userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
-chatlog|temp_user_id|integer||
-chatlog|owner_id|integer||
-userdictkeys|user_id|integer||
-userdictkeys|temp_user_id|integer||
-user|id|integer||nextval('user_id_seq'::regclass)
-chatlog|temp_owner_id|integer||
-chatlog|open_to_peer|boolean||false
-chatlog|encrypted|boolean||true
-user|confirmed_at|timestamp without time zone||
-user|active|boolean||false
-chatlog|modtime|timestamp without time zone||
-emailattachment|id|integer||nextval('emailattachment_id_seq'::regclass)
-emailattachment|email_id|integer||
-emailattachment|index|integer||
-attachments|encrypted|boolean||true
-email|id|integer||nextval('email_id_seq'::regclass)
-emailattachment|upload|integer||
-speaklist|id|integer||nextval('speaklist_id_seq'::regclass)
-package|upload|integer||
-package|version|integer||1
-email|datetime_message|timestamp without time zone||
-speaklist|question|integer||
-machinelearning|create_time|timestamp without time zone||
-user|modified_at|timestamp without time zone||
-user|last_login|timestamp without time zone||
-package|dependency|boolean||false
-package|core|boolean||false
-speaklist|dialect|character varying|10|
-attachments|key|character varying|250|
-attachments|dictionary|text||
-attachments|filename|text||
-email|short|character varying|250|
-email|all_addr|text||
-email|to_addr|text||
+uploads|yamlfile|character varying|255|
 email|cc_addr|text||
-email|from_addr|text||
-email|reply_to_addr|text||
-email|return_path_addr|text||
-email|subject|text||
-machinelearning|group_id|character varying|1024|
-machinelearning|key|character varying|1024|
-machinelearning|independent|text||
-machinelearning|dependent|text||
-machinelearning|info|text||
-globalobjectstorage|key|character varying|1024|
-globalobjectstorage|value|text||
-package|name|character varying|255|
-package|type|text||
-package|giturl|character varying|255|
-package|gitsubdir|text||
 package|packageversion|text||
-package|limitation|text||
-package|gitbranch|character varying|255|
-install|hostname|text||
-install|packageversion|text||
-jsonstorage|filename|character varying|255|
-jsonstorage|key|character varying|250|
-jsonstorage|tags|text||
-objectstorage|key|character varying|1024|
-objectstorage|value|text||
-chatlog|filename|character varying|255|
-chatlog|key|character varying|250|
+user|nickname|character varying|255|
+objectstorage|id|integer||nextval('objectstorage_id_seq'::regclass)
+supervisors|start_time|timestamp without time zone||now()
+emailattachment|id|integer||nextval('emailattachment_id_seq'::regclass)
+alembic_version|version_num|character varying|32|
+speaklist|type|character varying|20|
+user|timezone|character varying|64|
+user_invite|id|integer||nextval('user_invite_id_seq'::regclass)
+user_auth|id|integer||nextval('user_auth_id_seq'::regclass)
+chatlog|id|integer||nextval('chatlog_id_seq'::regclass)
+user_roles|role_id|integer||
+user_invite|invited_by_user_id|integer||
+machinelearning|modtime|timestamp without time zone||
 chatlog|message|text||
+user_auth|reset_password_token|character varying|100|''::character varying
+user|country|character varying|3|
+package_auth|package_id|integer||
+uploads|indexno|integer||nextval('uploads_indexno_seq'::regclass)
+install|version|integer||
 emailattachment|content_type|text||
+supervisors|id|integer||nextval('supervisors_id_seq'::regclass)
+shortener|short|character varying|250|
+user|first_name|character varying|255|''::character varying
+chatlog|owner_id|integer||
+user|password|character varying|255|''::character varying
+userdict|encrypted|boolean||true
+user_roles|id|integer||nextval('user_roles_id_seq'::regclass)
+attachments|filename|text||
+chatlog|open_to_peer|boolean||false
+supervisors|url|text||
+user|email|character varying|255|
+uploadsuserauth|uploads_indexno|integer||
+jsonstorage|modtime|timestamp without time zone||now()
+uploads|filename|character varying|255|
+userdictkeys|filename|character varying|255|
+machinelearning|info|text||
+install|id|integer||nextval('install_id_seq'::regclass)
+user|id|integer||nextval('user_id_seq'::regclass)
+objectstorage|value|text||
+emailattachment|index|integer||
+install|packageversion|text||
+speaklist|dialect|character varying|10|
+chatlog|key|character varying|250|
+user_auth|password|character varying|255|''::character varying
+user_invite|role_id|integer||
+package|upload|integer||
+globalobjectstorage|key|character varying|1024|
+machinelearning|id|integer||nextval('machinelearning_id_seq'::regclass)
+speaklist|upload|integer||
+jsonstorage|id|integer||nextval('jsonstorage_id_seq'::regclass)
+attachments|key|character varying|250|
+role|name|character varying|50|
+package|giturl|character varying|255|
+speaklist|language|character varying|10|
+userdictkeys|temp_user_id|integer||
+userdict|indexno|integer||nextval('userdict_indexno_seq'::regclass)
+speaklist|key|character varying|250|
+package|id|integer||nextval('package_id_seq'::regclass)
+userdict|dictionary|text||
+jsonstorage|data|jsonb||
+machinelearning|independent|text||
+speaklist|voice|character varying|20|
+user|active|boolean||false
+globalobjectstorage|user_id|integer||
+chatlog|temp_owner_id|integer||
+user|last_name|character varying|255|''::character varying
+userdict|modtime|timestamp without time zone||
+email|short|character varying|250|
+chatlog|temp_user_id|integer||
+machinelearning|active|boolean||false
+speaklist|id|integer||nextval('speaklist_id_seq'::regclass)
+package|type|text||
+uploadsroleauth|uploads_indexno|integer||
+emailattachment|upload|integer||
+machinelearning|create_time|timestamp without time zone||
+jsonstorage|persistent|boolean||false
+email|datetime_message|timestamp without time zone||
+package|limitation|text||
+machinelearning|key|character varying|1024|
+uploads|persistent|boolean||false
+jsonstorage|key|character varying|250|
+userdict|key|character varying|250|
+email|datetime_received|timestamp without time zone||
+package|version|integer||1
+speaklist|phrase|text||
+shortener|user_id|integer||
+chatlog|user_id|integer||
+speaklist|encrypted|boolean||true
+user_invite|token|character varying|100|''::character varying
 emailattachment|extension|text||
 speaklist|filename|character varying|255|
-speaklist|key|character varying|250|
-speaklist|phrase|text||
-speaklist|type|character varying|20|
-speaklist|language|character varying|10|
-alembic_version|version_num|character varying|32|
-speaklist|digest|text||
-speaklist|voice|character varying|20|
-package_auth|authtype|character varying|255|'owner'::character varying
-shortener|short|character varying|250|
-shortener|filename|character varying|255|
-shortener|uid|character varying|250|
-shortener|key|character varying|255|
-role|name|character varying|50|
-role|description|character varying|255|
-supervisors|hostname|text||
-supervisors|url|text||
-supervisors|role|text||
-uploads|key|character varying|250|
-uploads|filename|character varying|255|
-uploads|yamlfile|character varying|255|
-user_auth|password|character varying|255|''::character varying
-user_auth|reset_password_token|character varying|100|''::character varying
-user_invite|email|character varying|255|
-user_invite|token|character varying|100|''::character varying
-userdict|filename|character varying|255|
-userdict|key|character varying|250|
-userdict|dictionary|text||
-userdictkeys|filename|character varying|255|
-userdictkeys|key|character varying|250|
-user|social_id|character varying|255|
-user|nickname|character varying|255|
-user|email|character varying|255|
-user|first_name|character varying|255|''::character varying
-user|last_name|character varying|255|''::character varying
-user|country|character varying|3|
-user|subdivisionfirst|character varying|255|
-user|subdivisionsecond|character varying|255|
-user|subdivisionthird|character varying|255|
-user|organization|character varying|255|
-user|timezone|character varying|64|
-user|language|character varying|64|
-user|password|character varying|255|''::character varying
-user|otp_secret|character varying|255|
-user|pypi_username|character varying|255|
+uploadsroleauth|id|integer||nextval('uploadsroleauth_id_seq'::regclass)
 user|pypi_password|character varying|255|
+email|id|integer||nextval('email_id_seq'::regclass)
+role|description|character varying|255|
+supervisors|role|text||
+email|to_addr|text||
+uploads|private|boolean||true
+speaklist|digest|text||
+shortener|temp_user_id|integer||
+attachments|dictionary|text||
+email|reply_to_addr|text||
+install|package_id|integer||
+shortener|index|integer||
+package|core|boolean||false
+userdict|filename|character varying|255|
+role|id|integer||nextval('role_id_seq'::regclass)
+user|language|character varying|64|
+email|subject|text||
+attachments|id|integer||nextval('attachments_id_seq'::regclass)
+machinelearning|group_id|character varying|1024|
+jsonstorage|filename|character varying|255|
+attachments|question|integer||
+package|active|boolean||true
+package|dependency|boolean||false
+user|organization|character varying|255|
+email|all_addr|text||
+user|last_login|timestamp without time zone||
+user|confirmed_at|timestamp without time zone||
+package|name|character varying|255|
+globalobjectstorage|temp_user_id|integer||
+uploadsroleauth|role_id|integer||
+userdict|user_id|integer||
+uploadsuserauth|id|integer||nextval('uploadsuserauth_id_seq'::regclass)
+package_auth|user_id|integer||
+user|subdivisionsecond|character varying|255|
+install|hostname|text||
+userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
+shortener|filename|character varying|255|
+attachments|encrypted|boolean||true
+globalobjectstorage|encrypted|boolean||true
+user|otp_secret|character varying|255|
+user_roles|user_id|integer||
+machinelearning|dependent|text||
+jsonstorage|tags|text||
+user|subdivisionthird|character varying|255|
+user|subdivisionfirst|character varying|255|
+tempuser|id|integer||nextval('tempuser_id_seq'::regclass)
+globalobjectstorage|id|integer||nextval('globalobjectstorage_id_seq'::regclass)
+user|pypi_username|character varying|255|
+package|gitbranch|character varying|255|
+shortener|modtime|timestamp without time zone||now()
+userdictkeys|user_id|integer||
+uploadsuserauth|temp_user_id|integer||
+package|gitsubdir|text||
+user|social_id|character varying|255|
+shortener|key|character varying|255|
+email|return_path_addr|text||
+user_auth|user_id|integer||
+chatlog|filename|character varying|255|
+email|from_addr|text||
+user_invite|email|character varying|255|
+globalobjectstorage|value|text||
+objectstorage|key|character varying|1024|
+shortener|uid|character varying|250|
+speaklist|question|integer||
+emailattachment|email_id|integer||
+package_auth|authtype|character varying|255|'owner'::character varying
+chatlog|encrypted|boolean||true
+user|modified_at|timestamp without time zone||
+supervisors|hostname|text||
+shortener|id|integer||nextval('shortener_id_seq'::regclass)
+uploadsuserauth|user_id|integer||
+package_auth|id|integer||nextval('package_auth_id_seq'::regclass)
+uploads|key|character varying|250|
+userdictkeys|key|character varying|250|
+chatlog|modtime|timestamp without time zone||

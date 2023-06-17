@@ -7471,7 +7471,7 @@ def index(action_argument=None, refer=None):
                     data = "None"
                 else:
                     test_data = raw_data
-                    data = repr(data)
+                    data = repr(raw_data)
             else:
                 if isinstance(raw_data, str):
                     raw_data = BeautifulSoup(raw_data, "html.parser").get_text('\n')
