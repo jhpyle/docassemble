@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.60](https://github.com/jhpyle/docassemble/releases/tag/v1.4.60) - 2023-06-17
+
+
+### Fixed
+
+- Bug with `datatype: raw`.
+
 ## [1.4.59](https://github.com/jhpyle/docassemble/releases/tag/v1.4.59) - 2023-06-12
 
 
