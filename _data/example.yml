@@ -6527,6 +6527,15 @@
     fields:
       - "Was Washington the first U.S. president?": washington_not_the_first_president
         datatype: noyesmaybe
+"fields-raw":
+  "height": !!int |-
+    230
+  "width": !!int |-
+    488
+  "yaml": "question: |\n  Type HTML into both fields.\nfields:\n  - HTML: html_input\n\
+    \    datatype: raw\n  - Non-HTML: text_input\n---\nmandatory: True\nquestion:\
+    \ |\n  Result\nsubquestion: |\n  HTML:\n  \n  ${ html_input }\n  \n  Non-HTML:\n\
+    \  \n  ${ text_input }"
 "fields-yesno":
   "height": !!int |-
     392

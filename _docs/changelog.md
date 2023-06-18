@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.61](https://github.com/jhpyle/docassemble/releases/tag/v1.4.61) - 2023-06-18
+
+
+### Fixed
+
+- Issues with the timing of `change` event triggers on the combobox.
+
 ## [1.4.60](https://github.com/jhpyle/docassemble/releases/tag/v1.4.60) - 2023-06-17
 
 

@@ -1196,6 +1196,8 @@ By default, inputs with the `datatype` of `text` (which is the
 default) will be sanitized of any HTML.  If you want to allow users to
 include HTML, set the `datatype` to `raw`.
 
+{% include side-by-side.html demo="fields-raw" %}
+
 ## <a name="custom datatype"></a>Custom data types
 
 You can use custom data types by declaring a subclass of
