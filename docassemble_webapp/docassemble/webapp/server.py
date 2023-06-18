@@ -9060,6 +9060,9 @@ def index(action_argument=None, refer=None):
         else{
           data['_initial'] = false;
         }
+        if (elem !== null && $(elem).hasClass('combobox')){
+          elem = $(elem).parent().find('input[type="hidden"]');
+        }
         data['_changed'] = null;
         var n = formData.length;
         for (var i = 0; i < n; ++i){
@@ -11737,8 +11740,9 @@ def index(action_argument=None, refer=None):
             for (var j = 0; j < showIfVars.length; ++j){
               var showIfVar = showIfVars[j];
               var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+              var varToUse = jsInfo['vars'][i];
               var showHideDiv = function(speed){
-                var elem = daGetField(jsInfo['vars'][i]);
+                var elem = daGetField(varToUse);
                 if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
                   return;
                 }

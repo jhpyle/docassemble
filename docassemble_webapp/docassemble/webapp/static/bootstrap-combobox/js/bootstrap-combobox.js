@@ -119,10 +119,27 @@
       this.map = map;
       this.revMap = revMap;
       if (selected) {
-        this.$element.val(selected);
-        this.$target.val(selectedValue);
+        var triggerElement = false;
+        var triggerTarget = false;
+        var oldVal;
+        oldVal = this.$element.val();
+        if (oldVal !== selected) {
+          this.$element.val(selected);
+          triggerElement = true;
+        }
+        oldVal = this.$target.val();
+        if (oldVal !== selectedValue) {
+          this.$target.val(selectedValue);
+          triggerTarget = true;
+        }
         this.$container.addClass("combobox-selected");
         this.selected = true;
+        if (triggerTarget) {
+          this.$target.trigger("change");
+        }
+        if (triggerElement) {
+          this.$element.trigger("change");
+        }
       } else {
         this.$container.removeClass("combobox-selected");
         this.selected = false;
@@ -179,19 +196,38 @@
       //console.log("select");
       var val = this.$menu.find(".active").attr("data-value");
       var oldVal;
+      var triggerElement = false;
+      var triggerTarget = false;
+      var triggerSource = false;
       this.$container.parent().find(".da-has-error").remove();
-      this.$element.val(this.updater(val));
+      oldVal = this.$element.val();
+      var newVal = this.updater(val);
+      if (oldVal !== newVal) {
+        this.$element.val(newVal);
+        triggerElement = true;
+      }
       oldVal = this.$target.val();
-      if (oldVal != this.map[val]) {
+      if (oldVal !== this.map[val]) {
         this.$target.val(this.map[val]); //.trigger("change");
+        triggerTarget = true;
       }
       oldVal = this.$source.val();
-      if (oldVal != this.map[val]) {
-        this.$source.val(this.map[val]).trigger("change");
+      if (oldVal !== this.map[val]) {
+        this.$source.val(this.map[val]);
+        triggerSource = true;
       }
       this.$container.addClass("combobox-selected");
       this.selected = true;
       this.hide();
+      if (triggerTarget) {
+        this.$target.trigger("change");
+      }
+      if (triggerElement) {
+        this.$element.trigger("change");
+      }
+      if (triggerSource) {
+        this.$source.trigger("change");
+      }
       return;
     },
 
@@ -199,6 +235,8 @@
       //console.log("manualSelect");
       var oldVal;
       var found = false;
+      var triggerSource = false;
+      var triggerTarget = false;
       this.$container.parent().find(".da-has-error").remove();
       if (val !== "" && this.revMap[val] !== undefined) {
         this.$element.val(this.revMap[val]);
@@ -207,16 +245,25 @@
         this.$element.val(val);
       }
       oldVal = this.$target.val();
-      if (oldVal != val) {
+      if (oldVal !== val) {
         this.$target.val(val);
+        triggerTarget = true;
       }
       oldVal = this.$source.val();
-      if (oldVal != val) {
-        this.$source.val(val).trigger("change");
+      if (oldVal !== val) {
+        this.$source.val(val);
+        triggerSource = true;
       }
       if (val !== "" && found) {
         this.$container.addClass("combobox-selected");
         this.selected = true;
+      }
+      if (triggerTarget) {
+        this.$target.trigger("change");
+      }
+      this.$element.trigger("change");
+      if (triggerSource) {
+        this.$source.trigger("change");
       }
       return;
     },
@@ -376,9 +423,7 @@
       //console.log("toggle");
       if (!this.disabled) {
         if (this.$container.hasClass("combobox-selected")) {
-          this.clearTarget();
-          this.$source.trigger("change");
-          this.clearElement();
+          this.clearAll();
           this.$element.attr("aria-expanded", false);
           this.$button.attr("aria-expanded", false);
         } else {
@@ -399,6 +444,39 @@
         e.stopPropagation();
       }
       return false;
+    },
+
+    clearAll: function () {
+      //console.log('clearAll');
+      var triggerElement = false;
+      var triggerSource = false;
+      var triggerTarget = false;
+      var oldVal;
+      oldVal = this.$element.val();
+      if (oldVal !== "") {
+        this.$element.val("");
+        triggerElement = true;
+      }
+      oldVal = this.$source.val();
+      if (oldVal !== "") {
+        this.$source.val("");
+        triggerSource = true;
+      }
+      oldVal = this.$target.val();
+      if (oldVal !== "") {
+        this.$target.val("");
+        triggerTarget = true;
+      }
+      this.$container.removeClass("combobox-selected");
+      if (triggerTarget) {
+        this.$target.trigger("change");
+      }
+      if (triggerElement) {
+        this.$element.trigger("change");
+      }
+      if (triggerSource) {
+        this.$source.trigger("change");
+      }
     },
 
     clearElement: function () {
@@ -595,22 +673,41 @@
         }
       }
       var oldVal;
+      var triggerElement = false;
+      var triggerSource = false;
+      var triggerTarget = false;
       if (this.clearIfNoMatch && !this.selected && val !== "") {
-        this.$element.val("");
+        oldVal = this.$element.val();
+        if (oldVal !== "") {
+          this.$element.val("");
+          triggerElement = true;
+        }
         oldVal = this.$source.val();
-        if (oldVal != "") {
-          this.$source.val("").trigger("change");
+        if (oldVal !== "") {
+          this.$source.val("");
+          triggerSource = true;
         }
         oldVal = this.$target.val();
-        if (oldVal != "") {
+        if (oldVal !== "") {
           this.$target.val(""); //.trigger("change");
+          triggerTarget = true;
         }
       }
       if (!this.selected) {
         oldVal = this.$target.val();
-        if (oldVal != val) {
+        if (oldVal !== val) {
           this.$target.val(val); //.trigger("change");
+          triggerTarget = true;
         }
+      }
+      if (triggerTarget) {
+        this.$target.trigger("change");
+      }
+      if (triggerElement) {
+        this.$element.trigger("change");
+      }
+      if (triggerSource) {
+        this.$source.trigger("change");
       }
       if (!this.mousedover && this.shown) {
         setTimeout(function () {

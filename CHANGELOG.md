@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.61] - 2023-06-18
+
+### Fixed
+
+- Issues with the timing of `change` event triggers on the combobox.
+
 ## [1.4.60] - 2023-06-17
 
 ### Fixed

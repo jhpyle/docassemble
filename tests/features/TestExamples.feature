@@ -9548,3 +9548,11 @@ Feature: Example interviews
 
   # Scenario: Test the interview "test translation"
   #   Given I start the interview "docassemble.demo:data/questions/testtr.yml"
+
+  Scenario: Test the interview ""Allowing raw HTML in fields""
+    Given I start the interview "docassemble.base:data/questions/examples/fields-raw.yml"
+    And I set "HTML" to "<span class='invisible'>ABC</span> One"
+    And I set "Non-HTML" to "<span class='invisible'>XYZ</span> Two"
+    And I click the button "Continue"
+    Then I should see the phrase "XYZ"
+    And I should not see the phrase "ABC"
