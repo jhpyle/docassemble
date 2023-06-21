@@ -31108,7 +31108,7 @@ else:
 class AdminInterview:
 
     def is_not(self, interview):
-        return self.interview == interview
+        return self.interview != interview
 
     def can_use(self):
         if self.require_login and current_user.is_anonymous:
