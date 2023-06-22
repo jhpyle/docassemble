@@ -598,13 +598,17 @@ class InterviewStatus:
                     elif field.datatype == 'threestate':
                         checkboxes[field.saveas] = 'None'
                     elif field.datatype in ['multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes']:
+                        is_object = field.datatype.startswith('object')
                         if field.choicetype in ['compute', 'manual']:
                             pairlist = list(self.selectcompute[field.number])
                         else:
                             pairlist = []
                         for pair in pairlist:
                             if isinstance(pair['key'], str):
-                                checkboxes[safeid(from_safeid(field.saveas) + "[B" + myb64quote(pair['key']) + "]")] = 'False'
+                                if is_object:
+                                    checkboxes[safeid(from_safeid(field.saveas) + "[O" + myb64quote(pair['key']) + "]")] = 'False'
+                                else:
+                                    checkboxes[safeid(from_safeid(field.saveas) + "[B" + myb64quote(pair['key']) + "]")] = 'False'
                             else:
                                 checkboxes[safeid(from_safeid(field.saveas) + "[R" + myb64quote(repr(pair['key'])) + "]")] = 'False'
                     elif not self.extras['required'][field.number]:

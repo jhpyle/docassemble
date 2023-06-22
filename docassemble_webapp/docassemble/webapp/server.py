@@ -6993,6 +6993,11 @@ def index(action_argument=None, refer=None):
             exec(list_collect_list + '._allow_appending()', user_dict)
         for checkbox_field, checkbox_value in field_info['checkboxes'].items():
             if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
+                checkbox_field_to_use = checkbox_field
+                for k, v in known_varnames_visible.items():
+                    if v == checkbox_field:
+                        checkbox_field = k
+                        break
                 post_data.add(checkbox_field, checkbox_value)
         empty_fields = field_info['hiddens']
         for empty_field in empty_fields:
@@ -31108,7 +31113,7 @@ else:
 class AdminInterview:
 
     def is_not(self, interview):
-        return self.interview == interview
+        return self.interview != interview
 
     def can_use(self):
         if self.require_login and current_user.is_anonymous:

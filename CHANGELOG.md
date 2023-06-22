@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.4.62] - 2023-06-21
+
+### Fixed
+
+- Issue with administrative interviews not appearing in the menu.
+- Issue with unchecked checkbox fields subject to a `show if` not
+  being located for purposes of placing an error message.
+- Issue with failing to process false values of `object_checkboxes`.
+
 ## [1.4.61] - 2023-06-18
 
 ### Fixed
