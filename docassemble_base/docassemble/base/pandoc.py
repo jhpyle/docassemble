@@ -345,6 +345,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
     else:
         num_tries = 1
     while tries < num_tries:
+        completed_process = None
         use_libreoffice = True
         if update_refs:
             if daconfig.get('convertapi secret', None) is not None:
@@ -406,7 +407,8 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                 docassemble.base.functions.server.applock('obtain', 'unoconv', maxtime=6)
                 logmessage("Trying unoconv with " + repr(subprocess_arguments))
                 try:
-                    result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+                    completed_process = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False, capture_output=True)
+                    result = completed_process.returncode
                 except subprocess.TimeoutExpired:
                     logmessage("word_to_pdf: unoconv took too long")
                     result = 1
@@ -419,7 +421,8 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                 docassemble.base.functions.server.applock('obtain', 'libreoffice')
                 logmessage("Obtained libreoffice lock after {:.4f} seconds.".format(time.time() - start_time))
                 try:
-                    result = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False).returncode
+                    completed_process = subprocess.run(subprocess_arguments, cwd=tempdir, timeout=120, check=False, capture_output=True)
+                    result = completed_process.returncode
                 except subprocess.TimeoutExpired:
                     logmessage("word_to_pdf: libreoffice took too long")
                     result = 1
@@ -446,10 +449,11 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
         tries += 1
         if tries < num_tries:
             if use_libreoffice:
+                error_msg = (f": {completed_process.stderr}") if completed_process else ""
                 if UNOCONV_AVAILABLE:
-                    logmessage("Retrying unoconv with " + repr(subprocess_arguments))
+                    logmessage(f"Didn't get file ({error_msg}), Retrying unoconv with " + repr(subprocess_arguments))
                 else:
-                    logmessage("Retrying libreoffice with " + repr(subprocess_arguments))
+                    logmessage(f"Didn't get file ({error_msg}), Retrying libreoffice with " + repr(subprocess_arguments))
             elif daconfig.get('convertapi secret', None) is not None:
                 logmessage("Retrying convertapi")
             else:
