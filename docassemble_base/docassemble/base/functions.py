@@ -3815,6 +3815,8 @@ def package_question_filename(the_file):
     if len(parts) == 2:
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/questions/' + parts[1]
+        if len(parts[1]) > 268:
+            raise DAError("Invalid filename")
         try:
             path = Path(importlib.resources.files(parts[0]), parts[1])
         except:
