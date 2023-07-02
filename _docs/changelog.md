@@ -3,11 +3,24 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.63](https://github.com/jhpyle/docassemble/releases/tag/v1.4.63) - 2023-07-02
+
+
+### Changed
+- If a `NameError` exception arises out of code in a module file,
+  **docassemble** will raise an exception instead of treating the
+  exception as a reference to an undefined variable.
+
+
+### Fixed
+- Issue with using `default admin account` to set a default API key if
+  an external Redis server is not being used (requires system
+  upgrade).
+
 ## [1.4.62](https://github.com/jhpyle/docassemble/releases/tag/v1.4.62) - 2023-06-21
 
 
 ### Fixed
-
 - Issue with administrative interviews not appearing in the menu.
 - Issue with unchecked checkbox fields subject to a `show if` not
   being located for purposes of placing an error message.
@@ -17,21 +30,18 @@ short_title: Change Log
 
 
 ### Fixed
-
 - Issues with the timing of `change` event triggers on the combobox.
 
 ## [1.4.60](https://github.com/jhpyle/docassemble/releases/tag/v1.4.60) - 2023-06-17
 
 
 ### Fixed
-
 - Bug with `datatype: raw`.
 
 ## [1.4.59](https://github.com/jhpyle/docassemble/releases/tag/v1.4.59) - 2023-06-12
 
 
 ### Fixed
-
 - Adapted the fix made in 1.4.58 to work correctly with objects with
   random instance names.
 

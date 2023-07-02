@@ -2559,8 +2559,9 @@ default admin account:
   api key: Dbah81njFzdMLw07hnU2TBYA4eClcRw1
 {% endhighlight %}
 
-The API key will be owned by the default admin user and will have no
-constraints on IP address or `Referer`.
+The API key must be exactly 32 characters long. It will be owned by
+the default admin user and will have no constraints on IP address or
+`Referer`.
 
 After [`create_tables`] runs for the first time, you can (and should)
 delete the `default admin account` information from the configuration
