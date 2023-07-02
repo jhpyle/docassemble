@@ -10,9 +10,9 @@ setup_requires = [
     'enum34==1.1.10'
     ]
 install_requires = [
-    'docassemble==1.4.62',
-    'docassemble.base==1.4.62',
-    'docassemble.demo==1.4.62',
+    'docassemble==1.4.63',
+    'docassemble.base==1.4.63',
+    'docassemble.demo==1.4.63',
     "3to2==1.1.1",
     "airtable-python-wrapper==0.15.3",
     "alembic==1.9.2",
@@ -277,7 +277,7 @@ else:
     install_requires.append("docassemble-backports==1.0")
 
 setup(name='docassemble.webapp',
-      version='1.4.62',
+      version='1.4.63',
       python_requires='>=3.9',
       description=('The web application components of the docassemble system.'),
       long_description=read("README.md"),
