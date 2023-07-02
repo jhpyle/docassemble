@@ -1048,6 +1048,11 @@ elif [ "$PGRUNNING" == "false" ] && [ "$DBTYPE" == "postgresql" ]; then
     unset PGSSLROOTCERT
 fi
 
+if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ "$REDISRUNNING" == "false" ]; then
+    echo "initialize: Starting Redis" >&2
+    ${SUPERVISORCMD} start redis
+fi
+
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     echo "initialize: Obtaining default e-mail and password from mounted credentials, if available" >&2
     if [ -f /configdata/initial_credentials ]; then
@@ -1086,11 +1091,6 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
     if [ "$OTHERLOGSERVER" == "false" ] && [ -f "${LOGDIRECTORY}/docassemble.log" ]; then
 	chown www-data:www-data "${LOGDIRECTORY}/docassemble.log"
     fi
-fi
-
-if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ "$REDISRUNNING" == "false" ]; then
-    echo "initialize: Starting Redis" >&2
-    ${SUPERVISORCMD} start redis
 fi
 
 if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then

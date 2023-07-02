@@ -9416,11 +9416,6 @@ def prevent_dependency_satisfaction(f):
             return f(*args, **kwargs)
         except (NameError, AttributeError, DAIndexError, UndefinedError):
             raise DAError("Reference to undefined variable in context where dependency satisfaction not allowed")
-        # Python 3 version:
-        # try:
-        #     return f(*args, **kwargs)
-        # except (NameError, AttributeError, DAIndexError, UndefinedError) as err:
-        #     raise DAError("Reference to undefined variable in context where dependency satisfaction not allowed") from err
     return wrapper
 
 

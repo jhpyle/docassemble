@@ -58,6 +58,10 @@ class LazyNameError(NameError):
     pass
 
 
+class DANameError(NameError):
+    pass
+
+
 def invalid_variable_name(varname):
     if not isinstance(varname, str):
         return True

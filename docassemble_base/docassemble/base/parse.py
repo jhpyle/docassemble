@@ -48,7 +48,7 @@ from docassemble.base import __version__ as da_version
 import docassemble.base.filter
 import docassemble.base.pdftk
 import docassemble.base.file_docx
-from docassemble.base.error import DAError, DANotFoundError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError, DAAttributeError, DAIndexError, DAException
+from docassemble.base.error import DAError, DANotFoundError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError, DAAttributeError, DAIndexError, DAException, DANameError
 import docassemble.base.functions
 import docassemble.base.util
 from docassemble.base.functions import pickleable_objects, word, get_language, RawValue, get_config
@@ -6464,11 +6464,11 @@ class Question:
                 if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session', 'interview_exit'):
                     # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                     user_dict['role_needed'] = self.role
-                    raise NameError("name 'role_event' is not defined")
+                    raise DANameError("name 'role_event' is not defined")
             elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session', 'interview_exit'):
                 # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
-                raise NameError("name 'role_event' is not defined")
+                raise DANameError("name 'role_event' is not defined")
         if self.question_type == 'review' and sought is not None and not hasattr(self, 'review_saveas'):
             if 'event_stack' not in user_dict['_internal']:
                 user_dict['_internal']['event_stack'] = {}
@@ -8466,6 +8466,20 @@ class Interview:
                             docassemble.base.functions.this_thread.current_info.update({'action': exception_name, 'arguments': the_exception.arguments})
                         missingVariable = exception_name
                     else:
+                        if type(the_exception) is NameError:
+                            cl, exc, tb = sys.exc_info()
+                            errinfo = traceback.extract_tb(tb)[-1]
+                            if errinfo.filename[0] != '<':
+                                del cl
+                                del exc
+                                del tb
+                                extra = " in " + errinfo.filename
+                                if hasattr(errinfo, 'lineno'):
+                                    extra += " line " + str(errinfo.lineno)
+                                raise DAError("NameError: " + str(the_exception) + extra)
+                            del cl
+                            del exc
+                            del tb
                         follow_mc = True
                         missingVariable = extract_missing_name(the_exception)
                     variables_sought.add(missingVariable)
@@ -9275,6 +9289,20 @@ class Interview:
                     docassemble.base.functions.this_thread.misc['forgive_missing_question'] = [exception_name]
                 else:
                     # logmessage("regular nameerror")
+                    if type(the_exception) is NameError:
+                        cl, exc, tb = sys.exc_info()
+                        errinfo = traceback.extract_tb(tb)[-1]
+                        if errinfo.filename[0] != '<':
+                            del cl
+                            del exc
+                            del tb
+                            extra = " in " + errinfo.filename
+                            if hasattr(errinfo, 'lineno'):
+                                extra += " line " + str(errinfo.lineno)
+                            raise DAError("NameError: " + str(the_exception) + extra)
+                        del cl
+                        del exc
+                        del tb
                     follow_mc = True
                     newMissingVariable = extract_missing_name(the_exception)
                 if newMissingVariable == 'file':
