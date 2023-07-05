@@ -108,7 +108,7 @@ install_requires = [
     "google-resumable-media==2.4.1",
     "googleapis-common-protos==1.58.0",
     "greenlet==2.0.2",
-    "grpcio==1.51.1",
+    "grpcio==1.53.0",
     "grpcio-status==1.51.1",
     "guess-language-spirit==0.5.3",
     "httplib2==0.21.0",
