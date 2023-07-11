@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.64] - 2023-07-11
+
+### Fixed
+- Issue with the `NameError` exception change in 1.4.63.
+
 ## [1.4.63] - 2023-07-02
 
 ### Changed

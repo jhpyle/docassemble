@@ -8469,7 +8469,7 @@ class Interview:
                         if type(the_exception) is NameError:
                             cl, exc, tb = sys.exc_info()
                             errinfo = traceback.extract_tb(tb)[-1]
-                            if errinfo.filename[0] != '<':
+                            if errinfo.filename[0] == '/':
                                 del cl
                                 del exc
                                 del tb
@@ -9292,7 +9292,7 @@ class Interview:
                     if type(the_exception) is NameError:
                         cl, exc, tb = sys.exc_info()
                         errinfo = traceback.extract_tb(tb)[-1]
-                        if errinfo.filename[0] != '<':
+                        if errinfo.filename[0] == '/':
                             del cl
                             del exc
                             del tb
