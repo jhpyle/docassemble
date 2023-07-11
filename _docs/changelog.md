@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.64](https://github.com/jhpyle/docassemble/releases/tag/v1.4.64) - 2023-07-11
+
+
+### Fixed
+- Issue with the `NameError` exception change in 1.4.63.
+
 ## [1.4.63](https://github.com/jhpyle/docassemble/releases/tag/v1.4.63) - 2023-07-02
 
 
