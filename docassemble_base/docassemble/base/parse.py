@@ -2103,7 +2103,7 @@ class Question:
                 self.interview.navigation_back_button = data['features']['navigation back button']
             if 'go full screen' in data['features'] and data['features']['go full screen'] is not None:
                 self.interview.force_fullscreen = data['features']['go full screen']
-            if 'navigation' in data['features'] and isinstance(data['features']['navigation'], bool):
+            if 'navigation' in data['features']:
                 self.interview.use_navigation = data['features']['navigation']
             if 'small screen navigation' in data['features']:
                 if data['features']['small screen navigation'] == 'dropdown':

@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.65] - 2023-07-13
+
+### Fixed
+- The `navigation: horizontal` feature was not functional.
+
 ## [1.4.64] - 2023-07-11
 
 ### Fixed
