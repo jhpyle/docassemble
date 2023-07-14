@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.65](https://github.com/jhpyle/docassemble/releases/tag/v1.4.65) - 2023-07-13
+
+
+### Fixed
+- The `navigation: horizontal` feature was not functional.
+
 ## [1.4.64](https://github.com/jhpyle/docassemble/releases/tag/v1.4.64) - 2023-07-11
 
 
