@@ -58,7 +58,7 @@ install_requires = [
     "configparser==5.3.0",
     "convertapi==1.5.0",
     "crayons==0.4.0",
-    "cryptography==39.0.1",
+    "cryptography==41.0.2",
     "cssselect2==0.7.0",
     "defusedxml==0.7.1",
     "Deprecated==1.2.13",
