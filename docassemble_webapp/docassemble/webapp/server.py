@@ -6237,7 +6237,7 @@ def checkin():
                         result = docassemble.webapp.worker.workerapp.AsyncResult(id=worker_id)
                         if result.ready():
                             if isinstance(result.result, ReturnValue):
-                                commands.append({'value': result.result.value, 'extra': result.result.extra})
+                                commands.append({'value': docassemble.base.functions.safe_json(result.result.value), 'extra': result.result.extra})
                         else:
                             r.rpush(worker_key, worker_id)
                     except Exception as errstr:
