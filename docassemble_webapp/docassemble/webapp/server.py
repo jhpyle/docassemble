@@ -21589,7 +21589,7 @@ def create_project(user_id, new_name):
         area = SavedFile(user_id, fix=True, section='playground' + sec)
         new_dir = os.path.join(area.directory, new_name)
         if not os.path.isdir(new_dir):
-            os.makedirs(new_dir)
+            os.makedirs(new_dir, exist_ok=True)
         path = os.path.join(new_dir, '.placeholder')
         with open(path, 'a', encoding='utf-8'):
             os.utime(path, None)

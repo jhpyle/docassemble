@@ -484,7 +484,7 @@ def upgrade_db(url, py_file, engine, version_table=None, name=None, conn_args=No
         return
     versions_path = os.path.join(alembic_path, 'versions')
     if not os.path.isdir(versions_path):
-        os.makedirs(versions_path)
+        os.makedirs(versions_path, exist_ok=True)
     alembic_cfg = Config(ini_file)
     alembic_cfg.set_main_option("sqlalchemy.url", url)
     alembic_cfg.set_main_option("connect_args", json.dumps(conn_args))

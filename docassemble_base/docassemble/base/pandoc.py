@@ -226,7 +226,7 @@ class MyPandoc:
         temp_outfile.close()
         latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'conv')
         if not os.path.isdir(latex_conversion_directory):
-            os.makedirs(latex_conversion_directory)
+            os.makedirs(latex_conversion_directory, exist_ok=True)
         if not os.path.isdir(latex_conversion_directory):
             raise DAException("Could not create latex conversion directory")
         icc_profile_in_temp = os.path.join(tempfile.gettempdir(), 'sRGB_IEC61966-2-1_black_scaled.icc')
@@ -287,7 +287,7 @@ class MyPandoc:
         latex_conversion_directory = os.path.join(tempfile.gettempdir(), 'conv')
         if not os.path.isdir(latex_conversion_directory):
             try:
-                os.makedirs(latex_conversion_directory)
+                os.makedirs(latex_conversion_directory, exist_ok=True)
             except:
                 pass
         if not os.path.isdir(latex_conversion_directory):

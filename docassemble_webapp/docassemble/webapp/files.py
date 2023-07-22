@@ -60,7 +60,7 @@ def url_sanitize(url):
 
 class SavedFile:
 
-    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file', subdir=None, should_not_exist=False):
+    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file', subdir=None, should_not_exist=False, must_exist=False):
         file_number = int(file_number)
         section = str(section)
         if section not in docassemble.base.functions.this_thread.saved_files:
@@ -96,7 +96,9 @@ class SavedFile:
         else:
             self.path = os.path.join(self.directory, self.filename)
         if fix:
-            self.fix()
+            self.fix(must_exist=must_exist)
+            if must_exist and not os.path.isfile(self.path):
+                return None
             if should_not_exist and os.path.isdir(self.directory):
                 found_error = False
                 for root, dirs, files in os.walk(self.directory):  # pylint: disable=unused-variable
@@ -115,9 +117,9 @@ class SavedFile:
                     if hasattr(self, 'directory') and os.path.isdir(self.directory):
                         shutil.rmtree(self.directory)
                     if not os.path.isdir(self.directory):
-                        os.makedirs(self.directory)
+                        os.makedirs(self.directory, exist_ok=True)
 
-    def fix(self):
+    def fix(self, must_exist=False):
         if self.fixed:
             return
         # logmessage("fix: starting " + str(self.section) + '/' + str(self.file_number))
@@ -126,16 +128,18 @@ class SavedFile:
             self.modtimes = {}
             self.keydict = {}
             if not os.path.isdir(self.directory):
-                os.makedirs(self.directory)
+                os.makedirs(self.directory, exist_ok=True)
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             # logmessage("fix: prefix is " + prefix)
+            found_any = False
             for key in cloud.list_keys(prefix):
+                found_any = True
                 filename = os.path.join(*key.name[len(prefix):].split('/'))
                 fullpath = os.path.join(self.directory, filename)
                 fulldir = os.path.dirname(fullpath)
                 dirs_in_use.add(fulldir)
                 if not os.path.isdir(fulldir):
-                    os.makedirs(fulldir)
+                    os.makedirs(fulldir, exist_ok=True)
                 server_time = key.get_epoch_modtime()
                 if not os.path.isfile(fullpath):
                     key.get_contents_to_filename(fullpath)
@@ -162,8 +166,8 @@ class SavedFile:
                 if subdir not in dirs_in_use and os.path.isdir(subdir):
                     shutil.rmtree(subdir)
         else:
-            if not os.path.isdir(self.directory):
-                os.makedirs(self.directory)
+            if not os.path.isdir(self.directory) and not must_exist:
+                os.makedirs(self.directory, exist_ok=True)
         self.fixed = True
         # logmessage("fix: ending " + str(self.section) + '/' + str(self.file_number))
 
@@ -286,7 +290,7 @@ class SavedFile:
         new_file = os.path.join(self.directory, filename)
         new_file_dir = os.path.dirname(new_file)
         if not os.path.isdir(new_file_dir):
-            os.makedirs(new_file_dir)
+            os.makedirs(new_file_dir, exist_ok=True)
         shutil.copyfile(orig_path, new_file)
         if 'filename' not in kwargs:
             self.save()
@@ -684,13 +688,13 @@ machine learning training files, and other source files.
     staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
     sourcesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'sources')
     if not os.path.isdir(questionsdir):
-        os.makedirs(questionsdir)
+        os.makedirs(questionsdir, exist_ok=True)
     if not os.path.isdir(templatesdir):
-        os.makedirs(templatesdir)
+        os.makedirs(templatesdir, exist_ok=True)
     if not os.path.isdir(staticdir):
-        os.makedirs(staticdir)
+        os.makedirs(staticdir, exist_ok=True)
     if not os.path.isdir(sourcesdir):
-        os.makedirs(sourcesdir)
+        os.makedirs(sourcesdir, exist_ok=True)
     dir_questions = directory_for(area['playground'], current_project)
     dir_template = directory_for(area['playgroundtemplate'], current_project)
     dir_modules = directory_for(area['playgroundmodules'], current_project)
