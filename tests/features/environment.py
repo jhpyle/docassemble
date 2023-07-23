@@ -3,7 +3,9 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver.common.by import By
-from selenium.webdriver import ChromeOptions, Chrome
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver import Chrome
 from webdriver_manager.chrome import ChromeDriverManager
 default_path = "http://localhost"
 # default_path = "https://demo.docassemble.org"
@@ -63,14 +65,14 @@ def before_all(context):
         # context.browser.maximize_window()
     elif use_headless_chrome:
         context.headless = True
-        options = ChromeOptions()
+        options = Options()
         options.add_argument("--window-size=1005,9999")
         options.add_argument("--headless")
-        context.browser = MyChrome(ChromeDriverManager().install(), chrome_options=options)
+        context.browser = MyChrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     else:
-        options = ChromeOptions()
+        options = Options()
         options.add_argument("--start-maximized")
-        context.browser = MyChrome(ChromeDriverManager().install(), chrome_options=options)
+        context.browser = MyChrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     context.da_path = default_path
     context.wait_seconds = default_wait_seconds
 

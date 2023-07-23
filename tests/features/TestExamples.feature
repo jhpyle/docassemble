@@ -3385,7 +3385,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/override.yml"
     Then I should see the phrase "Nice evening, isn’t it?"
     And I click the button "Yes"
-    Then I should see the phrase "So, about that dance tonight … wanna go?"
+    Then I should see the phrase "So, about that dance tonight . . . wanna go?"
     And I click the button "Yes"
     Then I should see the phrase "That is splendid news!"
 

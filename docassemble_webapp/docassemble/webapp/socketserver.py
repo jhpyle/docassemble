@@ -5,6 +5,7 @@ import random
 import re
 import sys
 import time
+import trio
 import eventlet
 eventlet.sleep()
 eventlet.monkey_patch()

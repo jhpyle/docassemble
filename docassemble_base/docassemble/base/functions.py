@@ -24,7 +24,6 @@ import tzlocal
 import us
 import pycountry
 import markdown
-from mdx_smartypants import SmartypantsExt
 import nltk
 try:
     if not os.path.isfile(os.path.join(nltk.data.path[0], 'corpora', 'omw-1.4.zip')):
@@ -84,7 +83,6 @@ __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_l
 # except:
 #     default_timezone = 'America/New_York'
 # daconfig = {}
-smartyext = SmartypantsExt(configs={})
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 newlines = re.compile(r'[\r\n]+')
 single_newline = re.compile(r'[\r\n]')
@@ -1938,7 +1936,7 @@ this_thread.gathering_mode = {}
 this_thread.global_vars = GenericObject()
 this_thread.current_variable = []
 this_thread.open_files = set()
-this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html', 'footnotes'], output_format='html5')
+this_thread.markdown = markdown.Markdown(extensions=['smarty', 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html', 'footnotes'], output_format='html5')
 this_thread.saved_files = {}
 this_thread.message_log = []
 this_thread.misc = {}
@@ -2394,7 +2392,7 @@ def reset_local_variables():
     this_thread.current_question = None
     this_thread.current_section = None
     this_thread.internal = {}
-    this_thread.markdown = markdown.Markdown(extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html', 'footnotes'], output_format='html5')
+    this_thread.markdown = markdown.Markdown(extensions=['smarty', 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html', 'footnotes'], output_format='html5')
     this_thread.prevent_going_back = False
 
 

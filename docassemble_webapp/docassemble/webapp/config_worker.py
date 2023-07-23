@@ -6,6 +6,8 @@ accept_content = ['pickle']
 result_serializer = 'pickle'
 timezone = daconfig.get('timezone', 'America/New_York')
 enable_utc = True
+broker_connection_retry = True
+broker_connection_retry_on_startup = True
 
 if daconfig.get('has_celery_single_queue', False):
     task_routes = {"docassemble.webapp.worker.ocr_page": {"queue": "single"}}
