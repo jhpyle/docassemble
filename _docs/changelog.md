@@ -3,6 +3,24 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.66](https://github.com/jhpyle/docassemble/releases/tag/v1.4.66) - 2023-07-24
+
+
+### Changed
+- Upgraded dependencies. Packages that might require code changes
+  include `selenium` (now at version 4) and `matplotlib` (see the
+  "Generating a graph and inserting it into a document" recipe). Due
+  to incompatibilities with the latest version of `markdown`, the
+  `mdx_smartypants` extension is no longer being used. Instead the
+  standard `smarty` extension is used. There are some differences
+  between the two extensions, such as the transformation of ellipses.
+
+
+### Fixed
+- Adapted code so no error will be raised if docassemble tries to
+  create a directory where one already exists. A race condition of
+  some sort seemed to be causing such errors for some users.
+
 ## [1.4.65](https://github.com/jhpyle/docassemble/releases/tag/v1.4.65) - 2023-07-13
 
 

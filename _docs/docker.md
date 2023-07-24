@@ -145,9 +145,9 @@ take effect.  On some distributions, the `docker` group is not created
 by the installation process, so you will need to manually create it by
 running `sudo groupadd docker` before you run the `usermod` command.
 
-[Docker] will probably start automatically after it is installed.  On
-Linux, you many need to do `sudo /etc/init.d/docker start`, `sudo
-systemctl start docker`, or `sudo service docker start`.
+[Docker] may or may not start automatically after it is installed.  On
+Linux, you many need to do `sudo systemctl start docker`, `sudo
+service docker start`, or `sudo /etc/init.d/docker start`.
 
 The operating system that runs inside of the **docassemble** Docker
 container is Ubuntu 22.04. This is a fairly recent version of
