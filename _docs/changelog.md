@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.67](https://github.com/jhpyle/docassemble/releases/tag/v1.4.67) - 2023-07-28
+
+
+### Changed
+- Upgraded `webdriver_manager`.
+- The `.delete()` method of `DAGlobal` will now exit silently if
+  called on a `DAGlobal` object that has already been deleted.
+
 ## [1.4.66](https://github.com/jhpyle/docassemble/releases/tag/v1.4.66) - 2023-07-24
 
 
