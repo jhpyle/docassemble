@@ -265,7 +265,7 @@ install_requires = [
     "uWSGI==2.0.21",
     "vine==5.0.0",
     "wcwidth==0.2.6",
-    "webdriver-manager==3.9.0",
+    "webdriver-manager==4.0.0",
     "webencodings==0.5.1",
     "Werkzeug==2.3.6",
     "wrapt==1.15.0",

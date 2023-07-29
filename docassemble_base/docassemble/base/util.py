@@ -6124,14 +6124,15 @@ class DAGlobal(DAObject):
 
     def delete(self):
         """Deletes the data in the global storage area and undefines all attributes."""
-        if self.base == 'interview':
-            globalkey = 'da:daglobal:i:' + this_thread.current_info.get('yaml_filename', '') + ':' + self.key
-        elif self.base == 'global':
-            globalkey = 'da:daglobal:global:' + self.key
-        else:
-            globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + self.key
-        server.server_sql_delete(globalkey)
-        self.__dict__ = {'instanceName': self.instanceName, 'attrList': [], 'has_nonrandom_instance_name': self.has_nonrandom_instance_name}
+        if hasattr(self, 'base') and hasattr(self, 'key'):
+            if self.base == 'interview':
+                globalkey = 'da:daglobal:i:' + this_thread.current_info.get('yaml_filename', '') + ':' + self.key
+            elif self.base == 'global':
+                globalkey = 'da:daglobal:global:' + self.key
+            else:
+                globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + self.key
+            server.server_sql_delete(globalkey)
+            self.__dict__ = {'instanceName': self.instanceName, 'attrList': [], 'has_nonrandom_instance_name': self.has_nonrandom_instance_name}
 
 
 class DAStore(DAObject):
