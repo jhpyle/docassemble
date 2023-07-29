@@ -5035,7 +5035,7 @@ interview for which you want to create a session.
 
 The parameter `secret` can be set to the output of
 `get_user_secret()`.  If the target interview does not use server-side
-encryption ([`multi_user`] is set to `False`), then the `secret`
+encryption ([`multi_user`] is set to `True`), then the `secret`
 parameter is not important.  If you do not provide a `secret`
 parameter and the target interview uses server-side encryption, then
 the current user's decryption key will be used, and only the current
