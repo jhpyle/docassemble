@@ -7427,7 +7427,10 @@ def index(action_argument=None, refer=None):
             elif known_datatypes[real_key] in ('object', 'object_radio'):
                 if raw_data == '' or set_to_empty:
                     continue
-                data = "_internal['objselections'][" + repr(key) + "][" + repr(raw_data) + "]"
+                if raw_data == 'None':
+                    data = 'None'
+                else:
+                    data = "_internal['objselections'][" + repr(key) + "][" + repr(raw_data) + "]"
             elif known_datatypes[real_key] in ('object_multiselect', 'object_checkboxes') and bracket_expression is not None:
                 if raw_data not in ('True', 'False', 'None') or set_to_empty:
                     continue
@@ -7573,7 +7576,10 @@ def index(action_argument=None, refer=None):
             elif known_datatypes[orig_key] in ('object', 'object_radio'):
                 if raw_data == '' or set_to_empty:
                     continue
-                data = "_internal['objselections'][" + repr(key) + "][" + repr(raw_data) + "]"
+                if data == 'None':
+                    data = 'None'
+                else:
+                    data = "_internal['objselections'][" + repr(key) + "][" + repr(raw_data) + "]"
             elif set_to_empty in ('object_multiselect', 'object_checkboxes'):
                 continue
             elif real_key in known_datatypes and known_datatypes[real_key] in ('file', 'files', 'camera', 'user', 'environment'):

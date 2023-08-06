@@ -107,7 +107,7 @@ def user_list():
         else:
             user_indicator = user.email
         is_active = bool(user.active)
-        users.append(dict(name=name_string, email=user_indicator, active=is_active, id=user.id, high_priv=high_priv))
+        users.append({'name': name_string, 'email': user_indicator, 'active': is_active, 'id': user.id, 'high_priv': high_priv})
     if there_are_more:
         next_page = page + 2
     else:

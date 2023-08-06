@@ -76,10 +76,16 @@ class MySignInForm(LoginForm):
                     result = True
                 else:
                     connect.unbind_s()
-                    result = super().validate()
+                    try:
+                        result = super().validate()
+                    except:
+                        result = False
             except (ldap.LDAPError, ldap.INVALID_CREDENTIALS):
                 connect.unbind_s()
-                result = super().validate()
+                try:
+                    result = super().validate()
+                except:
+                    result = False
         else:
             user_manager = current_app.user_manager
             user, user_email = user_manager.find_user_by_email(self.email.data)

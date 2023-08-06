@@ -2465,8 +2465,8 @@ def get_locale(*pargs):
 
     """
     if len(pargs) == 1:
-        if 'locale_override' in this_thread.misc and pargs[0] in this_thread.misc['locale_override']:
-            return this_thread.misc['locale_override'][pargs[0]]
+        if 'locale_overrides' in this_thread.misc and pargs[0] in this_thread.misc['locale_overrides']:
+            return this_thread.misc['locale_overrides'][pargs[0]]
         return locale.localeconv().get(pargs[0], None)
     return this_thread.locale
 
@@ -2476,17 +2476,18 @@ def get_currency_symbol():
     one, and otherwise returns the default currency symbol.
 
     """
-    if 'locale_override' in this_thread.misc and 'currency_symbol' in this_thread.misc['locale_override']:
-        return this_thread.misc['locale_override']['currency_symbol']
+    if 'locale_overrides' in this_thread.misc and 'currency_symbol' in this_thread.misc['locale_overrides']:
+        return this_thread.misc['locale_overrides']['currency_symbol']
     return currency_symbol()
 
 
 def update_locale():
     """Updates the system locale based on the value set by set_locale()."""
     try:
-        locale.setlocale(locale.LC_ALL, str(this_thread.locale))
-    except:
-        logmessage("update_locale error: unable to set the locale to " + str(this_thread.locale))
+        locale.setlocale(locale.LC_ALL, str(this_thread.language) + '_' + str(this_thread.locale))
+    except Exception as err:
+        logmessage("update_locale error: unable to set the locale to " + str(this_thread.language) + '_' + str(this_thread.locale))
+        logmessage(err.__class__.__name__ + ": " + str(err))
         locale.setlocale(locale.LC_ALL, 'en_US.utf8')
 
 
