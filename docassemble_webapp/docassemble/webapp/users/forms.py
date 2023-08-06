@@ -43,17 +43,63 @@ def fix_nickname(form, field):
 
 class MySignInForm(LoginForm):
 
+    def ldap_bind(self, connect):
+        base_dn = daconfig['ldap login']['base dn'].strip()
+        if daconfig['ldap login'].get('anonymous bind', False):
+            bind_dn = ""
+            bind_password = ""
+        else:
+            bind_dn = daconfig['ldap login']['bind dn'].strip()
+            bind_password = daconfig['ldap login']['bind password'].strip()
+
+        username = ""
+        password = ""
+        try:
+            search_filter = daconfig['ldap login'].get('search pattern',
+                                                       "mail=%s") % (self.email.data)
+            connect.simple_bind_s(bind_dn, bind_password)
+            search_results = connect.search_s(base_dn,
+                                              ldap.SCOPE_SUBTREE, search_filter)
+            if len(search_results) == 0:
+                logmessage(("Email %s was not found in LDAP "
+                            "using search filter %s, base dn %s") %
+                           (self.email.data, search_filter, base_dn))
+            else:
+                if len(search_results) > 1:
+                    logmessage(("Email %s was found multiple times in LDAP "
+                                "using search filter %s, base dn %s "
+                                "- the first result will be used as dn: %s") %
+                               (self.email.data, search_filter, base_dn, search_results[0][0]))
+                username = search_results[0][0]
+                password = self.password.data
+        except (ldap.LDAPError, ldap.INVALID_CREDENTIALS):
+            # no unbind to make use of the rest of the LDAP workflow
+            logmessage(("Could not login into LDAP with email %s "
+                        "and given password") %
+                       (self.email.data))
+
+        return username, password
+
     def validate(self):
         if BAN_IP_ADDRESSES:
             key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
             failed_attempts = r.get(key)
             if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
                 abort(404)
+        ldap_server = daconfig['ldap login'].get('server', 'localhost').strip()
         if daconfig['ldap login'].get('enable', False):
-            ldap_server = daconfig['ldap login'].get('server', 'localhost').strip()
-            username = self.email.data
-            password = self.password.data
-            connect = ldap.initialize('ldap://' + ldap_server)
+            if daconfig['ldap login'].get('ldap over TLS', False):
+                ldap_protocol = "ldaps"
+            else:
+                ldap_protocol = "ldap"
+            connect = ldap.initialize(ldap_protocol + '://' + ldap_server)
+
+            if daconfig['ldap login'].get('login with bind_dn', False):
+                username, password = self.ldap_bind(connect)
+            else:
+                username = self.email.data
+                password = self.password.data
+
             connect.set_option(ldap.OPT_REFERRALS, 0)
             try:
                 connect.simple_bind_s(username, password)
