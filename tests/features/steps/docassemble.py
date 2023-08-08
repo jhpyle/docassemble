@@ -318,6 +318,13 @@ def click_nth_link(context, ordinal, link_name):
 @step(r'I should see the phrase "(?P<phrase>[^"]+)"')
 def see_phrase(context, phrase):
     take_screenshot(context)
+    assert not context.browser.text_present('Show variables and values')
+    assert context.browser.text_present(phrase)
+
+
+@step(r'I should explicitly see the phrase "(?P<phrase>[^"]+)"')
+def see_phrase_explicitly(context, phrase):
+    take_screenshot(context)
     assert context.browser.text_present(phrase)
 
 

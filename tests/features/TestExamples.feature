@@ -5034,7 +5034,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "Object" 2
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/branch-error.yml"
-    Then I should see the phrase "Interview has an error. There was a reference to a variable 'long_branch.length' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
+    Then I should explicitly see the phrase "Interview has an error. There was a reference to a variable 'long_branch.length' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
   Scenario: Test the interview "Checkboxes within fields" 9
     Given I start the interview "docassemble.base:data/questions/examples/checkbox-dict-dict.yml"
@@ -5246,16 +5246,16 @@ Feature: Example interviews
 
   Scenario: Test the interview "Gather" 3
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/gather-fruit-incomplete.yml"
-    Then I should see the phrase "Interview has an error. There was a reference to a variable 'fruit.there_are_any' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
+    Then I should explicitly see the phrase "Interview has an error. There was a reference to a variable 'fruit.there_are_any' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
   Scenario: Test the interview "Mako for loops" 2
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/gather.yml"
-    Then I should see the phrase "Interview has an error. There was a reference to a variable 'witness.there_are_any' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
+    Then I should explicitly see the phrase "Interview has an error. There was a reference to a variable 'witness.there_are_any' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
   Scenario: Test the interview "Infinite loop" 2
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/infinite-loop-2.yml"
-    Then I should see the phrase "There appears to be an infinite loop."
-    And I should see the phrase "Variables in stack are bar, foo."
+    Then I should explicitly see the phrase "There appears to be an infinite loop."
+    And I should explicitly see the phrase "Variables in stack are bar, foo."
 
   # Scenario: Test the interview ""
   #   Given I start the interview "docassemble.base:data/questions/examples/interview-flowers.yml"
@@ -5372,8 +5372,8 @@ Feature: Example interviews
 
   Scenario: Test the interview "Missing mandatory"
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/no-mandatory.yml"
-    Then I should see the phrase "Error"
-    And I should see the phrase "Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any). It is a best practice to end your interview with a question that says goodbye and offers an Exit button."
+    Then I should explicitly see the phrase "Error"
+    And I should explicitly see the phrase "Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any). It is a best practice to end your interview with a question that says goodbye and offers an Exit button."
 
   Scenario: Test the interview "Number format"
     Given I start the interview "docassemble.base:data/questions/examples/number-formatting.yml"
@@ -5447,7 +5447,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "Questionless interview"
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/questionless.yml"
-    Then I should see the phrase "Interview has an error. There was a reference to a variable 'favorite_number' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
+    Then I should explicitly see the phrase "Interview has an error. There was a reference to a variable 'favorite_number' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
   # Scenario: Test the interview "Redis with objects"
   #   Given I start the interview "docassemble.base:data/questions/examples/redis-data.yml"
@@ -6559,7 +6559,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "Error help" 2
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/error-help.yml"
-    Then I should see the phrase "We are sorry."
+    Then I should explicitly see the phrase "We are sorry."
 
   Scenario: Test the interview "Adding object to list"
     Given I start the interview "docassemble.base:data/questions/examples/append-list.yml"
