@@ -5607,7 +5607,7 @@ class DALazyTableTemplate(DALazyTemplate):
                 freeze_panes = None
             writer = pandas.ExcelWriter(output_to.path(),  # pylint: disable=abstract-class-instantiated
                                         engine='xlsxwriter',
-                                        options={'remove_timezone': True})
+                                        engine_kwargs={'remove_timezone': True})
             df.to_excel(writer, sheet_name=title, index=False, freeze_panes=freeze_panes)
             writer.save()
         elif file_format == 'csv':
