@@ -3991,7 +3991,7 @@ the position of the symbol will be determined by the current
 If the locale is `US.utf8`, `currency_symbol()` returns `$`.
 
 The locale can be set in the [configuration] or through the
-[`set_locale()`] function.
+[`set_locale()`] and [`update_locale()`] functions.
 
 If you set [`currency symbol`] in the [configuration], then
 `currency_symbol()` returns the symbol specified there, and does not
@@ -8293,7 +8293,6 @@ $(document).on('daPageLoad', function(){
 [`process_action()`]: #process_action
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`set_info()`]: #set_info
-[`set_locale()`]: #set_locale
 [`subquestion`]: {{ site.baseurl }}/docs/questions.html#subquestion
 [`title_case()`]: #title_case
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
