@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.4.68] - 2023-08-10
+
+### Changed
+- The `ldap login` feature now supports TLS and anonymous binding.
+
+### Fixed
+- Error with exporting tables to Excel, caused by the upgrade of the
+  Pandas dependency.
+- The way that locale-related functions actually worked did not match
+  the way they were documented; they have been fixed so that they
+  match the way they are documented. The `update_locale()` function is
+  also now imported by default.
+- Bug with handling of non-required object fields that are not
+  answered.
+
 ## [1.4.67] - 2023-07-28
 
 ### Changed

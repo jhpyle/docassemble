@@ -5795,7 +5795,7 @@ Feature: Example interviews
     Then I should see the phrase "What is your date of birth?"
     And I set the text box to "08/01/1989"
     And I click the button "Continue"
-    Then I should see the phrase "You are 33 years old."
+    Then I should see the phrase "You are 34 years old."
 
   # Scenario: Test the interview "Test e-mail attachment"
   #   Given I start the interview "docassemble.demo:data/questions/testattach.yml"
@@ -7472,7 +7472,7 @@ Feature: Example interviews
 
   Scenario: Test the interview "Error help" 1
     Given I start the interview "docassemble.base:data/questions/examples/error-help-language.yml"
-    Then I should see the phrase "We are sorry. An error has occurred."
+    Then I should explicitly see the phrase "We are sorry. An error has occurred."
 
   Scenario: Test the interview "Object radio buttons" 1
     Given I start the interview "docassemble.base:data/questions/examples/object-radio-nota.yml"
@@ -8934,7 +8934,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.demo:data/questions/examples/prevent-dependency-satisfaction.yml"
     Then I should see the phrase "How tasty is it?"
     And I click the button "Continue"
-    Then I should see the phrase "Reference to undefined variable in context where dependency satisfaction not allowed"
+    Then I should explicitly see the phrase "Reference to undefined variable in context where dependency satisfaction not allowed"
 
   Scenario: Test the interview "DOM"
     Given I start the interview "docassemble.demo:data/questions/examples/pytojs-dom.yml"
