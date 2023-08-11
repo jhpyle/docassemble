@@ -9009,7 +9009,10 @@ def index(action_argument=None, refer=None):
             theVal = null;
           }
           else{
-            if (theVal == 'True'){
+            if ($(elem).hasClass("daobject")){
+              theVal = atou(theVal);
+            }
+            else if (theVal == 'True'){
               theVal = true;
             }
             else if (theVal == 'False'){
@@ -9053,6 +9056,9 @@ def index(action_argument=None, refer=None):
             });
             return selectedVals;
           }
+        }
+        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('daobject')){
+          theVal = atou($(elem).val());
         }
         else{
           theVal = $(elem).val();
@@ -14219,7 +14225,10 @@ def observer():
             theVal = null;
           }
           else{
-            if (theVal == 'True'){
+            if ($(elem).hasClass("daobject")){
+              theVal = atou(theVal);
+            }
+            else if (theVal == 'True'){
               theVal = true;
             }
             else if (theVal == 'False'){
@@ -14263,6 +14272,9 @@ def observer():
             });
             return selectedVals;
           }
+        }
+        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('daobject')){
+          theVal = atou($(elem).val());
         }
         else{
           theVal = $(elem).val();
