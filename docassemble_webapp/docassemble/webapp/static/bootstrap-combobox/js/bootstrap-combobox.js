@@ -72,7 +72,7 @@
           '<div class="combobox-container"> <input type="hidden" /> ' +
           '<div class="input-group"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
           '<div class="input-group-append"> ' +
-          '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-expanded="false" aria-controls="id_controls">' +
+          '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-label="combobox dropdown" aria-expanded="false" aria-controls="id_controls">' +
           '<span class="fas fa-caret-down"></span><span class="fas fa-xmark"></span>' +
           "</button> </div> </div> </div>"
         );
