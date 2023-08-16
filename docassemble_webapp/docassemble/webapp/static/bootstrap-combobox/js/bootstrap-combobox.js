@@ -72,7 +72,9 @@
           '<div class="combobox-container"> <input type="hidden" /> ' +
           '<div class="input-group"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
           '<div class="input-group-append"> ' +
-          '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-label="combobox dropdown" aria-expanded="false" aria-controls="id_controls">' +
+          '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-label="' +
+          this.options.buttonLabel +
+          '" aria-expanded="false" aria-controls="id_controls">' +
           '<span class="fas fa-caret-down"></span><span class="fas fa-xmark"></span>' +
           "</button> </div> </div> </div>"
         );
@@ -359,12 +361,12 @@
       if (!query) {
         return item;
       }
-      return item.replace(new RegExp("(" + query + ")", "ig"), function (
-        $1,
-        match
-      ) {
-        return "<b>" + match + "</b>";
-      });
+      return item.replace(
+        new RegExp("(" + query + ")", "ig"),
+        function ($1, match) {
+          return "<b>" + match + "</b>";
+        }
+      );
     },
 
     render: function (items) {
@@ -770,10 +772,10 @@
 
   $.fn.combobox.defaults = {
     bsVersion: "5",
-    menu:
-      '<ul role="listbox" class="typeahead typeahead-long dropdown-menu"></ul>',
+    menu: '<ul role="listbox" class="typeahead typeahead-long dropdown-menu"></ul>',
     item: '<li role="option" class="dropdown-item dapointer"></li>',
     appendId: "combobox",
+    buttonLabel: "dropdown",
     clearIfNoMatch: false,
   };
 

@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.4.69] - 2023-08-15
+
+### Fixed
+- The `val()` JavaScript function erroneously returned encoded values
+  for `datatype: object` and `datatype: object_radio` fields. The
+  function has been modified so that it returns the `instanceName` of
+  the selected object.
+- The combobox HTML did not set an `aria-label`.
+- Markdown-to-HTML conversion in popover `help` text was not
+  full-featured.
+
 ## [1.4.68] - 2023-08-10
 
 ### Changed

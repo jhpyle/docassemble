@@ -8534,6 +8534,7 @@ def index(action_argument=None, refer=None):
       var daDoAction = """ + do_action + """;
       var daQuestionID = """ + json.dumps(question_id_dict) + """;
       var daCsrf = """ + json.dumps(generate_csrf()) + """;
+      var daComboboxButtonLabel = """ + json.dumps(word("Dropdown")) + """;
       var daShowIfInProcess = false;
       var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_list_collect_list', '_null_question'];
       var daVarLookup = Object();
@@ -11256,8 +11257,8 @@ def index(action_argument=None, refer=None):
             });
           }
         });
-        $('select.combobox').combobox();
-        $('select.da-ajax-combobox').combobox({clearIfNoMatch: true});
+        $('select.combobox').combobox({buttonLabel: daComboboxButtonLabel});
+        $('select.da-ajax-combobox').combobox({clearIfNoMatch: true, buttonLabel: daComboboxButtonLabel});
         $('input.da-ajax-combobox').each(function(){
           var cb = daComboBoxes[$(this).attr("id")];
           daFetchAjax(this, cb, false);
