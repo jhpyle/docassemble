@@ -2483,10 +2483,14 @@ def get_currency_symbol():
 
 def update_locale():
     """Updates the system locale based on the value set by set_locale()."""
+    if '_' in this_thread.locale:
+        the_locale = str(this_thread.locale)
+    else:
+        the_locale = str(this_thread.language) + '_' + str(this_thread.locale)
     try:
-        locale.setlocale(locale.LC_ALL, str(this_thread.language) + '_' + str(this_thread.locale))
+        locale.setlocale(locale.LC_ALL, the_locale)
     except Exception as err:
-        logmessage("update_locale error: unable to set the locale to " + str(this_thread.language) + '_' + str(this_thread.locale))
+        logmessage("update_locale error: unable to set the locale to " + the_locale)
         logmessage(err.__class__.__name__ + ": " + str(err))
         locale.setlocale(locale.LC_ALL, 'en_US.utf8')
 

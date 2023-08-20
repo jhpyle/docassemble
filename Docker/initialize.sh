@@ -20,7 +20,8 @@ echo "initialize: initialize starting" >&2
 
 RESTOREFROMBACKUP=true
 
-if [ -f /var/run/docassemble/da_running ]; then
+if [ -f /var/run/docassemble/da_running ] || [ -f /var/run/docassemble/status-rabbitmq-running ]; then
+    echo "initialize: unsafe shutdown detected; will not restore from backup"
     RESTOREFROMBACKUP=false
 fi
 
@@ -30,6 +31,7 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "true" ]; then
 fi
 
 mkdir -p /var/run/docassemble
+rm -f /var/run/docassemble/status-*
 touch /var/run/docassemble/da_running
 
 export DEBIAN_FRONTEND=noninteractive
@@ -962,7 +964,7 @@ fi
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" == "false" ] && [ "$DBTYPE" == "postgresql" ]; then
     echo "initialize: Starting PostgreSQL" >&2
-    ${SUPERVISORCMD} start postgres || exit 1
+    ${SUPERVISORCMD} start main:postgres || exit 1
     sleep 4
     su -c "while ! pg_isready -q; do sleep 1; done" postgres
     echo "initialize: Testing if the database user exists" >&2
@@ -1050,7 +1052,7 @@ fi
 
 if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ "$REDISRUNNING" == "false" ]; then
     echo "initialize: Starting Redis" >&2
-    ${SUPERVISORCMD} start redis
+    ${SUPERVISORCMD} start main:redis
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
@@ -1642,6 +1644,24 @@ function stopfunc {
                 rsync -auq --delete /var/log/nginx/ "${DA_ROOT}/backup/nginxlogs/"
             fi
         fi
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
+	while [ -f "/var/run/docassemble/status-postgres-running" ]; do
+	    echo "Waiting for postgres to finish" >&2
+	    sleep 1
+	done
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]]; then
+	while [ -f "/var/run/docassemble/status-redis-running" ]; do
+	    echo "Waiting for redis to finish" >&2
+	    sleep 1
+	done
+    fi
+    DISK_USAGE=$(df --sync --portability / | sed '1d' | awk '{print $5}')
+    if [ "${DISK_USAGE}" == "99%" ] || [ "${DISK_USAGE}" == "100%" ]; then
+	echo "initialize: Disk is full; shutdown was not safe" >&2
+	kill %1
+	exit 1
     fi
     rm -f /var/run/docassemble/da_running
     echo "initialize: Finished shutting down initialize" >&2

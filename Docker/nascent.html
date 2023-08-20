@@ -2,10 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="refresh" content="15">
     <title>Docassemble is starting</title>
   </head>
   <body>
     <p>Please wait while docassemble starts . . .</p>
+    <script>
+      var callingServer = false;
+      function pingServer(){
+        if (callingServer){
+          return;
+        }
+        let xhr = new XMLHttpRequest()
+        function onError(){
+          callingServer = false;
+        }
+        function onLoad(){
+          callingServer = false;
+          if (xhr.status == 200){
+            location.reload();
+            return;
+          }
+        }
+        xhr.open('GET', "/health_check?ready=1", true)
+        xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8')
+        xhr.addEventListener("load", onLoad);
+        xhr.addEventListener("error", onError);
+        xhr.addEventListener("abort", onError);
+        xhr.addEventListener("timeout", onError);
+        xhr.timeout = 5000;
+        xhr.send();
+      }
+      window.setInterval(pingServer, 10000)
+    </script>
   </body>
 </html>

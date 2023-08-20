@@ -160,6 +160,11 @@ class MySignInForm(LoginForm):
                 else:
                     self.email.errors.append(word("You cannot log in this way."))
                 return False
+            if self.password.data == 'password':
+                pipe = r.pipeline()
+                pipe.set('da:insecure_password_present', '1')
+                pipe.expire('da:insecure_password_present', 60)
+                pipe.execute()
             # logmessage("Trying super validate")
             result = super().validate()
             # logmessage("Super validate response was " + repr(result))

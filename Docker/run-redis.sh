@@ -14,7 +14,7 @@ export LANG=$1
 
 function stopfunc {
     redis-cli shutdown
-    echo backing up redis
+    echo "backing up redis" >&2
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	s4cmd -f put "/var/lib/redis/dump.rdb" "s3://${S3BUCKET}/redis.rdb"
     elif [ "${AZUREENABLE:-false}" == "true" ]; then
@@ -22,10 +22,13 @@ function stopfunc {
     else
 	cp /var/lib/redis/dump.rdb "${DA_ROOT}/backup/redis.rdb"
     fi
+    echo "finished backing up redis" >&2
+    rm -f "/var/run/docassemble/status-redis-running"
     exit 0
 }
 
 trap stopfunc SIGINT SIGTERM
 
+touch "/var/run/docassemble/status-redis-running"
 redis-server /etc/redis/redis.conf &
 wait %1

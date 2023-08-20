@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.4.70] - 2023-08-20
+
+### Changed
+- When installing a package with a GitHub URL, the
+  `#egg=mypackagename` feature of GitHub URLs is now respected, and
+  the name of the package will be extracted from `#egg` instead of
+  from the GitHub repository name.
+- Grouped the `initialize`, `postgres`, and `redis` Supervisor
+  processes into a group called `main` so that they shut down
+  simultaneously rather than sequentially.
+
+### Fixed
+- The `js show if` feature did not work correctly when an expression
+  reference two different fields.
+- The `auto terms` and `terms` features interfered with each other
+  when the same term was referenced in each.
+- Bug in locale-setting code.
+- The system for forcing the admin user to change their password when
+  the password is `password` introduced unnecessary delay on page
+  loads.
+- The "Please wait while docassemble starts . . ." page would refresh
+  into an error rather than refresh into the default interview under
+  some conditions.
+
 ## [1.4.69] - 2023-08-15
 
 ### Fixed

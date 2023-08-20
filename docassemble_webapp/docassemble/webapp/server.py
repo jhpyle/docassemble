@@ -11733,10 +11733,9 @@ def index(action_argument=None, refer=None):
           var showIfSign = jsInfo['sign'];
           var showIfMode = jsInfo['mode'];
           var jsExpression = jsInfo['expression'];
-          var n = jsInfo['vars'].length;
-          for (var i = 0; i < n; ++i){
+          jsInfo['vars'].forEach(function(infoItem, i){
             var showIfVars = [];
-            var initShowIfVar = utoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
+            var initShowIfVar = utoa(infoItem).replace(/[\\n=]/g, '');
             var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var elem = $("[name='" + initShowIfVarEscaped + "']");
             if (elem.length > 0){
@@ -11753,12 +11752,11 @@ def index(action_argument=None, refer=None):
               }
             }
             if (showIfVars.length == 0){
-              console.log("ERROR: reference to non-existent field " + jsInfo['vars'][i]);
+              console.log("ERROR: reference to non-existent field " + infoItem);
             }
-            for (var j = 0; j < showIfVars.length; ++j){
-              var showIfVar = showIfVars[j];
+            showIfVars.forEach(function(showIfVar){
               var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-              var varToUse = jsInfo['vars'][i];
+              var varToUse = infoItem;
               var showHideDiv = function(speed){
                 var elem = daGetField(varToUse);
                 if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
@@ -11860,8 +11858,8 @@ def index(action_argument=None, refer=None):
               $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
               $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
               $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
-            }
-          }
+            });
+          });
         });
         $(".dashowif").each(function(){
           var showIfVars = [];
@@ -11888,9 +11886,7 @@ def index(action_argument=None, refer=None):
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
           var showIfDiv = this;
-          var n = showIfVars.length;
-          for (var i = 0; i < n; ++i){
-            var showIfVar = showIfVars[i];
+          showIfVars.forEach(function(showIfVar){
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var showHideDiv = function(speed){
               var elem = daGetField(varName, showIfDiv);
@@ -12032,7 +12028,7 @@ def index(action_argument=None, refer=None):
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
             $("input.dafile[name='" + showIfVarEscaped + "']").on('filecleared', showHideDivFast);
-          }
+          });
         });
         function daTriggerAllShowHides(){
           var daUniqueTriggerQueries = daTriggerQueries.filter(daOnlyUnique);
@@ -16747,12 +16743,16 @@ def update_package():
                 branch = form.gitbranch.data.strip()
                 if not branch:
                     branch = get_master_branch(giturl)
-                packagename = re.sub(r'/*$', '', giturl)
-                packagename = re.sub(r'^git+', '', packagename)
-                packagename = re.sub(r'#.*', '', packagename)
-                packagename = re.sub(r'\.git$', '', packagename)
-                packagename = re.sub(r'.*/', '', packagename)
-                packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
+                m = re.search(r'#egg=(.*)', github_url)
+                if m:
+                    packagename = re.sub(r'&.*', '', m.group(1))
+                else:
+                    packagename = re.sub(r'/*$', '', giturl)
+                    packagename = re.sub(r'^git+', '', packagename)
+                    packagename = re.sub(r'#.*', '', packagename)
+                    packagename = re.sub(r'\.git$', '', packagename)
+                    packagename = re.sub(r'.*/', '', packagename)
+                    packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
                     install_git_package(packagename, giturl, branch)
                     result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
@@ -23512,12 +23512,11 @@ def needs_to_change_password():
         return False
     if not (current_user.social_id and current_user.social_id.startswith('local')):
         return False
-    # logmessage("needs_to_change_password: starting")
-    if app.user_manager.verify_password('password', current_user):
+    if r.get('da:insecure_password_present') is not None:
+        r.delete('da:insecure_password_present')
         session.pop('_flashes', None)
         flash(word("Your password is insecure and needs to be changed"), "warning")
         return True
-    # logmessage("needs_to_change_password: ending")
     return False
 
 
@@ -28566,12 +28565,16 @@ def api_package():
             branch = post_data.get('branch', None)
             if branch is None:
                 branch = get_master_branch(github_url)
-            packagename = re.sub(r'/*$', '', github_url)
-            packagename = re.sub(r'^git+', '', packagename)
-            packagename = re.sub(r'#.*', '', packagename)
-            packagename = re.sub(r'\.git$', '', packagename)
-            packagename = re.sub(r'.*/', '', packagename)
-            packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
+            m = re.search(r'#egg=(.*)', github_url)
+            if m:
+                packagename = re.sub(r'&.*', '', m.group(1))
+            else:
+                packagename = re.sub(r'/*$', '', github_url)
+                packagename = re.sub(r'^git+', '', packagename)
+                packagename = re.sub(r'#.*', '', packagename)
+                packagename = re.sub(r'\.git$', '', packagename)
+                packagename = re.sub(r'.*/', '', packagename)
+                packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
             if user_can_edit_package(giturl=github_url) and user_can_edit_package(pkgname=packagename):
                 install_git_package(packagename, github_url, branch)
                 if do_restart:
@@ -28858,12 +28861,16 @@ def api_playground_pull():
         branch = post_data.get('branch', None)
         if branch is None:
             branch = get_master_branch(github_url)
-        packagename = re.sub(r'/*$', '', github_url)
-        packagename = re.sub(r'^git+', '', packagename)
-        packagename = re.sub(r'#.*', '', packagename)
-        packagename = re.sub(r'\.git$', '', packagename)
-        packagename = re.sub(r'.*/', '', packagename)
-        packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
+        m = re.search(r'#egg=(.*)', github_url)
+        if m:
+            packagename = re.sub(r'&.*', '', m.group(1))
+        else:
+            packagename = re.sub(r'/*$', '', github_url)
+            packagename = re.sub(r'^git+', '', packagename)
+            packagename = re.sub(r'#.*', '', packagename)
+            packagename = re.sub(r'\.git$', '', packagename)
+            packagename = re.sub(r'.*/', '', packagename)
+            packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
     elif 'pip' in post_data:
         m = re.match(r'([^>=<]+)([>=<]+.+)', post_data['pip'])
         if m:

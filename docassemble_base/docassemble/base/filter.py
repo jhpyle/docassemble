@@ -30,7 +30,7 @@ zerowidth = '\u200B'
 DEFAULT_PAGE_WIDTH = '6.5in'
 
 term_start = re.compile(r'\[\[')
-term_match = re.compile(r'\[\[([^\]\|]*)(\|[^\]]*)?\]\]', re.DOTALL)
+term_match = re.compile(r'\[\[([^\[\]\|]*)(\|[^\[\]]*)?\]\]', re.DOTALL)
 noquote_match = re.compile(r'"')
 lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
@@ -1362,21 +1362,30 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         question = status.question
     if question is not None:
         if do_terms:
+            terms_done = set()
             if status is not None:
                 if len(question.terms) > 0:
                     lang = docassemble.base.functions.get_language()
                     for term in question.terms:
+                        terms_done.add(term.lower())
+                        # logmessage("Searching for term " + term + " in " + a)
                         if lang in question.terms[term]['re']:
                             a = question.terms[term]['re'][lang].sub(sub_term, a)
                         else:
                             a = question.terms[term]['re'][question.language].sub(sub_term, a)
+                        # logmessage("string is now " + str(a))
                 if len(question.autoterms) > 0:
                     lang = docassemble.base.functions.get_language()
                     for term in question.autoterms:
+                        if term.lower() in terms_done:
+                            continue
+                        terms_done.add(term.lower())
+                        # logmessage("Searching for term " + term + " in " + a)
                         if lang in question.autoterms[term]['re']:
                             a = question.autoterms[term]['re'][lang].sub(r'[[\1]]', a)
                         else:
                             a = question.autoterms[term]['re'][question.language].sub(r'[[\1]]', a)
+                        # logmessage("string is now " + str(a))
                 if 'interview_terms' in status.extras:
                     interview_terms = status.extras['interview_terms']
                 else:
@@ -1392,11 +1401,17 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                 lang = docassemble.base.functions.get_language()
                 if lang in interview_terms and len(interview_terms[lang]) > 0:
                     for term in interview_terms[lang]:
+                        if term.lower() in terms_done:
+                            continue
+                        terms_done.add(term.lower())
                         # logmessage("Searching for term " + term + " in " + a)
                         a = interview_terms[lang][term]['re'].sub(sub_term, a)
                         # logmessage("string is now " + str(a))
                 elif question.language in interview_terms and len(interview_terms[question.language]) > 0:
                     for term in interview_terms[question.language]:
+                        if term.lower() in terms_done:
+                            continue
+                        terms_done.add(term.lower())
                         # logmessage("Searching for term " + term + " in " + a)
                         a = interview_terms[question.language][term]['re'].sub(sub_term, a)
                         # logmessage("string is now " + str(a))
@@ -1404,11 +1419,17 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                 lang = docassemble.base.functions.get_language()
                 if lang in interview_autoterms and len(interview_autoterms[lang]) > 0:
                     for term in interview_autoterms[lang]:
+                        if term.lower() in terms_done:
+                            continue
+                        terms_done.add(term.lower())
                         # logmessage("Searching for term " + term + " in " + a)
                         a = interview_autoterms[lang][term]['re'].sub(r'[[\1]]', a)
                         # logmessage("string is now " + str(a))
                 elif question.language in interview_autoterms and len(interview_autoterms[question.language]) > 0:
                     for term in interview_autoterms[question.language]:
+                        if term.lower() in terms_done:
+                            continue
+                        terms_done.add(term.lower())
                         # logmessage("Searching for term " + term + " in " + a)
                         a = interview_autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
                         # logmessage("string is now " + str(a))

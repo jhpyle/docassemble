@@ -70,6 +70,7 @@ function stopfunc {
     fi
     echo "stopping postgres" >&2
     pg_ctlcluster --force $PGVERSION main stop
+    rm -f "/var/run/docassemble/status-postgres-running"
     exit 0
 }
 
@@ -86,5 +87,6 @@ fi
 mkdir -p "/var/run/postgresql/${PGVERSION}-main.pg_stat_tmp"
 chown -R postgres:postgres "/var/run/postgresql/${PGVERSION}-main.pg_stat_tmp"
 
+touch "/var/run/docassemble/status-postgres-running"
 su postgres -c "/usr/lib/postgresql/${PGVERSION}/bin/postgres -D /var/lib/postgresql/${PGVERSION}/main -c config_file=/etc/postgresql/${PGVERSION}/main/postgresql.conf" &
 wait %1
