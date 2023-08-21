@@ -10,9 +10,9 @@ setup_requires = [
     'enum34==1.1.10'
     ]
 install_requires = [
-    'docassemble==1.4.69',
-    'docassemble.base==1.4.69',
-    'docassemble.demo==1.4.69',
+    'docassemble==1.4.70',
+    'docassemble.base==1.4.70',
+    'docassemble.demo==1.4.70',
     "3to2==1.1.1",
     "aiohttp==3.8.5",
     "aiohttp-retry==2.8.3",
@@ -280,7 +280,7 @@ install_requires = [
 ]
 
 setup(name='docassemble.webapp',
-      version='1.4.69',
+      version='1.4.70',
       python_requires='>=3.9',
       description=('The web application components of the docassemble system.'),
       long_description=read("README.md"),
