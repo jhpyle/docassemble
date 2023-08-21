@@ -3,6 +3,44 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.70](https://github.com/jhpyle/docassemble/releases/tag/v1.4.70) - 2023-08-20
+
+
+### Changed
+- When installing a package with a GitHub URL, the
+  `#egg=mypackagename` feature of GitHub URLs is now respected, and
+  the name of the package will be extracted from `#egg` instead of
+  from the GitHub repository name.
+- Grouped the `initialize`, `postgres`, and `redis` Supervisor
+  processes into a group called `main` so that they shut down
+  simultaneously rather than sequentially.
+
+
+### Fixed
+- The `js show if` feature did not work correctly when an expression
+  reference two different fields.
+- The `auto terms` and `terms` features interfered with each other
+  when the same term was referenced in each.
+- Bug in locale-setting code.
+- The system for forcing the admin user to change their password when
+  the password is `password` introduced unnecessary delay on page
+  loads.
+- The "Please wait while docassemble starts . . ." page would refresh
+  into an error rather than refresh into the default interview under
+  some conditions.
+
+## [1.4.69](https://github.com/jhpyle/docassemble/releases/tag/v1.4.69) - 2023-08-15
+
+
+### Fixed
+- The `val()` JavaScript function erroneously returned encoded values
+  for `datatype: object` and `datatype: object_radio` fields. The
+  function has been modified so that it returns the `instanceName` of
+  the selected object.
+- The combobox HTML did not set an `aria-label`.
+- Markdown-to-HTML conversion in popover `help` text was not
+  full-featured.
+
 ## [1.4.68](https://github.com/jhpyle/docassemble/releases/tag/v1.4.68) - 2023-08-10
 
 

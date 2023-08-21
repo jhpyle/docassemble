@@ -7,22 +7,22 @@ short_title: Docker
 [Docker] is an application that treats a whole Linux machine,
 including its operating system and installed applications, as a
 computer-within-a-computer, called a "container."  "Containers" are
-similar to a [virtual machine] in many respects.  They are typically
-used for "shipping" applications.  Instead of installing an
+similar to a [virtual machine] in many respects. They are typically
+used for "shipping" applications. Instead of installing an
 application on a server directly, you can run the application in a
 "container."  This way, the application runs bundled with all of the
-operating system software that it needs.  Installing applications is
-quicker, simpler, and less error-prone.  There is virtually no
+operating system software that it needs. Installing applications is
+quicker, simpler, and less error-prone. There is virtually no
 performance degredation.
 
 [Docker] is a good platform for trying out **docassemble** for the
-first time.  It is also ideal in a production environment.
+first time. It is also ideal in a production environment.
 
 Since the **docassemble** application depends on so many different
 component parts, including a web server, SQL server, Redis server,
 distributed task queue, background task system, scheduled task system,
 and other components, running it inside of a [Docker] container is
-convenient.  When all of these components are running inside of a
+convenient. When all of these components are running inside of a
 "container," you don't have to do the work of installing and
 maintaining these components.
 
@@ -31,17 +31,17 @@ As much as [Docker] simplifies the process of installing
 "running," "stopping," and "starting" containers.
 
 [Docker] can also be used to deploy even the most complex
-**docassemble** installations.  For example, [Kubernetes] or Amazon's
+**docassemble** installations. For example, [Kubernetes] or Amazon's
 [EC2 Container Service] can be used to maintain a cluster of
 **docassemble** web server instances, created from [Docker] images,
-that communicate with a central server.  For information about how to
+that communicate with a central server. For information about how to
 install **docassemble** in a multi-server arrangement, see the
 [scalability] section.
 
 [Docker] is a complex and powerful tool, and the **docassemble**
-documentation is not a substitute for [Docker] documentation.  If you
+documentation is not a substitute for [Docker] documentation. If you
 are new to [Docker], you should learn about [Docker] by reading
-tutorials or watching videos.  Here is a brief cheat sheet based on
+tutorials or watching videos. Here is a brief cheat sheet based on
 loose real-world analogies:
 
 * Doing [`docker run`] is analogous to getting a Windows
@@ -74,7 +74,7 @@ analogous to a USB drive.
 # <a name="where"></a>Choosing where to run Docker
 
 [Docker] can be run on a Windows PC, a Mac, an on-site Linux machine,
-or a Linux-based virtual machine in the cloud.  Since **docassemble**
+or a Linux-based virtual machine in the cloud. Since **docassemble**
 is a web application, the ideal platform is a Linux virtual machine in
 the cloud.
 
@@ -88,24 +88,24 @@ your processor is an Apple M1 chip, or other ARM-based microprocessor,
 you should [build the image first](#build) and then [`docker run`] it.
 
 If you have never deployed a Linux-based virtual machine in the cloud
-before, this might be a good opportunity to learn.  The ability to use
+before, this might be a good opportunity to learn. The ability to use
 virtual machines on a cloud provider like [Amazon Web Services] or
-[Microsoft Azure] is a valuable and transferable skill.  Learning how
+[Microsoft Azure] is a valuable and transferable skill. Learning how
 to do cloud computing is beyond the scope of this documentation, but
-there are many guides on the internet.  The basic steps of running
+there are many guides on the internet. The basic steps of running
 Docker in the cloud are:
 
 1. Create an account with a cloud computing provider.
 2. Start a [sufficiently powerful](#install) virtual machine that runs
    some flavor of Linux.
 3. Connect to the virtual machine using [SSH] in order to control it
-   using a command line.  This can be a complicated step because most
+   using a command line. This can be a complicated step because most
    providers use certificates rather than passwords for authentication.
 4. [Install Docker](#install) on the virtual machine.
 
 There are also methods of controlling cloud computing resources from a
 local command line, where you type special commands to deploy [Docker]
-containers.  These can be very useful, but they tend to be more
+containers. These can be very useful, but they tend to be more
 complicated to use than the basic [Docker] command line.
 
 # <a name="install"></a>Installing Docker
@@ -117,7 +117,7 @@ you should always have at least 10GB free when you are running
 **docassemble**.
 
 If you have a Windows PC, follow the
-[Docker installation instructions for Windows]{:target="_blank"}.  You
+[Docker installation instructions for Windows]{:target="_blank"}. You
 will need administrator access on your PC in order to install (or
 upgrade) Docker.
 
@@ -139,13 +139,13 @@ sudo yum -y install docker
 sudo usermod -a -G docker ec2-user
 {% endhighlight %}
 
-The `usermod` line allows the non-root user to run [Docker].  You may
+The `usermod` line allows the non-root user to run [Docker]. You may
 need to log out and log back in again for this new user permission to
-take effect.  On some distributions, the `docker` group is not created
+take effect. On some distributions, the `docker` group is not created
 by the installation process, so you will need to manually create it by
 running `sudo groupadd docker` before you run the `usermod` command.
 
-[Docker] may or may not start automatically after it is installed.  On
+[Docker] may or may not start automatically after it is installed. On
 Linux, you many need to do `sudo systemctl start docker`, `sudo
 service docker start`, or `sudo /etc/init.d/docker start`.
 
@@ -175,7 +175,7 @@ follow the instructions in this section, and you'll get
 whether you are using a laptop or [AWS].
 
 However, you should think of this as an educational exercise; don't
-start using the container for serious development work.  For a serious
+start using the container for serious development work. For a serious
 implementation, you should deploy **docassemble** on a server (in the
 cloud or on-premises), and go through additional setup steps, such as
 configuring [HTTPS] for encryption and [data storage] for the safe,
@@ -204,17 +204,17 @@ of your machine.
 
 It will take several minutes for **docassemble** to download, and once
 the [`docker run`] command finishes, **docassemble** will start to
-run.  After a few minutes, you can point your web browser to the
-hostname of the machine that is running [Docker].  If you are running
+run. After a few minutes, you can point your web browser to the
+hostname of the machine that is running [Docker]. If you are running
 [Docker] on your own computer, this address is probably
 http://localhost.
 
 Note that the **docassemble** web interface is not available
-immediately after `docker run` is invoked.  The server needs time to
-boot and initialize.  On [EC2], this process takes about one minute
-forty seconds, and it might be slower on other platforms.  If you want
+immediately after `docker run` is invoked. The server needs time to
+boot and initialize. On [EC2], this process takes about one minute
+forty seconds, and it might be slower on other platforms. If you want
 to investigate what is happening on the server, see the
-[troubleshooting] section.  (If you have an existing configuration in
+[troubleshooting] section. (If you have an existing configuration in
 [data storage], the boot process will take even longer because your
 software and databases will need to be copied from [data storage] and
 restored on the server).
@@ -222,13 +222,13 @@ restored on the server).
 If you are running [Docker] on [AWS], the address of the server will
 be something like
 `http://ec2-52-38-111-32.us-west-2.compute.amazonaws.com` (check your
-[EC2] configuration for the hostname).  On [AWS], you will need a
+[EC2] configuration for the hostname). On [AWS], you will need a
 [Security Group] that opens [HTTP] (port 80) to the outside world in
 order to allow web browsers to connect to your [EC2] instance.
 
 Using the web browser, you can log in using the default username
 ("admin@admin.com") and password ("password"), and make changes to the
-configuration from the menu.  You should also go to User List from the
+configuration from the menu. You should also go to User List from the
 menu, click "Edit" next to the `admin@admin.com` user, and change that
 e-mail address to an actual e-mail address you can access.
 
@@ -236,17 +236,17 @@ In the [`docker run`] command, the `-d` flag means that the container
 will run in the background.
 
 The `-p` flag maps a port on the host machine to a port on the
-[Docker] container.  In this example, port 80 on the host machine will
-map to port 80 within the [Docker] container.  If you are already
+[Docker] container. In this example, port 80 on the host machine will
+map to port 80 within the [Docker] container. If you are already
 using port 80 on the host machine, you could use `-p 8080:80`, and
 then port 8080 on the host machine would be passed through to port 80
 on the [Docker] container.
 
 The `jhpyle/docassemble` tag refers to a [Docker] image that is
-[hosted on Docker Hub].  The image is about 4GB in size, and when it
-runs, the container uses about 10GB of hard drive space.  The
+[hosted on Docker Hub]. The image is about 4GB in size, and when it
+runs, the container uses about 10GB of hard drive space. The
 `jhpyle/docassemble` image is based on the "master" branch of the
-[docassemble repository] on [GitHub].  It is rebuilt every time the
+[docassemble repository] on [GitHub]. It is rebuilt every time the
 minor version of **docassemble** increases.
 
 ## <a name="shutdown"></a>Shutting down
@@ -258,12 +258,12 @@ docker stop -t 600 <containerid>
 {% endhighlight %}
 
 By default, [Docker] gives containers ten seconds to shut down before
-forcibly shutting them down.  Usually, ten seconds is plenty of time,
+forcibly shutting them down. Usually, ten seconds is plenty of time,
 but if the server is slow, **docassemble** might take a little longer
-than ten seconds to shut down.  To be on the safe side, give the
-container plenty of time to shut down gracefully.  The `-t 600` means
+than ten seconds to shut down. To be on the safe side, give the
+container plenty of time to shut down gracefully. The `-t 600` means
 that [Docker] will wait up to ten minutes before forcibly shutting
-down the container.  It will probably take no more than 15 seconds for
+down the container. It will probably take no more than 15 seconds for
 the [`docker stop`] command to complete, although it can take as long
 as a minute to stop a container if you are using [Azure Blob
 Storage](#persistent azure).
@@ -271,14 +271,14 @@ Storage](#persistent azure).
 It is very important to avoid a forced shutdown of **docassemble**.
 The container runs a [PostgreSQL] server (unless configured to use an
 external SQL server), and the data files of the server may become
-corrupted if [PostgreSQL] is not gracefully shut down.  To facilitate
+corrupted if [PostgreSQL] is not gracefully shut down. To facilitate
 [data storage] (more on this later), **docassemble** backs up your
 data during the shutdown process and restores from that backup during
-the initialization process.  If the shutdown process is interrupted,
+the initialization process. If the shutdown process is interrupted,
 your data may be left in an inconsistent state and there may be errors
 during later initialization.
 
-To see a list of stopped containers, run `docker ps -a`.  To remove a
+To see a list of stopped containers, run `docker ps -a`. To remove a
 container, run `docker rm <containerid>`.
 
 ## <a name="starting after shutdown"></a>Restarting the container after a shutdown
@@ -300,12 +300,12 @@ provider.
 When you run [`docker run`] on the "image" `jhpyle/docassemble`,
 [Docker] will go onto the internet, download ("pull") the
 `jhpyle/docassemble` image, create a new container using that image,
-and then "start" that container.  However, first it will check to see
+and then "start" that container. However, first it will check to see
 if a copy of the `jhpyle/docassemble` image has already been
 downloaded, and if there is a copy already downloaded, it will create
-the container using that copy.  This is important to keep in mind;
+the container using that copy. This is important to keep in mind;
 when you run `docker run`, you might be thinking you will always get
-the most recent version, but that is not the case.  (See [upgrading],
+the most recent version, but that is not the case. (See [upgrading],
 below, for more information.)
 
 When the **docassemble** container starts, it runs one command:
@@ -316,7 +316,7 @@ When the **docassemble** container starts, it runs one command:
 
 (This is specified in the [`Dockerfile`], if you are curious.)
 
-This command starts an application called [Supervisor].  [Supervisor]
+This command starts an application called [Supervisor]. [Supervisor]
 is a "process control system" that starts up the various applications
 that **docassemble** uses, including:
 
@@ -347,7 +347,7 @@ running of ad-hoc tasks, including:
   packages on the system.
 
 There is also a [Supervisor] service called `syslogng`, which is
-dormant on a single-server system.  (The [syslog-ng] application is
+dormant on a single-server system. (The [syslog-ng] application is
 used in the multi-server arrangement to consolidate log files from
 multiple machines.)
 
@@ -358,7 +358,7 @@ configuration but does not run unless `DAWEBSERVER` is set to
 `apache`.
 
 Finally, there is a service called `initialize`, which runs
-automatically when [Supervisor] starts.  This is a shell script that
+automatically when [Supervisor] starts. This is a shell script that
 initializes the server and starts the other services in the correct
 order.
 
@@ -380,20 +380,20 @@ process. However, even if you don't change `DAALLOWUPDATES`, the
 
 If you are having trouble with your **docassemble** server, do not
 assume that "turning it off and turning it on again" is a solution
-that will fix whatever problems you are having.  Maybe that is true
+that will fix whatever problems you are having. Maybe that is true
 with some systems, but it is not true with Linux or **docassemble**.
 In fact, if you are new to **docassemble**, "turning it off and
-turning it on again" may make your problems much worse.  Instead of
+turning it on again" may make your problems much worse. Instead of
 forcibly rebooting your system and hoping for the best, learn how to
 access log files and uncover evidence about why your system is not
-working as it should.  (This section explains how.)  If you would like
+working as it should. (This section explains how.)  If you would like
 to be able to "pull the plug" on your **docassemble** system without
 negative repercussions, you can, if you first configure an external
 SQL server, an external Redis server, and a cloud-based persistent
-storage system.  But until you have an external SQL server, an
+storage system. But until you have an external SQL server, an
 external Redis server, and cloud-based persistent storage system, you
 need to be extremely careful about how you shut down your Docker
-container.  (See the section on [shutting down](#shutdown) to learn
+container. (See the section on [shutting down](#shutdown) to learn
 why.)
 
 When something goes wrong, the first thing to check is the server's
@@ -424,7 +424,7 @@ to check a log file that isn't available at [Logs].
 To access the Docker container, first connect to the host computer
 using the command line (the same way you connected to the host
 computer to run `docker run` initially). Then find out the ID of the
-running container by doing [`docker ps`].  You will see output like
+running container by doing [`docker ps`]. You will see output like
 the following:
 
 {% highlight text %}
@@ -432,13 +432,13 @@ CONTAINER ID  IMAGE  COMMAND  CREATED  STATUS  PORTS  NAMES
 e4fa52ba540e  jhpyle/docassemble  "/usr/bin/supervisord" ...
 {% endhighlight %}
 
-The ID is in the first column.  Then run:
+The ID is in the first column. Then run:
 
 {% highlight bash %}
 docker exec -t -i e4fa52ba540e /bin/bash
 {% endhighlight %}
 
-using your own ID in place of `e4fa52ba540e`.  This will give you a
+using your own ID in place of `e4fa52ba540e`. This will give you a
 [bash] command prompt within the running container.
 
 The first thing to check when you connect to a container is:
@@ -451,34 +451,38 @@ The output should be something like:
 
 {% highlight text %}
 apache2                          STOPPED   Not started
-celery                           RUNNING   pid 8539, uptime 6:52:59
-celerysingle                     RUNNING   pid 8547, uptime 6:52:52
-cron                             RUNNING   pid 1442, uptime 20 days, 20:58:38
-exim4                            RUNNING   pid 1452, uptime 20 days, 20:58:37
-initialize                       RUNNING   pid 7, uptime 20 days, 21:00:05
-nascent                          STOPPED   Aug 14 04:20 PM
-nginx                            RUNNING   pid 7679, uptime 6:54:28
-postgres                         RUNNING   pid 321, uptime 20 days, 21:00:02
-rabbitmq                         RUNNING   pid 8410, uptime 6:53:02
-redis                            RUNNING   pid 479, uptime 20 days, 20:59:46
-reset                            EXITED    Sep 04 06:26 AM
+celery                           RUNNING   pid 978, uptime 0:01:57
+celerysingle                     RUNNING   pid 1045, uptime 0:01:52
+cron                             RUNNING   pid 1291, uptime 0:01:34
+exim4                            RUNNING   pid 1327, uptime 0:01:32
+main:initialize                  RUNNING   pid 7, uptime 0:02:21
+main:postgres                    RUNNING   pid 523, uptime 0:02:17
+main:redis                       RUNNING   pid 572, uptime 0:02:09
+nascent                          STOPPED   Aug 20 08:05 PM
+nginx                            RUNNING   pid 1232, uptime 0:01:39
+rabbitmq                         RUNNING   pid 793, uptime 0:02:02
+reset                            STOPPED   Not started
 sync                             STOPPED   Not started
 syslogng                         STOPPED   Not started
+unoconv                          RUNNING   pid 1275, uptime 0:01:37
 update                           STOPPED   Not started
-uwsgi                            RUNNING   pid 880, uptime 20 days, 20:59:10
-watchdog                         RUNNING   pid 9, uptime 20 days, 21:00:05
-websockets                       RUNNING   pid 8590, uptime 6:52:42
+uwsgi                            RUNNING   pid 1148, uptime 0:01:44
+watchdog                         RUNNING   pid 9, uptime 0:02:21
+websockets                       RUNNING   pid 1107, uptime 0:01:46
 {% endhighlight %}
 
 If you are running **docassemble** in a single-server arrangement, the
 processes that should be "RUNNING" include `celery`, `celerysingle`,
 `cron`, `exim4`, `initialize`, `nginx`, `postgres`, `rabbitmq`,
-`redis`, `uwsgi`, `watchdog`, and `websockets`.
+`redis`, `unoconv`, `uwsgi`, `watchdog`, and `websockets`. (The
+`initialize`, `postgres`, and `redis` processes are prefixed with
+`main:` because they are combined into a group called `main` so that
+they shut down simultaneously.)
 
 [Supervisor] is the application that orchestrates the various services
 that are necessary for the server to start up and operate. It creates
 various log files in the `/var/log/supervisor` directory on the
-server.  For example, these files show the log for the `initialize`
+server. For example, these files show the log for the `initialize`
 process, which is responsible for starting the server:
 
 * `/var/log/supervisor/initialize-stderr---supervisor-*.log`
@@ -501,7 +505,7 @@ declining order of importance, are:
 
 To navigate through the directories on the system, use [`cd`] to
 change your current directory and [`ls`] to list the files in a
-directory.  To view the contents of a file, type, e.g.,:
+directory. To view the contents of a file, type, e.g.,:
 
 {% highlight bash %}
 less /usr/share/docassemble/log/docassemble.log
@@ -518,28 +522,28 @@ If `supervisorctl status` shows that the `initialize` service is in
 `EXITED` or `FAILED` status, then there should be an error message in
 the file `/var/log/supervisor/initialize-stderr---supervisor-*.log`
 indicating what went wrong that prevented **docassemble** from
-initializing.  You will need to fix that problem, then type `exit` to
+initializing. You will need to fix that problem, then type `exit` to
 leave the container, and then restart your container by doing `docker
 stop -t 600 <containerid>` followed by `docker start <containerid>`.
 
 If `initialize` is `RUNNING` but `celery` is not `RUNNING`, and
 `nascent` is still `RUNNING`, then your server is still in the process
-of starting up.  If it is taking a really long time to start up, check
+of starting up. If it is taking a really long time to start up, check
 the above log files to see where in the process it is getting stuck.
 
 If you are get a "server error" in your web browser when trying to
 access **docassemble**, there should be an error message in
-`/usr/share/docassemble/log/uwsgi.log`.  If you see a message about a
+`/usr/share/docassemble/log/uwsgi.log`. If you see a message about a
 "blueprint's name collision," this is almost always not the real
 error; you need to scroll up through several error messages to find
-the actual error.  When the web application crashes, the error that
+the actual error. When the web application crashes, the error that
 initiated the crash causes other errors inside of the code of the
 [Flask] framework, and a "blueprint's name collision" error is
 typically the last error to be recorded in the error log.
 
 If you encounter a problem with upgrading or installing packages,
-check `/usr/share/docassemble/log/worker.log`.  This is the error log
-for the [Celery] background process system.  A [Celery] background
+check `/usr/share/docassemble/log/worker.log`. This is the error log
+for the [Celery] background process system. A [Celery] background
 task controls the upgrading and installation of packages, so if you
 get an error during upgrading or installation of packages, make sure
 to check here first.
@@ -551,7 +555,7 @@ The main configuration file is located at
 `/usr/share/docassemble/config/config.yml`.
 
 Because of the way that [data storage] works, however, you need to be
-careful about editing the [Configuration] file directly.  If you are
+careful about editing the [Configuration] file directly. If you are
 using [S3](#persistent S3) or [Azure Blob Storage](#persistent azure),
 then during the container initialization process, the file will be
 overwritten with the copy of `config.yml` that is stored in the cloud.
@@ -560,7 +564,7 @@ safely shuts down, `/usr/share/docassemble/config/config.yml` will be
 copied to `/usr/share/docassemble/backup/config.yml`, and when a
 container starts up, `/usr/share/docassemble/backup/config.yml` will
 be copied to `/usr/share/docassemble/config/config.yml`, overwriting
-the existing contents.  This is part of the operation of the [data
+the existing contents. This is part of the operation of the [data
 storage] feature; it makes it possible for you to remove a container
 and `docker run` a new one while retaining all of your data.
 
@@ -572,15 +576,15 @@ then `docker start` the container again.
 
 If you are not using [S3](#persistent S3) or [Azure Blob
 Storage](#persistent azure), then you can edit the [Configuration]
-file using an editor like [`nano`].  If the status of `initialize` is
+file using an editor like [`nano`]. If the status of `initialize` is
 `RUNNING`, edit `/usr/share/docassemble/config/config.yml` file, and
 then do `supervisorctl start reset` to restart the **docassemble**
-services so that they use the new [Configuration].  When the container
+services so that they use the new [Configuration]. When the container
 stops, it will safely shut down, and
 `/usr/share/docassemble/config/config.yml` will be backed up to
-`/usr/share/docassemble/backup/config.yml`.  If you are using
+`/usr/share/docassemble/backup/config.yml`. If you are using
 [persistent volumes], the `backup` folder will be in the [Docker
-volume] that will persist even if you `docker rm` the container.  If
+volume] that will persist even if you `docker rm` the container. If
 the status of `initialize` is `FAILED` or `EXITED`, then this backup
 process will not take place; in that case, you should make your
 changes to `/usr/share/docassemble/backup/config.yml`, and then
@@ -590,10 +594,10 @@ restart your container by doing [`docker stop -t 600`] followed by
 If you need to make manual changes to the installation of [Python]
 packages, note that **docassemble**'s [Python] code is installed in a
 [Python virtual environment] in which all of the files are readable
-and writable by the `www-data` user.  The virtual environment is
-located at `/usr/share/docassemble/local3.10/`.  Thus, installing
+and writable by the `www-data` user. The virtual environment is
+located at `/usr/share/docassemble/local3.10/`. Thus, installing
 [Python] packages through Ubuntu's `apt` utility will not actually
-make that [Python] code available to **docassemble**.  Before using
+make that [Python] code available to **docassemble**. Before using
 [pip], you need to first change the user to `www-data`, and then
 switch into the appropriate [Python virtual environment].
 
@@ -611,17 +615,17 @@ pip install --upgrade --force-reinstall azure-storage
 {% endhighlight %}
 
 To stop using the [Python virtual environment], type the command
-`deactivate`.  To stop being the `www-data` user, type the command
+`deactivate`. To stop being the `www-data` user, type the command
 `exit`.
 
 Services other than [NGINX] and [uWSGI] are an important part of
-**docassemble**'s operations.  For example, the upgrading and
+**docassemble**'s operations. For example, the upgrading and
 installation of [Python] packages takes place in a background process
-operated by the `celery` service.  In addition, the [live help]
-feature uses a service called `websockets`.  The `nginx`, `uwsgi`,
+operated by the `celery` service. In addition, the [live help]
+feature uses a service called `websockets`. The `nginx`, `uwsgi`,
 `celery`, and `websockets` services all need to be restarted every
 time there is a change to the [Configuration] or a change to [Python]
-code.  To restart all of the services at once, you can do:
+code. To restart all of the services at once, you can do:
 
 {% highlight bash %}
 supervisorctl start reset
@@ -636,22 +640,22 @@ supervisorctl start reset
 
 You need to manually restart the `uwsgi` process here because the
 `reset` process uses an optimized method of refreshing the application
-server.  This usually works well when you make [Configuration] and
+server. This usually works well when you make [Configuration] and
 [Python] code changes, but if [uWSGI] has crashed, `supervisorctl
 start reset` will not bring it back to life.
 
 If you want to access the [Redis] data, do [`docker exec`] to get
 inside the container and then run `redis-cli` (assuming that your
-[Redis] server is the default local [Redis] server).  Note that
-**docassemble** uses several of the [Redis] databases.  If you do
+[Redis] server is the default local [Redis] server). Note that
+**docassemble** uses several of the [Redis] databases. If you do
 `redis-cli -n 1` (the default), you will access the database used on a
-system level.  If you do `redis-cli -n 2`, you will access the
+system level. If you do `redis-cli -n 2`, you will access the
 database used by [`DARedis`].
 
 Unless you specify a different SQL server, the [PostgreSQL] data for
 your **docassemble** server is inside the `docassemble` database
-running on the Docker container.  The default username is
-`docassemble` and the default password is `abc123`.  After doing
+running on the Docker container. The default username is
+`docassemble` and the default password is `abc123`. After doing
 [`docker exec`] to get inside the container, run:
 
 {% highlight bash %}
@@ -668,12 +672,12 @@ the [debugging subsection] of the [installation] section.
 In the example [above](#single server arrangement), we started
 **docassemble** with `docker run -d -p 80:80 jhpyle/docassemble`.
 This command will cause **docassemble** to use default values for all
-configuration options.  You can also communicate specific
+configuration options. You can also communicate specific
 configuration options to the container.
 
 The recommended way to do this is to create a text file called
 `env.list` in the current working directory containing environment
-variable definitions in standard shell script format.  For example:
+variable definitions in standard shell script format. For example:
 
 {% highlight text %}
 DAHOSTNAME=docassemble.example.com
@@ -691,22 +695,22 @@ docker run --env-file=env.list -d -p 80:80 -p 443:443 --restart always --stop-ti
 
 These configuration options will cause [NGINX] to use
 docassemble.example.com as the server name and use [HTTPS] with
-certificates hosted on [Let's Encrypt].  (The flag `-p 443:443` is
+certificates hosted on [Let's Encrypt]. (The flag `-p 443:443` is
 included so that the [HTTPS] port is exposed.)
 
 If you want your server to be able to accept incoming [e-mails], you
 will need to add `-p 25:25 -p 465:465` in order to open ports 25
-and 465.  See the [e-mailing the interview] section for information
+and 465. See the [e-mailing the interview] section for information
 about configuring your server to receive e-mails.
 
 A [template for the `env.list` file] is included in distribution.
 
 When running **docassemble** in [ECS], environment variables like
 these are specified in [JSON] text that is entered into the web
-interface.  (See the [scalability] section for more information about
+interface. (See the [scalability] section for more information about
 using [ECS].)
 
-In your `env.list` file, you can set a variety of options.  These
+In your `env.list` file, you can set a variety of options. These
 options are case specific, so you need to literally specify `true` or
 `false`, because `True` and `False` will not work.
 
@@ -716,9 +720,9 @@ to server).
 
 * <a name="CONTAINERROLE"></a>`CONTAINERROLE`: either `all` or a
   colon-separated list of services (e.g. `web:celery`,
-  `sql:log:redis`, etc.) that should be started by the server.  Only
+  `sql:log:redis`, etc.) that should be started by the server. Only
   set the `CONTAINERROLE` if you are using a [multi-server
-  arrangement]; the default is `all`.  The available options
+  arrangement]; the default is `all`. The available options
   are:
   * `all`: the [Docker] container will run all of the services of
     **docassemble** on a single container.
@@ -734,16 +738,16 @@ to server).
 * <a name="SERVERHOSTNAME"></a>`SERVERHOSTNAME`: In a
   [multi-server arrangement], all **docassemble** application servers
   need to be able to communicate with each other using port 9001 (the
-  [supervisor] port).  All application servers "register" with the
-  central SQL server.  When they register, they each provide their
+  [supervisor] port). All application servers "register" with the
+  central SQL server. When they register, they each provide their
   hostname; that is, the hostname at which the specific individual
-  application server can be found.  Then, when an application server
+  application server can be found. Then, when an application server
   wants to send a message to the other application servers, the
   application server can query the central SQL server to get a list of
-  hostnames of other application servers.  This is necessary so that
+  hostnames of other application servers. This is necessary so that
   any one application server can send a signal to the other
   application servers to install a new package or a new version of a
-  package, so that all servers are running the same software.  If you
+  package, so that all servers are running the same software. If you
   are running **docassemble** in a [multi-server arrangement], and you
   are starting an application server, set `SERVERHOSTNAME` to the
   hostname with which other application servers can find that server.
@@ -774,30 +778,30 @@ These variables will be populated in the [Configuartion] under the
 
 The following eight options indicate where an existing configuration
 file can be found on [S3](#persistent s3) or
-[Azure blob storage](#persistent azure).  If a [configuration] file
+[Azure blob storage](#persistent azure). If a [configuration] file
 exists in the cloud at the indicated location, that [configuration]
 file will be used to set the [configuration] of your **docassemble**
-installation.  If no [configuration] file yet exists in the cloud at the
+installation. If no [configuration] file yet exists in the cloud at the
 indicated location, **docassemble** will create an initial
 [configuration] file and store it in the indicated location.
 
 * <a name="S3ENABLE"></a>`S3ENABLE`: Set this to `true` if you are
   using [S3] (or [S3]-compatible object storage service) as a
   repository for uploaded files, [Playground] files, the
-  [configuration] file, and other information.  This environment
+  [configuration] file, and other information. This environment
   variable, along with others that begin with `S3`, populates values
-  in [`s3` section] of the initial [configuration] file.  If this is
+  in [`s3` section] of the initial [configuration] file. If this is
   unset, but [`S3BUCKET`] is set, it will be assumed to be `true`.
 * <a name="S3BUCKET"></a>`S3BUCKET`: If you are using [S3], set this
-  to the bucket name.  Note that **docassemble** will not create the
-  bucket for you.  You will need to create it for yourself
-  beforehand.  The bucket should be empty.
+  to the bucket name. Note that **docassemble** will not create the
+  bucket for you. You will need to create it for yourself
+  beforehand. The bucket should be empty.
 * <a name="S3ACCESSKEY"></a>`S3ACCESSKEY`: If you are using [S3], set
-  this to the [S3] access key.  You can ignore this environment
+  this to the [S3] access key. You can ignore this environment
   variable if you are using [EC2] with an [IAM] role that allows
   access to your [S3] bucket.
 * <a name="S3SECRETACCESSKEY"></a>`S3SECRETACCESSKEY`: If you are
-  using [S3], set this to the [S3] access secret.  You can ignore this
+  using [S3], set this to the [S3] access secret. You can ignore this
   environment variable if you are using [EC2] with an [IAM] role that
   allows access to your [S3] bucket.
 * <a name="S3REGION"></a>`S3REGION`: If you are using [S3], set this
@@ -823,14 +827,14 @@ indicated location, **docassemble** will create an initial
 * <a name="AZUREENABLE"></a>`AZUREENABLE`: Set this to `true` if you
   are using [Azure blob storage](#persistent azure) as a repository
   for uploaded files, [Playground] files, the [configuration] file,
-  and other information.  This environment variable, along with others
+  and other information. This environment variable, along with others
   that begin with `AZURE`, populates values in [`azure` section] of
-  the [configuration] file.  If this is unset, but
+  the [configuration] file. If this is unset, but
   [`AZUREACCOUNTNAME`], [`AZUREACCOUNTKEY`], and [`AZURECONTAINER`]
   are set, it will be assumed to be `true`.
 * <a name="AZURECONTAINER"></a>`AZURECONTAINER`: If you are using
   [Azure blob storage](#persistent azure), set this to the container
-  name.  Note that **docassemble** will not create the container for you.
+  name. Note that **docassemble** will not create the container for you.
   You will need to create it for yourself beforehand.
 * <a name="AZUREACCOUNTNAME"></a>`AZUREACCOUNTNAME`: If you are using
   [Azure blob storage](#persistent azure), set this to the account
@@ -839,7 +843,7 @@ indicated location, **docassemble** will create an initial
   using [Azure blob storage], set this to the account key.
 
 The options listed below are "setup" parameters that are useful for
-pre-populating a fresh [configuration] with particular values.  These
+pre-populating a fresh [configuration] with particular values. These
 environment variables are effective only during an initial `run` of
 the [Docker] container, when a [configuration] file does not already
 exist.
@@ -848,163 +852,163 @@ If you are using [persistent volumes], or you have set the options
 above for [S3](#persistent s3)/[Azure blob storage](#persistent azure)
 and a [configuration] file exists in your cloud storage, the values in
 that stored [configuration] file will, by default, take precedence
-over any values you specify in `env.list`.  If you are using
+over any values you specify in `env.list`. If you are using
 [S3](#persistent s3)/[Azure blob storage](#persistent azure), you can
 edit these configuration files in the cloud and then stop and start
 your container for the new configuration to take effect.
 
 * <a name="DAWEBSERVER"></a>`DAWEBSERVER`: This can be set either to
-  `nginx` (the default) or `apache`.  See the [`web server`]
+  `nginx` (the default) or `apache`. See the [`web server`]
   configuration directive.
 * <a name="DBHOST"></a>`DBHOST`: The hostname of the [PostgreSQL]
-  server.  Keep undefined or set to `null` in order to use the
-  [PostgreSQL] server on the same host.  This environment variable,
+  server. Keep undefined or set to `null` in order to use the
+  [PostgreSQL] server on the same host. This environment variable,
   along with others that begin with `DB`, populates values in [`db`
-  section] of the [configuration] file.  If you are using a managed
+  section] of the [configuration] file. If you are using a managed
   SQL database service, set `DBHOST` to the hostname of the database
-  service.  If you are using [PostgreSQL] and the database referenced
+  service. If you are using [PostgreSQL] and the database referenced
   by `DBNAME` does not exist on the SQL server, the [Docker] startup
   process will attempt to use the `DBUSER` and `DBPASSWORD`
-  credentials to create the database.  Otherwise, you need to make
+  credentials to create the database. Otherwise, you need to make
   sure the database by the name of `DBNAME` exists before
   **docassemble** starts.
-* <a name="DBNAME"></a>`DBNAME`: The name of the database.  The
+* <a name="DBNAME"></a>`DBNAME`: The name of the database. The
   default is `docassemble`.
 * <a name="DBUSER"></a>`DBUSER`: The username for connecting to the
-  [PostgreSQL] server.  The default is `docassemble`.
+  [PostgreSQL] server. The default is `docassemble`.
 * <a name="DBPASSWORD"></a>`DBPASSWORD`: The password for connecting
-  to the SQL server.  The default is `abc123`.  The password cannot
+  to the SQL server. The default is `abc123`. The password cannot
   contain the character `#`.
 * <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the
-  database specifier.  The default is `postgresql+psycopg2://`.  This
+  database specifier. The default is `postgresql+psycopg2://`. This
   corresponds with the `prefix` of the [`db`] configuration directive.
 * <a name="DBPORT"></a>`DBPORT`: This sets the port that
-  **docassemble** will use to access the SQL server.  If you are using
+  **docassemble** will use to access the SQL server. If you are using
   the default port for your database backend, you do not need to set
   this.
 * <a name="DBTABLEPREFIX"></a>`DBTABLEPREFIX`: This allows multiple
   separate **docassemble** implementations to share the same SQL
-  database.  The value is a prefix to be added to each table in the
+  database. The value is a prefix to be added to each table in the
   database.
 * <a name="DBBACKUP"></a>`DBBACKUP`: Set this to `false` if you are
   using an off-site [PostgreSQL] `DBHOST` and you do not want the
-  database to be backed up by the daily cron job.  This is important
+  database to be backed up by the daily cron job. This is important
   if the off-site SQL database is large compared to the available disk
-  space on the server.  The default value is `true`.
+  space on the server. The default value is `true`.
 * <a name="DBSSLMODE"></a>`DBSSLMODE`: This is relevant if you have
-  [PostgreSQL] database and you have an SSL certificate for it.  This
-  sets the `sslmode` parameter.  For more information, see the
+  [PostgreSQL] database and you have an SSL certificate for it. This
+  sets the `sslmode` parameter. For more information, see the
   documentation for the [`db` section] of the [Configuration].
 * <a name="DBSSLCERT"></a>`DBSSLCERT`: This is relevant if you have
-  [PostgreSQL] database and you have an SSL certificate for it.  This
-  is the name of a certificate file.  For more information, see the
+  [PostgreSQL] database and you have an SSL certificate for it. This
+  is the name of a certificate file. For more information, see the
   documentation for the [`db` section] of the [Configuration].
 * <a name="DBSSLKEY"></a>`DBSSLKEY`: This is relevant if you have
-  [PostgreSQL] database and you have an SSL certificate for it.  This
-  is the name of a certificate key file.  For more information, see the
+  [PostgreSQL] database and you have an SSL certificate for it. This
+  is the name of a certificate key file. For more information, see the
   documentation for the [`db` section] of the [Configuration].
 * <a name="DBSSLROOTCERT"></a>`DBSSLROOTCERT`: This is relevant if you have
-  [PostgreSQL] database and you have an SSL certificate for it.  This
-  is the name of a root certificate file.  For more information, see the
+  [PostgreSQL] database and you have an SSL certificate for it. This
+  is the name of a root certificate file. For more information, see the
   documentation for the [`db` section] of the [Configuration].
 * <a name="DASQLPING"></a>`DASQLPING`: If your docassemble server runs
   in an environment in which persistent SQL connections will
   periodically be severed, you can set `DASQLPING: true` in order to
-  avoid errors.  There is an overhead cost to using this, so only
+  avoid errors. There is an overhead cost to using this, so only
   enable this if you get SQL errors when trying to connect after a
-  period of inactivity.  The default is `false`.  See the [`sql ping`]
+  period of inactivity. The default is `false`. See the [`sql ping`]
   configuration directive.
 * <a name="EC2"></a>`EC2`: Set this to `true` if you are running
-  [Docker] on [EC2].  This tells **docassemble** that it can use an
+  [Docker] on [EC2]. This tells **docassemble** that it can use an
   [EC2]-specific method of determining the hostname of the server on
-  which it is running.  See the [`ec2`] configuration directive.
+  which it is running. See the [`ec2`] configuration directive.
 * <a name="COLLECTSTATISTICS"></a>`COLLECTSTATISTICS`: Set this to
   `true` if you want the server to use [Redis] to track the number of
-  interview sessions initiated.  See the [`collect statistics`]
+  interview sessions initiated. See the [`collect statistics`]
   configuration directive.
 * <a name="KUBERNETES"></a>`KUBERNETES`: Set this to `true` if you are
-  running inside [Kubernetes].  This tells **docassemble** that it can
-  use the IP address of the Pod in place of the hostname.  See the
+  running inside [Kubernetes]. This tells **docassemble** that it can
+  use the IP address of the Pod in place of the hostname. See the
   [`kubernetes`] configuration directive.
 * <a name="USEHTTPS"></a>`USEHTTPS`: Set this to `true` if you would
   like **docassemble** to communicate with the browser using
-  encryption.  Read the [HTTPS] section for more information.
-  Defaults to `false`.  See the [`use https`] configuration directive.
+  encryption. Read the [HTTPS] section for more information.
+  Defaults to `false`. See the [`use https`] configuration directive.
   Do not set this to `true` if you are using a proxy server that
   forwards non-encrypted [HTTP] to your server; in that case, see the
   [`BEHINDHTTPSLOADBALANCER`] variable below.
 * <a name="DAHOSTNAME"></a>`DAHOSTNAME`: Set this to the hostname by
-  which web browsers can find **docassemble**.  This is necessary for
+  which web browsers can find **docassemble**. This is necessary for
   [HTTPS] to function. See the [`external hostname`] configuration
   directive.
 * <a name="USELETSENCRYPT"></a>`USELETSENCRYPT`: Set this to `true` if
-  you are [using Let's Encrypt].  The default is `false`.  See the
+  you are [using Let's Encrypt]. The default is `false`. See the
   [`use lets encrypt`] configuration directive.
 * <a name="LETSENCRYPTEMAIL"></a>`LETSENCRYPTEMAIL`: Set this to the
-  e-mail address you use with [Let's Encrypt].  See the
+  e-mail address you use with [Let's Encrypt]. See the
   [`lets encrypt email`] configuration directive.
 * <a name="LOGSERVER"></a>`LOGSERVER`: This is used in the
   [multi-server arrangement] where there is a separate server for
-  collecting log messages.  The default is `none`, which causes the
-  server to run [Syslog-ng].  See the [`log server`] configuration
+  collecting log messages. The default is `none`, which causes the
+  server to run [Syslog-ng]. See the [`log server`] configuration
   directive.
 * <a name="REDIS"></a>`REDIS`: If you are running **docassemble** in a
   [multi-server arrangement], set this to `redis://thehostname` where
   `thehostname` is the host name at which the [Redis] server can be
-  accessed.  See the [`redis`] configuration directive.
+  accessed. See the [`redis`] configuration directive.
 * <a name="RABBITMQ"></a>`RABBITMQ`: If you are running
   **docassemble** in a [multi-server arrangement], set this to the URL
   at which the [RabbitMQ] server can be accessed, in the form
   `pyamqp://guest@rabbitmqserver.local//` or
-  `pyamqp://user:xxsecretpasswdxx@rabbitmqserver.local//`.  Note that
-  [RabbitMQ] is very particular about hostnames.  If the [RabbitMQ]
+  `pyamqp://user:xxsecretpasswdxx@rabbitmqserver.local//`. Note that
+  [RabbitMQ] is very particular about hostnames. If the [RabbitMQ]
   server is running on a machine on which the command `hostname -s`
   evaluates to `rabbitmqserver.local`, then your application servers
   will need to use `rabbitmqserver.local` as the hostname in the
   `RABBITMQ` URL, even if other names resolve to the same IP address.
   Note that if you run **docassemble** using the instructions in the
   [scalability] section, you may not need to worry about setting
-  `RABBITMQ`.  See the [`rabbitmq`] configuration directive.
+  `RABBITMQ`. See the [`rabbitmq`] configuration directive.
 * <a name="DACELERYWORKERS"></a>`DACELERYWORKERS`: By default, the
   number of Celery workers is based on the number of CPUs on the
-  machine.  If you want to set a different value, set
-  `DACELERYWORKERS` to integer greater than or equal to 1.  See the
+  machine. If you want to set a different value, set
+  `DACELERYWORKERS` to integer greater than or equal to 1. See the
   [`celery processes`] configuration directive.
 * <a name="SERVERADMIN"></a>`SERVERADMIN`: If your **docassemble** web
   server generates an error, the error message will contain an e-mail
-  address that the user can contact for help.  This e-mail address
-  defaults to `webmaster@localhost`.  You can set this e-mail address
+  address that the user can contact for help. This e-mail address
+  defaults to `webmaster@localhost`. You can set this e-mail address
   by setting the `SERVERADMIN` environment variable to the e-mail
-  address you want to use.  See the [`server administrator email`]
+  address you want to use. See the [`server administrator email`]
   configuration directive.
 * <a name="POSTURLROOT"></a>`POSTURLROOT`: If users access
   **docassemble** at https://docassemble.example.com/da, set `POSTURLROOT`
-  to `/da/`.  The trailing slash is important.  If users access
+  to `/da/`. The trailing slash is important. If users access
   **docassemble** at https://docassemble.example.com, you can ignore
-  this.  The default value is `/`.  See the [`root`] configuration
+  this. The default value is `/`. See the [`root`] configuration
   directive.
 * <a name="BEHINDHTTPSLOADBALANCER"></a>`BEHINDHTTPSLOADBALANCER`: Set
   this to `true` if you are using a load balancer or proxy server that
   accepts connections in HTTPS and forwards them to your server or
-  servers as HTTP.  This lets **docassemble** know that when it forms
+  servers as HTTP. This lets **docassemble** know that when it forms
   URLs, it should use the `https` scheme even though requests appear
   to be coming in as HTTP requests, and when it sends cookies, it
-  should set the `secure` flag on the cookies.  You also need to make
+  should set the `secure` flag on the cookies. You also need to make
   sure that your proxy server is setting the `X-Forwarded-*` HTTP
-  headers when it passes HTTP requests to your server or servers.  See
+  headers when it passes HTTP requests to your server or servers. See
   the [`behind https load balancer`] configuration directive for more
   information.
 * <a name="XSENDFILE"></a>`XSENDFILE`: Set this to `false` if the
   X-Sendfile header is not functional in your configuration for
-  whatever reason.  See the [`xsendfile`] configuration directive.
+  whatever reason. See the [`xsendfile`] configuration directive.
 * <a name="DAALLOWUPDATES"></a>`DAALLOWUPDATES`: Set this to `false`
   if you want to disable the updating of software through the user
-  interface.  See the [`allow updates`] configuration directive.
+  interface. See the [`allow updates`] configuration directive.
 * <a name="DAUPDATEONSTART"></a>`DAUPDATEONSTART`: Set this to `false`
   if you do not want the container to update its software using `pip`
-  when it starts up.  Set `DAUPDATEONSTART` to `initial` if you want
+  when it starts up. Set `DAUPDATEONSTART` to `initial` if you want
   the container to update its software during the first `docker run`,
-  but not on every `docker start`.  See the [`update on start`]
+  but not on every `docker start`. See the [`update on start`]
   configuration directive.
 * <a name="DAROOTOWNED"></a>`DAROOTOWNED`: Set this
   to `true` if you are setting `DAALLOWUPDATES=false` and
@@ -1028,79 +1032,79 @@ your container for the new configuration to take effect.
   the `docassemble.base` and `docassemble.demo` packages. See the
   [`debug`] and [`allow demo`] configuration directives.
 * <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
-  zone of the server.  The value of the variable is stored in
+  zone of the server. The value of the variable is stored in
   `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
-  run in order to set the system time zone.  The default is
+  run in order to set the system time zone. The default is
   `America/New_York`. The time zone must exactly match the name of a
-  time zone in the [tz database].  See the [`timezone`] configuration
+  time zone in the [tz database]. See the [`timezone`] configuration
   directive.
 * <a name="LOCALE"></a>`LOCALE`: You can use this to enable a locale
-  on the server.  The value needs to exactly match one of the valid
+  on the server. The value needs to exactly match one of the valid
   [locale values] that [Ubuntu]/[Debian] recognizes (listed in the
-  `/etc/locale.gen` file on an [Ubuntu]/[Debian] system).  When the
+  `/etc/locale.gen` file on an [Ubuntu]/[Debian] system). When the
   server starts, the value of `LOCALE` is appended to
-  `/etc/locale.gen` and `locale-gen` and `update-locale` are run.  The
-  default is `en_US.UTF-8 UTF-8`.  See the [`os locale`] configuration
+  `/etc/locale.gen` and `locale-gen` and `update-locale` are run. The
+  default is `en_US.UTF-8 UTF-8`. See the [`os locale`] configuration
   directive.
 * <a name="OTHERLOCALES"></a>`OTHERLOCALES`: You can use this to set
-  up other locales on the system besides the default locale.  Set this
-  to a comma separated list of locales.  The values need to match
-  entries in `/etc/locale.gen` on [Ubuntu].  See the
+  up other locales on the system besides the default locale. Set this
+  to a comma separated list of locales. The values need to match
+  entries in `/etc/locale.gen` on [Ubuntu]. See the
   [`other os locales`] configuration directive.
 * <a name="PACKAGES"></a>`PACKAGES`: If your interviews use code that
   depends on certain [Ubuntu] packages being installed, you can
   provide a comma-separated list of [Ubuntu] packages in the
-  `PACKAGES` environment variable.  The packages will be installed
-  when the container is started.  See the [`debian packages`]
+  `PACKAGES` environment variable. The packages will be installed
+  when the container is started. See the [`debian packages`]
   configuration directive.
 * <a name="PYTHONPACKAGES"></a>`PYTHONPACKAGES`: If you want to
   install certain [Python] packages during the container start process,
   you can provide a comma-separated list of packages in the
-  `PYTHONPACKAGES` environment variable.  See the [`python packages`]
+  `PYTHONPACKAGES` environment variable. See the [`python packages`]
   configuration directive.
 * <a name="DASECRETKEY"></a>`DASECRETKEY`: The secret key for protecting
-  against cross-site forgery.  See the [`secretkey`] configuration
-  directive.  If `DASECRETKEY` is not set, a random secret key will be
+  against cross-site forgery. See the [`secretkey`] configuration
+  directive. If `DASECRETKEY` is not set, a random secret key will be
   generated.
 * <a name="DABACKUPDAYS"></a>`DABACKUPDAYS`: The number of days
-  backups should be kept.  The default is 14.  See the [`backup days`]
+  backups should be kept. The default is 14. See the [`backup days`]
   configuration directive.
 * <a name="DAEXPOSEWEBSOCKETS"></a>`DAEXPOSEWEBSOCKETS`: You may need
   to set this to `true` if you are operating a [Docker] container
   [behind a reverse proxy] and you want to use the [WebSocket]-based
-  [live help] features.  See the [`expose websockets`] configuration
+  [live help] features. See the [`expose websockets`] configuration
   directive.
 * <a name="DAWEBSOCKETSIP"></a>`DAWEBSOCKETSIP`: You can set this if
   you need to manually specify the address on which the `websockets`
-  service runs.  See the [`websockets ip`] configuration directive.
+  service runs. See the [`websockets ip`] configuration directive.
 * <a name="DAWEBSOCKETSPORT"></a>`DAWEBSOCKETSPORT`: You can set this
   if you need to manually specify the port on which the `websockets`
-  service runs.  See the [`websockets port`] configuration directive.
+  service runs. See the [`websockets port`] configuration directive.
 * <a name="PORT"></a>`PORT`: By default, if you are not using [HTTPS],
-  the **docassemble** web application runs on port 80.  When running
+  the **docassemble** web application runs on port 80. When running
   Docker, you can map any port on the host to port 80 in the
-  container.  However, if you are using a system like Heroku which
+  container. However, if you are using a system like Heroku which
   expects the Docker container to use the `PORT` environment variable,
-  you can set `PORT` in your `env.list` file.  See the [`http port`]
+  you can set `PORT` in your `env.list` file. See the [`http port`]
   configuration directive.
 * <a name="USEMINIO"></a>`USEMINIO`: Set this to `true` if you are
   setting [`S3ENDPOINTURL`] to point to [MinIO] and you would like the
-  bucket to be created when the container starts.  See the [`use
+  bucket to be created when the container starts. See the [`use
   minio`] configuration directive.
 * <a name="USECLOUDURLS"></a>`USECLOUDURLS`: Set this to `false` if
   you are using cloud storage but you do not want URLs for files to
-  point directly to the cloud storage provider.  See the [`use cloud
+  point directly to the cloud storage provider. See the [`use cloud
   urls`] configuration directive.
 * <a name="DASTABLEVERSION"></a>`DASTABLEVERSION`: Set this to `true`
-  if you want **docassemble** to stay on version 1.0.x.  This is the
+  if you want **docassemble** to stay on version 1.0.x. This is the
   `stable` branch of the [GitHub] repository, which only receives bug
-  fixes and security updates.  See the [`stable version`]
+  fixes and security updates. See the [`stable version`]
   configuration directive.
 * <a name="DASSLPROTOCOLS"></a>`DASSLPROTOCOLS`: This indicates the
-  SSL protocols that [NGINX] should accept.  The default is `TLSv1.2`.
+  SSL protocols that [NGINX] should accept. The default is `TLSv1.2`.
   You might want to set it to `TLSv1 TLSv1.1 TLSv1.2` if you need to
-  support older browsers.  The value is passed directly to the [NGINX]
-  directive [`ssl_protocols`].  See the [`nginx ssl protocols`]
+  support older browsers. The value is passed directly to the [NGINX]
+  directive [`ssl_protocols`]. See the [`nginx ssl protocols`]
   configuration directive.
 * <a name="PIPINDEXURL"></a>`PIPINDEXURL`: This controls the package
   index that `pip` uses. See the [`pip index url`] configuration
@@ -1114,21 +1118,21 @@ your container for the new configuration to take effect.
   the [persistent volume], [S3](#persistent s3), or [Azure blob
   storage](#persistent azure), the values in that [configuration] file
   will take precedence over any values specified in [Docker]
-  environment variables.  This is the default behavior; the [Docker]
+  environment variables. This is the default behavior; the [Docker]
   environment variables are useful for 1) telling the server where to
   find an existing [configuration] file; and 2) if no [configuration]
   file exists already, pre-populating the initial [configuration]
-  file.  However, if you set `ENVIRONMENT_TAKES_PRECEDENCE` to `true`,
+  file. However, if you set `ENVIRONMENT_TAKES_PRECEDENCE` to `true`,
   then **docassemble** will override values in the [configuration]
   file with the values of [Docker] environment variables if they
-  conflict.  Note that the [YAML] of the [configuration] file will not
+  conflict. Note that the [YAML] of the [configuration] file will not
   be altered; you will still see the same [YAML] when you go to edit
-  the [Configuration].  However, internally, **docassemble** will
+  the [Configuration]. However, internally, **docassemble** will
   override those values with the values of the [Docker] environment
-  variables.  Since it can be confusing to have dueling sources of
+  variables. Since it can be confusing to have dueling sources of
   configuration values, it is encouraged that you update the [YAML] of
   your [Configuration] to align with the values in your [Docker]
-  environment.  The `ENVIRONMENT_TAKES_PRECEDENCE` option is primarily
+  environment. The `ENVIRONMENT_TAKES_PRECEDENCE` option is primarily
   used in the [Kubernetes]/[Helm] environment, where there are some
   [Docker] environment variables that cannot be known in advance.
 
@@ -1163,8 +1167,8 @@ When **docassemble** starts up on a [Docker] container, it:
 
 When **docassemble** stops, it saves the [configuration] file, a
 backup of the [PostgreSQL] database, and backups of the [Let's Encrypt]
-configuration.  If you are using [persistent volumes], the information
-will be stored there.  If you are using [S3](#persistent s3) or [Azure
+configuration. If you are using [persistent volumes], the information
+will be stored there. If you are using [S3](#persistent s3) or [Azure
 blob storage](#persistent azure), the information will be stored in
 the cloud.
 
@@ -1174,11 +1178,11 @@ backups of the [Let's Encrypt] configuration from storage and use them
 for the container.
 
 Suppose you have an existing installation that uses HTTPS and [Let's
-Encrypt], but you want to change the [`DAHOSTNAME`].  You will need to
-delete the saved configuration before running a new container.  First,
-shut down the machine with [`docker stop -t 600`].  Then, if you are using
+Encrypt], but you want to change the [`DAHOSTNAME`]. You will need to
+delete the saved configuration before running a new container. First,
+shut down the machine with [`docker stop -t 600`]. Then, if you are using
 [S3](#persistent s3), you can go to the [S3 Console] and delete the
-"letsencrypt.tar.gz" file.  If you are using [Azure blob
+"letsencrypt.tar.gz" file. If you are using [Azure blob
 storage](#persistent azure), you can go to the [Azure Portal] and
 delete the "letsencrypt.tar.gz" file.
 
@@ -1186,9 +1190,9 @@ Also, if a configuration file exists on [S3](#persistent
 s3)/[Azure blob storage](#persistent azure) (`config.yml`) or in a
 [persistent volume], then the values in that configuration will take
 precedence over the corresponding environment variables that are
-passed to [Docker].  Once a configuration file exists, you should make
+passed to [Docker]. Once a configuration file exists, you should make
 changes to the configuration file rather than passing environment
-variables to [Docker].  However, if your configuration is on
+variables to [Docker]. However, if your configuration is on
 [S3](#persistent s3)/[Azure blob storage](#persistent azure), you will
 at least need to pass sufficient access keys (e.g., [`S3BUCKET`],
 [`AZURECONTAINER`], etc.) to access that storage; otherwise your
@@ -1196,25 +1200,25 @@ container will not know where to find the configuration.
 
 Also, there are some environment variables that do not exist in the
 configuration file because they are specific to the individual server
-being started.  These include the [`CONTAINERROLE`] and
+being started. These include the [`CONTAINERROLE`] and
 [`SERVERHOSTNAME`] environment variables.
 
 # <a name="data storage"></a>Data storage
 
-[Docker] containers are volatile.  They are designed to be run, turned
-off, and destroyed.  When using [Docker], the best way to upgrade
+[Docker] containers are volatile. They are designed to be run, turned
+off, and destroyed. When using [Docker], the best way to upgrade
 **docassemble** to a new version is to destroy and rebuild your
 containers.
 
 But what about your data?  If you run **docassemble**, you are
-accumulating valuable data in SQL, in files, and in [Redis].  If your
+accumulating valuable data in SQL, in files, and in [Redis]. If your
 data are stored on the [Docker] container, they will be destroyed by
 [`docker rm`].
 
-There are two ways around this problem.  The first, and most
-preferable solution, is to use an object storage service.  The
+There are two ways around this problem. The first, and most
+preferable solution, is to use an object storage service. The
 standard-setting object storage service is [Amazon Web Services]'s
-[S3].  If you use [AWS], you can create an [S3 bucket] for your data,
+[S3]. If you use [AWS], you can create an [S3 bucket] for your data,
 and then when you launch your **docassemble** container, set the
 [`S3BUCKET`], [`S3ACCESSKEY`], [`S3SECRETACCESSKEY`], and [`S3REGION`]
 environment variables.
@@ -1222,33 +1226,33 @@ environment variables.
 If you don't want to use [Amazon Web Services], you can use an
 [S3]-compatible object storage service by setting [`S3ENDPOINTURL`] to
 the URL of the service, along with the [`S3BUCKET`], [`S3ACCESSKEY`],
-and [`S3SECRETACCESSKEY`]<span></span> [environment variables].  There
+and [`S3SECRETACCESSKEY`]<span></span> [environment variables]. There
 are [S3]-compatible object storage services available for [Google
 Cloud], [Wasabi], [Linode], [Vultr], [Digital Ocean], [IBM Cloud],
-[Oracle Cloud], [Scaleway], [Exoscale], and others.  If you are
+[Oracle Cloud], [Scaleway], [Exoscale], and others. If you are
 operating an on-premises server, you can deploy [MinIO] ([MinIO] is
 configured by default if you deploy **docassemble** [with Kubernetes])
 or [Rook].
 
 In addition to [S3] and [S3]-compatible object storage,
-**docassemble** supports [Azure blob storage].  You can create a [blob
+**docassemble** supports [Azure blob storage]. You can create a [blob
 storage container] inside [Microsoft Azure] and then when you launch
 your container, you set the [`AZUREACCOUNTNAME`], [`AZUREACCOUNTKEY`],
 and [`AZURECONTAINER`]<span></span> [environment variables].
 
 When [`docker stop -t 600`] is run, **docassemble** will backup the SQL
 database, the [Redis] database, the [configuration], and your uploaded
-files to the [S3 bucket] or [blob storage container].  Then, when you
+files to the [S3 bucket] or [blob storage container]. Then, when you
 issue a [`docker run`] command with [environment variables] pointing
 **docassemble** to your [S3 bucket]/[Azure blob storage] resource,
-**docassemble** will make restore from the backup.  You can [`docker
+**docassemble** will make restore from the backup. You can [`docker
 rm`] your container and your data will persist in the cloud.
 
 The second method of persistent storage is to use [persistent
-volumes], which is a feature of [Docker].  This will store the data in
+volumes], which is a feature of [Docker]. This will store the data in
 directories on the [Docker] host, so that when you destroy the
 container, these directories will be untouched, and when you start up
-a new container, it will use the saved directories.  This feature is
+a new container, it will use the saved directories. This feature is
 only available if you are running **docassemble** in a single-server
 configuration.
 
@@ -1267,19 +1271,19 @@ you need to obtain credentials and create a bucket.
 
 If you want to use [Amazon Web Services], you would first sign up for
 an [AWS] account, and go to the [S3 Console], click "Create Bucket,"
-and pick a name.  If your site is at docassemble.example.com, a good
-name for the bucket is `docassemble-example-com`.  (Client software
+and pick a name. If your site is at docassemble.example.com, a good
+name for the bucket is `docassemble-example-com`. (Client software
 will have trouble accessing your bucket if it contains `.`
 characters.)  Under "Region," pick the region nearest you.
 Then you need to obtain an access key and a secret access key for
-[S3].  To obtain these credentials, go to [IAM Console] and create a
+[S3]. To obtain these credentials, go to [IAM Console] and create a
 user with "programmatic access."  Under "Attach existing policies
 directly," find the policy called `AmazonS3FullAccess` and attach it
 to the user.
 
 When you run your **docassemble** [Docker] container, set the
 [configuration options]<span></span> [`S3BUCKET`], [`S3ACCESSKEY`],
-[`S3SECRETACCESSKEY`], and [`S3REGION`].  For example, you might use
+[`S3SECRETACCESSKEY`], and [`S3REGION`]. For example, you might use
 an `env.list` file such as:
 
 {% highlight text %}
@@ -1299,13 +1303,13 @@ LETSENCRYPTEMAIL=dev@example.com
 Note that if you run **docassemble** on [EC2], you can launch your
 [EC2] instances with an [IAM] role that allows **docassemble** to
 access to an [S3] bucket without the necessity of setting
-[`S3ACCESSKEY`] and [`S3SECRETACCESSKEY`].  In this case, the only
+[`S3ACCESSKEY`] and [`S3SECRETACCESSKEY`]. In this case, the only
 environment variable you need to pass is [`S3BUCKET`].
 
 If you are using an [S3]-compatible object storage service, you will
 need to set [`S3ENDPOINTURL`] to the URL endpoint of your service,
 which you can find in the service's documentation or in your account
-settings.  You likely will not need to set [`S3REGION`] unless the
+settings. You likely will not need to set [`S3REGION`] unless the
 service supports the "region" concept.
 
 These secret access keys will become available to all developers who
@@ -1314,7 +1318,7 @@ file.
 
 If you are using [AWS] and you want to limit access to a particular
 bucket, you do not have to use the `AmazonS3FullAccess` policy when
-obtaining [S3] credentials.  Instead, you can create your own policy
+obtaining [S3] credentials. Instead, you can create your own policy
 with the following definition:
 
 {% highlight json %}
@@ -1355,20 +1359,20 @@ its rotating backups.
 
 ## <a name="persistent azure"></a>Using Microsoft Azure
 
-Using [Microsoft Azure] is very similar to using [S3].  From the
+Using [Microsoft Azure] is very similar to using [S3]. From the
 [Azure Portal] dashboard, search for "Storage accounts" in the
-"Resources."  Click "Add" to create a new storage account.  Under
+"Resources."  Click "Add" to create a new storage account. Under
 "Account kind," choose "BlobStorage."  Under "Access tier," you can
 choose either "Cool" or "Hot," but you may have to pay more for "Hot."
 
 Once the storage account is created, go into your "Blobs" service in
 the storage account and click "+ Container" to add a new container.
 Set the "Access type" to "Private."  The name of the container
-corresponds with the [`AZURECONTAINER`] environment variable.  Back at
+corresponds with the [`AZURECONTAINER`] environment variable. Back at
 the storage account, click "Access keys."  The "Storage account name"
-corresponds with the environment variable [`AZUREACCOUNTNAME`].  The
+corresponds with the environment variable [`AZUREACCOUNTNAME`]. The
 "key1" corresponds with the [`AZUREACCOUNTKEY`] environment variable.
-(You can also use "key2.").  For example, you might use an `env.list`
+(You can also use "key2."). For example, you might use an `env.list`
 file such as:
 
 {% highlight text %}
@@ -1407,7 +1411,7 @@ jhpyle/docassemble
 
 where `--env-file=env.list` is an optional parameter that refers to a
 file `env.list` containing environment variables for the
-configuration.  A [template for the `env.list` file] is included in
+configuration. A [template for the `env.list` file] is included in
 distribution.
 
 An advantage of using persistent volumes is that you can completely
@@ -1436,7 +1440,7 @@ dabackup:/usr/share/docassemble/backup`. If a volume called `dabackup`
 does not already exist, it will be created, and the
 `jhpyle/docassemble` container will initialize its contents. The
 `dabackup` volume will be associated with the directory
-`/usr/share/docassemble/backup` inside the container.  The `docker
+`/usr/share/docassemble/backup` inside the container. The `docker
 volume ls` command can be used to list the files inside of a
 volume. `docker cp` can be used to copy files from the host to the
 `/usr/share/docassemble/backup` folder.
@@ -1460,7 +1464,7 @@ docker cp redis.key deleteme:/data/
 
 Then you can delete the container, as it is no longer needed:
 
-Now delete the [BusyBox] container.  (The volume `dacerts` will not be
+Now delete the [BusyBox] container. (The volume `dacerts` will not be
 deleted.)
 
 {% highlight bash %}
@@ -1519,18 +1523,18 @@ Ultimately, the better [data storage] solution is to use cloud storage
 ([S3](#persistent s3), [Azure blob storage](#persistent azure)) because:
 
 1. [S3](#persistent s3) and [Azure blob storage](#persistent azure)
-   make scaling easier.  They are the "cloud" way of storing
+   make scaling easier. They are the "cloud" way of storing
    persistent data, at least until cloud-based network file systems
    become more robust.
 2. It is easier to upgrade your virtual machines to the latest
    software and operating system if you can just destroy them and
-   recreate them, rather than running update scripts.  If your
+   recreate them, rather than running update scripts. If your
    persistent data is stored in the cloud, you can destroy and
    recreate virtual machines at will, without ever having to worry
    about copying your data on and off the machines.
 
 However, you can get around the second problem by using [`docker
-volume create`] to put your [Docker volume] on a separate drive.  That
+volume create`] to put your [Docker volume] on a separate drive. That
 way, you could remove the virtual machine that runs the application,
 along with its primary drive, without affecting the drive with the
 **docassemble** data.
@@ -1604,9 +1608,9 @@ the same place it was before, with the same uploaded files, the same
 SQL database.
 
 During the `docker stop` process, application data are saved into
-files and directories in the [data storage] area.  During `docker run`
+files and directories in the [data storage] area. During `docker run`
 (and `docker start` as well), application data are restored from the
-[data storage] area before the server attempts to start.  Included in
+[data storage] area before the server attempts to start. Included in
 the application data is a the list of Python packages installed on
 your system; when the server starts, `pip` will be used to install the
 same list of packages.
@@ -1614,14 +1618,14 @@ same list of packages.
 This backup-on-shutdown/restore-on-startup feature is very powerful
 because it means you can shut down, delete your Docker container, pull
 a new Docker image, and then re-run `docker run`, and all of your
-application data and Python packages will be restored.  Between the
+application data and Python packages will be restored. Between the
 old Docker image and the new Docker image, the versions of the
 operating system, PostgreSQL, and Python might have changed, but the
 restore process will adjust for this.
 
 However, if your server has an unsafe shutdown, the files in the [data
-storage] area might be corrupted.  They might also be missing or very
-old (dating from the last time there was a safe shutdown).  If this
+storage] area might be corrupted. They might also be missing or very
+old (dating from the last time there was a safe shutdown). If this
 happens, not all is lost, because you can restore from one of the
 daily backup snapshots.
 
@@ -1630,25 +1634,25 @@ storage](#persistent azure), the files and directories that are saved
 during the shutdown process are:
 
 * `postgres` - a folder containing a "dump" of each database hosted by
-  the [PostgreSQL] server.  Usually the operative file is called
-  `docassemble`, for the database called `docassemble`.  If you point
+  the [PostgreSQL] server. Usually the operative file is called
+  `docassemble`, for the database called `docassemble`. If you point
   your server to an external database using the [`db` section] of your
-  [Configuration], this is not applicable.  The backup file will
+  [Configuration], this is not applicable. The backup file will
   exist, but it will be an empty database.
 * `redis.rdb` - a file containing a backup of the [Redis] database.
   If you point your server to an external [Redis] database using a
   [`redis`] directive in your [Configuration], this is not
-  applicable.  The `redis.rdb` file will exist, but it will be an
+  applicable. The `redis.rdb` file will exist, but it will be an
   empty database.
 * `log` - a folder containing **docassemble** log files.
-* `nginxlogs` - a folder containing the logs for [NGINX].  If you are
-  using Apache, the relevant folder is `apachelogs`.  This is not
+* `nginxlogs` - a folder containing the logs for [NGINX]. If you are
+  using Apache, the relevant folder is `apachelogs`. This is not
   applicable unless the `CONTAINERROLE` is `all`.
 
 The `files` folder, the `config.yml` file, and the
 `letsencrypt.tar.gz` (if Let's Encrypt is used) are important for
 restoring the system on startup, but they are always up-to-date; they
-are not copied from the server during the shutdown process.  So even
+are not copied from the server during the shutdown process. So even
 if you have an unsafe shutdown, you will have up-to-date versions of
 `files`, `config.yml`, and `letsencrypt.tar.gz`.
 
@@ -1657,27 +1661,27 @@ storage](#persistent azure), then during a safe shutdown process,
 application data is saved into the following files and folders:
 
 * `/usr/share/docassemble/backup/postgres` - a folder containing a
-  "dump" of each database hosted by the [PostgreSQL] server.  Usually
+  "dump" of each database hosted by the [PostgreSQL] server. Usually
   the operative file is called `docassemble`, for the database called
-  `docassemble`.  If you point your server to an external database
+  `docassemble`. If you point your server to an external database
   using the [`db` section] of your [Configuration], this is not
-  applicable.  The backup file will exist, but it will be an empty
+  applicable. The backup file will exist, but it will be an empty
   database.
 * `/usr/share/docassemble/backup/redis.rdb` - a file containing a
-  backup of the [Redis] database.  If you point your server to an
+  backup of the [Redis] database. If you point your server to an
   external [Redis] database using a [`redis`] directive in your
-  [Configuration], this is not applicable.  The `redis.rdb` file will
+  [Configuration], this is not applicable. The `redis.rdb` file will
   exist, but it will be an empty database.
 * `/usr/share/docassemble/backup/files` - a directory containing all
   of the stored files in your system (document uploads, assembled
-  documents, ZIP files for installed packages, etc.).  If [`backup file
+  documents, ZIP files for installed packages, etc.). If [`backup file
   storage`] in the [Configuration] is set to `false`, then this will
   not exist.
 * `/usr/share/docassemble/backup/log` - a folder containing
   **docassemble** log files.
 * `/usr/share/docassemble/backup/nginxlogs` - a folder containing the
-  logs for [NGINX].  If you are using Apache, the relevant folder is
-  `/usr/share/docassemble/backup/apachelogs`.  This is not applicable
+  logs for [NGINX]. If you are using Apache, the relevant folder is
+  `/usr/share/docassemble/backup/apachelogs`. This is not applicable
   unless the `CONTAINERROLE` is `all`.
 * `/usr/share/docassemble/backup/config/config.yml` - a file
   containing the Configuration of your system.
@@ -1689,31 +1693,31 @@ shutdown process.
 
 Whenever a **docassemble** container starts up, the [PostgreSQL]
 database in `postgres/docassemble` is used to restore
-**docassemble**'s SQL database.  The `redis.rdb` file is used to
-restore the Redis database.  These files are created during the
-shutdown process.  It is important that the shutdown process happens
+**docassemble**'s SQL database. The `redis.rdb` file is used to
+restore the Redis database. These files are created during the
+shutdown process. It is important that the shutdown process happens
 gracefully, because otherwise these files will not be complete.
 
 As protection against the risk of an unsafe shutdown (as well as the
 risk of the accidental deletion of data), **docassemble** maintains a
-daily rotating backup.  The daily backup is created whenever the daily
+daily rotating backup. The daily backup is created whenever the daily
 cron job runs (which is typically around 6:00 in the morning).
 
 If you are using [S3](#persistent s3) or [Azure blob
 storage](#persistent azure), these backups are in the `backup` folder
-in the cloud storage.  There is a subfolder in the `backup` folder for
-each container that has used the cloud storage area.  The subfolder
-names come from the internal hostnames of containers.  In a
-[multi-server arrangement], you will see several subfolders.  You may
+in the cloud storage. There is a subfolder in the `backup` folder for
+each container that has used the cloud storage area. The subfolder
+names come from the internal hostnames of containers. In a
+[multi-server arrangement], you will see several subfolders. You may
 also see several subfolders if you have called `docker run` multiple
-times.  Within a subfolder for a container, there are subfolders for
-each day for which there is a backup.  The folders are in the format
-`MM-DD` where `MM` is the month and `DD` is the day of the month.  If
+times. Within a subfolder for a container, there are subfolders for
+each day for which there is a backup. The folders are in the format
+`MM-DD` where `MM` is the month and `DD` is the day of the month. If
 you want to restore your system to a snapshot of where it was when a
 daily backup was made, you will need to shut down your server(s) with
-`docker stop -t 600` if it is still running.  Then you will need to
+`docker stop -t 600` if it is still running. Then you will need to
 copy files from the daily backup location to the places where they
-will be used when the system starts up again.  In particular, you will
+will be used when the system starts up again. In particular, you will
 copy the following out of the daily backup folder:
 
 * `config/config.yml` to `config.yml` in the root of the cloud storage.
@@ -1722,7 +1726,7 @@ copy the following out of the daily backup folder:
 * `redis.rdb` to `redis.rdb` in the root of the cloud storage.
 * `log` to `log` in the root of the cloud storage.
 
-Copying `log` is optional.  The contents of log files are not critical
+Copying `log` is optional. The contents of log files are not critical
 to the functionality of the systems.
 
 Note that when using [S3](#persistent s3) or [Azure blob
@@ -1734,12 +1738,12 @@ can enable it using [S3] or [Azure blob storage] site.
 If you are not using [S3](#persistent s3) or [Azure blob
 storage](#persistent azure), the disaster recovery backup files are in
 folders named `/usr/share/docassemble/backup/MM-DD` where `MM` is the
-month and `DD` is the day the backup was made.  If you want to restore
+month and `DD` is the day the backup was made. If you want to restore
 your system to a snapshot of where it was when a daily backup was
 made, you will first need to shut down your server with `docker stop
--t 600` if it is still running.  Then you will need to copy files from
+-t 600` if it is still running. Then you will need to copy files from
 the daily backup location to the places where they will be used when
-the system starts up again.  In particular, you will copy the
+the system starts up again. In particular, you will copy the
 following out of the daily backup folder:
 
 * the `config/config.yml` file to `/usr/share/docassemble/backup/config.yml`
@@ -1748,7 +1752,7 @@ following out of the daily backup folder:
 * the `redis.rdb` file to `/usr/share/docassemble/backup/redis.rdb`
 * the `log` folder to `/usr/share/docassemble/backup/log`
 
-Copying `log` is optional.  The contents of log files are not critical
+Copying `log` is optional. The contents of log files are not critical
 to the functionality of the systems.
 
 After copying these files into place, you can start your server(s)
@@ -1777,7 +1781,7 @@ The (potentially) plural services include:
 
 The **docassemble** [Docker] container will run any subset of these
 six services, depending on the value of the environment variable
-[`CONTAINERROLE`], which is passed to the container at startup.  In a
+[`CONTAINERROLE`], which is passed to the container at startup. In a
 single-server arrangement ([`CONTAINERROLE`] = `all`, or left
 undefined), the container runs all of the services (except the log
 message aggregator, which is not necessary in the case of a
@@ -1789,8 +1793,8 @@ different [configuration options].
 
 In a multi-server arrangement, you can have one machine run SQL,
 another machine run [Redis] and [RabbitMQ], and any number of machines
-run web servers and [Celery] nodes.  You can decide how to allocate
-services to different machines.  For example, you might want to run
+run web servers and [Celery] nodes. You can decide how to allocate
+services to different machines. For example, you might want to run
 central tasks on a powerful server, while running many web servers on
 less powerful machines.
 
@@ -1854,7 +1858,7 @@ docker run \
 Note that [Docker] will fail if any of these ports is already in use.
 For example, many Linux distributions run a mail transport agent on
 port 25 by default; you will have to stop that service in order to
-start [Docker] with `-p 25:25`.  For example, on [Amazon Linux] you
+start [Docker] with `-p 25:25`. For example, on [Amazon Linux] you
 may need to run:
 
 {% highlight bash %}
@@ -1869,12 +1873,12 @@ one another.
 
 One way to share files among containers is to make
 `/usr/share/docassemble/` a [persistent volume] on a network file
-system.  This directory contains the configuration, SSL certificates,
-[Python virtual environment], and uploaded files.  However, network
+system. This directory contains the configuration, SSL certificates,
+[Python virtual environment], and uploaded files. However, network
 file systems present problems.
 
 A preferable way to share files is with [Amazon S3] or
-[Azure blob storage], which **docassemble** supports.  See the
+[Azure blob storage], which **docassemble** supports. See the
 [using S3] and [using Azure blob storage] sections for instructions on
 setting this up.
 
@@ -1890,7 +1894,7 @@ This means that as long as there is a `config.yml` file in the cloud
 with the configuration you want, you can start **docassemble**
 containers without specifying a lot of [configuration options]; you
 simply have to refer to your cloud storage bucket/container, and
-**docassemble** will take it from there.  For example, to run a
+**docassemble** will take it from there. For example, to run a
 central server, you can do:
 
 {% highlight bash %}
@@ -1924,7 +1928,7 @@ docker run \
 If you are running **docassemble** on [EC2], the easiest way to enable
 HTTPS support is to set up an [Application Load Balancer] that accepts
 connections in HTTPS format and forwards them to the web servers in
-HTTP format.  In this configuration [Amazon] takes care of creating
+HTTP format. In this configuration [Amazon] takes care of creating
 and hosting the necessary SSL certificates.
 
 If you are not using a [load balancer], you can use HTTPS either by
@@ -1934,7 +1938,7 @@ setting up [Let's Encrypt] or by providing your own certificates.
 
 If you are running **docassemble** in a [single-server arrangement],
 or in a [multi-server arrangement] with only one web server, you can
-use [Let's Encrypt] to enable [HTTPS].  If you have more than one web
+use [Let's Encrypt] to enable [HTTPS]. If you have more than one web
 server, you can enable encryption [without Let's Encrypt] by
 installing your own certificates.
 
@@ -1945,7 +1949,7 @@ your task definition or `env.list` file:
 * `LETSENCRYPTEMAIL`: [Let's Encrypt] requires an e-mail address, which
   it will use to get in touch with you about renewing the SSL certificates.
 * `DAHOSTNAME`: set this to the hostname that users will use to get to
-  the web application.  [Let's Encrypt] needs this in order to verify
+  the web application. [Let's Encrypt] needs this in order to verify
   that you have access to the host.
 * `USEHTTPS`: set this to `true`.
 
@@ -1962,7 +1966,7 @@ TIMEZONE=America/New_York
 
 The first time the server is started, the `letsencrypt` utility will
 be run, which will change the [NGINX] configuration in order to use the
-appropriate SSL certificates.  When the server is later restarted,
+appropriate SSL certificates. When the server is later restarted,
 the `letsencrypt renew` command will be run, which will refresh the
 certificates if they are within 30 days of expiring.
 
@@ -1971,7 +1975,7 @@ the certificates.
 
 If you are using a [multi-server arrangement] with a single web
 server, you need to run the `cron` role on the same server that runs
-the `web` role.  If you use the [e-mail receiving] feature with
+the `web` role. If you use the [e-mail receiving] feature with
 [TLS encryption], the `mail` role also has to share the server with
 the `web` and `cron` roles.
 
@@ -1982,13 +1986,13 @@ other SSL certificates that your server needs to use, you can pass
 your certificates to **docassemble**.
 
 Using your own SSL certificates with [Docker] requires that your SSL
-certificates reside within each container.  There are several ways to
+certificates reside within each container. There are several ways to
 get your certificates into the container:
 
 * Use [S3](#persistent s3) or [Azure blob storage](#persistent azure)
   and upload the certificates to `certs/` in your bucket/container.
 * [Build your own private image] in which your SSL certificates are
-  placed in `Docker/ssl`.  During the build process, these files will
+  placed in `Docker/ssl`. During the build process, these files will
   be copied into `/usr/share/docassemble/certs`.
 * Use [persistent volumes] and copy the SSL certificate files
   into the volume for `/usr/share/docassemble/certs` before starting
@@ -2029,7 +2033,7 @@ server.
 
 If you are using [S3](#persistent s3) or [Azure blob storage](#persistent azure),
 this module will copy the files from the `certs/` prefix in your
-bucket/container to `/etc/ssl/docassemble`.  You can use the [S3
+bucket/container to `/etc/ssl/docassemble`. You can use the [S3
 Console] or the [Azure Portal] to create a folder called `certs` and
 upload your certificate files into that folder.
 
@@ -2038,13 +2042,13 @@ If you are not using [S3](#persistent s3) or [Azure blob storage](#persistent az
 `/usr/share/docassemble/certs` to `/etc/ssl/docassemble`.
 
 There are two ways that you can put your own certificate files into
-the `/usr/share/docassemble/certs` directory.  The first way is to
+the `/usr/share/docassemble/certs` directory. The first way is to
 [create your own Docker image] of **docassemble** and put your
-certificates into the `Docker/ssl` directory.  The contents of this
+certificates into the `Docker/ssl` directory. The contents of this
 directory are copied into `/usr/share/docassemble/certs` during the
 build process.
 
-The second way is to use [persistent volumes].  If you have a
+The second way is to use [persistent volumes]. If you have a
 persistent volume for the directory `/usr/share/docassemble/certs`,
 you can copy the SSL certificate files into that directory before
 starting the container.
@@ -2080,7 +2084,7 @@ docker cp nginx.key deleteme:/data/
 You may want to copy other certificates as well, for example for
 PostgreSQL or Redis.
 
-Now delete the [BusyBox] container.  (Your volume will not be
+Now delete the [BusyBox] container. (Your volume will not be
 deleted.)
 
 {% highlight bash %}
@@ -2129,12 +2133,12 @@ certificates.
 
 If you want to use different filesystem or cloud locations, the
 `docassemble.webapp.install_certs` module can be configured to use
-different locations.  See the [configuration] variable [`certs`].
+different locations. See the [configuration] variable [`certs`].
 
 ## <a name="tls"></a>Using TLS for incoming e-mail
 
 If you use the [e-mail receiving] feature, you can use [TLS] to
-encrypt incoming e-mail communications.  By default, **docassemble**
+encrypt incoming e-mail communications. By default, **docassemble**
 will install self-signed certificates into the [Exim] configuration,
 but for best results you should use certificates that match your
 [`incoming mail domain`].
@@ -2145,7 +2149,7 @@ in a [single-server arrangement], then **docassemble** will use your
 
 However, if you are running your `mail` server as part of a dedicated
 backend server that does not include `web`, you will need to create
-and install your own certificates.  In addition, if your
+and install your own certificates. In addition, if your
 [`incoming mail domain`] is different from your [`external hostname`]
 ([`DAHOSTNAME`]), then you will also need to install your own
 certificates.
@@ -2194,24 +2198,24 @@ in recent years, web browsers have become more restrictive about
 the URL of the [`<iframe>`] uses a hostname that is different from the
 hostname in the browser location bar.
 
-The following example illustrates how to do this.  Your situation will
+The following example illustrates how to do this. Your situation will
 probably be different, but this example will still help you figure out
 how to configure your system.
 
 ## <a name="forwarding nginx"></a>Example using NGINX
 
 The example will demonstrate how to run **docassemble** using [Docker]
-on an Ubuntu 22.04 server running in the cloud.  The machine that runs
+on an Ubuntu 22.04 server running in the cloud. The machine that runs
 [Docker] will also run the [NGINX] web browser. [NGINX] will be
 configured to use encryption and it will listen on ports 80 and 443.
 The web server will be accessible at `https://justice.example.com` and
-will serve resources other than **docassemble**.  The **docassemble**
+will serve resources other than **docassemble**. The **docassemble**
 resources will be accessible at `https://justice.example.com/da`.
 [Docker] will run on the machine and will listen on ports 8080
-and 8050.  The web server will accept HTTPS requests at `/da` and
-forward thema as HTTP requests to port 8080.  The SSL certificate will
+and 8050. The web server will accept HTTPS requests at `/da` and
+forward thema as HTTP requests to port 8080. The SSL certificate will
 be installed on the Ubuntu server, and the [Docker] container will run
-an HTTP server.  [Docker] will be controlled by the user account
+an HTTP server. [Docker] will be controlled by the user account
 `ubuntu`, which is assumed to have [sudo] privileges.
 
 This example uses only one machine, but if you want to have a separate
@@ -2307,10 +2311,10 @@ Inside of `nano`, you can save the file by typing Ctrl-s and exit by
 typing Ctrl-x.
 
 The `POSTURLROOT` variable, which is set to `/da/`, indicates the
-path after the domain at which **docassemble** can be accessed.  The
+path after the domain at which **docassemble** can be accessed. The
 [NGINX] web server will be able to provide other resources at other
 paths, but `/da/` will be reserved for the exclusive use of
-**docassemble**.  The beginning slash and the trailing slash are both
+**docassemble**. The beginning slash and the trailing slash are both
 necessary.
 
 Setting [`DAEXPOSEWEBSOCKETS`] to `true` means that the [WebSocket]
@@ -2326,7 +2330,7 @@ docker run --env-file=env.list -v dabackup:/usr/share/docassemble/backup -d -p 8
 {% endhighlight %}
 
 The option `-p 8080:80` means that port 8080 on the Ubuntu machine
-will be mapped to port 80 within the [Docker] container.  The option
+will be mapped to port 80 within the [Docker] container. The option
 `-p 8050:5000` means that the web sockets port of the container should
 be accessible on port 8050 of the host, so that the web server on the
 host can tunnel traffic to it directly. Note that ports 8080 and 8050
@@ -2481,7 +2485,7 @@ repository:
 * <span></span>[`docassemble/Docker/config/config.yml.dist`]: you
   probably do not need to change this; it is a template that is
   updated based on the contents of the environment variables passed to
-  [`docker run`].  Once your server is up and running you can change
+  [`docker run`]. Once your server is up and running you can change
   the rest of the configuration in the web application.
 * <span></span>[`docassemble/Docker/initialize.sh`]: this script
   updates `config.yml` based on the environment variables; retrieves a
@@ -2517,7 +2521,7 @@ repository:
   into `/etc/logrotate.d` and will control the rotation of the
   **docassemble** log file in `/usr/share/docassemble/log`.
 * <span></span>[`docassemble/Docker/nginx.logrotate`]: This replaces the standard
-  nginx logrotate configuration.  It does not compress old log files,
+  nginx logrotate configuration. It does not compress old log files,
   so that it is easier to view them in the web application.
 * <span></span>[`docassemble/Docker/process-email.sh`]: This is a
   script that is run when an e-mail is received, if the
@@ -2573,10 +2577,10 @@ docker push yourdockerhubusername/mydocassemble
 # <a name="arm"></a>ARM support
 
 Using **docassemble** on the [ARM] architecture is considered
-experimental.  The images on [Docker Hub] are `amd64`-only, so if you
+experimental. The images on [Docker Hub] are `amd64`-only, so if you
 want to run **docassemble** on [ARM], you will need to use `docker
 build` to build the `jhpyle/docassemble-os` and `jhpyle/docassemble`
-images.  The known issues with [ARM] compatibility are:
+images. The known issues with [ARM] compatibility are:
 
 * The `DAGoogleAPI` object cannot be used because the dependency
   package it relies on causes a C memory allocation error to be
@@ -2587,17 +2591,19 @@ images.  The known issues with [ARM] compatibility are:
 # <a name="upgrading"></a>Upgrading docassemble when using Docker
 
 New versions of the **docassemble** software are published frequently.
-Most changes only affect the [Python] code.  You can upgrade the
+Most changes only affect the [Python] code. You can upgrade the
 **docassemble** [Python] packages by going to "Package Management"
 from the menu and clicking the "Upgrade" button.
 
-However, sometimes a "system upgrade" is necessary.  This can happen
+However, sometimes a "system upgrade" is necessary. This can happen
 when changes are made to **docassemble**'s underlying operating system
 files, or new versions of Python packages become incompatible with old
-versions of operating system files.  Performing a "system upgrade"
-requires stopping your **docassemble** container and running `docker
-run` with a new version of the **docassemble** image in order to start
-a new container based on the new image.
+versions of operating system files, or **docassemble** requires a
+newer version of Python than the version available in the operating
+system. Performing a "system upgrade" requires stopping your
+**docassemble** container and running `docker run` with a new version
+of the **docassemble** image in order to start a new container based
+on the new image.
 
 Doing a system upgrade is only safe if you are already using a form
 of [data storage]. If you aren't using a [Docker volume], [S3], or
@@ -2632,9 +2638,9 @@ understand some things about how Docker works.
 
 [Docker] saves every image it uses to disk. So if you ran `docker run`
 two years ago, [Docker] downloaded the image `jhpyle/docassemble` and
-stored a copy of it. If you ran `docker run` today on the
-`jhpyle/docassemble` image, [Docker] would use the downloaded image
-from two years ago instead of downloading the latest image from
+stored a copy of it on the disk. If you then run `docker run` today on
+the `jhpyle/docassemble` image, [Docker] would use the downloaded
+image from two years ago instead of downloading the latest image from
 [Docker Hub].
 
 The **docassemble** images take up a lot of disk space. One of the
@@ -2665,6 +2671,11 @@ system upgrade:
 * `docker stop -t 600 45034cf698b1` will stop the container with
   container ID `45034cf698b1` and it will give it ten minutes (600
   seconds) to shut down safely.
+* `docker logs 45034cf698b1` will show the log of the container. This
+  log is very high-level and limited, but it contains useful
+  information about whether a container has shut down safely. There
+  are more logs available inside the container itself; see
+  [troubleshooting] for instructions on accessing them.
 * `docker ps -a` will list all of the containers on the server,
   whether they are running or not.
 * `docker rm 45034cf698b1` will delete the container with container ID
@@ -2674,6 +2685,10 @@ system upgrade:
 * `docker rmi 22cd380ad224` will delete the image with the image ID
   `22cd380ad224` so long as no existing containers depend on the
   image.
+* `docker pull jhpyle/docassemble` will download the latest version of
+  the **docassemble** image from [Docker Hub] and save it to disk. The
+  `docker run` command does this automatically if you tell it to use
+  an image that has not been downloaded yet.
 * `docker volume ls` will list the [Docker] volumes that exist on the
   system.
 * `docker system df` will report how much disk space [Docker] is
@@ -2682,8 +2697,8 @@ system upgrade:
 ## <a name="upgrading stopping"></a>Stopping the Docker container
 
 The first step of doing a system upgrade is to stop the Docker
-container.  Use `docker ps` to determine the container ID or name
-(e.g., `45034cf698b1`, and then use `docker stop -t 600 45034cf698b1`
+container. Use `docker ps` to determine the container ID or name
+(e.g., `45034cf698b1`), and then use `docker stop -t 600 45034cf698b1`
 to stop the container. The `-t 600` indicates that [Docker] should
 wait 600 seconds, or ten minutes, for the container to safely stop.
 
@@ -2698,27 +2713,92 @@ quicker if you are using an external SQL server and an external
 out to [data storage].
 
 Doing `docker stop -t 600` gives the machine ten minutes to shut down,
-which is probably more than enough time. If you think it actually took
-10 minutes for the `docker stop` command to complete, then you should
-do `docker ps -a` to see what the exit status was. If it says
-something like `Exited (0) About a minute ago`, then that is good,
-because the exit status was `0`. If the exit status was something
-else, that means Docker had to forcibly kill the container, which may
-have interrupted the container's backup process. In that case, you
-should start the container again, wait for it to boot, and then do the
-shutdown again, but give it even more time to shut down. Or, you may
-need to investigate why it took so long to shut down in the first
-place.
+which is probably more than enough time. If it actually takes 10
+minutes for the `docker stop` command to complete, then you should do
+`docker ps -a` to see what the exit status was. If it says something
+like `Exited (0) About a minute ago`, then that is good, because the
+exit status was `0`. If the exit status was something else, that means
+Docker had to forcibly kill the container, which may have interrupted
+the container's backup process. In that case, you should start the
+container again, wait for it to boot, and then do the shutdown again,
+but give it even more time to shut down. Or, you may need to
+investigate why it took so long to shut down in the first place.
 
-If you are using a [Docker volume] for [data storage], it is important
-to make sure that the backup procedures that were carried out when you
-did `docker stop` did not exhaust your disk space. If you have
-voluminous generated and uploaded files, you will need disk space to
-support multiple copies of the files. If the process of backing up the
-files exhausts disk space, then your [data storage] will not contain
-all of your files.
+It is important to make sure that the backup procedures that were
+carried out when you did `docker stop` did not exhaust the disk space
+within the container. If the process of backing up the files exhausts
+disk space, then your [data storage] may not contain all of your
+application data. If you attempt to do a system upgrade when your
+[data storage] does not contain all of your application data, your new
+container may only work partially, and you may lose application data.
 
-You can `docker exec` into your container and do:
+After the `docker stop` process is completed, you should check the
+logs of the container. If `45034cf698b1` is the ID of your container
+(obtained from `docker ps -a`), you can run:
+
+{% highlight bash %}
+docker logs 45034cf698b1
+{% endhighlight %}
+
+The end of the output will look something like this:
+
+{% highlight text %}
+2023-08-20 12:17:56,718 INFO stopped: postgres (exit status 0)
+2023-08-20 12:17:56,909 INFO stopped: initialize (exit status 0)
+2023-08-20 12:17:56,909 INFO reaped unknown pid 1339 (terminated by SIGTERM)
+2023-08-20 12:17:57,870 INFO reaped unknown pid 4162 (exit status 0)
+2023-08-20 12:17:57,870 INFO reaped unknown pid 4163 (exit status 0)
+2023-08-20 12:17:57,870 INFO reaped unknown pid 4213 (terminated by SIGUSR1)
+2023-08-20 12:17:58,122 INFO reaped unknown pid 4280 (terminated by SIGUSR1)
+2023-08-20 12:17:59,169 INFO stopped: rabbitmq (exit status 0)
+2023-08-20 12:17:59,169 INFO reaped unknown pid 4234 (exit status 0)
+2023-08-20 12:17:59,169 INFO reaped unknown pid 4287 (terminated by SIGUSR1)
+2023-08-20 12:17:59,169 INFO reaped unknown pid 919 (terminated by SIGUSR1)
+{% endhighlight %}
+
+The line `stopped: initialize (exit status 0)` indicates that the
+shutdown was safe and disk space was not exhausted. If you see any
+other report about the way that the `initialize` process was stopped,
+something is wrong and it is probably not safe to do a system
+upgrade. If you have exhausted disk space, you haven't lost data,
+because the data will still be on the stopped container. However, you
+need to make sure you don't delete your Docker container, because it
+will contain the data that doesn't exist in [data storage].
+
+If you see that something is wrong after stopping the container, you
+might want to inspect the file system of the stopped container without
+starting it. This allows you to see the logs that were created when
+each of the `supervisord` services were shutting down. To inspect the
+file system of a stopped container, you can create a Docker image from
+the stoppedn container, and then use `docker run` to create a
+container from that image, with a special "entry point" that simply
+runs a shell (instead of running **docassemble**).
+
+{% highlight bash %}
+docker commit 352b3835eefc deleteme
+docker run -ti --rm --entrypoint=/bin/bash deleteme
+{% endhighlight %}
+
+While inside the container, you can inspect the contents of various
+log files, particularly the log files inside of
+`/var/log/supervisor`. This will allow you to see if anything went
+wrong during the shutdown process.
+
+Note that any changes that you make will not have any effect on your
+stopped container. You are working with a copy of that container.
+
+When you are done exploring the files of the stopped container, you
+can run `exit` to exit. Then you will probably want to delete the
+image you created:
+
+{% highlight bash %}
+docker rmi deleteme
+{% endhighlight %}
+
+If your original container is still running, and you want to check the
+available disk space, you can use `docker exec` to get into your
+container (see the [troubleshooting] section for instructions), and
+then you can do:
 
 {% highlight bash %}
 df -h
@@ -2755,12 +2835,22 @@ This will report something like:
 {% endhighlight %}
 
 If you are using [S3] or [Azure blob storage], files are not stored in
-`/usr/share/docassemble/files`; disk space is likely only going to be
-an issue if you are using a [Docker volume] for [data storage].
+`/usr/share/docassemble/files`, but are stored in the cloud. However,
+it is still important to have ample free disk space even if you are
+using [S3] or [Azure blob storage], because **docassemble** needs disk
+space to create backup files before saving them to the cloud.
+
+If you need to free up space on the disk, a good place to start is the
+`/usr/share/docassemble/backup` folder. The subdirectories for the
+rolling backup, which have names like `08-20`, `08-21`, etc. can be
+voluminous. You might want to delete all but the most recent
+ones. Then you might want to adjust the [`backup days`] Configuration
+directive so that the system does not save so many days of backup.
+
+## <a name="upgrading free"></a>Freeing up disk space
 
 The following three lines will stop all containers, remove all
-containers, and then remove all of the images that [Docker] created
-during the build process.
+containers, and then remove all of the images that [Docker] created.
 
 {% highlight bash %}
 docker stop -t 600 $(docker ps -a -q)
@@ -2768,15 +2858,15 @@ docker rm $(docker ps -a -q)
 docker rmi $(docker images | awk "{print $3}")
 {% endhighlight %}
 
-While these commands are helpful, you should understand what they are
-doing before you run them. The first command stops all the
-containers. It uses the output of `docker ps -a -q` to get a list of
-the container IDs of all of the containers on the system, and passes
-that list to `docker stop`. The second command deletes all of the
-containers on the system. The third command deletes all the images on
-the server. This last command frees up the most disk space. It is
-usually necessary to remove the containers first (the [`docker rm`]
-line), as the containers depend on the images.
+You should understand what they are doing before you run them. The
+first command stops all the containers. It uses the output of `docker
+ps -a -q` to get a list of the container IDs of all of the containers
+on the system, and passes that list to `docker stop`. The second
+command deletes all of the containers on the system. The third command
+deletes all the images on the server. This last command frees up the
+most disk space. It is usually necessary to remove the containers
+first (the [`docker rm`] line), as the containers depend on the
+images.
 
 Note that if you try to run these commands, you might get an error
 like `"docker stop" requires at least 1 argument.` This is harmless;
@@ -2787,6 +2877,8 @@ above and instead get help, or spend time learning how [Docker] works
 before you attempt this. Doing `docker rm` permanently deletes your
 server, so it's not something you should be doing unless you know for
 a fact that your data are backed up in [data storage].
+
+## <a name="upgrading starting"></a>Starting a new container
 
 Once the old images and containers are deleted, you can upgrade to the
 new system version of **docassemble** by running the same `docker run`
@@ -2802,11 +2894,25 @@ jhpyle/docassemble
 or, if you are using S3 or Azure Blob Storage, you wouldn't use a
 `dabackup` volume:
 
-{% highlight text %}
+{% highlight bash %}
 docker run --env-file=env.list \
 -d -p 80:80 -p 443:443 --restart always --stop-timeout 600 \
 jhpyle/docassemble
 {% endhighlight %}
+
+The `docker run` command will download the latest version of the
+`jhpyle/docassemble` image from [Docker Hub]. However, note that if
+you have an old version of that image already present on your system,
+`docker run` will use that old version instead of downloading the
+new image. If you want to download the new image without doing `docker
+run`, you can run:
+
+{% highlight bash %}
+docker pull jhpyle/docassemble
+{% endhighlight %}
+
+Then you can see the image you have downloaded by running `docker
+images`.
 
 If your host OS is old, you may want to upgrade your host OS and
 Docker itself while the **docassemble** server is stopped. You may
@@ -2832,7 +2938,7 @@ contents of your `env.list` file, if you were using one.
 # <a name="downgrading"></a>Installing an earlier version of **docassemble** when using Docker
 
 When you do `docker run` or `docker pull`, the only image available on
-[Docker Hub] is the "latest" image.  To install a version based on an
+[Docker Hub] is the "latest" image. To install a version based on an
 earlier version of **docassemble**, you can make your own image using
 [git].
 
@@ -2851,11 +2957,11 @@ is simply an illustration of creating an image called
 [`docker run`].
 
 Starting with version 0.5, the **docassemble** image is split into two
-parts.  The `jhpyle/docassemble` image uses `jhpyle/docassemble-os` as
-a base image.  The `jhpyle/docassemble-os` image consists of the
+parts. The `jhpyle/docassemble` image uses `jhpyle/docassemble-os` as
+a base image. The `jhpyle/docassemble-os` image consists of the
 underlying [Ubuntu] operating system with required [Ubuntu] packages
-installed.  The `jhpyle/docassemble-os` image is updated much less
-frequently than the `jhpyle/docassemble` image.  If you want to build
+installed. The `jhpyle/docassemble-os` image is updated much less
+frequently than the `jhpyle/docassemble` image. If you want to build
 your own version of `jhpyle/docassemble-os`, you can do so by running:
 
 {% highlight bash %}
@@ -2865,7 +2971,7 @@ docker build -t jhpyle/docassemble-os .
 cd ..
 {% endhighlight %}
 
-The [docassemble-os repository] consists of a [Dockerfile] only.  Note
+The [docassemble-os repository] consists of a [Dockerfile] only. Note
 that the first line of the [Dockerfile] in the [docassemble
 repository] is:
 
@@ -2874,12 +2980,11 @@ FROM jhpyle/docassemble-os
 {% endhighlight %}
 
 Thus, the `jhpyle/docassemble` image incorporates by reference the
-`jhpyle/docassemble-os` base image.  The [`docker build`] command
+`jhpyle/docassemble-os` base image. The [`docker build`] command
 above overwrites the `jhpyle/docassemble-os` image that is stored on
-your local machine.  If you want, you can edit the [Dockerfile] before
+your local machine. If you want, you can edit the [Dockerfile] before
 building your custom `jhpyle/docassemble` version so that it
 references a different base image.
-
 
 [Redis]: https://redis.io/
 [Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/
