@@ -16743,9 +16743,10 @@ def update_package():
                 branch = form.gitbranch.data.strip()
                 if not branch:
                     branch = get_master_branch(giturl)
-                m = re.search(r'#egg=(.*)', github_url)
+                m = re.search(r'#egg=(.*)', giturl)
                 if m:
                     packagename = re.sub(r'&.*', '', m.group(1))
+                    giturl = giturl.removesuffix("#egg=" + m.group(1))
                 else:
                     packagename = re.sub(r'/*$', '', giturl)
                     packagename = re.sub(r'^git+', '', packagename)
@@ -19901,6 +19902,7 @@ def get_branches_of_repo(giturl):
     repo_name = re.sub(r'^http.*github.com/', '', repo_name)
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
+    repo_name = re.sub(r'#egg=(.*)', '', repo_name)
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
