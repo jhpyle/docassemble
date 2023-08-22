@@ -19902,6 +19902,7 @@ def get_branches_of_repo(giturl):
     repo_name = re.sub(r'^http.*github.com/', '', repo_name)
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
+    repo_name = re.sub(r'#egg=(.*)', '', repo_name)
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
