@@ -2610,6 +2610,23 @@ of [data storage]. If you aren't using a [Docker volume], [S3], or
 [Azure blob storage], then your data will be lost if you attempt a
 system upgrade.
 
+Note that just as **docassemble** needs a "system upgrade" every once
+in a while, the host operating system may also need to be upgraded. If
+the operating system on computer that runs Docker is old, it may have
+trouble running the latest version of the Docker container. Also, if
+you are running an old operating system on the host computer, you may
+not have the latest security updates. Thus, before you do a system
+upgrade, you should think about whether it is time to upgrade the host
+operating system. If you are using the [S3] or [Azure blob storage]
+form of [data storage], you can `docker stop` the Docker container,
+terminate the host computer, create a new host computer with Docker
+installed on it, change your [DNS] records to point to the new host
+computer, and then do `docker run` on the new computer. If you are
+using a [Docker volume] for data storage, you need to copy the [Docker
+volume] from the old computer to the new computer, which can be a
+time-consuming operation. (The steps are explained
+[below](#upgrading starting).)
+
 ## <a name="upgrading basic"></a>Overview of a system upgrade
 
 The basic steps of a system upgrade on a server are:
@@ -2617,8 +2634,9 @@ The basic steps of a system upgrade on a server are:
 1. Safely shut down the **docassemble** server using `docker
    stop`. This will save your SQL database, Redis database, and files
    to [data storage].
-2. Free up disk space by using `docker rm` and `docker rmi` to delete
-   copies of the old **docassemble** containers and images.
+2. Remove the old **docassemble** container and image by using `docker
+   rm` and `docker rmi` to delete copies of the old **docassemble**
+   containers and images.
 3. Start a new container from the latest **docassemble** image using
    the same `docker run` command you ran when you created
    the original container.
@@ -2921,13 +2939,32 @@ also want to migrate to a new host.
 If you want to move your **docassemble** server to a new host, and
 you are using a Docker volume for [data storage], then the steps are:
 
-1. On the existing host, safely shut down the **docassemble** server
-   using `docker stop`.
-2. Create a new host.
+1. On the existing host, [safely shut down](#upgrading stopping)
+   the **docassemble** server using `docker stop`.
+2. Create a new host and install Docker on it.
 3. Transfer the Docker volume to the new host using:
 {% highlight text %}
 docker run --rm -v dabackup:/from alpine ash -c "cd /from ; tar -cf - . " | ssh -i cert.rsa username@newhost 'docker run --rm -i -v dabackup:/to alpine ash -c "cd /to ; tar -xpvf - " '
 {% endhighlight %}
+   where `newhost` is the hostname of the new machine, `username` is the
+   name of your user account on that machine, `cert.rsa` is the SSH
+   certificate file that allows you to SSH to `newhost`. (It needs to
+   be saved to the current working directory on the old machine.) This
+   `docker run` command is used with `--rm`, which means the container
+   will be automatically deleted as soon as it finishes its work
+   (which is to copy files). The name `alpine` refers to a small Linux
+   distribution that is useful for performing maintenance operations,
+   and `ash` refers to a shell command (similar to `bash` and
+   `sh`). This command starts a container on the old machine, where
+   the `dabackup` volume is mounted on the container at mount point
+   `/from`. The container creates a `.tar` file out of the `dabackup`
+   and sends the file as a data stream over the network to the new
+   computer, using `ssh`. Using `ssh`, it creates a Docker container
+   on the new machine, where a new `dabackup` volume is mounted at
+   mount point `/to`. This container receives the `.tar` data stream
+   over `ssh` and unpacks it to the `/to` directory. Both of the
+   containers are deleted when the work completes, but the `dabackup`
+   volume on the new computer remains.
 4. Start a new container from the latest **docassemble** image using
    `docker run`.
 

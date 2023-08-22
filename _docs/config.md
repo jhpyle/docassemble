@@ -3494,43 +3494,42 @@ azure maps:
 
 ## <a name="google"></a>Google API key
 
-If you have a Google API key, you can include it as follows:
+If you want to use the [`.geocode()`] method, which uses the [Google
+Maps Geocoding API], or the feature in Utilities for translating
+system words into other languages, which uses the [Google Cloud
+Translation API], you need to obtain a Google API key and plug it into
+your Configuration:
 
 {% highlight yaml %}
 google:
   api key: UIJGeyD-23aSdgSE34gEGRg3GDRGdrge9z-YUia
 {% endhighlight %}
 
-This will enable you to use the [Google Maps Geocoding API] (see the
-[`.geocode()`] method), and will also enable the [Google Cloud
-Translation API] for the feature in Utilities for translating system
-words into other languages.
-
-As of June 2018, Google
-[requires that you enable billing](https://developers.google.com/maps/documentation/geolocation/usage-and-billing)
-on the API key in order to use the geocoding feature.  To avoid charges, you may want to
-[restrict the API](https://developers.google.com/maps/faq#usage_cap) to no more than 2,500
-requests per day.
-
 The `api key` under `google` is used when the server sends requests to
-Google; thus, you can add security based on IP address to the API key.
+Google; thus, in the Google Cloud Console, you should add security to
+the API key based on the IP address of the machine making the
+request. If you migrate to a different server with a different IP
+address, remember to add your new IP address to the list of allowable
+IP addresses.
 
 **docassemble** also has features, including [address autocomplete]
 and the [`map_of()`] function, which cause the user's web browser to
-call the Google API.
+call the Google API. For these features, you need to set up an API key
+and place it under the `google` directive as the `google maps api key`:
 
 {% highlight yaml %}
 google:
   google maps api key: YyFeyuE-36grDgEE34jETRy3WDjGerye0y-wrRb
 {% endhighlight %}
 
-These features require sharing the API key with the web browser, which
-means your API key is not secret. Google allows you to add security
-based on the `Referer` header, so that the API key can only be used
-when it is called from a particular web site.
+The [address autocomplete] and [`map_of()`] features require sharing
+the API key with the web browser, which means your API key is not
+secret. Google allows you to add security based on the `Referer`
+header, so that the API key can only be used when it is called from a
+particular web site.
 
 Therefore, if you use both the server-side features and the
-client-side features, you should obtain two API keys from Google, and
+client-side features, obtain two separate API keys from Google, and
 lock down the `api key` based on the IP address of your server, and
 lock down the `google maps api key` based on the URL of your site.
 

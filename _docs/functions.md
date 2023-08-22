@@ -8041,6 +8041,19 @@ Note that `val()` only works with fields that exist on the screen; the
 you want to pass variable values from Python to JavaScript, see the
 [recipe on the topic].
 
+If you have a `datatype: checkboxes` field where the variable name is
+`favorite_fruits` and the choices are `apple`, `orange`, and `peach`, then:
+
+* `val("favorite_fruits['apple']")` will return `true` or `false`
+  depending on whether the checkbox is checked.
+* `val("favorite_fruits")` will return an `Array` where the items are
+  the strings `"apple"`, `"orange"`, etc., depending on which items
+  were selected.
+* `val("favorite_fruits[nota]")` will return `true` or `false`
+  depending on whether the "None of the above" checkbox is checked.
+* `val("favorite_fruits[aota]")` will return `true` or `false`
+  depending on whether the "All of the above" checkbox is checked.
+
 You can also access this function under the name `da_val()`, which can
 be useful if you are embedding **docassemble** and there is a name
 conflict.
@@ -8054,12 +8067,8 @@ itself.
 {% include side-by-side.html demo="getField" %}
 
 If a field consists of multiple radio buttons or checkboxes,
-`getField()` returns the first element. If you need to select all of
-the elements, you can use the `name` of the element to find the group:
-
-{% highlight javascript %}
-document.getElementsByName(getField('favorite_fruit').name)
-{% endhighlight %}
+`getField()` returns the `<fieldset>` element that contains the
+input elements.
 
 You can also access this function under the name `daGetField()`, which
 can be useful if you are embedding **docassemble** and there is a name
@@ -8075,6 +8084,19 @@ variable name must be written exactly as it appears in the underlying
 
 {% include side-by-side.html demo="setField" %}
 
+If you have a `datatype: checkboxes` field where the variable name is
+`favorite_fruits` and the choices are `apple`, `orange`, and `peach`,
+then:
+
+* `setField("favorite_fruits['apple']", true)` will check the `apple`
+  checkbox.
+* `setField("favorite_fruits", ['apple', 'orange'])` will check the
+  `apple` and `orange` checkboxes.
+* `setField("favorite_fruits[nota]", true)` will check the "None of
+  the above" checkbox.
+* `setField("favorite_fruits[aota]")` will check the "All of the
+  above" checkbox.
+
 You can also access this function under the name `daSetField()`, which
 can be useful if you are embedding **docassemble** and there is a name
 conflict.
@@ -8086,6 +8108,12 @@ the screen that can be used with `val()`, `getField()`, and
 `setField()`.
 
 {% include side-by-side.html demo="getFields" %}
+
+If you have a `datatype: checkboxes` field where the variable name is
+`favorite_fruits` and the choices are `apple`, `orange`, and `peach`,
+then `getFields()` will return `favorite_fruits`,
+`favorite_fruits["apple"]`, `favorite_fruits["orange"]`, etc., but it
+will not return `favorite_fruits[nota]` or `favorite_fruits[aota]`.
 
 You can also access this function under the name `daGetFields()`, which
 can be useful if you are embedding **docassemble** and there is a name

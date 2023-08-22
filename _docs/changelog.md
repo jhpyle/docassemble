@@ -3,6 +3,19 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.71](https://github.com/jhpyle/docassemble/releases/tag/v1.4.71) - 2023-08-22
+
+
+### Changed
+- The `val()`, `getField()`, and `setField()` JavaScript functions can
+  references pseudo-fields `favorite_fruit[nota]` and
+  `favorite_fruit[aota]` to refer to the "None of the above" and "All
+  of the above" checkboxes in a `datatype: checkboxes` field.
+
+
+### Fixed
+- Bug introduced in 1.4.70 relating to GitHub URLs.
+
 ## [1.4.70](https://github.com/jhpyle/docassemble/releases/tag/v1.4.70) - 2023-08-20
 
 
