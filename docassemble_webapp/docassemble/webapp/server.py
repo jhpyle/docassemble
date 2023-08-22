@@ -8761,7 +8761,7 @@ def index(action_argument=None, refer=None):
                 if (notInDiv && $.contains(notInDiv, elem)){
                   continue;
                 }
-                return daVarLookupCheckbox[fieldName][i].fieldset;
+                return daVarLookupCheckbox[fieldName][i].elem;
               }
             }
           }
@@ -11146,7 +11146,19 @@ def index(action_argument=None, refer=None):
             }
             cbList.push({'variable': key, 'value': theVal, 'type': theType, 'elem': this})
           });
-          daVarLookupCheckbox[varname].push({'fieldset': this, 'checkboxes': cbList, 'isObject': isObject});
+          daVarLookupCheckbox[varname].push({'elem': this, 'checkboxes': cbList, 'isObject': isObject});
+          $(this).find('input.danota-checkbox').each(function(){
+            if (!daVarLookupCheckbox[varname + '[nota]']){
+              daVarLookupCheckbox[varname + '[nota]'] = [];
+            }
+            daVarLookupCheckbox[varname + '[nota]'].push({'elem': this, 'checkboxes': [{'variable': varname + '[nota]', 'type': 'X', 'elem': this}], 'isObject': isObject});
+          });
+          $(this).find('input.daaota-checkbox').each(function(){
+            if (!daVarLookupCheckbox[varname + '[aota]']){
+              daVarLookupCheckbox[varname + '[aota]'] = [];
+            }
+            daVarLookupCheckbox[varname + '[aota]'].push({'elem': this, 'checkboxes': [{'variable': varname + '[aota]', 'type': 'X', 'elem': this}], 'isObject': isObject});
+          });
         });
         $('.dacurrency').each(function(){
           var theVal = $(this).val().toString();
@@ -13991,7 +14003,7 @@ def observer():
                 if (notInDiv && $.contains(notInDiv, elem)){
                   continue;
                 }
-                return daVarLookupCheckbox[fieldName][i].fieldset;
+                return daVarLookupCheckbox[fieldName][i].elem;
               }
             }
           }
@@ -14783,7 +14795,7 @@ def observer():
             }
             cbList.push({'variable': key, 'value': theVal, 'type': theType, 'elem': this})
           });
-          daVarLookupCheckbox[varname].push({'fieldset': this, 'checkboxes': cbList, 'isObject': isObject});
+          daVarLookupCheckbox[varname].push({'elem': this, 'checkboxes': cbList, 'isObject': isObject});
         });
         $('.dacurrency').each(function(){
           var theVal = $(this).val().toString();
@@ -14826,10 +14838,9 @@ def observer():
           var showIfSign = jsInfo['sign'];
           var showIfMode = jsInfo['mode'];
           var jsExpression = jsInfo['expression'];
-          var n = jsInfo['vars'].length;
-          for (var i = 0; i < n; ++i){
+          jsInfo['vars'].forEach(function(infoItem, i){
             var showIfVars = [];
-            var initShowIfVar = utoa(jsInfo['vars'][i]).replace(/[\\n=]/g, '');
+            var initShowIfVar = utoa(infoItem).replace(/[\\n=]/g, '');
             var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var elem = $("[name='" + initShowIfVarEscaped + "']");
             if (elem.length > 0){
@@ -16782,7 +16793,7 @@ def update_package():
                 m = re.search(r'#egg=(.*)', giturl)
                 if m:
                     packagename = re.sub(r'&.*', '', m.group(1))
-                    giturl = giturl.removesuffix("#egg=" + m.group(1))
+                    giturl = re.sub(r'#.*', '', giturl)
                 else:
                     packagename = re.sub(r'/*$', '', giturl)
                     packagename = re.sub(r'^git+', '', packagename)
@@ -19938,7 +19949,7 @@ def get_branches_of_repo(giturl):
     repo_name = re.sub(r'^http.*github.com/', '', repo_name)
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
-    repo_name = re.sub(r'#egg=(.*)', '', repo_name)
+    repo_name = re.sub(r'#egg=.*', '', repo_name)
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
@@ -19977,6 +19988,7 @@ def get_branches_of_repo(giturl):
 
 
 def get_repo_info(giturl):
+    giturl = re.sub(r'#.*', '', giturl)
     repo_name = re.sub(r'/*$', '', giturl)
     m = re.search(r'//(.+):x-oauth-basic@github.com', repo_name)
     if m:
@@ -28606,6 +28618,7 @@ def api_package():
             m = re.search(r'#egg=(.*)', github_url)
             if m:
                 packagename = re.sub(r'&.*', '', m.group(1))
+                github_url = re.sub(r'#.*', '', github_url)
             else:
                 packagename = re.sub(r'/*$', '', github_url)
                 packagename = re.sub(r'^git+', '', packagename)
@@ -28902,6 +28915,7 @@ def api_playground_pull():
         m = re.search(r'#egg=(.*)', github_url)
         if m:
             packagename = re.sub(r'&.*', '', m.group(1))
+            github_url = re.sub(r'#.*', '', github_url)
         else:
             packagename = re.sub(r'/*$', '', github_url)
             packagename = re.sub(r'^git+', '', packagename)

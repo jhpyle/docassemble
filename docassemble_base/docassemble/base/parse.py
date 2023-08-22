@@ -1992,6 +1992,17 @@ def evaluate_image_in_item(data, user_dict):
     return data
 
 
+def process_js_vars(expr):
+    output = set()
+    for item in expr:
+        m = re.search('^(.*)\[[an]ota\]$', item)
+        if m:
+            output.add(m.group(1))
+        else:
+            output.add(item)
+    return list(output)
+
+
 class Question:
 
     def idebug(self, data):
@@ -4002,7 +4013,7 @@ class Question:
                             js_info['sign'] = False
                         js_info['mode'] = 0
                         js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
-                        js_info['vars'] = list(set(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', field[key]) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', field[key])))
+                        js_info['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', field[key]) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', field[key]))
                         if 'extras' not in field_info:
                             field_info['extras'] = {}
                         field_info['extras']['show_if_js'] = js_info
@@ -4016,7 +4027,7 @@ class Question:
                             js_info['sign'] = False
                         js_info['mode'] = 1
                         js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
-                        js_info['vars'] = list(set(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', field[key]) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', field[key])))
+                        js_info['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', field[key]) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', field[key]))
                         if 'extras' not in field_info:
                             field_info['extras'] = {}
                         field_info['extras']['show_if_js'] = js_info
@@ -9827,7 +9838,7 @@ def invalid_variable_name(varname):
     varname = re.sub(r'[\.\[].*', '', varname)
     if not valid_variable_match.match(varname):
         return True
-    return False
+    return illegal_variable_name(varname)
 
 
 def exec_with_trap(the_question, the_dict, old_variable=None):
