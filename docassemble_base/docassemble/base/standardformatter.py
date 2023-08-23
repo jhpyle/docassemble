@@ -2583,9 +2583,9 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 else:
                     formatted_item = markdown_to_html(str(status.extras['aota'][field.number]), status=status, trim=True, escape=(not embedded), do_terms=False)
                 if embedded:
-                    inner_fieldlist.append('<input class="dafield' + str(field.number) + ' dacheckbox-embedded daaota-checkbox" id="_ignore_aota' + str(field.number) + '" type="checkbox" name="_ignore_aota' + str(field.number) + '"' + disable_others_data + '/>&nbsp;<label class="form-label" for="_ignore_aota' + str(field.number) + '">' + formatted_item + '</label>')
+                    inner_fieldlist.append('<input class="dafield' + str(field.number) + ' dacheckbox-embedded daaota-checkbox" id="_ignore_aota' + str(field.number) + '" type="checkbox" value="True" name="_ignore_aota' + str(field.number) + '"' + disable_others_data + '/>&nbsp;<label class="form-label" for="_ignore_aota' + str(field.number) + '">' + formatted_item + '</label>')
                 else:
-                    inner_fieldlist.append('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + DEFAULT_LABELAUTY_AOTA_COLOR + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' daaota-checkbox da-to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" name="_ignore_aota' + str(field.number) + '" ' + ischecked + disable_others_data + '/>')
+                    inner_fieldlist.append('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + DEFAULT_LABELAUTY_AOTA_COLOR + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' daaota-checkbox da-to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="_ignore_aota' + str(field.number) + '" type="checkbox" value="True" name="_ignore_aota' + str(field.number) + '" ' + ischecked + disable_others_data + '/>')
             if 'nota' in status.extras and field.number in status.extras['nota'] and status.extras['nota'][field.number] is not False:
                 if defaultvalue_set and defaultvalue is None:
                     ischecked = ' checked'
@@ -2596,9 +2596,9 @@ def input_for(status, field, wide=False, embedded=False, floating_label=None):
                 else:
                     formatted_item = markdown_to_html(str(status.extras['nota'][field.number]), status=status, trim=True, escape=(not embedded), do_terms=False)
                 if embedded:
-                    inner_fieldlist.append('<input class="dafield' + str(field.number) + ' dacheckbox-embedded danota-checkbox" id="_ignore' + str(field.number) + '" type="checkbox" name="_ignore' + str(field.number) + '"' + disable_others_data + '/>&nbsp;<label class="form-label" for="_ignore' + str(field.number) + '">' + formatted_item + '</label>')
+                    inner_fieldlist.append('<input class="dafield' + str(field.number) + ' dacheckbox-embedded danota-checkbox" id="_ignore' + str(field.number) + '" type="checkbox" value="True" name="_ignore' + str(field.number) + '"' + disable_others_data + '/>&nbsp;<label class="form-label" for="_ignore' + str(field.number) + '">' + formatted_item + '</label>')
                 else:
-                    inner_fieldlist.append('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + DEFAULT_LABELAUTY_NOTA_COLOR + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' danota-checkbox da-to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" name="_ignore' + str(field.number) + '" ' + ischecked + disable_others_data + '/>')
+                    inner_fieldlist.append('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + DEFAULT_LABELAUTY_NOTA_COLOR + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="' + 'dafield' + str(field.number) + ' danota-checkbox da-to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="_ignore' + str(field.number) + '" type="checkbox" value="True" name="_ignore' + str(field.number) + '" ' + ischecked + disable_others_data + '/>')
             elif hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in status.extras and field.number in status.extras['minlength']) or ('maxlength' in field.extras and 'maxlength' in status.extras and field.number in status.extras['maxlength'])):
                 inner_fieldlist.append('<input value="" type="hidden" name="_ignore' + str(field.number) + '"/>')
             if embedded:

@@ -10956,6 +10956,8 @@ def index(action_argument=None, refer=None):
       function daInitialize(doScroll){
         daResetCheckinCode();
         daComboBoxes = Object();
+        daVarLookupSelect = Object();
+        daVarLookupCheckbox = Object();
         if (daSpinnerTimeout != null){
           clearTimeout(daSpinnerTimeout);
           daSpinnerTimeout = null;
@@ -11897,8 +11899,22 @@ def index(action_argument=None, refer=None):
           var showIfMode = parseInt($(this).data('showif-mode'));
           var initShowIfVar = $(this).data('showif-var');
           var varName = atou(initShowIfVar);
-          var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          var elem = $("[name='" + initShowIfVarEscaped + "']");
+          var elem = [];
+          if (varName.endsWith('[nota]') || varName.endsWith('[aota]')){
+            var signifier = varName.endsWith('[nota]') ? 'nota' : 'aota';
+            var cbVarName = varName.replace(/\[[na]ota\]$/, '');
+            $('fieldset.da-field-checkboxes').each(function(){
+              var thisVarName = atou($(this).data('varname'));
+              if (thisVarName == cbVarName){
+                elem = $(this).find('input.da' + signifier + '-checkbox');
+                initShowIfVar = $(elem).attr('name');
+              }
+            });
+          }
+          else {
+            var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+            elem = $("[name='" + initShowIfVarEscaped + "']");
+          }
           if (elem.length > 0){
             showIfVars.push(initShowIfVar);
           }
@@ -13724,6 +13740,7 @@ def observer():
       var daVarLookupCheckbox = Object();
       var daVarLookupOption = Object();
       var daTargetDiv = "#dabody";
+      var daComboBoxes = Object();
       var daLocationBar = """ + json.dumps(url_for('index', i=i)) + """;
       var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
       var daYamlFilename = """ + json.dumps(i) + """;
@@ -14648,6 +14665,9 @@ def observer():
       }
       var da_get_interview_variables = get_interview_variables;
       function daInitialize(doScroll){
+        daComboBoxes = Object();
+        daVarLookupSelect = Object();
+        daVarLookupCheckbox = Object();
         if (daSpinnerTimeout != null){
           clearTimeout(daSpinnerTimeout);
           daSpinnerTimeout = null;
@@ -14857,13 +14877,13 @@ def observer():
               }
             }
             if (showIfVars.length == 0){
-              console.log("ERROR: reference to non-existent field " + jsInfo['vars'][i]);
+              console.log("ERROR: reference to non-existent field " + infoItem);
             }
-            for (var j = 0; j < showIfVars.length; ++j){
-              var showIfVar = showIfVars[j];
+            showIfVars.forEach(function(showIfVar){
               var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+              var varToUse = infoItem;
               var showHideDiv = function(speed){
-                var elem = daGetField(jsInfo['vars'][i]);
+                var elem = daGetField(varToUse);
                 if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
                   return;
                 }
@@ -14963,8 +14983,8 @@ def observer():
               $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
               $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
               $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
-            }
-          }
+            });
+          });
         });
         $(".dashowif").each(function(){
           var showIfVars = [];
@@ -14972,8 +14992,22 @@ def observer():
           var showIfMode = parseInt($(this).data('showif-mode'));
           var initShowIfVar = $(this).data('showif-var');
           var varName = atou(initShowIfVar);
-          var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          var elem = $("[name='" + initShowIfVarEscaped + "']");
+          var elem = [];
+          if (varName.endsWith('[nota]') || varName.endsWith('[aota]')){
+            var signifier = varName.endsWith('[nota]') ? 'nota' : 'aota';
+            var cbVarName = varName.replace(/\[[na]ota\]$/, '');
+            $('fieldset.da-field-checkboxes').each(function(){
+              var thisVarName = atou($(this).data('varname'));
+              if (thisVarName == cbVarName){
+                elem = $(this).find('input.da' + signifier + '-checkbox');
+                initShowIfVar = $(elem).attr('name');
+              }
+            });
+          }
+          else {
+            var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
+            elem = $("[name='" + initShowIfVarEscaped + "']");
+          }
           if (elem.length > 0){
             showIfVars.push(initShowIfVar);
           }
@@ -14991,9 +15025,7 @@ def observer():
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
           var showIfDiv = this;
-          var n = showIfVars.length;
-          for (var i = 0; i < n; ++i){
-            var showIfVar = showIfVars[i];
+          showIfVars.forEach(function(showIfVar){
             var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
             var showHideDiv = function(speed){
               var elem = daGetField(varName, showIfDiv);
@@ -15046,13 +15078,16 @@ def observer():
                     $(showIfDiv).show(speed);
                   }
                   $(showIfDiv).data('isVisible', '1');
-                  $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                  $(showIfDiv).find('input.combobox').each(function(){
-                    daComboBoxes[$(this).attr('id')].enable();
-                  });
-                  $(showIfDiv).find('input.dafile').each(function(){
-                    $(this).data("fileinput").enable();
-                  });
+                  var firstChild = $(showIfDiv).children()[0];
+                  if (!$(firstChild).hasClass('dacollectextra') || $(firstChild).is(":visible")){
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].enable();
+                    });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").enable();
+                    });
+                  }
                 }
                 else{
                   if ($(showIfDiv).data('isVisible') != '0'){
@@ -15084,9 +15119,6 @@ def observer():
                   $(showIfDiv).find('input.combobox').each(function(){
                     daComboBoxes[$(this).attr('id')].disable();
                   });
-                  $(showIfDiv).find('input.dafile').each(function(){
-                    $(this).data("fileinput").disable();
-                  });
                 }
                 else{
                   if ($(showIfDiv).data('isVisible') != '1'){
@@ -15096,13 +15128,16 @@ def observer():
                     $(showIfDiv).show(speed);
                   }
                   $(showIfDiv).data('isVisible', '1');
-                  $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                  $(showIfDiv).find('input.combobox').each(function(){
-                    daComboBoxes[$(this).attr('id')].enable();
-                  });
-                  $(showIfDiv).find('input.dafile').each(function(){
-                    $(this).data("fileinput").enable();
-                  });
+                  var firstChild = $(showIfDiv).children()[0];
+                  if (!$(firstChild).hasClass('dacollectextra') || $(firstChild).is(":visible")){
+                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+                    $(showIfDiv).find('input.combobox').each(function(){
+                      daComboBoxes[$(this).attr('id')].enable();
+                    });
+                    $(showIfDiv).find('input.dafile').each(function(){
+                      $(this).data("fileinput").enable();
+                    });
+                  }
                 }
               }
               var daThis = this;
@@ -15132,7 +15167,7 @@ def observer():
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
             $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
             $("input.dafile[name='" + showIfVarEscaped + "']").on('filecleared', showHideDivFast);
-          }
+          });
         });
         function daTriggerAllShowHides(){
           var daUniqueTriggerQueries = daTriggerQueries.filter(daOnlyUnique);

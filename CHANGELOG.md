@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.4.72] - 2023-08-23
+
+### Changed
+- The pseudo-fields `favorite_fruit[nota]` and `favorite_fruit[aota]`
+  referring to the "None of the above" and "All of the above"
+  checkboxes in a `datatype: checkboxes` field can now be used in a
+  boolean `show if`.
+
 ## [1.4.71] - 2023-08-22
 
 ### Changed
