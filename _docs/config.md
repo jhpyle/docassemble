@@ -4791,7 +4791,7 @@ by removing the configuration entirely.
 
 For more information about how to obtain these keys, see the
 [installation] page's sections on [Facebook], [Twitter], [Google],
-[Auth0], and [Azure].
+[Auth0], [Keycloak], and [Azure].
 
 Note that in [YAML], dictionary keys must be unique.  So you can only
 have one `ouath:` line in your configuration.  Put all of your
@@ -6166,6 +6166,7 @@ and Facebook API keys.
 [Twitter]: {{ site.baseurl }}/docs/installation.html#twitter
 [Google]: {{ site.baseurl }}/docs/installation.html#google
 [Auth0]: {{ site.baseurl }}/docs/installation.html#auth0
+[Keycloak]: {{ site.baseurl }}/docs/installation.html#keycloak
 [Azure]: {{ site.baseurl }}/docs/installation.html#azure
 [invited by an administrator]: {{ site.baseurl }}/docs/users.html#invite
 [`root`]: #root

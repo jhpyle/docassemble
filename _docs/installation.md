@@ -814,6 +814,50 @@ interface.
   steps above.  Make sure that `enable` is not set to `False`.
 * Also, in your [configuration], set the [`url root`] directive.
 
+## <a name="keycloak"></a>Setting up Keycloak logins
+
+To enable users to log in using a [Keycloak] server, you need to
+obtain an `domain`, `realm`, `id`, and `secret` for use with the
+Keycloak [OAuth] interface. In this example, assume that users access
+your **docassemble** server at https://da.example.com and the Keycloak
+server is available at https://keycloak.example.com.
+
+* Log into the Keycloak server.
+* Note the name of the "Realm" you are using. (The default is
+  `master`.) This is the `realm` that you will use in your [`oauth`]
+  configuration.
+* Create a "client" called `docassemble` (or whatever you want). This
+  is the `id` that you will use in your [`oauth`] configuration.
+* Set "Root URL" to `https://da.example.com`.
+* Set "Home URL" to `https://da.example.com`.
+* Set "Valid redirect URIs" to
+  `https://da.example.com/callback/keycloak`.
+* Set "Valid post logout redirect URIs" to
+  `https://da.example.com/*`.
+* Set "Web origins" to `https://da.example.com`.
+* Set "Admin URL" to `https://da.example.com`.
+* Under "Capability config," set "Client authentication" to "On."
+* Under "Credentials," use "Client Id and Secret" as the "Client
+  Authenticator." Make a note of the "Client secret"; this is the
+  `secret` that you will use in your [`oauth`] configuration.
+* Log into your **docassemble** server as an administrator and go to
+  the [configuration].
+* Add a `keycloak` configuration under the `oauth` directive, filling
+  in the information about the Keycloak server.
+
+{% highlight yaml %}
+oauth:
+  keycloak:
+    domain: keycloak.example.com
+    realm: master
+    id: docassemble
+    secret: ifRzXtUv7WlSkWjRbHwgvgk0aACoXTcF
+{% endhighlight %}
+
+* Note that the `domain` is the hostname of the Keycloak server,
+without `https://`. If your Keycloak server uses `http://` rather than
+`https://`, set `protocol` to `http://`.
+
 ## <a name="azure"></a>Setting up Microsoft Azure logins
 
 To enable users to log in with their Microsoft accounts, you need to
@@ -1709,3 +1753,4 @@ All of these system administration headaches can be avoided by
 [Mailgun API]: {{ site.baseurl }}/docs/config.html#mailgun api
 [SendGrid API]: https://sendgrid.com/solutions/email-api/
 [Telnyx]: https://telnyx.com/
+[Keycloak]: https://www.keycloak.org/
