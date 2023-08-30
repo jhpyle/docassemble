@@ -1840,7 +1840,7 @@ When you use the `show if` and `hide if` field modifiers to refer to
 fields that are on the screen, you are able to test whether the fields
 are true, or have particular values, but you cannot do anything more
 complex, such as test whether the value is one of two values, or
-the values of two fields.
+the values of two fields. It is not possible to use `show if:` with wither `hide: if` or `disable if:` on a single field. If you do, the field will be shown regardless of the value of the veriable referred to.
 
 The `js show if` and `js hide if` features allow you to use any
 arbitrary [JavaScript] expression to determine whether a field should
