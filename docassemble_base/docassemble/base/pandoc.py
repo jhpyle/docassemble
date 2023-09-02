@@ -30,6 +30,22 @@ def copy_if_different(source, destination):
         shutil.copyfile(source, destination)
 
 
+def gotenberg_to_pdf(from_file, to_file, pdfa, password):
+    if pdfa:
+        data = {'nativePdfFormat': 'PDF/A-1a'}
+    else:
+        data = {}
+    r = requests.post(daconfig['gotenberg url'] + '/forms/libreoffice/convert', data=data, files={'files': open(from_file, 'rb')}, timeout=6000)
+    if r.status_code != 200:
+        logmessage("call to " + daconfig['gotenberg url'] + " returned status code " + str(r.status_code))
+        logmessage(r.text)
+        raise DAException("Call to gotenberg did not succeed")
+    with open(to_file, 'wb') as fp:
+        fp.write(r.content)
+    if password:
+        pdf_encrypt(to_file, password)
+
+
 def cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password):
     headers = {"Authorization": "Bearer " + daconfig.get('cloudconvert secret').strip()}
     data = {
@@ -348,7 +364,18 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
         completed_process = None
         use_libreoffice = True
         if update_refs:
-            if daconfig.get('convertapi secret', None) is not None:
+            if daconfig.get('gotenberg url', None) is not None:
+                update_references(from_file)
+                try:
+                    gotenberg_to_pdf(from_file, to_file, pdfa, password)
+                    result = 0
+                except Exception as err:
+                    logmessage("Call to gotenberg failed")
+                    logmessage(err.__class__.__name__ + ": " + str(err))
+                    result = 1
+                use_libreoffice = False
+                password = False
+            elif daconfig.get('convertapi secret', None) is not None:
                 update_references(from_file)
                 try:
                     convertapi_to_pdf(from_file, to_file)
@@ -358,6 +385,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                     result = 1
                 use_libreoffice = False
             elif daconfig.get('cloudconvert secret', None) is not None:
+                update_references(from_file)
                 try:
                     cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password)
                     result = 0
@@ -372,6 +400,16 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                     subprocess_arguments = [UNOCONV_PATH, '-f', 'pdf'] + UNOCONV_FILTERS[method] + ['-e', 'PDFViewSelection=2', '-o', to_file, from_file]
                 else:
                     subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',True,' + method + ')']
+        elif daconfig.get('gotenberg url', None) is not None:
+            try:
+                gotenberg_to_pdf(from_file, to_file, pdfa, password)
+                result = 0
+            except Exception as err:
+                logmessage("Call to gotenberg failed")
+                logmessage(err.__class__.__name__ + ": " + str(err))
+                result = 1
+            use_libreoffice = False
+            password = False
         elif daconfig.get('convertapi secret', None) is not None:
             try:
                 convertapi_to_pdf(from_file, to_file)
@@ -454,6 +492,8 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                     logmessage(f"Didn't get file ({error_msg}), Retrying unoconv with " + repr(subprocess_arguments))
                 else:
                     logmessage(f"Didn't get file ({error_msg}), Retrying libreoffice with " + repr(subprocess_arguments))
+            elif daconfig.get('gotenberg url', None) is not None:
+                logmessage("Retrying gotenberg")
             elif daconfig.get('convertapi secret', None) is not None:
                 logmessage("Retrying convertapi")
             else:

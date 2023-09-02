@@ -494,6 +494,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DADEBUG}}/'"${DADEBUG:-true}"'/g' \
         -e 's/{{DASUPERVISORUSERNAME}}/'"${DASUPERVISORUSERNAME:-null}"'/g' \
         -e 's/{{DASUPERVISORPASSWORD}}/'"${DASUPERVISORPASSWORD:-null}"'/g' \
+        -e 's#{{GOTENBERGURL}}#'"${GOTENBERGURL:-null}"'#g' \
         "$DA_CONFIG_FILE_DIST" > "$DA_CONFIG_FILE" || exit 1
 fi
 if [ "${DAROOTOWNED:-false}" == "false" ] && [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then

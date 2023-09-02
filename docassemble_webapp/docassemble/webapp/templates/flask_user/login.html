@@ -40,7 +40,7 @@
               </div>
               <div class="row">
                 <div class="col">
-                  {{ field(class_='form-control', type='email') }}
+                  {{ field(class_='form-control', type='email', autocomplete='off') }}
                 </div>
               </div>
               {%- if field.errors %}
@@ -67,7 +67,7 @@
               </div>
               <div class="row">
                 <div class="col">
-                  {{ field(class_='form-control') }}
+                  {{ field(class_='form-control', autocomplete='off') }}
                 </div>
               </div>
               {%- if field.errors %}

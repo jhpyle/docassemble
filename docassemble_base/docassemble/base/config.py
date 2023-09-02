@@ -1054,6 +1054,10 @@ def load(**kwargs):
             override_config(daconfig, messages, 'root owned', 'DAROOTOWNED')
         if env_exists('DAREADONLYFILESYSTEM'):
             override_config(daconfig, messages, 'read only file system', 'DAREADONLYFILESYSTEM')
+        if env_exists('ENABLEUNOCONV'):
+            override_config(daconfig, messages, 'enable unoconv', 'ENABLEUNOCONV')
+        if env_exists('GOTENBERGURL'):
+            override_config(daconfig, messages, 'gotenberg url', 'GOTENBERGURL')
         env_messages = messages
 
 
