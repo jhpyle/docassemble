@@ -1099,7 +1099,7 @@ class InterviewStatus:
             }
         validation_rules_used = set()
         file_fields = []
-        for field in self.question.get_fields_and_sub_fields(the_user_dict):
+        for field in self.get_field_list():
             the_field = {}
             the_field['number'] = field.number
             if hasattr(field, 'saveas'):

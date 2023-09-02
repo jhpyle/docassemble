@@ -4948,6 +4948,11 @@ class DAFileList(DAList):
 
     """
 
+    def init(self, *pargs, **kwargs):
+        if 'complete_attribute' not in kwargs:
+            kwargs['complete_attribute'] = 'initialized'
+        super().init(*pargs, **kwargs)
+
     def __str__(self):
         return str(self.show())
 

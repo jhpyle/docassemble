@@ -134,7 +134,7 @@ def start_interview(context, interview_name):
     context.interview_name = interview_name
     context.browser.get(context.da_path + "/interview?i=" + interview_name + '&reset=2')
     context.browser.wait_for_it()
-    elems = context.browser.find_elements(By.XPATH, '//h1[text()="Error"]')
+    elems = context.browser.find_elements(By.XPATH, '//title[text()="Error"]')
     assert len(elems) == 0
 
 
@@ -320,6 +320,13 @@ def see_phrase(context, phrase):
     take_screenshot(context)
     assert not context.browser.text_present('Show variables and values')
     assert context.browser.text_present(phrase)
+    if context.check_json:
+        context.browser.execute_script("window.open('');")
+        context.browser.switch_to.window(context.browser.window_handles[1])
+        context.browser.get(context.da_path + "/interview?i=" + context.interview_name + '&json=1')
+        assert "<!DOCTYPE html>" not in context.browser.page_source
+        context.browser.close()
+        context.browser.switch_to.window(context.browser.window_handles[0])
 
 
 @step(r'I should explicitly see the phrase "(?P<phrase>[^"]+)"')
@@ -657,6 +664,12 @@ def accept_alert(context):
 @step(r'I switch to the new tab')
 def switch_tab(context):
     context.browser.switch_to.window(context.browser.window_handles[-1])
+
+
+@step(r'I close the tab')
+def close_tab(context):
+    context.browser.close()
+    context.browser.switch_to.window(context.browser.window_handles[0])
 
 
 @step(r'I scroll to the bottom')

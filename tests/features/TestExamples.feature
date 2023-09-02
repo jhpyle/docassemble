@@ -7471,7 +7471,7 @@ Feature: Example interviews
     Then I should see the phrase "Sorry, we have encountered an error."
 
   Scenario: Test the interview "Error help" 1
-    Given I start the interview "docassemble.base:data/questions/examples/error-help-language.yml"
+    Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/error-help-language.yml"
     Then I should explicitly see the phrase "We are sorry. An error has occurred."
 
   Scenario: Test the interview "Object radio buttons" 1
@@ -9132,8 +9132,9 @@ Feature: Example interviews
     Then I should see the phrase "number_of_fruit in the other session is now 2."
     And I click the link "Visit other session"
     And I switch to the new tab
-    Then I should see the phrase "There are 2 fruit."
-    And I should see the phrase "Your favorite fruit is apple."
+    Then I should explicitly see the phrase "There are 2 fruit."
+    And I should explicitly see the phrase "Your favorite fruit is apple."
+    And I close the tab
 
   Scenario: Test the interview "Ajax Combobox"
     Given I start the interview "docassemble.base:data/questions/examples/fields-ajax-2.yml"

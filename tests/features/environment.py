@@ -12,6 +12,7 @@ default_path = "http://localhost"
 default_wait_seconds = 0
 use_firefox = False
 use_headless_chrome = True
+check_json = False
 
 
 class MyFirefox(webdriver.Firefox):
@@ -75,7 +76,7 @@ def before_all(context):
         context.browser = MyChrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     context.da_path = default_path
     context.wait_seconds = default_wait_seconds
-
+    context.check_json = check_json
 
 def after_all(context):
     time.sleep(2)
