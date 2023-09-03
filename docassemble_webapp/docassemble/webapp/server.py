@@ -1278,6 +1278,9 @@ def add_log_handler():
             time.sleep(1)
             continue
         sys_logger.addHandler(docassemble_log_handler)
+        if os.environ.get('SUPERVISORLOGLEVEL', 'info') == 'debug':
+            stderr_log_handler = logging.StreamHandler(stream=sys.stderr)
+            sys_logger.addHandler(stderr_log_handler)
         break
 
 add_log_handler()

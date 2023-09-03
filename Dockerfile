@@ -129,6 +129,7 @@ ENV \
 CONTAINERROLE="all" \
 LOCALE="en_US.UTF-8 UTF-8" \
 TIMEZONE="America/New_York" \
+SUPERVISORLOGLEVEL="info" \
 EC2="" \
 S3ENABLE="" \
 S3BUCKET="" \

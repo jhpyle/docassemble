@@ -1,10 +1,14 @@
 # Change Log
 
-## [1.4.73] - 2023-09-02
+## [1.4.73] - 2023-09-04
 
 ### Added
 - The `gotenberg url` Configuration directive, which allows for the
-  use of an external Gotenberg server for DOCX to PDF conversion.
+  use of an external Gotenberg server for DOCX to PDF
+  conversion.
+- The Docker environment variable `SUPERVISORLOGLEVEL`, which can be
+  set to `debug` so that application log messages can be viewed with
+  `docker logs` (system upgrade required).
 
 ### Changed
 - Additional fonts are installed in the operating system to support
