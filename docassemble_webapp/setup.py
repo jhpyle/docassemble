@@ -262,7 +262,7 @@ install_requires = [
     "urllib3==1.26.16",
     "us==3.1.1",
     "user-agents==2.2.0",
-    "uWSGI==2.0.22",
+    "uWSGI==2.0.21",
     "vine==5.0.0",
     "wcwidth==0.2.6",
     "webdriver-manager==4.0.0",
