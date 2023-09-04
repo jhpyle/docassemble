@@ -1112,6 +1112,20 @@ your container for the new configuration to take effect.
 * <a name="PIPEXTRAINDEXURLS"></a>`PIPEXTRAINDEXURLS`: This controls
   the extra package index sites that `pip` uses. See the [`pip extra
   index urls`] configuration directive.
+* <a name="ENABLEUNOCONV"></a>`ENABLEUNOCONV`: This controls whether
+  [unoconv] is used for DOCX to PDF conversion. It can be set to
+  `true` or `false`. See the [`enable unoconv`] configuration
+  directive.
+* <a name="GOTENBERGURL"></a>`GOTENBERGURL`: This can be set to the
+  URL of your [Gotenberg] server, if you have one. See the [`gotenberg
+  url`] configuration directive.
+* <a name="SUPERVISORLOGLEVEL"></a>`SUPERVISORLOGLEVEL`: This can be
+  set to `debug` if you would like log messages to print to the output
+  of `supervisord`, which is the output of the container itself. This
+  allows you to view log messages using `docker logs`. The default
+  value is `info`, which means that the output of `supervisord` is
+  limited to messages about the starting and stopping of services and
+  processes.
 * <a
   name="ENVIRONMENT_TAKES_PRECEDENCE"></a>`ENVIRONMENT_TAKES_PRECEDENCE`:
   It was noted above that once the [configuration] file is located in
@@ -3307,3 +3321,5 @@ references a different base image.
 [Apache]: https://httpd.apache.org/
 [tz database]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [locale values]: {{ site.baseurl }}/img/locales.txt
+[`enable unoconv`]: {{ site.baseurl }}/docs/config.html#enable unoconv
+[Gotenberg]: https://gotenberg.dev/

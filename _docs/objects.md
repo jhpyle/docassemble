@@ -2081,6 +2081,9 @@ defined as a `DAFileList` object containing the file or files
 uploaded.  These variables can be used in much the same way that
 [`DAFile`] variables can be used.
 
+By default, the `complete_attribute` of a `DAFileList` is
+`initialized`, and the `object_type` is `DAFile`.
+
 <a name="DAFileList.show"></a>The `.show()` method inserts markup that
 displays each file as an image.  This method takes an optional keyword
 argument, `width`.
