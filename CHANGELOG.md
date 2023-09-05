@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.74] - 2023-09-05
+
+### Fixed
+- Bug with `datatype: object`.
+
 ## [1.4.73] - 2023-09-04
 
 ### Added

@@ -7592,7 +7592,7 @@ def index(action_argument=None, refer=None):
             elif known_datatypes[orig_key] in ('object', 'object_radio'):
                 if raw_data == '' or set_to_empty:
                     continue
-                if data == 'None':
+                if raw_data == 'None':
                     data = 'None'
                 else:
                     data = "_internal['objselections'][" + repr(key) + "][" + repr(raw_data) + "]"
