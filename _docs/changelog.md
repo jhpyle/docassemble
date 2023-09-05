@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.74](https://github.com/jhpyle/docassemble/releases/tag/v1.4.74) - 2023-09-05
+
+
+### Fixed
+- Bug with `datatype: object`.
+
 ## [1.4.73](https://github.com/jhpyle/docassemble/releases/tag/v1.4.73) - 2023-09-04
 
 
