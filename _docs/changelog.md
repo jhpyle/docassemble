@@ -3,6 +3,10 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.75](https://github.com/jhpyle/docassemble/releases/tag/v1.4.75) - 2023-09-05
+
+- No changes, version advanced by accident. 
+
 ## [1.4.74](https://github.com/jhpyle/docassemble/releases/tag/v1.4.74) - 2023-09-05
 
 
