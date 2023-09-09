@@ -1190,7 +1190,7 @@ def file_user_access(file_number, allow_user_id=None, allow_email=None, disallow
         db.session.execute(delete(UploadsUserAuth).filter_by(uploads_indexno=file_number))
     if not (allow_user_id or allow_email or disallow_user_id or disallow_email or disallow_all):
         result = {'user_ids': [], 'emails': [], 'temp_user_ids': []}
-        for auth in db.session.execute(select(UploadsUserAuth.user_id, UploadsUserAuth.temp_user_id, UserModel.email).outerjoin(UserModel, UploadsUserAuth.user_id == UserModel.id).where(UploadsUserAuth.uploads_indexno == file_number)).scalars().all():
+        for auth in db.session.execute(select(UploadsUserAuth.user_id, UploadsUserAuth.temp_user_id, UserModel.email).outerjoin(UserModel, UploadsUserAuth.user_id == UserModel.id).where(UploadsUserAuth.uploads_indexno == file_number)).all():
             if auth.user_id is not None:
                 result['user_ids'].append(auth.user_id)
             if auth.temp_user_id is not None:
@@ -1228,7 +1228,7 @@ def file_privilege_access(file_number, allow=None, disallow=None, disallow_all=F
         db.session.execute(delete(UploadsRoleAuth).filter_by(uploads_indexno=file_number))
     if not (allow or disallow or disallow_all):
         result = []
-        for auth in db.session.execute(select(UploadsRoleAuth.id, Role.name).join(Role, UploadsRoleAuth.role_id == Role.id).where(UploadsRoleAuth.uploads_indexno == file_number)).scalars():
+        for auth in db.session.execute(select(UploadsRoleAuth.id, Role.name).join(Role, UploadsRoleAuth.role_id == Role.id).where(UploadsRoleAuth.uploads_indexno == file_number)).all():
             result.append(auth.name)
         return result
     return None
