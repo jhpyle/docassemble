@@ -1,0 +1,28 @@
+metadata:
+  title: Fields in a grid
+  short title: Grid
+  documentation: "https://docassemble.org/docs/fields.html#grid"
+  example start: 1
+  example end: 2
+---
+features:
+  labels above fields: True
+---
+question: |
+  Tell me about yourself.
+fields:
+  - Name: user_name
+    grid: 7
+  - Age: user_age
+    datatype: integer
+    min: 0
+    grid: 5
+  - Life story: user_life_story
+    input type: area
+---
+mandatory: True
+question: Greetings, ${ user_name }!
+subquestion: |
+  % if user_age >= 30:
+  OMG you are old.
+  % endif

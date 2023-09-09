@@ -1,0 +1,58 @@
+metadata:
+  title: Fields in a grid
+  short title: Grid
+  documentation: "https://docassemble.org/docs/fields.html#grid"
+  example start: 1
+  example end: 2
+---
+features:
+  labels above fields: True
+---
+question: |
+  Lets pick some numbers.
+fields:
+  - "Are you afraid of odd numbers?": no_odd
+    datatype: yesnoradio
+  - "1": number_one
+    datatype: yesno
+    grid: 2
+    hide if: no_odd
+  - "2": number_two
+    datatype: yesnowide
+    grid: 2
+  - "3": number_three
+    datatype: yesnowide
+    grid: 2
+    hide if: no_odd
+  - "4": number_four
+    datatype: yesnowide
+    grid: 2
+  - "5": number_five
+    datatype: yesnowide
+    grid: 2
+    hide if: no_odd
+  - "6": number_six
+    datatype: yesnowide
+    grid: 2
+  - "7": number_seven
+    datatype: yesnowide
+    grid: 2
+    hide if: no_odd
+  - "8": number_eight
+    datatype: yesnowide
+    grid: 2
+  - "9": number_nine
+    datatype: yesnowide
+    grid: 2
+    hide if: no_odd
+  - "10": number_ten
+    datatype: yesnowide
+    grid: 2
+---
+mandatory: True
+question: |
+  % if no_odd:
+  I agree, odd numbers are scary.
+  % else:
+  Who thinks odd numbers are scary?
+  % endif

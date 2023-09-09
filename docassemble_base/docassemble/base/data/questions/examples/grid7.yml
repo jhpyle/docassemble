@@ -1,0 +1,37 @@
+metadata:
+  title: Fields in a grid
+  short title: Grid
+  documentation: "https://docassemble.org/docs/fields.html#grid"
+  example start: 2
+  example end: 3
+---
+objects:
+  - address: Address
+---
+features:
+  labels above fields: True
+---
+question: |
+  Tell me your address.
+fields:
+  - Address: address.address
+  - City: address.city
+    grid:
+      width: 6
+      breakpoint: sm
+  - State: address.state
+    code: states_list(abbreviate=True)
+    grid:
+      width: 3
+      breakpoint: sm
+    hint: ""
+  - Zip: address.zip
+    grid:
+      width: 3
+      breakpoint: sm
+---
+mandatory: True
+question: |
+  Your address
+subquestion: |
+  ${ address.block() }

@@ -1,0 +1,52 @@
+metadata:
+  title: Review answers in tabular form
+  short title: Tabular
+  example start: 1
+  example end: 1
+  documentation: "https://docassemble.org/docs/fields.html#review customization"
+---
+event: review_answers
+question: |
+  Revisit your answers
+review:
+  - Revisit fruit: fruit
+    button: |
+      You said your favorite fruit was
+      ${ fruit }.
+  - Revisit vegetable: vegetable
+    button: |
+      You said your favorite vegetable
+      was ${ vegetable }.
+  - Revisit fungus: fungi
+    button: |
+      You said your favorite fungus
+      was ${ fungi }.
+tabular: table table-striped
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - no label: fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - no label: vegetable
+---
+question: |
+  What is your favorite fungi?
+fields:
+  - no label: fungi
+---
+event: final_screen
+question: All done
+subquestion: |
+  You like ${ fruit }, ${ vegetable }, and ${ fungi }.
+---
+mandatory: True
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+---
+mandatory: True
+code: |
+  need(final_screen)

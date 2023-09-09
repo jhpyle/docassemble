@@ -196,6 +196,23 @@ i.da-chat-inactive:hover {
     left: -0.2rem;
 }
 
+.da-form-group.darequired .dagridwide:before {
+    position: absolute;
+    content: '*';
+    color: red;
+    top: 0rem;
+    left: -0.2rem;
+}
+
+.da-grid-container.da-form-group-floating label {
+    margin-left: calc(var(--bs-gutter-x) * .5);
+    margin-right: calc(var(--bs-gutter-x) * .5);
+}
+
+.da-grid-container {
+    position: relative;
+}
+
 .da-form-group.darequired .danolabel {
     position: relative;
 }
@@ -237,6 +254,9 @@ i.da-chat-inactive:hover {
     }
     .da-form-group.darequired .da-form-label:after {
 	bottom: 0.7rem;
+    }
+    .da-grid-container.dayesnospacing + .da-grid-container.dayesnospacing {
+	margin-top: -1.0rem;
     }
 }
 @media (min-width: 768px) {
@@ -576,6 +596,10 @@ a.da-review-action {
 a.da-review-action-button {
     /* font-size: 14px; */
     float: right;
+}
+
+table.da-review-tabular > tbody > tr > td {
+    vertical-align: top;
 }
 
 a.da-example-share {
@@ -1270,7 +1294,7 @@ div.danavbar {
     color: #9d9d9d !important;
 }
 
-.dayesnospacing + .dayesnospacing {
+.da-container.dayesnospacing + .da-container.dayesnospacing {
     margin-top: -1.0rem;
 }
 
@@ -1836,4 +1860,8 @@ a.dadisabled {
     .da-d-sm-none {
 	display: none !important;
     }
+}
+
+div.da-field-container-datatype-range label.da-top-label {
+    margin-bottom: 1.5rem;
 }

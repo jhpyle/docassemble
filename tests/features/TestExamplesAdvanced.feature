@@ -311,4 +311,4 @@ Feature: Example interviews
     Then I should see the phrase "Revise the English translation."
     And I click the button "Continue"
     Then I should see the phrase "Translated text"
-    And I should see the phrase "My office is opposite the Netherlands."
+    And I should see the phrase "My office is on the opposite side of the Netherlands."

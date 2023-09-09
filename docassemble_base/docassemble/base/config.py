@@ -357,8 +357,26 @@ def load(**kwargs):
         daconfig['grid classes']['admin'] = 'col-md-7 col-lg-6'
     if not daconfig['grid classes'].get('label width', None):
         daconfig['grid classes']['label width'] = 'md-4'
+    daconfig['grid classes']['label grid breakpoint'] = re.sub(r'-.*', '', daconfig['grid classes']['label width'])
+    daconfig['grid classes']['label grid number'] = re.sub(r'[^0-9]', '', daconfig['grid classes']['label width'])
+    try:
+        daconfig['grid classes']['label grid number'] = int(daconfig['grid classes']['label grid number'])
+        assert daconfig['grid classes']['label grid number'] >= 1
+        assert daconfig['grid classes']['label grid number'] <= 12
+    except:
+        daconfig['grid classes']['label grid number'] = 4
     if not daconfig['grid classes'].get('field width', None):
         daconfig['grid classes']['field width'] = 'md-8'
+    daconfig['grid classes']['field grid breakpoint'] = re.sub(r'-.*', '', daconfig['grid classes']['field width'])
+    daconfig['grid classes']['field grid number'] = re.sub(r'[^0-9]', '', daconfig['grid classes']['field width'])
+    try:
+        daconfig['grid classes']['field grid number'] = int(daconfig['grid classes']['field grid number'])
+        assert daconfig['grid classes']['field grid number'] >= 1
+        assert daconfig['grid classes']['field grid number'] <= 12
+    except:
+        daconfig['grid classes']['field grid number'] = 8
+    if not daconfig['grid classes'].get('grid breakpoint', None):
+        daconfig['grid classes']['grid breakpoint'] = 'md'
     if not daconfig['grid classes']['vertical navigation'].get('bar', None):
         daconfig['grid classes']['vertical navigation']['bar'] = 'offset-xl-1 col-xl-2 col-lg-3 col-md-3'
     if not daconfig['grid classes']['vertical navigation'].get('body', None):

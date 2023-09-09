@@ -1,0 +1,20 @@
+metadata:
+  title: Fields in a grid
+  short title: Grid
+  documentation: "https://docassemble.org/docs/fields.html#grid"
+  example start: 1
+  example end: 1
+---
+question: |
+  Tell me about your numerical tastes.
+fields:
+  - Best number: favorite_number
+    datatype: integer
+    grid: 2
+  - Worst number: least_favorite_number
+    datatype: integer
+    grid: 2
+---
+mandatory: True
+question: |
+  I am also a fan of ${ favorite_number }.

@@ -322,7 +322,7 @@ class InterviewSourceFile(InterviewSource):
                             logmessage("path was not a file")
                     else:
                         logmessage("path did not exist")
-                    raise DAError("Reference to invalid playground path.")
+                    raise DANotFoundError("Reference to invalid playground path.")
             else:
                 self.set_filepath(kwargs['filepath'])
         else:
@@ -1231,7 +1231,7 @@ class InterviewStatus:
                 the_field['uncheck_others'] = True
             elif hasattr(field, 'checkothers') and field.checkothers is not False:
                 the_field['check_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata', 'css class', 'address_autocomplete', 'label_above_field', 'floating_label'):
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata', 'css class', 'address_autocomplete', 'label_above_field', 'floating_label', 'grid'):
                 if key in self.extras and field.number in self.extras[key]:
                     if key in ('minlength', 'maxlength', 'min', 'max', 'step'):
                         validation_rules_used.add(key)
@@ -1644,6 +1644,8 @@ class Field:
             self.address_autocomplete = data['address_autocomplete']
         if 'label_above_field' in data:
             self.label_above_field = data['label_above_field']
+        if 'grid' in data:
+            self.grid = data['grid']
         if 'floating_label' in data:
             self.floating_label = data['floating_label']
         if 'max_image_size' in data:
@@ -1995,7 +1997,7 @@ def evaluate_image_in_item(data, user_dict):
 def process_js_vars(expr):
     output = set()
     for item in expr:
-        m = re.search('^(.*)\[[an]ota\]$', item)
+        m = re.search('^(.*)\[[an]ota\]$', item)  # noqa: W605
         if m:
             output.add(m.group(1))
         else:
@@ -2072,6 +2074,7 @@ class Question:
         self.undefine = []
         self.action_buttons = []
         self.validation_code = None
+        self.tabular = None
         num_directives = 0
         for directive in ('yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'fields', 'buttons', 'choices', 'dropdown', 'combobox', 'signature', 'review'):
             if directive in data:
@@ -2082,7 +2085,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb', 'tabular'):
                     logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -4195,6 +4198,37 @@ class Question:
                             self.find_fields_in(field[key])
                         else:
                             field_info['label_above_field'] = bool(field[key])
+                    elif key == 'grid':
+                        field_info[key] = {}
+                        if isinstance(field[key], (str, int)):
+                            field[key] = {'width': field[key]}
+                        if not isinstance(field[key], dict) or len(field[key]) == 0:
+                            raise DAError(key + " is not in the correct format." + self.idebug(data))
+                        for item in field[key].keys():
+                            if item not in ('width', 'label width', 'start', 'end', 'breakpoint'):
+                                raise DAError(key + " has an invalid key " + repr(item) + "." + self.idebug(data))
+                        if 'width' not in field[key]:
+                            raise DAError(key + ' must specify a width.' + self.idebug(data))
+                        for subkey in ('width', 'label width'):
+                            if subkey in field[key]:
+                                if isinstance(field[key][subkey], str):
+                                    field_info[key][subkey] = compile(field[key][subkey], '<' + key + ' ' + subkey + ' expression>', 'eval')
+                                    self.find_fields_in(field[key][subkey])
+                                elif isinstance(field[key][subkey], int):
+                                    field_info[key][subkey] = field[key][subkey]
+                                else:
+                                    raise DAError(key + " " + subkey + " must be a number between 1 and 12, or a Python expression." + self.idebug(data))
+                        for subkey in ('start', 'end'):
+                            if subkey in field[key]:
+                                if isinstance(field[key][subkey], str):
+                                    field_info[key][subkey] = compile(field[key][subkey], '<' + key + ' ' + subkey + ' expression>', 'eval')
+                                    self.find_fields_in(field[key][subkey])
+                                elif isinstance(field[key][subkey], (bool, NoneType)):
+                                    field_info[key][subkey] = field[key][subkey]
+                                else:
+                                    raise DAError(key + " " + subkey + " must be True or False, or a Python expression." + self.idebug(data))
+                        if 'breakpoint' in field[key]:
+                            field_info[key]['breakpoint'] = TextObject(definitions + str(field[key]['breakpoint']), question=self)
                     elif key == 'floating label':
                         if isinstance(field[key], str):
                             field_info['floating_label'] = compile(field[key], '<floating label expression>', 'eval')
@@ -4410,6 +4444,12 @@ class Question:
             self.question_type = 'review'
             if self.is_mandatory and 'continue button field' not in data:
                 raise DAError("A review block without a continue button field cannot be mandatory." + self.idebug(data))
+            if 'tabular' in data and data['tabular']:
+                if isinstance(data['tabular'], str):
+                    tabular_class = data['tabular']
+                else:
+                    tabular_class = 'table table-borderless'
+                self.tabular = TextObject(definitions + tabular_class, question=self)
             if isinstance(data['review'], dict):
                 data['review'] = [data['review']]
             if not isinstance(data['review'], list):
@@ -5322,6 +5362,10 @@ class Question:
             if key not in the_default_titles:
                 the_default_titles[key] = val
         extras = {}
+        if self.tabular is not None:
+            extras['tabular'] = self.tabular.text(user_dict).strip()
+        else:
+            extras['tabular'] = False
         if len(self.action_buttons) > 0:
             extras['action_buttons'] = []
             for item in self.action_buttons:
@@ -6250,6 +6294,25 @@ class Question:
                             extras['label_above_field'][field.number] = field.label_above_field
                         else:
                             extras['label_above_field'][field.number] = eval(field.label_above_field, user_dict)
+                    if hasattr(field, 'grid'):
+                        if 'grid' not in extras:
+                            extras['grid'] = {}
+                        extras['grid'][field.number] = {}
+                        for subkey, subkeyval in field.grid.items():
+                            if isinstance(subkeyval, (int, bool, NoneType)):
+                                extras['grid'][field.number][subkey] = subkeyval
+                            elif subkey == 'breakpoint':
+                                extras['grid'][field.number][subkey] = subkeyval.text(user_dict).strip()
+                            else:
+                                extras['grid'][field.number][subkey] = eval(subkeyval, user_dict)
+                            if subkey in ('width', 'label width') and isinstance(extras['grid'][field.number][subkey], float):
+                                extras['grid'][field.number][subkey] = int(extras['grid'][field.number][subkey])
+                            if subkey in ('start', 'end') and not isinstance(extras['grid'][field.number][subkey], bool):
+                                extras['grid'][field.number][subkey] = bool(extras['grid'][field.number][subkey])
+                            if subkey in ('width', 'label width') and (not isinstance(extras['grid'][field.number][subkey], int) or extras['grid'][field.number][subkey] < 1 or extras['grid'][field.number][subkey] > 12):
+                                raise DAError("Invalid grid " + subkey +  " value. It must be an integer between 1 and 12.")
+                            if subkey == 'breakpoint' and extras['grid'][field.number][subkey] not in ('xs', 'sm', 'md', 'lg', 'xl', 'xxl'):
+                                raise DAError("Invalid grid " + subkey +  " value. It must be one of xs, sm, md, lg, xl, or xxl.")
                     if hasattr(field, 'floating_label'):
                         if 'floating_label' not in extras:
                             extras['floating_label'] = {}
@@ -8477,7 +8540,7 @@ class Interview:
                             docassemble.base.functions.this_thread.current_info.update({'action': exception_name, 'arguments': the_exception.arguments})
                         missingVariable = exception_name
                     else:
-                        if type(the_exception) is NameError:
+                        if type(the_exception) is NameError:  # pylint: disable=unidiomatic-typecheck
                             cl, exc, tb = sys.exc_info()
                             errinfo = traceback.extract_tb(tb)[-1]
                             if errinfo.filename[0] == '/':
@@ -9300,7 +9363,7 @@ class Interview:
                     docassemble.base.functions.this_thread.misc['forgive_missing_question'] = [exception_name]
                 else:
                     # logmessage("regular nameerror")
-                    if type(the_exception) is NameError:
+                    if type(the_exception) is NameError:  # pylint: disable=unidiomatic-typecheck
                         cl, exc, tb = sys.exc_info()
                         errinfo = traceback.extract_tb(tb)[-1]
                         if errinfo.filename[0] == '/':

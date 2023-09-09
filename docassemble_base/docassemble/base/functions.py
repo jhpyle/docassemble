@@ -121,6 +121,26 @@ class ReturnValue:
         return str(self.value)
 
 
+def filename_invalid(filename):
+    if '../' in filename:
+        return True
+    if re.search(r'[^A-Za-z0-9\_\.\-\/ ]', filename):
+        return True
+    if len(filename) > 268:
+        return True
+    return False
+
+
+def package_name_invalid(packagename):
+    if re.search(r'[^A-Za-z0-9\_\.\-]', packagename):
+        return True
+    if len(packagename) > 268:
+        return True
+    if not packagename.startswith('docassemble.'):
+        return True
+    return False
+
+
 def get_current_variable():
     # logmessage("get_current_variable")
     if len(this_thread.current_variable) > 0:
@@ -665,7 +685,7 @@ def countries_list():
     return [{item[0]: item[1]} for item in sorted([[country.alpha_2, word(country.name)] for country in pycountry.countries], key=lambda x: x[1])]
 
 
-def states_list(country_code=None):
+def states_list(country_code=None, abbreviate=False):
     """Returns a list of U.S. states or subdivisions of another country,
     suitable for use in a multiple choice field."""
     ensure_definition(country_code)
@@ -680,7 +700,10 @@ def states_list(country_code=None):
             continue
         m = re.search(r'-([A-Z0-9]+)$', subdivision.code)
         if m:
-            mapping[m.group(1)] = word(subdivision.name)
+            if abbreviate:
+                mapping[m.group(1)] = m.group(1)
+            else:
+                mapping[m.group(1)] = word(subdivision.name)
     return dict(sorted(mapping.items(), key=lambda item: item[1]))
 
 
@@ -3732,6 +3755,8 @@ def qr_code(string, width=None, alt_text=None):
 
 
 def standard_template_filename(the_file):
+    if filename_invalid(the_file):
+        return None
     try:
         path = Path(importlib.resources.files('docassemble.base'), 'data', 'templates', str(the_file))
     except:
@@ -3759,6 +3784,8 @@ def package_template_filename(the_file, **kwargs):
             return abs_file.path
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
+        if filename_invalid(parts[1]) or package_name_invalid(parts[0]):
+            return None
         try:
             path = Path(importlib.resources.files(parts[0]), parts[1])
         except:
@@ -3769,6 +3796,8 @@ def package_template_filename(the_file, **kwargs):
 
 
 def standard_question_filename(the_file):
+    if filename_invalid(the_file):
+        return None
     try:
         return str(Path(importlib.resources.files('docassemble.base'), 'data', 'questions', str(the_file)))
     except:
@@ -3787,6 +3816,8 @@ def package_data_filename(the_file):
         parts = [this_thread.current_package, the_file]
     #    parts = ['docassemble.base', the_file]
     if len(parts) == 2:
+        if filename_invalid(parts[1]) or package_name_invalid(parts[0]):
+            return None
         m = re.search(r'^docassemble.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*)$', parts[0])
         if m:
             if re.search(r'^data/sources/', parts[1]):
@@ -3800,6 +3831,8 @@ def package_data_filename(the_file):
             if abs_file is None:
                 return None
             return abs_file.path
+        if filename_invalid(parts[1]) or package_name_invalid(parts[0]):
+            return None
         try:
             path = Path(importlib.resources.files(parts[0]), parts[1])
         except:
@@ -3816,9 +3849,9 @@ def package_data_filename(the_file):
 def package_question_filename(the_file):
     parts = the_file.split(":")
     if len(parts) == 2:
-        if not re.match(r'data/.*', parts[1]):
+        if not re.match(r'^data/questions/', parts[1]):
             parts[1] = 'data/questions/' + parts[1]
-        if len(parts[1]) > 268:
+        if filename_invalid(parts[1]) or package_name_invalid(parts[0]):
             raise DAError("Invalid filename")
         try:
             path = Path(importlib.resources.files(parts[0]), parts[1])
@@ -4551,7 +4584,7 @@ def _defined_internal(var, caller: DefCaller, alt=None, prior=False):
                 pass
             if has_random_instance_name:
                 force_ask_nameerror(cum_variable)
-            the_cum[the_index]
+            the_cum[the_index]  # pylint: disable=pointless-statement
     if caller.is_pure():
         this_thread.probing = False
     if caller.is_predicate():

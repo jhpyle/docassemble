@@ -1471,9 +1471,9 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     if do_terms and question is not None and term_start.search(result):
         lang = docassemble.base.functions.get_language()
         if status is not None:
-            if len(question.terms) > 0:
+            if len(question.terms) > 0 and 'terms' in status.extras:
                 result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'], label=x.group(2), status=status, question=question)), result)
-            if len(question.autoterms) > 0:
+            if len(question.autoterms) > 0 and 'autoterms' in status.extras:
                 result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'], label=x.group(2), status=status, question=question)), result)
             if 'interview_terms' in status.extras:
                 interview_terms = status.extras['interview_terms']
@@ -1761,6 +1761,8 @@ def process_target(text):
 def to_text(html_doc, terms, links):
     output = ""
     # logmessage("to_text: html doc is " + str(html_doc))
+    if not html_doc.startswith('<'):
+        html_doc = "<span>" + html_doc + "</span>"
     soup = BeautifulSoup(html_doc, 'html.parser')
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]  # pylint: disable=expression-not-assigned
     [s.extract() for s in soup.find_all(hidden)]  # pylint: disable=expression-not-assigned

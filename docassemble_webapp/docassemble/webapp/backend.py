@@ -22,7 +22,7 @@ import ruamel.yaml
 import tzlocal
 from docassemble.base.error import DAException
 from docassemble.webapp.da_flask_mail import Message  # noqa: F401 # pylint: disable=unused-import
-from docassemble.base.functions import pickleable_objects
+from docassemble.base.functions import pickleable_objects, filename_invalid
 from docassemble.base.config import daconfig, hostname
 from docassemble.base.generate_key import random_bytes, random_alphanumeric
 from docassemble.base.logger import logmessage
@@ -174,7 +174,8 @@ def user_is_developer(user_id):
                 if role.name in ('developer', 'admin'):
                     return True
     except:
-        return False
+        pass
+    return False
 
 
 def absolute_filename(the_file):
@@ -184,6 +185,8 @@ def absolute_filename(the_file):
         if not user_is_developer(match.group(1)):
             return None
         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        if filename_invalid(filename):
+            return None
         # logmessage("absolute_filename: filename is " + filename + " and subdir is " + match.group(2))
         playground = SavedFile(match.group(1), section='playground', fix=True, filename=filename, subdir=match.group(2), must_exist=True)
         return playground
@@ -192,6 +195,8 @@ def absolute_filename(the_file):
         if not user_is_developer(match.group(1)):
             return None
         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        if filename_invalid(filename):
+            return None
         playground = SavedFile(match.group(1), section='playgroundtemplate', fix=True, filename=filename, subdir=match.group(2), must_exist=True)
         return playground
     match = re.match(r'^/playgroundstatic/([0-9]+)/([A-Za-z0-9]+)/(.*)', the_file)
@@ -199,6 +204,8 @@ def absolute_filename(the_file):
         if not user_is_developer(match.group(1)):
             return None
         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        if filename_invalid(filename):
+            return None
         playground = SavedFile(match.group(1), section='playgroundstatic', fix=True, filename=filename, subdir=match.group(2), must_exist=True)
         return playground
     match = re.match(r'^/playgroundsources/([0-9]+)/([A-Za-z0-9]+)/(.*)', the_file)
@@ -206,6 +213,8 @@ def absolute_filename(the_file):
         if not user_is_developer(match.group(1)):
             return None
         filename = re.sub(r'[^A-Za-z0-9\-\_\. ]', '', match.group(3))
+        if filename_invalid(filename):
+            return None
         playground = SavedFile(match.group(1), section='playgroundsources', fix=True, filename=filename, subdir=match.group(2), must_exist=True)
         write_ml_source(playground, match.group(1), match.group(2), filename)
         return playground
