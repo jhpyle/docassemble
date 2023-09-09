@@ -908,7 +908,7 @@
     mandatory: True
 "all-false":
   "height": !!int |-
-    358
+    368
   "width": !!int |-
     488
   "yaml": "question: |\n  Please tell me what you think.\nfields:\n  - \"Select the\
@@ -924,7 +924,7 @@
     \  not true\n  % endif\n  that there is at least one fruit you do not like."
 "all-mandatory":
   "height": !!int |-
-    122
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -954,7 +954,7 @@
       % endif
 "all-true":
   "height": !!int |-
-    358
+    368
   "width": !!int |-
     488
   "yaml": "question: |\n  Please tell me what you think.\nfields:\n  - \"Select the\
@@ -2206,7 +2206,7 @@
       This is the interview help.
 "chat-example-1":
   "height": !!int |-
-    302
+    308
   "width": !!int |-
     488
   "yaml": |-
@@ -2307,7 +2307,7 @@
     mandatory: True
 "choices":
   "height": !!int |-
-    298
+    306
   "width": !!int |-
     488
   "yaml": |-
@@ -2412,7 +2412,7 @@
           'color': "success"}]
 "choices-icons":
   "height": !!int |-
-    436
+    445
   "width": !!int |-
     488
   "yaml": |-
@@ -2452,7 +2452,7 @@
       - Other: other
 "choices-with-default":
   "height": !!int |-
-    298
+    306
   "width": !!int |-
     488
   "yaml": |-
@@ -2467,7 +2467,7 @@
       - Other
 "choices-with-default-item":
   "height": !!int |-
-    298
+    306
   "width": !!int |-
     488
   "yaml": |-
@@ -2482,7 +2482,7 @@
       - Other: other
 "choices-with-help":
   "height": !!int |-
-    298
+    306
   "width": !!int |-
     488
   "yaml": |-
@@ -3909,7 +3909,7 @@
     mandatory: True
 "device-local":
   "height": !!int |-
-    210
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -4719,7 +4719,7 @@
       docx template file: table_template.docx
 "doors":
   "height": !!int |-
-    210
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -4915,7 +4915,7 @@
           - mineshaft
 "emoji-inline":
   "height": !!int |-
-    448
+    459
   "width": !!int |-
     488
   "yaml": |-
@@ -5436,7 +5436,7 @@
       Hey, I warned you.
 "exit-choices":
   "height": !!int |-
-    210
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -5608,7 +5608,7 @@
       That is splendid news!
 "false-values":
   "height": !!int |-
-    358
+    368
   "width": !!int |-
     488
   "yaml": |-
@@ -5659,7 +5659,7 @@
       - Favorite tree: tree
 "fields":
   "height": !!int |-
-    1410
+    1438
   "width": !!int |-
     488
   "yaml": |-
@@ -5797,7 +5797,7 @@
     list collect: True
 "fields-checkboxes":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -5849,7 +5849,7 @@
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-code":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -5882,7 +5882,7 @@
     mandatory: True
 "fields-checkboxes-default-0":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -5899,7 +5899,7 @@
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-default-1":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -5918,7 +5918,7 @@
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-default-2":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -5938,7 +5938,7 @@
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-default-3":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -5976,7 +5976,7 @@
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-default-5":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -5994,7 +5994,7 @@
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-default-6":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -6012,7 +6012,7 @@
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-different-labels":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -6046,7 +6046,7 @@
     mandatory: True
 "fields-checkboxes-nota":
   "height": !!int |-
-    416
+    424
   "width": !!int |-
     488
   "yaml": |-
@@ -6062,7 +6062,7 @@
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-nota-false":
   "height": !!int |-
-    372
+    378
   "width": !!int |-
     488
   "yaml": |-
@@ -6220,7 +6220,7 @@
       `${ repr((doctor.address.latitude, doctor.address.longitude)) }`.
 "fields-mc":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -6249,7 +6249,7 @@
                   ]
 "fields-mc-2":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -6261,7 +6261,7 @@
                   }
 "fields-mc-3":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -6269,7 +6269,7 @@
       myoptions = ["Apples", "Oranges", "Pears"]
 "fields-mc-4":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -6281,7 +6281,7 @@
                   ]
 "fields-mc-5":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -6293,7 +6293,7 @@
                   ]
 "fields-mc-6":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -6305,7 +6305,7 @@
                   ]
 "fields-mc-7":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -6318,7 +6318,7 @@
                   ]
 "fields-mc-8":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -6334,7 +6334,7 @@
                   ]
 "fields-mc-9":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -6367,7 +6367,7 @@
         none of the above: False
 "fields-mc-exclude":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -6424,7 +6424,7 @@
           all_fruit
 "fields-mc-nota":
   "height": !!int |-
-    346
+    354
   "width": !!int |-
     488
   "yaml": |-
@@ -6518,7 +6518,7 @@
       - "What is your favorite fruit overall?": favorite_fruit
 "fields-noyesmaybe":
   "height": !!int |-
-    302
+    308
   "width": !!int |-
     488
   "yaml": |-
@@ -6538,7 +6538,7 @@
     \  \n  ${ text_input }"
 "fields-yesno":
   "height": !!int |-
-    392
+    396
   "width": !!int |-
     488
   "yaml": |-
@@ -6601,7 +6601,7 @@
           - likes_obsidian
 "fields-yesno-help":
   "height": !!int |-
-    392
+    396
   "width": !!int |-
     488
   "yaml": |-
@@ -6618,7 +6618,7 @@
         help: Round root with white flesh
 "fields-yesno-uncheck-others":
   "height": !!int |-
-    436
+    442
   "width": !!int |-
     488
   "yaml": |-
@@ -6666,7 +6666,7 @@
           - likes_obsidian
 "fields-yesnomaybe":
   "height": !!int |-
-    302
+    308
   "width": !!int |-
     488
   "yaml": |-
@@ -6677,7 +6677,7 @@
         datatype: yesnomaybe
 "fields-yesnoradio":
   "height": !!int |-
-    362
+    370
   "width": !!int |-
     488
   "yaml": |-
@@ -6690,7 +6690,7 @@
         datatype: noyesradio
 "fields-yesnowide":
   "height": !!int |-
-    314
+    318
   "width": !!int |-
     488
   "yaml": |-
@@ -7115,7 +7115,7 @@
       all_reviewed = False
 "force-gather":
   "height": !!int |-
-    103
+    104
   "width": !!int |-
     488
   "yaml": |-
@@ -7153,7 +7153,7 @@
     continue button field: fourth_page
 "forget-result-of":
   "height": !!int |-
-    254
+    260
   "width": !!int |-
     488
   "yaml": |-
@@ -8174,7 +8174,7 @@
     yesno: x.likes_cats
 "generic-object-ein":
   "height": !!int |-
-    242
+    246
   "width": !!int |-
     488
   "yaml": |-
@@ -8403,6 +8403,281 @@
     code: |
       title = "Household stuff"
       data = [['Thing', 'How many']] + [[y, how_many[y]] for y in things]
+"grid1":
+  "height": !!int |-
+    366
+  "width": !!int |-
+    488
+  "yaml": |-
+    features:
+      labels above fields: True
+    ---
+    question: |
+      Tell me about yourself.
+    fields:
+      - Name: user_name
+        grid: 7
+      - Age: user_age
+        datatype: integer
+        min: 0
+        grid: 5
+      - Life story: user_life_story
+        input type: area
+"grid2":
+  "height": !!int |-
+    386
+  "width": !!int |-
+    488
+  "yaml": |-
+    features:
+      labels above fields: True
+    ---
+    question: |
+      Lets pick some numbers.
+    fields:
+      - "Are you afraid of odd numbers?": no_odd
+        datatype: yesnoradio
+      - "1": number_one
+        datatype: yesno
+        grid: 2
+        hide if: no_odd
+      - "2": number_two
+        datatype: yesnowide
+        grid: 2
+      - "3": number_three
+        datatype: yesnowide
+        grid: 2
+        hide if: no_odd
+      - "4": number_four
+        datatype: yesnowide
+        grid: 2
+      - "5": number_five
+        datatype: yesnowide
+        grid: 2
+        hide if: no_odd
+      - "6": number_six
+        datatype: yesnowide
+        grid: 2
+      - "7": number_seven
+        datatype: yesnowide
+        grid: 2
+        hide if: no_odd
+      - "8": number_eight
+        datatype: yesnowide
+        grid: 2
+      - "9": number_nine
+        datatype: yesnowide
+        grid: 2
+        hide if: no_odd
+      - "10": number_ten
+        datatype: yesnowide
+        grid: 2
+"grid3":
+  "height": !!int |-
+    208
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Tell me about your numerical tastes.
+    fields:
+      - Best number: favorite_number
+        datatype: integer
+        grid: 2
+      - Worst number: least_favorite_number
+        datatype: integer
+        grid: 2
+"grid4":
+  "height": !!int |-
+    232
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Tell me about your numerical tastes.
+    fields:
+      - Best number: favorite_number
+        datatype: integer
+        grid:
+          width: 3
+          label width: 3
+      - Worst number: least_favorite_number
+        datatype: integer
+        grid:
+          width: 3
+          label width: 3
+"grid5":
+  "height": !!int |-
+    402
+  "width": !!int |-
+    488
+  "yaml": |-
+    features:
+      labels above fields: True
+    ---
+    question: |
+      Lets pick some numbers and letters.
+    fields:
+      - "1": number_one
+        datatype: yesno
+        grid: 2
+      - "2": number_two
+        datatype: yesnowide
+        grid: 2
+      - "3": number_three
+        datatype: yesnowide
+        grid: 2
+      - "4": number_four
+        datatype: yesnowide
+        grid: 2
+      - "5": number_five
+        datatype: yesnowide
+        grid: 2
+      - "6": number_six
+        datatype: yesnowide
+        grid: 2
+      - "7": number_seven
+        datatype: yesnowide
+        grid: 2
+      - "8": number_eight
+        datatype: yesnowide
+        grid: 2
+      - "9": number_nine
+        datatype: yesnowide
+        grid: 2
+      - "10": number_ten
+        datatype: yesnowide
+        grid: 2
+      - "A": letter_a
+        datatype: yesno
+        grid:
+          width: 2
+          start: True
+      - "B": letter_b
+        datatype: yesnowide
+        grid: 2
+      - "C": letter_c
+        datatype: yesnowide
+        grid: 2
+      - "D": letter_d
+        datatype: yesnowide
+        grid: 2
+      - "E": letter_e
+        datatype: yesnowide
+        grid: 2
+      - "F": letter_f
+        datatype: yesnowide
+        grid: 2
+      - "G": letter_g
+        datatype: yesnowide
+        grid: 2
+      - "H": letter_h
+        datatype: yesnowide
+        grid: 2
+      - "I": letter_i
+        datatype: yesnowide
+        grid: 2
+      - "J": letter_j
+        datatype: yesnowide
+        grid: 2
+"grid6":
+  "height": !!int |-
+    402
+  "width": !!int |-
+    488
+  "yaml": |-
+    features:
+      labels above fields: True
+    ---
+    question: |
+      Lets pick some numbers and letters.
+    fields:
+      - "1": number_one
+        datatype: yesno
+        grid: 2
+      - "2": number_two
+        datatype: yesnowide
+        grid: 2
+      - "3": number_three
+        datatype: yesnowide
+        grid: 2
+      - "4": number_four
+        datatype: yesnowide
+        grid: 2
+      - "5": number_five
+        datatype: yesnowide
+        grid: 2
+      - "6": number_six
+        datatype: yesnowide
+        grid: 2
+      - "7": number_seven
+        datatype: yesnowide
+        grid: 2
+      - "8": number_eight
+        datatype: yesnowide
+        grid: 2
+      - "9": number_nine
+        datatype: yesnowide
+        grid: 2
+      - "10": number_ten
+        datatype: yesnowide
+        grid:
+          width: 2
+          end: True
+      - "A": letter_a
+        datatype: yesno
+        grid: 2
+      - "B": letter_b
+        datatype: yesnowide
+        grid: 2
+      - "C": letter_c
+        datatype: yesnowide
+        grid: 2
+      - "D": letter_d
+        datatype: yesnowide
+        grid: 2
+      - "E": letter_e
+        datatype: yesnowide
+        grid: 2
+      - "F": letter_f
+        datatype: yesnowide
+        grid: 2
+      - "G": letter_g
+        datatype: yesnowide
+        grid: 2
+      - "H": letter_h
+        datatype: yesnowide
+        grid: 2
+      - "I": letter_i
+        datatype: yesnowide
+        grid: 2
+      - "J": letter_j
+        datatype: yesnowide
+        grid: 2
+"grid7":
+  "height": !!int |-
+    294
+  "width": !!int |-
+    488
+  "yaml": "features:\n  labels above fields: True\n---\nquestion: |\n  Tell me your\
+    \ address.\nfields:\n  - Address: address.address\n  - City: address.city\n  \
+    \  grid:\n      width: 6\n      breakpoint: sm\n  - State: address.state\n   \
+    \ code: states_list(abbreviate=True)\n    grid: \n      width: 3\n      breakpoint:\
+    \ sm\n    hint: \"\"\n  - Zip: address.zip\n    grid: \n      width: 3\n     \
+    \ breakpoint: sm"
+"grid8":
+  "height": !!int |-
+    294
+  "width": !!int |-
+    488
+  "yaml": "features:\n  labels above fields: True\n---\ncode: |\n  address_width =\
+    \ 6\n  state_width = 3\n  breakpoint = \"sm\"\n---\nquestion: |\n  Tell me your\
+    \ address.\nfields:\n  - Address: address.address\n  - City: address.city\n  \
+    \  grid:\n      width: address_width\n      breakpoint: ${ breakpoint }\n  - State:\
+    \ address.state\n    code: states_list(abbreviate=True)\n    grid: \n      width:\
+    \ state_width\n      breakpoint: ${ breakpoint }\n    hint: \"\"\n  - Zip: address.zip\n\
+    \    grid: \n      width: 12 - (state_width + address_width)\n      breakpoint:\
+    \ ${ breakpoint }"
 "hello-not-oop":
   "height": !!int |-
     230
@@ -8437,7 +8712,7 @@
     mandatory: True
 "help":
   "height": !!int |-
-    288
+    293
   "width": !!int |-
     488
   "yaml": |-
@@ -8512,7 +8787,7 @@
         want ${ defendant } to suffer.
 "hideif-boolean":
   "height": !!int |-
-    336
+    340
   "width": !!int |-
     488
   "yaml": |-
@@ -8549,7 +8824,7 @@
       </script>
 "hyperlink-style":
   "height": !!int |-
-    254
+    260
   "width": !!int |-
     488
   "yaml": |-
@@ -8567,7 +8842,7 @@
         the_link = "your [local law library](https://lawlibrarydirectory.org), which may be able to help you"
 "if":
   "height": !!int |-
-    210
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -9172,7 +9447,7 @@
         label above field: True
 "language":
   "height": !!int |-
-    210
+    214
   "width": !!int |-
     488
   "yaml": "question: |\n  What is the meaning of life?\nfields:\n  - Meaning of life:\
@@ -10212,7 +10487,7 @@
     \ symbol=u'\u20AC') }.\nmandatory: True"
 "name":
   "height": !!int |-
-    210
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -10655,7 +10930,7 @@
           - antagonist
 "object-checkboxes":
   "height": !!int |-
-    322
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -10681,7 +10956,7 @@
         - antagonist
 "object-checkboxes-dalist":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -10705,7 +10980,7 @@
         - antagonist
 "object-checkboxes-default":
   "height": !!int |-
-    322
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -10839,7 +11114,7 @@
         - antagonist
 "object-radio":
   "height": !!int |-
-    226
+    230
   "width": !!int |-
     488
   "yaml": |-
@@ -12067,7 +12342,7 @@
       ${ user.favorite_things }.
 "prevent-back":
   "height": !!int |-
-    242
+    246
   "width": !!int |-
     488
   "yaml": |-
@@ -12076,7 +12351,7 @@
       prevent_going_back()
 "prevent-going-back":
   "height": !!int |-
-    242
+    246
   "width": !!int |-
     488
   "yaml": |-
@@ -12483,7 +12758,7 @@
       ${ quote_paragraphs(allegations) }
 "radio-list":
   "height": !!int |-
-    540
+    554
   "width": !!int |-
     488
   "yaml": |-
@@ -12507,7 +12782,7 @@
           - Toyota: Japan
 "radio-list-mobile":
   "height": !!int |-
-    717
+    732
   "width": !!int |-
     385
   "yaml": |-
@@ -13121,7 +13396,7 @@
       [change this](${ url_action('review_answer') }).
 "review-conditional":
   "height": !!int |-
-    298
+    306
   "width": !!int |-
     488
   "yaml": "question: |\n  What is your favorite fruit?\nfield: favorite_fruit\nchoices:\n\
@@ -13224,6 +13499,52 @@
           We suspect you prefer
           ${ fruit } to ${ vegetable }.
     continue button field: answers_reviewed
+"review-tabular":
+  "height": !!int |-
+    354
+  "width": !!int |-
+    488
+  "yaml": |-
+    event: review_answers
+    question: |
+      Revisit your answers
+    review:
+      - Revisit fruit: fruit
+        button: |
+          You said your favorite fruit was
+          ${ fruit }.
+      - Revisit vegetable: vegetable
+        button: |
+          You said your favorite vegetable
+          was ${ vegetable }.
+      - Revisit fungus: fungi
+        button: |
+          You said your favorite fungus
+          was ${ fungi }.
+    tabular: True
+"review-tabular-class":
+  "height": !!int |-
+    357
+  "width": !!int |-
+    488
+  "yaml": |-
+    event: review_answers
+    question: |
+      Revisit your answers
+    review:
+      - Revisit fruit: fruit
+        button: |
+          You said your favorite fruit was
+          ${ fruit }.
+      - Revisit vegetable: vegetable
+        button: |
+          You said your favorite vegetable
+          was ${ vegetable }.
+      - Revisit fungus: fungi
+        button: |
+          You said your favorite fungus
+          was ${ fungi }.
+    tabular: table table-striped
 "right":
   "height": !!int |-
     146
@@ -13244,7 +13565,7 @@
     \ literacy."
 "salutation":
   "height": !!int |-
-    486
+    492
   "width": !!int |-
     488
   "yaml": |-
@@ -13364,7 +13685,7 @@
       ${ best_color }.
 "scan-for-variables-original":
   "height": !!int |-
-    210
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -13456,7 +13777,7 @@
       </script>
 "sections":
   "height": !!int |-
-    199
+    200
   "width": !!int |-
     488
   "yaml": "sections:\n  - Introduction\n  - About you:\n    - Contact info\n    -\
@@ -13567,7 +13888,7 @@
     \ to go eat some\n  ${ favorite_vegetable }\n  now."
 "sections-keywords-get-sections":
   "height": !!int |-
-    178
+    180
   "width": !!int |-
     488
   "yaml": "sections:\n  - intro: Introduction\n  - about: About you\n    subsections:\n\
@@ -13736,7 +14057,7 @@
       navigation: True
 "sections-small-screen-dropdown":
   "height": !!int |-
-    311
+    312
   "width": !!int |-
     385
   "yaml": |-
@@ -13745,7 +14066,7 @@
       small screen navigation: dropdown
 "sections-small-screen-false":
   "height": !!int |-
-    209
+    210
   "width": !!int |-
     385
   "yaml": "sections:\n  - Introduction\n  - About you:\n    - Contact info\n    -\
@@ -13953,7 +14274,7 @@
         response(url=interview_url(i='docassemble.demo:data/questions/questions.yml', local=True))
 "session-local":
   "height": !!int |-
-    210
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -13997,7 +14318,7 @@
       [${ interview_url() }](${ interview_url() })
 "set-language":
   "height": !!int |-
-    210
+    214
   "width": !!int |-
     488
   "yaml": "initial: True\ncode: |\n  set_language(language)\n---\nquestion: |\n  What\
@@ -14125,7 +14446,7 @@
             2 + 2 == 3
 "showif-boolean":
   "height": !!int |-
-    258
+    262
   "width": !!int |-
     488
   "yaml": |-
@@ -14149,7 +14470,7 @@
           is: False
 "showif-nested":
   "height": !!int |-
-    258
+    262
   "width": !!int |-
     488
   "yaml": |-
@@ -14195,7 +14516,7 @@
           varieties_liked['Fuji']
 "shuffle":
   "height": !!int |-
-    422
+    400
   "width": !!int |-
     488
   "yaml": |-
@@ -14467,7 +14788,7 @@
       ${ user_state }.
 "static-file":
   "height": !!int |-
-    210
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -14685,7 +15006,7 @@
       ${ income.table }
 "table-dict-confirm":
   "height": !!int |-
-    334
+    332
   "width": !!int |-
     488
   "yaml": |-
@@ -14702,7 +15023,7 @@
     confirm: True
 "table-dict-delete-buttons":
   "height": !!int |-
-    333
+    332
   "width": !!int |-
     488
   "yaml": |-
@@ -14718,7 +15039,7 @@
     delete buttons: True
 "table-dict-edit":
   "height": !!int |-
-    442
+    332
   "width": !!int |-
     488
   "yaml": |-
@@ -14757,7 +15078,7 @@
       - receives
 "table-dict-edit-delete-buttons":
   "height": !!int |-
-    333
+    332
   "width": !!int |-
     488
   "yaml": |-
@@ -14775,7 +15096,7 @@
     delete buttons: False
 "table-dict-edit-minimum-number":
   "height": !!int |-
-    333
+    332
   "width": !!int |-
     488
   "yaml": |-
@@ -15611,7 +15932,7 @@
     mandatory: True
 "true-values":
   "height": !!int |-
-    358
+    368
   "width": !!int |-
     488
   "yaml": |-
@@ -15638,7 +15959,7 @@
       - user: Individual
 "umbrella-interview":
   "height": !!int |-
-    286
+    292
   "width": !!int |-
     488
   "yaml": |-
@@ -16309,7 +16630,7 @@
     \ fruit=favorite_fruit))"
 "all-mandatory":
   "height": !!int |-
-    122
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -16591,7 +16912,7 @@
     \ contract.docx"
 "collate":
   "height": !!int |-
-    280
+    284
   "width": !!int |-
     488
   "yaml": "objects:\n  - favorite: DADict.using(object_type=DAObject, keys=['fruit',\
@@ -16843,7 +17164,7 @@
         datatype: date
 "daglobal":
   "height": !!int |-
-    293
+    294
   "width": !!int |-
     488
   "yaml": "objects:\n  - g: DAGlobal.using(base=the_base, key=the_key)\n  - g.fruits:\
@@ -17960,7 +18281,7 @@
       - Restart: restart
 "hook-on-gather":
   "height": !!int |-
-    226
+    230
   "width": !!int |-
     488
   "yaml": |-
@@ -18050,7 +18371,7 @@
       % endfor
 "interview_in_interview":
   "height": !!int |-
-    286
+    292
   "width": !!int |-
     488
   "yaml": "objects:\n  - user_global: Individual\n  - user: Individual\n  - endpoint:\
@@ -18608,7 +18929,7 @@
     \ docx template file: nested_list_table.docx"
 "new-or-existing":
   "height": !!int |-
-    226
+    230
   "width": !!int |-
     488
   "yaml": |-
@@ -18862,7 +19183,7 @@
     continue button field: person[i].fruit_preferences[j].preferred_seeds_verified
 "object-checkboxes-custom":
   "height": !!int |-
-    270
+    276
   "width": !!int |-
     488
   "yaml": |-
@@ -19037,7 +19358,7 @@
       ${ first_five_pages }
 "phone-number":
   "height": !!int |-
-    186
+    187
   "width": !!int |-
     488
   "yaml": |-
@@ -19633,7 +19954,7 @@
     \ `${ item.inventory }`\n  \n  % endfor"
 "realtimegd":
   "height": !!int |-
-    358
+    368
   "width": !!int |-
     488
   "yaml": |-
@@ -19674,7 +19995,7 @@
     attachment code: assembled_document
 "realtimegd2":
   "height": !!int |-
-    358
+    368
   "width": !!int |-
     488
   "yaml": |-

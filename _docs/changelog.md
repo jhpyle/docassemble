@@ -3,9 +3,29 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.76](https://github.com/jhpyle/docassemble/releases/tag/v1.4.76) - 2023-09-09
+
+
+### Added
+- The `grid` field modifier for displaying fields side-by-side in a
+  responsive flexbox.
+- The `tabular` modifier for the `review` block, which will cause the
+  items to be displayed in an HTML `<table>`.
+- The `abbreviate` optional keyword parameter of the `states_list()` function.
+
+
+### Changed
+- Altered the CSS of `radio`, `yesno`, `yesnowide`, and `checkboxes`
+  labels so that the text will not wrap under the bullet.
+- Configuration will not save if there are duplicate keys in the YAML.
+
+
+### Fixed
+- Avoided `KeyError` when combining `terms` and `autoterms`.
+
 ## [1.4.75](https://github.com/jhpyle/docassemble/releases/tag/v1.4.75) - 2023-09-05
 
-- No changes, version advanced by accident. 
+- No changes, version advanced by accident.
 
 ## [1.4.74](https://github.com/jhpyle/docassemble/releases/tag/v1.4.74) - 2023-09-05
 

@@ -466,6 +466,7 @@ grid classes:
     right small screen: d-block d-lg-none
   label width: md-4
   field width: md-8
+  grid break: md
 {% endhighlight %}
 
 `user` refers to administrative screens that end users see, like the
@@ -490,13 +491,16 @@ any). The `right small screen` directive refers to the size of this
 version of the `right` screen part. Under `vertical navigation`, the
 `bar` refers to the width of the vertical navigation bar.
 
-The `label width` and `field width` are not technically classes, but
-rather parts of classes. The actual classes used will be prefixed with
-`col-` or `offset-`, depending on the context. The default values of
-`md-4` and `md-8` mean that when labels and fields appear
-side-by-side, the width of the labels is half of the width of the
-fields, and below the `md` breakpoint, the labels appear above the
-fields.
+The `label width`, `field width`, and `grid breakpoint` are not
+classes, but rather parts of classes. The actual classes used will be
+prefixed with `col-` or `offset-`, depending on the context. The
+default values of `md-4` and `md-8` mean that when labels and fields
+appear side-by-side, the width of the labels is half of the width of
+the fields, and below the `md` breakpoint, the labels appear above the
+fields. The `grid breakpoint` is a default value for the [`grid` field
+modifier]. It indicates the breakpoint in [Bootstrap]'s grid system
+when the side-by-side arrangement should be shown. The default is
+`md`.
 
 ## <a name="alert html"></a><a name="alert container html"></a>Customization of alerts
 
@@ -2384,19 +2388,22 @@ The format of the `error help` is [Markdown].
 You can also set this on a per-interview basis using [`error help`]
 inside the [`metadata`].
 
-## <a name="debian packages"></a>Debian packages to install
+## <a name="ubuntu packages"></a><a name="debian packages"></a>ubuntu packages to install
 
-On [Docker], you can ensure that particular [Debian] packages are
-installed by providing a list of packages to the `debian packages`
+On [Docker], you can ensure that particular [Ubuntu] packages are
+installed by providing a list of packages to the `ubuntu packages`
 directive:
 
 {% highlight yaml %}
-debian packages:
+ubuntu packages:
   - r-base
   - r-cran-effects
 {% endhighlight %}
 
 These packages will be installed when the [Docker] container starts.
+
+For backwards compatibility, the directive `debian packages` works the
+same way.
 
 ## <a name="allow non-idempotent questions"></a>Non-idempotent question check
 
@@ -6529,3 +6536,4 @@ and Facebook API keys.
 [`ENABLEUNOCONV`]: {{ site.baseurl }}/docs/docker.html#ENABLEUNOCONV
 [Gotenberg]: https://gotenberg.dev/
 [`GOTENBERGURL`]: {{ site.baseurl }}/docs/docker.html#GOTENBERGURL
+[`grid` field modifier]: {{ site.baseurl }}/docs/fields.html#grid

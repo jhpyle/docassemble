@@ -2312,6 +2312,11 @@ name of these subdivisions varies.  The [`subdivision_type()`]
 function can be used to find the name of the major subdivision, and
 also to find if the country has any subdivisions at all.
 
+The `states_list()` function also takes an optional keyword argument
+`abbreviate`. The default value is `False`. If it is set to `True`,
+then the labels and values will both be the abbreviated version of the
+state name.
+
 The `state_name()` function returns the name of a state based on the
 state abbreviation provided.
 
@@ -8457,7 +8462,6 @@ $(document).on('daPageLoad', function(){
 [ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
 [Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
 [`ocr languages`]: {{ site.baseurl }}/docs/config.html#ocr languages
-[`debian packages`]: {{ site.baseurl }}/docs/config.html#debian packages
 [`ocr dpi`]: {{ site.baseurl }}/docs/config.html#ocr dpi
 [pdftoppm]: https://www.foolabs.com/xpdf/download.html
 [`s3`]: {{ site.baseurl }}/docs/config.html#s3

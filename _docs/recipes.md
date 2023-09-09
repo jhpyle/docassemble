@@ -1376,7 +1376,7 @@ variables that are referenced in a document.
 {% include demo-side-by-side.html demo="universal-document" %}
 
 For security purposes, this example interview requires `admin` or
-`developer` privileges.  You can find the source on GitHub and try it
+`developer` privileges.  You can find the source [on GitHub](https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/universal-document.yml) and try it
 out on your own server.
 
 # <a name="adust_language_for_second_or_third_person"></a>Adjust Language for Second or Third Person

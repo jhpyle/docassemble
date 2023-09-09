@@ -1055,7 +1055,7 @@ your container for the new configuration to take effect.
   depends on certain [Ubuntu] packages being installed, you can
   provide a comma-separated list of [Ubuntu] packages in the
   `PACKAGES` environment variable. The packages will be installed
-  when the container is started. See the [`debian packages`]
+  when the container is started. See the [`ubuntu packages`]
   configuration directive.
 * <a name="PYTHONPACKAGES"></a>`PYTHONPACKAGES`: If you want to
   install certain [Python] packages during the container start process,
@@ -3171,7 +3171,7 @@ references a different base image.
 [`use https`]: {{ site.baseurl }}/docs/config.html#use https
 [`ec2`]: {{ site.baseurl }}/docs/config.html#ec2
 [`kubernetes`]: {{ site.baseurl }}/docs/config.html#kubernetes
-[`debian packages`]: {{ site.baseurl }}/docs/config.html#debian packages
+[`ubuntu packages`]: {{ site.baseurl }}/docs/config.html#ubuntu packages
 [`url root`]: {{ site.baseurl }}/docs/config.html#url root
 [`root`]: {{ site.baseurl }}/docs/config.html#root
 [Ubuntu]: https://ubuntu.com/

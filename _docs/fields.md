@@ -2019,6 +2019,110 @@ expression.
 You can use the [`floating labels`] feature to make this the default
 setting for all fields in your interview.
 
+## <a name="grid"></a>`grid`
+
+Using the `grid` field modifier, you can place fields side-by-side on
+the screen. **docassemble** uses the [grid system] of [Bootstrap],
+which is based on [flexbox], to implement this. Instead of
+representing widths as percentages between 0 and 100, the [grid
+system] uses numbers from 1 to 12.
+
+{% include side-by-side.html demo="grid1" %}
+
+In the above example, `grid: 7` means 7/12ths of the width of the
+enclosing HTML element, and `grid: 5` means 5/12ths of the width of
+the enclosing HTML element. The enclosing element here is the central
+column on the screen. Since 7+5=12, the two fields together fill the
+width of the central column.
+
+If you specify `grid` values for adjacent fields, the fields will be
+placed together in the same [Bootstrap] "row." If the sum of `grid`
+widths of adjacent fields add up to a value greater then 12, the items
+will wrap.
+
+{% include side-by-side.html demo="grid2" %}
+
+If you are using the `grid` field modifier, it is recommended that you
+use [`labels above fields`] in [`features`] or the [`label above
+field`] field modifier. The default labeling style, where the label is
+to the left of the field, can work with `grid`, but the label takes up a
+width of 4, which does not leave a lot of room for the field.
+
+{% include side-by-side.html demo="grid3" %}
+
+It is possible to use a different width for the label. To do this,
+use `grid` to specify a [YAML] dictionary instead of an integer.
+
+{% include side-by-side.html demo="grid4" %}
+
+Inside this dictionary, `width` is the width of the field itself, and
+`label width` is the width of the label. Note that writing:
+
+{% highlight yaml %}
+grid:
+  width: 3
+{% endhighlight %}
+
+is equivalent to writing:
+
+{% highlight yaml %}
+grid: 3
+{% endhighlight %}
+
+By default, any adjacent fields that specify a `grid` will be joined
+together in the same "row." If you want adjacent fields to be in
+separate rows even though they both specify a `grid`, you can specify
+`start: True` or `end: True` to indicate that a "row" should start or
+end with the given field.
+
+This interview uses `start: True` to indicate that the fields `A`,
+`B`, `C`, etc. should start on a new row:
+
+{% include side-by-side.html demo="grid5" %}
+
+The following interview has the same appearance, but uses `end: True`
+to indicate that the row of fields `1` through `10` should end at
+field `10`.
+
+{% include side-by-side.html demo="grid6" %}
+
+[Bootstrap]'s [grid system] is [responsive]. On screens that are less
+than 768 pixels wide, `grid` fields are arranged vertically. The
+threshold of 768 pixels is based on [Bootstrap]'s "medium"
+[breakpoint], which uses the code `md`.
+
+The breakpoint of 768 pixels can be changed globally for the server by
+setting the `grid breakpoint` setting of the [`grid classes`]
+directive in the [Configuration]. The available values are:
+
+* `xs`
+* `sm`
+* `md`
+* `lg`
+* `xl`
+* `xxl`
+
+If `xs` is used as the `grid breakpoint`, that means that `grid`
+fields will be side-by-side no matter how small the screen is.
+
+The breakpoint can also be configured on a field-by-field basis by
+setting the `breakpoint` option under `grid`:
+
+{% include side-by-side.html demo="grid7" %}
+
+In the above example, the fields for gathering the address will be
+side-by-side as long as the screen is at least 576 pixels wide (the
+`sm` threshold).
+
+You can specify the `width`, `label width`, `start`, and `end` as
+Python expressions, and you can specify the `breakpoint` using
+[Mako].
+
+{% include side-by-side.html demo="grid8" %}
+
+If `grid` refers to a string, the string is expected to be a Python
+expression that evaluates to an integer between 1 and 12.
+
 ## <a name="label"></a>`label` and `field`
 
 Instead of expressing your labels and variable names in the form of `-
@@ -3114,6 +3218,18 @@ shown.  Note: this is not available with the `button` display format.
 
 {% include side-by-side.html demo="review-4" %}
 
+If you want the list of review items to be formatted as an HTML
+`<table>`, set the `tabular` modifier on the `question` to `True`.
+
+{% include side-by-side.html demo="review-tabular" %}
+
+The `tabular` modifier can also be used to specify a particular CSS
+class for the `<table>`.
+
+{% include side-by-side.html demo="review-tabular-class" %}
+
+Mako can be used with `tabular`.
+
 By referring to a list of variables instead of a single variable, you
 can indicate that more than one variable should be sought.  The fields
 mentioned will not appear on the `review` screen until all have been
@@ -3493,3 +3609,9 @@ why this needs to be done manually as opposed to automatically:
 [Bootstrap colors]: https://getbootstrap.com/docs/5.2/customize/color/
 [Bootstrap]: https://getbootstrap.com/
 [`accept` method]: https://jqueryvalidation.org/accept-method/
+[grid system]: https://getbootstrap.com/docs/5.3/layout/grid/
+[flexbox]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout/Basic_concepts_of_flexbox
+[responsive]: https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Responsive_Design
+[breakpoint]: https://getbootstrap.com/docs/5.3/layout/breakpoints/#available-breakpoints
+[breakpoints]: https://getbootstrap.com/docs/5.3/layout/breakpoints/#available-breakpoints
+[`grid classes`]: {{ site.baseurl }}/docs/config.html#grid classes
