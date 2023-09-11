@@ -2085,7 +2085,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb', 'tabular'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb', 'tabular', 'hide continue button', 'disable continue button'):
                     logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -2402,6 +2402,12 @@ class Question:
                 self.find_fields_in(data['allowed to set'])
             else:
                 raise DAError("When allowed to set is not a list, it must be plain text." + self.idebug(data))
+        if 'hide continue button' in data and 'question' in data:
+            self.hide_continue_button = compile(data['hide continue button'], '<hide continue button>', 'eval')
+            self.find_fields_in(data['hide continue button'])
+        if 'disable continue button' in data and 'question' in data:
+            self.disable_continue_button = compile(data['disable continue button'], '<disable continue button>', 'eval')
+            self.find_fields_in(data['disable continue button'])
         if 'usedefs' in data:
             defs = []
             if isinstance(data['usedefs'], list):
@@ -3039,15 +3045,18 @@ class Question:
                 data['include'] = [data['include']]
             if isinstance(data['include'], list):
                 for questionPath in data['include']:
-                    if ':' in questionPath:
-                        self.interview.read_from(interview_source_from_string(questionPath, interview_source=self.interview.source, parent_source=self.from_source))
-                    else:
-                        new_source = self.from_source.append(questionPath)
-                        if new_source is None:
-                            new_source = interview_source_from_string('docassemble.base:data/questions/' + re.sub(r'^data/questions/', '', questionPath), interview_source=self.interview.source, parent_source=self.from_source)
+                    try:
+                        if ':' in questionPath:
+                            self.interview.read_from(interview_source_from_string(questionPath, interview_source=self.interview.source, parent_source=self.from_source))
+                        else:
+                            new_source = self.from_source.append(questionPath)
                             if new_source is None:
-                                raise DANotFoundError('Question file ' + questionPath + ' not found')
-                        self.interview.read_from(new_source)
+                                new_source = interview_source_from_string('docassemble.base:data/questions/' + re.sub(r'^data/questions/', '', questionPath), interview_source=self.interview.source, parent_source=self.from_source)
+                                if new_source is None:
+                                    raise DANotFoundError('Question file ' + questionPath + ' not found')
+                            self.interview.read_from(new_source)
+                    except DANotFoundError:
+                        raise DAError('An include section could not find the file ' + str(questionPath) + '.' + self.idebug(data))
             else:
                 raise DAError("An include section must be organized as a list." + self.idebug(data))
         if 'action buttons' in data:
@@ -4205,11 +4214,11 @@ class Question:
                         if not isinstance(field[key], dict) or len(field[key]) == 0:
                             raise DAError(key + " is not in the correct format." + self.idebug(data))
                         for item in field[key].keys():
-                            if item not in ('width', 'label width', 'start', 'end', 'breakpoint'):
+                            if item not in ('width', 'label width', 'offset', 'start', 'end', 'breakpoint'):
                                 raise DAError(key + " has an invalid key " + repr(item) + "." + self.idebug(data))
                         if 'width' not in field[key]:
                             raise DAError(key + ' must specify a width.' + self.idebug(data))
-                        for subkey in ('width', 'label width'):
+                        for subkey in ('width', 'label width', 'offset'):
                             if subkey in field[key]:
                                 if isinstance(field[key][subkey], str):
                                     field_info[key][subkey] = compile(field[key][subkey], '<' + key + ' ' + subkey + ' expression>', 'eval')
@@ -5729,6 +5738,9 @@ class Question:
                 for item in extras['allowed_to_set']:
                     if not isinstance(item, str):
                         raise DAError("allowed to set code did not evaluate to a list of text items")
+        for item in ('hide_continue_button', 'disable_continue_button'):
+            if hasattr(self, item):
+                extras[item] = bool(eval(getattr(self, item), user_dict))
         if self.reload_after is not None:
             number = str(self.reload_after.text(user_dict))
             if number not in ("False", "false", "Null", "None", "none", "null"):
@@ -6305,12 +6317,12 @@ class Question:
                                 extras['grid'][field.number][subkey] = subkeyval.text(user_dict).strip()
                             else:
                                 extras['grid'][field.number][subkey] = eval(subkeyval, user_dict)
-                            if subkey in ('width', 'label width') and isinstance(extras['grid'][field.number][subkey], float):
+                            if subkey in ('width', 'label width', 'offset') and isinstance(extras['grid'][field.number][subkey], float):
                                 extras['grid'][field.number][subkey] = int(extras['grid'][field.number][subkey])
                             if subkey in ('start', 'end') and not isinstance(extras['grid'][field.number][subkey], bool):
                                 extras['grid'][field.number][subkey] = bool(extras['grid'][field.number][subkey])
-                            if subkey in ('width', 'label width') and (not isinstance(extras['grid'][field.number][subkey], int) or extras['grid'][field.number][subkey] < 1 or extras['grid'][field.number][subkey] > 12):
-                                raise DAError("Invalid grid " + subkey +  " value. It must be an integer between 1 and 12.")
+                            if subkey in ('width', 'label width', 'offset') and (not isinstance(extras['grid'][field.number][subkey], int) or extras['grid'][field.number][subkey] < 1 or extras['grid'][field.number][subkey] > 12):
+                                raise DAError("Invalid grid " + subkey + " value. It must be an integer between 1 and 12.")
                             if subkey == 'breakpoint' and extras['grid'][field.number][subkey] not in ('xs', 'sm', 'md', 'lg', 'xl', 'xxl'):
                                 raise DAError("Invalid grid " + subkey +  " value. It must be one of xs, sm, md, lg, xl, or xxl.")
                     if hasattr(field, 'floating_label'):

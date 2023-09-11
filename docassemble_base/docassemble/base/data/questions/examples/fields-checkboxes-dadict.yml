@@ -1,0 +1,33 @@
+metadata:
+  title: DADict methods
+  short title: DADict
+  documentation: "https://docassemble.org/docs/fields.html#fields checkboxes"
+  example start: 2
+  example end: 2
+---
+question: |
+  Please tell me what you think.
+fields:
+  - "Select the fruits you like": likes_fruit
+    datatype: checkboxes
+    choices:
+      - Apples: apple
+      - Peaches: peach
+      - Pears: pear
+  - "What is your favorite fruit overall?": favorite_fruit
+---
+mandatory: True
+question: |
+  Your fruit preferences
+subquestion: |
+  % if likes_fruit.all_true():
+  You like all the fruit.
+  % elif likes_fruit.all_false():
+  You don't like any of the fruit.
+  % elif likes_fruit.any_true():
+  You like at least one fruit.
+  % endif
+
+  % if likes_fruit.any_false():
+  There is at least one fruit you don't like.
+  % endif

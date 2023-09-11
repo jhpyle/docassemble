@@ -1,0 +1,26 @@
+metadata:
+  title: Editing uploads
+  documentation: "https://docassemble.org/docs/recipes.html#upload exhibits"
+  example start: 1
+  example end: 4
+---
+include:
+  - upload-handler.yml
+---
+objects:
+  - exhibits: DAFileList
+---
+event: final_screen
+question: |
+  % if exhibits.number() == 0:
+  Good luck making your case without evidence.
+  % else:
+  Thank you for uploading
+  ${ exhibits.quantity_noun('exhibits') }.
+  % endif
+---
+mandatory: True
+code: |
+  if exhibits.number() > 0:
+    exhibits.verified
+  final_screen

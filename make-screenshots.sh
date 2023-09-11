@@ -256,7 +256,8 @@ do
 	 "$file" = "wc_side_of_bed" -o \
 	 "$file" = "with-mandatory" -o \
 	 "$file" = "with-mandatory-tweak-a" -o \
-	 "$file" = "with-mandatory-tweak-b" ]
+	 "$file" = "with-mandatory-tweak-b" -o \
+         "$file" = "upload-handler" ]
     then
 	continue
     fi

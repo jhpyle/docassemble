@@ -1,5 +1,5 @@
 metadata:
-  title: Checkboxes within fields
+  title: Checkboxes with label value pairs
   short title: Checkboxes
   documentation: "https://docassemble.org/docs/fields.html#fields checkboxes"
 ---
@@ -8,12 +8,13 @@ question: |
 fields:
   - "Select the fruits you like": likes_fruit
     datatype: checkboxes
-    code: |
-      [
-        {'apple': 'Apples', 'default': True},
-        {'peach': 'Peaches'},
-        {'pear': 'Pears'}
-      ]
+    choices:
+      - label: Apples
+        value: apple
+      - label: Peaches
+        value: peach
+      - label: Pears
+        value: pear
   - "What is your favorite fruit overall?": favorite_fruit
 ---
 question: |

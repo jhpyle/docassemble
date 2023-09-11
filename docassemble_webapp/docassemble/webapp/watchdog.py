@@ -2,10 +2,10 @@ import sys
 import time
 import psutil
 
-busy_pids = set()
-index = 0
 
-if __name__ == '__main__':
+def main():
+    busy_pids = set()
+    index = 0
     while True:
         busy_now = set()
         no_longer_busy = set()
@@ -36,3 +36,6 @@ if __name__ == '__main__':
                 else:
                     busy_pids.add(pid)
         time.sleep(5)
+
+if __name__ == '__main__':
+    main()

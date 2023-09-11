@@ -1,0 +1,65 @@
+generic object: DAFileList
+question: |
+  Do you have any ${ noun_plural(x.object_name()) } to upload?
+yesno: x.there_are_any
+---
+generic object: DAFileList
+sets: x[i].initialized
+question: |
+  Upload one or more ${ noun_plural(x.object_name()) }.
+fields:
+  - label: |
+      ${ noun_plural(x.object_name(), capitalize=True) }
+    field: x[i]
+    datatype: files
+validation code: |
+  uploaded_files = x[i]
+  x[i] = uploaded_files[0]
+  x[i].instanceName = x.item_name(i)
+  for item in uploaded_files[1:]:
+    x.append(item, set_instance_name=True)
+  del uploaded_files
+  x.there_is_another = False
+  x.gathered = True
+---
+generic object: DAFileList
+question: |
+  What is the name of the ${ ordinal(i) }
+  ${ noun_singular(x.object_name()) }?
+fields:
+  - Name: x[i].filename
+---
+generic object: DAFileList
+question: ${ x.as_noun(x.object_name(), capitalize=True) } you have uploaded.
+subquestion: |
+  ${ x.table }
+  
+  ${ x.add_action(classname="btn-darevisit") }
+  % if x.number() > 1:
+  ${ action_button_html(url_action(x.attr_name('reordered')), label="Rearrange", icon="sort", color="info") }
+  % endif
+continue button field: x.verified
+---
+generic object: DAFileList
+question: |
+  Correct the order of the ${ noun_plural(x.object_name()) }.
+subquestion: |
+  ${ x.reordering_table }
+continue button field: x.reordered
+---
+generic object: DAFileList
+table: x.table
+rows: x
+columns:
+  - Filename: |
+      '[' + row_item.filename + '](' + row_item.url_for() + ')'
+edit:
+  - filename
+---
+generic object: DAFileList
+table: x.reordering_table
+rows: x
+columns:
+  - Filename: row_item.filename
+delete buttons: False
+allow reordering: True

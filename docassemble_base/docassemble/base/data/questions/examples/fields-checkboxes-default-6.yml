@@ -28,5 +28,12 @@ subquestion: |
   % if likes_fruit['pear']:
   You like pears.
   % endif
+
+  In other words, you like
+  ${ likes_fruit.true_values() }.
+
   Your favorite, though, is ${ favorite_fruit }.
+
+  In Python, `likes_fruit` is a `DADict`:
+  `${ repr(likes_fruit) }`.
 mandatory: True

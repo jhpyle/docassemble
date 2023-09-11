@@ -1,0 +1,47 @@
+metadata:
+  title: Fields in a grid
+  short title: Grid
+  documentation: "https://docassemble.org/docs/fields.html#grid"
+  example start: 1
+  example end: 2
+---
+features:
+  labels above fields: True
+---
+question: |
+  How many fingers do you have?
+fields:
+  - Left hand: fingers_left
+    datatype: integer
+    grid:
+      width: 4
+  - Right hand: fingers_right
+    datatype: integer
+    grid:
+      width: 4
+      offset: 4
+  - A: a_field
+    datatype: yesnowide
+    grid:
+      offset: 1
+      width: 2
+  - B: b_field
+    datatype: yesnowide
+    grid:
+      offset: 1
+      width: 2
+  - C: c_field
+    datatype: yesnowide
+    grid:
+      offset: 1
+      width: 2
+  - D: d_field
+    datatype: yesnowide
+    grid:
+      offset: 1
+      width: 2
+---
+mandatory: True
+question: |
+  You have
+  ${ quantity_noun(fingers_left + fingers_right, 'finger') }.

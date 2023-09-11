@@ -1,0 +1,49 @@
+metadata:
+  title: Disable continue button
+  example start: 6
+  example end: 6
+  documentation: "https://docassemble.org/docs/modifiers.html#disable continue button"
+---
+mandatory: True
+code: |
+  introduction
+  user_prevented_from_going_back
+  user_number
+  threshold_screen
+  final_screen
+---
+code: |
+  import random
+  number_to_enter = int(random.random() * 1000)
+---
+question: |
+  Remember this number: ${ number_to_enter }
+continue button field: introduction
+---
+code: |
+  prevent_going_back()
+  user_prevented_from_going_back = True
+---
+question: |
+  What was the number I asked you to remember?
+fields:
+  - Number: user_number
+    datatype: integer
+---
+question: |
+  % if user_number == number_to_enter:
+  You have passed the short-term memory test.
+  % else:
+  You are wrong.
+  % endif
+subquestion: |
+  % if user_number != number_to_enter:
+  ${ action_button_html(url_action('user_number'), label="Try again") }
+  % endif
+disable continue button: |
+  user_number != number_to_enter
+continue button field: threshold_screen
+---
+event: final_screen
+question: |
+  That's all. Bye!

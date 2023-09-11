@@ -4830,7 +4830,10 @@ class KeycloakSignIn(OAuthSignIn):
             realm = daconfig['oauth']['keycloak']['realm']
         except:
             realm = None
-        protocol = daconfig['oauth']['keycloak'].get('protocol', 'https://')
+        try:
+            protocol = daconfig['oauth']['keycloak']['protocol']
+        except KeyError:
+            protocol = 'https://'
         if not protocol.endswith('://'):
             protocol = protocol + '://'
         self.service = OAuth2Service(

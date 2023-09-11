@@ -572,7 +572,7 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
         if label_content:
             all_label_classes = []
             if grid_type == 'horizontal':
-                label_width_number = grid_info[field.number].get('label', None) or daconfig['grid classes']['label grid number']
+                label_width_number = grid_info[field.number].get('label width', None) or daconfig['grid classes']['label grid number']
                 label_width = 100.0 * (label_width_number/(label_width_number + grid_number))
                 label_style = ' style="width: %.8f%%"' % (label_width,)
                 all_label_classes.append('col-form-label da-form-label datext-right')
@@ -610,8 +610,10 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
                 grid_breakpoint = daconfig['grid classes']['grid breakpoint'] + '-'
         if 'showif' in grid_info[field.number]:
             all_classes.append(grid_info[field.number]['showif']['class'])
+        if 'offset' in grid_info[field.number]:
+            all_classes.append('offset-' + grid_breakpoint + str(grid_info[field.number]['offset']))
         if grid_type in ('offset', 'horizontal'):
-            label_number = grid_info[field.number].get('label', None) or daconfig['grid classes']['label grid number']
+            label_number = grid_info[field.number].get('label width', None) or daconfig['grid classes']['label grid number']
             total_number = min(12, label_number + grid_number)
             all_classes.append('col-' + grid_breakpoint + str(total_number))
             if grid_type in ('offset', 'horizontal'):
@@ -759,6 +761,14 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         continue_label = markdown_to_html(status.continueLabel, trim=True, do_terms=False, status=status)
     else:
         continue_label = word('Continue')
+    if status.extras.get('hide_continue_button', False):
+        show_continue_button = 'id="da-continue-button" style="display: none" '
+    else:
+        show_continue_button = 'id="da-continue-button" '
+    if status.extras.get('disable_continue_button', False):
+        disable_continue_button = 'disabled="" '
+    else:
+        disable_continue_button = ''
     # if status.question.script is not None:
     #     status.extra_scripts.append(status.question.script)
     if hasattr(status.question, 'fields_saveas'):
@@ -1086,9 +1096,13 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         output += status.submit
         output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
         if hasattr(status.question, 'review_saveas'):
-            output += back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_STYLE + continue_button_color + ' ' + BUTTON_CLASS + '" name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True">' + continue_label + '</button>' + additional_buttons_after + help_button + '\n                </fieldset>\n'
+            output += back_button + additional_buttons_before
+            output += '\n                <button type="submit" class="btn ' + BUTTON_STYLE + continue_button_color + ' ' + BUTTON_CLASS + '" ' + show_continue_button + disable_continue_button + 'name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True">' + continue_label + '</button>'
+            output += additional_buttons_after + help_button + '\n                </fieldset>\n'
         else:
-            output += back_button + additional_buttons_before + '\n                <button class="btn ' + BUTTON_STYLE + continue_button_color + ' ' + BUTTON_CLASS + '" type="submit">' + resume_button_label + '</button>' + additional_buttons_after + help_button + '\n                </fieldset>\n'
+            output += back_button + additional_buttons_before
+            output += '\n                <button class="btn ' + BUTTON_STYLE + continue_button_color + ' ' + BUTTON_CLASS + '" ' + show_continue_button + disable_continue_button + 'type="submit">' + resume_button_label + '</button>'
+            output += additional_buttons_after + help_button + '\n                </fieldset>\n'
         output += help_button_area
         if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
@@ -1118,10 +1132,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             for field in field_list:
                 grid_data = status.extras['grid'].get(field.number, {})
                 grid_info[field.number] = {'grid': grid_data.get('width', None), 'start': False, 'end': False}
-                if 'label width' in grid_data:
-                    grid_info[field.number]['label'] = grid_data['label width']
-                if 'breakpoint' in grid_data:
-                    grid_info[field.number]['breakpoint'] = grid_data['breakpoint']
+                for item in ('label width', 'offset', 'breakpoint'):
+                    if item in grid_data:
+                        grid_info[field.number][item] = grid_data[item]
                 if grid_data.get('start', False):
                     if prev_field is not None and prev_field['grid']:  # pylint: disable=unscriptable-object
                         prev_field['manual_end'] = True  # pylint: disable=unsupported-assignment-operation
@@ -1760,9 +1773,13 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         output += status.submit
         output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
         if hasattr(status.question, 'fields_saveas'):
-            output += back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" name="' + escape_id(safeid(status.question.fields_saveas)) + '" value="True">' + continue_label + '</button>' + additional_buttons_after + help_button + '\n                </fieldset>\n'
+            output += back_button + additional_buttons_before
+            output += '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" ' + show_continue_button + disable_continue_button + 'name="' + escape_id(safeid(status.question.fields_saveas)) + '" value="True">' + continue_label + '</button>'
+            output += additional_buttons_after + help_button + '\n                </fieldset>\n'
         else:
-            output += back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" type="submit">' + continue_label + '</button>' + additional_buttons_after + help_button + '\n                </fieldset>\n'
+            output += back_button + additional_buttons_before
+            output += '\n                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" ' + show_continue_button + disable_continue_button + 'type="submit">' + continue_label + '</button>'
+            output += additional_buttons_after + help_button + '\n                </fieldset>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
         if showUnderText:
@@ -1790,7 +1807,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += indent_by(video_text, 12)
         output += status.submit
         output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
-        output += back_button + additional_buttons_before + '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button>' + additional_buttons_after + help_button + '\n                </fieldset>\n'
+        output += back_button + additional_buttons_before
+        output += '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" ' + show_continue_button + disable_continue_button + 'name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button>'
+        output += additional_buttons_after + help_button + '\n                </fieldset>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
         if showUnderText:
@@ -1969,7 +1988,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += status.submit
             output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
             output += back_button + additional_buttons_before + '\n'
-            output += '                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" type="submit">' + continue_label + '</button>' + additional_buttons_after + help_button + '\n'
+            output += '                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" ' + show_continue_button + disable_continue_button + 'type="submit">' + continue_label + '</button>'
+            output += additional_buttons_after + help_button + '\n'
             output += '                </fieldset>\n'
         else:
             output += status.submit
@@ -2106,7 +2126,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += indent_by(video_text, 12)
         output += status.submit
         output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
-        output += back_button + additional_buttons_before + '\n                <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" type="submit">' + continue_label + '</button>' + additional_buttons_after + help_button + '\n                </fieldset>\n'
+        output += back_button + additional_buttons_before
+        output += '\n                <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" ' + show_continue_button + disable_continue_button + 'type="submit">' + continue_label + '</button>'
+        output += additional_buttons_after + help_button + '\n                </fieldset>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
         if showUnderText:

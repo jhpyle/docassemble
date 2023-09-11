@@ -9,7 +9,7 @@ features:
   labels above fields: True
 ---
 question: |
-  Lets pick some numbers.
+  Let's pick some numbers.
 fields:
   - "Are you afraid of odd numbers?": no_odd
     datatype: yesnoradio

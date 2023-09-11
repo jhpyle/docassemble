@@ -1,0 +1,70 @@
+metadata:
+  title: Table gather
+  example start: 1
+  example end: 8
+  documentation: "https://docassemble.org/docs/groups.html#table gather"
+---
+objects: 
+  - parties: DAList.using(object_type=Individual, complete_attribute='complete', gathered=True)
+---
+code: |
+  parties[i].name.first
+  parties[i].role
+  parties[i].complete = True
+---
+question: |
+  Parties to the case
+subquestion: |
+  % if parties.number() > 0:
+  ${ parties.table }
+
+  ${ parties.add_action(label="Add another party") }
+  % else:
+  Every case must have at least one party.
+  
+  ${ parties.add_action(label="Add a party") }
+  % endif
+continue button field: parties.reviewed
+hide continue button: |
+  parties.number() == 0
+---
+table: parties.table
+rows: parties
+columns:
+  - Name: row_item
+  - Role: row_item.role
+edit:
+  - name.first
+  - role
+---
+question: |
+  What is the name of the ${ ordinal(i) } party?
+fields:
+  - First name: parties[i].name.first
+  - Last name: parties[i].name.last
+---
+question: |
+  Is ${ parties[i] } a plaintiff or a defendant?
+field: parties[i].role
+choices:
+  - Plaintiff: plaintiff
+  - Defendant: defendant
+---  
+event: final_screen
+question: |
+  Summary of case
+subquestion: |
+  % for role_name in ('plaintiff', 'defendant'):
+    % for party in parties.filter(role=role_name):
+      % if loop.first:
+  The ${ noun_plural(role_name) } are:
+
+      % endif
+    * ${ party }
+    % endfor
+  % endfor
+---
+mandatory: True
+code: |
+  parties.reviewed
+  final_screen
