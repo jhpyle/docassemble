@@ -2722,6 +2722,36 @@ one way to do it.
 
 {% include demo-side-by-side.html demo="continuation-page" %}
 
+# <a name="upload exhibits"></a>Editing a `DAFileList` of file uploads
+
+If you allow your users to "edit" a file upload by sending them back
+to the `question` with the `datatype: file` or `datatype: files`
+field, the only way they can "edit" the upload is by re-uploading a
+new file or a new set of files. The value of the `DAFileList` is
+simply replaced. This is because `datatype: files` and `datatype:
+file` produce an `<input type="file">` HTML element, which is
+incapable of having a default value.
+
+To allow the user to edit a file upload, you can instead send them to
+a `question` that lets them see the files they have uploaded, delete
+particular ones, reorder the files, and add additional files.
+
+{% include demo-side-by-side.html demo="upload-handler-demo" %}
+
+In this example, the file [`upload-handler.yml`] defines rules that
+apply to any `DAFileList` (the blocks use `generic object:
+DAFileList`). The complicated part is the `validation code` on the
+`question` that sets `x[i]`. Without this, the `DAFileList` `x` would
+be a list of `DAFileList` objects rather than a list of `DAFile`
+objects.
+
+Note that the interview requires a definition of
+`exhibits.verified`. This is important; if your interview doesn't have
+logic that seeks out the `.verified` attribute, the user will not see
+the screens that allow them to edit the list of uploaded files.
+
+This recipe requires **docassemble** version 1.4.73 or higher.
+
 [`sections`]: {{ site.baseurl }}/docs/initial.html#sections
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
@@ -2862,3 +2892,4 @@ one way to do it.
 [`button-checkboxes.css`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/static/button-checkboxes.css
 [`background_action()`]: {{ site.baseurl }}/docs/background.html#background_action
 [`celery modules`]: {{ site.baseurl }}/docs/config.html#celery modules
+[`upload-handler.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/upload-handler.yml

@@ -863,6 +863,53 @@ list of [Python expression]s.  If a list of expressions is provided,
 each expression must evaluate to true in order for the question to be
 asked.
 
+# <a name="hide continue button"></a>Conditionally hiding the Continue button based on a Python expression
+
+Many `question` blocks have "Continue" buttons. If you want the
+"Continue" button to be hidden in some circumstances, so that the user
+cannot continue, you can set `hide continue button` to a [Python
+expression] that, if true, will cause the Continue button to be
+unavailable.
+
+You might use this on a `question` that contains an [action] the user
+can perform in order to make a correction, which may cause the
+Continue button to appear.
+
+{% include side-by-side.html demo="hide-continue-button" %}
+
+Note that the condition specified by `hide continue button` is a
+[Python expression]. This expression can only evaluate values of
+variables that have already been defined.
+
+If you want a Continue button to be shown or hidden based on the
+values of fields on the screen, you would need to write your own
+[JavaScript] to reveal the button. To reveal the button with
+[JavaScript], you can run `$("#da-continue-button").show()`.
+
+Note that because the button can be revealed with [JavaScript], the
+`hide continue button` feature should be considered cosmetic, not
+something that you should rely on for enforcing interview logic. A
+user with experience with [JavaScript] could figure out how to reveal
+the button and press it.
+
+Unless you are a [JavaScript] programmer, you should not use `hide
+continue button` on a `question` that uses `fields`, `choices`,
+`dropdown`, etc., because the user would have no way to submit the
+input. `hide continue button` is primarily useful for a screen that
+should either be either a dead-end screen or a `continue button field`
+screen, depending on a condition expressed in [Python].
+
+# <a name="disable continue button"></a>Conditionally disabling the Continue button based on a Python expression
+
+`disable continue button` is just like [`hide continue button`] except
+that instead of hiding the Continue button, it shows the button with
+the [disabled attribute] set.
+
+{% include side-by-side.html demo="disable-continue-button" %}
+
+To enable the button using [JavaScript], run 
+`$("#da-continue-button").prop("disabled", false)`.
+
 # <a name="scan for variables"></a>Turn off variable scanning
 
 By default, **docassemble** looks at every block in your interview and
@@ -1062,3 +1109,6 @@ by **docassemble**, so it can contain any valid [YAML].
 [`continue button field`]: {{ site.baseurl }}/docs/fields.html#continue button field
 [`DABreadCrumbs`]: {{ site.baseurl }}/docs/objects.html#DABreadCrumbs
 [Bootstrap colors]: https://getbootstrap.com/docs/5.2/customize/color/
+[action]: {{ site.baseurl }}/docs/functions.html#url_action
+[`hide continue button`]: #hide continue button
+[disabled attribute]: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/disabled

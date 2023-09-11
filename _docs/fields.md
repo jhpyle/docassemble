@@ -868,25 +868,16 @@ from the keys, you can specify the choices in the following manner:
 
 {% include side-by-side.html demo="fields-checkboxes-different-labels" %}
 
+You can also express the checkboxes as a list of dictionaries where
+each dictionary has the keys `label` and `value`.
+
+{% include side-by-side.html demo="fields-checkboxes-label-value" %}
+
 The [`all_true()`], [`all_false()`], [`any_true()`], [`any_false()`],
 [`true_values()`], and [`false_values()`] methods of [`DADict`] can be
 used to analyze the values set by a checkboxes field.  For example:
 
-{% highlight yaml %}
-mandatory: True
-question: |
-  Your fruit preferences
-subquestion: |
-  % if likes_fruit.all_true():
-  You like all the fruit.
-  % elif likes_fruit.all_false():
-  You don't like any of the fruit.
-  % elif likes_fruit.any_true():
-  You like at least one fruit.
-  % elif likes_fruit.any_false():
-  There is at least one fruit you don't like.
-  % endif
-{% endhighlight %}
+{% include side-by-side.html demo="fields-checkboxes-dadict" %}
 
 You can generate checkbox choices with code:
 
@@ -2114,9 +2105,16 @@ In the above example, the fields for gathering the address will be
 side-by-side as long as the screen is at least 576 pixels wide (the
 `sm` threshold).
 
-You can specify the `width`, `label width`, `start`, and `end` as
-Python expressions, and you can specify the `breakpoint` using
-[Mako].
+If you want to insert horizontal space before a field, set the
+`offset` under `grid`:
+
+{% include side-by-side.html demo="grid9" %}
+
+This will indent the field by the given amount of space.
+
+You can specify the `width`, `label width`, `offset`, `start`, and
+`end` as Python expressions, and you can specify the `breakpoint`
+using [Mako].
 
 {% include side-by-side.html demo="grid8" %}
 
@@ -2793,6 +2791,17 @@ data type.
 When set, the variable `user_picture` will be a special [object] of
 type [`DAFileList`].  For more information about how to make use of
 uploaded files, see [inserting images].
+
+Note that after a file is uploaded, if you send the user back to the
+same `question` again, the user might expect to see the file that they
+had already uploaded. However, they will instead be required to upload
+a new file. This new upload will replace the [`DAFileList`] they had
+created early.
+
+To see an example of providing the user with an interface for editing
+a list of files that were upload (including deleting specific files,
+reordering files, and adding additional files), see 
+[this recipe]({{ site.baseurl }}/docs/recipes.html#upload exhibits).
 
 ## <a name="signature"></a>Gathering the user's signature into a file variable
 

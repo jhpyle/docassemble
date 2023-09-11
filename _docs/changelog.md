@@ -3,6 +3,20 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.77](https://github.com/jhpyle/docassemble/releases/tag/v1.4.77) - 2023-09-10
+
+
+### Added
+- The `hide continue button` and `disable continue button` modifiers
+  for `question`.
+- The `offset` option for the `grid` field modifier for inserting
+  horizontal space before a field.
+
+
+### Fixed
+- Error when calling `.privilege_access()` on a `DAFile`.
+- Error when using social logins.
+
 ## [1.4.76](https://github.com/jhpyle/docassemble/releases/tag/v1.4.76) - 2023-09-09
 
 

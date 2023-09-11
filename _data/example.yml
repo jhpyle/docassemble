@@ -3968,6 +3968,25 @@
       The current date is ${ format_date(current_datetime()) }.
     buttons:
       - Ok: continue
+"disable-continue-button":
+  "height": !!int |-
+    122
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      % if user_number == number_to_enter:
+      You have passed the short-term memory test.
+      % else:
+      You are wrong.
+      % endif
+    subquestion: |
+      % if user_number != number_to_enter:
+      ${ action_button_html(url_action('user_number'), label="Try again") }
+      % endif
+    disable continue button: |
+      user_number != number_to_enter
+    continue button field: threshold_screen
 "disable-others":
   "height": !!int |-
     310
@@ -5826,7 +5845,12 @@
       % endif
       Your favorite, though, is ${ favorite_fruit }.
 
-      In Python, `likes_fruit` is
+      In other words, you like
+      ${ likes_fruit.true_values() }.
+
+      Your favorite, though, is ${ favorite_fruit }.
+
+      In Python, `likes_fruit` is a `DADict`:
       `${ repr(likes_fruit) }`.
     mandatory: True
 "fields-checkboxes-aota":
@@ -5865,21 +5889,27 @@
             {'pear': 'Pears'}
           ]
       - "What is your favorite fruit overall?": favorite_fruit
-    ---
-    question: |
-      Thank you for your thoughts.
-    subquestion: |
-      % if likes_fruit['apple']:
-      You like apples.
-      % endif
-      % if likes_fruit['peach']:
-      You like peaches.
-      % endif
-      % if likes_fruit['pear']:
-      You like pears.
-      % endif
-      Your favorite, though, is ${ favorite_fruit }.
+"fields-checkboxes-dadict":
+  "height": !!int |-
+    424
+  "width": !!int |-
+    488
+  "yaml": |-
     mandatory: True
+    question: |
+      Your fruit preferences
+    subquestion: |
+      % if likes_fruit.all_true():
+      You like all the fruit.
+      % elif likes_fruit.all_false():
+      You don't like any of the fruit.
+      % elif likes_fruit.any_true():
+      You like at least one fruit.
+      % endif
+
+      % if likes_fruit.any_false():
+      There is at least one fruit you don't like.
+      % endif
 "fields-checkboxes-default-0":
   "height": !!int |-
     424
@@ -6026,24 +6056,25 @@
           - Peaches: peach
           - Pears: pear
       - "What is your favorite fruit overall?": favorite_fruit
-    ---
+"fields-checkboxes-label-value":
+  "height": !!int |-
+    424
+  "width": !!int |-
+    488
+  "yaml": |-
     question: |
-      Thank you for your thoughts.
-    subquestion: |
-      % if likes_fruit['apple']:
-      You like apples.
-      % endif
-      % if likes_fruit['peach']:
-      You like peaches.
-      % endif
-      % if likes_fruit['pear']:
-      You like pears.
-      % endif
-      Your favorite, though, is ${ favorite_fruit }.
-
-      In Python, `likes_fruit` is
-      `${ variable_as_code }`.
-    mandatory: True
+      Please tell me what you think.
+    fields:
+      - "Select the fruits you like": likes_fruit
+        datatype: checkboxes
+        choices:
+          - label: Apples
+            value: apple
+          - label: Peaches
+            value: peach
+          - label: Pears
+            value: pear
+      - "What is your favorite fruit overall?": favorite_fruit
 "fields-checkboxes-nota":
   "height": !!int |-
     424
@@ -8433,7 +8464,7 @@
       labels above fields: True
     ---
     question: |
-      Lets pick some numbers.
+      Let's pick some numbers.
     fields:
       - "Are you afraid of odd numbers?": no_odd
         datatype: yesnoradio
@@ -8659,25 +8690,101 @@
     294
   "width": !!int |-
     488
-  "yaml": "features:\n  labels above fields: True\n---\nquestion: |\n  Tell me your\
-    \ address.\nfields:\n  - Address: address.address\n  - City: address.city\n  \
-    \  grid:\n      width: 6\n      breakpoint: sm\n  - State: address.state\n   \
-    \ code: states_list(abbreviate=True)\n    grid: \n      width: 3\n      breakpoint:\
-    \ sm\n    hint: \"\"\n  - Zip: address.zip\n    grid: \n      width: 3\n     \
-    \ breakpoint: sm"
+  "yaml": |-
+    features:
+      labels above fields: True
+    ---
+    question: |
+      Tell me your address.
+    fields:
+      - Address: address.address
+      - City: address.city
+        grid:
+          width: 6
+          breakpoint: sm
+      - State: address.state
+        code: states_list(abbreviate=True)
+        grid:
+          width: 3
+          breakpoint: sm
+        hint: ""
+      - Zip: address.zip
+        grid:
+          width: 3
+          breakpoint: sm
 "grid8":
   "height": !!int |-
     294
   "width": !!int |-
     488
-  "yaml": "features:\n  labels above fields: True\n---\ncode: |\n  address_width =\
-    \ 6\n  state_width = 3\n  breakpoint = \"sm\"\n---\nquestion: |\n  Tell me your\
-    \ address.\nfields:\n  - Address: address.address\n  - City: address.city\n  \
-    \  grid:\n      width: address_width\n      breakpoint: ${ breakpoint }\n  - State:\
-    \ address.state\n    code: states_list(abbreviate=True)\n    grid: \n      width:\
-    \ state_width\n      breakpoint: ${ breakpoint }\n    hint: \"\"\n  - Zip: address.zip\n\
-    \    grid: \n      width: 12 - (state_width + address_width)\n      breakpoint:\
-    \ ${ breakpoint }"
+  "yaml": |-
+    features:
+      labels above fields: True
+    ---
+    code: |
+      address_width = 6
+      state_width = 3
+      breakpoint = "sm"
+    ---
+    question: |
+      Tell me your address.
+    fields:
+      - Address: address.address
+      - City: address.city
+        grid:
+          width: address_width
+          breakpoint: ${ breakpoint }
+      - State: address.state
+        code: states_list(abbreviate=True)
+        grid:
+          width: state_width
+          breakpoint: ${ breakpoint }
+        hint: ""
+      - Zip: address.zip
+        grid:
+          width: 12 - (state_width + address_width)
+          breakpoint: ${ breakpoint }
+"grid9":
+  "height": !!int |-
+    270
+  "width": !!int |-
+    488
+  "yaml": |-
+    features:
+      labels above fields: True
+    ---
+    question: |
+      How many fingers do you have?
+    fields:
+      - Left hand: fingers_left
+        datatype: integer
+        grid:
+          width: 4
+      - Right hand: fingers_right
+        datatype: integer
+        grid:
+          width: 4
+          offset: 4
+      - A: a_field
+        datatype: yesnowide
+        grid:
+          offset: 1
+          width: 2
+      - B: b_field
+        datatype: yesnowide
+        grid:
+          offset: 1
+          width: 2
+      - C: c_field
+        datatype: yesnowide
+        grid:
+          offset: 1
+          width: 2
+      - D: d_field
+        datatype: yesnowide
+        grid:
+          offset: 1
+          width: 2
 "hello-not-oop":
   "height": !!int |-
     230
@@ -8785,6 +8892,28 @@
         money to seek in damages, just ask
         for a million dollars, since you
         want ${ defendant } to suffer.
+"hide-continue-button":
+  "height": !!int |-
+    122
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      % if user_number == number_to_enter:
+      You have passed the short-term memory test.
+      % else:
+      You are wrong.
+      % endif
+    action buttons:
+      - label: |
+          Try again
+        action: user_number
+        show if: |
+          user_number != number_to_enter
+        color: primary
+    hide continue button: |
+      user_number != number_to_enter
+    continue button field: threshold_screen
 "hideif-boolean":
   "height": !!int |-
     340
@@ -15426,6 +15555,29 @@
     columns:
       - Fruit Name: row_item.name
       - Seeds: row_item.seeds
+"tablegather":
+  "height": !!int |-
+    153
+  "width": !!int |-
+    488
+  "yaml": "objects: \n  - parties: DAList.using(object_type=Individual, complete_attribute='complete',\
+    \ gathered=True)\n---\ncode: |\n  parties[i].name.first\n  parties[i].role\n \
+    \ parties[i].complete = True\n---\nquestion: |\n  Parties to the case\nsubquestion:\
+    \ |\n  % if parties.number() > 0:\n  ${ parties.table }\n\n  ${ parties.add_action(label=\"\
+    Add another party\") }\n  % else:\n  Every case must have at least one party.\n\
+    \  \n  ${ parties.add_action(label=\"Add a party\") }\n  % endif\ncontinue button\
+    \ field: parties.reviewed\nhide continue button: |\n  parties.number() == 0\n\
+    ---\ntable: parties.table\nrows: parties\ncolumns:\n  - Name: row_item\n  - Role:\
+    \ row_item.role\nedit:\n  - name.first\n  - role\n---\nquestion: |\n  What is\
+    \ the name of the ${ ordinal(i) } party?\nfields:\n  - First name: parties[i].name.first\n\
+    \  - Last name: parties[i].name.last\n---\nquestion: |\n  Is ${ parties[i] } a\
+    \ plaintiff or a defendant?\nfield: parties[i].role\nchoices:\n  - Plaintiff:\
+    \ plaintiff\n  - Defendant: defendant\n---\nevent: final_screen\nquestion: |\n\
+    \  Summary of case\nsubquestion: |\n  % for role_name in ('plaintiff', 'defendant'):\n\
+    \    % for party in parties.filter(role=role_name):\n      % if loop.first:\n\
+    \  The ${ noun_plural(role_name) } are:\n\n      % endif\n    * ${ party }\n \
+    \   % endfor\n  % endfor\n---\nmandatory: True\ncode: |\n  parties.reviewed\n\
+    \  final_screen"
 "tags":
   "height": !!int |-
     266
@@ -20593,6 +20745,12 @@
       name: A document
       filename: final_document
       docx template file: main_document.docx
+"tablegather":
+  "height": !!int |-
+    153
+  "width": !!int |-
+    488
+  "yaml": ""
 "tagged-pdf":
   "height": !!int |-
     575
@@ -20870,6 +21028,52 @@
     validation code: |
       if uploaded_file.size_in_bytes() > 100000:
         validation_error("That file is way too big!  Upload a smaller file.")
+"upload-handler":
+  "yaml": |-
+    generic object: DAFileList
+    sets: x[i].initialized
+    question: |
+      Upload one or more ${ noun_plural(x.object_name()) }.
+    fields:
+      - label: |
+          ${ noun_plural(x.object_name(), capitalize=True) }
+        field: x[i]
+        datatype: files
+    validation code: |
+      uploaded_files = x[i]
+      x[i] = uploaded_files[0]
+      x[i].instanceName = x.item_name(i)
+      for item in uploaded_files[1:]:
+        x.append(item, set_instance_name=True)
+      del uploaded_files
+      x.there_is_another = False
+      x.gathered = True
+"upload-handler-demo":
+  "height": !!int |-
+    154
+  "width": !!int |-
+    488
+  "yaml": |-
+    include:
+      - upload-handler.yml
+    ---
+    objects:
+      - exhibits: DAFileList
+    ---
+    event: final_screen
+    question: |
+      % if exhibits.number() == 0:
+      Good luck making your case without evidence.
+      % else:
+      Thank you for uploading
+      ${ exhibits.quantity_noun('exhibits') }.
+      % endif
+    ---
+    mandatory: True
+    code: |
+      if exhibits.number() > 0:
+        exhibits.verified
+      final_screen
 "validation-code":
   "height": !!int |-
     270

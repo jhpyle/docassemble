@@ -1453,6 +1453,21 @@ order of items in the list, you can set `allow reordering` to `True`:
 The changes to the order of elements will be saved when the user
 presses Continue.
 
+# <a name="table gather"></a>Use a table to gather the list
+
+It is possible to use a `table` for the initial gathering process, not
+just for editing an already-gathered list. You can do this by
+initializing the list with `gathered=True` and then placing something
+in the interview logic that forces the user to visit a page with a
+`table` and an `.add_action()` button.
+
+{% include side-by-side.html demo="tablegather" %}
+
+In this example, it is important that `parties.reviewed` is placed
+into the interview logic in the place where the user should be asked
+for the names of the parties. If this variable is not required, the
+`parties` list will simply be considered to be empty.
+
 # <a name="list collect"></a>Collect all items on one page
 
 By default, when gathering or editing a list item, **docassemble**
