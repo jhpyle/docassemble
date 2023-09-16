@@ -1136,7 +1136,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     if item in grid_data:
                         grid_info[field.number][item] = grid_data[item]
                 if grid_data.get('start', False):
-                    if prev_field is not None and prev_field['grid']:  # pylint: disable=unscriptable-object
+                    if prev_field is not None and prev_field['grid']:  # pylint: disable=unsubscriptable-object
                         prev_field['manual_end'] = True  # pylint: disable=unsupported-assignment-operation
                 if grid_data.get('end', False):
                     grid_info[field.number]['manual_end'] = True
@@ -1273,7 +1273,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     else:
                         display_style = ''
                     if grid_info['_enabled'] and grid_info[field.number]['grid']:
-                        grid_info[field.number]['showif'] = {'style': display_style, 'class': 'dajsshowif', 'data': {'jsshowif': myb64doublequote(json.dumps(status.extras['show_if_js'][field.number]))}}
+                        grid_info[field.number]['showif'] = {'style': display_style, 'class': 'dajsshowif', 'data': {'jsshowif': safeid(json.dumps(status.extras['show_if_js'][field.number]))}}
                         if hasattr(field, 'saveas'):
                             grid_info[field.number]['showif']['data']['saveas'] = escape_id(field.saveas)
                     else:
@@ -3213,6 +3213,13 @@ def input_for(status, field, embedded=False, wide=False, floating_label=None):
             else:
                 output += "".join(inner_fieldlist) + '</fieldset>'
         elif field.datatype in ['file', 'files', 'camera', 'user', 'environment', 'camcorder', 'microphone'] and not is_hidden:
+            if 'file css class' in status.extras and field.number in status.extras['file css class']:
+                file_class = status.extras['file css class'][field.number]
+                if file_class == 'None':
+                    file_class = 'form-control'
+            else:
+                file_class = 'dafile'
+            file_class += extra_class
             if field.datatype == 'files':
                 multipleflag = ' multiple'
             else:
@@ -3250,7 +3257,7 @@ def input_for(status, field, embedded=False, wide=False, floating_label=None):
             if embedded:
                 output += '<span class="da-inline-error-wrapper"><input alt="' + word("You can upload a file here") + '" type="file" class="dafile-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + req_attr + '/></span>'
             else:
-                output += '<input aria-describedby="' + escape_id(saveas_string) + '-error" alt=' + fix_double_quote(word("You can upload a file here")) + ' type="file" tabindex="-1" class="dafile" data-show-upload="false" ' + maximagesize + imagetype + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + req_attr + ' /><div class="da-has-error invalid-feedback" style="display: none;" id="' + escape_id(saveas_string) + '-error"></div>'
+                output += '<input aria-describedby="' + escape_id(saveas_string) + '-error" alt=' + fix_double_quote(word("You can upload a file here")) + ' type="file" tabindex="-1" class="' + file_class + '" data-show-upload="false" ' + maximagesize + imagetype + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + req_attr + ' /><div class="da-has-error invalid-feedback" style="display: none;" id="' + escape_id(saveas_string) + '-error"></div>'
             # output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="fas fa-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-secondary btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-secondary fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'range' and not is_hidden:
             ok = True

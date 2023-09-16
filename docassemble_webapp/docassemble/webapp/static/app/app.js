@@ -9,7 +9,8 @@ var daAspectRatio;
 var daTheBorders;
 var daIsEmpty;
 
-function daInitializeSignature() {
+function daInitializeSignature(penColor) {
+  daColor = penColor;
   daAspectRatio = 0.4;
   daTheBorders = 30;
   daIsEmpty = 1;
@@ -143,6 +144,7 @@ function daNewCanvas() {
   $("#dasigcanvas").each(function () {
     daCtx = $(this)[0].getContext("2d");
     daCtx.strokeStyle = daColor;
+    daCtx.fillStyle = daColor;
     daCtx.lineWidth = daTheWidth;
   });
 
@@ -633,17 +635,15 @@ function daFillInAddress(origId) {
       typeof id_for_part["latitude"] != "undefined" &&
       document.getElementById(id_for_part["latitude"]) != null
     ) {
-      document.getElementById(
-        id_for_part["latitude"]
-      ).value = place.geometry.location.lat();
+      document.getElementById(id_for_part["latitude"]).value =
+        place.geometry.location.lat();
     }
     if (
       typeof id_for_part["longitude"] != "undefined" &&
       document.getElementById(id_for_part["longitude"]) != null
     ) {
-      document.getElementById(
-        id_for_part["longitude"]
-      ).value = place.geometry.location.lng();
+      document.getElementById(id_for_part["longitude"]).value =
+        place.geometry.location.lng();
     }
   }
   if (

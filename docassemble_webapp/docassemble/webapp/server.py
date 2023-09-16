@@ -12618,7 +12618,11 @@ def index(action_argument=None, refer=None):
             populate_social(social, interview.consolidated_metadata['social'])
         standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme, page_title=interview_status.title, social=social, yaml_filename=yaml_filename)
     if interview_status.question.question_type == "signature":
-        interview_status.extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
+        if 'pen color' in interview_status.extras and 0 in interview_status.extras['pen color']:
+            pen_color = interview_status.extras['pen color'][0].strip()
+        else:
+            pen_color = '#000'
+        interview_status.extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature(' + json.dumps(pen_color) + ');});</script>')
         if interview.options.get('hide navbar', False):
             bodyclass = "dasignature navbarhidden"
         else:
@@ -22108,6 +22112,9 @@ def playground_page():
                     files = sorted([{'name': f, 'modtime': os.path.getmtime(os.path.join(the_directory, f))} for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])
                     file_listing = [x['name'] for x in files]
                     assign_opacity(files)
+                if active_file == form.original_playground_name.data:
+                    active_file = the_file
+                    set_variable_file(current_project, active_file)
             the_time = formatted_current_time()
             should_save = True
             the_content = re.sub(r'\r\n', r'\n', form.playground_content.data)

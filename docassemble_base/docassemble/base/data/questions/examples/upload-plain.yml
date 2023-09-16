@@ -1,0 +1,18 @@
+metadata:
+  title: Disabling file-input plugin
+  example start: 1
+  example end: 1
+  documentation: "https://docassemble.org/docs/fields.html#file css class"
+---
+question: |
+  Please upload a JPEG or PNG of yourself.
+fields:
+  - File: user_file
+    datatype: file
+    file css class: None
+---
+question: |
+  Here is your file.
+subquestion: |
+  ${ user_file }
+mandatory: True

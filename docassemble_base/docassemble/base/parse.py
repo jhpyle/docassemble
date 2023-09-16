@@ -1231,7 +1231,7 @@ class InterviewStatus:
                 the_field['uncheck_others'] = True
             elif hasattr(field, 'checkothers') and field.checkothers is not False:
                 the_field['check_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata', 'css class', 'address_autocomplete', 'label_above_field', 'floating_label', 'grid'):
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata', 'css class', 'address_autocomplete', 'label_above_field', 'floating_label', 'grid', 'pen color', 'file css class'):
                 if key in self.extras and field.number in self.extras[key]:
                     if key in ('minlength', 'maxlength', 'min', 'max', 'step'):
                         validation_rules_used.add(key)
@@ -2085,7 +2085,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb', 'tabular', 'hide continue button', 'disable continue button'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb', 'tabular', 'hide continue button', 'disable continue button', 'pen color'):
                     logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -3383,6 +3383,10 @@ class Question:
                 processed_decoration_list.append(item_to_add)
             self.decorations = processed_decoration_list
         if 'signature' in data:
+            if 'pen color' in data:
+                pen_extras = {'pen color': TextObject(DO_NOT_TRANSLATE + data['pen color'], question=self)}
+            else:
+                pen_extras = {}
             self.question_type = 'signature'
             if 'required' in data:
                 if isinstance(data['required'], bool):
@@ -3390,9 +3394,9 @@ class Question:
                 else:
                     is_required = {'compute': compile(data['required'], '<required code>', 'eval'), 'sourcecode': data['required']}
                     self.find_fields_in(data['required'])
-                self.fields.append(Field({'saveas': data['signature'], 'required': is_required}))
+                self.fields.append(Field({'saveas': data['signature'], 'required': is_required, 'extras': pen_extras}))
             else:
-                self.fields.append(Field({'saveas': data['signature']}))
+                self.fields.append(Field({'saveas': data['signature'], 'extras': pen_extras}))
             if self.scan_for_variables:
                 self.fields_used.add(data['signature'])
             else:
@@ -3962,6 +3966,10 @@ class Question:
                     elif key == 'accept' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
                         field_info['accept'] = {'compute': compile(field[key], '<accept code>', 'eval'), 'sourcecode': field[key]}
                         self.find_fields_in(field[key])
+                    elif key == 'file css class' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
+                        if 'extras' not in field_info:
+                            field_info['extras'] = {}
+                        field_info['extras']['file css class'] = TextObject(DO_NOT_TRANSLATE + str(field[key]), question=self)
                     elif key == 'allow privileges' and 'datatype' in field and field['datatype'] in ('file', 'files', 'camera', 'user', 'environment'):
                         if isinstance(field[key], list):
                             for item in field[key]:
@@ -4237,7 +4245,7 @@ class Question:
                                 else:
                                     raise DAError(key + " " + subkey + " must be True or False, or a Python expression." + self.idebug(data))
                         if 'breakpoint' in field[key]:
-                            field_info[key]['breakpoint'] = TextObject(definitions + str(field[key]['breakpoint']), question=self)
+                            field_info[key]['breakpoint'] = TextObject(DO_NOT_TRANSLATE + str(field[key]['breakpoint']), question=self)
                     elif key == 'floating label':
                         if isinstance(field[key], str):
                             field_info['floating_label'] = compile(field[key], '<floating label expression>', 'eval')
@@ -5858,7 +5866,7 @@ class Question:
                                 continue
                         else:
                             extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
-                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline', 'inline width', 'currency symbol'):  # 'script', 'css',
+                    for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline', 'inline width', 'currency symbol', 'pen color', 'file css class'):  # 'script', 'css',
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = {}
@@ -6324,7 +6332,7 @@ class Question:
                             if subkey in ('width', 'label width', 'offset') and (not isinstance(extras['grid'][field.number][subkey], int) or extras['grid'][field.number][subkey] < 1 or extras['grid'][field.number][subkey] > 12):
                                 raise DAError("Invalid grid " + subkey + " value. It must be an integer between 1 and 12.")
                             if subkey == 'breakpoint' and extras['grid'][field.number][subkey] not in ('xs', 'sm', 'md', 'lg', 'xl', 'xxl'):
-                                raise DAError("Invalid grid " + subkey +  " value. It must be one of xs, sm, md, lg, xl, or xxl.")
+                                raise DAError("Invalid grid " + subkey + " value. It must be one of xs, sm, md, lg, xl, or xxl.")
                     if hasattr(field, 'floating_label'):
                         if 'floating_label' not in extras:
                             extras['floating_label'] = {}
@@ -6430,7 +6438,7 @@ class Question:
                             if 'field metadata' not in extras:
                                 extras['field metadata'] = {}
                             extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
-                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline', 'inline width', 'ml_group', 'currency symbol', 'css class'):  # , 'textresponse', 'content_type' # 'script', 'css',
+                        for key in ('note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'scale', 'inline', 'inline width', 'ml_group', 'currency symbol', 'css class', 'pen color', 'file css class'):  # , 'textresponse', 'content_type' # 'script', 'css',
                             if key in field.extras:
                                 if key not in extras:
                                     extras[key] = {}

@@ -78,6 +78,7 @@ def before_all(context):
     context.wait_seconds = default_wait_seconds
     context.check_json = check_json
 
+
 def after_all(context):
     time.sleep(2)
     # print("Total %d of %d scenarios passed!" % ( total.scenarios_ran, total.scenarios_passed ))
