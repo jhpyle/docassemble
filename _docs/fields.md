@@ -680,6 +680,29 @@ Since the [`accept` method] of the [jQuery Validation Plugin] only
 works with MIME types, you can only specify MIME types here, not file
 extensions.
 
+<a name="file css class"></a>By default, **docassemble** styles the
+upload using the [Bootstrap File Input] plugin. If you do not want the
+[Bootstrap File Input] plugin to be used, you can set `file css class`
+to `None`.
+
+{% include side-by-side.html demo="upload-plain" %}
+
+If you set `file css class` to `None`, then the `class` of the `<input
+type="file">` element will be `form-control`, which is the standard
+class that [Bootstrap] uses to style file input elements. You can set
+`file css class` to any other class of your choosing if you want to
+use a different `class` than `form-control`. The `file css class`
+modifier can use [Mako] templating.
+
+If no `file css class` is specified, the `class` of the input element
+will be `dafile`, which causes the [Bootstrap File Input] plugin to
+be activated.
+
+Note that `file css class` is different from `css class`; the `css
+class` modifier simply adds additional classes to the `class`
+attribute of the input element, whereas `file css class` replaces the
+default class, which is `dafile`.
+
 <a name="maximum image size"></a>If your users upload digital photos
 into your interviews, the uploads may take a long time.  You can
 configure an upload field so that images are reduced in size before
@@ -2868,6 +2891,14 @@ under: |
 required: False
 {% endhighlight %}
 
+<a name="pen color"></a>By default, the color of the signature is
+black. To use a different color, set `pen color` to a valid [CSS
+color]. This example uses a blue color.
+
+{% include side-by-side.html demo="signature-blue" %}
+
+[Mako] can be used when specifying a `pen color`.
+
 # <a name="general"></a>Generalizing questions
 
 **docassemble** lets you write a single question that can be re-used
@@ -3624,3 +3655,5 @@ why this needs to be done manually as opposed to automatically:
 [breakpoint]: https://getbootstrap.com/docs/5.3/layout/breakpoints/#available-breakpoints
 [breakpoints]: https://getbootstrap.com/docs/5.3/layout/breakpoints/#available-breakpoints
 [`grid classes`]: {{ site.baseurl }}/docs/config.html#grid classes
+[Bootstrap File Input]: https://plugins.krajee.com/file-input
+[CSS color]: https://developer.mozilla.org/en-US/docs/Web/CSS/color

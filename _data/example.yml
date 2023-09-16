@@ -14696,9 +14696,9 @@
         Hint: 2 + 2 = 4.
 "signature":
   "height": !!int |-
-    394
+    386
   "width": !!int |-
-    478
+    488
   "yaml": |-
     question: |
       Sign your name
@@ -14706,6 +14706,21 @@
       By signing your name, you agree to
       our terms and conditions.
     signature: target_variable
+    under: |
+      ${ user }
+"signature-blue":
+  "height": !!int |-
+    425
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Sign your name
+    subquestion: |
+      By signing your name, you agree to
+      our terms and conditions.
+    signature: target_variable
+    pen color: "#33f"
     under: |
       ${ user }
 "signin":
@@ -16260,6 +16275,18 @@
     subquestion: |
       ${ user_pictures }
     mandatory: True
+"upload-plain":
+  "height": !!int |-
+    208
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Please upload a JPEG or PNG of yourself.
+    fields:
+      - File: user_file
+        datatype: file
+        file css class: None
 "upload-show":
   "height": !!int |-
     515

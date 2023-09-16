@@ -3,6 +3,20 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.78](https://github.com/jhpyle/docassemble/releases/tag/v1.4.78) - 2023-09-16
+
+
+### Added
+- The `pen color` modifier for the `signature` block.
+- The `file css class` field modifier for `datatype: file` and
+  `datatype: files` fields. This can be set to `None` to disable the
+  Bootstrap File Input plugin for the file upload input element.
+
+
+### Fixed
+- Errors with the Apache web server option (system upgrade required).
+- Error with `js show if` when used in conjunction with `grid`.
+
 ## [1.4.77](https://github.com/jhpyle/docassemble/releases/tag/v1.4.77) - 2023-09-10
 
 
