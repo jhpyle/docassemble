@@ -1,0 +1,20 @@
+metadata:
+  title: List fonts
+---
+modules:
+  - .fonts
+---
+question: |
+  Select a language to see the installed fonts for that language.
+field: language
+dropdown:
+  code: |
+    language_list()
+---
+mandatory: True
+question: |
+  Fonts for ${ lang_name(language) }
+subquestion: |
+  % for item in get_fonts(language):
+  * ${ item[1] } `${ item[0] }`
+  % endfor

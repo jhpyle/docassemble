@@ -26,6 +26,12 @@ logging.getLogger('pdfminer').setLevel(logging.ERROR)
 
 PDFTK_PATH = 'pdftk'
 QPDF_PATH = 'qpdf'
+DEFAULT_RENDERING_FONT = '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'
+
+if os.path.isfile(DEFAULT_RENDERING_FONT):
+    DEFAULT_FONT_ARGUMENTS = ['replacement_font', DEFAULT_RENDERING_FONT]
+else:
+    DEFAULT_FONT_ARGUMENTS = []
 
 
 def set_pdftk_path(path):
@@ -150,7 +156,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix='', parent_ft=N
                 outfields.append((prefix, default, pageno, rect, field_type, export_value))
 
 
-def fill_template(template, data_strings=None, data_names=None, hidden=None, readonly=None, images=None, pdf_url=None, editable=True, pdfa=False, password=None, template_password=None, default_export_value=None):
+def fill_template(template, data_strings=None, data_names=None, hidden=None, readonly=None, images=None, pdf_url=None, editable=True, pdfa=False, password=None, template_password=None, default_export_value=None, replacement_font=None):
     if data_strings is None:
         data_strings = []
     if data_names is None:
@@ -228,7 +234,11 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                 logmessage("Failed to decrypt PDF template " + str(template))
                 raise DAError("Call to qpdf failed for template " + str(template) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
             template = template_file.name
-        subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name]
+        if replacement_font:
+            font_arguments = ['replacement_font', replacement_font]
+        else:
+            font_arguments = DEFAULT_FONT_ARGUMENTS
+        subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name] + font_arguments
         # logmessage("Arguments are " + str(subprocess_arguments))
         if len(images) > 0:
             subprocess_arguments.append('need_appearances')

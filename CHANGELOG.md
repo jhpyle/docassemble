@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.4.79] - 2023-09-18
+
+### Added
+- The `rendering font` option to `attachment`.
+
+### Changed
+- `pdftk` will render form fields to text using the `msttcorefonts`
+  version of Arial, which has better support for Unicode characters.
+- Updated the collection of Material Icons.
+
+### Fixed
+- Exception raised in certain circumstances when using `depends on`.
+- When `hide corner interface` was used, on small screens the toggler
+  still showed.
+
 ## [1.4.78] - 2023-09-16
 
 ### Added

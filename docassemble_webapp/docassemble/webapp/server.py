@@ -3224,48 +3224,48 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         navbar += '<li hidden class="nav-item dainvisible" role="presentation"><button class="btn btn-link nav-link dahelptrigger da-no-outline" id="dahelptoggle" data-bs-target="#dahelp" data-bs-toggle="tab" role="tab">' + word('Help') + '</button></li>'
     navbar += '<li hidden class="nav-item dainvisible" id="daPhoneAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" role="tab" title=' + json.dumps(phone_message) + ' class="btn btn-link nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-phone da-chat-active"></i><span class="visually-hidden">' + phone_sr + '</span></button></li>' + \
               '<li class="nav-item dainvisible" id="daChatAvailable"><button data-bs-target="#dahelp" data-bs-toggle="tab" class="btn btn-link nav-link dapointer dahelptrigger da-no-outline"><i class="fas fa-comment-alt"></i><span class="visually-hidden">' + chat_sr + '</span></button></li></ul>'
-    navbar += """
+    if not status.question.interview.options.get('hide corner interface', False):
+        navbar += """
           <button id="damobile-toggler" type="button" class="navbar-toggler ms-auto" data-bs-toggle="collapse" data-bs-target="#danavbar-collapse">
             <span class="navbar-toggler-icon"></span><span class="visually-hidden">""" + word("Display the menu") + """</span>
           </button>
           <div class="collapse navbar-collapse" id="danavbar-collapse">
             <ul class="navbar-nav ms-auto">
 """
-    navbar += status.nav_item
-    if 'menu_items' in status.extras:
-        if not isinstance(status.extras['menu_items'], list):
-            custom_menu = '<a tabindex="-1" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
-        elif len(status.extras['menu_items']) > 0:
-            custom_menu = ""
-            for menu_item in status.extras['menu_items']:
-                if not (isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item):
-                    custom_menu += '<a tabindex="-1" class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
-                else:
-                    screen_size = menu_item.get('screen_size', '')
-                    if screen_size == 'small':
-                        menu_item_classes = ' d-block d-md-none'
-                    elif screen_size == 'large':
-                        menu_item_classes = ' d-none d-md-block'
+        navbar += status.nav_item
+        if 'menu_items' in status.extras:
+            if not isinstance(status.extras['menu_items'], list):
+                custom_menu = '<a tabindex="-1" class="dropdown-item">' + word("Error: menu_items is not a Python list") + '</a>'
+            elif len(status.extras['menu_items']) > 0:
+                custom_menu = ""
+                for menu_item in status.extras['menu_items']:
+                    if not (isinstance(menu_item, dict) and 'url' in menu_item and 'label' in menu_item):
+                        custom_menu += '<a tabindex="-1" class="dropdown-item">' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
                     else:
-                        menu_item_classes = ''
-                    match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
-                    if match_action:
-                        custom_menu += '<a class="dropdown-item' + menu_item_classes + '" data-embaction="' + match_action.group(1) + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
-                    else:
-                        custom_menu += '<a class="dropdown-item' + menu_item_classes + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
+                        screen_size = menu_item.get('screen_size', '')
+                        if screen_size == 'small':
+                            menu_item_classes = ' d-block d-md-none'
+                        elif screen_size == 'large':
+                            menu_item_classes = ' d-none d-md-block'
+                        else:
+                            menu_item_classes = ''
+                        match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
+                        if match_action:
+                            custom_menu += '<a class="dropdown-item' + menu_item_classes + '" data-embaction="' + match_action.group(1) + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
+                        else:
+                            custom_menu += '<a class="dropdown-item' + menu_item_classes + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
+            else:
+                custom_menu = ""
         else:
             custom_menu = ""
-    else:
-        custom_menu = ""
-    if ALLOW_REGISTRATION:
-        sign_in_text = word('Sign in or sign up to save answers')
-    else:
-        sign_in_text = word('Sign in to save answers')
-    if daconfig.get('resume interview after login', False):
-        login_url = url_for('user.login', next=url_for('index', **index_params))
-    else:
-        login_url = url_for('user.login')
-    if not status.question.interview.options.get('hide corner interface', False):
+        if ALLOW_REGISTRATION:
+            sign_in_text = word('Sign in or sign up to save answers')
+        else:
+            sign_in_text = word('Sign in to save answers')
+        if daconfig.get('resume interview after login', False):
+            login_url = url_for('user.login', next=url_for('index', **index_params))
+        else:
+            login_url = url_for('user.login')
         admin_menu = ''
         if not status.question.interview.options.get('hide standard menu', False):
             for item in app.config['ADMIN_INTERVIEWS']:
@@ -3338,8 +3338,9 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
             </ul>"""
         if daconfig.get('login link style', 'normal') == 'button' and show_login and current_user.is_anonymous and not custom_menu:
             navbar += '\n            <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ms-3 d-none d-md-block" href="' + login_url + '">' + word('Sign in') + '</a>'
+        navbar += """
+          </div>"""
     navbar += """
-          </div>
         </div>
       </div>
     </div>

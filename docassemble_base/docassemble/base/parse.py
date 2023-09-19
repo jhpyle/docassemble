@@ -5292,6 +5292,8 @@ class Question:
                     self.find_fields_in(target['pdf/a'])
                 else:
                     raise DAError('Unknown data type in attachment pdf/a.' + self.idebug(target))
+            if 'rendering font' in target and target['rendering font']:
+                options['rendering_font'] = TextObject(str(target['rendering font']), question=self)
             if 'tagged pdf' in target:
                 if isinstance(target['tagged pdf'], bool):
                     options['tagged_pdf'] = target['tagged pdf']
@@ -6772,7 +6774,7 @@ class Question:
                         if hasattr(the_file, 'number'):
                             result['file'][doc_format] = the_file.number
                 # logmessage("finalize_attachment: returning " + attachment['variable_name'] + " from cache")
-                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions'):
+                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
                     if key in result:
                         del result[key]
                 return result
@@ -6808,9 +6810,9 @@ class Question:
                             else:
                                 default_export_value = None
                             docassemble.base.functions.set_context('pdf')
-                            the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'], default_export_value=default_export_value)
+                            the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'], default_export_value=default_export_value, replacement_font=result['rendering_font'])
                             result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
-                            for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions'):
+                            for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
                                 if key in result:
                                     del result[key]
                             docassemble.base.functions.reset_context()
@@ -6871,7 +6873,7 @@ class Question:
                                         result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                                 if 'docx' in result['formats_to_use']:
                                     result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
-                            for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions']:
+                            for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions', 'rendering_font']:
                                 if key in result:
                                     del result[key]
                     else:
@@ -7070,6 +7072,10 @@ class Question:
                     result['convert_to_pdf_a'] = eval(attachment['options']['pdf_a'], the_user_dict)
             else:
                 result['convert_to_pdf_a'] = self.interview.use_pdf_a
+            if 'rendering_font' in attachment['options']:
+                result['rendering_font'] = attachment['options']['rendering_font'].text(the_user_dict).strip()
+            else:
+                result['rendering_font'] = None
             if 'hyperlink_style' in attachment['options']:
                 result['hyperlink_style'] = attachment['options']['hyperlink_style'].text(the_user_dict).strip()
             else:
@@ -7573,7 +7579,7 @@ def recursive_add_classes(class_list, the_class):
 
 
 def unqualified_name(variable, the_user_dict):
-    if variable == 'x' or variable.startswith('x[') or variable.startswith('x.') and 'x' in the_user_dict and hasattr(the_user_dict['x'], 'instanceName'):
+    if (variable == 'x' or variable.startswith('x[') or variable.startswith('x.')) and 'x' in the_user_dict and hasattr(the_user_dict['x'], 'instanceName'):
         variable = re.sub(r'^x', the_user_dict['x'].instanceName, variable)
     for index_var in ['i', 'j', 'k', 'l', 'm', 'n']:
         if '[' + index_var + ']' in variable and index_var in the_user_dict:
