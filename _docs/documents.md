@@ -1270,6 +1270,47 @@ If you want to prevent users from editing the forms created through
 
 {% include side-by-side.html demo="pdf-fill-not-editable" %}
 
+## <a name="rendering font"></a>Changing the font used when rendering fields as text
+
+If you use `editable: false` or `pdf/a: True`, form fields will be
+rendered to text in the PDF file. [pdftk] performs this task using the
+Arial font to render the text. You can indicate that a different font
+should be used instead:
+
+{% highlight yaml %}
+question: |
+  Here is your PDF form
+attachment:
+  name: A filled-in form
+  filename: filled-form
+  pdf template file: sample-form.pdf
+  editable: False
+  rendering font: "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"
+  fields:
+    Your Name: |
+      ${ user }
+    Your Organization: |
+      ${ user.organization }
+    Apple Checkbox: |
+      ${ likes_apples }
+    Orange Checkbox: |
+      ${ likes_oranges }
+    Pear Checkbox: |
+      ${ likes_pears }
+    Toast Checkbox: |
+      ${ likes_toast }
+{% endhighlight %}
+
+For best results, set `rendering font` to the path of a font on the
+server. If you set `rendering font` to the name of a font, it will
+work, but [pdftk] will use 100% CPU for several seconds as it searches
+the fonts on the system, trying to retrieve the filename of the font.
+
+To see a list of font files available on the server, you can use the
+[font list tool].
+
+When specifying a `rendering font`, you can use [Mako] templating.
+
 ## <a name="signature"></a>How to insert signatures or other images into fillable PDF files
 
 To add a signature or other image to a fillable PDF file, use
@@ -2156,3 +2197,4 @@ interview, see the [`cache documents` feature].
 [`Legal-Template.rtf`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.rtf
 [`Legal-Template.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.docx
 [Python expression]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[font list tool]: https://demo.docassemble.org/start/demo/fontlist/
