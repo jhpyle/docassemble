@@ -2009,6 +2009,8 @@ class Question:
 
     def idebug(self, data):
         if hasattr(self, 'from_source') and hasattr(self, 'package'):
+            if isinstance(self.line_number, int):
+                return f"\nIn file {self.from_source.path} in the block on line {self.line_number} from package {self.package}:\n\n" + yaml.dump(data)
             return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n\n" + yaml.dump(data)
         return yaml.dump(data)
 
@@ -2027,6 +2029,10 @@ class Question:
         else:
             register_target = self
             main_list = True
+        if 'line_number' in kwargs:
+            self.line_number = kwargs['line_number']
+        else:
+            self.line_number = None
         self.from_source = kwargs.get('source', None)
         self.package = kwargs.get('package', None)
         self.interview = caller
@@ -8086,7 +8092,9 @@ class Interview:
                 return
             self.includes.add(source.path)
         # for document in yaml.safe_load_all(source.content):
+        line_number = 1
         for source_code in document_match.split(source.content):
+            lines_in_code = sum(l == "\n" for l in source_code)
             source_code = remove_trailing_dots.sub('', source_code)
             source_code = fix_tabs.sub('  ', source_code)
             if source.testing:
@@ -8094,20 +8102,26 @@ class Interview:
                     # logmessage("Package is " + str(source_package))
                     document = yaml.safe_load(source_code)
                     if document is not None:
-                        question = Question(document, self, source=source, package=source_package, source_code=source_code)
+                        question = Question(document, self, source=source, package=source_package, source_code=source_code, line_number=line_number)
                         self.names_used.update(question.fields_used)
                 except Exception as errMess:
                     # logmessage(str(source_code))
                     try:
-                        logmessage('Interview: error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
+                        # Correct line numbers to be global to the YAML
+                        if isinstance(errMess, yaml.error.MarkedYAMLError):
+                            if errMess.context_mark is not None:
+                                errMess.context_mark.line += (line_number - 1)
+                            if errMess.problem_mark is not None:
+                                errMess.problem_mark.line += (line_number - 1)
+                        logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}\nDocument source code was:\n\n---\n{source_code}---\n\nError was:\n\n{errMess}')
                     except:
                         try:
-                            logmessage('Interview: error reading YAML file ' + str(source.path) + '. Error was:\n\n' + str(errMess))
+                            logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error was:\n\n{errMess}')
                         except:
                             if isinstance(errMess, yaml.error.MarkedYAMLError):
-                                logmessage('Interview: error reading YAML file ' + str(source.path) + '. Error type was:\n\n' + errMess.problem)
+                                logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error type was:\n\n{errMess.problem}')
                             else:
-                                logmessage('Interview: error reading YAML file ' + str(source.path) + '. Error type was:\n\n' + errMess.__class__.__name__)
+                                logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error type was:\n\n' + errMess.__class__.__name__)
                     self.success = False
             else:
                 try:
@@ -8117,22 +8131,29 @@ class Interview:
                     # logmessage("Error: " + str(source_code))
                     # str(source_code)
                     try:
-                        raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
+                        # Correct line numbers to be global to the YAML
+                        if isinstance(errMess, yaml.error.MarkedYAMLError):
+                            if errMess.context_mark is not None:
+                                errMess.context_mark.line += (line_number - 1)
+                            if errMess.problem_mark is not None:
+                                errMess.problem_mark.line += (line_number - 1)
+                        raise DAError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code}---\n\nError was:\n\n{errMess}')
                     except (UnicodeDecodeError, UnicodeEncodeError):
-                        raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess.__class__.__name__))
+                        raise DAError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code}---\n\nError was:\n\n' + str(errMess.__class__.__name__))
                 if document is not None:
                     try:
-                        question = Question(document, self, source=source, package=source_package, source_code=source_code)
+                        question = Question(document, self, source=source, package=source_package, source_code=source_code, line_number=line_number)
                         self.names_used.update(question.fields_used)
                     except SyntaxException as qError:
                         self.success = False
-                        raise DAError("Syntax Exception: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + str(source_code))
+                        raise DAError(f"Syntax Exception: {qError}\n\nIn file {source.path} in the block on line {line_number} from package {source_package}:\n{source_code}")
                     except CompileException as qError:
                         self.success = False
-                        raise DAError("Compile Exception: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + str(source_code))
+                        raise DAError(f"Compile Exception: {qError}\n\nIn file {source.path} in the block on line {line_number} from package {source_package}:\n{source_code}")
                     except SyntaxError as qError:
                         self.success = False
-                        raise DAError("Syntax Error: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + str(source_code))
+                        raise DAError(f"Syntax Error: {qError}\n\nIn file {source.path} in the block on line {line_number} from package {source_package}:\n{source_code}")
+            line_number += lines_in_code
         for ordering in self.id_orderings:
             if ordering['type'] == 'supersedes' and hasattr(ordering['question'], 'number'):
                 new_list = [ordering['question'].number]
