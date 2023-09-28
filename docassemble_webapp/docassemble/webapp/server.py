@@ -11887,7 +11887,7 @@ def index(action_argument=None, refer=None):
                 var daThis = this;
                 if (!daShowIfInProcess){
                   daShowIfInProcess = true;
-                  $(":input").not("[type='file']").each(function(){
+                  $("div[data-saveas='" + $(this).data("saveas") + ":input").not("[type='file']").each(function(){
                     if (this != daThis){
                       $(this).trigger('change');
                     }
@@ -12071,7 +12071,7 @@ def index(action_argument=None, refer=None):
               var daThis = this;
               if (!daShowIfInProcess){
                 daShowIfInProcess = true;
-                $(":input").not("[type='file']").each(function(){
+                $("div[data-saveas='" + $(this).data("saveas") + ":input").not("[type='file']").each(function(){
                   if (this != daThis){
                     $(this).trigger('change');
                   }
@@ -14984,7 +14984,7 @@ def observer():
                 var daThis = this;
                 if (!daShowIfInProcess){
                   daShowIfInProcess = true;
-                  $(":input").not("[type='file']").each(function(){
+                  $("div[data-saveas='" + $(this).data("saveas") + ":input").not("[type='file']").each(function(){
                     if (this != daThis){
                       $(this).trigger('change');
                     }
@@ -15168,7 +15168,7 @@ def observer():
               var daThis = this;
               if (!daShowIfInProcess){
                 daShowIfInProcess = true;
-                $(":input").not("[type='file']").each(function(){
+                $("div[data-saveas='" + $(this).data("saveas") + ":input").not("[type='file']").each(function(){
                   if (this != daThis){
                     $(this).trigger('change');
                   }
