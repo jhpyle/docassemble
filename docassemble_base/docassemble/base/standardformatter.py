@@ -1612,6 +1612,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 if field.datatype in ['number', 'currency', 'float', 'integer']:
                     validation_rules['rules'][the_saveas]['number'] = True
                     validation_rules['messages'][the_saveas]['number'] = field.validation_message('number', status, word("You need to enter a number."))
+                    validation_rules['messages'][the_saveas]['pattern'] = field.validation_message('number', status, word("You need to enter a number."))
                     if field.datatype == 'integer' and not ('step' in status.extras and field.number in status.extras['step']):
                         validation_rules['messages'][the_saveas]['step'] = field.validation_message('integer', status, word("Please enter a whole number."))
                     elif 'step' in status.extras and field.number in status.extras['step']:
