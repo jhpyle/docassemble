@@ -796,7 +796,7 @@ def fetch_user_dict(user_code, filename, secret=None):
     result = db.session.execute(stmt)
     for d in list(result):
         # logmessage("fetch_user_dict: indexno is " + str(d.indexno))
-        if d.dictionary:
+        if d.dictionary and isinstance(d.dictionary, str):
             if d.encrypted:
                 # logmessage("fetch_user_dict: entry was encrypted")
                 user_dict = decrypt_dictionary(d.dictionary, secret)
