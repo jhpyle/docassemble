@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.4.80] - 2023-10-01
+
+### Changed
+- Added error message if more than one of `show if`, `hide if`,
+  `disable if`, or `enable if` is used on the same field. The only
+  situation in which these can be combined on a single field is if one
+  is using the `code` form and the other is not.
+
+### Fixed
+- Inefficient JavaScript for handling nested `show if` fields
+  modifiers.
+- The input validation error message for entering a non-number did not
+  appear if the validation failed on the regular expression pattern.
+
 ## [1.4.79] - 2023-09-18
 
 ### Added

@@ -11777,6 +11777,7 @@ def index(action_argument=None, refer=None):
         }
         daShowIfInProcess = true;
         var daTriggerQueries = [];
+        var daInputsSeen = {};
         function daOnlyUnique(value, index, self){
           return self.indexOf(value) === index;
         }
@@ -11884,14 +11885,19 @@ def index(action_argument=None, refer=None):
                     });
                   }
                 }
-                var daThis = this;
+                var leader = false;
                 if (!daShowIfInProcess){
                   daShowIfInProcess = true;
-                  $(":input").not("[type='file']").each(function(){
-                    if (this != daThis){
-                      $(this).trigger('change');
-                    }
-                  });
+                  daInputsSeen = {};
+                  leader = true;
+                }
+                $(showIfDiv).find(":input").not("[type='file']").each(function(){
+                  if (!daInputsSeen.hasOwnProperty($(this).attr('id'))){
+                    $(this).trigger('change');
+                  }
+                  daInputsSeen[$(this).attr('id')] = true;
+                });
+                if (leader){
                   daShowIfInProcess = false;
                 }
               };
@@ -11996,7 +12002,7 @@ def index(action_argument=None, refer=None):
                   }
                 }
               }
-              //console.log("this is " + $(this).attr('id') + " and saveAs is " + atou(saveAs) + " and showIfVar is " + atou(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
+              // console.log("There was a trigger on " + $(this).attr('id') + ". This handler was installed based on varName " + varName + ", showIfVar " + atou(showIfVar) + ". This handler was installed for the benefit of the .dashowif div encompassing the field for " + atou(saveAs) + ". The comparison value is " + String(showIfVal) + " and the current value of the element on the screen is " + String(theVal) + ".");
               if(daShowIfCompare(theVal, showIfVal)){
                 if (showIfSign){
                   if ($(showIfDiv).data('isVisible') != '1'){
@@ -12068,14 +12074,19 @@ def index(action_argument=None, refer=None):
                   }
                 }
               }
-              var daThis = this;
+              var leader = false;
               if (!daShowIfInProcess){
                 daShowIfInProcess = true;
-                $(":input").not("[type='file']").each(function(){
-                  if (this != daThis){
-                    $(this).trigger('change');
-                  }
-                });
+                daInputsSeen = {};
+                leader = true;
+              }
+              $(showIfDiv).find(":input").not("[type='file']").each(function(){
+                if (!daInputsSeen.hasOwnProperty($(this).attr('id'))){
+                  $(this).trigger('change');
+                }
+                daInputsSeen[$(this).attr('id')] = true;
+              });
+              if (leader){
                 daShowIfInProcess = false;
               }
             };
@@ -14874,6 +14885,7 @@ def observer():
         });
         daShowIfInProcess = true;
         var daTriggerQueries = [];
+        var daInputsSeen = {};
         function daOnlyUnique(value, index, self){
           return self.indexOf(value) === index;
         }
@@ -14981,14 +14993,19 @@ def observer():
                     });
                   }
                 }
-                var daThis = this;
+                var leader = false;
                 if (!daShowIfInProcess){
                   daShowIfInProcess = true;
-                  $(":input").not("[type='file']").each(function(){
-                    if (this != daThis){
-                      $(this).trigger('change');
-                    }
-                  });
+                  daInputsSeen = {};
+                  leader = true;
+                }
+                $(showIfDiv).find(":input").not("[type='file']").each(function(){
+                  if (!daInputsSeen.hasOwnProperty($(this).attr('id'))){
+                    $(this).trigger('change');
+                  }
+                  daInputsSeen[$(this).attr('id')] = true;
+                });
+                if (leader){
                   daShowIfInProcess = false;
                 }
               };
@@ -15165,14 +15182,19 @@ def observer():
                   }
                 }
               }
-              var daThis = this;
+              var leader = false;
               if (!daShowIfInProcess){
                 daShowIfInProcess = true;
-                $(":input").not("[type='file']").each(function(){
-                  if (this != daThis){
-                    $(this).trigger('change');
-                  }
-                });
+                daInputsSeen = {};
+                leader = true;
+              }
+              $(showIfDiv).find(":input").not("[type='file']").each(function(){
+                if (!daInputsSeen.hasOwnProperty($(this).attr('id'))){
+                  $(this).trigger('change');
+                }
+                daInputsSeen[$(this).attr('id')] = true;
+              });
+              if (leader){
                 daShowIfInProcess = false;
               }
             };

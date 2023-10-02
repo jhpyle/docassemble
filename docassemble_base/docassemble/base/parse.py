@@ -4058,6 +4058,13 @@ class Question:
                             field_info['extras'] = {}
                         field_info['extras']['show_if_js'] = js_info
                     elif key in ('show if', 'hide if'):
+                        for other_key in ('hide if', 'show if', 'disable if', 'enable if'):
+                            if key != other_key:
+                                if other_key in field:
+                                    this_is_code = (isinstance(field[key], dict) and len(field[key]) == 1 and 'code' in field[key])
+                                    other_is_code = (isinstance(field[other_key], dict) and len(field[other_key]) == 1 and 'code' in field[other_key])
+                                    if this_is_code == other_is_code:
+                                        raise DAError(key + " cannot be combined with " + other_key)
                         if 'extras' not in field_info:
                             field_info['extras'] = {}
                         if isinstance(field[key], dict):
@@ -4094,13 +4101,24 @@ class Question:
                                 field_info['extras']['show_if_sign_code'] = 1
                             else:
                                 field_info['extras']['show_if_sign_code'] = 0
+                            using_code = True
+                        else:
+                            using_code = False
                         if not exclusive:
                             if key == 'show if':
                                 field_info['extras']['show_if_sign'] = 1
                             else:
                                 field_info['extras']['show_if_sign'] = 0
-                        field_info['extras']['show_if_mode'] = 0
+                        if not using_code or not exclusive:
+                            field_info['extras']['show_if_mode'] = 0
                     elif key in ('disable if', 'enable if'):
+                        for other_key in ('show if', 'hide if', 'disable if', 'enable if'):
+                            if key != other_key:
+                                if other_key in field:
+                                    this_is_code = (isinstance(field[key], dict) and len(field[key]) == 1 and 'code' in field[key])
+                                    other_is_code = (isinstance(field[other_key], dict) and len(field[other_key]) == 1 and 'code' in field[other_key])
+                                    if this_is_code == other_is_code:
+                                        raise DAError(key + " cannot be combined with " + other_key)
                         if 'extras' not in field_info:
                             field_info['extras'] = {}
                         if isinstance(field[key], dict):
@@ -4128,7 +4146,7 @@ class Question:
                             field_info['extras']['show_if_var'] = safeid(field[key].strip())
                             field_info['extras']['show_if_val'] = TextObject('True')
                         else:
-                            raise DAError("Invalid variable name in disable if/enable if")
+                            raise DAError("Invalid variable name in " + key)
                         exclusive = False
                         if isinstance(field[key], dict) and 'code' in field[key]:
                             if len(field[key]) == 1:
@@ -4137,12 +4155,16 @@ class Question:
                                 field_info['extras']['show_if_sign_code'] = 1
                             else:
                                 field_info['extras']['show_if_sign_code'] = 0
+                            using_code = True
+                        else:
+                            using_code = False
                         if not exclusive:
                             if key == 'enable if':
                                 field_info['extras']['show_if_sign'] = 1
                             else:
                                 field_info['extras']['show_if_sign'] = 0
-                        field_info['extras']['show_if_mode'] = 1
+                        if not using_code or not exclusive:
+                            field_info['extras']['show_if_mode'] = 1
                     elif key in ('default', 'hint', 'help'):
                         if not isinstance(field[key], dict) and not isinstance(field[key], list):
                             field_info[key] = TextObject(definitions + str(field[key]), question=self)
@@ -8094,7 +8116,7 @@ class Interview:
         # for document in yaml.safe_load_all(source.content):
         line_number = 1
         for source_code in document_match.split(source.content):
-            lines_in_code = sum(l == "\n" for l in source_code)
+            lines_in_code = sum(character == "\n" for character in source_code)
             source_code = remove_trailing_dots.sub('', source_code)
             source_code = fix_tabs.sub('  ', source_code)
             if source.testing:
