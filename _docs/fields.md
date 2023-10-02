@@ -1831,12 +1831,15 @@ for customizing the user interface.  Thus whatever logic you express
 in `show if` will probably have to be repeated elsewhere.  If instead
 of using `show if` you gathered the field in a separate `question`,
 you would only need to specify the logic in one place.
+
 ## <a name="hide if"></a>`hide if`
 
 This works just like [`show if`](#show if), except that it hides the
 field instead of showing it.
 
 {% include side-by-side.html demo="hideif-boolean" %}
+
+`hide if` cannot be combined with `show if`.
 
 ## <a name="enable if"></a><a name="disable if"></a>`enable if` and `disable if`
 
@@ -1845,6 +1848,9 @@ if` and `hide if`, except that instead of visibly hiding the fields
 and labels, it disables the input elements.
 
 The use of `code` inside of `enable if` and `disable if` is not supported.
+
+`enable if` and `disable if` cannot be combined with `show if` or
+`hide if` on the same field.
 
 ## <a name="js show if"></a>`js show if`
 
@@ -1909,6 +1915,9 @@ the field instead of showing it.
 The `js enable if` and `js disable if` field modifiers work just like
 `js show if` and `js hide if`, except that instead of visibly hiding
 the fields and labels, it disables the input elements.
+
+`js enable if` and `js disable if` cannot be combined with `js show
+if` or `js hide if` on the same field.
 
 ## <a name="disable others"></a>`disable others`
 
