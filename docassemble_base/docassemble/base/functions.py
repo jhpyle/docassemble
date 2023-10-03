@@ -2692,6 +2692,9 @@ def salutation_default(indiv, **kwargs):
 
 
 def number_to_word(number, **kwargs):
+    """
+    Returns the number as a word in the current language.
+    """
     language = kwargs.get('language', None)
     capitalize_arg = kwargs.get('capitalize', False)
     function = kwargs.get('function', None)
@@ -2705,9 +2708,11 @@ def number_to_word(number, **kwargs):
             language = loc
             break
     if raise_on_error:
+        number = int(number)
         the_word = num2words.num2words(number, lang=language, to=function)
     else:
         try:
+            number = int(number)
             the_word = num2words.num2words(number, lang=language, to=function)
         except NotImplementedError:
             the_word = str(number)
