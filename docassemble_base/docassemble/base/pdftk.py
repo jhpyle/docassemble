@@ -6,6 +6,7 @@ import os
 import string
 import codecs
 import logging
+import packaging
 from io import BytesIO
 from xfdfgen import Xfdf
 import pikepdf
@@ -238,6 +239,11 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
             font_arguments = ['replacement_font', replacement_font]
         else:
             font_arguments = DEFAULT_FONT_ARGUMENTS
+        system_version = daconfig.get('system version', 'Unknown')
+        if system_version == 'Unknown' or packaging.version.parse(system_version) < packaging.version.parse("1.4.73"):
+          if replacement_font:
+              logmessage("Warning: the `replacement_font` argument isn't supported without a system docassemble of 1.4.73 or above")
+          font_arguments = []
         subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name] + font_arguments
         # logmessage("Arguments are " + str(subprocess_arguments))
         if len(images) > 0:
