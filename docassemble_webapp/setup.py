@@ -169,7 +169,7 @@ install_requires = [
     "pdfminer.six==20221105",
     "phonenumbers==8.13.17",
     "pikepdf==8.2.0",
-    "Pillow==10.0.0",
+    "Pillow==10.0.1",
     "pkginfo==1.9.6",
     "pluggy==1.2.0",
     "ply==3.11",

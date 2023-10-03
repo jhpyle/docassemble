@@ -29948,7 +29948,31 @@ def manage_api():
             if not success:
                 flash(word("Could not create new key"), 'error')
                 return render_template('pages/manage_api.html', **argu)
-            argu['description'] = Markup(word("Your new API key, known internally as <strong>%s</strong>, is:<br />%s<br />") % (form.name.data, "<code>" + api_key + "</code>") + word("<strong>This is the only time you will be able to see your API key</strong>, so make sure to make a note of it and keep it in a secure place."))
+            argu['description'] = Markup(
+                    f"""<div class="alert alert-success" role="alert">
+                    <p>
+                    { word(f"Make sure to copy your <strong>{ form.name.data }</strong> API key now as you will not be able to see this again.") }
+                    </p>
+
+                    Your API key: <kbd id="apiKey">{ api_key }</kbd> <button onclick="copyToClipboard()" class="btn btn-secondary btn-sm">{ word("Copy") }</button>
+                    </div>
+                    
+                    <script>
+                        function copyToClipboard() {{
+                            const apiKeyElement = document.getElementById('apiKey');
+                            const selection = window.getSelection();
+                            const range = document.createRange();
+                            range.selectNodeContents(apiKeyElement);
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                            document.execCommand('copy');
+                            selection.removeAllRanges();
+                            alert('{ word("API Key copied to clipboard!") }');
+                        }}
+                    </script>
+                    """
+            )
+
         elif action == 'edit':
             argu['title'] = word("Edit API Key")
             argu['tab_title'] = argu['title']
