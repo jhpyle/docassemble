@@ -9,7 +9,7 @@
   is using the `code` form and the other is not.
 
 ### Fixed
-- Inefficient JavaScript for handling nested `show if` fields
+- Inefficient JavaScript for handling nested `show if` field
   modifiers.
 - The input validation error message for entering a non-number did not
   appear if the validation failed on the regular expression pattern.
