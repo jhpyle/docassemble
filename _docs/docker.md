@@ -2626,10 +2626,10 @@ system upgrade.
 
 Note that just as **docassemble** needs a "system upgrade" every once
 in a while, the host operating system may also need to be upgraded. If
-the operating system on computer that runs Docker is old, it may have
-trouble running the latest version of the Docker container. Also, if
-you are running an old operating system on the host computer, you may
-not have the latest security updates. Thus, before you do a system
+the operating system on the computer that runs Docker is old, it may
+have trouble running the latest version of the Docker container. Also,
+if you are running an old operating system on the host computer, you
+may not have the latest security updates. Thus, before you do a system
 upgrade, you should think about whether it is time to upgrade the host
 operating system. If you are using the [S3] or [Azure blob storage]
 form of [data storage], you can `docker stop` the Docker container,
@@ -2638,8 +2638,8 @@ installed on it, change your [DNS] records to point to the new host
 computer, and then do `docker run` on the new computer. If you are
 using a [Docker volume] for data storage, you need to copy the [Docker
 volume] from the old computer to the new computer, which can be a
-time-consuming operation. (The steps are explained
-[below](#upgrading starting).)
+time-consuming operation. (The steps are explained [below](#upgrading
+starting).)
 
 ## <a name="upgrading basic"></a>Overview of a system upgrade
 
@@ -2737,12 +2737,7 @@ wait 600 seconds, or ten minutes, for the container to safely stop.
 It is very important that the shutdown is given enough time to
 complete, because part of the shutdown process involves dumping the
 SQL database, saving the Redis database, and copying files to [data
-storage]. Shutdown will be quicker if you are using [S3]/[Azure blob
-storage], because in that case your files are already located in [data
-storage] and don't need to be copied there. Shutdown will be even
-quicker if you are using an external SQL server and an external
-[Redis] server, in which case those databases do not need to be dumped
-out to [data storage].
+storage].
 
 Doing `docker stop -t 600` gives the machine ten minutes to shut down,
 which is probably more than enough time. If it actually takes 10
@@ -2802,9 +2797,9 @@ might want to inspect the file system of the stopped container without
 starting it. This allows you to see the logs that were created when
 each of the `supervisord` services were shutting down. To inspect the
 file system of a stopped container, you can create a Docker image from
-the stoppedn container, and then use `docker run` to create a
-container from that image, with a special "entry point" that simply
-runs a shell (instead of running **docassemble**).
+the stopped container, and then use `docker run` to create a container
+from that image, with a special "entry point" that simply runs a shell
+(instead of running **docassemble**).
 
 {% highlight bash %}
 docker commit 352b3835eefc deleteme

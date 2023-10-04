@@ -3,6 +3,18 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.81](https://github.com/jhpyle/docassemble/releases/tag/v1.4.81) - 2023-10-03
+
+
+### Fixed
+- Test for appropriate system version before using a `rendering font`.
+
+
+### Changed
+- Added clipboard button next to API key.
+- Avoid exceptions when invalid values are passed to `ordinal()` and
+  `ordinal_number()`.
+
 ## [1.4.80](https://github.com/jhpyle/docassemble/releases/tag/v1.4.80) - 2023-10-01
 
 
@@ -14,7 +26,7 @@ short_title: Change Log
 
 
 ### Fixed
-- Inefficient JavaScript for handling nested `show if` fields
+- Inefficient JavaScript for handling nested `show if` field
   modifiers.
 - The input validation error message for entering a non-number did not
   appear if the validation failed on the regular expression pattern.
