@@ -2101,6 +2101,10 @@ def worker_caller(func, ui_notification, action):
 
 
 def ordinal_function_en(i, **kwargs):
+    try:
+        i = int(i)
+    except:
+        i = 0
     use_word = kwargs.get('use_word', None)
     if use_word is True:
         kwargs['function'] = 'ordinal'
@@ -2691,6 +2695,17 @@ def salutation_default(indiv, **kwargs):
     return salut
 
 
+def string_to_number(number):
+    try:
+        float_number = float(number)
+        int_number = int(number)
+        if float_number == int_number:
+            return int_number
+        return float_number
+    except:
+        return number
+
+
 def number_to_word(number, **kwargs):
     language = kwargs.get('language', None)
     capitalize_arg = kwargs.get('capitalize', False)
@@ -2704,6 +2719,7 @@ def number_to_word(number, **kwargs):
         if language == lang and this_thread.locale.startswith(loc):
             language = loc
             break
+    number = string_to_number(number)
     if raise_on_error:
         the_word = num2words.num2words(number, lang=language, to=function)
     else:

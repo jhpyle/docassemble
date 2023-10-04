@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.4.81] - 2023-10-03
+
+### Fixed
+- Test for appropriate system version before using a `rendering font`.
+
+### Changed
+- Added clipboard button next to API key.
+- Avoid exceptions when invalid values are passed to `ordinal()` and
+  `ordinal_number()`.
+
 ## [1.4.80] - 2023-10-01
 
 ### Changed

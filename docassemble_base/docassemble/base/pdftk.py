@@ -7,6 +7,7 @@ import string
 import codecs
 import logging
 from io import BytesIO
+import packaging
 from xfdfgen import Xfdf
 import pikepdf
 import img2pdf
@@ -26,9 +27,11 @@ logging.getLogger('pdfminer').setLevel(logging.ERROR)
 
 PDFTK_PATH = 'pdftk'
 QPDF_PATH = 'qpdf'
-DEFAULT_RENDERING_FONT = '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'
 
-if os.path.isfile(DEFAULT_RENDERING_FONT):
+SYSTEM_VERSION = daconfig.get('system version', None)
+REPLACEMENT_FONT_SUPPORTED = SYSTEM_VERSION is not None and packaging.version.parse(SYSTEM_VERSION) >= packaging.version.parse("1.4.73")
+DEFAULT_RENDERING_FONT = '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'
+if REPLACEMENT_FONT_SUPPORTED and os.path.isfile(DEFAULT_RENDERING_FONT):
     DEFAULT_FONT_ARGUMENTS = ['replacement_font', DEFAULT_RENDERING_FONT]
 else:
     DEFAULT_FONT_ARGUMENTS = []
@@ -115,7 +118,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix='', parent_ft=N
             export_value = 'Yes'
             try:
                 for key in list(field['AP']['N'].keys()):
-                    if key in ('Off', 'off'): #, 'No', 'no'
+                    if key in ('Off', 'off'):  # , 'No', 'no'
                         continue
                     export_value = key
                     break
@@ -178,7 +181,7 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
     for field, default, pageno, rect, field_type, export_value in the_fields:  # pylint: disable=unused-variable
         field_type = re.sub(r'[^/A-Za-z]', '', str(field_type))
         if field_type in ('/Btn', "/'Btn'"):
-            if field in export_values.keys():
+            if field in export_values:
                 export_values[field].append(export_value or default_export_value or 'Yes')
             else:
                 export_values[field] = [export_value or default_export_value or 'Yes']
@@ -190,9 +193,9 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                     # Implies a radio button, so val should stay the same. Check for yes vs True, since
                     # parse.py turns "true" into "yes".
                     # Just turn things off if it doesn't match any value
-                    if 'True' in export_values[key] and (val == "Yes" or val == "yes"):
+                    if 'True' in export_values[key] and val in ('Yes', 'yes'):
                         val = 'True'
-                    if 'False' in export_values[key] and (val == "No" or val == "no"):
+                    if 'False' in export_values[key] and val in ('No', 'no'):
                         val = 'False'
                     if val not in export_values[key]:
                         val = 'Off'
@@ -235,7 +238,11 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                 raise DAError("Call to qpdf failed for template " + str(template) + " where arguments were " + " ".join(qpdf_subprocess_arguments))
             template = template_file.name
         if replacement_font:
-            font_arguments = ['replacement_font', replacement_font]
+            if REPLACEMENT_FONT_SUPPORTED:
+                font_arguments = ['replacement_font', replacement_font]
+            else:
+                logmessage("Warning: the rendering font feature requires system version 1.4.73 or later")
+                font_arguments = []
         else:
             font_arguments = DEFAULT_FONT_ARGUMENTS
         subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name] + font_arguments

@@ -72,4 +72,38 @@
   <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_profile_page') }}">Back to Profile</a>
 </div>
 {%- endif %}
+<script>
+  function flash(message, priority, clear){
+    if (priority == null){
+      priority = 'info'
+    }
+    if (!$("#daflash").length){
+      $("body").append('<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash"></div>');
+    }
+    if (clear){
+      $("#daflash").empty();
+    }
+    if (message != null){
+      $("#daflash").append('<div class="da-alert alert alert-' + priority + ' alert-dismissible fade show">' + message + '</div>');
+      if (priority == 'success'){
+        setTimeout(function(){
+          $("#daflash .alert-success").hide(300, function(){
+            $(this).remove();
+          });
+        }, 3000);
+      }
+    }
+  }
+  function daCopyToClipboard() {
+    const apiKeyElement = document.getElementById('daApiKey');
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(apiKeyElement);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.execCommand('copy');
+    selection.removeAllRanges();
+    flash("{{ word('API key copied to clipboard.') }}", "success");
+  }
+</script>
 {% endblock %}
