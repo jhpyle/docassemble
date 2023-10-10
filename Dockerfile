@@ -57,9 +57,9 @@ bash -c \
 && pip3 install --upgrade mod_wsgi==4.9.4 \
 && pip3 install --upgrade \
    acme==2.6.0 \
-   certbot==2.6.0 \
-   certbot-apache==2.6.0 \
-   certbot-nginx==2.6.0 \
+   certbot==2.7.0 \
+   certbot-apache==2.7.0 \
+   certbot-nginx==2.7.0 \
    certifi==2023.7.22 \
    cffi==1.15.1 \
    charset-normalizer==3.2.0 \
