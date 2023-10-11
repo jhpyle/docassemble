@@ -62,6 +62,7 @@ subquestion: |
       % endif
     * ${ party }
     % endfor
+
   % endfor
 ---
 mandatory: True

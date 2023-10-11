@@ -22,15 +22,7 @@ code: |
 ---
 # make sure that the sections are
 # set every time the screen loads.
-# The sections_set variable depends
-# on likes_mushrooms, so if the
-# likes_mushrooms variables changes,
-# sections_set becomes undefined.
 initial: True
-code: |
-  sections_set
----
-depends on: likes_mushrooms
 code: |
   nav.set_sections(
     [{"identity": "About you"},
@@ -43,9 +35,19 @@ code: |
      }] \
      + ([{'mushrooms': "Mushrooms"}] if likes_mushrooms else []) \
      + ["Conclusion"])
-  sections_set = True
 ---
 mandatory: True
+code: |
+  identity
+  fruit
+  vegetables
+  legumes
+  root_veggies
+  if likes_mushrooms:
+    favorite_mushroom
+  final_screen
+---
+event: final_screen
 section: Conclusion
 question: Conclusion
 subquestion: |
@@ -121,4 +123,10 @@ code: |
   set_save_status('overwrite')
   for variable_name, variable_value in action_arguments().items():
     if variable_value:
-      define(variable_name, variable_value)
+      if variable_name == 'likes_mushrooms':
+        if variable_value == 'True':
+          define(variable_name, True)
+        else:
+          define(variable_name, False)
+      else:
+        define(variable_name, variable_value)
