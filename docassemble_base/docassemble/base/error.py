@@ -31,6 +31,10 @@ class DANotFoundError(Exception):
     pass
 
 
+class DAInvalidFilename(Exception):
+    pass
+
+
 class DAValidationError(Exception):
     """This is an Exception object that is used when raising an exception inside input validation code."""
 

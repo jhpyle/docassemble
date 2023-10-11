@@ -24,6 +24,3 @@ question: Result of question
 subquestion: |
   target_variable is: `${ repr(target_variable) }`
 mandatory: True
----
-code: |
-  is_annoying = False

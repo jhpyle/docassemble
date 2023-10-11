@@ -11,5 +11,12 @@ question: |
 buttons:
   - I am not a bear: exit
   - Continue: continue
+---
+mandatory: True
+question: |
+  Instructions for bears
+subquestion: |
+  Grip the doorknob and turn it.
 
+  Then look for the pantry. That is where they keep the food.
   

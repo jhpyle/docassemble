@@ -24,4 +24,4 @@ if ! [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     exit 0
 fi
 
-busybox httpd -f -p ${PORT:-80} -h /var/www/nascent
+busybox httpd -c /usr/share/docassemble/config/nascent.conf -f -p ${PORT:-80} -h /var/www/nascent

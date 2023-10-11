@@ -35,6 +35,7 @@ bash -c \
 && cp /tmp/docassemble/Docker/config/exim4-main /etc/exim4/conf.d/main/01_docassemble \
 && cp /tmp/docassemble/Docker/config/exim4-acl /etc/exim4/conf.d/acl/29_docassemble \
 && cp /tmp/docassemble/Docker/config/exim4-update /etc/exim4/update-exim4.conf.conf \
+&& cp /tmp/docassemble/Docker/config/nascent.conf /usr/share/docassemble/config/nascent.conf \
 && cp /tmp/docassemble/Docker/nascent.html /var/www/nascent/index.html \
 && cp /tmp/docassemble/Docker/daunoconv /usr/bin/daunoconv \
 && chmod ogu+rx /usr/bin/daunoconv \

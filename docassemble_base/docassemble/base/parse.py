@@ -1904,6 +1904,11 @@ class FileInPackage:
         self.area = area
         self.package = package
 
+    def original_reference(self):
+        if self.is_code:
+            return 'indicated by ' + self.fileref['code'].strip()
+        return self.fileref
+
     def path(self, the_user_dict=None):
         if the_user_dict is None:
             the_user_dict = {}
@@ -5121,6 +5126,8 @@ class Question:
                         field_mode = 'auto'
             else:
                 field_mode = 'manual'
+            if 'pdf template file' in target and 'fields' not in target:
+                target['fields'] = {}
             if 'fields' in target:
                 if 'pdf template file' not in target and 'docx template file' not in target:
                     raise DAError('Fields supplied to attachment but no pdf template file or docx template file supplied' + self.idebug(target))
@@ -5166,7 +5173,7 @@ class Question:
                     for template_file in options['docx_template_file']:
                         if not template_file.is_code:
                             the_docx_path = template_file.path()
-                            if not os.path.isfile(the_docx_path):
+                            if the_docx_path is None or not os.path.isfile(the_docx_path):
                                 raise DAError("Missing docx template file " + os.path.basename(the_docx_path))
                             template_files.append(the_docx_path)
                     if len(template_files) > 0:
@@ -6838,7 +6845,10 @@ class Question:
                             else:
                                 default_export_value = None
                             docassemble.base.functions.set_context('pdf')
-                            the_pdf_file = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict), data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'], default_export_value=default_export_value, replacement_font=result['rendering_font'])
+                            the_template_path = attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict)
+                            if the_template_path is None:
+                                raise DAError("pdf template file " + attachment['options']['pdf_template_file'].original_reference() +  " not found")
+                            the_pdf_file = docassemble.base.pdftk.fill_template(the_template_path, data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'], default_export_value=default_export_value, replacement_font=result['rendering_font'])
                             result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                             for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
                                 if key in result:

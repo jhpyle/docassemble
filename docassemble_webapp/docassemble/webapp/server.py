@@ -49,7 +49,7 @@ import docassemble.webapp.setup
 from docassemble.webapp.setup import da_version
 import docassemble.base.astparser
 from docassemble.webapp.api_key import encrypt_api_key
-from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError, DAException, DANotFoundError
+from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError, DAException, DANotFoundError, DAInvalidFilename
 import docassemble.base.functions
 from docassemble.base.functions import get_default_timezone, ReturnValue, word
 import docassemble.base.DA
@@ -22452,12 +22452,12 @@ function daFetchVariableReportCallback(data){
       var accordionItemHeader = $('<h2>');
       accordionItemHeader.addClass("accordion-header");
       accordionItemHeader.attr("id", "accordionItemheader" + i);
-      accordionItemHeader.html('<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse' + i + '" aria-expanded="false" aria-controls="collapse' + i + '">' + item.name + '</button>');
+      accordionItemHeader.html('<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse' + i + '" aria-expanded="false" aria-controls="collapse' + i + '">' + item.name + '</button>');
       accordionItem.append(accordionItemHeader);
       var collapse = $("<div>");
       collapse.attr("id", "collapse" + i);
       collapse.attr("aria-labelledby", "accordionItemheader" + i);
-      collapse.data("parent", "#varsreport");
+      collapse.data("bs-parent", "#varsreport");
       collapse.addClass("accordion-collapse");
       collapse.addClass("collapse");
       var accordionItemBody = $("<div>");
@@ -22786,7 +22786,7 @@ def server_error(the_error):
     else:
         the_history = None
     the_vars = None
-    if isinstance(the_error, (DAError, DANotFoundError)):
+    if isinstance(the_error, (DAError, DANotFoundError, DAInvalidFilename)):
         errmess = str(the_error)
         the_trace = None
         logmessage(errmess)
@@ -23039,7 +23039,7 @@ def server_error(the_error):
         if 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata:
             session['in error'] = True
             return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': {'error_message': orig_errmess, 'error_history': the_history, 'error_trace': the_trace}}, refer=['error'])
-    show_debug = not bool((not DEBUG) and isinstance(the_error, DAError))
+    show_debug = not bool((not DEBUG) and isinstance(the_error, (DAError, DAInvalidFilename)))
     if int(int(error_code)/100) == 4:
         show_debug = False
     if error_code == 404:
@@ -31014,7 +31014,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
     recipient_email = daconfig.get('error notification email', None)
     if not recipient_email:
         return
-    if err.__class__.__name__ in ['CSRFError', 'ClientDisconnected', 'MethodNotAllowed', 'DANotFoundError'] + ERROR_TYPES_NO_EMAIL:
+    if err.__class__.__name__ in ['CSRFError', 'ClientDisconnected', 'MethodNotAllowed', 'DANotFoundError', 'DAInvalidFilename'] + ERROR_TYPES_NO_EMAIL:
         return
     email_recipients = []
     if isinstance(recipient_email, list):

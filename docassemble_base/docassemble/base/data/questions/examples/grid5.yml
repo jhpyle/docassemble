@@ -9,7 +9,7 @@ features:
   labels above fields: True
 ---
 question: |
-  Lets pick some numbers and letters.
+  Let's pick some numbers and letters.
 fields:
   - "1": number_one
     datatype: yesno

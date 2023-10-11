@@ -55,7 +55,7 @@ from pylatex.utils import escape_latex
 # import operator
 import titlecase
 from docassemble.base.logger import logmessage
-from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun, DAError, DANameError
+from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun, DAError, DANameError, DAInvalidFilename
 from docassemble.base.generate_key import random_string
 import docassemble.base.astparser
 from user_agents import parse as ua_parse
@@ -3868,7 +3868,7 @@ def package_question_filename(the_file):
         if not re.match(r'^data/questions/', parts[1]):
             parts[1] = 'data/questions/' + parts[1]
         if filename_invalid(parts[1]) or package_name_invalid(parts[0]):
-            raise DAError("Invalid filename")
+            raise DAInvalidFilename("Invalid filename")
         try:
             path = Path(importlib.resources.files(parts[0]), parts[1])
         except:
