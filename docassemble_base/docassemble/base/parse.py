@@ -2153,6 +2153,7 @@ class Question:
                 self.interview.use_tagged_pdf = data['features']['tagged pdf']
             if 'bootstrap theme' in data['features'] and data['features']['bootstrap theme']:
                 self.interview.bootstrap_theme = data['features']['bootstrap theme']
+                self.interview.bootstrap_theme_package = self.package
             if 'inverse navbar' in data['features']:
                 self.interview.options['inverse navbar'] = data['features']['inverse navbar']
             if 'popover trigger' in data['features']:
@@ -7917,7 +7918,10 @@ class Interview:
     def get_bootstrap_theme(self):
         if self.bootstrap_theme is None:
             return None
-        result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.source.package)
+        if not hasattr(self, 'bootstrap_theme_package'):
+            result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.source.package)
+        else:
+            result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.bootstrap_theme_package)
         return result
 
     def get_tags(self, the_user_dict):
