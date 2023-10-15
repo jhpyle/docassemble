@@ -5,7 +5,9 @@ metadata:
   documentation: "https://docassemble.org/docs/groups.html#table gather"
 ---
 objects: 
-  - parties: DAList.using(object_type=Individual, complete_attribute='complete', gathered=True)
+  - parties: DAList.using(object_type=Individual,
+                          complete_attribute='complete',
+                          gathered=True)
 ---
 code: |
   parties[i].name.first

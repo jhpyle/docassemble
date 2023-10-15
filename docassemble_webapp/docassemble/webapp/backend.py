@@ -959,7 +959,7 @@ def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=
         the_user_id = None
     else:
         if user_id is None and temp_user_id is None:
-            if current_user.is_authenticated and not current_user.is_anonymous:
+            if current_user.is_authenticated:
                 user_type = 'user'
                 the_user_id = current_user.id
             else:

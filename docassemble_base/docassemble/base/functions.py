@@ -1,7 +1,6 @@
 import re
 import types
 import os
-import inspect
 import locale
 import decimal
 from io import IOBase
@@ -18,8 +17,8 @@ from unicodedata import normalize
 from enum import Enum
 from pathlib import Path
 import importlib.resources
-import astunparse
 import sys
+import astunparse
 import tzlocal
 import us
 import pycountry
@@ -3708,12 +3707,12 @@ def force_gather(*pargs, forget_prior=False, evaluate=False):
         raise ForcedNameError(last_variable_name, gathering=True, user_dict=the_user_dict)
 
 
-def static_filename_path(filereference):
+def static_filename_path(filereference, return_nonexistent=False):
     ensure_definition(filereference)
     if re.search(r'data/templates/', filereference):
-        result = package_template_filename(filereference)
+        result = package_template_filename(filereference, return_nonexistent=return_nonexistent)
     else:
-        result = package_data_filename(static_filename(filereference))
+        result = package_data_filename(static_filename(filereference), return_nonexistent=return_nonexistent)
     # if result is None or not os.path.isfile(result):
     #    result = server.absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filereference)).path
     return result
@@ -3770,14 +3769,14 @@ def qr_code(string, width=None, alt_text=None):
     return '[QR ' + string + ', ' + width + ', ' + str(alt_text) + ']'
 
 
-def standard_template_filename(the_file):
+def standard_template_filename(the_file, return_nonexistent=False):
     if filename_invalid(the_file):
         return None
     try:
         path = Path(importlib.resources.files('docassemble.base'), 'data', 'templates', str(the_file))
     except:
         return None
-    if path.exists():
+    if path.exists() or return_nonexistent:
         return str(path)
     # logmessage("Error retrieving data file")
     return None
@@ -3806,21 +3805,24 @@ def package_template_filename(the_file, **kwargs):
             path = Path(importlib.resources.files(parts[0]), parts[1])
         except:
             return None
-        if path.exists():
+        if path.exists() or kwargs.get('return_nonexistent', False):
             return str(path)
     return None
 
 
-def standard_question_filename(the_file):
+def standard_question_filename(the_file, return_nonexistent=False):
     if filename_invalid(the_file):
         return None
     try:
-        return str(Path(importlib.resources.files('docassemble.base'), 'data', 'questions', str(the_file)))
+        path = Path(importlib.resources.files('docassemble.base'), 'data', 'questions', str(the_file))
     except:
         return None
+    if path.exists() or return_nonexistent:
+        return str(path)
+    return None
 
 
-def package_data_filename(the_file):
+def package_data_filename(the_file, return_nonexistent=False):
     # logmessage("package_data_filename with: " + str(the_file))
     if the_file is None:
         return None
@@ -3853,7 +3855,7 @@ def package_data_filename(the_file):
             path = Path(importlib.resources.files(parts[0]), parts[1])
         except:
             return None
-        if path.exists():
+        if path.exists() or return_nonexistent:
             result = str(path)
         else:
             result = None
@@ -3862,7 +3864,7 @@ def package_data_filename(the_file):
     return result
 
 
-def package_question_filename(the_file):
+def package_question_filename(the_file, return_nonexistent=False):
     parts = the_file.split(":")
     if len(parts) == 2:
         if not re.match(r'^data/questions/', parts[1]):
@@ -3873,7 +3875,7 @@ def package_question_filename(the_file):
             path = Path(importlib.resources.files(parts[0]), parts[1])
         except:
             return None
-        if path.exists():
+        if path.exists() or return_nonexistent:
             return str(path)
     return None
 

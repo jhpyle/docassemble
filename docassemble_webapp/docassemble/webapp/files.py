@@ -118,6 +118,7 @@ class SavedFile:
                         shutil.rmtree(self.directory)
                     if not os.path.isdir(self.directory):
                         os.makedirs(self.directory, exist_ok=True)
+        return None
 
     def fix(self, must_exist=False):
         if self.fixed:
@@ -131,9 +132,7 @@ class SavedFile:
                 os.makedirs(self.directory, exist_ok=True)
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             # logmessage("fix: prefix is " + prefix)
-            found_any = False
             for key in cloud.list_keys(prefix):
-                found_any = True
                 filename = os.path.join(*key.name[len(prefix):].split('/'))
                 fullpath = os.path.join(self.directory, filename)
                 fulldir = os.path.dirname(fullpath)

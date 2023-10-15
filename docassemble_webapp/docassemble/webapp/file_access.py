@@ -76,6 +76,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
     # logmessage('file reference is ' + str(file_reference))
     convert = kwargs.get('convert', None)
     privileged = kwargs.get('privileged', None)
+    return_nonexistent = kwargs.get('return_nonexistent', False)
     has_info = False
     if re.search(r'^[0-9]+$', str(file_reference)):
         uids = kwargs.get('uids', None)
@@ -164,7 +165,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
                 result['package'] = the_package
         elif len(parts) == 2:
             result['package'] = parts[0]
-        result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference)
+        result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference, return_nonexistent=return_nonexistent)
     # logmessage("path is " + str(result['fullpath']))
     if result['fullpath'] is not None:  # os.path.isfile(result['fullpath'])
         if not has_info:

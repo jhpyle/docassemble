@@ -8960,7 +8960,7 @@ def path_and_mimetype(file_ref):
         else:
             mime_type = None
         return file_ref.path(), mime_type
-    file_info = server.file_finder(file_ref)
+    file_info = server.file_finder(file_ref, return_nonexistent=True)
     return file_info.get('fullpath', None), file_info.get('mimetype', None)
 
 

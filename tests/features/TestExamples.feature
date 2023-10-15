@@ -9976,9 +9976,6 @@ Feature: Example interviews
   # Scenario: Test the interview "One screen per section"
   #   Given I start the interview "docassemble.demo:data/questions/examples/free-nav.yml"
 
-  # Scenario: Test the interview "Table gather"
-  #   Given I start the interview "docassemble.demo:data/questions/examples/tablegather.yml"
-
   Scenario: Test the interview "Editing uploads"
     Given I start the interview "docassemble.demo:data/questions/examples/upload-handler-demo.yml"
     Then I should see the phrase "Do you have any exhibits to upload?"

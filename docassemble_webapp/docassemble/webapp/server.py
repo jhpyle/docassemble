@@ -1236,7 +1236,7 @@ app.jinja_env.globals.update(url_for=url_for, url_for_interview=url_for_intervie
 
 def syslog_message(message):
     message = re.sub(r'\n', ' ', message)
-    if current_user and current_user.is_authenticated and not current_user.is_anonymous:
+    if current_user and current_user.is_authenticated:
         the_user = current_user.email
     else:
         the_user = "anonymous"
@@ -2300,7 +2300,7 @@ def add_timestamps(the_dict, manual_user_id=None):
     nowtime = datetime.datetime.utcnow()
     the_dict['_internal']['starttime'] = nowtime
     the_dict['_internal']['modtime'] = nowtime
-    if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
+    if manual_user_id is not None or (current_user and current_user.is_authenticated):
         if manual_user_id is not None:
             the_user_id = manual_user_id
         else:
@@ -2751,7 +2751,7 @@ def save_user_dict_key(session_id, filename, priors=False, user=None):
         user_id = user.id
         is_auth = True
     else:
-        if current_user.is_authenticated and not current_user.is_anonymous:
+        if current_user.is_authenticated:
             is_auth = True
             user_id = current_user.id
         else:
@@ -2799,7 +2799,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
     if steps is not None:
         user_dict['_internal']['steps'] = steps
     user_dict['_internal']['modtime'] = nowtime
-    if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
+    if manual_user_id is not None or (current_user and current_user.is_authenticated):
         if manual_user_id is not None:
             the_user_id = manual_user_id
         else:
@@ -3286,7 +3286,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                             navbar += '              <li class="nav-item"><a class="nav-link d-block d-md-none" href="' + login_url + '">' + word('Sign in') + '</a>'
                     else:
                         navbar += '              <li class="nav-item"><a class="nav-link" href="' + login_url + '">' + sign_in_text + '</a></li>'
-            else:
+            elif current_user.is_authenticated:
                 if custom_menu == '' and status.question.interview.options.get('hide standard menu', False):
                     navbar += '              <li class="nav-item"><a class="nav-link" tabindex="-1">' + (current_user.email if current_user.email else re.sub(r'.*\$', '', current_user.social_id)) + '</a></li>'
                 else:
@@ -4477,7 +4477,7 @@ def get_requester_ip(req):
 
 def current_info(yaml=None, req=None, action=None, location=None, interface='web', session_info=None, secret=None, device_id=None, session_uid=None):  # pylint: disable=redefined-outer-name
     # logmessage("interface is " + str(interface))
-    if current_user.is_authenticated and not current_user.is_anonymous:
+    if current_user.is_authenticated:
         role_list = [str(role.name) for role in current_user.roles]
         if len(role_list) == 0:
             role_list = ['user']
@@ -4983,7 +4983,7 @@ def auto_login():
     except:
         abort(403)
     user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.id == info['user_id'])).scalar()
-    if (not user) or user.social_id.startswith('disabled$'):
+    if (not user) or user.social_id.startswith('disabled$') or not user.active:
         abort(403)
     login_user(user, remember=False)
     update_last_login(user)
@@ -6012,10 +6012,12 @@ def checkin():
         the_user_id = 't' + str(session['tempuser'])
         auth_user_id = None
         temp_user_id = int(session['tempuser'])
-    else:
+    elif current_user.is_authenticated:
         auth_user_id = current_user.id
         the_user_id = current_user.id
         temp_user_id = None
+    else:
+        return jsonify_with_cache(success=True, action='reload')
     the_current_info = current_info(yaml=yaml_filename, req=request, action=None, session_info=session_info, secret=secret, device_id=request.cookies.get('ds', None))
     docassemble.base.functions.this_thread.current_info = the_current_info
     if request.form.get('action', None) == 'chat_log':
@@ -6572,9 +6574,15 @@ def index(action_argument=None, refer=None):
             db.session.add(new_temp_user)
             db.session.commit()
             session['tempuser'] = new_temp_user.id
-    else:
-        if 'user_id' not in session:
-            session['user_id'] = current_user.id
+    elif not current_user.is_authenticated:
+        response = do_redirect(url_for('user.login'), is_ajax, is_json, js_target)
+        response.set_cookie('remember_token', '', expires=0)
+        response.set_cookie('visitor_secret', '', expires=0)
+        response.set_cookie('secret', '', expires=0)
+        response.set_cookie('session', '', expires=0)
+        return response
+    elif 'user_id' not in session:
+        session['user_id'] = current_user.id
     expire_visitor_secret = False
     if 'visitor_secret' in request.cookies:
         if 'session' in request.args:
@@ -13333,6 +13341,13 @@ def interview_menu(absolute_urls=False, start_new=False, tag=None):
 def interview_start():
     if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
         return redirect(url_for('user.login', next=url_for('interview_start', **request.args)))
+    if not current_user.is_anonymous and not current_user.is_authenticated:
+        response = redirect(url_for('interview_start'))
+        response.set_cookie('remember_token', '', expires=0)
+        response.set_cookie('visitor_secret', '', expires=0)
+        response.set_cookie('secret', '', expires=0)
+        response.set_cookie('session', '', expires=0)
+        return response
     setup_translation()
     if len(daconfig['dispatch']) == 0:
         return redirect(url_for('index', i=final_default_yaml_filename))
