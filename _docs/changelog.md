@@ -3,6 +3,30 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.82](https://github.com/jhpyle/docassemble/releases/tag/v1.4.82) - 2023-10-15
+
+
+### Changed
+- Selected dependencies upgraded.
+- Users whose accounts are made inactive will be immediately logged
+  out.
+- When a relative file reference is given to `bootstrap theme` in
+  `features`, the reference will be resolved using the package in
+  which the immediate YAML file is located, rather than the package of
+  the main interview file.
+- The `docassemble.webapp` package now depends on `certbot`,
+  `certbot-apache`, `certbot-nginx`, and `acme`, even though it does
+  not use these packages. This is because upgrades to
+  `docassemble.webapp` may upgrade dependencies of `certbot` and cause
+  `certbot` to fail.
+
+
+### Fixed
+- The web server that responds while docassemble is starting up no
+  longer returns 404 errors (system upgrade required).
+- Incorrect input validation of email field when editing profile of a
+  user who uses the phone-based login method.
+
 ## [1.4.81](https://github.com/jhpyle/docassemble/releases/tag/v1.4.81) - 2023-10-03
 
 

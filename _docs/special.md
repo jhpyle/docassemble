@@ -224,7 +224,8 @@ you to use and to retrieve with [`url_args`].
 * `new_session`: used to start a new interview session
 * `index`: used for retrieving documents
 * `from_list`: indicates that interview was launched from the
-  Interview List page
+  Interview List page, or in a context where the user does not need to
+  be warned when switching into a different interview
 * `js_target`: indicates that [JavaScript] should be returned that
   places the interview into the element on the screen with an `id`
   matching the given value.

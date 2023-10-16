@@ -865,6 +865,24 @@ For other session restarting options, see the `'restart'` and
 `'new_session'` options for the [`url_of()`] and [`command()`]
 functions, and the `restart` and `new_session` [special buttons].
 
+<a name="from_list"></a>If the user has been in an interview session
+and then navigates to a different interview, the user will see an
+informational message at the top of the screen such as:
+
+* Starting a new interview.  To go back to your previous interview, go
+to My Interviews on the menu.
+* Starting a new interview.  To go back to your previous interview, log
+in to see a list of your interviews.
+* Entering a different interview.  To go back to your previous
+interview, go to My Interviews on the menu.
+* Entering a different interview.  To go back to your previous
+interview, log in to see a list of your interviews.
+
+This message is not shown when the user starts an interview session by
+clicking a link on the My Interviews page. The informational message
+is suppressed by the inclusion of `&from_list=1` in the URL parameters
+of the link.
+
 ## <a name="resume"></a>Resuming an interview with a POST request
 
 If you do not want your users' browsers to pass a session ID as a URL

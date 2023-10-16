@@ -4075,11 +4075,12 @@ to enable two-factor authentication with all of the default options.
 The `auto login` directive causes users to automatically redirect to a
 third-party login service when they arrive at the `/user/sign-in` endpoint.
 
-If you have only one alternative login method, you can set `auto
-login` to `True`:
+If you have only one alternative login method, you can [`password
+login`] to `False` and set `auto login` to `True`:
 
 {% highlight yaml %}
 auto login: True
+password login: False
 {% endhighlight %}
 
 If you have multiple alternative login methods, and you want one of
@@ -4088,6 +4089,7 @@ login method:
 
 {% highlight yaml %}
 auto login: google
+password login: False
 {% endhighlight %}
 
 Valid values are `phone`, `google`, `facebook`, `twitter`, `auth0`,
@@ -6537,3 +6539,4 @@ and Facebook API keys.
 [Gotenberg]: https://gotenberg.dev/
 [`GOTENBERGURL`]: {{ site.baseurl }}/docs/docker.html#GOTENBERGURL
 [`grid` field modifier]: {{ site.baseurl }}/docs/fields.html#grid
+[`password login`]: #password login
