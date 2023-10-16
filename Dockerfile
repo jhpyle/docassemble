@@ -57,15 +57,15 @@ bash -c \
 && pip3 install --upgrade wheel==0.41.0 \
 && pip3 install --upgrade mod_wsgi==4.9.4 \
 && pip3 install --upgrade \
-   acme==2.6.0 \
-   certbot==2.6.0 \
-   certbot-apache==2.6.0 \
-   certbot-nginx==2.6.0 \
+   acme==2.7.1 \
+   certbot==2.7.1 \
+   certbot-apache==2.7.1 \
+   certbot-nginx==2.7.1 \
    certifi==2023.7.22 \
-   cffi==1.15.1 \
-   charset-normalizer==3.2.0 \
+   cffi==1.16.0 \
+   charset-normalizer==3.3.0 \
    click==8.1.6 \
-   ConfigArgParse==1.5.5 \
+   ConfigArgParse==1.7 \
    configobj==5.0.8 \
    cryptography==41.0.4 \
    distro==1.8.0 \
@@ -76,15 +76,15 @@ bash -c \
    parsedatetime==2.6 \
    pycparser==2.21 \
    pyOpenSSL==23.2.0 \
-   pyparsing==3.0.9 \
+   pyparsing==3.1.1 \
    pyRFC3339==1.1 \
    python-augeas==1.1.0 \
-   pytz==2023.3 \
+   pytz==2023.3.post1 \
    regex==2023.6.3 \
    requests==2.31.0 \
    six==1.16.0 \
    tqdm==4.65.0 \
-   urllib3==1.26.16 \
+   urllib3==2.0.6 \
 && pip3 install \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \

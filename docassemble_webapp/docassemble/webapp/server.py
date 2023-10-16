@@ -5099,6 +5099,11 @@ def phone_login():
         else:
             ok = False
         if ok:
+            social_id = 'phone$' + str(phone_number)
+            user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(social_id=social_id)).scalar()
+            if user and user.active is False:
+                flash(word("Your account has been disabled."), 'error')
+                return redirect(url_for('phone_login'))
             verification_code = random_digits(daconfig['verification code digits'])
             message = word("Your verification code is") + " " + str(verification_code) + "."
             user_agent = request.headers.get('User-Agent', '')
@@ -5163,7 +5168,7 @@ def phone_login_verify():
             user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(social_id=social_id)).scalar()
             if user and user.active is False:
                 flash(word("Your account has been disabled."), 'error')
-                return redirect(url_for('user.login'))
+                return redirect(url_for('phone_login'))
             if not user:
                 user = UserModel(social_id=social_id, nickname=phone_number, active=True)
                 db.session.add(user)

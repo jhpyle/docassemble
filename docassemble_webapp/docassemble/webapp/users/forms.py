@@ -253,20 +253,34 @@ class UserProfileForm(FlaskForm):
 
 
 class EditUserProfileForm(UserProfileForm):
-    email = StringField(word('E-mail'), validators=[Email(word('Must be a valid e-mail address')), DataRequired(word('E-mail is required'))])
+    email = StringField(word('E-mail'))
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     active = BooleanField(word('Active'))
     uses_mfa = BooleanField(word('Uses two-factor authentication'))
 
     def validate(self, user_id, admin_id):  # pylint: disable=arguments-differ
+        existing_user = db.session.execute(select(UserModel).filter_by(id=user_id)).scalar()
+        phone_user = existing_user.social_id.startswith('phone$')
         user_manager = current_app.user_manager
         rv = UserProfileForm.validate(self)
         if not rv:
             return False
-        user, user_email = user_manager.find_user_by_email(self.email.data)  # pylint: disable=unused-variable
-        if user is not None and user.id != user_id:
-            self.email.errors.append(word('That e-mail address is already taken.'))
-            return False
+        if phone_user and self.email.data == '':
+            self.email.data = None
+        if not phone_user:
+            if not (self.email.data and self.email.data.strip()):
+                self.email.errors.append(word('E-mail is required'))
+                return False
+        if self.email.data:
+            try:
+                Email("error")(self, self.email)
+            except ValidationError:
+                self.email.errors.append(word('Must be a valid e-mail address'))
+                return False
+            user, user_email = user_manager.find_user_by_email(self.email.data)  # pylint: disable=unused-variable
+            if user is not None and user.id != user_id:
+                self.email.errors.append(word('That e-mail address is already taken.'))
+                return False
         if current_user.id == user_id and current_user.has_roles('admin'):
             if admin_id not in self.role_id.data:
                 self.role_id.errors.append(word('You cannot take away your own admin privilege.'))

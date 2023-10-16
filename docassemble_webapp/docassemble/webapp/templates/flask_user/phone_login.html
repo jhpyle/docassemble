@@ -7,7 +7,7 @@
 
 <form action="" method="POST" role="form" class="form">
   {{ form.hidden_tag() }}
-  {{ render_field(form.phone_number) }}
+  {{ render_field(form.phone_number, autocomplete='off') }}
   {{ render_submit_field(form.submit) }}
 </form>
 
