@@ -30,8 +30,9 @@ QPDF_PATH = 'qpdf'
 
 SYSTEM_VERSION = daconfig.get('system version', None)
 REPLACEMENT_FONT_SUPPORTED = SYSTEM_VERSION is not None and packaging.version.parse(SYSTEM_VERSION) >= packaging.version.parse("1.4.73")
-DEFAULT_RENDERING_FONT = '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf'
-if REPLACEMENT_FONT_SUPPORTED and os.path.isfile(DEFAULT_RENDERING_FONT):
+REPLACEMENT_FONT_SUPPORTED = False
+DEFAULT_RENDERING_FONT = daconfig.get('default rendering font', None)
+if REPLACEMENT_FONT_SUPPORTED and DEFAULT_RENDERING_FONT and os.path.isfile(DEFAULT_RENDERING_FONT):
     DEFAULT_FONT_ARGUMENTS = ['replacement_font', DEFAULT_RENDERING_FONT]
 else:
     DEFAULT_FONT_ARGUMENTS = []

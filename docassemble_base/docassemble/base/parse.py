@@ -386,6 +386,8 @@ class InterviewSourceFile(InterviewSource):
         data['__parent_package__'] = kwargs.get('parent_source', self).package
         data['__interview_filename__'] = kwargs.get('interview_source', self).path
         data['__interview_package__'] = kwargs.get('interview_source', self).package
+        data['__hostname__'] = get_config('external hostname', None) or 'localhost'
+        data['__debug__'] = bool(get_config('debug', True))
         try:
             self.set_content(template.render(data))
         except Exception as err:

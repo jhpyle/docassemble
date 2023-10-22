@@ -12,6 +12,8 @@ subquestion: |
   * `__interview_package__`: {{ __interview_package__ }}
   * `__parent_filename__`: {{ __parent_filename__ }}
   * `__parent_package__`: {{ __parent_package__ }}
+  * `__debug__`: {{ __debug__ }}
+  * `__hostname__`: {{ __hostname__ }}
 ---
 metadata:
   title: Using Jinja2 in YAML
