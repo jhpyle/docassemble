@@ -223,7 +223,7 @@ install_requires = [
     "user-agents==2.2.0",
     "wcwidth==0.2.6",
     "webencodings==0.5.1",
-    "Werkzeug==2.3.6",
+    "Werkzeug==3.0.1",
     "xfdfgen==0.4",
     "xlrd==2.0.1",
     "XlsxWriter==3.1.7",
