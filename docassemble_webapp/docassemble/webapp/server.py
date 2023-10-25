@@ -10207,13 +10207,7 @@ def index(action_argument=None, refer=None):
             window.scrollTo(0, 1);
           }
           $(daTargetDiv).html(data.body);
-          var bodyClasses = $(daTargetDiv).parent()[0].className.split(/\s+/);
-          var n = bodyClasses.length;
-          while (n--){
-            if (bodyClasses[n] == 'dabody' || bodyClasses[n] == 'dasignature' || bodyClasses[n].indexOf('question-') == 0){
-              $(daTargetDiv).parent().removeClass(bodyClasses[n]);
-            }
-          }
+          $(daTargetDiv).parent().removeClass();
           $(daTargetDiv).parent().addClass(data.bodyclass);
           $("meta[name=viewport]").attr('content', "width=device-width, initial-scale=1");
           daDoAction = data.do_action;
@@ -17744,7 +17738,7 @@ class Fruit(DAObject):
         file_number = get_new_file_number(None, nice_name)
         file_set_attributes(file_number, private=False, persistent=True)
         saved_file = SavedFile(file_number, extension='zip', fix=True, should_not_exist=True)
-        zf = zipfile.ZipFile(saved_file.path, mode='w')
+        zf = zipfile.ZipFile(saved_file.path, compression=zipfile.ZIP_DEFLATED, mode='w')
         trimlength = len(directory) + 1
         if current_user.timezone:
             the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
@@ -23213,7 +23207,7 @@ def logs():
     if LOGSERVER is None and use_zip:
         timezone = get_default_timezone()
         zip_archive = tempfile.NamedTemporaryFile(mode="wb", prefix="datemp", suffix=".zip", delete=False)
-        zf = zipfile.ZipFile(zip_archive, mode='w')
+        zf = zipfile.ZipFile(zip_archive, compression=zipfile.ZIP_DEFLATED, mode='w')
         for f in os.listdir(LOG_DIRECTORY):
             zip_path = os.path.join(LOG_DIRECTORY, f)
             if f.startswith('.') or not os.path.isfile(zip_path):
@@ -26542,7 +26536,7 @@ def translation_file():
         else:
             zip_file = tempfile.NamedTemporaryFile(suffix='.zip', delete=False)
             zip_file_name = docassemble.base.functions.space_to_underscore(os.path.splitext(os.path.basename(re.sub(r'.*:', '', yaml_filename)))[0]) + "_" + tr_lang + ".zip"
-            with zipfile.ZipFile(zip_file, mode='w') as zf:
+            with zipfile.ZipFile(zip_file, compression=zipfile.ZIP_DEFLATED, mode='w') as zf:
                 for item in xliff_files:
                     info = zipfile.ZipInfo(item[1])
                     with open(item[0].name, 'rb') as fp:

@@ -513,7 +513,7 @@ def make_package_zip(pkgname, info, author_info, tz_name, current_project='defau
     trimlength = len(directory) + 1
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
-    zf = zipfile.ZipFile(temp_zip, mode='w')
+    zf = zipfile.ZipFile(temp_zip, compression=zipfile.ZIP_DEFLATED, mode='w')
     the_timezone = zoneinfo.ZoneInfo(tz_name)
     for root, dirs, files in os.walk(packagedir):  # pylint: disable=unused-variable
         for file in files:

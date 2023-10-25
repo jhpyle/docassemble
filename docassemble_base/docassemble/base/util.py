@@ -9160,7 +9160,7 @@ def zip_file(*pargs, **kwargs):
     if not isinstance(the_zip_file, DAFile):
         raise DAError("zip_file: output_to must be a DAFile")
     the_zip_file.initialize(filename=kwargs.get('filename', 'file.zip'), reinitialize=the_zip_file.ok)
-    zf = zipfile.ZipFile(the_zip_file.path(), mode='w')
+    zf = zipfile.ZipFile(the_zip_file.path(), compression=zipfile.ZIP_DEFLATED, mode='w')
     seen = {}
     for zip_path, path in files:
         if zip_path not in seen:
