@@ -1057,6 +1057,10 @@ The following variables are available in the [Jinja2] context:
     [`include` block].  Otherwise, `__parent_filename__` will be the
     same as `__interview_filename__`.
   * `__parent_package__`: the package containing `__parent_filename`.
+  * `__debug__`: the value of the [`debug`] Configuration directive (the
+    default is `True`.
+  * `__hostname__`: the value of the [`external hostname`] Configuration
+    directive (the default is `localhost`).
 
 In addition, you can make variables available in the [Jinja2] context on
 your server by setting the [`jinja data`] directive in your
@@ -1173,3 +1177,5 @@ containing `# use jinja` was encountered.
 [`SQLObject`]: {{ site.baseurl }}/docs/objects.html#SQLObject
 [`allow embedding`]: {{ site.baseurl }}/docs/config.html#allow embedding
 [Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
+[`debug`]: {{ site.baseurl }}/docs/config.html#debug
+[`external hostname`]: {{ site.baseurl }}/docs/config.html#external hostname

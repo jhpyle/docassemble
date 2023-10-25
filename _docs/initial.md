@@ -583,6 +583,17 @@ referring to their package names.  E.g.,
 `questions.yml` in the `docassemble/helloworld/data/questions`
 directory of that package.
 
+The `include` block is a special type of block that is only evaluated
+when the YAML is initially compiled. Modifiers like `if` and
+`mandatory` have no effect on the `include` block. It is not possible
+to conditionally include a YAML file because `include` is a
+"compile-time" block, not a "runtime" block. If you want the blocks
+inside of the included YAML file to be conditionally applicable, you
+need to use `if` or `mandatory` modifiers on those blocks.
+
+See the section on [combining multiple interviews into one] for
+strategies about how to use `include` effectively.
+
 # <a name="im"></a>Images
 
 ## <a name="image sets"></a>With attribution: `image sets`
@@ -2792,3 +2803,4 @@ This will cause the web application to run the JavaScript for the
 [`pickle`]: https://docs.python.org/3/library/pickle.html
 [`mail`]: {{ site.baseurl }}/docs/config.html#mail multiple
 [GitHub repository]: {{ site.github.repository_url }}
+[combining multiple interviews into one]: {{ site.baseurl }}/docs/logic.html#multiple interviews

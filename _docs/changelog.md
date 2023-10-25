@@ -3,6 +3,32 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.83](https://github.com/jhpyle/docassemble/releases/tag/v1.4.83) - 2023-10-25
+
+
+### Added
+- The `default rendering font` Configuration directive. This allows
+  you to specify a system-wide font that should be used for rendering
+  form fields when using an `attachment` with `pdf template file` and
+  `editable: False`.
+
+
+### Changed
+- The feature from 1.4.79, described below as "`pdftk` will render
+  form fields to text using the `msttcorefonts` version of Arial,
+  which has better support for Unicode characters," has been removed
+  because with this font, `pdftk` rendered text too small when the
+  font size in the field was "Auto." To reenable this feature, specify
+  a `default rendering font` in your Configuration, or specify a
+  `rendering font` with each attachment.
+
+
+### Fixed
+- Error when non-`str` values are used as `datatype: checkboxes`
+  values.
+- The `css class` of a `question` persisted after the Continue button
+  was pressed.
+
 ## [1.4.82](https://github.com/jhpyle/docassemble/releases/tag/v1.4.82) - 2023-10-15
 
 

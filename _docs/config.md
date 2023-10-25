@@ -4651,6 +4651,24 @@ tagged pdf: True
 This setting can also be made on a per-interview basis by setting the
 [`tagged pdf` features setting].
 
+## <a name="default rendering font"></a>Changing the default font for rendering PDF fields
+
+When `pdf template file` is used with `editable: False`, [pdftk] is
+used to convert form fields to rendered text. The default font that
+[pdftk] uses may not have support for characters that you want to
+use. You can specify a different font for a particular `attachment`
+using [`rendering font`].
+
+To specify a font that should be used by default instead of [pdftk]'s
+Arial font, you can specify a `default rendering font` in the
+Configuration.
+
+{% highlight yaml %}
+default rendering font: /usr/share/fonts/truetype/msttcorefonts/Arial.ttf
+{% endhighlight %}
+
+For more information about what font file to use, see [`rendering font`].
+
 ## <a name="enable unoconv"></a>Using unoconv instead of LibreOffice for processing DOCX files
 
 Starting with system version 1.3.18, a [unoconv] listener is
@@ -6540,3 +6558,5 @@ and Facebook API keys.
 [`GOTENBERGURL`]: {{ site.baseurl }}/docs/docker.html#GOTENBERGURL
 [`grid` field modifier]: {{ site.baseurl }}/docs/fields.html#grid
 [`password login`]: #password login
+[pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
+[`rendering font`]: {{ site.baseurl }}/docs/documents.html#rendering font
