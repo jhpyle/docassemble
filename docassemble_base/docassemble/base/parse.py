@@ -5177,7 +5177,7 @@ class Question:
                         if not template_file.is_code:
                             the_docx_path = template_file.path()
                             if the_docx_path is None or not os.path.isfile(the_docx_path):
-                                raise DAError("Missing docx template file " + os.path.basename(the_docx_path))
+                                raise DAError("Missing docx template file " + template_file.original_reference())
                             template_files.append(the_docx_path)
                     if len(template_files) > 0:
                         if len(template_files) == 1:
@@ -7190,8 +7190,8 @@ class Question:
                             docx_paths = []
                             for docx_reference in attachment['options']['docx_template_file']:
                                 for docx_path in docx_reference.paths(the_user_dict=the_user_dict):
-                                    if not os.path.isfile(docx_path):
-                                        raise DAError("Missing docx template file " + os.path.basename(docx_path))
+                                    if docx_path is None or not os.path.isfile(docx_path):
+                                        raise DAError("Missing docx template file " + docx_reference.original_reference())
                                     docx_paths.append(docx_path)
                             if len(docx_paths) == 1:
                                 docx_path = docx_paths[0]
@@ -9024,7 +9024,7 @@ class Interview:
                             gathered = question.gathered
                         else:
                             gathered = eval(question.gathered, user_dict)
-                        thename = from_safeid(question.fields[0].saveas)
+                        thename = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
                         if question.use_objects == 'objects':
                             user_dict['_DADATA'] = docassemble.base.util.objects_from_data(recursive_eval_dataobject(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, package=question.package)
                         elif question.use_objects:
@@ -9045,7 +9045,7 @@ class Interview:
                             gathered = question.gathered
                         else:
                             gathered = eval(question.gathered, user_dict)
-                        thename = from_safeid(question.fields[0].saveas)
+                        thename = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
                         if question.use_objects == 'objects':
                             user_dict['_DADATAFROMCODE'] = docassemble.base.util.objects_from_data(recursive_eval_data_from_code(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, package=question.package)
                         elif question.use_objects:
@@ -9069,9 +9069,10 @@ class Interview:
                         else:
                             use_objects = bool(eval(question.use_objects, user_dict))
                         for field in question.fields:
-                            variable = from_safeid(field.saveas)
-                            if not variables_equivalent(variable, missing_var):
+                            raw_variable = from_safeid(field.saveas)
+                            if not variables_equivalent(raw_variable, missing_var):
                                 continue
+                            variable = substitute_vars(raw_variable, is_generic, the_x, iterators)
                             the_file_name = field.extras['file_name'].text(user_dict).strip()
                             was_defined = False
                             try:
@@ -9107,9 +9108,10 @@ class Interview:
                         docassemble.base.functions.this_thread.current_question = question
                         for keyvalue in question.objects:
                             # logmessage("In a for loop for keyvalue")
-                            for variable, object_type_name in keyvalue.items():
-                                if not variables_equivalent(variable, missing_var):
+                            for raw_variable, object_type_name in keyvalue.items():
+                                if not variables_equivalent(raw_variable, missing_var):
                                     continue
+                                variable = substitute_vars(raw_variable, is_generic, the_x, iterators)
                                 was_defined = False
                                 try:
                                     exec("__oldvariable__ = " + str(missing_var), user_dict)

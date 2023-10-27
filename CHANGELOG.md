@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.4.84] - 2023-10-26
+
+### Fixed
+- An incorrect `instanceName` was used when a variable name in an
+  `objects`, `objects from file` or `data` block contained an iterator
+  variable.
+
 ## [1.4.83] - 2023-10-25
 
 ### Added
