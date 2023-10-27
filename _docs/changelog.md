@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.84](https://github.com/jhpyle/docassemble/releases/tag/v1.4.84) - 2023-10-26
+
+
+### Fixed
+- An incorrect `instanceName` was used when a variable name in an
+  `objects`, `objects from file` or `data` block contained an iterator
+  variable.
+
 ## [1.4.83](https://github.com/jhpyle/docassemble/releases/tag/v1.4.83) - 2023-10-25
 
 
