@@ -167,6 +167,25 @@ later point in time. The software in the **docassemble** image and
 Python packages is continually updated, and the latest versions of
 software may expect the latest versions of operating system.
 
+If you are using [Docker Desktop], it is recommended that you go to
+Settings and change the Docker Engine settings so that the
+`shutdown-timeout` is at least 600 seconds. Otherwise, Docker Desktop
+may forcibly terminate your **docassemble** container while it is
+trying to safely shut down.
+
+{% highlight javascript %}
+{
+  "builder": {
+    "gc": {
+      "defaultKeepStorage": "20GB",
+      "enabled": true
+    }
+  },
+  "experimental": false,
+  "shutdown-timeout": 600
+}
+{% endhighlight %}
+
 # <a name="single server arrangement"></a>Quick start
 
 If you just want to test out **docassemble** for the first time,
@@ -201,6 +220,15 @@ docker run -d -p 80:80 -p 443:443 --restart always --stop-timeout 600 jhpyle/doc
 The [`docker run`] command will download and run **docassemble**,
 making the application available on the standard HTTP port (port 80)
 of your machine.
+
+If you are using the graphical user interface of [Docker Desktop] to
+start a container using the `jhpyle/docassemble` image, then [Docker
+Desktop] will run `docker run` for you, and you will not be able to
+specify the command line parameters directly. Under the "optional
+settings," make sure to map port 80 to port 80 (the equivalent of `-p
+80:80`). If it doesn't let you do that, try mapping port `8080` to
+port `80`, in which case **docassemble** will be available at
+`http://localhost:8080`.
 
 It will take several minutes for **docassemble** to download, and once
 the [`docker run`] command finishes, **docassemble** will start to
@@ -2991,7 +3019,7 @@ earlier version of **docassemble**, you can make your own image using
 {% highlight bash %}
 git clone {{ site.github.repository_url }}
 cd docassemble
-git checkout v0.3.21
+git checkout v1.4.84
 docker build -t yourname/mydocassemble .
 cd ..
 docker run -d -p 80:80 -p 443:443 --restart always --stop-timeout 600 yourname/mydocassemble
@@ -3013,6 +3041,7 @@ your own version of `jhpyle/docassemble-os`, you can do so by running:
 {% highlight bash %}
 git clone https://github.com/jhpyle/docassemble-os
 cd docassemble-os
+git checkout v1.0.12
 docker build -t jhpyle/docassemble-os .
 cd ..
 {% endhighlight %}

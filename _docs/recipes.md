@@ -2223,7 +2223,7 @@ For example, you could use an interview like this:
 {% highlight yaml %}
 mandatory: True
 code: |
-  json_response(the_document.number)
+  json_response(the_document.pdf.number)
 ---
 attachment:
   variable name: the_document
