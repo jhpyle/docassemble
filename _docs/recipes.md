@@ -952,8 +952,8 @@ class DAStripe(DAObject):
     float(self.amount)
     str(self.currency)
     self.intent = stripe.PaymentIntent.create(
-      amount=int(float('%.2f' % self.amount)*100.0),
-      currency=self.currency,
+      amount=int(float('%.2f' % float(self.amount))*100.0),
+      currency=str(self.currency),
     )
     self.is_setup = True
 
