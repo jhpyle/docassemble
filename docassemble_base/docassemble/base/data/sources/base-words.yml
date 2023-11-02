@@ -44,6 +44,7 @@
 "Anguilla": Null
 "Anonymous": Null
 "anonymous visitor": Null
+"An SSH key is already installed on your GitHub account. The existing SSH key will not be replaced. Note that if you are connecting to GitHub from multiple docassemble servers, each server needs to have a different appname in the Configuration. If you have problems using GitHub, disable the integration and configure it again.": Null
 "Answer here": Null
 "Antarctica": Null
 "Antigua and Barbuda": Null
@@ -1030,6 +1031,7 @@
 "There was an error.": Null
 "There was an error updating the packages.": Null
 "There was an error with the synchronization.": Null
+"There was a problem connecting to GitHub. Please check your GitHub configuration and try again.": Null
 "There was a problem reading the YAML file you uploaded.  Are you sure it is a YAML file?  File was not saved.": Null
 "There was a problem sending the text message.": Null
 "There was a problem sending you a text message.  Please log in another way.": Null
@@ -1308,7 +1310,6 @@
 "Your email address": Null
 "Your email has been confirmed.": Null
 "Your file upload is larger than the server can accept. Please reduce the size of your file upload.": Null
-"Your GitHub integration has already been configured.": Null
 "Your GitHub integration is currently turned on.  Below, you can change which repositories docassemble can access.  You can disable GitHub integration if you no longer wish to use it.": Null
 "Your GitHub settings were saved.": Null
 "Your information was saved.": Null

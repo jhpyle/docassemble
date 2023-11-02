@@ -17,6 +17,8 @@ if __name__ == "__main__":
         print('export DAWEBSERVER="' + daconfig['web server'] + '"')
     else:
         print('export DAWEBSERVER="nginx"')
+    if daconfig.get('run oauthlib on http', False):
+        print('export OAUTHLIB_INSECURE_TRANSPORT=1')
     if '--limited' in sys.argv:
         sys.exit(0)
     if 'other os locales' in daconfig and isinstance(daconfig['other os locales'], list):

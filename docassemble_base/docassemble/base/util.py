@@ -21,9 +21,11 @@ import tempfile
 import time
 import types
 import zipfile
+import base64
 import pycurl  # pylint: disable=import-error
 import requests
 import yaml
+from requests_oauthlib import OAuth2Session
 from requests.auth import HTTPDigestAuth, HTTPBasicAuth, AuthBase
 from requests.exceptions import RequestException
 import httplib2
@@ -38,7 +40,7 @@ from twilio.rest import Client as TwilioRestClient
 import pycountry
 from jinja2.runtime import UndefinedError
 from jinja2.exceptions import TemplateError
-from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError, LazyNameError, DAAttributeError
+from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError, LazyNameError, DAAttributeError, DAException
 from docassemble.base.file_docx import include_docx_template
 from docassemble.base.filter import markdown_to_html
 from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, get_voice, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, update_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms, possessify_long, a_in_the_b, its, the, this, these, underscore_to_space, some, ReturnValue, set_variables, language_name, run_action_in_session  # noqa: F401 # pylint: disable=unused-import
@@ -9661,6 +9663,25 @@ def safeid(text):
     return re.sub(r'[\n=]', '', codecs.encode(text.encode('utf-8'), 'base64').decode())
 
 
+def _extract_id_token(id_token):
+    if isinstance(id_token, bytes):
+        segments = id_token.split(b'.')
+    else:
+        segments = id_token.split('.')
+
+    if len(segments) != 3:
+        raise DAException('Wrong number of segments in token: {0}'.format(id_token))
+
+    if isinstance(segments[1], str):
+        b64string = segments[1].encode('ascii')
+    else:
+        b64string = segments[1]
+    if not isinstance(b64string, bytes):
+        raise ValueError('{0!r} could not be converted to bytes'.format(value))
+
+    return json.loads(base64.urlsafe_b64decode(b64string + b'=' * (4 - len(b64string) % 4)).decode('utf-8'))
+
+
 class DAOAuth(DAObject):
     """A base class for performing OAuth2 authorization in an interview"""
 
@@ -9677,16 +9698,9 @@ class DAOAuth(DAObject):
         client_secret = app_credentials.get('secret', None)
         if client_id is None or client_secret is None:
             raise DAError('The application ' + self.appname + " is not configured in the Configuration")
-        flow = oauth2client.client.OAuth2WebServerFlow(
-            client_id=client_id,
-            client_secret=client_secret,
-            scope=self.scope,
-            redirect_uri=re.sub(r'\?.*', '', interview_url()),
-            auth_uri=self.auth_uri,
-            token_uri=self.token_uri,
-            access_type='offline',
-            prompt='consent')
-        return flow
+        return OAuth2Session(client_id,
+                             redirect_uri=re.sub(r'\?.*', '', interview_url()),
+                             scope=self.scope)
 
     def _setup(self):
         if hasattr(self, 'use_random_unique_id') and self.use_random_unique_id and not hasattr(self, 'unique_id'):
@@ -9738,11 +9752,51 @@ class DAOAuth(DAObject):
             stored_state = None
         if stored_state is not None:
             if 'code' in self.url_args and 'state' in self.url_args:
+                app_credentials = get_config('oauth', {}).get(self.appname, {})
+                client_id = app_credentials.get('id', None)
+                client_secret = app_credentials.get('secret', None)
                 r.delete(r_key)
                 if self.url_args['state'] != stored_state.decode():
                     raise DAError("State did not match.  " + repr(self.url_args['state']) + " vs " + repr(stored_state.decode()) + " where r_key is " + repr(r_key))
                 flow = self._get_flow()
-                credentials = flow.step2_exchange(self.url_args['code'])
+                token_dict = flow.fetch_token(
+                    self.token_uri,
+                    code=self.url_args['code'],
+                    client_secret=client_secret)
+                if hasattr(self, 'user_agent') and self.user_agent:
+                    user_agent = self.user_agent
+                else:
+                    user_agent = 'Python client library'
+                if token_dict.get('refresh_token'):
+                    refresh_token = token_dict['refresh_token']
+                elif hasattr(self, 'refresh_token') and self.refresh_token:
+                    refresh_token = self.refresh_token
+                else:
+                    refresh_token = None
+                if hasattr(self, 'token_info_uri') and self.token_info_uri:
+                    token_info_uri = self.token_info_uri
+                else:
+                    token_info_uri = None
+                if hasattr(self, 'revoke_uri') and self.revoke_uri:
+                    revoke_uri = self.revoke_uri
+                else:
+                    revoke_uri = None
+                if 'expires_in' in token_dict:
+                    delta = datetime.timedelta(seconds=int(token_dict['expires_in']))
+                    token_expiry = delta + datetime.datetime.utcnow()
+                else:
+                    token_expiry = None
+                extracted_id_token = None
+                id_token_jwt = None
+                if 'id_token' in token_dict:
+                    extracted_id_token = _extract_id_token(token_dict['id_token'])
+                    id_token_jwt = token_dict['id_token']
+                credentials = oauth2client.client.OAuth2Credentials(
+                    token_dict['access_token'], client_id, client_secret,
+                    refresh_token, token_expiry, self.token_uri, user_agent,
+                    revoke_uri=revoke_uri, id_token=extracted_id_token,
+                    id_token_jwt=id_token_jwt, token_response=token_dict, scopes=self.scope,
+                    token_info_uri=token_info_uri)
                 storage = self._get_redis_cred_storage()
                 storage.put(credentials)
                 del self.url_args['code']
@@ -9752,13 +9806,12 @@ class DAOAuth(DAObject):
         storage = self._get_redis_cred_storage()
         credentials = storage.get()
         if not credentials or credentials.invalid:
-            state_string = safeid(user_info().filename + '^' + random_string(8))
+            flow = self._get_flow()
+            uri, state_string = flow.authorization_url(self.auth_uri, access_type='offline', prompt='consent')
             pipe = r.pipeline()
             pipe.set(r_key, state_string)
             pipe.expire(r_key, 300)
             pipe.execute()
-            flow = self._get_flow()
-            uri = flow.step1_get_authorize_url(state=state_string)
             if 'state' in self.url_args:
                 del self.url_args['state']
             if 'code' in self.url_args:

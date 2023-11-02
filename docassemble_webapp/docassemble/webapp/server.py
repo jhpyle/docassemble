@@ -5528,7 +5528,7 @@ def get_github_flow():
         client_secret=client_secret,
         scope='repo admin:public_key read:user user:email read:org',
         redirect_uri=url_for('github_oauth_callback', _external=True),
-        auth_uri='http://github.com/login/oauth/authorize',
+        auth_uri='https://github.com/login/oauth/authorize',
         token_uri='https://github.com/login/oauth/access_token',
         access_type='offline',
         prompt='consent')
@@ -5577,6 +5577,7 @@ def github_menu():
     form = GitHubForm(request.form)
     if request.method == 'POST':
         if form.configure.data:
+            r.delete('da:github:userid:' + str(current_user.id))
             return redirect(url_for('github_configure'))
         if form.unconfigure.data:
             return redirect(url_for('github_unconfigure'))
@@ -5623,24 +5624,37 @@ def github_configure():
         return redirect(uri)
     http = credentials.authorize(httplib2.Http())
     found = False
-    resp, content = http.request("https://api.github.com/user/emails", "GET")
-    if int(resp['status']) == 200:
-        user_info_list = json.loads(content.decode())
-        user_info = None
-        for item in user_info_list:
-            if item.get('email', None) and item.get('visibility', None) != 'private':
-                user_info = item
-        if user_info is None:
-            raise DAError("github_configure: could not get e-mail address")
-    else:
-        raise DAError("github_configure: could not get information about user")
-    resp, content = http.request("https://api.github.com/user/keys", "GET")
-    if int(resp['status']) == 200:
+    try:
+        resp, content = http.request("https://api.github.com/user/emails", "GET")
+        assert int(resp['status']) == 200
+    except:
+        r.delete('da:github:userid:' + str(current_user.id))
+        r.delete('da:using_github:userid:' + str(current_user.id))
+        flash(word("There was a problem connecting to GitHub. Please check your GitHub configuration and try again."), 'danger')
+        return redirect(url_for('github_menu'))
+    user_info_list = json.loads(content.decode())
+    user_info = None
+    for item in user_info_list:
+        if item.get('email', None) and item.get('visibility', None) != 'private':
+            user_info = item
+    if user_info is None:
+        logmessage("github_configure: could not get information about user")
+        r.delete('da:github:userid:' + str(current_user.id))
+        r.delete('da:using_github:userid:' + str(current_user.id))
+        flash(word("There was a problem connecting to GitHub. Please check your GitHub configuration and try again."), 'danger')
+        return redirect(url_for('github_menu'))
+    try:
+        resp, content = http.request("https://api.github.com/user/keys", "GET")
+        assert int(resp['status']) == 200
         for key in json.loads(content.decode()):
             if key['title'] == app.config['APP_NAME'] or key['title'] == app.config['APP_NAME'] + '_user_' + str(current_user.id):
                 found = True
-    else:
-        raise DAError("github_configure: could not get information about ssh keys")
+    except:
+        logmessage("github_configure: could not get information about ssh keys")
+        r.delete('da:github:userid:' + str(current_user.id))
+        r.delete('da:using_github:userid:' + str(current_user.id))
+        flash(word("There was a problem connecting to GitHub. Please check your GitHub configuration and try again."), 'danger')
+        return redirect(url_for('github_menu'))
     while found is False:
         next_link = get_next_link(resp)
         if next_link:
@@ -5650,11 +5664,14 @@ def github_configure():
                     if key['title'] == app.config['APP_NAME'] or key['title'] == app.config['APP_NAME'] + '_user_' + str(current_user.id):
                         found = True
             else:
-                raise DAError("github_configure: could not get additional information about ssh keys")
+                r.delete('da:github:userid:' + str(current_user.id))
+                r.delete('da:using_github:userid:' + str(current_user.id))
+                flash(word("There was a problem connecting to GitHub. Please check your GitHub configuration and try again."), 'danger')
+                return redirect(url_for('github_menu'))
         else:
             break
     if found:
-        flash(word("Your GitHub integration has already been configured."), 'info')
+        flash(word("An SSH key is already installed on your GitHub account. The existing SSH key will not be replaced. Note that if you are connecting to GitHub from multiple docassemble servers, each server needs to have a different appname in the Configuration. If you have problems using GitHub, disable the integration and configure it again."), 'info')
     if not found:
         (private_key_file, public_key_file) = get_ssh_keys(user_info['email'])  # pylint: disable=unused-variable
         with open(public_key_file, 'r', encoding='utf-8') as fp:
@@ -5665,7 +5682,11 @@ def github_configure():
         if int(resp['status']) == 201:
             flash(word("GitHub integration was successfully configured."), 'info')
         else:
-            raise DAError("github_configure: error setting public key")
+            logmessage("github_configure: error setting public key")
+            r.delete('da:github:userid:' + str(current_user.id))
+            r.delete('da:using_github:userid:' + str(current_user.id))
+            flash(word("There was a problem connecting to GitHub. Please check your GitHub configuration and try again."), 'danger')
+            return redirect(url_for('github_menu'))
     r.set('da:using_github:userid:' + str(current_user.id), json.dumps({'shared': True, 'orgs': True}))
     return redirect(url_for('github_menu'))
 
@@ -5730,6 +5751,7 @@ def github_oauth_callback():
         return ('File not found', 404)
     setup_translation()
     failed = False
+    do_redirect = False
     if not app.config['USE_GITHUB']:
         logmessage('github_oauth_callback: server does not use github')
         failed = True
@@ -5742,12 +5764,16 @@ def github_oauth_callback():
         if 'code' not in request.args or 'state' not in request.args:
             logmessage('github_oauth_callback: code and state not in args')
             failed = True
+            do_redirect = True
         elif request.args['state'] != github_next['state']:
             logmessage('github_oauth_callback: state did not match')
             failed = True
     if failed:
         r.delete('da:github:userid:' + str(current_user.id))
         r.delete('da:using_github:userid:' + str(current_user.id))
+        if do_redirect:
+            flash(word("There was a problem connecting to GitHub. Please check your GitHub configuration and try again."), 'danger')
+            return redirect(url_for('github_menu'))
         return ('File not found', 404)
     flow = get_github_flow()
     credentials = flow.step2_exchange(request.args['code'])
@@ -17366,7 +17392,7 @@ def create_playground_package():
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git clone.  " + output)
                 if not os.path.isdir(packagedir):
-                    raise DAError("create_playground_package: package directory did not exist")
+                    raise DAError("create_playground_package: package directory did not exist.  " + output)
                 if pulled_already:
                     output += "Doing git checkout " + commit_code + "\n"
                     try:
