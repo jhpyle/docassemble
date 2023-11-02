@@ -3024,7 +3024,7 @@ context of an interview.
 {% include demo-side-by-side.html demo="oauth-test" %}
 
 Although [OAuth2] is fairly complicated, the way that **docassemble**
-handles it is fairly simple.  There are two main things that the
+handles it is fairly simple. There are two main things that the
 `DAOAuth` object does: first, it uses the [`response()`] function to
 trigger a browser redirect to the third-party [OAuth2] process if the
 user has missing or invalid credientials; second, the [OAuth2] site
@@ -3035,19 +3035,19 @@ retrieve the access token obtained during the [OAuth2] process.
 
 In the above example, the user needs to be logged in because the
 [OAuth2] credentials are stored globally using [Redis] using the
-user's e-mail address as part of the key.  However, a later example
+user's e-mail address as part of the key. However, a later example
 will demonstrate how to use identifiers other than the user's e-mail
 address.
 
-To use a `DAOAuth` object to connect to Google, you need to use the
-[Google Developers Console] and enable the "Google Sheets API."  Under
-Credentials, create an "OAuth client ID" for a "web application."
-Assuming your server is at https://interview.example.com, add
-`https://interview.example.com` to the "Authorized JavaScript
-origins."  Then, under "Authorized redirect URIs," add
-`https://interview.example.com/interview` (or
+To follow this example and use a `DAOAuth` object to connect to
+Google, you need to use the [Google Developers Console] and enable the
+"Google Sheets API." Under Credentials, create an "OAuth client ID"
+for a "web application." Assuming your server is at
+https://interview.example.com, add `https://interview.example.com` to
+the "Authorized JavaScript origins." Then, under "Authorized redirect
+URIs," add `https://interview.example.com/interview` (or
 `https://interview.example.com/run/yourshortcut` if you are using a
-shortcut).  Make a note of the "Client ID" and the "Client secret"
+shortcut). Make a note of the "Client ID" and the "Client secret"
 because you will need to plug those values into the [Configuration]
 
 The module `oauthsheets.py` contains the following:
@@ -3079,17 +3079,17 @@ class GoogleAuth(DAOAuth):
 This example connects to Google, but note that [OAuth2] is a general
 protocol used by a number of authentication providers.
 
-The `GoogleAuth` class is a subclass of `DAOAuth`.  The following four
+The `GoogleAuth` class is a subclass of `DAOAuth`. The following four
 attributes must be defined:
 
 * `appname` - This is a name that you choose.  Credentials will be
   stored based on this application name as well as the user's e-mail
   address.  In this example, the application name is `mygoogle`.
-* `token_uri` - This is the URL for obtaining the [OAuth2] token.  It
+* `token_uri` - This is the URL for obtaining the [OAuth2] token. It
   should be provided in the documentation for the [OAuth2] API.
-* `auth_uri` - This is the URL for [OAuth2] authorization.  It
+* `auth_uri` - This is the URL for [OAuth2] authorization. It
   should be provided in the documentation for the [OAuth2] API.
-* `scope` - This is the scope of access you are requesting.  The
+* `scope` - This is the scope of access you are requesting. The
   format should be documented in the documentation for the [OAuth2]
   API.
 
@@ -3106,14 +3106,21 @@ oauth:
 
 Note that in the interview, the object was defined with
 `.using(url_args=url_args)`, and that the "redirect URI" was
-`/interview`.  This is all necessary because after the [OAuth2]
+`/interview`. This is all necessary because after the [OAuth2]
 process, the [OAuth2] provider will redirect back to your interview
-with the URL parameters `state` and `code`.  The `DAOAuth` object
-needs to have a reference to the `url_args` so that it can read these
-URL parameters.
+with the URL parameters `state` and `code`. The `DAOAuth` object needs
+to have a reference to the `url_args` so that it can read these URL
+parameters.
 
-If you need to modify the way this works, you can copy and paste the
-code for `DAOAuth` out of [`oauth.py`] into your own module.
+Note that if the user has opened sessions in multiple different
+interviews, when the user is redirected to `/interview`, they may
+resume a different session. To avoid this, use `/start/` URLs to start
+interview sessions and `/run/` URLs to resume interview sessions. This
+is a limitation of [OAuth2], which does not allow URL parameters in
+the URL to which the user is redirected.
+
+If you need to modify the way `DAOAuth` works, you can copy and paste the
+code for `DAOAuth` out of [`docassemble.base.util`] into your own module.
 
 The methods of `DAOAuth` that are useful are:
 
@@ -3141,9 +3148,9 @@ add a menu item that allows the users to manage their credentials.
 {% include demo-side-by-side.html demo="oauth-test-2" %}
 
 By default, the `DAOAuth` object will remember the user's credentials
-for six months.  To set a different period, you can set the `expires`
+for six months. To set a different period, you can set the `expires`
 attribute to an integer number of seconds or to `None` if the
-credentials should be remembered forever.  Here is an example of
+credentials should be remembered forever. Here is an example of
 storing credentials for one week:
 
 {% highlight yaml %}
@@ -3152,15 +3159,15 @@ objects:
 {% endhighlight %}
 
 The examples above have demonstrated using the logged-in user's e-mail
-address as the identifier for storing the credentials.  This is the
-default behavior.  The advantage is that a given user only needs to go
+address as the identifier for storing the credentials. This is the
+default behavior. The advantage is that a given user only needs to go
 through the oauth process once and then they will connect
 automatically in the future, even in different sessions and
 interviews.
 
 However, you might want to use an [OAuth2] process for a non-logged-in
 user, or you might want a different unique ID than the user's e-mail
-address.  You can set a custom `unique_id` to be used instead.
+address. You can set a custom `unique_id` to be used instead.
 
 {% highlight yaml %}
 objects:
@@ -3172,9 +3179,9 @@ code: |
 
 You might use this in a situation where an external server initializes
 the session using the [API] and populates the unique ID as a variable
-in the interview answers.  In this situation, you would need to
-prevent users from initiating a session if that unique ID was not
-defined.  Here is one way to do it.
+in the interview answers. In this situation, you would need to prevent
+users from initiating a session if that unique ID was not defined.
+Here is one way to do it.
 
 {% highlight python %}
 # get the session ID of a new session

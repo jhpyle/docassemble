@@ -4750,6 +4750,19 @@ celery processes: 15
 This value will be passed directly to [Celery]'s [`worker_concurrency`]
 configuration variable.
 
+## <a name="run oauthlib on http"></a>Using oauthlib on http servers
+
+If you use the `oauthlib` library and users access your server using
+`http://` rather than `https://`, set `run oauthlib on http` to
+`True`.
+
+{% highlight yaml %}
+run oauthlib on http: True
+{% endhighlight %}
+
+This will set the environment variable `OAUTHLIB_INSECURE_TRANSPORT`
+to `1`.
+
 ## <a name="office addin url"></a>Microsoft Word sidebar
 
 You will need to set `office addin url` if you are running a

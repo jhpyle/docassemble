@@ -3,6 +3,19 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.85](https://github.com/jhpyle/docassemble/releases/tag/v1.4.85) - 2023-11-02
+
+
+### Added
+- The `run oauthlib on http` Configuration directive. You may need to
+  set this to `True` if you use the `oauthlib` library on a server
+  that uses `http://` instead of `https://`.
+
+
+### Fixed
+- If integration with GitHub goes wrong, the user could continue to
+  see errors after correcting the configuration.
+
 ## [1.4.84](https://github.com/jhpyle/docassemble/releases/tag/v1.4.84) - 2023-10-26
 
 
