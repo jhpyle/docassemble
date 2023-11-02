@@ -4502,7 +4502,9 @@ def _defined_internal(var, caller: DefCaller, alt=None, prior=False):
     the_user_dict = frame.f_locals
     failure_val = False if caller.is_predicate() else alt
     user_dict_name = 'old_user_dict' if prior else 'user_dict'
-    while variable not in the_user_dict:
+    # When `prior=True`, we need to get `old_user_dict`, but objects could be present in
+    # `the_user_dict` before finding `old_user_dict`. When found, we break, ignoring this condition.
+    while (variable not in the_user_dict) or prior:
         frame = frame.f_back
         if frame is None:
             if caller.is_pure():
