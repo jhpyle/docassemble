@@ -1865,3 +1865,11 @@ a.dadisabled {
 div.da-field-container-datatype-range label.da-top-label {
     margin-bottom: 1.5rem;
 }
+
+code {
+    white-space: pre;
+}
+
+div.form-text .daterm {
+    color: inherit;
+}

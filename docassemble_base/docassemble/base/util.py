@@ -9086,6 +9086,30 @@ def get_docx_paths(target, paths):
         paths.append(target)
 
 
+def get_passwords(password):
+    if password is None:
+        return (None, None)
+    if isinstance(password, (str, bool, int, float)):
+        owner_password = None
+        user_password = str(password).strip()
+    elif isinstance(password, list) and len(password) == 1:
+        owner_password = password[0]
+        user_password = None
+    elif isinstance(password, list) and len(password) >= 2:
+        owner_password = password[0]
+        user_password = password[1]
+    elif isinstance(password, dict):
+        owner_password = password.get('owner', None)
+        user_password = password.get('user', None)
+    else:
+        raise DAError("get_passwords: invalid password")
+    if isinstance(owner_password, (str, bool, int, float)):
+        owner_password = str(owner_password).strip()
+    if isinstance(user_password, (str, bool, int, float)):
+        user_password = str(user_password).strip()
+    return (owner_password, user_password)
+
+
 def pdf_concatenate(*pargs, **kwargs):
     """Concatenates PDF files together and returns a DAFile representing
     the new PDF.
@@ -9095,7 +9119,8 @@ def pdf_concatenate(*pargs, **kwargs):
     get_pdf_paths(list(pargs), paths)
     if len(paths) == 0:
         raise DAError("pdf_concatenate: no valid files to concatenate")
-    pdf_path = docassemble.base.pandoc.concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=kwargs.get('password', None))
+    (owner_password, password) = get_passwords(kwargs.get('password', None))
+    pdf_path = docassemble.base.pandoc.concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=password, owner_password=owner_password)
     pdf_file = kwargs.get('output_to', None)
     if pdf_file is None:
         pdf_file = DAFile()
@@ -9482,7 +9507,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         docx_template.save(temp_file.name)
         if not isinstance(pdf_options, dict):
             pdf_options = {}
-        result = docassemble.base.pandoc.word_to_pdf(temp_file.name, 'docx', output_path, pdfa=pdf_options.get('pdfa', False), password=pdf_options.get('password', None), update_refs=pdf_options.get('update_refs', False), tagged=pdf_options.get('tagged', False), filename=filename)
+        result = docassemble.base.pandoc.word_to_pdf(temp_file.name, 'docx', output_path, pdfa=pdf_options.get('pdfa', False), password=pdf_options.get('password', None), owner_password=pdf_options.get('owner_password', None), update_refs=pdf_options.get('update_refs', False), tagged=pdf_options.get('tagged', False), filename=filename)
         if not result:
             raise DAError("Error converting to PDF")
     elif output_format == 'md':

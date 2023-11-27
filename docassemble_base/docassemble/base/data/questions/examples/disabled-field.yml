@@ -1,0 +1,23 @@
+metadata:
+  title: Disabled field
+  documentation: "https://docassemble.org/docs/fields.html#disabled"
+---
+question: |
+  What are your favorite things to eat?
+subquestion: |
+  (It goes without saying that you love turnips.)  
+fields:
+  - Fruit: favorite_fruit
+  - Vegetable: favorite_vegetable
+    disabled: True
+    default: turnips
+---
+question: Result of question
+subquestion: |
+  Your favorite fruit is ${ favorite_fruit }.
+
+  The `favorite_vegetable` variable
+  was not defined by the previous
+  question because the field was
+  disabled.
+mandatory: True

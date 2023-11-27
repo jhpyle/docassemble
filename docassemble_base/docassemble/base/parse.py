@@ -1233,7 +1233,7 @@ class InterviewStatus:
                 the_field['uncheck_others'] = True
             elif hasattr(field, 'checkothers') and field.checkothers is not False:
                 the_field['check_others'] = True
-            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata', 'css class', 'address_autocomplete', 'label_above_field', 'floating_label', 'grid', 'pen color', 'file css class'):
+            for key in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'inline', 'inline width', 'rows', 'accept', 'currency symbol', 'field metadata', 'css class', 'address_autocomplete', 'label_above_field', 'floating_label', 'grid', 'item grid', 'pen color', 'file css class'):
                 if key in self.extras and field.number in self.extras[key]:
                     if key in ('minlength', 'maxlength', 'min', 'max', 'step'):
                         validation_rules_used.add(key)
@@ -1269,6 +1269,10 @@ class InterviewStatus:
                 the_field['required'] = self.extras['required'][field.number]
                 if the_field['required']:
                     validation_rules_used.add('required')
+            if 'disabled' in self.extras and field.number in self.extras['disabled'] and self.extras['disabled'][field.number]:
+                the_field['disabled'] = True
+            if 'under_text' in self.extras and field.number in self.extras['under_text'] and self.extras['under_text'][field.number]:
+                the_field['under_text'] = self.extras['under_text'][field.number]
             if 'validation messages' in self.extras and field.number in self.extras['validation messages']:
                 the_field['validation_messages'].update(self.extras['validation messages'][field.number])
             if 'permissions' in self.extras and field.number in self.extras['permissions']:
@@ -1648,6 +1652,8 @@ class Field:
             self.label_above_field = data['label_above_field']
         if 'grid' in data:
             self.grid = data['grid']
+        if 'item grid' in data:
+            self.item_grid = data['item grid']
         if 'floating_label' in data:
             self.floating_label = data['floating_label']
         if 'max_image_size' in data:
@@ -2098,7 +2104,7 @@ class Question:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb', 'tabular', 'hide continue button', 'disable continue button', 'pen color'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'manual attachment list', 'breadcrumb', 'tabular', 'hide continue button', 'disable continue button', 'pen color', 'gathered'):
                     logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -4037,6 +4043,14 @@ class Question:
                         else:
                             field_info['required'] = {'compute': compile(field[key], '<required code>', 'eval'), 'sourcecode': field[key]}
                             self.find_fields_in(field[key])
+                    elif key == 'disabled':
+                        if 'extras' not in field_info:
+                            field_info['extras'] = {}
+                        if isinstance(field[key], (bool, NoneType)):
+                            field_info['extras']['disabled'] = bool(field[key])
+                        else:
+                            field_info['extras']['disabled'] = {'compute': compile(field[key], '<disabled code>', 'eval'), 'sourcecode': field[key]}
+                            self.find_fields_in(field[key])
                     elif key in ('js show if', 'js hide if'):
                         if not isinstance(field[key], str):
                             raise DAError("A js show if or js hide if expression must be a string" + self.idebug(data))
@@ -4173,6 +4187,11 @@ class Question:
                                 field_info['extras']['show_if_sign'] = 0
                         if not using_code or not exclusive:
                             field_info['extras']['show_if_mode'] = 1
+                    elif key == 'under text':
+                        if field[key]:
+                            if 'extras' not in field_info:
+                                field_info['extras'] = {}
+                            field_info['extras']['under_text'] = TextObject(definitions + str(field[key]), question=self)
                     elif key in ('default', 'hint', 'help'):
                         if not isinstance(field[key], dict) and not isinstance(field[key], list):
                             field_info[key] = TextObject(definitions + str(field[key]), question=self)
@@ -4280,6 +4299,26 @@ class Question:
                                     field_info[key][subkey] = field[key][subkey]
                                 else:
                                     raise DAError(key + " " + subkey + " must be True or False, or a Python expression." + self.idebug(data))
+                        if 'breakpoint' in field[key]:
+                            field_info[key]['breakpoint'] = TextObject(DO_NOT_TRANSLATE + str(field[key]['breakpoint']), question=self)
+                    elif key == 'item grid':
+                        field_info[key] = {}
+                        if isinstance(field[key], (str, int)):
+                            field[key] = {'width': field[key]}
+                        if not isinstance(field[key], dict) or len(field[key]) == 0:
+                            raise DAError(key + " is not in the correct format." + self.idebug(data))
+                        for item in field[key].keys():
+                            if item not in ('width', 'breakpoint'):
+                                raise DAError(key + " has an invalid key " + repr(item) + "." + self.idebug(data))
+                        if 'width' not in field[key]:
+                            raise DAError(key + ' must specify a width.' + self.idebug(data))
+                        if isinstance(field[key]['width'], str):
+                            field_info[key]['width'] = compile(field[key]['width'], '<' + key + ' width expression>', 'eval')
+                            self.find_fields_in(field[key]['width'])
+                        elif isinstance(field[key]['width'], int):
+                            field_info[key]['width'] = field[key]['width']
+                        else:
+                            raise DAError(key + " width must be a number between 1 and 12, or a Python expression." + self.idebug(data))
                         if 'breakpoint' in field[key]:
                             field_info[key]['breakpoint'] = TextObject(DO_NOT_TRANSLATE + str(field[key]['breakpoint']), question=self)
                     elif key == 'floating label':
@@ -5279,6 +5318,8 @@ class Question:
                 target['valid formats'] = ['*']
             if 'password' in target:
                 options['password'] = TextObject(target['password'])
+            if 'owner password' in target:
+                options['owner_password'] = TextObject(target['owner password'])
             if 'template password' in target:
                 options['template_password'] = TextObject(target['template password'])
             if 'persistent' in target:
@@ -6373,6 +6414,23 @@ class Question:
                                 raise DAError("Invalid grid " + subkey + " value. It must be an integer between 1 and 12.")
                             if subkey == 'breakpoint' and extras['grid'][field.number][subkey] not in ('xs', 'sm', 'md', 'lg', 'xl', 'xxl'):
                                 raise DAError("Invalid grid " + subkey + " value. It must be one of xs, sm, md, lg, xl, or xxl.")
+                    if hasattr(field, 'item_grid'):
+                        if 'item grid' not in extras:
+                            extras['item grid'] = {}
+                        extras['item grid'][field.number] = {}
+                        for subkey, subkeyval in field.item_grid.items():
+                            if isinstance(subkeyval, (int, bool, NoneType)):
+                                extras['item grid'][field.number][subkey] = subkeyval
+                            elif subkey == 'breakpoint':
+                                extras['item grid'][field.number][subkey] = subkeyval.text(user_dict).strip()
+                            else:
+                                extras['item grid'][field.number][subkey] = eval(subkeyval, user_dict)
+                            if subkey == 'width' and isinstance(extras['item grid'][field.number][subkey], float):
+                                extras['item grid'][field.number][subkey] = int(extras['item grid'][field.number][subkey])
+                            if subkey == 'width' and (not isinstance(extras['item grid'][field.number][subkey], int) or extras['item grid'][field.number][subkey] < 1 or extras['item grid'][field.number][subkey] > 12):
+                                raise DAError("Invalid item grid " + subkey + " value. It must be an integer between 1 and 12.")
+                            if subkey == 'breakpoint' and extras['item grid'][field.number][subkey] not in ('xs', 'sm', 'md', 'lg', 'xl', 'xxl'):
+                                raise DAError("Invalid item grid " + subkey + " value. It must be one of xs, sm, md, lg, xl, or xxl.")
                     if hasattr(field, 'floating_label'):
                         if 'floating_label' not in extras:
                             extras['floating_label'] = {}
@@ -6509,6 +6567,19 @@ class Question:
                                 extras['custom_parameters_code'][field.number] = {}
                             for param_name, param_val in field.extras['custom_parameters_code'].items():
                                 extras['custom_parameters_code'][field.number][param_name] = eval(param_val['compute'], user_dict)
+                        if 'under_text' in field.extras:
+                            if 'under_text' not in extras:
+                                extras['under_text'] = {}
+                            extras['under_text'][field.number] = field.extras['under_text'].text(user_dict).strip()
+                        if 'disabled' in field.extras:
+                            if 'disabled' not in extras:
+                                extras['disabled'] = {}
+                            if isinstance(field.extras['disabled'], bool):
+                                extras['disabled'][field.number] = field.extras['disabled']
+                            else:
+                                extras['disabled'][field.number] = bool(eval(field.extras['disabled']['compute'], user_dict))
+                            if extras['disabled'][field.number]:
+                                extras['required'][field.number] = False
                     if hasattr(field, 'saveas'):
                         try:
                             if not test_for_objects:
@@ -6812,7 +6883,7 @@ class Question:
                         if hasattr(the_file, 'number'):
                             result['file'][doc_format] = the_file.number
                 # logmessage("finalize_attachment: returning " + attachment['variable_name'] + " from cache")
-                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
+                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'owner_password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
                     if key in result:
                         del result[key]
                 return result
@@ -6850,10 +6921,10 @@ class Question:
                             docassemble.base.functions.set_context('pdf')
                             the_template_path = attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict)
                             if the_template_path is None:
-                                raise DAError("pdf template file " + attachment['options']['pdf_template_file'].original_reference() +  " not found")
-                            the_pdf_file = docassemble.base.pdftk.fill_template(the_template_path, data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], template_password=result['template_password'], default_export_value=default_export_value, replacement_font=result['rendering_font'])
+                                raise DAError("pdf template file " + attachment['options']['pdf_template_file'].original_reference() + " not found")
+                            the_pdf_file = docassemble.base.pdftk.fill_template(the_template_path, data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], password=result['password'], owner_password=result['owner_password'], template_password=result['template_password'], default_export_value=default_export_value, replacement_font=result['rendering_font'])
                             result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
-                            for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
+                            for key in ('images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'owner_password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
                                 if key in result:
                                     del result[key]
                             docassemble.base.functions.reset_context()
@@ -6914,11 +6985,11 @@ class Question:
                                         result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                                 if 'docx' in result['formats_to_use']:
                                     result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
-                            for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'template_password', 'update_references', 'permissions', 'rendering_font']:
+                            for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'owner_password', 'template_password', 'update_references', 'permissions', 'rendering_font']:
                                 if key in result:
                                     del result[key]
                     else:
-                        converter = MyPandoc(pdfa=result['convert_to_pdf_a'], password=result['password'])
+                        converter = MyPandoc(pdfa=result['convert_to_pdf_a'], password=result['password'], owner_password=result['owner_password'])
                         converter.output_format = doc_format
                         converter.input_content = result['markdown'][doc_format]
                         if 'initial_yaml' in attachment['options']:
@@ -7167,14 +7238,11 @@ class Question:
                     result['update_references'] = eval(attachment['options']['update_references'], the_user_dict)
             else:
                 result['update_references'] = False
-            if 'password' in attachment['options']:
-                result['password'] = attachment['options']['password'].text(the_user_dict)
-            else:
-                result['password'] = None
-            if 'template_password' in attachment['options']:
-                result['template_password'] = attachment['options']['template_password'].text(the_user_dict)
-            else:
-                result['template_password'] = None
+            for item in ('password', 'owner_password', 'template_password'):
+                if item in attachment['options']:
+                    result[item] = attachment['options'][item].text(the_user_dict)
+                else:
+                    result[item] = None
             for doc_format in result['formats_to_use']:
                 if doc_format in ['pdf', 'rtf', 'rtf to docx', 'tex', 'docx', 'raw', 'md']:
                     if 'decimal_places' in attachment['options']:

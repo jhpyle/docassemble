@@ -1,0 +1,41 @@
+metadata:
+  title: Show fields with JavaScript
+  short title: JS Show
+  documentation: "https://docassemble.org/docs/recipes.html#js show if yesnomaybe"
+  example start: 1
+  example end: 2
+---
+question: |
+  Please fill in the following information.
+subquestion: |
+  Try setting "Favorite fruit" to 
+  "apple" or "mango" (and unfocus the 
+  field) to see what happens.
+fields:
+  - Favorite fruit: fruit
+  - Favorite vegetable: vegetable
+  - "Do you like mushrooms?": likes_mushrooms
+    datatype: yesnomaybe
+  - Favorite mushroom: mushroom
+    js show if: |
+      val("likes_mushrooms") == true
+  - "How could you now know?": reason_why_unsure
+    input type: area
+    js show if: |
+      val("likes_mushrooms") == "None"
+---
+question: |
+  Thank you for that information.
+subquestion: |
+  You like ${ fruit } and ${ vegetable }.
+
+  % if likes_mushrooms is None:
+  You said you don't know if you like
+  mushrooms. Your ridiculous explanation
+  was:
+
+  ${ quote_paragraphs(reason_why_unsure) }
+  % elif likes_mushrooms:
+  Your favorite mushroom is ${ mushroom }.
+  % endif
+mandatory: True

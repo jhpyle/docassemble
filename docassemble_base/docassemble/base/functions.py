@@ -801,6 +801,10 @@ def user_info():
         user.current_filename = this_thread.current_question.from_source.path
     except:
         user.current_filename = None
+    try:
+        user.current_section = this_thread.current_section or get_user_dict()['nav'].current
+    except:
+        user.current_section = None
     return user
 
 
@@ -3593,7 +3597,7 @@ def response(*pargs, **kwargs):
 
 def json_response(data, response_code=None):
     """Sends data in JSON format as an HTTP response."""
-    raise ResponseError(json.dumps(data, sort_keys=True, indent=2) + "\n", content_type="application/json", response_code=response_code)
+    raise ResponseError(binaryresponse=(json.dumps(data, sort_keys=True, indent=2) + "\n").encode('utf-8'), content_type="application/json", response_code=response_code)
 
 
 def variables_as_json(include_internal=False):

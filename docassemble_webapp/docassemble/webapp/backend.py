@@ -7,8 +7,8 @@ import os
 import pickle
 import platform
 import re
-# import sys
-# import time
+import sys
+import time
 import types
 import xml.etree.ElementTree as ET
 import pandas
@@ -23,7 +23,7 @@ import tzlocal
 from docassemble.base.error import DAException
 from docassemble.webapp.da_flask_mail import Message  # noqa: F401 # pylint: disable=unused-import
 from docassemble.base.functions import pickleable_objects, filename_invalid
-from docassemble.base.config import daconfig, hostname
+from docassemble.base.config import daconfig, hostname, DEBUG_BOOT, START_TIME, boot_log
 from docassemble.base.generate_key import random_bytes, random_alphanumeric
 from docassemble.base.logger import logmessage
 import docassemble.base.functions
@@ -50,6 +50,8 @@ import docassemble.webapp.worker
 if platform.machine() == 'x86_64':
     import docassemble.webapp.google_api
 
+if DEBUG_BOOT:
+    boot_log("backend: starting")
 TypeType = type(type(None))
 NoneType = type(None)
 DEBUG = daconfig.get('debug', False)
@@ -297,8 +299,13 @@ def get_mail_config():
             mail_config['mail'] = mail_class(config=config)
     return the_mail_configs
 
+if DEBUG_BOOT:
+    boot_log("backend: getting email configuration")
 
 mail_configs = get_mail_config()
+
+if DEBUG_BOOT:
+    boot_log("backend: finished getting email configuration")
 
 
 def da_send_mail(the_message, config='default'):
@@ -401,6 +408,9 @@ def get_info_from_file_number_with_uids(*pargs, **kwargs):
         kwargs['uids'] = get_session_uids()
     return get_info_from_file_number(*pargs, **kwargs)
 
+if DEBUG_BOOT:
+    boot_log("backend: configuring common functions")
+
 classes = daconfig['table css class'].split(',')
 DEFAULT_TABLE_CLASS = json.dumps(classes[0].strip())
 if len(classes) > 1:
@@ -446,6 +456,9 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT, voice=DEFAULT_VOICE)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()
+
+if DEBUG_BOOT:
+    boot_log("backend: finished configuring common functions")
 
 
 def fix_words():
@@ -582,10 +595,17 @@ def fix_words():
         else:
             logmessage("filename " + filename + " did not exist")
 
+if DEBUG_BOOT:
+    boot_log("backend: processing translations")
+
 fix_words()
 
 if 'currency symbol' in daconfig:
     docassemble.base.functions.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
+
+if DEBUG_BOOT:
+    boot_log("backend: finished processing translations")
+    boot_log("backend: obtaining cloud object")
 
 cloud = docassemble.webapp.cloud.get_cloud()
 
@@ -608,6 +628,9 @@ docassemble.base.functions.update_server(cloud=cloud,
 
 if platform.machine() == 'x86_64':
     docassemble.base.functions.update_server(google_api=docassemble.webapp.google_api)
+
+if DEBUG_BOOT:
+    boot_log("backend: finished obtaining cloud object")
 
 initial_dict = {'_internal': {'session_local': {}, 'device_local': {}, 'user_local': {}, 'dirty': {}, 'progress': 0, 'tracker': 0, 'docvar': {}, 'doc_cache': {}, 'steps': 1, 'steps_offset': 0, 'secret': None, 'informed': {}, 'livehelp': {'availability': 'unavailable', 'mode': 'help', 'roles': [], 'partner_roles': []}, 'answered': set(), 'answers': {}, 'objselections': {}, 'starttime': None, 'modtime': None, 'accesstime': {}, 'tasks': {}, 'gather': [], 'event_stack': {}, 'misc': {}}, 'url_args': {}, 'nav': docassemble.base.functions.DANav()}
 # else:
@@ -1328,3 +1351,6 @@ def get_session_uids():
     if 'sessions' in session:
         return [item['uid'] for item in session['sessions'].values()]
     return []
+
+if DEBUG_BOOT:
+    boot_log("backend: completed")

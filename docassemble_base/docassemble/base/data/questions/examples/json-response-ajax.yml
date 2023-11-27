@@ -1,0 +1,41 @@
+metadata:
+  title: JSON response
+  short title: JSON
+  documentation: "https://docassemble.org/docs/functions.html#json_response"
+  example start: 1
+  example end: 2
+---
+mandatory: True
+question: |
+  Tell me about your shipment.
+fields:
+  - Weight (lbs): weight
+    datatype: number
+  - Size: size
+    choices:
+      - Small box: 1
+      - Medium box: 2
+      - Large box: 3
+  - html: |
+      <button id="calcButton" class="btn btn-info float-end" type="button">Calculate</button>
+      <span id="calcResults"></span>
+script: |
+  <script>
+    $("#calcButton").on('click', function(){
+      var theWeight = parseFloat(val('weight'))
+      var theSize = parseInt(val('size'))
+      if (theWeight && theSize){
+        action_call('calc', {weight: theWeight, size: theSize}, function(data){
+          $("#calcResults").html("That will cost $" + data.cost.toLocaleString('en-US') + ".");
+        });
+      }
+    })
+  </script>
+---
+event: calc
+code: |
+  json_response({'cost': 4.44 + action_argument('weight') * 5.2 + action_argument('size') * 13.1})
+---
+mandatory: True
+question: |
+  We will ship that right away.

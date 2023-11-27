@@ -42,8 +42,9 @@ import zipfile
 
 import docassemble.base.config
 if not docassemble.base.config.loaded:
+    docassemble.base.config.boot_log("server: starting")
     docassemble.base.config.load()
-from docassemble.base.config import daconfig, hostname, in_celery, in_cron
+from docassemble.base.config import daconfig, hostname, in_celery, in_cron, DEBUG_BOOT, START_TIME, boot_log
 
 import docassemble.webapp.setup
 from docassemble.webapp.setup import da_version
@@ -150,12 +151,15 @@ import xlsxwriter
 from user_agents import parse as ua_parse
 import yaml as standardyaml
 
+if DEBUG_BOOT:
+    boot_log("server: done importing modules")
+
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
 docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearning.MachineLearningEntry)
 docassemble.base.util.set_random_forest_machine_learner(docassemble.webapp.machinelearning.RandomForestMachineLearner)
 docassemble.base.util.set_svm_machine_learner(docassemble.webapp.machinelearning.SVMMachineLearner)
 
-START_TIME = time.time()
+
 
 min_system_version = '1.2.0'
 re._MAXCACHE = 10000
@@ -630,6 +634,9 @@ else:
 mimetypes.add_type('application/x-yaml', '.yml')
 mimetypes.add_type('application/x-yaml', '.yaml')
 
+if DEBUG_BOOT:
+    boot_log("server: creating session store")
+
 store = RedisStore(r_store)
 
 kv_session = KVSessionExtension(store, app)
@@ -1015,7 +1022,7 @@ def custom_login():
         if app.config['AUTO_LOGIN'] is True:
             number_of_methods = 0
             the_method = None
-            for login_method in ('USE_PHONE_LOGIN', 'USE_GOOGLE_LOGIN', 'USE_FACEBOOK_LOGIN', 'USE_TWITTER_LOGIN', 'USE_AUTH0_LOGIN', 'USE_KEYCLOAK_LOGIN', 'USE_AZURE_LOGIN'):
+            for login_method in ('USE_PHONE_LOGIN', 'USE_GOOGLE_LOGIN', 'USE_FACEBOOK_LOGIN', 'USE_ZITADEL_LOGIN', 'USE_TWITTER_LOGIN', 'USE_AUTH0_LOGIN', 'USE_KEYCLOAK_LOGIN', 'USE_AZURE_LOGIN'):
                 if app.config[login_method]:
                     number_of_methods += 1
                     the_method = re.sub(r'USE_(.*)_LOGIN', r'\1', login_method).lower()
@@ -1075,6 +1082,8 @@ def logout():
             if next_url.startswith('/'):
                 next_url = get_base_url() + next_url
             next_url = 'https://' + daconfig['oauth']['auth0']['domain'] + '/v2/logout?' + urlencode({'returnTo': next_url, 'client_id': daconfig['oauth']['auth0']['id']})
+        if current_user.social_id.startswith('zitadel$') and 'oauth' in daconfig and 'zitadel' in daconfig['oauth'] and 'domain' in daconfig['oauth']['zitadel'] and 'id' in daconfig['oauth']['zitadel']:
+            next_url = 'https://' + daconfig['oauth']['zitadel']['domain'] + '/oidc/v1/end_session?' + urlencode({'post_logout_redirect_uri': url_for('user.login', _external=True), 'client_id': daconfig['oauth']['zitadel']['id']})
         if current_user.social_id.startswith('keycloak$') and 'oauth' in daconfig and 'keycloak' in daconfig['oauth'] and 'domain' in daconfig['oauth']['keycloak']:
             if next_url.startswith('/'):
                 next_url = get_base_url() + next_url
@@ -1205,6 +1214,9 @@ def password_validator(form, field):  # pylint: disable=unused-argument
             error_message += '.'
         raise wtforms.ValidationError(word(error_message))
 
+if DEBUG_BOOT:
+    boot_log("server: setting up Flask")
+
 the_db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 the_user_manager = UserManager()
 the_user_manager.init_app(app, db_adapter=the_db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated, login_view_function=custom_login, register_view_function=custom_register, resend_confirm_email_view_function=custom_resend_confirm_email, resend_confirm_email_form=MyResendConfirmEmailForm, password_validator=password_validator, make_safe_url_function=make_safe_url)
@@ -1213,6 +1225,8 @@ lm.init_app(app)
 lm.login_view = 'custom_login'
 lm.anonymous_user = AnonymousUserModel
 
+if DEBUG_BOOT:
+    boot_log("server: finished setting up Flask")
 
 def url_for_interview(**args):
     for k, v in daconfig.get('dispatch').items():
@@ -1263,6 +1277,9 @@ def syslog_message(message):
 def syslog_message_with_timestamp(message):
     syslog_message(time.strftime("%Y-%m-%d %H:%M:%S") + " " + message)
 
+if DEBUG_BOOT:
+    boot_log("server: setting up logging")
+
 sys_logger = logging.getLogger('docassemble')
 sys_logger.setLevel(logging.DEBUG)
 
@@ -1290,6 +1307,9 @@ if not (in_celery or in_cron):
         docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
     else:
         docassemble.base.logger.set_logmessage(syslog_message)
+
+if DEBUG_BOOT:
+    boot_log("server: finished setting up logging")
 
 
 def login_as_admin(url, url_root):
@@ -1462,6 +1482,7 @@ app.handle_url_build_error = my_default_url
 app.config['CONTAINER_CLASS'] = 'container-fluid' if daconfig.get('admin full width', False) else 'container'
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
+app.config['USE_ZITADEL_LOGIN'] = False
 app.config['USE_TWITTER_LOGIN'] = False
 app.config['USE_AUTH0_LOGIN'] = False
 app.config['USE_KEYCLOAK_LOGIN'] = False
@@ -1478,6 +1499,7 @@ if 'oauth' in daconfig:
     app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
     app.config['USE_GOOGLE_LOGIN'] = bool('google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False))
     app.config['USE_FACEBOOK_LOGIN'] = bool('facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False))
+    app.config['USE_ZITADEL_LOGIN'] = bool('zitadel' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['zitadel'] and daconfig['oauth']['zitadel']['enable'] is False))
     app.config['USE_TWITTER_LOGIN'] = bool('twitter' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['twitter'] and daconfig['oauth']['twitter']['enable'] is False))
     app.config['USE_AUTH0_LOGIN'] = bool('auth0' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['auth0'] and daconfig['oauth']['auth0']['enable'] is False))
     app.config['USE_KEYCLOAK_LOGIN'] = bool('keycloak' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['keycloak'] and daconfig['oauth']['keycloak']['enable'] is False))
@@ -1575,7 +1597,13 @@ def get_page_parts():
             the_main_page_parts[DEFAULT_LANGUAGE][key] = the_main_page_parts['*'][key]
     return (the_page_parts, the_main_page_parts)
 
+if DEBUG_BOOT:
+    boot_log("server: getting page parts from configuration")
+
 (page_parts, main_page_parts) = get_page_parts()
+
+if DEBUG_BOOT:
+    boot_log("server: finished getting page parts from configuration")
 
 ga_configured = bool(google_config.get('analytics id', None) is not None)
 
@@ -3301,7 +3329,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                         if current_user.has_role('admin', 'developer', 'trainer'):
                             navbar += '<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
                         if current_user.has_role('admin', 'developer'):
-                            if app.config['ALLOW_UPDATES']:
+                            if app.config['ALLOW_UPDATES'] and (app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
                                 navbar += '<a class="dropdown-item" href="' + url_for('update_package') + '">' + word('Package Management') + '</a>'
                             if app.config['ALLOW_LOG_VIEWING']:
                                 navbar += '<a class="dropdown-item" href="' + url_for('logs') + '">' + word('Logs') + '</a>'
@@ -4686,7 +4714,7 @@ class GoogleSignIn(OAuthSignIn):
                 'google$' + str(google_id),
                 email.split('@')[0],
                 email,
-                {'name': google_name, 'first': first_name, 'last': last_name}
+                {'name': google_name, 'first_name': first_name, 'last_name': last_name}
             )
         raise DAException("Could not get Google authorization information")
 
@@ -4725,11 +4753,60 @@ class FacebookSignIn(OAuthSignIn):
             'facebook$' + str(me['id']),
             me.get('email').split('@')[0],
             me.get('email'),
-            {'first': me.get('first_name', None),
-             'middle': me.get('middle_name', None),
-             'last': me.get('last_name', None),
+            {'first_name': me.get('first_name', None),
+             'last_name': me.get('last_name', None),
+             'name': me.get('name', None)}
+        )
+
+
+class ZitadelSignIn(OAuthSignIn):
+
+    def __init__(self):
+        super().__init__('zitadel')
+        self.service = OAuth2Service(
+            name='zitadel',
+            client_id=self.consumer_id,
+            client_secret=None,
+            authorize_url='https://' + str(self.consumer_domain) + '/oauth/v2/authorize',
+            access_token_url='https://' + str(self.consumer_domain) + '/oauth/v2/token',
+            base_url='https://' + str(self.consumer_domain)
+        )
+
+    def authorize(self):
+        session['zitadel_verifier'] = random_alphanumeric(43)
+        code_challenge = base64.b64encode(hashlib.sha256(session['zitadel_verifier'].encode()).digest()).decode()
+        code_challenge = re.sub(r'\+', '-', code_challenge)
+        code_challenge = re.sub(r'/', '_', code_challenge)
+        code_challenge = re.sub(r'=', '', code_challenge)
+        the_url = self.service.get_authorize_url(
+            scope='openid email profile',
+            response_type='code',
+            redirect_uri=self.get_callback_url(),
+            code_challenge=code_challenge,
+            code_challenge_method='S256')
+        return redirect(the_url)
+
+    def callback(self):
+        if 'code' not in request.args or 'zitadel_verifier' not in session:
+            return None, None, None, None
+        the_data = {'code': request.args['code'],
+                    'grant_type': 'authorization_code',
+                    'code_verifier': session['zitadel_verifier'],
+                    'redirect_uri': self.get_callback_url()}
+        oauth_session = self.service.get_auth_session(
+            decoder=safe_json_loads,
+            data=the_data
+        )
+        me = oauth_session.get('oidc/v1/userinfo').json()
+        del session['zitadel_verifier']
+        return (
+            'zitadel$' + str(me['sub']),
+            me.get('email').split('@')[0],
+            me.get('email'),
+            {'first_name': me.get('given_name', None),
+             'last_name': me.get('family_name', None),
              'name': me.get('name', None),
-             'name_format': me.get('name_format', None)}
+             'language': me.get('locale', None)}
         )
 
 
@@ -5053,6 +5130,8 @@ def oauth_callback(provider):
         elif 'name' in name_data and name_data['name'] is not None and ' ' in name_data['name']:
             user.first_name = re.sub(r' .*', '', name_data['name'])
             user.last_name = re.sub(r'.* ', '', name_data['name'])
+        if 'language' in name_data and name_data['language']:
+            user.language = name_data['language']
         db.session.add(user)
         db.session.commit()
     session["_flashes"] = []
@@ -8166,8 +8245,18 @@ def index(action_argument=None, refer=None):
                 logmessage("index: exception during validation: " + the_error_message)
                 if the_error_message == '':
                     the_error_message = word("Please enter a valid value.")
-                if isinstance(validation_error, DAValidationError) and isinstance(validation_error.field, str) and validation_error.field in key_to_orig_key:
-                    field_error[key_to_orig_key[validation_error.field]] = the_error_message
+                if isinstance(validation_error, DAValidationError) and isinstance(validation_error.field, str):
+                    the_field = validation_error.field
+                    logmessage("field is " + the_field)
+                    if the_field not in key_to_orig_key:
+                        for item in key_to_orig_key.keys():
+                            if item.startswith(the_field + '['):
+                                the_field = item
+                                break
+                    if the_field in key_to_orig_key:
+                        field_error[key_to_orig_key[the_field]] = the_error_message
+                    else:
+                        error_messages.append(("error", the_error_message))
                 else:
                     error_messages.append(("error", the_error_message))
                 validated = False
@@ -10826,6 +10915,14 @@ def index(action_argument=None, refer=None):
                 $(this).data("fileinput").enable();
               }
             }
+            else if ($(this).hasClass('daslider')){
+              if (value){
+                $(this).slider('disable');
+              }
+              else{
+                $(this).slider('enable');
+              }
+            }
             else {
               $(this).prop("disabled", value);
             }
@@ -11058,6 +11155,9 @@ def index(action_argument=None, refer=None):
         $(".dacollectextra").find('input.combobox').each(function(){
           daComboBoxes[$(this).attr('id')].disable();
         });
+        $(".dacollectextra").find('input.daslider').each(function(){
+          $(this).slider('disable');
+        });
         $(".dacollectextra").find('input.dafile').each(function(){
           $(this).data("fileinput").disable();
         });
@@ -11079,6 +11179,9 @@ def index(action_argument=None, refer=None):
             $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
             $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
                daComboBoxes[$(this).attr('id')].enable();
+            });
+            $('div[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
+              $(this).slider('enable');
             });
             $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
               $(this).data("fileinput").enable();
@@ -11104,6 +11207,9 @@ def index(action_argument=None, refer=None):
           $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
             daComboBoxes[$(this).attr('id')].disable();
           });
+          $('div[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
+            $(this).slider('disable');
+          });
           $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
             $(this).data("fileinput").disable();
           });
@@ -11121,6 +11227,9 @@ def index(action_argument=None, refer=None):
           $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
             daComboBoxes[$(this).attr('id')].disable();
           });
+          $('div[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
+            $(this).slider('disable');
+          });
           $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
             $(this).data("fileinput").disable();
           });
@@ -11137,6 +11246,9 @@ def index(action_argument=None, refer=None):
           $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
           $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
             daComboBoxes[$(this).attr('id')].enable();
+          });
+          $('div[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
+            $(this).slider('enable');
           });
           $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
             $(this).data("fileinput").enable();
@@ -11863,6 +11975,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
                     });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('enable');
+                    });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").enable();
                     });
@@ -11878,6 +11993,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].disable();
+                    });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('disable');
                     });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").disable();
@@ -11897,6 +12015,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].disable();
                     });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('disable');
+                    });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").disable();
                     });
@@ -11912,6 +12033,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
+                    });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('enable');
                     });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").enable();
@@ -12051,6 +12175,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
                     });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('enable');
+                    });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").enable();
                     });
@@ -12067,6 +12194,9 @@ def index(action_argument=None, refer=None):
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                   $(showIfDiv).find('input.combobox').each(function(){
                     daComboBoxes[$(this).attr('id')].disable();
+                  });
+                  $(showIfDiv).find('input.daslider').each(function(){
+                    $(this).slider('disable');
                   });
                   $(showIfDiv).find('input.dafile').each(function(){
                     $(this).data("fileinput").disable();
@@ -12086,6 +12216,12 @@ def index(action_argument=None, refer=None):
                   $(showIfDiv).find('input.combobox').each(function(){
                     daComboBoxes[$(this).attr('id')].disable();
                   });
+                  $(showIfDiv).find('input.daslider').each(function(){
+                    $(this).slider('disable');
+                  });
+                  $(showIfDiv).find('input.dafile').each(function(){
+                    $(this).data("fileinput").disable();
+                  });
                 }
                 else{
                   if ($(showIfDiv).data('isVisible') != '1'){
@@ -12100,6 +12236,9 @@ def index(action_argument=None, refer=None):
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
+                    });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('enable');
                     });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").enable();
@@ -13862,6 +14001,14 @@ def observer():
                 $(this).data("fileinput").enable();
               }
             }
+            else if ($(this).hasClass('daslider')){
+              if (value){
+                $(this).slider('disable');
+              }
+              else{
+                $(this).slider('enable');
+              }
+            }
             else {
               $(this).prop("disabled", value);
             }
@@ -14978,6 +15125,9 @@ def observer():
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
                     });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('enable');
+                    });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").enable();
                     });
@@ -14993,6 +15143,9 @@ def observer():
                     $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].disable();
+                    });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('disable');
                     });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").disable();
@@ -15012,6 +15165,9 @@ def observer():
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].disable();
                     });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('disable');
+                    });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").disable();
                     });
@@ -15027,6 +15183,9 @@ def observer():
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
+                    });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('enable');
                     });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").enable();
@@ -15166,6 +15325,9 @@ def observer():
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
                     });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('enable');
+                    });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").enable();
                     });
@@ -15182,6 +15344,9 @@ def observer():
                   $(showIfDiv).find('input, textarea, select').prop("disabled", true);
                   $(showIfDiv).find('input.combobox').each(function(){
                     daComboBoxes[$(this).attr('id')].disable();
+                  });
+                  $(showIfDiv).find('input.daslider').each(function(){
+                    $(this).slider('disable');
                   });
                   $(showIfDiv).find('input.dafile').each(function(){
                     $(this).data("fileinput").disable();
@@ -15201,6 +15366,12 @@ def observer():
                   $(showIfDiv).find('input.combobox').each(function(){
                     daComboBoxes[$(this).attr('id')].disable();
                   });
+                  $(showIfDiv).find('input.daslider').each(function(){
+                    $(this).slider('disable');
+                  });
+                  $(showIfDiv).find('input.dafile').each(function(){
+                    $(this).data("fileinput").disable();
+                  });
                 }
                 else{
                   if ($(showIfDiv).data('isVisible') != '1'){
@@ -15215,6 +15386,9 @@ def observer():
                     $(showIfDiv).find('input, textarea, select').prop("disabled", false);
                     $(showIfDiv).find('input.combobox').each(function(){
                       daComboBoxes[$(this).attr('id')].enable();
+                    });
+                    $(showIfDiv).find('input.daslider').each(function(){
+                      $(this).slider('enable');
                     });
                     $(showIfDiv).find('input.dafile').each(function(){
                       $(this).data("fileinput").enable();
@@ -16625,6 +16799,8 @@ def monitor():
 @roles_required(['admin', 'developer'])
 def update_package_wait():
     setup_translation()
+    if not (app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
+        return ('File not found', 404)
     next_url = app.user_manager.make_safe_url_function(request.args.get('next', url_for('update_package')))
     my_csrf = generate_csrf()
     script = """
@@ -16748,6 +16924,8 @@ def update_package_wait():
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package_ajax():
+    if not (app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
+        return ('File not found', 404)
     if 'taskwait' not in session or 'serverstarttime' not in session:
         return jsonify(success=False)
     setup_translation()
@@ -16825,6 +17003,8 @@ def get_package_name_from_zip(zippath):
 def update_package():
     setup_translation()
     if not app.config['ALLOW_UPDATES']:
+        return ('File not found', 404)
+    if not (app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
         return ('File not found', 404)
     if 'taskwait' in session:
         del session['taskwait']
@@ -17093,7 +17273,10 @@ def create_playground_package():
         current_package = werkzeug.utils.secure_filename(current_package)
     do_pypi = request.args.get('pypi', False)
     do_github = request.args.get('github', False)
-    do_install = request.args.get('install', False)
+    if app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin'):
+        do_install = request.args.get('install', False)
+    else:
+        do_install = False
     branch = request.args.get('branch', None)
     if branch is not None:
         branch = branch.strip()
@@ -17501,7 +17684,10 @@ def create_playground_package():
                 shutil.rmtree(directory)
                 the_args = {'project': current_project, 'pull': '1', 'github_url': ssh_url, 'show_message': '0'}
                 do_pypi_also = true_or_false(request.args.get('pypi_also', False))
-                do_install_also = true_or_false(request.args.get('install_also', False))
+                if app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin'):
+                    do_install_also = true_or_false(request.args.get('install_also', False))
+                else:
+                    do_install_also = False
                 if do_pypi_also or do_install_also:
                     the_args['file'] = current_package
                     if do_pypi_also:
@@ -20390,7 +20576,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
             if filename == 'setup.py' and at_top_level:
                 with open(orig_file, 'r', encoding='utf-8') as fp:
                     setup_py = fp.read()
-            elif len(levels) >= 1 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
+            elif len(levels) >= 1 and not at_top_level and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
                 data_files['modules'].append(filename)
                 target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
                 # output += "Copying " + orig_file + "\n"
@@ -20555,6 +20741,9 @@ def playground_packages():
         form.github_branch.choices.append((form.github_branch.data, form.github_branch.data))
     else:
         form.github_branch.choices.append(('', ''))
+    if request.method == 'POST' and not (app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
+        form.install_also.data = 'n'
+        form.install.data = ''
     if request.method == 'POST' and 'uploadfile' not in request.files and form.validate():
         the_file = form.file_name.data
         validated = True
@@ -20786,7 +20975,7 @@ def playground_packages():
                             with zf.open(zinfo) as f:
                                 the_file_obj = TextIOWrapper(f, encoding='utf8')
                                 setup_py = the_file_obj.read()
-                        elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
+                        elif len(levels) >= 1 and directory != root_dir and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
                             need_to_restart = True
                             data_files['modules'].append(filename)
                             target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
@@ -20836,7 +21025,10 @@ def playground_packages():
         pypi_package = request.args.get('pypi', None)
         branch = request.args.get('branch', None)
         do_pypi_also = true_or_false(request.args.get('pypi_also', False))
-        do_install_also = true_or_false(request.args.get('install_also', False))
+        if app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin'):
+            do_install_also = true_or_false(request.args.get('install_also', False))
+        else:
+            do_install_also = False
         result = do_playground_pull(area, current_project, github_url=github_url, branch=branch, pypi_package=pypi_package, can_publish_to_github=can_publish_to_github, github_email=github_email, pull_only=(do_pypi_also or do_install_also))
         if result['action'] == 'error':
             raise DAError("playground_packages: " + result['message'])
@@ -22643,7 +22835,9 @@ $( document ).ready(function() {
       event.preventDefault();
       return false;
     }
-    thisWindow.location.replace('""" + url_for('sync_with_google_drive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
+    setTimeout(function(){
+      thisWindow.location.replace('""" + url_for('sync_with_google_drive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
+    }, 100);
     return true;
   });
   $("#daRunSyncOD").click(function(event){
@@ -22658,7 +22852,10 @@ $( document ).ready(function() {
       event.preventDefault();
       return false;
     }
-    thisWindow.location.replace('""" + url_for('sync_with_onedrive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
+    setTimeout(function(){
+      thisWindow.location.replace('""" + url_for('sync_with_onedrive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
+    }, 100);
+    return true;
   });
   $("#form button[name='submit']").click(function(event){
     daCodeMirror.save();
@@ -29208,7 +29405,7 @@ def api_playground_install():
                             with zf.open(zinfo) as f:
                                 the_file_obj = TextIOWrapper(f, encoding='utf8')
                                 setup_py = the_file_obj.read()
-                        elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
+                        elif len(levels) >= 1 and not directory != root_dir and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
                             need_to_restart = True
                             data_files['modules'].append(filename)
                             target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
@@ -31197,7 +31394,13 @@ def make_necessary_dirs():
     if app.config['ALLOW_RESTARTING'] and not os.access(WEBAPP_PATH, os.W_OK):
         sys.exit("Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH)
 
+if DEBUG_BOOT:
+    boot_log("server: making directories that do not already exist")
+
 make_necessary_dirs()
+
+if DEBUG_BOOT:
+    boot_log("server: finished making directories that do not already exist")
 
 docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          navigation_bar=navigation_bar,
@@ -31269,11 +31472,17 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
 # docassemble.base.parse.set_url_for(url_for)
 # APPLICATION_NAME = 'docassemble'
 
+if DEBUG_BOOT:
+    boot_log("server: building documentation")
+
 base_words = get_base_words()
 title_documentation = get_title_documentation()
 DOCUMENTATION_BASE = daconfig.get('documentation base url', 'https://docassemble.org/docs/')
 documentation_dict = get_documentation_dict()
 base_name_info = get_name_info()
+
+if DEBUG_BOOT:
+    boot_log("server: finished building documentation")
 
 # docassemble.base.functions.set_chat_partners_available(chat_partners_available)
 
@@ -31544,9 +31753,13 @@ class TestContext:
 def initialize():
     global global_css
     global global_js
+    if DEBUG_BOOT:
+        boot_log("server: entering app context")
     with app.app_context():
         url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
         url = url_root + 'interview'
+        if DEBUG_BOOT:
+            boot_log("server: entering request context")
         with app.test_request_context(base_url=url_root, path=url):
             app.config['USE_FAVICON'] = test_favicon_file('favicon.ico')
             app.config['USE_APPLE_TOUCH_ICON'] = test_favicon_file('apple-touch-icon.png')
@@ -31600,13 +31813,19 @@ def initialize():
             except:
                 logmessage("Error converting social image references")
             interviews_to_load = daconfig.get('preloaded interviews', None)
+            if DEBUG_BOOT:
+                boot_log("server: loading preloaded interviews")
             if isinstance(interviews_to_load, list):
                 for yaml_filename in daconfig['preloaded interviews']:
                     try:
                         docassemble.base.interview_cache.get_interview(yaml_filename)
                     except:
                         pass
+            if DEBUG_BOOT:
+                boot_log("server: finished loading preloaded interviews")
             if app.config['ENABLE_PLAYGROUND']:
+                if DEBUG_BOOT:
+                    boot_log("server: copying playground modules")
                 obtain_lock('init' + hostname, 'init')
                 try:
                     copy_playground_modules()
@@ -31614,7 +31833,11 @@ def initialize():
                     logmessage("There was an error copying the playground modules: " + err.__class__.__name__)
                 write_pypirc()
                 release_lock('init' + hostname, 'init')
+                if DEBUG_BOOT:
+                    boot_log("server: finished copying playground modules")
             try:
+                if DEBUG_BOOT:
+                    boot_log("server: deleting LibreOffice macro file if necessary")
                 macro_path = daconfig.get('libreoffice macro file', '/var/www/.config/libreoffice/4/user/basic/Standard/Module1.xba')
                 if os.path.isfile(macro_path) and os.path.getsize(macro_path) != 7167:
                     # logmessage("Removing " + macro_path + " because it is out of date")
@@ -31623,8 +31846,15 @@ def initialize():
                 #     logmessage("File " + macro_path + " is missing or has the correct size")
             except Exception as err:
                 logmessage("Error was " + err.__class__.__name__ + ' ' + str(err))
+            if DEBUG_BOOT:
+                boot_log("server: fixing API keys")
             fix_api_keys()
+            if DEBUG_BOOT:
+                boot_log("server: starting importing add-on modules")
             import_necessary(url, url_root)
+            if DEBUG_BOOT:
+                boot_log("server: finished importing add-on modules")
+                boot_log("server: running app")
 
 initialize()
 

@@ -3,6 +3,7 @@ import re
 import sys
 import socket
 import threading
+import time
 import base64
 import json
 import importlib.metadata
@@ -16,6 +17,7 @@ import docassemble.base.amazon
 import docassemble.base.microsoft
 from docassemble.base.generate_key import random_string
 
+START_TIME = time.time()
 dbtableprefix = None
 daconfig = {}
 s3_config = {}
@@ -31,6 +33,7 @@ in_cron = False
 errors = []
 env_messages = []
 allowed = {}
+DEBUG_BOOT = False
 
 
 def env_true_false(var):
@@ -252,6 +255,7 @@ def load(**kwargs):
     global GC_ENABLED
     global azure_config
     global AZURE_ENABLED
+    global DEBUG_BOOT
     global dbtableprefix
     global hostname
     global loaded
@@ -260,6 +264,8 @@ def load(**kwargs):
     global env_messages
     # changed = False
     filename = None
+    container_role = os.environ.get('CONTAINERROLE', None) or ':all:'
+    single_server = ':all:' in container_role
     if 'arguments' in kwargs and isinstance(kwargs['arguments'], list) and len(kwargs['arguments']) > 1:
         for arg in kwargs['arguments'][1:]:
             if arg.startswith('--'):
@@ -377,6 +383,8 @@ def load(**kwargs):
         daconfig['grid classes']['field grid number'] = 8
     if not daconfig['grid classes'].get('grid breakpoint', None):
         daconfig['grid classes']['grid breakpoint'] = 'md'
+    if not daconfig['grid classes'].get('item grid breakpoint', None):
+        daconfig['grid classes']['item grid breakpoint'] = 'md'
     if not daconfig['grid classes']['vertical navigation'].get('bar', None):
         daconfig['grid classes']['vertical navigation']['bar'] = 'offset-xl-1 col-xl-2 col-lg-3 col-md-3'
     if not daconfig['grid classes']['vertical navigation'].get('body', None):
@@ -494,6 +502,8 @@ def load(**kwargs):
             daconfig = cloud.load_with_secrets(daconfig)
     else:
         cloud = None
+    if 'debug startup process' in daconfig and daconfig['debug startup process']:
+        DEBUG_BOOT = True
     if 'supervisor' in daconfig:
         if not (isinstance(daconfig['supervisor'], dict) and daconfig['supervisor'].get('username', None) and daconfig['supervisor'].get('password', None)):
             daconfig['supervisor'] = {}
@@ -683,7 +693,7 @@ def load(**kwargs):
     dbtableprefix = daconfig['db'].get('table prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
-    if cloud is not None:
+    if cloud is not None and not single_server:
         if 'host' not in daconfig['db'] or daconfig['db']['host'] is None:
             key = cloud.get_key('hostname-sql')
             if key.does_exist:
@@ -1077,6 +1087,8 @@ def load(**kwargs):
         if env_exists('GOTENBERGURL'):
             override_config(daconfig, messages, 'gotenberg url', 'GOTENBERGURL')
         env_messages = messages
+    if DEBUG_BOOT:
+        boot_log("config: load complete")
 
 
 def default_config():
@@ -1175,3 +1187,7 @@ def noquote(string):
     if isinstance(string, str):
         return string.replace('\n', ' ').replace('"', '&quot;').strip()
     return string
+
+
+def boot_log(message):
+    sys.stderr.write('%.3fs %s\n' % (time.time() - START_TIME, message))

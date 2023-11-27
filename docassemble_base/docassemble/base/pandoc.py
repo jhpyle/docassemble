@@ -30,7 +30,7 @@ def copy_if_different(source, destination):
         shutil.copyfile(source, destination)
 
 
-def gotenberg_to_pdf(from_file, to_file, pdfa, password):
+def gotenberg_to_pdf(from_file, to_file, pdfa, password, owner_password):
     if pdfa:
         data = {'nativePdfFormat': 'PDF/A-1a'}
     else:
@@ -42,8 +42,8 @@ def gotenberg_to_pdf(from_file, to_file, pdfa, password):
         raise DAException("Call to gotenberg did not succeed")
     with open(to_file, 'wb') as fp:
         fp.write(r.content)
-    if password:
-        pdf_encrypt(to_file, password)
+    if password or owner_password:
+        pdf_encrypt(to_file, password, owner_password)
 
 
 def cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password):
@@ -180,6 +180,7 @@ class MyPandoc:
         else:
             self.pdfa = False
         self.password = kwargs.get('password', None)
+        self.owner_password = kwargs.get('owner_password', None)
         self.input_content = None
         self.output_content = None
         self.input_format = 'markdown'
@@ -294,8 +295,8 @@ class MyPandoc:
             else:
                 self.output_filename = temp_outfile.name
             self.output_content = None
-            if self.output_format == 'pdf' and self.password:
-                pdf_encrypt(self.output_filename, self.password)
+            if self.output_format == 'pdf' and (self.password or self.owner_password):
+                pdf_encrypt(self.output_filename, self.password, self.owner_password)
         else:
             raise IOError("Failed creating file: %s" % temp_outfile.name)
 
@@ -341,7 +342,7 @@ class MyPandoc:
             self.output_content = self.output_content.decode()
 
 
-def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_refs=False, tagged=False, filename=None, retry=True):
+def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, owner_password=None, update_refs=False, tagged=False, filename=None, retry=True):
     if filename is None:
         filename = 'file'
     filename = docassemble.base.functions.secure_filename(filename)
@@ -367,7 +368,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
             if daconfig.get('gotenberg url', None) is not None:
                 update_references(from_file)
                 try:
-                    gotenberg_to_pdf(from_file, to_file, pdfa, password)
+                    gotenberg_to_pdf(from_file, to_file, pdfa, password, owner_password)
                     result = 0
                 except Exception as err:
                     logmessage("Call to gotenberg failed")
@@ -375,6 +376,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                     result = 1
                 use_libreoffice = False
                 password = False
+                owner_password = False
             elif daconfig.get('convertapi secret', None) is not None:
                 update_references(from_file)
                 try:
@@ -395,6 +397,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                     result = 1
                 use_libreoffice = False
                 password = False
+                owner_password = False
             else:
                 if UNOCONV_AVAILABLE:
                     subprocess_arguments = [UNOCONV_PATH, '-f', 'pdf'] + UNOCONV_FILTERS[method] + ['-e', 'PDFViewSelection=2', '-o', to_file, from_file]
@@ -402,7 +405,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                     subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--invisible', 'macro:///Standard.Module1.ConvertToPdf(' + from_file + ',' + to_file + ',True,' + method + ')']
         elif daconfig.get('gotenberg url', None) is not None:
             try:
-                gotenberg_to_pdf(from_file, to_file, pdfa, password)
+                gotenberg_to_pdf(from_file, to_file, pdfa, password, owner_password)
                 result = 0
             except Exception as err:
                 logmessage("Call to gotenberg failed")
@@ -410,6 +413,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                 result = 1
             use_libreoffice = False
             password = False
+            owner_password = False
         elif daconfig.get('convertapi secret', None) is not None:
             try:
                 convertapi_to_pdf(from_file, to_file)
@@ -428,6 +432,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
                 result = 1
             use_libreoffice = False
             password = False
+            owner_password = False
         else:
             if method == 'default':
                 if UNOCONV_AVAILABLE:
@@ -503,7 +508,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, update_
         result = 1
     if result == 0:
         if password:
-            pdf_encrypt(to_file, password)
+            pdf_encrypt(to_file, password, owner_password)
         shutil.copyfile(to_file, out_file)
     if tempdir is not None:
         shutil.rmtree(tempdir)
@@ -751,7 +756,7 @@ def initialize_libreoffice():
         logmessage("No LibreOffice macro path exists")
         temp_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf")
         word_file = docassemble.base.functions.package_template_filename('docassemble.demo:data/templates/template_test.docx')
-        word_to_pdf(word_file, 'docx', temp_file.name, pdfa=False, password=None, retry=False)
+        word_to_pdf(word_file, 'docx', temp_file.name, pdfa=False, password=None, owner_password=None, retry=False)
         del temp_file
         del word_file
     orig_path = docassemble.base.functions.package_template_filename('docassemble.base:data/macros/Module1.xba')
@@ -763,7 +768,7 @@ def initialize_libreoffice():
         logmessage("Could not copy LibreOffice macro into place")
 
 
-def concatenate_files(path_list, pdfa=False, password=None):
+def concatenate_files(path_list, pdfa=False, password=None, owner_password=None):
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     new_path_list = []
     for path in path_list:
@@ -807,6 +812,6 @@ def concatenate_files(path_list, pdfa=False, password=None):
             original.save(pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
-    if password:
-        pdf_encrypt(pdf_file.name, password)
+    if password or owner_password:
+        pdf_encrypt(pdf_file.name, password, owner_password)
     return pdf_file.name

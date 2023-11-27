@@ -131,25 +131,31 @@
                     <label class="form-check-label" for="{{ form.pypi_also.id }}">{{ form.pypi_also.label }}</label>
                 </div>
                 {%- endif %}
+                {%- if config['DEVELOPER_CAN_INSTALL'] or current_user.has_roles(['admin']) %}
                 <div class="form-check">
                     {{ form.install_also(type='checkbox', class='form-check-input') }}
                     <label class="form-check-label" for="{{ form.install_also.id }}">{{ form.install_also.label }}</label>
                 </div>
+                {%- endif %}
               </div>
               {%- endif %}
               {%- if can_publish_to_pypi %}
               <div id="pypi_message_div" style="display:none">
                 <p>{{ word("Press the Publish button to publish the package on PyPI.") }}</p>
+                {%- if config['DEVELOPER_CAN_INSTALL'] or current_user.has_roles(['admin']) %}
                 <div class="form-check">
                     {{ form.install_also(type='checkbox', class='form-check-input') }}
                     <label class="form-check-label" for="{{ form.install_also.id }}">{{ form.install_also.label }}</label>
                 </div>
+                {%- endif %}
               </div>
               {%- endif %}
               <div class="form-actions mt-3">
                 {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], title=word('Save your changes to the package information')) }}
                 {%- if current_file != '' %}
+                  {%- if config['DEVELOPER_CAN_INSTALL'] or current_user.has_roles(['admin']) %}
                 {{ render_submit_field(form.install, class="btn " + config['BUTTON_STYLE'] + "success " + config['BUTTON_CLASS'], title=word('Install package on this server')) }}
+                  {%- endif %}
                 {%- if can_publish_to_pypi %}
                 {{ render_submit_field(form.pypi, id="daPyPI", class="btn " + config['BUTTON_STYLE'] + "warning " + config['BUTTON_CLASS'], title=word('Publish on PyPI')) }}
                 {{ render_submit_field(form.cancel, id="daCancelPyPI", class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS'], style="display:none") }}

@@ -160,7 +160,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix='', parent_ft=N
                 outfields.append((prefix, default, pageno, rect, field_type, export_value))
 
 
-def fill_template(template, data_strings=None, data_names=None, hidden=None, readonly=None, images=None, pdf_url=None, editable=True, pdfa=False, password=None, template_password=None, default_export_value=None, replacement_font=None):
+def fill_template(template, data_strings=None, data_names=None, hidden=None, readonly=None, images=None, pdf_url=None, editable=True, pdfa=False, password=None, owner_password=None, template_password=None, default_export_value=None, replacement_font=None):
     if data_strings is None:
         data_strings = []
     if data_names is None:
@@ -377,34 +377,18 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
         flatten_pdf(pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
-    if password:
-        pdf_encrypt(pdf_file.name, password)
+    if password or owner_password:
+        pdf_encrypt(pdf_file.name, password, owner_password)
     return pdf_file.name
 
 
-def get_passwords(password):
-    if password is None:
-        return (None, None)
-    if isinstance(password, (str, bool, int, float)):
-        owner_password = str(password).strip()
-        user_password = str(password).strip()
-    elif isinstance(password, list):
-        owner_password = str(password[0]).strip()
-        user_password = str(password[1]).strip()
-    elif isinstance(password, dict):
-        owner_password = str(password.get('owner', 'password')).strip()
-        user_password = str(password.get('user', 'password')).strip()
-    else:
-        raise DAError("get_passwords: invalid password")
-    return (owner_password, user_password)
-
-
-def pdf_encrypt(filename, password):
+def pdf_encrypt(filename, user_password, owner_password):
     # logmessage("pdf_encrypt: running; password is " + repr(password))
-    (owner_password, user_password) = get_passwords(password)
     outfile = tempfile.NamedTemporaryFile(prefix="datemp", suffix=".pdf", delete=False)
-    if owner_password == user_password:
+    if owner_password is None:
         commands = ['pdftk', filename, 'output', outfile.name, 'user_pw', user_password, 'allow', 'printing']
+    elif user_password is None:
+        commands = ['pdftk', filename, 'output', outfile.name, 'owner_pw', owner_password, 'allow', 'printing']
     else:
         commands = ['pdftk', filename, 'output', outfile.name, 'owner_pw', owner_password, 'user_pw', user_password, 'allow', 'printing']
     try:

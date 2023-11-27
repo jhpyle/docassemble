@@ -1,0 +1,26 @@
+metadata:
+  title: Multiple choice items in a grid
+  short title: Item grid
+  documentation: "https://docassemble.org/docs/fields.html#item grid"
+  example start: 2
+  example end: 2
+---
+features:
+  labels above fields: True
+---
+question: |
+  Select your favorite fruit.
+fields:
+  - Favorite fruit: favorite_fruit
+    item grid: 6
+    choices:
+      - Apple
+      - Orange
+      - Peach
+      - Pear
+      - Banana
+      - Grapes
+---
+mandatory: True
+question: |
+  Your favorite fruit is ${ favorite_fruit }.
