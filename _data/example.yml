@@ -59,7 +59,7 @@
       set_save_status('ignore')
 "action-buttons-http":
   "height": !!int |-
-    290
+    291
   "width": !!int |-
     488
   "yaml": |-
@@ -99,7 +99,7 @@
       - Favorite Color: color
 "actions-demo":
   "height": !!int |-
-    413
+    414
   "width": !!int |-
     488
   "yaml": |-
@@ -506,7 +506,7 @@
         required: False
 "address-autocomplete-specific":
   "height": !!int |-
-    615
+    614
   "width": !!int |-
     488
   "yaml": |-
@@ -924,7 +924,7 @@
     \  not true\n  % endif\n  that there is at least one fruit you do not like."
 "all-mandatory":
   "height": !!int |-
-    214
+    122
   "width": !!int |-
     488
   "yaml": |-
@@ -1876,7 +1876,7 @@
       person: DAList.using(object_type=Individual, there_are_any=True)
 "buttons-code-list":
   "height": !!int |-
-    186
+    187
   "width": !!int |-
     488
   "yaml": |-
@@ -2906,7 +2906,7 @@
       </style>
 "css-class":
   "height": !!int |-
-    97
+    98
   "width": !!int |-
     488
   "yaml": |-
@@ -3606,7 +3606,7 @@
         datatype: date
 "default-screen-parts":
   "height": !!int |-
-    208
+    199
   "width": !!int |-
     488
   "yaml": |-
@@ -4048,6 +4048,33 @@
 
       ${ reason }
     mandatory: True
+"disabled-field":
+  "height": !!int |-
+    302
+  "width": !!int |-
+    488
+  "yaml": "question: |\n  What are your favorite things to eat?\nsubquestion: |\n\
+    \  (It goes without saying that you love turnips.)  \nfields:\n  - Fruit: favorite_fruit\n\
+    \  - Vegetable: favorite_vegetable\n    disabled: True\n    default: turnips"
+"disabled-field-dummy":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      What is your favorite vegetable?
+    fields:
+      - Vegetable: favorite_vegetable
+    ---
+    question: |
+      What are your favorite things to eat?
+    fields:
+      - Fruit: favorite_fruit
+      - Vegetable: favorite_vegetable_placeholder
+        disabled: True
+        default: |
+          ${ favorite_vegetable }
 "dispatch":
   "height": !!int |-
     122
@@ -4913,7 +4940,7 @@
     \  - Refresh: refresh"
 "embed":
   "height": !!int |-
-    221
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -6498,7 +6525,7 @@
           Nothing ${ "at all" }
 "fields-multiselect":
   "height": !!int |-
-    334
+    346
   "width": !!int |-
     488
   "yaml": |-
@@ -7021,7 +7048,7 @@
         force_ask('user_is_communist')
 "force-ask-forget-prior":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -7159,7 +7186,7 @@
       force_gather('favorite_food')
 "forget-prior":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -8163,7 +8190,7 @@
       % endfor
 "generators":
   "height": !!int |-
-    228
+    234
   "width": !!int |-
     488
   "yaml": |-
@@ -8371,7 +8398,7 @@
       </script>
 "getFields":
   "height": !!int |-
-    472
+    440
   "width": !!int |-
     488
   "yaml": |-
@@ -9414,6 +9441,50 @@
     \ of ten pets.\nsubquestion: |\n  % for pet_type in pet_types:\n  The name of\
     \ your pet ${ pet_type }\n  is ${ pet.item(pet_type).name }.\n  It is ${ pet.item(pet_type).color\
     \ }\n  and it has\n  ${ pet.item(pet_type).legs } legs.\n  \n  % endfor"
+"item-grid":
+  "height": !!int |-
+    208
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Select your favorite fruit.
+    fields:
+      - Favorite fruit: favorite_fruit
+        item grid: 6
+        choices:
+          - Apple
+          - Orange
+          - Peach
+          - Pear
+          - Banana
+          - Grapes
+"item-grid-breakpoint":
+  "height": !!int |-
+    208
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Select your favorite number.
+    fields:
+      - Favorite fruit: favorite_number
+        item grid:
+          width: 3
+          breakpoint: sm
+        choices:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
 "join":
   "yaml": |-
     initial: True
@@ -9521,6 +9592,42 @@
       What is your favorite fruit?
     fields:
       - Fruit: favorite_fruit
+"json-response-ajax":
+  "height": !!int |-
+    284
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: True
+    question: |
+      Tell me about your shipment.
+    fields:
+      - Weight (lbs): weight
+        datatype: number
+      - Size: size
+        choices:
+          - Small box: 1
+          - Medium box: 2
+          - Large box: 3
+      - html: |
+          <button id="calcButton" class="btn btn-info float-end" type="button">Calculate</button>
+          <span id="calcResults"></span>
+    script: |
+      <script>
+        $("#calcButton").on('click', function(){
+          var theWeight = parseFloat(val('weight'))
+          var theSize = parseInt(val('size'))
+          if (theWeight && theSize){
+            action_call('calc', {weight: theWeight, size: theSize}, function(data){
+              $("#calcResults").html("That will cost $" + data.cost.toLocaleString('en-US') + ".");
+            });
+          }
+        })
+      </script>
+    ---
+    event: calc
+    code: |
+      json_response({'cost': 4.44 + action_argument('weight') * 5.2 + action_argument('size') * 13.1})
 "jsshowif":
   "height": !!int |-
     404
@@ -9696,7 +9803,7 @@
     list collect: True
 "list-collect-options":
   "height": !!int |-
-    611
+    563
   "width": !!int |-
     488
   "yaml": |-
@@ -10157,7 +10264,7 @@
       Then look for the pantry. That is where they keep the food.
 "manual-attachment-list":
   "height": !!int |-
-    291
+    293
   "width": !!int |-
     488
   "yaml": |-
@@ -11238,7 +11345,7 @@
       - Last Name: villain.name.last
 "object-multiselect-dalist":
   "height": !!int |-
-    232
+    244
   "width": !!int |-
     488
   "yaml": |-
@@ -12328,7 +12435,7 @@
       % endif
 "persistent-task":
   "height": !!int |-
-    251
+    253
   "width": !!int |-
     488
   "yaml": "default screen parts:\n  under: |\n    % if task_performed('fruit_gathered',\
@@ -12342,7 +12449,7 @@
     \ performed."
 "post":
   "height": !!int |-
-    307
+    308
   "width": !!int |-
     488
   "yaml": |-
@@ -13565,7 +13672,7 @@
     edit:\n  - name.first\n  - favorite_fruit"
 "review-edit-list-custom-button":
   "height": !!int |-
-    406
+    405
   "width": !!int |-
     488
   "yaml": |-
@@ -13574,7 +13681,7 @@
       review button icon: pencil-alt
 "review-edit-list-table":
   "height": !!int |-
-    390
+    389
   "width": !!int |-
     488
   "yaml": "need: person.table\nmandatory: true\nquestion: |\n  Thank you for your\
@@ -14845,7 +14952,7 @@
         - pdf
 "social":
   "height": !!int |-
-    128
+    126
   "width": !!int |-
     488
   "yaml": |-
@@ -15082,7 +15189,7 @@
       % endif
 "table":
   "height": !!int |-
-    290
+    289
   "width": !!int |-
     488
   "yaml": |-
@@ -15108,7 +15215,7 @@
       - Seeds: row_item.seeds
 "table-alt":
   "height": !!int |-
-    290
+    289
   "width": !!int |-
     488
   "yaml": |-
@@ -15128,7 +15235,7 @@
           row_item.seeds
 "table-dict":
   "height": !!int |-
-    250
+    249
   "width": !!int |-
     488
   "yaml": |-
@@ -15262,7 +15369,7 @@
             there_is_another=False)
 "table-dict-string":
   "height": !!int |-
-    442
+    332
   "width": !!int |-
     488
   "yaml": |-
@@ -15290,7 +15397,7 @@
     edit: True
 "table-empty":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -15302,7 +15409,7 @@
     show if empty: False
 "table-empty-message":
   "height": !!int |-
-    144
+    146
   "width": !!int |-
     488
   "yaml": |-
@@ -15316,7 +15423,7 @@
       to display today.
 "table-export":
   "height": !!int |-
-    364
+    340
   "width": !!int |-
     488
   "yaml": |-
@@ -15347,7 +15454,7 @@
       - Last eaten: row_item.last_eaten
 "table-if-then":
   "height": !!int |-
-    290
+    289
   "width": !!int |-
     488
   "yaml": |-
@@ -15360,7 +15467,7 @@
           "too many" if row_item.seeds > 20 else row_item.seeds
 "table-mako":
   "height": !!int |-
-    290
+    289
   "width": !!int |-
     488
   "yaml": |-
@@ -15402,7 +15509,7 @@
       Beet                       | 6 { .text-end }
 "table-markdown-noheader":
   "height": !!int |-
-    290
+    289
   "width": !!int |-
     488
   "yaml": "mandatory: true\nquestion: |\n  Your vegetable inventory\nsubquestion:\
@@ -15446,7 +15553,7 @@
       - last_eaten
 "table-python":
   "height": !!int |-
-    354
+    329
   "width": !!int |-
     488
   "yaml": |-
@@ -15519,7 +15626,7 @@
     read only: important
 "table-reorder":
   "height": !!int |-
-    380
+    379
   "width": !!int |-
     488
   "yaml": |-
@@ -15566,7 +15673,7 @@
       - last_eaten
 "table-width":
   "height": !!int |-
-    703
+    705
   "width": !!int |-
     488
   "yaml": |-
@@ -15828,7 +15935,7 @@
       To get started, press **Continue**.
 "template-subject":
   "height": !!int |-
-    325
+    327
   "width": !!int |-
     488
   "yaml": |-
@@ -16174,6 +16281,21 @@
       Note: if you did not catch this
       movie reference, you need to
       improve your cultural literacy.
+"under-text":
+  "height": !!int |-
+    352
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      What are your favorite things to eat?
+    subquestion: |
+      Please be specific.
+    fields:
+      - Vegetable: target_variable
+        under text: E.g., eggplant, turnips
+      - Fruit: other_target_variable
+        under text: E.g., apples, oranges
 "update-terms":
   "height": !!int |-
     186
@@ -16817,7 +16939,7 @@
     \ fruit=favorite_fruit))"
 "all-mandatory":
   "height": !!int |-
-    214
+    122
   "width": !!int |-
     488
   "yaml": |-
@@ -17073,7 +17195,7 @@
       final_screen
 "cards":
   "height": !!int |-
-    152
+    153
   "width": !!int |-
     488
   "yaml": ""
@@ -18407,7 +18529,7 @@
     \ for item in court]"
 "graph":
   "height": !!int |-
-    310
+    286
   "width": !!int |-
     488
   "yaml": "modules:\n  - .graph\n---\nobjects:\n  - graph: DAFile\n  - pets: DADict.using(there_are_any=True)\n\
@@ -18544,7 +18666,7 @@
       Thank you for that information.
 "indexdemoquery":
   "height": !!int |-
-    96
+    158
   "width": !!int |-
     488
   "yaml": |-
@@ -18622,6 +18744,8 @@
       * `__interview_package__`: {{ __interview_package__ }}
       * `__parent_filename__`: {{ __parent_filename__ }}
       * `__parent_package__`: {{ __parent_package__ }}
+      * `__debug__`: {{ __debug__ }}
+      * `__hostname__`: {{ __hostname__ }}
 "jinjayaml-included":
   "yaml": ""
 "jsondemo":
@@ -18641,6 +18765,23 @@
     \ |\n  #### JSON format\n  \n  `${ json.dumps(user.favorite_fruit.as_serializable())\
     \ }`\n  \n  #### Python format\n  \n  `${ repr(user.favorite_fruit.as_serializable())\
     \ }`"
+"jsshowifmaybe":
+  "height": !!int |-
+    504
+  "width": !!int |-
+    488
+  "yaml": "question: |\n  Please fill in the following information.\nsubquestion:\
+    \ |\n  Try setting \"Favorite fruit\" to \n  \"apple\" or \"mango\" (and unfocus\
+    \ the \n  field) to see what happens.\nfields:\n  - Favorite fruit: fruit\n  -\
+    \ Favorite vegetable: vegetable\n  - \"Do you like mushrooms?\": likes_mushrooms\n\
+    \    datatype: yesnomaybe\n  - Favorite mushroom: mushroom\n    js show if: |\n\
+    \      val(\"likes_mushrooms\") == true\n  - \"How could you now know?\": reason_why_unsure\n\
+    \    input type: area\n    js show if: |\n      val(\"likes_mushrooms\") == \"\
+    None\"\n---\nquestion: |\n  Thank you for that information.\nsubquestion: |\n\
+    \  You like ${ fruit } and ${ vegetable }.\n\n  % if likes_mushrooms is None:\n\
+    \  You said you don't know if you like\n  mushrooms. Your ridiculous explanation\n\
+    \  was:\n\n  ${ quote_paragraphs(reason_why_unsure) }\n  % elif likes_mushrooms:\n\
+    \  Your favorite mushroom is ${ mushroom }.\n  % endif\nmandatory: True"
 "life_story":
   "yaml": |-
     template: life_story
@@ -18648,7 +18789,7 @@
       ${ single_to_double_newlines(life_story_text) }
 "macros":
   "height": !!int |-
-    466
+    465
   "width": !!int |-
     488
   "yaml": |-
@@ -19421,7 +19562,7 @@
     mandatory: True
 "objects-from-file":
   "height": !!int |-
-    145
+    146
   "width": !!int |-
     488
   "yaml": "code: |\n  people = objects_from_file(\"contacts.yml\", use_objects=True)\n\
@@ -19452,7 +19593,7 @@
     \ number.\n  \n  % endfor"
 "objects-from-file-json":
   "height": !!int |-
-    145
+    146
   "width": !!int |-
     488
   "yaml": "code: |\n  people = objects_from_file(\"contacts.json\")\n---\nmandatory:\
@@ -19774,7 +19915,7 @@
     \ or \"[BLANK]\" }.\ntarget: food_section_text"
 "primary-interview":
   "height": !!int |-
-    254
+    189
   "width": !!int |-
     488
   "yaml": |-
@@ -20424,7 +20565,7 @@
     \ here](${ interview_url() })."
 "secondary-interview":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -20809,7 +20950,7 @@
     mandatory: True
 "testcards":
   "height": !!int |-
-    358
+    334
   "width": !!int |-
     488
   "yaml": |-
@@ -21014,7 +21155,7 @@
         datatype: date
 "universal-document":
   "height": !!int |-
-    549
+    507
   "width": !!int |-
     488
   "yaml": "features:\n  use catchall: True\n---\ngeneric object: DACatchAll\nquestion:\
@@ -21201,6 +21342,10 @@
     code: |
       user_key = 'workers_comp_user:' + user_info().email
 "wc_side_of_bed":
+  "height": !!int |-
+    208
+  "width": !!int |-
+    488
   "yaml": |-
     include:
       - wc_common.yml

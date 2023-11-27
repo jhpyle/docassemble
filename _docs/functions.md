@@ -813,19 +813,24 @@ executed one after another without pauses.
 
 ## <a name="json_response"></a>json_response()
 
-Calling `json_response(data)` is a shorthand for
-`response(json.dumps(data), content_type="application/json")`.
+Calling `json_response(data)` is (basically) a shorthand for
+`response(binaryresponse=json.dumps(data).encode('utf-8'), content_type="application/json")`.
 
-In other words, it takes a single argument and returns it as an HTTP
+It takes a single positional argument and returns it as an HTTP
 response in [JSON] format.
 
+Here is an example of how `json_response()` can be used in combination
+with the [`action_call()` JavaScript function].
+
+{% include side-by-side.html demo="json-response-ajax" %}
+
 The `json_response()` function accepts the optional keyword parameter
-`response_code`.  The default response code is 200 but you can use
+`response_code`. The default response code is 200 but you can use
 `response_code` to set it to a different value.
 
 Another way to get [JSON] output from **docassemble** is to use the
 [JSON interface], which provides a [JSON] representation of a
-**docassemble** screen.  This can be useful if you are developing your
+**docassemble** screen. This can be useful if you are developing your
 own front end to **docassemble**.
 
 ## <a name="variables_as_json"></a>variables_as_json()
@@ -1531,7 +1536,7 @@ by [`url_action()`] or [`interview_url_action()`].
 
 When a `check in` action takes place, `action_arguments()` returns the
 fields on the screen. Although the special arguments `_initial` and
-`changed` can be read with [`action_argument()`], the
+`_changed` can be read with [`action_argument()`], the
 `action_arguments()` function does not return these values.
 
 ## <a name="action_argument"></a>action_argument()
@@ -2653,6 +2658,13 @@ attributes describing the current user:
 * `current_package` the package of the filename of the currently executing block
 * `variable` the name of the last variable to be sought, or
   `None` if there was no variable being sought.
+* `current_section` the name of the current section, as determined by
+  the `section` modifier of the latest `question` **docassemble**
+  tried to process. In most situations, you will want to use
+  `nav.get_section()` instead. The `current_section` is useful if your
+  Python code needs to know the `section` modifier of the `question`
+  that **docassemble** is currently trying to display (which might not
+  be the same `question` that ultimately is displayed).
 * `language` the user's language, if set (an [ISO-639-1] or
   [ISO-639-3] code)
 * `timezone` the user's time zone, in a format like `America/New_York`
@@ -4443,13 +4455,14 @@ available at `/interviews`.
   with this interview filename (e.g., `docassemble.demo:data/questions/questions.yml`).
 * `session` - if set, `interview_list()` will only act on sessions
   with this session ID.
-* `user_id` - if set to an integer, `interview_list()` will only act
-  on sessions that the user with the given user ID is a user of.  If
-  set to `'all'`, `interview_list()` will act on all interviews on the
-  server.  If not set, `interview_list()` will act on interviews owned
-  by the current user.  Only users with `admin` [privileges] (or users
-  with a custom privilege with the `access_sessions` permission) can
-  access sessions of other users.
+* `user_id` - if not set, `interview_list()` will only act on
+  interviews owned by the current user. If set to an integer,
+  `interview_list()` will only act on sessions that the user with the
+  given user ID is a user of. If set to `'all'`, the sessions will not
+  be limited to the interviews of a particular user; you can then use
+  `query` to narrow the list. Only users with `admin` [privileges] (or
+  users with a custom privilege with the `access_sessions` permission)
+  can access sessions of other users.
 * `query` - this can be set to a query expression if you want to do a
   complex query. The syntax is explained below.
 * `include_dict` - if `True`, then `interview_list()` will return the
@@ -4635,6 +4648,7 @@ want to filter with a boolean query, you can set the keyword parameter
 `query` to an expression such as the following:
 
 * `DA.Sessions.modtime < '4/5/2022'`
+* `DA.Sessions.user_id.In(1, 41)`
 * `DA.Sessions.email == 'jsmith@docassemble.org'`
 * `DA.Sessions.email.Like('%@abc.com') & DA.Sessions.modtime < '4/5/2022'`
 * `DA.Sessions.first_name == 'Joseph' | DA.Sessions.first_name == 'Joe'`
@@ -6301,8 +6315,10 @@ list, it will be unpacked.
   file.  If not provided, the file will be named `file.pdf`.
 * `pdfa`: if `True`, the [PDF] file will be converted to [PDF/A]
   format.  The default is `False`.
-* `password`: if provided, the [PDF] file will be protected.  See the
-  documentation for the [`password`] document modifier.
+* `password`: if provided, the [PDF] file will be protected. If
+  `password` is a string, the password will be a "user password." To
+  supply an "owner password," you can set `password=[owner_pw, user_pw]`
+  or `password={'owner': owner_pw, 'user': user_pw}`.
 * `output_to`: if this refers to a [`DAFile`] object, the output of
   `pdf_concatenate()` will be saved to this [`DAFile`]. By default,
   `pdf_concatenate()` returns a new [`DAFile`] with a random instance
@@ -8059,6 +8075,17 @@ If you have a `datatype: checkboxes` field where the variable name is
 * `val("favorite_fruits[aota]")` will return `true` or `false`
   depending on whether the "All of the above" checkbox is checked.
 
+If you call `val()` on a field with a `datatype` of `yesno`, `noyes`,
+`yesnoradio`, or `noyesradio`, the function will return `null` (if no
+selection has been made), `true`, `false`.
+
+If you call `val()` on a field with a `datatype` of `yesnomaybe` or
+`noyesmaybe`, the result is the same except that if the "I don't know"
+choice is selected, the function will return `"None"`.
+
+The `val()` function returns `null` if the field for the given
+variable is disabled.
+
 You can also access this function under the name `da_val()`, which can
 be useful if you are embedding **docassemble** and there is a name
 conflict.
@@ -8074,6 +8101,9 @@ itself.
 If a field consists of multiple radio buttons or checkboxes,
 `getField()` returns the `<fieldset>` element that contains the
 input elements.
+
+The `getField()` function returns `null` if the field for the given
+variable is disabled.
 
 You can also access this function under the name `daGetField()`, which
 can be useful if you are embedding **docassemble** and there is a name
@@ -8233,16 +8263,27 @@ embedding **docassemble** and there is a name conflict.
 
 ## <a name="js_daPageLoad"></a>Running Javascript at page load time
 
-When your [JavaScript] code is imported through the [`javascript`]
-feature, it is necessary to wrap the code in a `daPageLoad` trigger.
-Otherwise, the code will only be executed on the first page load, not
-when the user navigates from screen to screen.
+If you have [JavaScript] code in a `.js` file that you load with the
+[`javascript`] feature, but you need that code to run when a screen
+loads, it is necessary to wrap the code in a `daPageLoad` trigger.
 
 {% highlight javascript %}
 $(document).on('daPageLoad', function(){
   console.log("The screen is loaded");
 });
 {% endhighlight %}
+
+This is because the **docassemble** front end is a "single page
+application." When the user navigates from screen to screen, the whole
+page is not reloaded; rather, an [Ajax] request is sent and the DOM is
+redrawn. Thus, the [`javascript`] file will only executed on the first
+page load, or when the user presses the refresh button. The
+`daPageLoad` event is triggered whenever the user arrives at a new
+screen.
+
+Note that you should only attach a `daPageLoad` listener from a
+[`javascript`] file, not from a [`script`]
+
 
 [`json_response()`]: #json_response
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
@@ -8437,7 +8478,7 @@ $(document).on('daPageLoad', function(){
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
 [`javascript`]: {{ site.baseurl }}/docs/initial.html#javascript
-[`script`]: {{ site.baseurl }}/docs/fields.html#script
+[`script`]: {{ site.baseurl }}/docs/modifiers.html#script
 [`html`]: {{ site.baseurl }}/docs/fields.html#html
 [`css`]: {{ site.baseurl }}/docs/fields.html#css
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields

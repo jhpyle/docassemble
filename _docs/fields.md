@@ -855,7 +855,8 @@ buttons offering choices "Yes" and "No."
 {% include side-by-side.html demo="fields-yesnoradio" %}
 
 <a name="fields yesnomaybe"></a>`datatype: yesnomaybe` will show radio
-buttons offering choices "Yes," "No," and "I don't know."
+buttons offering choices "Yes," "No," and "I don't know." The
+resulting Python values are `True`, `False`, and `None`.
 
 {% include side-by-side.html demo="fields-yesnomaybe" %}
 
@@ -901,6 +902,10 @@ The [`all_true()`], [`all_false()`], [`any_true()`], [`any_false()`],
 used to analyze the values set by a checkboxes field.  For example:
 
 {% include side-by-side.html demo="fields-checkboxes-dadict" %}
+
+If you want to require the user to select a minimum or maximum number
+of checkboxes, you can use the [`minlength`] and/or [`maxlength`] field
+modifiers.
 
 You can generate checkbox choices with code:
 
@@ -1481,6 +1486,41 @@ the screen loads in the browser.  Whether a field is required or not
 cannot be controlled in real time when the user is looking at the
 screen.
 
+## <a name="disabled"></a>`disabled`
+
+If the `disabled` field modifier is set to `True` or to a Python
+expression that evaluates to a true value, the field will be displayed
+as normal, but will be disabled.
+
+{% include side-by-side.html demo="disabled-field" %}
+
+When the field is `disabled`, this also has the effect of `required:
+False`.
+
+When the user presses the Continue button, the variable associated
+with the field will be ignored; it will not be defined or changed.
+
+Note that if the interview logic has arrived at the `question` because
+it needs the value of a variable that is listed as a field under
+`fields` in the `question`, but you have `disabled` the field, the
+interview logic will ask the `question` again after the user presses
+Continue. You can avoid this problem by defining the variable with a
+different block, and using a different variable name for the disabled
+field.
+
+{% include side-by-side.html demo="disabled-field-dummy" %}
+
+Note that the `disabled` modifier is unrelated to the [`disable if`],
+[`js disable if`], and [`disable others`] modifiers.
+
+## <a name="under text"></a>`under text`
+
+You can guide users as to how they should fill out a text field by
+displaying text under the field. You can use [Mako] templates within
+`under text`.
+
+{% include side-by-side.html demo="under-text" %}
+
 ## <a name="hint"></a>`hint`
 
 You can guide users as to how they should fill out a text field by
@@ -1847,7 +1887,9 @@ The `enable if` and `disable if` field modifiers work just like `show
 if` and `hide if`, except that instead of visibly hiding the fields
 and labels, it disables the input elements.
 
-The use of `code` inside of `enable if` and `disable if` is not supported.
+The use of `code` inside of `enable if` and `disable if` is not
+supported. The [`disabled`] modifier allows you to cause a field to be
+disabled based on a Python expression.
 
 `enable if` and `disable if` cannot be combined with `show if` or
 `hide if` on the same field.
@@ -2152,6 +2194,22 @@ using [Mako].
 
 If `grid` refers to a string, the string is expected to be a Python
 expression that evaluates to an integer between 1 and 12.
+
+## <a name="item grid"></a>`item grid`
+
+The `item grid` field modifier is similar to the `grid` field
+modifier, but it only applies to fields that contain a list of radio
+buttons or a list of checkboxes.
+
+{% include side-by-side.html demo="item-grid" %}
+
+The default breakpoint is the `md` screen size. You can change this
+globally for the server using the `item grid breakpoint` setting
+under the [`grid classes`] Configuration directive. You can change
+this for a particular field by setting `item grid` to a [YAML]
+dictionary with values `width` and `breakpoint`.
+
+{% include side-by-side.html demo="item-grid-breakpoint" %}
 
 ## <a name="label"></a>`label` and `field`
 
@@ -3666,3 +3724,6 @@ why this needs to be done manually as opposed to automatically:
 [`grid classes`]: {{ site.baseurl }}/docs/config.html#grid classes
 [Bootstrap File Input]: https://plugins.krajee.com/file-input
 [CSS color]: https://developer.mozilla.org/en-US/docs/Web/CSS/color
+[`disable if`]: #disable if
+[`js disable if`]: #js disable if
+[`disabled`]: #disabled

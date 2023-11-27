@@ -858,6 +858,46 @@ oauth:
 without `https://`. If your Keycloak server uses `http://` rather than
 `https://`, set `protocol` to `http://`.
 
+## <a name="zitadel"></a>Setting up Zitadel logins
+
+To enable users to log in with [Zitadel] accounts, you need to obtain
+an `id` and `domain` for use with [Zitadel]'s [OAuth] interface.
+
+* Log in to [Zitadel].
+* Create an instance. The name of your instance will determine the
+  name of your `domain`, and users will see this in a URL to which
+  they will be redirected, so it should be a name that would be
+  trusted.
+* Within the instance, create a project, and create an application
+  within the project.
+* Give your application a name.
+* When it asks the "Type of Application," choose "Web."
+* When it asks the "Authentication Method," choose "PKCE."
+* When it asks for "Redirect URIs," you will want to turn on
+  "Development Mode" if you are running on a site that uses
+  `http://`.
+* Under Redirect URIs, enter the URL of your site with
+  `/callback/zitadel` at the end. E.g.,
+  `https://docassemble.example.com/callback/zitadel`.
+* Under Post Logout URIs, enter the URL of your site with
+  `/user/sign-in` at the end.  E.g.,
+  `https://docassemble.example.com/user/sign-in`.
+* After you have created the Application, note the "Client ID." This
+  will be the `id` in your [`oauth`] configuration, under
+  `zitadel`. Under the "URLs" tab, note the hostname that the URLs
+  have in common. This will be the `domain` part of your [OAuth]
+  configuration.
+* Edit your **docassemble** [configuration] and update the values
+  under the `zitadel` part of the [`oauth`] directive so that it
+  includes the `id` and `domain` values you noted in the steps
+  above. When setting the `domain`, do not include the `https://`
+  part. There should not be any `/` characters in the `domain`; it
+  needs to be a pure domain. Make sure that `enable` is not set to
+  `False`.
+* In your [configuration], set the [`url root`] directive. This may or
+  may not be necessary for [Zitadel] to work, but in any case, it
+  doesn't hurt.
+
 ## <a name="azure"></a>Setting up Microsoft Azure logins
 
 To enable users to log in with their Microsoft accounts, you need to
@@ -1754,3 +1794,4 @@ All of these system administration headaches can be avoided by
 [SendGrid API]: https://sendgrid.com/solutions/email-api/
 [Telnyx]: https://telnyx.com/
 [Keycloak]: https://www.keycloak.org/
+[Zitadel]: https://zitadel.com

@@ -2738,6 +2738,12 @@ the screens that allow them to edit the list of uploaded files.
 
 This recipe requires **docassemble** version 1.4.73 or higher.
 
+# <a name="js show if yesnomaybe"></a>Using `js show if` with `yesnomaybe`
+
+Here is an example of using `js show if` with `datatype: yesnomaybe`.
+
+{% include demo-side-by-side.html demo="jsshowifmaybe" %}
+
 [`sections`]: {{ site.baseurl }}/docs/initial.html#sections
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if

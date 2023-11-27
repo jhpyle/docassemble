@@ -1691,8 +1691,7 @@ by the interview's [`tagged pdf` features setting].
 
 If you want the [PDF] file produced by an attachment to be protected
 with a password, you can set a `password`, and the [PDF] file will be
-encrypted.  There are two passwords that can be set: an
-"owner" password and a "user" password.
+encrypted.
 
 {% highlight yaml %}
 question: |
@@ -1704,17 +1703,20 @@ attachment:
   password: nelson
 {% endhighlight %}
 
-The `password` can be specified in the following ways:
+There are two passwords that can be set: an "owner" password and a
+"user" password. The `password` sets the "user" password. To set the
+"owner" password, specify `owner password`:
 
-* If set to a string, only the "user" password will be set.
-* If set to a list, the first element is the "owner" password and the
-  second element is the "user" password.
-* If set to a [Python dict], the value of the `owner` key is the
-  "owner" password and the value of the `user` key is the "user"
-  password.
-
-If the user password and the owner password are the same, then only
-the "user" password will be set.
+{% highlight yaml %}
+question: |
+  Here is your document.
+attachment:
+  name: Your letter
+  filename: letter
+  pdf template file: letter_template.pdf
+  password: nelson
+  owner password: abc123
+{% endhighlight %}
 
 ## <a name="template password"></a>Using encrypted templates
 

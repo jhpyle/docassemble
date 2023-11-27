@@ -706,6 +706,23 @@ tracked in a [Python set] called `drafts`.  The actual variable
 `track_drafts` code discovers the "draft" value by calling
 [`action_argument()`].
 
+Note that the values returned by `action_argument()` and
+`action_arguments()` are raw, unprocessed strings that come directly
+from the values of the HTML input elements, such as `'23.2', 'True',
+'False', and ''. The values might not meet input validation
+requirements.
+
+Two special values can be retrieved with `action_argument()`:
+
+* `_initial` will be `True` for the first `check in` request, and for
+  all other requests will be `False`.
+* `_changed` will be `None` for any periodic `check in` requests, and
+  will be set to the name of a field for any `check in` requests that
+  happen because a field was changed.
+
+The `action_arguments()` dictionary does not contain these values;
+they are only available by calling `action_argument()`.
+
 Note that unlike [background tasks], [`code`] that runs from `check
 in` **can** directly make permenent changes to the interview answers.
 Because it has this privilege, [`code`] that runs from `check in` must

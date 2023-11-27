@@ -194,14 +194,27 @@ This method also works with [inline icons].
 If you know how to write [JavaScript] and [CSS], you can add
 [JavaScript] code and [CSS] formatting to a question.
 
+{% include side-by-side.html demo="script" %}
+
+This [JavaScript] will be executed when the screen loads. 
+
 To add [JavaScript] or [CSS] to all questions, you can use a
 [`features`] block to include [JavaScript] and [CSS] files on the web
 page.
 
-The `script` modifier contains raw HTML to be appended to the bottom
-of the web page for the question.
+Note that the **docassemble** front end is a "single page
+application," which means that when the user presses the Continue
+button or the Back button, the page does not reload; rather, an Ajax
+request is sent to the server and then the DOM is redrawn. The code in
+the `script` modifier is run whenever the `question` is shown. That
+means that the `script` code may run more than once in the user's
+browser session.
 
-{% include side-by-side.html demo="script" %}
+Therefore, you should not use code in a `script` modifier to attach a
+`daPageLoad` listener, because that could mean that the listener will
+be attached more than once. Therefore, only attach `daPageLoad`
+listeners from a [JavaScript] file that you include using the
+[`javascript`] feature.
 
 # <a name="css"></a>Adding [CSS]: `css`
 
@@ -214,6 +227,10 @@ elements you include in your questions, rather than include [CSS] that
 has global effects (like the example above).  Because of the way
 **docassemble** interviews work, [CSS] applied in one question will
 affect later questions until the screen is reloaded.
+
+In the vast majority of situations, you should not use the `css`
+modifier, but should instead write a CSS file that you include using
+[`css`] in a [`features`] block.
 
 # <a name="progress"></a>The progress bar
 
@@ -1063,6 +1080,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [JavaScript]: https://en.wikipedia.org/wiki/JavaScript
 [CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
 [`features`]: {{ site.baseurl }}/docs/initial.html#features
+[`css`]: {{ site.baseurl }}/docs/initial.html#css
 [fallback]: {{ site.baseurl }}/docs/logic.html#fallback
 [`code`]: {{ site.baseurl }}/docs/code.html#code
 [`nav.show_sections()`]: {{ site.baseurl}}/docs/functions.html#DANav.show_sections
@@ -1112,3 +1130,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [action]: {{ site.baseurl }}/docs/functions.html#url_action
 [`hide continue button`]: #hide continue button
 [disabled attribute]: https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/disabled
+[`javascript`]: {{ site.baseurl }}/docs/initial.html#javascript

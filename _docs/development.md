@@ -294,15 +294,17 @@ caused by software updates.
    upgrade your software by publishing
    `docasemble.bankruptcy103:data/questions/controversy.yml`, and the
    users with existing sessions will continue to use version 102.
-2. When you upgrade, you can add a [`mandatory`] code block early
-   on in your interview that performs upgrade-related functions, like
-   renaming the variable `recieved_income` to `received_income`.
+2. When you upgrade, you can add a [`mandatory`] code block early on
+   in your interview that performs upgrade-related functions, like
+   renaming the variable `recieved_income` to `received_income`. (Note
+   that each [`mandatory`] code block must have a unique `id`.
+   Otherwise inserting a new [`mandatory`] code block could cause
+   logic problems for users who have existing sessions.)
 3. In every version of your interview, you can include a [`mandatory`]
    code block that sets a variable like `interview_version` to
    whatever the current interview version is.  Then, if the user
    resumes an old session, your code can be aware of the fact that the
    session was started under the old version.
-
 
 # <a name="collaboration"></a>Workflow for collaboration
 
@@ -774,22 +776,22 @@ be reviewed by a human before it is provided to the user?  Should
 users have access to customer support while using the interview?
 Should someone be staffed with [observing] users as they use the
 application in order to figure out why users are getting stuck?  Is
-testing a process that is started shortly before the interview goes
-live, or integrated into the development process from the beginning?
-How intensive should the testing be?  Should the testing process be
-informal ("try it out, click around, see if it breaks") or formal
-("Try scenario A to completion, then scenario B to completion")?
-Should a process of continuous quality improvement be followed, in
-which information is collected from user surveys or customer service
-requests and used as the basis for improvements?  Should [metrics] be
-collected and reviewed?  Should team meetings be held to brainstorm
-improvements?  Should testing be conducted every time a new version is
-published?  Should this testing process test new features only, or
-also test features that used to work without a problem?  After an
-interview goes live, should a subject matter expert review it
-periodically to make sure the logic is not out of date?  Should the
-interview be tested in some way every day to make sure the site hasn't
-crashed without sending a notification?
+"testing" a process that is started shortly before the interview goes
+live, or is "testing" integrated into the development process from the
+beginning?  How intensive should the testing be?  Should the testing
+process be informal ("try it out, click around, see if it breaks") or
+formal ("Try scenario A to completion, then scenario B to
+completion")?  Should a process of continuous quality improvement be
+followed, in which information is collected from user surveys or
+customer service requests and used as the basis for improvements?
+Should [metrics] be collected and reviewed?  Should team meetings be
+held to brainstorm improvements?  Should testing be conducted every
+time a new version is published?  Should this testing process test new
+features only, or also test features that used to work without a
+problem?  After an interview goes live, should a subject matter expert
+review it periodically to make sure the logic is not out of date?
+Should the interview be tested in some way every day to make sure the
+site hasn't crashed without sending a notification?
 
 Lastly, how can **technology** assist the people who implement these
 processes?  It is important to view technology for quality assurance

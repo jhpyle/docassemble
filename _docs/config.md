@@ -196,6 +196,17 @@ files by going to Logs from the menu. To disable this feature, set
 allow log viewing: False
 {% endhighlight %}
 
+## <a name="developer can install"></a>Whether users with developer accounts can install packages
+
+By default, any user with `admin` or `developer` privileges can use
+the Package Management page and install Playground packages on the
+system. If you want those features to be available only to users with
+`admin` privileges, set `developer can install` to `False`.
+
+{% highlight yaml %}
+developer can install: False
+{% endhighlight %}
+
 ## <a name="root owned"></a>Whether files on the server are owned by root
 
 By default, the **docassemble** Configuration and packages can be
@@ -466,7 +477,8 @@ grid classes:
     right small screen: d-block d-lg-none
   label width: md-4
   field width: md-8
-  grid break: md
+  grid breakpoint: md
+  item grid breakpoint: md
 {% endhighlight %}
 
 `user` refers to administrative screens that end users see, like the
@@ -491,16 +503,17 @@ any). The `right small screen` directive refers to the size of this
 version of the `right` screen part. Under `vertical navigation`, the
 `bar` refers to the width of the vertical navigation bar.
 
-The `label width`, `field width`, and `grid breakpoint` are not
-classes, but rather parts of classes. The actual classes used will be
-prefixed with `col-` or `offset-`, depending on the context. The
-default values of `md-4` and `md-8` mean that when labels and fields
-appear side-by-side, the width of the labels is half of the width of
-the fields, and below the `md` breakpoint, the labels appear above the
-fields. The `grid breakpoint` is a default value for the [`grid` field
-modifier]. It indicates the breakpoint in [Bootstrap]'s grid system
-when the side-by-side arrangement should be shown. The default is
-`md`.
+The `label width`, `field width`, `grid breakpoint`, and `item grid
+breakpoint` are not classes, but rather parts of classes. The actual
+classes used will be prefixed with `col-` or `offset-`, depending on
+the context. The default values of `md-4` and `md-8` mean that when
+labels and fields appear side-by-side, the width of the labels is half
+of the width of the fields, and below the `md` breakpoint, the labels
+appear above the fields. The `grid breakpoint` is a default value for
+the [`grid` field modifier]. It indicates the breakpoint in
+[Bootstrap]'s grid system when the side-by-side arrangement should be
+shown. The default is `md`. Likewise, the `item grid breakpoint` is a
+default value for the [`item grid` field modifier].
 
 ## <a name="alert html"></a><a name="alert container html"></a>Customization of alerts
 
@@ -2160,6 +2173,85 @@ celery flask log: /tmp/docassemble-log/celery-flask.log
 
 The default locates for the [Flask] log files are `/tmp/flask.log` and
 `/tmp/celery-flask.log`.
+
+## <a name="debug startup process"></a>Log messages during the startup process
+
+If the web application is slow to startup after a restart (i.e., after
+the Configuration is saved, or after a package is installed, you can
+set `debug startup process` to `True` in order to see log messages in
+the `uwsgi.log` log file showing the timing of various parts of the
+web application startup process.
+
+{% highlight yaml %}
+debug startup process: True
+{% endhighlight %}
+
+The log should look something like this:
+
+{% highlight text %}
+0.000s server: starting
+0.071s config: load complete
+4.179s backend: starting
+4.179s backend: getting email configuration
+4.179s backend: finished getting email configuration
+4.179s backend: configuring common functions
+4.179s backend: finished configuring common functions
+4.179s backend: processing translations
+4.840s backend: finished processing translations
+4.840s backend: obtaining cloud object
+4.840s backend: finished obtaining cloud object
+4.840s backend: completed
+4.892s server: done importing modules
+4.896s server: creating session store
+4.896s server: setting up Flask
+4.903s server: finished setting up Flask
+4.903s server: setting up logging
+4.903s server: finished setting up logging
+4.903s server: getting page parts from configuration
+4.903s server: finished getting page parts from configuration
+5.776s server: making directories that do not already exist
+5.776s server: finished making directories that do not already exist
+5.776s server: building documentation
+6.218s server: finished building documentation
+6.218s server: entering app context
+6.218s server: entering request context
+6.235s server: loading preloaded interviews
+6.458s server: finished loading preloaded interviews
+6.458s server: copying playground modules
+6.504s server: finished copying playground modules
+6.504s server: deleting LibreOffice macro file if necessary
+6.504s server: fixing API keys
+6.504s server: starting importing add-on modules
+7.490s server: finished importing add-on modules
+7.490s server: running app
+{% endhighlight %}
+
+The period of four seconds at the start is taken up by loading a large
+number of necessary Python modules. If your system takes much longer
+than four seconds to reach `backend: starting`, your system may have
+insufficient CPU or memory.
+
+The time between `processing translations` and `finished processing
+translations` can be reduced by removing unnecessary lines from the
+[`words`] configuration.
+
+The time between `finished getting page parts from configuration` and
+`making directories that do not already exist` consists of loading
+necessary Python functions.
+
+The time between `starting importing add-on modules` and `finished
+importing add-on modules` can be reduced by uninstalling unnecessary
+add-on packages, adding `# do not pre-load` to the top of module files
+that should not load when the system starts, and removing files from
+the Modules folders of users' Playgrounds.
+
+If you want to see logs of the initial system startup process (the
+process that happens when you do `docker run`, see the log files
+mentioned in the [Troubleshooting] section, in particular the log
+files at `/var/log/supervisor/initialize*`.
+
+Check the `worker.log` file for information about package
+installation.
 
 ## <a name="language"></a><a name="dialect"></a><a name="voice"></a><a name="locale"></a>Default language, locale, dialect, and voice
 
@@ -4847,11 +4939,11 @@ The `pypirc path` directive refers to the file where the repository
 URL will be stored. You may need to edit this if you run
 **docassemble** on a non-standard operating system.
 
-## <a name="oauth"></a>Facebook, Twitter, Google, Auth0, and Azure login
+## <a name="oauth"></a>Facebook, Twitter, Google, Auth0, Keycloak, Zitadel, and Azure login
 
 If you want to enable logging in with Facebook, Twitter, Google,
-Auth0, or Microsoft Azure, you will need to tell **docassemble** your
-[OAuth2] keys for these services:
+Auth0, KeyCloak, Zitadel, or Microsoft Azure, you will need to tell
+**docassemble** your [OAuth2] keys for these services:
 
 {% highlight yaml %}
 oauth:
@@ -4859,6 +4951,10 @@ oauth:
     enable: True
     id: 423759825983740
     secret: 34993a09909c0909b9000a090d09f099
+  twitter:
+    enable: True
+    id: Iweh63ReKfOCttaUBE3t27TET
+    secret: hfieegGgrht5re3hfhsRGStYUbDDAgerergrggSDGHtrErE7rf
   google:
     enable: True
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
@@ -4868,10 +4964,17 @@ oauth:
     id: ceyd6imTYxTNmuj2CYpwH_cEhdWt93e6
     secret: LLGEBDrrgDFDfBsFjErsdSdsntkrtAbfa4ee3ss_adfdSDFEWEsfgHTerjNsd3dD
     domain: example.auth0.com
-  twitter:
+  keycloak:
     enable: True
-    id: Iweh63ReKfOCttaUBE3t27TET
-    secret: hfieegGgrht5re3hfhsRGStYUbDDAgerergrggSDGHtrErE7rf
+    id: example
+    secret: ifYzXtUv7WlSkWjMbHwgvgk0aACoXTcF
+    domain: "keycloak.mysite.com"
+    protocol: "https://"
+    realm: master
+  zitadel:
+    enable: True
+    id: 168422810448705515@yourprojectname
+    domain: your-instance-name-edy3i2.zitadel.cloud
   azure:
     enable: True
     id: e378beb1-0bfb-45bc-9b4b-604dcf640c87
@@ -4883,7 +4986,7 @@ by removing the configuration entirely.
 
 For more information about how to obtain these keys, see the
 [installation] page's sections on [Facebook], [Twitter], [Google],
-[Auth0], [Keycloak], and [Azure].
+[Auth0], [Keycloak], [Zitadel] and [Azure].
 
 Note that in [YAML], dictionary keys must be unique. So you can only
 have one `ouath:` line in your configuration. Put all of your
@@ -6259,6 +6362,7 @@ and Facebook API keys.
 [Google]: {{ site.baseurl }}/docs/installation.html#google
 [Auth0]: {{ site.baseurl }}/docs/installation.html#auth0
 [Keycloak]: {{ site.baseurl }}/docs/installation.html#keycloak
+[Zitadel]: {{ site.baseurl }}/docs/installation.html#zitadel
 [Azure]: {{ site.baseurl }}/docs/installation.html#azure
 [invited by an administrator]: {{ site.baseurl }}/docs/users.html#invite
 [`root`]: #root
@@ -6570,6 +6674,8 @@ and Facebook API keys.
 [Gotenberg]: https://gotenberg.dev/
 [`GOTENBERGURL`]: {{ site.baseurl }}/docs/docker.html#GOTENBERGURL
 [`grid` field modifier]: {{ site.baseurl }}/docs/fields.html#grid
+[`item grid` field modifier]: {{ site.baseurl }}/docs/fields.html#item grid
 [`password login`]: #password login
 [pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
 [`rendering font`]: {{ site.baseurl }}/docs/documents.html#rendering font
+[Troubleshooting]: {{ site.baseurl }}/docs/docker.html#troubleshooting

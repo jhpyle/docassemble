@@ -3,6 +3,38 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.86](https://github.com/jhpyle/docassemble/releases/tag/v1.4.86) - 2023-11-26
+
+
+### Added
+- The `disabled` field modifier for showing a field on the screen that
+  is always disabled.
+- The `under text` field modifier for showing help text under a form
+  field in a smaller font.
+- The `item grid` field modifier, which is similar to the `grid`
+  modifier, but affects whether the choices in a list of radio buttons
+  or checkboxes wrap.
+- The `developer can install` Configuration directive.
+- The `debug startup process` Configuration directive for logging the
+  timing of the different parts of the `uwsgi` loading process.
+- The `current_section` attribute of the output of `user_info()`.
+- The `owner password` option under `attachment` for protecting a PDF
+  file with an owner password.
+- Support for login using Zitadel.
+
+
+### Changed
+- The CSS for `<code>` elements no longer collapses spaces.
+
+
+### Fixed
+- The UI of fields with `datatype: range` were not shown as disabled
+  even if the underlying `<input>` was disabled.
+- Sync and Run did not work correctly in some browsers because of a
+  JavaScript timing issue.
+- Module files in zipped packages were not detected unless a root
+  directory was used.
+
 ## [1.4.85](https://github.com/jhpyle/docassemble/releases/tag/v1.4.85) - 2023-11-02
 
 
