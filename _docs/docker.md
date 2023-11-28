@@ -835,11 +835,11 @@ indicated location, **docassemble** will create an initial
 * <a name="S3REGION"></a>`S3REGION`: If you are using [S3], set this
   to the [region] you are using (e.g., `us-west-1`, `us-west-2`,
   `ca-central-1`).
-* <a name="S3ENDPOINTURL"></a>`S3ENDPOINTURL`: If you are using an
-  [S3]-compatible object storage service, set `S3ENDPOINTURL` to the URL
-  of the service, usually **without** the bucket name (e.g., 
-  `https://region.mys3service.com`, not 
-  `https://bucket.region.mys3service.com`).
+* <a name="S3ENDPOINTURL"></a>`S3ENDPOINTURL`: If you are using a
+  non-[AWS]<span></span> [S3]-compatible object storage service, set
+  `S3ENDPOINTURL` to the URL of the service, (e.g.,
+  `https://region.mys3service.com`. Usually this URL does not contain
+  the bucket name (e.g., not `https://bucket.region.mys3service.com`).
 * <a name="S3_SSE_ALGORITHM"></a>`S3_SSE_ALGORITHM`: the server-side
   encryption algorithm used (e.g., `AES256`, `aws:kms`). This should
   only be specified if the S3 bucket uses server-side encryption.
@@ -1310,8 +1310,8 @@ from S3 to the server. This negatively impacts performance.
 
 ## <a name="persistent s3"></a>Using S3 or S3-compatible
 
-To use [S3] (or an [S3]-compatible service) for persistent storage,
-you need to obtain credentials and create a bucket.
+To use [S3] (or a non-[AWS]<span></span> [S3]-compatible service) for persistent
+storage, you need to obtain credentials and create a bucket.
 
 If you want to use [Amazon Web Services], you would first sign up for
 an [AWS] account, and go to the [S3 Console], click "Create Bucket,"
@@ -1344,37 +1344,33 @@ USELETSENCRYPT=true
 LETSENCRYPTEMAIL=dev@example.com
 {% endhighlight %}
 
-If you were using an S3 compatible service instead of AWS, you would
-add the `S3ENDPOINTURL` directive, and leave the S3REGION directive
-blank.
-
-For example, if you used Digital Ocean Spaces's San Francisco 
-datacenter, the S3 section of your env.list might look like this:
-
-{% highlight text %}
-S3ENABLE=true
-S3BUCKET=interviews-example-com
-S3ACCESSKEY=YERWERGDFSGERGSDFGSW
-S3SECRETACCESSKEY=WERWR36dddeg3udjfRT1+rweRTHRTookiMVASDAS
-S3REGION=
-S3ENDPOINTURL=https://sfo3.digitaloceanspaces.com
-{% endhighlight %}
-
-Note that if you run **docassemble** on [EC2], you can launch your
-[EC2] instances with an [IAM] role that allows **docassemble** to
-access to an [S3] bucket without the necessity of setting
-[`S3ACCESSKEY`] and [`S3SECRETACCESSKEY`]. In this case, the only
-environment variable you need to pass is [`S3BUCKET`].
-
 If you are using an [S3]-compatible object storage service, you will
 need to set [`S3ENDPOINTURL`] to the URL endpoint of your service,
 which you can find in the service's documentation or in your account
 settings. You likely will not need to set [`S3REGION`] unless the
 service supports the "region" concept.
 
-These secret access keys will become available to all developers who
-use your **docassemble** server, since they are in the configuration
-file.
+For example, if you are using the [Digital Ocean] Spaces service using
+the San Francisco datacenter, your `env.list` file might contain:
+
+{% highlight text %}
+S3ENABLE=true
+S3BUCKET=interviews-example-com
+S3ACCESSKEY=YERWERGDFSGERGSDFGSW
+S3SECRETACCESSKEY=WERWR36dddeg3udjfRT1+rweRTHRTookiMVASDAS
+S3ENDPOINTURL=https://sfo3.digitaloceanspaces.com
+{% endhighlight %}
+
+Keep in mind that the secret access keys that you include in your
+environment variables will become available to all developers who use
+your **docassemble** server, since they will be stored in the
+configuration file.
+
+Note that if you run **docassemble** on [EC2], you can launch your
+[EC2] instances with an [IAM] role that allows **docassemble** to
+access to an [S3] bucket without the necessity of setting
+[`S3ACCESSKEY`] and [`S3SECRETACCESSKEY`]. In this case, the only
+environment variable you need to pass is [`S3BUCKET`].
 
 If you are using [AWS] and you want to limit access to a particular
 bucket, you do not have to use the `AmazonS3FullAccess` policy when
