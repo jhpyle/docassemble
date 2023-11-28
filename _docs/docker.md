@@ -837,7 +837,9 @@ indicated location, **docassemble** will create an initial
   `ca-central-1`).
 * <a name="S3ENDPOINTURL"></a>`S3ENDPOINTURL`: If you are using an
   [S3]-compatible object storage service, set `S3ENDPOINTURL` to the URL
-  of the service (e.g., `https://mys3service.com`).
+  of the service, usually **without** the bucket name (e.g., 
+  `https://region.mys3service.com`, not 
+  `https://bucket.region.mys3service.com`).
 * <a name="S3_SSE_ALGORITHM"></a>`S3_SSE_ALGORITHM`: the server-side
   encryption algorithm used (e.g., `AES256`, `aws:kms`). This should
   only be specified if the S3 bucket uses server-side encryption.
@@ -1308,7 +1310,7 @@ from S3 to the server. This negatively impacts performance.
 
 ## <a name="persistent s3"></a>Using S3 or S3-compatible
 
-To use [S3] (or an [S3]-compatible] service) for persistent storage,
+To use [S3] (or an [S3]-compatible service) for persistent storage,
 you need to obtain credentials and create a bucket.
 
 If you want to use [Amazon Web Services], you would first sign up for
@@ -1340,6 +1342,22 @@ USEHTTPS=true
 EC2=true
 USELETSENCRYPT=true
 LETSENCRYPTEMAIL=dev@example.com
+{% endhighlight %}
+
+If you were using an S3 compatible service instead of AWS, you would
+add the `S3ENDPOINTURL` directive, and leave the S3REGION directive
+blank.
+
+For example, if you used Digital Ocean Spaces's San Francisco 
+datacenter, the S3 section of your env.list might look like this:
+
+{% highlight text %}
+S3ENABLE=true
+S3BUCKET=interviews-example-com
+S3ACCESSKEY=YERWERGDFSGERGSDFGSW
+S3SECRETACCESSKEY=WERWR36dddeg3udjfRT1+rweRTHRTookiMVASDAS
+S3REGION=
+S3ENDPOINTURL=https://sfo3.digitaloceanspaces.com
 {% endhighlight %}
 
 Note that if you run **docassemble** on [EC2], you can launch your
