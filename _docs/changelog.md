@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.87](https://github.com/jhpyle/docassemble/releases/tag/v1.4.87) - 2023-11-28
+
+
+### Changed
+- Set a specific maximum number of open file descriptors (1048576) to
+  avoid problems with `ulimit -n` being too high on some kernels
+  (system update required).
+
 ## [1.4.86](https://github.com/jhpyle/docassemble/releases/tag/v1.4.86) - 2023-11-26
 
 
