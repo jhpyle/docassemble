@@ -3388,7 +3388,7 @@ def exit_href(data=False):
 def delete_session_for_interview(i=None):
     if i is not None:
         clear_session(i)
-    for key in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus', 'observer', 'monitor', 'doing_sms'):
+    for key in ('i', 'uid', 'key_logged', 'encrypted', 'chatstatus', 'observer', 'monitor', 'doing_sms', 'alt_session'):
         if key in session:
             del session[key]
 
@@ -3399,21 +3399,21 @@ def delete_session_sessions():
 
 
 def delete_session_info():
-    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions', 'alt_session', 'zitadel_verifier'):
         if key in session:
             del session[key]
 
 
 def backup_session():
     backup = {}
-    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions', 'alt_session'):
         if key in session:
             backup[key] = session[key]
     return backup
 
 
 def restore_session(backup):
-    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions', 'alt_session'):
         if key in backup:
             session[key] = backup[key]
 
@@ -6552,7 +6552,8 @@ def launch():
             args[key] = val
     args['i'] = data['i']
     if 'session' in data:
-        update_session(data['i'], uid=data['session'])
+        delete_session_for_interview(data['i'])
+        session['alt_session'] = [data['i'], data['session']]
     else:
         args['new_session'] = '1'
     request.args = args
@@ -6765,6 +6766,9 @@ def index(action_argument=None, refer=None):
     docassemble.base.functions.this_thread.current_info = the_current_info
     if session_info is None or reset_interview or new_interview:
         was_new = True
+        if 'alt_session' in session and yaml_filename == session['alt_session'][0]:
+            session_parameter = session['alt_session'][1]
+            del session['alt_session']
         if (PREVENT_DEMO) and (yaml_filename.startswith('docassemble.base:') or yaml_filename.startswith('docassemble.demo:')) and (current_user.is_anonymous or not (current_user.has_role('admin', 'developer') or current_user.can_do('demo_interviews'))):
             raise DAError(word("Not authorized"), code=403)
         if current_user.is_anonymous and not daconfig.get('allow anonymous access', True):
@@ -6839,12 +6843,14 @@ def index(action_argument=None, refer=None):
             unique_sessions = interview.consolidated_metadata.get('sessions are unique', False)
             if unique_sessions is not False and not current_user.is_authenticated:
                 delete_session_for_interview(yaml_filename)
+                session['alt_session'] = [yaml_filename, session_parameter]
                 flash(word("You need to be logged in to access this interview."), "info")
                 logmessage("Redirecting to login because sessions are unique.")
                 return redirect(url_for('user.login', next=url_for('index', **request.args)))
             if current_user.is_anonymous:
                 if (not interview.allowed_to_initiate(is_anonymous=True)) or (not interview.allowed_to_access(is_anonymous=True)):
                     delete_session_for_interview(yaml_filename)
+                    session['alt_session'] = [yaml_filename, session_parameter]
                     flash(word("You need to be logged in to access this interview."), "info")
                     logmessage("Redirecting to login because anonymous user not allowed to access this interview.")
                     return redirect(url_for('user.login', next=url_for('index', **request.args)))
