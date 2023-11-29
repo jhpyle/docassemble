@@ -42,7 +42,6 @@ import zipfile
 
 import docassemble.base.config
 if not docassemble.base.config.loaded:
-    docassemble.base.config.boot_log("server: starting")
     docassemble.base.config.load()
 from docassemble.base.config import daconfig, hostname, in_celery, in_cron, DEBUG_BOOT, START_TIME, boot_log
 

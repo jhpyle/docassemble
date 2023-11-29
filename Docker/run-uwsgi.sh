@@ -13,8 +13,6 @@ set -- $LOCALE
 export LANG=$1
 export HOME=/var/www
 
-ulimit -n 1048576
-
 function stopfunc {
     UWSGI_PID=$(</var/run/uwsgi/uwsgi.pid) || exit 0
     echo "Sending stop command" >&2
