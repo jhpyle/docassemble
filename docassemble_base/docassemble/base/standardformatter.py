@@ -3453,12 +3453,18 @@ def input_for(status, field, embedded=False, floating_label=None):
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
             html_valid_part = ''
-            if field.datatype in ('date'):
+            if field.datatype in ('date', 'datetime', 'datetime-local'):
+                if field.datatype in ('datetime', 'datetime-local'):
+                    format_str = "yyyy-MM-ddTHH:mm:ss"
+                    format_func = format_datetime
+                else:
+                    format_str = "yyyy-MM-dd"
+                    format_func = format_date
                 if hasattr(status, 'extras') and 'min' in status.extras:
-                  date_str = format_date(status.extras['min'][field.number], format='yyyy-MM-dd')
+                  date_str = format_func(status.extras['min'][field.number], format=format_str)
                   html_valid_part += f' min="{date_str}" '
                 if hasattr(status, 'extras') and 'max' in status.extras:
-                  date_str = format_date(status.extras['max'][field.number], format='yyyy-MM-dd')
+                  date_str = format_func(status.extras['max'][field.number], format=format_str)
                   html_valid_part += f' max="{date_str}" '
             data_part = ''
             if field.datatype in custom_types:
