@@ -3452,6 +3452,14 @@ def input_for(status, field, embedded=False, floating_label=None):
                 input_type = 'text'
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
+            html_valid_part = ''
+            if field.datatype in ('date'):
+                if hasattr(status, 'extras') and 'min' in status.extras:
+                  date_str = format_date(status.extras['min'][field.number], format='yyyy-MM-dd')
+                  html_valid_part += f' min="{date_str}" '
+                if hasattr(status, 'extras') and 'max' in status.extras:
+                  date_str = format_date(status.extras['max'][field.number], format='yyyy-MM-dd')
+                  html_valid_part += f' max="{date_str}" '
             data_part = ''
             if field.datatype in custom_types:
                 input_type = custom_types[field.datatype]['input_type']
@@ -3467,7 +3475,7 @@ def input_for(status, field, embedded=False, floating_label=None):
                 if len(custom_parameters) > 0:
                     for param_name, param_val in custom_parameters.items():
                         data_part += ' data-' + re.sub(r'[^A-Za-z0-9\-]', '-', param_name).strip('-') + '=' + fix_double_quote(str(param_val))
-            output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + data_part + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+            output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + extra_style + title_text + data_part + ' type="' + input_type + '"' + html_valid_part + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if not embedded and field.datatype == 'currency':
                 output += ' aria-describedby="' + escape_id(saveas_string) + '-error"' + disable_others_data + autocomplete_off + req_attr + disabled_attr + ' />'
                 if not currency_symbol_before:
