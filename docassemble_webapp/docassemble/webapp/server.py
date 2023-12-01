@@ -29410,7 +29410,7 @@ def api_playground_install():
                             with zf.open(zinfo) as f:
                                 the_file_obj = TextIOWrapper(f, encoding='utf8')
                                 setup_py = the_file_obj.read()
-                        elif len(levels) >= 1 and not directory != root_dir and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
+                        elif len(levels) >= 1 and directory != root_dir and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
                             need_to_restart = True
                             data_files['modules'].append(filename)
                             target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)

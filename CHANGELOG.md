@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.88] - 2023-12-01
+
+### Fixed
+- Bug in `/api/playground_install`.
+
 ## [1.4.87] - 2023-11-28
 
 ### Changed
