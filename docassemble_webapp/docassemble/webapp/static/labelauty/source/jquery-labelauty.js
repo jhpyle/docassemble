@@ -194,7 +194,7 @@
         $(element).addClass(classes[idx]);
       }
 
-      var current_mode = document.documentElement.getAttribute('data-bs-theme') || "light";
+      var current_mode = (document.documentElement.getAttribute("data-bs-theme") === "dark") ? "dark" : "light";
       if ($object.is(":checked")) {
         $(element).addClass("btn-" + color);
         $(element).removeClass("btn-" + current_mode);
@@ -334,7 +334,7 @@
     var unchecked_message;
     var checked_message;
     var aria = "";
-    var current_mode = document.documentElement.getAttribute('data-bs-theme') || "light";
+    var current_mode = (document.documentElement.getAttribute("data-bs-theme") === "dark") ? "dark" : "light";
 
     if (messages_object == null) unchecked_message = checked_message = "";
     else {
