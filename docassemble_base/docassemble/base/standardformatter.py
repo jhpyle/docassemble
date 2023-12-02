@@ -1177,7 +1177,6 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 note_fields[field.number] = process_target(status.extras['html'][field.number].rstrip())
             elif 'note' in status.extras and field.number in status.extras['note']:
                 note_fields[field.number] = markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input)
-            #logmessage("extras is " + repr(status.extras))
             if hasattr(field, 'saveas'):
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
                 if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in status.extras) or 'show_if_js' in field.extras)) or (hasattr(field, 'disableothers') and field.disableothers):
@@ -3461,11 +3460,11 @@ def input_for(status, field, embedded=False, floating_label=None):
                     format_str = "yyyy-MM-dd"
                     format_func = format_date
                 if hasattr(status, 'extras') and 'min' in status.extras:
-                  date_str = format_func(status.extras['min'][field.number], format=format_str)
-                  html_valid_part += f' min="{date_str}" '
+                    date_str = format_func(status.extras['min'][field.number], format=format_str)
+                    html_valid_part += f' min="{date_str}" '
                 if hasattr(status, 'extras') and 'max' in status.extras:
-                  date_str = format_func(status.extras['max'][field.number], format=format_str)
-                  html_valid_part += f' max="{date_str}" '
+                    date_str = format_func(status.extras['max'][field.number], format=format_str)
+                    html_valid_part += f' max="{date_str}" '
             data_part = ''
             if field.datatype in custom_types:
                 input_type = custom_types[field.datatype]['input_type']

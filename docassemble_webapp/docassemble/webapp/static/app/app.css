@@ -191,7 +191,7 @@ i.da-chat-inactive:hover {
 .da-form-group.darequired .dawidecol:before {
     position: absolute;
     content: '*';
-    color: var(--bs-form-invalid-color);
+    color: red;
     top: 0rem;
     left: -0.2rem;
 }
@@ -199,9 +199,17 @@ i.da-chat-inactive:hover {
 .da-form-group.darequired .dagridwide:before {
     position: absolute;
     content: '*';
-    color: var(--bs-form-invalid-color);
+    color: red;
     top: 0rem;
     left: -0.2rem;
+}
+
+[data-bs-theme=dark] .da-form-group.darequired .dawidecol:before {
+    color: var(--bs-red);
+}
+
+[data-bs-theme=dark] .da-form-group.darequired .dagridwide:before {
+    color: var(--bs-red);
 }
 
 .da-grid-container.da-form-group-floating label {
@@ -220,9 +228,13 @@ i.da-chat-inactive:hover {
 .da-form-group.darequired .danolabel:before {
     position: absolute;
     content: '*';
-    color: var(--bs-form-invalid-color);
+    color: red;
     top: 0rem;
     left: -0.2rem;
+}
+
+[data-bs-theme=dark] .da-form-group.darequired .danolabel:before {
+    color: var(--bs-red);
 }
 
 .da-form-group.darequired .da-top-label {
@@ -231,8 +243,12 @@ i.da-chat-inactive:hover {
 
 .da-form-group.darequired .da-top-label:after {
     content: '*';
-    color: var(--bs-form-invalid-color);
+    color: red;
     margin-left: 0.2em;
+}
+
+[data-bs-theme=dark] .da-form-group.darequired .da-top-label:after {
+    color: var(--bs-red);
 }
 
 .da-form-group.darequired .da-form-label {
@@ -242,7 +258,11 @@ i.da-chat-inactive:hover {
 .da-form-group.darequired .da-form-label:after {
     position: absolute;
     content: '*';
-    color: var(--bs-form-invalid-color);
+    color: red;
+}
+
+[data-bs-theme=dark] .da-form-group.darequired .da-form-label:after {
+    color: var(--bs-red);
 }
 
 @media (max-width: 767px) {

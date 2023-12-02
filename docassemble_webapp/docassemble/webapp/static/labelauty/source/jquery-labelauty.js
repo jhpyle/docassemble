@@ -193,15 +193,13 @@
       for (var idx = 0; idx < classes.length; idx++) {
         $(element).addClass(classes[idx]);
       }
-
-      var current_mode = (document.documentElement.getAttribute("data-bs-theme") === "dark") ? "dark" : "light";
       if ($object.is(":checked")) {
         $(element).addClass("btn-" + color);
-        $(element).removeClass("btn-" + current_mode);
+        $(element).removeClass("btn-light");
         $(element).attr("aria-checked", true);
       } else {
         $(element).removeClass("btn-" + color);
-        $(element).addClass("btn-" + current_mode);
+        $(element).addClass("btn-light");
         $(element).attr("aria-checked", false);
       }
       var the_name = $object.attr("name");
@@ -214,13 +212,13 @@
                 $(this)
                   .next()
                   .addClass("btn-" + color);
-                $(this).next().removeClass("btn-" + current_mode);
+                $(this).next().removeClass("btn-light");
                 $(this).next().attr("aria-checked", true);
               } else {
                 $(this)
                   .next()
                   .removeClass("btn-" + color);
-                $(this).next().addClass("btn-" + current_mode);
+                $(this).next().addClass("btn-light");
                 $(this).next().attr("aria-checked", false);
               }
             }
@@ -233,13 +231,13 @@
             $(this)
               .next()
               .addClass("btn-" + color);
-            $(this).next().removeClass("btn-" + current_mode);
+            $(this).next().removeClass("btn-light");
             $(this).next().attr("aria-checked", true);
           } else {
             $(this)
               .next()
               .removeClass("btn-" + color);
-            $(this).next().addClass("btn-" + current_mode);
+            $(this).next().addClass("btn-light");
             $(this).next().attr("aria-checked", false);
           }
         });
@@ -252,12 +250,12 @@
           event.preventDefault();
           if ($object.is(":checked")) {
             $(this).addClass("btn-" + color);
-            $(this).removeClass("btn-" + current_mode);
+            $(this).removeClass("btn-light");
             $object.prop("checked", false);
             $(this).attr("aria-checked", true);
           } else {
             $(this).addClass("btn-" + color);
-            $(this).removeClass("btn-" + current_mode);
+            $(this).removeClass("btn-light");
             $object.prop("checked", true);
             $(this).attr("aria-checked", false);
           }
@@ -334,7 +332,6 @@
     var unchecked_message;
     var checked_message;
     var aria = "";
-    var current_mode = (document.documentElement.getAttribute("data-bs-theme") === "dark") ? "dark" : "light";
 
     if (messages_object == null) unchecked_message = checked_message = "";
     else {
@@ -370,7 +367,7 @@
 
     if (label == true && icon == true) {
       block =
-        '<label class="form-label text-start btn btn-' + current_mode + ' dalabelauty" for="' +
+        '<label class="form-label text-start btn btn-light dalabelauty" for="' +
         input_id +
         '" ' +
         aria +
@@ -390,7 +387,7 @@
         "</label>";
     } else if (label == true) {
       block =
-        '<label class="form-label text-start btn btn' + current_mode + ' dalabelauty" for="' +
+        '<label class="form-label text-start btn btn-light dalabelauty" for="' +
         input_id +
         '" ' +
         aria +
@@ -404,7 +401,7 @@
         "</label>";
     } else {
       block =
-        '<label class="form-label text-start btn btn-' + current_mode + ' dalabelauty" for="' +
+        '<label class="form-label text-start btn btn-light dalabelauty" for="' +
         input_id +
         '" ' +
         aria +
