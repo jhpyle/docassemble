@@ -8483,7 +8483,7 @@
         input type: area
 "grid2":
   "height": !!int |-
-    386
+    370
   "width": !!int |-
     488
   "yaml": |-
@@ -8566,7 +8566,7 @@
           label width: 3
 "grid5":
   "height": !!int |-
-    402
+    370
   "width": !!int |-
     488
   "yaml": |-
@@ -8640,7 +8640,7 @@
         grid: 2
 "grid6":
   "height": !!int |-
-    402
+    370
   "width": !!int |-
     488
   "yaml": |-
@@ -8773,7 +8773,7 @@
           breakpoint: ${ breakpoint }
 "grid9":
   "height": !!int |-
-    270
+    262
   "width": !!int |-
     488
   "yaml": |-
@@ -9443,7 +9443,7 @@
     \ }\n  and it has\n  ${ pet.item(pet_type).legs } legs.\n  \n  % endfor"
 "item-grid":
   "height": !!int |-
-    208
+    308
   "width": !!int |-
     488
   "yaml": |-
@@ -9452,6 +9452,7 @@
     fields:
       - Favorite fruit: favorite_fruit
         item grid: 6
+        input type: radio
         choices:
           - Apple
           - Orange
@@ -9461,14 +9462,15 @@
           - Grapes
 "item-grid-breakpoint":
   "height": !!int |-
-    208
+    308
   "width": !!int |-
     488
   "yaml": |-
     question: |
       Select your favorite number.
     fields:
-      - Favorite fruit: favorite_number
+      - Favorite number: favorite_number
+        input type: radio
         item grid:
           width: 3
           breakpoint: sm

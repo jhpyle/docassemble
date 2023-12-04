@@ -3,6 +3,23 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.88](https://github.com/jhpyle/docassemble/releases/tag/v1.4.88) - 2023-12-03
+
+
+### Changed
+- When `min` or `max` is used with a `datatype: date` or `datatype:
+  datetime`, the minimum and/or maximum are now indicated in the HTML
+  so that browser widgets know what they are.
+- When the browser uses dark mode, the red asterisk is less bright.
+- When `grid` is used, items are aligned to the bottom of the row.
+
+
+### Fixed
+- Bug in `/api/playground_install`.
+- Fixed formatting in `grid` mode when label is empty.
+- When browsing other users' playgrounds, the Download and GitHub
+  buttons in the Packages folder did not work as intended.
+
 ## [1.4.87](https://github.com/jhpyle/docassemble/releases/tag/v1.4.87) - 2023-11-28
 
 
