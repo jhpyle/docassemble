@@ -17292,7 +17292,7 @@ def create_playground_package():
         branch = new_branch
     sanitize_arguments(do_pypi, do_github, do_install, branch, new_branch)
     if app.config['USE_GITHUB']:
-        github_auth = r.get('da:using_github:userid:' + str(playground_user.id))
+        github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
         github_auth = None
     area = {}
@@ -17427,18 +17427,18 @@ def create_playground_package():
             info['dependencies'] = list(x for x in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp'))
             info['modtime'] = os.path.getmtime(filename)
             author_info = {}
-            author_info['author name and email'] = name_of_user(current_user, include_email=True)
-            author_info['author name'] = name_of_user(current_user)
-            author_info['author email'] = current_user.email
-            author_info['first name'] = current_user.first_name
-            author_info['last name'] = current_user.last_name
-            author_info['id'] = current_user.id
+            author_info['author name and email'] = name_of_user(playground_user, include_email=True)
+            author_info['author name'] = name_of_user(playground_user)
+            author_info['author email'] = playground_user.email
+            author_info['first name'] = playground_user.first_name
+            author_info['last name'] = playground_user.last_name
+            author_info['id'] = playground_user.id
             if do_pypi:
                 if current_user.pypi_username is None or current_user.pypi_password is None or current_user.pypi_username == '' or current_user.pypi_password == '':
                     flash("Could not publish to PyPI because username and password were not defined")
                     return redirect(url_for('playground_packages', project=current_project, file=current_package))
-                if current_user.timezone:
-                    the_timezone = current_user.timezone
+                if playground_user.timezone:
+                    the_timezone = playground_user.timezone
                 else:
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
@@ -17517,7 +17517,7 @@ def create_playground_package():
                 #     branch_option = '-b ' + commit_branch + ' '
                 tempbranch = 'playground' + random_string(5)
                 packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
-                the_user_name = str(current_user.first_name) + " " + str(current_user.last_name)
+                the_user_name = str(playground_user.first_name) + " " + str(playground_user.last_name)
                 if the_user_name == ' ':
                     the_user_name = 'Anonymous User'
                 if is_empty:
@@ -17588,8 +17588,8 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         # raise DAError("create_playground_package: error running git checkout.  " + output)
-                if current_user.timezone:
-                    the_timezone = current_user.timezone
+                if playground_user.timezone:
+                    the_timezone = playground_user.timezone
                 else:
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
@@ -17706,8 +17706,8 @@ def create_playground_package():
             file_number = get_new_file_number(None, nice_name)
             file_set_attributes(file_number, private=False, persistent=True)
             saved_file = SavedFile(file_number, extension='zip', fix=True, should_not_exist=True)
-            if current_user.timezone:
-                the_timezone = current_user.timezone
+            if playground_user.timezone:
+                the_timezone = playground_user.timezone
             else:
                 the_timezone = get_default_timezone()
             fix_ml_files(author_info['id'], current_project)

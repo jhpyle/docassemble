@@ -11,7 +11,8 @@ features:
 question: |
   Select your favorite number.
 fields:
-  - Favorite fruit: favorite_number
+  - Favorite number: favorite_number
+    input type: radio
     item grid:
       width: 3
       breakpoint: sm

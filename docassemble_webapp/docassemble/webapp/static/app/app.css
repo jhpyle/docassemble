@@ -1893,3 +1893,19 @@ code {
 div.form-text .daterm {
     color: inherit;
 }
+
+.dalabelauty {
+    margin-bottom: 0.5rem;
+}
+
+div.da-grid-container > div.dafieldpart > fieldset.da-field-radio {
+    margin-bottom: -0.5rem;
+}
+
+div.da-grid-container > div.dafieldpart > fieldset.da-field-checkbox {
+    margin-bottom: -0.5rem;
+}
+
+div.da-grid-container > div.dafieldpart > fieldset.da-field-checkboxes {
+    margin-bottom: -0.5rem;
+}

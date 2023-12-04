@@ -13,6 +13,7 @@ question: |
 fields:
   - Favorite fruit: favorite_fruit
     item grid: 6
+    input type: radio
     choices:
       - Apple
       - Orange
