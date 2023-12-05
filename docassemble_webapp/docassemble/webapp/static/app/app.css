@@ -1540,7 +1540,6 @@ div.daconstraintlist div + div {
 	width: 100%;
 	overflow: hidden;
 	font-size: small;
-	background-color: #fff;
 	user-select: none;
 	padding-top: 40px;
 	-webkit-user-select: none;
