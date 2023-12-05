@@ -52,9 +52,15 @@ curl http://localhost/api/list?key=H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT
 
 The `key` is the API key, which provides authentication.
 
-While sending the API key as a URL parameter is easy, it is not
-recommended, because URLs are often logged. The best approach is to
-send the API key in an HTTP header called `X-API-Key`:
+## <a name="authentication"></a>Authentication
+
+To authenticate with the API, you need to provide an API key. Sending
+the API key as the URL parameter called `key` is easy, but it is not
+recommended, because URLs are often logged.
+
+The best approach is to send the API key in the headers.
+
+You can send the API key in an HTTP header called `X-API-Key`:
 
 {% highlight bash %}
 curl -H "X-API-Key: H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
@@ -74,16 +80,18 @@ if r.status_code != 200:
 info = r.json()
 {% endhighlight %}
 
-You can also pass the API key as a "bearer token":
+You can also pass the API key in the headers as a "bearer token" using
+the `Authorization` header, where you prefix the API key with the word
+`Bearer`:
 
 {% highlight bash %}
 curl -H "Authorization: Bearer H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
 {% endhighlight %}
 
-Although "bearer tokens" traditionally expire after a period of time,
-and **docassemble** API keys do not, so using **docassemble** API keys
-as "bearer tokens" is somewhat of a misnomer. However, passing a token
-as a "bearer token" is more of an accepted standard than using
+"Bearer tokens" traditionally expire after a period of time, and
+**docassemble** API keys do not, so using **docassemble** API keys as
+"bearer tokens" is somewhat of a misnomer. However, passing a token as
+a "bearer token" is more of an accepted standard than using
 `X-API-Key` as a header, so you may find it easier to use the "bearer
 token" method of authentication.
 
@@ -93,6 +101,8 @@ If you prefer, you can include the API key in a cookie called
 {% highlight bash %}
 curl --cookie "X-API-Key=H3PLMKJKIVATLDPWHJH3AGWEJPFU5GRT" http://localhost/api/list
 {% endhighlight %}
+
+## <a name="responses"></a>Responses
 
 For nearly all API endpoints, the output returned is in [JSON]
 format. For example, the output of calling `/api/list` will look
@@ -132,13 +142,15 @@ something like this:
 ]
 {% endhighlight %}
 
-When making a [POST] request, the parameters are passed in the body of
-the request, not as URL parameters.  (This includes `key`, the API
-key, if you are not already passing the API key as a header or
-cookie.) If the `Content-Type` header is not set, **docassemble**
-assumes that the body of the [POST] request contains data in the
-standard [form data] (`application/x-www-form-urlencoded` or
-`multipart/form-data`) format.
+## <a name="post"></a>Calling POST endpoints
+
+When making a [POST] request, the data in the request must be passed
+in the body of the request, not as URL parameters. (This includes
+`key`, the API key, if you are not already passing the API key as a
+header or cookie.) If the `Content-Type` header is not set,
+**docassemble** assumes that the body of the [POST] request contains
+data in the standard [form data] (`application/x-www-form-urlencoded`
+or `multipart/form-data`) format.
 
 For example, to make a [POST] request using [cURL], you can use form
 data to send the API key and other parameters:
@@ -212,6 +224,8 @@ be the traditional `multipart/form-data` format in which text
 parameters are provided along with file contents, with boundary
 separators.
 
+## <a name="cors"></a>Cross-site scripting
+
 By default, all API endpoints return headers to facilitate
 [Cross-Origin Resource Sharing] ([CORS]), such as:
 
@@ -245,6 +259,8 @@ to use a [serverless function] that knows the API key and acts as an
 intermediary.  The web browser would make requests to the serverless
 function, which in turn would make requests to the **docassemble**
 server and return results.
+
+## <a name="ratelimit"></a>Rate limits
 
 **docassemble** does not enforce any rate limits in the use of the
 API. It is theoretically possible that you could overtax your

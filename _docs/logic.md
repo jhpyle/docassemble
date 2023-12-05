@@ -833,7 +833,7 @@ more than once.  The first time it runs, it adds `benefits_income` to
 undefined.  **docassemble** obtains a definition of
 `net_business_income` in microseconds by running the [`code`] block that
 defines `net_business_income`.  But after it does that, it does not
-resumt where it left off (adding `net_business_income` to
+resume where it left off (adding `net_business_income` to
 `total_income`).  It will repeat the [`code`] block again, from the
 beginning.  So `benefits_income` will be added to `total_income` a
 second time, and then `net_business_income` will be added, and then
@@ -1239,10 +1239,10 @@ In this case, when **docassemble** tries to get a definition of
 block, and then it will encounter `we_already_agreed_to_go` and seek
 its definition.  If the value of `we_already_agreed_to_go` turns out
 to be false, the [`code`] block will run its course without setting a
-value for `user_wants_to_got_to_dance`.  Not giving up,
+value for `user_wants_to_go_to_dance`.  Not giving up,
 **docassemble** will keep going backwards through the blocks in the
 [YAML] file, looking for one that offers to define
-`user_wants_to_got_to_dance`.  It will find such a question among the
+`user_wants_to_go_to_dance`.  It will find such a question among the
 questions included by reference from `question_library.yml`, namely
 the question "Interested in going to the dance tonight?"
 
