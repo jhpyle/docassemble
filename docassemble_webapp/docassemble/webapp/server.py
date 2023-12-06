@@ -26956,7 +26956,7 @@ def api_invite_user():
     post_data = request.get_json(silent=True)
     if post_data is None:
         post_data = request.form.copy()
-    send_emails = true_or_false(request.args.get('send_emails', True))
+    send_emails = true_or_false(post_data.get('send_emails', True))
     role_name = str(post_data.get('privilege', 'user')).strip() or 'user'
     valid_role_names = set()
     for rol in db.session.execute(select(Role).where(Role.name != 'cron').order_by(Role.id)).scalars():
@@ -26966,11 +26966,12 @@ def api_invite_user():
     if role_name not in valid_role_names:
         return jsonify_with_status("Invalid privilege name.", 400)
     raw_email_addresses = post_data.get('email_addresses', post_data.get('email_address', []))
-    if raw_email_addresses.startswith('[') or raw_email_addresses.startswith('"'):
-        try:
-            raw_email_addresses = json.loads(raw_email_addresses)
-        except:
-            return jsonify_with_status("The email_addresses field did not contain valid JSON.", 400)
+    if isinstance(raw_email_addresses, str):
+        if raw_email_addresses.startswith('[') or raw_email_addresses.startswith('"'):
+            try:
+                raw_email_addresses = json.loads(raw_email_addresses)
+            except:
+                return jsonify_with_status("The email_addresses field did not contain valid JSON.", 400)
     if not isinstance(raw_email_addresses, list):
         raw_email_addresses = [str(raw_email_addresses)]
     email_addresses = []
