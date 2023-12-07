@@ -62,9 +62,18 @@ loose real-world analogies:
   and opening up PowerShell.
 * Doing [`docker ps`] is analogous to walking around your house and
   making a list of your computers.
+* Doing [`docker images`] is analogous to walking around your house and
+  making a list of your Windows installation DVDs.
 * Doing [`docker volume`] is analogous to doing things with USB drives.
 * Doing [`docker build`] is analogous to creating a Windows
   installation DVD based on the Windows source code.
+* Doing [`docker commit`] is analogous to creating a Windows
+  installation DVD based on the the current state of your
+  Windows PC.
+* Doing [`docker save`] is analogous to taking a Windows installation
+  DVD out of your house and into your car.
+* Doing [`docker load`] is analogous to taking a Windows
+  installation DVD out of your car and into your house.
 
 In these analogies, a [Docker] "image" is analogous to a Windows
 installation DVD, a [Docker] "container" is analogous to a particular
@@ -925,22 +934,23 @@ your container for the new configuration to take effect.
   database to be backed up by the daily cron job. This is important
   if the off-site SQL database is large compared to the available disk
   space on the server. The default value is `true`.
-* <a name="DBSSLMODE"></a>`DBSSLMODE`: This is relevant if you have
+* <a name="DBSSLMODE"></a>`DBSSLMODE`: This is relevant if you have a
   [PostgreSQL] database and you have an SSL certificate for it. This
   sets the `sslmode` parameter. For more information, see the
   documentation for the [`db` section] of the [Configuration].
-* <a name="DBSSLCERT"></a>`DBSSLCERT`: This is relevant if you have
+* <a name="DBSSLCERT"></a>`DBSSLCERT`: This is relevant if you have a
   [PostgreSQL] database and you have an SSL certificate for it. This
   is the name of a certificate file. For more information, see the
   documentation for the [`db` section] of the [Configuration].
-* <a name="DBSSLKEY"></a>`DBSSLKEY`: This is relevant if you have
+* <a name="DBSSLKEY"></a>`DBSSLKEY`: This is relevant if you have a
   [PostgreSQL] database and you have an SSL certificate for it. This
   is the name of a certificate key file. For more information, see the
   documentation for the [`db` section] of the [Configuration].
-* <a name="DBSSLROOTCERT"></a>`DBSSLROOTCERT`: This is relevant if you have
-  [PostgreSQL] database and you have an SSL certificate for it. This
-  is the name of a root certificate file. For more information, see the
-  documentation for the [`db` section] of the [Configuration].
+* <a name="DBSSLROOTCERT"></a>`DBSSLROOTCERT`: This is relevant if you
+  have a [PostgreSQL] database and you have an SSL certificate for
+  it. This is the name of a root certificate file. For more
+  information, see the documentation for the [`db` section] of the
+  [Configuration].
 * <a name="DASQLPING"></a>`DASQLPING`: If your docassemble server runs
   in an environment in which persistent SQL connections will
   periodically be severed, you can set `DASQLPING: true` in order to
@@ -3226,10 +3236,14 @@ references a different base image.
 [`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
 [`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
 [`docker ps`]: https://docs.docker.com/engine/reference/commandline/ps/
+[`docker images`]: https://docs.docker.com/engine/reference/commandline/images/
 [`docker pull`]: https://docs.docker.com/engine/reference/commandline/pull/
 [`docker volume`]: https://docs.docker.com/engine/reference/commandline/volume/
 [`docker volume inspect`]: https://docs.docker.com/engine/reference/commandline/volume_inspect/
 [`docker volume create`]: https://docs.docker.com/engine/reference/commandline/volume_create/
+[`docker commit`]: https://docs.docker.com/engine/reference/commandline/commit/
+[`docker save`]: https://docs.docker.com/engine/reference/commandline/save/
+[`docker load`]: https://docs.docker.com/engine/reference/commandline/load/
 [Amazon Web Services]: https://aws.amazon.com
 [AWS]: https://aws.amazon.com
 [S3 bucket]: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html

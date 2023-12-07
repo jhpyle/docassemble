@@ -1694,9 +1694,23 @@ logoutpage: https://example.com/pages/comeagain.html
 
 ## <a name="db"></a>SQL database
 
-The `db` section of the configuration tells the **docassemble** web
-app where to find the SQL database in which to store users' answers,
-login information, and other information.
+The `db` section of the Configuration indicates where **docassemble**
+can find the SQL database in which to store users' answers, login
+information, and other information.
+
+The `db` directives should be treated as read-only. The primary way
+you would adjust your database configuration is when starting a new
+server for the first time. At that time, you can set [Docker]
+configuration variables [`DBHOST`], [`DBNAME`], [`DBUSER`],
+[`DBPASSWORD`], and other related variables in order to specify that a
+particular SQL database should be used. For example, you would set
+these environment variables if you were using a cloud-based managed
+database system like [RDS].
+
+Changing the `db` directives after you already have a working system
+can easily lead to an unbootable system. You should not change the
+values using the web-based front end unless you really know what you
+are doing.
 
 {% highlight yaml %}
 db:
@@ -4500,9 +4514,36 @@ directory is set in [`log`]).
 
 ## <a name="redis"></a>Redis server location
 
-By default, **docassemble** assumes that the [Redis] server is located
-on the same server as the web server. You can designate a different
-[Redis] server by setting the `redis` directive:
+The `redis` directive indicates where **docassemble** can find the
+[Redis] server that it should used for storing [Flask] session state,
+API keys, background task information, and other data that are stored
+in [Redis].
+
+The `redis` directive should be treated as read-only. The primary way
+you would adjust your [Redis] configuration is when starting a new
+server for the first time. At that time, you can set [Docker]
+configuration variable [`REDIS`] in order to specify that a particular
+external [Redis] database should be used. For example, you would set
+this environment variable if you were using a cloud-based managed
+Redis system like [ElastiCache for Redis].
+
+Changing the `redis` directive after you already have a working system
+can lead to major problems, such as API keys not working. You should
+not change the `redis` value using the web-based front end unless you
+really know what you are doing.
+
+In the default [Docker] configuration, `redis` directive is set to
+`null`.
+
+{% highlight yaml %}
+redis: null
+{% endhighlight %}
+
+This indicates that the [Redis] server is located on the same server
+as the web server.
+
+If `redis` is set to a something else, then an external `redis` server
+is used.
 
 {% highlight yaml %}
 redis: redis://192.168.0.2
@@ -6679,3 +6720,9 @@ and Facebook API keys.
 [pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
 [`rendering font`]: {{ site.baseurl }}/docs/documents.html#rendering font
 [Troubleshooting]: {{ site.baseurl }}/docs/docker.html#troubleshooting
+[`DBHOST`]: {{ site.baseurl }}/docs/docker.html#DBHOST
+[`DBNAME`]: {{ site.baseurl }}/docs/docker.html#DBNAME
+[`DBUSER`]: {{ site.baseurl }}/docs/docker.html#DBUSER
+[`DBPASSWORD`]: {{ site.baseurl }}/docs/docker.html#DBPASSWORD
+[RDS]: https://aws.amazon.com/rds/
+[ElastiCache for Redis]: https://aws.amazon.com/elasticache/redis/
