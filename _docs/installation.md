@@ -594,8 +594,8 @@ some of the commands in these instructions.
 First, allow [PostgreSQL] connections over TCP/IP:
 
 {% highlight yaml %}
-echo "host   all   all  0.0.0.0/0   md5" >> /etc/postgresql/11/main/pg_hba.conf
-echo "listen_addresses = '*'" >> /etc/postgresql/11/main/postgresql.conf
+echo "host   all   all  0.0.0.0/0   md5" >> /etc/postgresql/14/main/pg_hba.conf
+echo "listen_addresses = '*'" >> /etc/postgresql/14/main/postgresql.conf
 {% endhighlight %}
 
 Then set up the database by running the following commands.

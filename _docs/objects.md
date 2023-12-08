@@ -2548,12 +2548,22 @@ properties:
 
 In most circumstances, it is not necessary to use a `DALink` to
 represent a [hyperlink] because you can use [Markdown] to indicate a
-hyperlink.  However, when you are creating a document from a [`docx
-template file`], [Markdown] syntax is not available.  When a `DALink`
-object is used within a [`docx template file`], an actual DOCX
-hyperlink is inserted into the document.
+hyperlink. In a [`docx template file`] template, you can write:
+
+> For more information, visit {% raw %}{{r the_link \| inline_markdown }}{% endraw %}.
+{: .blockquote}
+
+A `DALink` object is another way that you can insert a hyperlink into
+a [`docx template file`].
 
 {% include side-by-side.html demo="dalink" %}
+
+If you want your hyperlinks to look like hyperlinks, you will need to
+make sure that your DOCX template has a character style for
+hyperlinks. In the DOCX template in the above example,
+[`dalink.docx`], a character style for hyperlinks is defined, and that
+is why the link appears with color and underlining. For more
+information, see the section on [hyperlink style].
 
 ## <a name="DARedis"></a>DARedis
 
@@ -7392,3 +7402,5 @@ the `_uid` of the table rather than the `id`.
 [`docassemble.demo`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo
 [`docassemble.webapp`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp
 [bearer token authentication]: https://swagger.io/docs/specification/authentication/bearer-authentication/
+[`dalink.docx`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/dalink.docx
+[hyperlink style]: {{ site.baseurl }}/docs/documents.html#hyperlink style

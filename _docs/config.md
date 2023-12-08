@@ -7,23 +7,43 @@ short_title: Configuration
 # <a name="configfile"></a>Location of the configuration file
 
 **docassemble** reads its configuration directives from a [YAML] file,
-which by default is located in
-`/usr/share/docassemble/config/config.yml`. If you are using [Docker]
-with [S3], [S3]-compatible object storage, or [Azure blob storage],
-**docassemble** will attempt to copy the configuration file from your
-[S3] bucket or [Azure blob storage] container before starting.
+which is located in `/usr/share/docassemble/config/config.yml`. If you
+are using [Docker] with [S3], [S3]-compatible object storage, or
+[Azure blob storage], **docassemble** will attempt to copy the
+configuration file from your [S3] bucket or [Azure blob storage]
+container before starting.
 
 # <a name="edit"></a>How to edit the configuration file
 
 The configuration file can be edited through the web application by
 any user with `admin` privileges. The editing screen is located on
 the menu under "Configuration."  After the configuration [YAML] is
-saved, the server is restarted.
+saved, the web application is restarted.
+
+Some Configuration directives do not fully take effect until the
+entire system is restarted, in which case you would need to [`docker
+stop`] and then [`docker start`] your [Docker] container.
 
 You can also edit the configuration file directly on the file system.
-(You may need to be able to do so if you make edits to the
-configuration file through the web application that render the web
-application inoperative.)
+You may need to do so if the web application becomes inoperative due
+to a problem with the configuration.
+
+If you are using [Docker] and you try to edit
+`/usr/share/docassemble/config/config.yml` on the file system, keep in
+mind that under some conditions the `config.yml` file may be
+overwritten by a file located in another place. If you are using [S3]
+or [Azure blob storage], the version of `config.yml` located in the
+cloud always overwrites the local copy, so you should edit
+`config.yml` using the cloud provider's web interface while the
+container is stopped, and then start the container again. If you are
+not using [S3] or [Azure blob storage], the [Docker] container's
+initialization script will copy `config.yml` from
+`/usr/share/docassemble/backup/config.yml`. If you are using a Docker
+volume for [data storage], you can stop the container and edit this
+file in the volume, then start the container.
+
+After editing the `config.yml` file manually, you can restart the web
+application by running `supervisorctl start reset`.
 
 # <a name="sample"></a>Sample configuration file
 
@@ -38,14 +58,14 @@ db:
   user: docassemble
   password: abc123
   host: localhost
-  port: Null
-  table prefix: Null
+  port: null
+  table prefix: null
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 default title: docassemble
 default short title: doc
 mail:
-  username: Null
-  password: Null
+  username: null
+  password: null
   server: localhost
   default sender: '"Administrator" <no-reply@example.com>'
 default interview: docassemble.demo:data/questions/default-interview.yml
@@ -1720,7 +1740,7 @@ db:
   password: abc123
   host: localhost
   port: 5432
-  table prefix: Null
+  table prefix: null
   backup: True
 {% endhighlight %}
 
@@ -2742,9 +2762,9 @@ use alembic: False
 ## <a name="secretkey"></a>Secret key for Flask
 
 The [Flask] web framework needs a secret key in order to manage
-session information and provide [protection] against
-[cross-site request forgery]. Set the `secretkey` to a random value
-that cannot be guessed.
+session information, provide [protection] against [cross-site request
+forgery], and to help encrypt passwords. Set the `secretkey` to a
+random value that cannot be guessed.
 
 {% highlight yaml %}
 secretkey: CnFUCzajSgjVZKD1xFfMQdFW8o9JxnBL
@@ -2752,6 +2772,9 @@ secretkey: CnFUCzajSgjVZKD1xFfMQdFW8o9JxnBL
 
 The [startup process] on [Docker] sets the `secretkey` to a random
 value.
+
+After you already have a working system, you should not change the
+`secretkey`. If you do, none of your passwords or API keys will work.
 
 ## <a name="backup days"></a>Number of days of backups to keep
 
@@ -4628,8 +4651,8 @@ do not have these applications on your system, you need to set the
 configuration variables to null:
 
 {% highlight yaml %}
-imagemagick: Null
-pdftoppm: Null
+imagemagick: null
+pdftoppm: null
 {% endhighlight %}
 
 If you have the applications, but you want to specify a particular
@@ -4649,8 +4672,8 @@ that they are accessible through the commands `pacpl` and
 your system, you need to set the configuration variables to null:
 
 {% highlight yaml %}
-pacpl: Null
-ffmpeg: Null
+pacpl: null
+ffmpeg: null
 {% endhighlight %}
 
 You can also set these variables to tell **docassemble** to use a
@@ -6724,5 +6747,8 @@ and Facebook API keys.
 [`DBNAME`]: {{ site.baseurl }}/docs/docker.html#DBNAME
 [`DBUSER`]: {{ site.baseurl }}/docs/docker.html#DBUSER
 [`DBPASSWORD`]: {{ site.baseurl }}/docs/docker.html#DBPASSWORD
+[`REDIS`]: {{ site.baseurl }}/docs/docker.html#REDIS
 [RDS]: https://aws.amazon.com/rds/
 [ElastiCache for Redis]: https://aws.amazon.com/elasticache/redis/
+[`docker start`]: https://docs.docker.com/engine/reference/commandline/start/
+[`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/

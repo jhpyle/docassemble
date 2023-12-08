@@ -26,10 +26,6 @@ convenient. When all of these components are running inside of a
 "container," you don't have to do the work of installing and
 maintaining these components.
 
-As much as [Docker] simplifies the process of installing
-**docassemble**, it takes some time to understand the concepts behind
-"running," "stopping," and "starting" containers.
-
 [Docker] can also be used to deploy even the most complex
 **docassemble** installations. For example, [Kubernetes] or Amazon's
 [EC2 Container Service] can be used to maintain a cluster of
@@ -38,10 +34,18 @@ that communicate with a central server. For information about how to
 install **docassemble** in a multi-server arrangement, see the
 [scalability] section.
 
-[Docker] is a complex and powerful tool, and the **docassemble**
-documentation is not a substitute for [Docker] documentation. If you
-are new to [Docker], you should learn about [Docker] by reading
-tutorials or watching videos. Here is a brief cheat sheet based on
+As much as [Docker] simplifies the process of installing
+**docassemble**, it takes some time to understand the concepts behind
+"running," "stopping," and "starting" containers. [Docker] is a
+complex and powerful tool, and the **docassemble** documentation is
+not a substitute for [Docker] documentation. If you are new to
+[Docker], you should learn about [Docker] by reading tutorials or
+watching videos. The documentation on this page assumes you are using
+the [Docker] command line interface, so it is recommended you learn
+about that, rather than the graphical interfaces that gloss over
+important details.
+
+Here is a brief cheat sheet guide to the [Docker] commands, based on
 loose real-world analogies:
 
 * Doing [`docker run`] is analogous to getting a Windows
@@ -49,21 +53,21 @@ loose real-world analogies:
   drive, and then booting the computer for the first time.
 * Doing [`docker pull`] is analogous to going to a store and obtaining
   a Windows installation DVD.
-* Doing [`docker stop`] is analogous to turning off a computer (and
-  forcibly unplugging it after a certain number of seconds after you
-  initiate the shutdown from the Windows "start" menu).
+* Doing [`docker stop`] is analogous to clicking "shut down" from the
+  Windows "start" menu, waiting a certain number of seconds, and then
+  unplugging the computer if it hasn't turned off yet.
 * Doing [`docker start`] is analogous to turning on a computer that
   already has Windows installed on it.
-* Doing [`docker rm`] is analogous to tossing a computer into a
-  trash incinerator.
-* Doing [`docker rmi`] is analogous to tossing a Windows installation
-  DVD into a trash incinerator.
-* Doing [`docker exec`] is analogous to sitting down at your computer
-  and opening up PowerShell.
+* Doing [`docker exec`] is analogous to sitting down at your Windows
+  computer and opening up PowerShell.
 * Doing [`docker ps`] is analogous to walking around your house and
   making a list of your computers.
 * Doing [`docker images`] is analogous to walking around your house and
   making a list of your Windows installation DVDs.
+* Doing [`docker rm`] is analogous to tossing a computer into a
+  trash incinerator.
+* Doing [`docker rmi`] is analogous to tossing a Windows installation
+  DVD into a trash incinerator.
 * Doing [`docker volume`] is analogous to doing things with USB drives.
 * Doing [`docker build`] is analogous to creating a Windows
   installation DVD based on the Windows source code.
@@ -311,9 +315,12 @@ external SQL server), and the data files of the server may become
 corrupted if [PostgreSQL] is not gracefully shut down. To facilitate
 [data storage] (more on this later), **docassemble** backs up your
 data during the shutdown process and restores from that backup during
-the initialization process. If the shutdown process is interrupted,
-your data may be left in an inconsistent state and there may be errors
-during later initialization.
+the startup process. If the shutdown process is interrupted, your data
+may be left in an inconsistent state. As a safety measure, if
+the **docassemble** startup process detects that the previous shutdown
+process was interrupted, it will not attempt to restore data from
+[data storage], and it will resume using the working files it had been
+using before the last shutdown.
 
 To see a list of stopped containers, run `docker ps -a`. To remove a
 container, run `docker rm <containerid>`.
@@ -359,18 +366,27 @@ that **docassemble** uses, including:
 
 * A web server, [NGINX], which is called `nginx` within the Supervisor
   configuration.
-* A application server, [uWSGI], called `uwsgi`.
-* A background task system, [Celery], consisting of two processes,
+* An application server, [uWSGI], called `uwsgi`.
+* A [background task] system, [Celery], consisting of two processes,
   `celery` and `celerysingle`.
-* A scheduled task runner, called `cron`.
-* A SQL server, [PostgreSQL], called `postgres`.
-* A distributed task queue system, [RabbitMQ], called `rabbitmq`.
-* An in-memory data structure store, [Redis], called `redis`.
+* A scheduled task runner, called `cron`, which supports the
+  [scheduled tasks] feature and [deletes inactive sessions].
+* A server for [receiving emails], called `exim4`.
+* A SQL server, [PostgreSQL], called `postgres`, which stores user
+  account information, interview answers, and other application data
+  (which will not be used if the [`db`] Configuration points to an
+  external server).
+* A distributed task queue system, [RabbitMQ], called `rabbitmq`,
+  which supports the [Celery]-based [background process] system.
+* An in-memory data structure store, [Redis], called `redis` (which
+  will not be used if the [`redis`] Configuration points to an
+  external server).
 * A watchdog daemon that looks for out-of-control processes and
   kills them, called `watchdog`.
 * A [WebSocket] server that supports the [live help] functionality,
   called `websockets`.
-* A [unoconv] server, called `unoconv`
+* A [unoconv] server, called `unoconv` (which will be used for DOCX to
+  PDF conversion if [`enable unoconv`] is true).
 
 In addition to starting background tasks, [Supervisor] coordinates the
 running of ad-hoc tasks, including:
@@ -379,20 +395,23 @@ running of ad-hoc tasks, including:
   initialization process, so that the application responds on port 80.
 * A script called `sync` that consolidates log files in one place,
   to support the [Logs] interface.
-* A script called `reset` that restarts the server.
 * A script called `update` that installs and upgrades the [Python]
   packages on the system.
+* A script called `reset` that restarts each of the tasks that use the
+  **docassemble** [Python] packages. This is called after packages are
+  installed, [Python] modules are changed, or the [Configuration] is
+  changed.
 
 There is also a [Supervisor] service called `syslogng`, which is
 dormant on a single-server system. (The [syslog-ng] application is
 used in the multi-server arrangement to consolidate log files from
 multiple machines.)
 
-[NGINX] is used by default, but it is possible (mostly for backwards
-compatibility reasons) to run Apache instead of [NGINX]. For this
-reason, there is a service called `apache2`, which is defined in the
-configuration but does not run unless `DAWEBSERVER` is set to
-`apache`.
+For the web server, [NGINX] is used by default, but it is possible
+(mostly for backwards compatibility reasons) to run Apache instead of
+[NGINX]. For this reason, there is a service called `apache2`, which
+is defined in the configuration but does not run unless `DAWEBSERVER`
+is set to `apache`.
 
 Finally, there is a service called `initialize`, which runs
 automatically when [Supervisor] starts. This is a shell script that
@@ -810,7 +829,7 @@ servers send each other commands over port 9001.
 * `DASUPERVISORPASSWORD`: the password that should be used when
   communicating with [supervisor] over port 9001.
 
-These variables will be populated in the [Configuartion] under the
+These variables will be populated in the [Configuration] under the
 [`supervisor`] directive.
 
 The following eight options indicate where an existing configuration
@@ -3033,6 +3052,21 @@ If you are using S3 or Azure Blob Storage, you can just delete the
 host machine and start a new machine. Just remember to save the
 contents of your `env.list` file, if you were using one.
 
+If you are not using any form of [data storage], but you want to move
+your container from one machine to another machine, you can do so
+using [Docker] commands. First, use [`docker stop`] to safely shut
+down the container. Then use [`docker commit`] to convert the
+container into an image. You can run [`docker images`] to verify that
+the image exists on the machine. Then you can use [`docker save`] to
+convert the image into a `.tar` file. Then you can copy the `.tar`
+file from the old machine to the new machine with a network file
+copying command like `scp`. On the new machine, you can use [`docker
+load`] to convert that `.tar` file into an image. You can run `docker
+images` to verify that the image now exists on the new machine). Then
+you can invoke `docker run` on this image (using the same environment
+variables and command line switches you used when you ran `docker run`
+on the old machine.
+
 # <a name="downgrading"></a>Installing an earlier version of **docassemble** when using Docker
 
 When you do `docker run` or `docker pull`, the only image available on
@@ -3104,7 +3138,6 @@ references a different base image.
 [scalability]: {{ site.baseurl }}/docs/scalability.html
 [Amazon S3]: https://aws.amazon.com/s3/
 [using HTTPS]: #https
-[docassemble repository]: {{ site.github.repository_url }}
 [`docassemble/Dockerfile`]: {{ site.github.repository_url }}/blob/master/Dockerfile
 [`docassemble/Docker/config/config.yml.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/config.yml.dist
 [`docassemble/Docker/initialize.sh`]: {{ site.github.repository_url }}/blob/master/Docker/initialize.sh
@@ -3203,6 +3236,8 @@ references a different base image.
 [`DAWEBSOCKETSPORT`]: #DAWEBSOCKETSPORT
 [`DAUPDATEONSTART`]: #DAUPDATEONSTART
 [Celery]: https://docs.celeryq.dev/en/stable/
+[background task]: {{ site.baseurl }}/docs/background.html#background
+[background process]: {{ site.baseurl }}/docs/background.html#background
 [background processes]: {{ site.baseurl }}/docs/background.html#background
 [Windows PowerShell]: https://en.wikipedia.org/wiki/PowerShell
 [Terminal]: https://en.wikipedia.org/wiki/Terminal_(macOS)
@@ -3223,6 +3258,7 @@ references a different base image.
 [`url root`]: {{ site.baseurl }}/docs/config.html#url root
 [`root`]: {{ site.baseurl }}/docs/config.html#root
 [Ubuntu]: https://ubuntu.com/
+[Debian]: https://www.debian.org/
 [using S3]: #persistent s3
 [using Azure blob storage]: #persistent azure
 [environment variables]: #configuration options
@@ -3374,4 +3410,9 @@ references a different base image.
 [tz database]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [locale values]: {{ site.baseurl }}/img/locales.txt
 [`enable unoconv`]: {{ site.baseurl }}/docs/config.html#enable unoconv
+[`gotenberg url`]: {{ site.baseurl }}/docs/config.html#gotenberg url
 [Gotenberg]: https://gotenberg.dev/
+[deletes inactive sessions]: {{ site.baseurl }}/docs/config.html#interview delete days
+[receiving emails]: {{ site.baseurl }}/docs/functions.html#interview_email
+[unoconv]: https://linux.die.net/man/1/unoconv
+[docassemble repository]: {{ site.github.repository_url }}
