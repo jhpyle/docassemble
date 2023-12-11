@@ -1094,7 +1094,7 @@ def qr_url_string(match):
     else:
         alt_text = word("A QR code")
     width_string = "width:" + width
-    im = qrcode.make(string, image_factory=qrcode.image.svg.SvgPathImage)
+    im = qrcode.make(string, image_factory=qrcode.image.svg.SvgPathFillImage)
     output = BytesIO()
     im.save(output)
     the_image = output.getvalue().decode()
