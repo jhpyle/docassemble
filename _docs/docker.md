@@ -42,8 +42,8 @@ not a substitute for [Docker] documentation. If you are new to
 [Docker], you should learn about [Docker] by reading tutorials or
 watching videos. The documentation on this page assumes you are using
 the [Docker] command line interface, so it is recommended you learn
-about that, rather than the graphical interfaces that gloss over
-important details.
+about that, rather than graphical interfaces or "container management"
+systems that gloss over important details.
 
 Here is a brief cheat sheet guide to the [Docker] commands, based on
 loose real-world analogies:
@@ -56,6 +56,9 @@ loose real-world analogies:
 * Doing [`docker stop`] is analogous to clicking "shut down" from the
   Windows "start" menu, waiting a certain number of seconds, and then
   unplugging the computer if it hasn't turned off yet.
+* Doing [`docker kill`] is analogous to unplugging your Windows
+  computer while it is on, without clicking "shut down" from the
+  Windows "start" menu.
 * Doing [`docker start`] is analogous to turning on a computer that
   already has Windows installed on it.
 * Doing [`docker exec`] is analogous to sitting down at your Windows
@@ -94,9 +97,9 @@ the cloud.
 You can test out **docassemble** on a PC or a Mac, but for serious,
 long-term deployment, it is worthwhile to run it in the cloud, or on a
 dedicated on-premises server. Running [Docker] on a machine that shuts
-down or restarts frequently could lead to [database
-corruption]. Also, if you are using [Docker Desktop], **docassemble**
-will run very slowly if you do not have an `amd64`-based processor. If
+down or restarts frequently could lead to [database corruption]. Also,
+if you are using [Docker Desktop], **docassemble** will not run
+reliably if you have a processor that is not in the `amd64` family. If
 your processor is an Apple M1 chip, or other ARM-based microprocessor,
 you should [build the image first](#build) and then [`docker run`] it.
 
@@ -111,15 +114,25 @@ Docker in the cloud are:
 1. Create an account with a cloud computing provider.
 2. Start a [sufficiently powerful](#install) virtual machine that runs
    some flavor of Linux.
-3. Connect to the virtual machine using [SSH] in order to control it
+3. In the networking configuration (sometimes called the "firewall" or
+   "security group"), open up ports 80 (HTTP) and 443 (HTTPS) to the
+   outside world.
+4. Connect to the virtual machine using [SSH] in order to control it
    using a command line. This can be a complicated step because most
-   providers use certificates rather than passwords for authentication.
-4. [Install Docker](#install) on the virtual machine.
+   providers use certificates rather than passwords for
+   authentication. This requires port 22 to be open to the outside
+   world. Some cloud providers may give you the option of connecting
+   to a console from within the web browser.
+5. [Install Docker](#install) on the virtual machine.
+
+See the [example deployment] for step-by-step instructions using
+[Amazon Lightsail].
 
 There are also methods of controlling cloud computing resources from a
-local command line, where you type special commands to deploy [Docker]
-containers. These can be very useful, but they tend to be more
-complicated to use than the basic [Docker] command line.
+local command line (for example, the [AWS CLI] and the [Azure CLI]),
+where you type special commands to deploy [Docker] containers. These
+can be very useful, but they tend to be more complicated to use than
+the basic [Docker] command line.
 
 # <a name="install"></a>Installing Docker
 
@@ -234,45 +247,6 @@ The [`docker run`] command will download and run **docassemble**,
 making the application available on the standard HTTP port (port 80)
 of your machine.
 
-If you are using the graphical user interface of [Docker Desktop] to
-start a container using the `jhpyle/docassemble` image, then [Docker
-Desktop] will run `docker run` for you, and you will not be able to
-specify the command line parameters directly. Under the "optional
-settings," make sure to map port 80 to port 80 (the equivalent of `-p
-80:80`). If it doesn't let you do that, try mapping port `8080` to
-port `80`, in which case **docassemble** will be available at
-`http://localhost:8080`.
-
-It will take several minutes for **docassemble** to download, and once
-the [`docker run`] command finishes, **docassemble** will start to
-run. After a few minutes, you can point your web browser to the
-hostname of the machine that is running [Docker]. If you are running
-[Docker] on your own computer, this address is probably
-http://localhost.
-
-Note that the **docassemble** web interface is not available
-immediately after `docker run` is invoked. The server needs time to
-boot and initialize. On [EC2], this process takes about one minute
-forty seconds, and it might be slower on other platforms. If you want
-to investigate what is happening on the server, see the
-[troubleshooting] section. (If you have an existing configuration in
-[data storage], the boot process will take even longer because your
-software and databases will need to be copied from [data storage] and
-restored on the server).
-
-If you are running [Docker] on [AWS], the address of the server will
-be something like
-`http://ec2-52-38-111-32.us-west-2.compute.amazonaws.com` (check your
-[EC2] configuration for the hostname). On [AWS], you will need a
-[Security Group] that opens [HTTP] (port 80) to the outside world in
-order to allow web browsers to connect to your [EC2] instance.
-
-Using the web browser, you can log in using the default username
-("admin@admin.com") and password ("password"), and make changes to the
-configuration from the menu. You should also go to User List from the
-menu, click "Edit" next to the `admin@admin.com` user, and change that
-e-mail address to an actual e-mail address you can access.
-
 In the [`docker run`] command, the `-d` flag means that the container
 will run in the background.
 
@@ -290,6 +264,45 @@ runs, the container uses about 10GB of hard drive space. The
 [docassemble repository] on [GitHub]. It is rebuilt every time the
 minor version of **docassemble** increases.
 
+If you are using the graphical user interface of [Docker Desktop] to
+start a container using the `jhpyle/docassemble` image, then [Docker
+Desktop] will run `docker run` for you, and you will not be able to
+specify the command line parameters directly. Under the "optional
+settings," make sure to map port 80 to port 80 (the equivalent of `-p
+80:80`). If it doesn't let you do that, try mapping port `8080` to
+port `80`, in which case **docassemble** will be available at
+`http://localhost:8080`.
+
+It will take several minutes for **docassemble** to download, and once
+the [`docker run`] command finishes, **docassemble** will start to
+run. After a few minutes, you can point your web browser to the
+hostname of the machine that is running [Docker]. If you are running
+[Docker] on your own computer, this address is probably
+http://localhost.
+
+Note that the **docassemble** web interface is not available
+immediately after the `docker run` finishes. The server needs time to
+boot and initialize. On [EC2], this process takes about one minute
+forty seconds, and it might be slower on other platforms. If you want
+to investigate what is happening on the server, see the
+[troubleshooting] section. (If you have an existing configuration in
+[data storage], the boot process will take even longer because your
+software and databases will need to be copied from [data storage] and
+restored on the server).
+
+If you are running [Docker] on [AWS], the address of the server will
+be something like
+`http://ec2-52-38-111-32.us-west-2.compute.amazonaws.com` (check your
+[EC2] configuration for the hostname). On [AWS], you will need a
+[Security Group] that opens [HTTP] (port 80) to the outside world in
+order to allow web browsers to connect to your [EC2] instance.
+
+Using the web browser, you can log in using the default username
+("admin@admin.com") and password ("password"), and make changes to the
+configuration from the menu. You should go to User List from the menu,
+click "Edit" next to the `admin@admin.com` user, and change that
+e-mail address to an actual e-mail address you can access.
+
 ## <a name="shutdown"></a>Shutting down
 
 You can shut down the container by running:
@@ -299,28 +312,25 @@ docker stop -t 600 <containerid>
 {% endhighlight %}
 
 By default, [Docker] gives containers ten seconds to shut down before
-forcibly shutting them down. Usually, ten seconds is plenty of time,
-but if the server is slow, **docassemble** might take a little longer
-than ten seconds to shut down. To be on the safe side, give the
-container plenty of time to shut down gracefully. The `-t 600` means
-that [Docker] will wait up to ten minutes before forcibly shutting
-down the container. It will probably take no more than 15 seconds for
-the [`docker stop`] command to complete, although it can take as long
-as a minute to stop a container if you are using [Azure Blob
-Storage](#persistent azure).
+forcibly shutting them down. Ten seconds may be enough time in some
+situations, but you should assume that **docassemble** might need
+longer than ten seconds to shut down. To be safe, give the container
+plenty of time to shut down gracefully. The `-t 600` switch means that
+[Docker] will wait up to ten minutes (600 seconds) before forcibly
+shutting down the container.
 
 It is very important to avoid a forced shutdown of **docassemble**.
-The container runs a [PostgreSQL] server (unless configured to use an
-external SQL server), and the data files of the server may become
-corrupted if [PostgreSQL] is not gracefully shut down. To facilitate
-[data storage] (more on this later), **docassemble** backs up your
-data during the shutdown process and restores from that backup during
-the startup process. If the shutdown process is interrupted, your data
-may be left in an inconsistent state. As a safety measure, if
-the **docassemble** startup process detects that the previous shutdown
-process was interrupted, it will not attempt to restore data from
-[data storage], and it will resume using the working files it had been
-using before the last shutdown.
+The container uses a [PostgreSQL] server running internally (unless
+configured to use an external SQL server), and the data files of the
+server may become corrupted if [PostgreSQL] is not gracefully shut
+down. To facilitate [data storage] (more on this later),
+**docassemble** backs up your data during the shutdown process and
+restores from that backup during the startup process. If the shutdown
+process is interrupted, your data may be left in an inconsistent
+state. As a safety measure, if the **docassemble** startup process
+detects that the previous shutdown process was interrupted, it will
+not attempt to restore data from [data storage], and it will resume
+using the working files it had been using before the last shutdown.
 
 To see a list of stopped containers, run `docker ps -a`. To remove a
 container, run `docker rm <containerid>`.
@@ -392,11 +402,16 @@ In addition to starting background tasks, [Supervisor] coordinates the
 running of ad-hoc tasks, including:
 
 * A bare-bones web server called `nascent` that runs during the
-  initialization process, so that the application responds on port 80.
+  initialization process, so that the application responds on port 80
+  while the initialization process is happening. As soon as the
+  initialization process finishes, the `nascent` task is stopped and
+  the `nginx` task is started.
 * A script called `sync` that consolidates log files in one place,
-  to support the [Logs] interface.
+  to support the [Logs] interface. This is run when you visit the Logs
+  page in the web interface.
 * A script called `update` that installs and upgrades the [Python]
-  packages on the system.
+  packages on the system. This is run when you use the Package
+  Management page in the web interface.
 * A script called `reset` that restarts each of the tasks that use the
   **docassemble** [Python] packages. This is called after packages are
   installed, [Python] modules are changed, or the [Configuration] is
@@ -417,6 +432,318 @@ Finally, there is a service called `initialize`, which runs
 automatically when [Supervisor] starts. This is a shell script that
 initializes the server and starts the other services in the correct
 order.
+
+## <a name="initialize"></a>What happens during startup
+
+When `supervisord` starts, the `watchdog`, `nascent` and `initialize`
+processes are started. The `initialize` process is a `bash` script,
+`/usr/share/docassemble/webapp/initialize.sh`, that performs
+initialization tasks and calls `supervisorctl` to start other tasks
+that `supervisord` will manage.
+
+The `initialize` script does the following.
+
+* The script detects if there was an unsafe shutdown; if there was an
+  unsafe shutdown, then the commands that restore application data
+  from [data storage] will not be run.
+* The `apt-get update` command is run so that the container can run
+  `apt-get install` commands later in the process.
+* If S3 is enabled, the bucket will be created if it does not already
+  exist.
+* If data for an existing server is available in data storage, files
+  are copied from data storage to working directories. This includes:
+    * Let's Encrypt files (`letsencrypt.tar.gz` is unpacked into
+      `/etc/letsencrypt`);
+    * Log files (`/var/log/nginx` and `/usr/share/docassemble/log`);
+    * The configuration file (`config.yml` is copied to
+      `/usr/share/docassemble/config/config.yml`); and
+    * The [Redis] database (`redis.rdb` is copied to
+      `/var/lib/redis/dump.rdb`).
+* If `/usr/share/docassemble/config/config.yml` does not exist, a
+  configuration file is created based on default values, a
+  randomly-generated `secretkey`, and [Docker] environment
+  variables.
+* The `config.yml` file is read and environment variables are set
+  based on the values in the `config.yml` file. (Some of the
+  initialization commands that run in the `bash` script rely on
+  environment variables.)
+* The script detects whether this container is starting up for the
+  first time; that is, whether a [`docker run`] or [`docker start`] is
+  happening.
+* If a [`docker run`] is happening, the file permissions are changed
+  to allow the `www-data` user to make changes to Python packages and
+  the Configuration. However, if the environment variables indicate
+  that these files should not be modifiable by the `www-data` user,
+  this step is skipped.
+* The [NGINX] base configuration files are created based on the
+  Configuration.
+* If [S3] or [Azure Blob Storage] is being used, the Configuration is
+  saved to the cloud.
+* If [S3] or [Azure Blob Storage] is being used, and there is no
+  `files` folder in the cloud, but there is a local directory
+  `/usr/share/docassemble/files`, that directory is copied to the
+  `files` folder in [S3].
+* The [NGINX] site configuration files are created based on the
+  Configuration and Let's Encrypt data.
+* The `/etc/locale.gen` file is updated and the `update-locale` and
+  `locale-gen` utilities are run based on the [`locale`] specified in
+  the Configuration.
+* Ubuntu packages specified in the [`ubuntu packages`] Configuration
+  directive are installed with `apt-get`.
+* If a `pip index url` is specified in the Configuration, then `pip
+  config` is run to set the `pip` global index.
+* The Python packages specified in `python packages` are installed.
+* The time zone specified in the `timezone` Configuration directive is
+  configured in the operating system.
+* If custom HTTPS certificates are used, they are copied from
+  `/usr/share/docassemble/certs` into their working directories.
+* The local PostgreSQL database is started.
+    * The PostgreSQL process is started using `supervisorctl`.
+    * The script waits until PostgreSQL is ready.
+    * If the PostgreSQL role indicated by the `user` directive under
+      `db` does not exist, it is created.
+    * Any PostgreSQL database dump files that exist in data storage
+      (under `postgres`) are restored using `pg_restore -F c -C -c`.
+    * If the PostgreSQL database indicated by the `name` directive
+      under `db` does not exist, it is created, and ownership is given
+      to the role indicated by the `user` directive under `db`.
+* The Redis process is started using `supervisorctl`. (Redis restores
+  its database from `/var/lib/redis/dump.rdb` when it starts and
+  saves the contents of the database to this file as well.)
+* The `docassemble.webapp.create_tables` module is executed. The
+  module performs the following actions.
+    * If a file exists at `/configdata/initial_credentials`,
+      the file is read using the `bash` command `source`. The purpose
+      of this file is to provide definitions of the `DA_ADMIN_EMAIL`,
+      `DA_ADMIN_PASSWORD`, and `DA_ADMIN_API_KEY` environment
+      variables. After the file is read, it is deleted.
+    * The module runs, which ensures that all of the necessary SQL
+      database tables are created if they do not exist, and performs
+      any necessary upgrades using [Alembic].
+    * If the database was empty, the database is populated with
+      default values. Most importantly, an administrative user is
+      created. The credentials for this user are obtained from the
+      `DA_ADMIN_EMAIL` and `DA_ADMIN_PASSWORD` environment variables,
+      but if the environment variables are not defined,
+      `admin@admin.com` and `password` are used.
+    * If the `DA_ADMIN_API_KEY` environment variable is defined, it is
+      used to create an API key for the initial administrator user.
+    * After the script is run, the `bash` script deletes the values of
+      `DA_ADMIN_EMAIL`, `DA_ADMIN_PASSWORD`, and `DA_ADMIN_API_KEY`.
+      Note that the values of `DA_ADMIN_EMAIL`, `DA_ADMIN_PASSWORD`,
+      and `DA_ADMIN_API_KEY` are very sensitive. Although they can be
+      defined through ordinary Docker environment variables, it is
+      much safer to define them through the
+      `/configdata/initial_credentials` file, which you can create
+      with a Docker volume mount.
+* The `docassemble.webapp.update` module is executed. When you install
+  your own Python packages on a server, a list of the packages and
+  their dependencies is kept in a SQL database table, so that if you
+  perform a system upgrade, **docassemble** knows which packages need
+  to be installed on the new server. This is accomplished through the
+  `docassemble.webapp.update` module.
+* The `rabbitmq` process is started using `supervisorctl`.
+* The `celery` and `celerysingle` processes are started using
+  `supervisorctl`.
+* If Let's Encrypt is being used, then:
+    * The `nascent` process is stopped so that Let's Encrypt can
+      run. The `supervisord` daemon had already started the `nascent`
+      process immediately when the container started.
+    * `certbot` is run either to renew the certificate (if Let's
+      Encrypt is already enabled for the given `DAHOSTNAME`) or create
+      the certificate.
+    * The Let's Encrypt configuration is copied to the data storage
+      area.
+* The `websockets` process is started using `supervisorctl`.
+* The `uwsgi` process is started using `supervisorctl`.
+* If the `nascent` process has not been stopped yet, it is stopped.
+* The `nginx` process is started using `supervisorctl`.
+* The root of the web application is accessed with `curl`. This is
+  done because the first HTTP request made to the web application
+  takes longer, so if that request is made immediately, hopefully no
+  end user will encounter it.
+* The `cron` process is started using `supervisorctl`.
+* The `exim4` process is started using `supervisorctl`.
+
+## <a name="hourly cron"></a>What happens during the hourly cron job
+
+On an hourly basis, the `cron` process runs each of the scripts in
+`/etc/cron.hourly/`, including the script
+`/etc/cron.hourly/docassemble`.
+
+The `/etc/cron.hourly/docassemble` script does the following:
+
+* Hourly [scheduled tasks] are run.
+* Temporary files in `/tmp` are deleted if they are more than a few
+  hours old.
+* The `docassemble.webapp.cleanup_sessions` module is run, which
+  deletes stale Flask sessions.
+* [NGINX] log files are copied to `/usr/share/docassemble/log`.
+* If [S3] or [Azure Blob Storage] is not in use, files in
+  `/usr/share/docassemble/files` are copied to data storage. This
+  means that during the shutdown process, fewer files will need to be
+  copied.
+
+## <a name="daily cron"></a>What happens during the daily cron job
+
+On a daily basis, the `cron` process runs each of the scripts in
+`/etc/cron.daily/`, including the script
+`/etc/cron.daily/docassemble`.
+
+The `/etc/cron.daily/docassemble` script does the following:
+
+* Daily [scheduled tasks] are run.
+* If Let's Encrypt is in use, `certbot renew` is run for the
+  `DAHOSTNAME`.
+* The directory `/etc/letsencrypt` is copied to data storage as
+  `letsencrypt.tar.gz`.
+* The log files are copied to data storage.
+* Each database that the PostgreSQL server hosts (except for ones with
+  `template` in the name) are dumped to the `postgres` folder in data
+  storage using `pg_dump -F c`.
+* The `/var/lib/redis/dump.rdb` file is copied to data storage as the
+  `redis.rdb` file.
+* The `/usr/share/docassemble/files` directory containing uploaded and
+  generated files, as well as the contents of users' Playgrounds, is
+  copied to data storage. (This is not done if [S3] or [Azure Blob
+  Storage] is used, because in that case the files live in the
+  cloud and are copied to `/tmp` on an as-needed basis.)
+* A rolling backup directory is created at, for example
+  `/usr/share/docassemble/backup/07-01` (if today's date is July 1)
+  and populated with:
+    * `letsencrypt.tar.gz`, if Let's Encrypt is used.
+    * A copy of the `postgres` directory containing each database that
+      the SQL server hosts.
+    * The `redis.rdb` file.
+    * The log files.
+    * The `files` directory, unless the [`backup file storage`]
+      Configuration directive is false.
+* If [S3] or [Azure Blob Storage] is used, the rolling backup is
+  copied to the cloud.
+* Old rolling backup directories are deleted locally and in the cloud
+  according to the value of the [`backup days`] Configuration
+  directive.
+
+The `cron` process also calls `logrotate`, which rotates log
+files.
+
+The docassemble-specific `logrotate` files include
+`/etc/logrotate.d/docassemble`, which contains the following.
+
+{% highlight text %}
+/usr/share/docassemble/log/docassemble.log
+/usr/share/docassemble/log/apache_access.log
+/usr/share/docassemble/log/apache_error.log
+/usr/share/docassemble/log/nginx_access.log
+/usr/share/docassemble/log/nginx_error.log
+/usr/share/docassemble/log/uwsgi.log
+/usr/share/docassemble/log/websockets.log
+/usr/share/docassemble/log/worker.log
+/usr/share/docassemble/log/single_worker.log
+{
+        su www-data www-data
+        create 600 www-data www-data
+        rotate 7
+        maxsize 5M
+        daily
+        missingok
+        notifempty
+        postrotate
+                /usr/share/docassemble/webapp/restart-post-logrotate.sh
+        endscript
+}
+{% endhighlight %}
+
+Another `logrotate` file that is relevant is `/etc/logrotate.d/nginx`,
+which contains the following.
+
+{% highlight text %}
+/var/log/nginx/*.log {
+        daily
+        missingok
+        rotate 7
+        compress
+        delaycompress
+        notifempty
+        create 0640 www-data adm
+        sharedscripts
+        prerotate
+                if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+                        run-parts /etc/logrotate.d/httpd-prerotate; \
+                fi \
+        endscript
+        postrotate
+                if /etc/init.d/nginx status > /dev/null ; then \
+                        /usr/share/docassemble/webapp/restart-nginx.sh ; \
+                fi
+        endscript
+}
+{% endhighlight %}
+
+## <a name="weekly cron"></a>What happens during the weekly cron job
+
+On a weekly basis, the `cron` process runs each of the scripts in
+`/etc/cron.weekly/`, including the script
+`/etc/cron.weekly/docassemble`.
+
+The `/etc/cron.weekly/docassemble` script does the following:
+
+* Weekly [scheduled tasks] are run.
+
+## <a name="monthly cron"></a>What happens during the monthly cron job
+
+On a monthly basis, the `cron` process runs each of the scripts in
+`/etc/cron.monthly/`, including the script
+`/etc/cron.monthly/docassemble`.
+
+The `/etc/cron.monthly/docassemble` script does the following:
+
+* Monthly [scheduled tasks] are run.
+
+## <a name="stop"></a>What happens during shut down
+
+If the `supervisord` process receives the `SIGINT` or `SIGHUP` signal,
+for example because a `docker stop` command was executed,
+`supervisord` sends that signal to each of its running processes.
+
+Upon receiving the signal, the `postgres` process does the following:
+
+* Each database that the PostgreSQL server hosts (except for ones with
+  `template` in the name) are dumped to the `postgres` folder in data
+  storage using `pg_dump -F c`.
+* The server is stopped with `pg_ctlcluster --force 14.9 main stop`.
+* The process exits with exit code 0.
+
+Upon receiving the signal to stop, the `redis` process does the
+following:
+
+* The server is stopped with `redis-cli shutdown`.
+* The `/var/lib/redis/dump.rdb` file is copied to data storage as the
+  `redis.drb` file.
+* The process exits with exit code 0.
+
+Upon receiving the signal to stop, the `initialize` process does the
+following:
+
+* The Configuration is copied to data storage. (This is not done if
+  [S3] or [Azure Blob Storage] is used because the Configuration file
+  is saved to the cloud immediately after being edited on the
+  Configuration page.)
+* Log files are copied to data storage.
+* The `/usr/share/docassemble/files` directory containing uploaded and
+  generated files, as well as the contents of users' Playgrounds, is
+  copied to data storage. (This is not done if [S3] or [Azure Blob
+  Storage] is used, because in that case the files live in the cloud
+  and are copied to `/tmp` on an as-needed basis.)
+* The script waits for the `postgres` shutdown process to complete
+  successfully.
+* The script waits for the `redis` shutdown process to complete
+  successfully.
+* Disk usage is tested, and if it is 100%, the process exits with exit
+  code `1`.
+* The process exits with exit code `0`.
+
+The other processes stop without performing any additional tasks.
 
 # <a name="nointernet"></a>Running without an internet connection
 
@@ -2055,7 +2382,7 @@ appropriate SSL certificates. When the server is later restarted,
 the `letsencrypt renew` command will be run, which will refresh the
 certificates if they are within 30 days of expiring.
 
-In addition, a [script] will run on a weekly basis to attempt to renew
+In addition, a [script] will run on a daily basis to attempt to renew
 the certificates.
 
 If you are using a [multi-server arrangement] with a single web
@@ -3265,6 +3592,7 @@ references a different base image.
 [GitHub]: https://github.com
 [data storage]: #data storage
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
+[`docker kill`]: https://docs.docker.com/engine/reference/commandline/kill/
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
 [`docker rmi`]: https://docs.docker.com/engine/reference/commandline/rmi/
 [`docker exec`]: https://docs.docker.com/engine/reference/commandline/exec/
@@ -3325,6 +3653,7 @@ references a different base image.
 [Traefik]: https://traefik.io/
 [Flask]: https://flask.pocoo.org/
 [third party providers]: {{ site.baseurl }}/deploy.html
+[example deployment]: {{ site.baseurl }}/deploy.html#example
 [troubleshooting]: #troubleshooting
 [`backup days`]: {{ site.baseurl }}/docs/config.html#backup days
 [`python packages`]: {{ site.baseurl }}/docs/config.html#python packages
@@ -3415,4 +3744,9 @@ references a different base image.
 [deletes inactive sessions]: {{ site.baseurl }}/docs/config.html#interview delete days
 [receiving emails]: {{ site.baseurl }}/docs/functions.html#interview_email
 [unoconv]: https://linux.die.net/man/1/unoconv
+[AWS CLI]: https://aws.amazon.com/cli/
+[Azure CLI]: https://learn.microsoft.com/en-us/cli/azure/
+[Amazon Lightsail]: https://aws.amazon.com/lightsail/
+[`locale`]: {{ site.baseurl }}/docs/config.html#locale
+[Alembic]: https://alembic.sqlalchemy.org/en/latest/
 [docassemble repository]: {{ site.github.repository_url }}

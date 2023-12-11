@@ -534,20 +534,20 @@ There are three methods for specifying interview-wide default values for
 parts of the screen:
 
 * Using the [`set_parts()`] function in [Python] code to set default
-  values for the screen parts.  You can use [Python] logic and the
+  values for the screen parts. You can use [Python] logic and the
   [`get_language()`] function to set different values for different
-  languages.  [Mako] templating is not supported and formatting must
+  languages. [Mako] templating is not supported and formatting must
   use raw [HTML].
 * Using a [`default screen parts`] block to specify dynamic content
   using [Mako] templating and [Markdown] formatting, which is
-  re-evaluated every time the screen loads.  Using the [`language`]
+  re-evaluated every time the screen loads. Using the [`language`]
   modifier (or a [`default language`] block in a separate [YAML]
   file), you can write different [`default screen parts`] blocks for
   different languages.
 * Using a [`metadata`] block to specify static content that is the
-  same for all sessions of the interview.  [Mako] templating is not
-  supported and formatting must use raw [HTML].  You can specify
-  different content to be used for different languages.  An advantage
+  same for all sessions of the interview. [Mako] templating is not
+  supported and formatting must use raw [HTML]. You can specify
+  different content to be used for different languages. An advantage
   of [`metadata`] over [`default screen parts`] is that it is visible
   to the [Available Interviews] list, whereas other methods of setting
   defaults are not.
@@ -562,8 +562,8 @@ These different methods override each other in this order.  A
 [`metadata`] block will override [Configuration] directives, a
 [`default screen parts`] block will override a [`metadata`] block,
 [`set_parts()`] will override a [`default screen parts`] block, and
-[`question`]-specific specifiers will override a [`default screen
-parts`] block.
+[`question`]-specific specifiers will override parts specified by
+[`set_parts()`].
 
 For more information about each method, see its documentation.
 
