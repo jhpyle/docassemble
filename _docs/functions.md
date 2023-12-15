@@ -8129,7 +8129,7 @@ then:
   `apple` and `orange` checkboxes.
 * `setField("favorite_fruits[nota]", true)` will check the "None of
   the above" checkbox.
-* `setField("favorite_fruits[aota]")` will check the "All of the
+* `setField("favorite_fruits[aota]", true)` will check the "All of the
   above" checkbox.
 
 You can also access this function under the name `daSetField()`, which
