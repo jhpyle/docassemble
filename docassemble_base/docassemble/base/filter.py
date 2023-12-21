@@ -1090,11 +1090,11 @@ def qr_url_string(match):
         if match.group(3) != 'None':
             alt_text = str(match.group(3))
         else:
-            alt_text = word("A QR code")
+            alt_text = word(f"A QR code that goes to {string}")
     else:
-        alt_text = word("A QR code")
+        alt_text = word(f"A QR code that goes to {string}")
     width_string = "width:" + width
-    im = qrcode.make(string, image_factory=qrcode.image.svg.SvgPathImage)
+    im = qrcode.make(string, image_factory=qrcode.image.svg.SvgPathFillImage)
     output = BytesIO()
     im.save(output)
     the_image = output.getvalue().decode()
