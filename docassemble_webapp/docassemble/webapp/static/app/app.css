@@ -1908,3 +1908,7 @@ div.da-grid-container > div.dafieldpart > fieldset.da-field-checkbox {
 div.da-grid-container > div.dafieldpart > fieldset.da-field-checkboxes {
     margin-bottom: -0.5rem;
 }
+
+[data-bs-theme=dark] #dasigcanvas {
+    background-color: #777;
+}

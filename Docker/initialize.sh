@@ -808,7 +808,7 @@ else
     fi
 
     if [ -n "$PACKAGES" ]; then
-        echo "initialize: Installing Debian packages specified in the Configuration" >&2
+        echo "initialize: Installing Ubuntu packages specified in the Configuration" >&2
         for PACKAGE in "${PACKAGES[@]}"; do
             apt-get -q -y install $PACKAGE &> /dev/null
         done

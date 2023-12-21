@@ -17,6 +17,12 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "true" ]; then
     exit 0
 fi
 
+if [ "${DASUPERVISORUSERNAME:-null}" != "null" ]; then
+    SUPERVISORCMD="supervisorctl --serverurl http://localhost:9001 --username ${DASUPERVISORUSERNAME} --password ${DASUPERVISORPASSWORD}"
+else
+    SUPERVISORCMD="supervisorctl --serverurl http://localhost:9001"
+fi
+
 if [ "${DAROOTOWNED:-false}" == "true" ]; then
     if [ "${DAALLOWUPDATES:-true}" == "true" ] \
        || [ "${DAENABLEPLAYGROUND:-true}" == "true" ] \
@@ -47,32 +53,32 @@ fi
 
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
     echo "`date` stopping celery" >&2
-    supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 stop celery || exit 1
+    ${SUPERVISORCMD} stop celery || exit 1
     echo "`date` stopping celerysingle" >&2
-    supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 stop celerysingle || exit 1
+    ${SUPERVISORCMD} stop celerysingle || exit 1
     if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
 	echo "`date` stopping rabbitmq" >&2
-	supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 stop rabbitmq || exit 1
+	${SUPERVISORCMD} stop rabbitmq || exit 1
     fi
     sleep 1
     if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
 	echo "`date` starting rabbitmq" >&2
-	supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 start rabbitmq || exit 1
+	${SUPERVISORCMD} start rabbitmq || exit 1
     fi
     sleep 1
     echo "`date` starting celery" >&2
-    supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 start celery || exit 1
+    ${SUPERVISORCMD} start celery || exit 1
     echo "`date` starting celerysingle" >&2
-    supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 start celerysingle || exit 1
+    ${SUPERVISORCMD} start celerysingle || exit 1
     echo "`date` finished resetting background task system" >&2
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     echo "`date` stopping websockets" >&2
-    supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 stop websockets || exit 1
+    ${SUPERVISORCMD} stop websockets || exit 1
     sleep 1
     echo "`date` starting websockets" >&2
-    supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 start websockets || exit 1
+    ${SUPERVISORCMD} start websockets || exit 1
     echo "`date` finished resetting websockets" >&2
 fi
 

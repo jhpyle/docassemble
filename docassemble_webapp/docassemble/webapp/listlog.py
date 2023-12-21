@@ -26,7 +26,10 @@ def list_log_files():
     cmd = "supervisorctl "
     if os.getenv('DASUPERVISORUSERNAME', None):
         cmd += '--username ' + os.getenv('DASUPERVISORUSERNAME') + ' --password ' + os.getenv('DASUPERVISORPASSWORD') + ' '
-    cmd += "--serverurl http://localhost:9001 start sync > /dev/null && while supervisorctl --serverurl http://localhost:9001 status sync | grep -q RUNNING; do sleep 1; done"
+    cmd += "--serverurl http://localhost:9001 start sync > /dev/null && while supervisorctl "
+    if os.getenv('DASUPERVISORUSERNAME', None):
+        cmd += '--username ' + os.getenv('DASUPERVISORUSERNAME') + ' --password ' + os.getenv('DASUPERVISORPASSWORD') + ' '
+    cmd += "--serverurl http://localhost:9001 status sync | grep -q RUNNING; do sleep 1; done"
     result = subprocess.run(cmd, shell=True, check=False).returncode
     if result == 0:
         file_listing = [f for f in os.listdir(LOG_DIRECTORY) if os.path.isfile(os.path.join(LOG_DIRECTORY, f))]

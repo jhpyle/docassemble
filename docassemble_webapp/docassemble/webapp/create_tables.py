@@ -2,7 +2,6 @@ import sys
 import os
 import time
 import datetime
-from pathlib import Path
 import importlib.resources
 import docassemble.base.config
 if __name__ == "__main__":

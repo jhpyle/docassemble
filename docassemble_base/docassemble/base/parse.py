@@ -1572,8 +1572,16 @@ class TextObject:
                 for orig_lang in question.interview.translation_dict[self.original_text]:
                     if orig_lang == question.language or (question.language == '*' and orig_lang == question.interview.default_language):
                         for target_lang in question.interview.translation_dict[self.original_text][orig_lang]:
+                            xx = question.interview.translation_dict[self.original_text][orig_lang][target_lang]
+                            if not self.uses_mako and isinstance(xx, str) and match_mako.search(xx):
+                                self.uses_mako = True
+                                self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8')
                             if self.uses_mako:
-                                self.other_lang[target_lang] = (question.interview.translation_dict[self.original_text][orig_lang][target_lang], MakoTemplate(question.interview.translation_dict[self.original_text][orig_lang][target_lang], strict_undefined=True, input_encoding='utf-8'))
+                                the_template = MakoTemplate(xx, strict_undefined=True, input_encoding='utf-8')
+                                if question is not None:
+                                    for y in the_template.names_used - the_template.names_set:
+                                        question.names_used.add(y)
+                                self.other_lang[target_lang] = (question.interview.translation_dict[self.original_text][orig_lang][target_lang], the_template)
                             else:
                                 self.other_lang[target_lang] = (question.interview.translation_dict[self.original_text][orig_lang][target_lang],)
 

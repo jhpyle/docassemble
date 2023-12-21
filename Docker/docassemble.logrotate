@@ -16,7 +16,6 @@
 	missingok
 	notifempty
 	postrotate
-	        if ls /var/run/uwsgi/docassemble.sock > /dev/null ; then supervisorctl --serverurl http://localhost:9001 start reset > /dev/null ; fi
-		if supervisorctl --serverurl http://localhost:9001 status syslogng | grep -q RUNNING ; then supervisorctl --serverurl http://localhost:9001 restart syslogng > /dev/null ; fi
+	        /usr/share/docassemble/webapp/restart-post-logrotate.sh
 	endscript
 }

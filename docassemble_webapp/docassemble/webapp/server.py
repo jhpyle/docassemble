@@ -26946,6 +26946,45 @@ def api_create_user():
     return jsonify_with_status({'user_id': user_id, 'password': password}, 200)
 
 
+def invite_user(email_address, privilege=None, send=True):
+    if not (current_user.is_authenticated and current_user.has_role_or_permission('admin', permissions=['create_user'])):
+        raise DAError("You do not have sufficient privileges to create a new user")
+    role_name = privilege or 'user'
+    the_role_id = None
+    for role in db.session.execute(select(Role).order_by('id')).scalars():
+        if role.name == role_name:
+            the_role_id = role.id
+            break
+    if the_role_id is None:
+        raise DAError("Invalid privilege name " + repr(privilege))
+    user, user_email = app.user_manager.find_user_by_email(email_address)  # pylint: disable=unused-variable
+    if user:
+        return DAError("A user with that email address already exists")
+    user_invite = MyUserInvitation(email=email_address, role_id=the_role_id, invited_by_user_id=current_user.id)
+    db.session.add(user_invite)
+    db.session.commit()
+    token = app.user_manager.generate_token(user_invite.id)
+    accept_invite_link = url_for('user.register',
+                                 token=token,
+                                 _external=True)
+    user_invite.token = token
+    db.session.commit()
+    if send:
+        try:
+            logmessage("Trying to send invite e-mail to " + str(user_invite.email))
+            docassemble_flask_user.emails.send_invite_email(user_invite, accept_invite_link)
+            logmessage("Sent e-mail invite to " + str(user_invite.email))
+        except Exception as e:
+            try:
+                logmessage("Failed to send invite e-mail: " + e.__class__.__name__ + ': ' + str(e))
+            except:
+                logmessage("Failed to send invite e-mail")
+            db.session.delete(user_invite)
+            db.session.commit()
+            raise DAError("Invitation email failed to send")
+        return None
+    return accept_invite_link
+
 @app.route('/api/user_invite', methods=['POST'])
 @csrf.exempt
 @cross_origin(origins='*', methods=['POST', 'HEAD'], automatic_options=True)
@@ -27091,6 +27130,16 @@ def api_user_by_id(user_id):
         for key in ('first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'password', 'old_password'):
             if key in post_data:
                 info[key] = post_data[key]
+        if 'active' in post_data:
+            if user_id in (1, current_user.id):
+                return jsonify_with_status("The active status of this user account cannot be changed.", 403)
+            if not current_user.has_role_or_permission('admin', permissions=['edit_user_active_status']):
+                return jsonify_with_status("You do not have sufficient privileges to change the active status of user accounts.", 403)
+            active_status = true_or_false(post_data['active'])
+            if user_info['active'] and not active_status:
+                info['active'] = False
+            elif not user_info['active'] and active_status:
+                info['active'] = True
         if 'password' in info and not current_user.has_role_or_permission('admin', permissions=['edit_user_password']):
             return jsonify_with_status("You must have admin privileges to change a password.", 403)
         try:
@@ -31470,7 +31519,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          secure_filename=secure_filename,
                                          transform_json_variables=transform_json_variables,
                                          get_login_url=get_login_url,
-                                         run_action_in_session=run_action_in_session)
+                                         run_action_in_session=run_action_in_session,
+                                         invite_user=invite_user)
 
 # docassemble.base.util.set_user_id_function(user_id_dict)
 # docassemble.base.functions.set_generate_csrf(generate_csrf)

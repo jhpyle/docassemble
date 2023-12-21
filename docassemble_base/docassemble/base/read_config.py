@@ -47,14 +47,14 @@ if __name__ == "__main__":
         print('DAMAXCONTENTLENGTH=' + str(16 * 1024 * 1024))
     if 'celery processes' in daconfig and isinstance(daconfig['celery processes'], int):
         print('DACELERYWORKERS=' + str(daconfig['celery processes']))
-    if 'debian packages' in daconfig and isinstance(daconfig['debian packages'], list) and daconfig.get('ubuntu packages', None) is not None:
+    if 'debian packages' in daconfig and isinstance(daconfig['debian packages'], list) and daconfig.get('ubuntu packages', None) is None:
         daconfig['ubuntu packages'] = daconfig['debian packages']
         del daconfig['debian packages']
-    if 'debian packages' in daconfig and isinstance(daconfig['debian packages'], list):
+    if 'ubuntu packages' in daconfig and isinstance(daconfig['ubuntu packages'], list):
         print('declare -a PACKAGES')
         print('export PACKAGES')
         indexno = 0
-        for package in daconfig['debian packages']:
+        for package in daconfig['ubuntu packages']:
             print('PACKAGES[' + str(indexno) + ']=' + repr(str(package)))
             indexno += 1
     else:
