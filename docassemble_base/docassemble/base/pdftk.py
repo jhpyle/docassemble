@@ -367,7 +367,7 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
         if len(image_todo) > 0:
             for item in image_todo:
                 xone, yone, xtwo, ytwo = fields[item['field']]['rect']
-                logmessage("Trying to save to page " + repr(item['pageno'] - 1))
+                # logmessage("Trying to save to page " + repr(item['pageno'] - 1))
                 with Pdf.open(item['overlay_file']) as overlay_file:
                     overlay_page = overlay_file.pages[0]
                     pdf.pages[item['pageno'] - 1].add_overlay(overlay_page, rect=pikepdf.Rectangle(xone, yone, xtwo, ytwo))

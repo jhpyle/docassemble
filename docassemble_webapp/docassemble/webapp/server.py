@@ -636,6 +636,17 @@ mimetypes.add_type('application/x-yaml', '.yaml')
 if DEBUG_BOOT:
     boot_log("server: creating session store")
 
+safeyaml = ruamel.yaml.YAML(typ='safe', pure=True)
+altyaml = ruamel.yaml.YAML(typ=['safe', 'bytes'], pure=True)
+altyaml.default_flow_style = False
+altyaml.default_style = '"'
+altyaml.allow_unicode = True
+altyaml.width = 10000
+altyamlstring = ruamel.yaml.YAML(typ=['safe', 'string'], pure=True)
+altyamlstring.default_flow_style = False
+altyamlstring.default_style = '"'
+altyamlstring.allow_unicode = True
+altyamlstring.width = 10000
 store = RedisStore(r_store)
 
 kv_session = KVSessionExtension(store, app)
@@ -1958,7 +1969,7 @@ def get_base_words():
         with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
-            return ruamel.yaml.safe_load(content)
+            return safeyaml.load(content)
     return None
 
 
@@ -1968,7 +1979,7 @@ def get_pg_code_cache():
         with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
-            return ruamel.yaml.safe_load(content)
+            return safeyaml.load(content)
     return None
 
 
@@ -1978,7 +1989,7 @@ def get_documentation_dict():
         with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
-            return ruamel.yaml.safe_load(content)
+            return safeyaml.load(content)
     return None
 
 
@@ -1988,7 +1999,7 @@ def get_name_info():
         with open(docstring['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
-            info = ruamel.yaml.safe_load(content)
+            info = safeyaml.load(content)
         for val in info:
             info[val]['name'] = val
             if 'insert' not in info[val]:
@@ -2007,7 +2018,7 @@ def get_title_documentation():
         with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
-            return ruamel.yaml.safe_load(content)
+            return safeyaml.load(content)
     return None
 
 
@@ -2252,7 +2263,7 @@ def proc_example_list(example_list, package, directory, examples):
                 for block in blocks:
                     if re.search(r'metadata:', block):
                         try:
-                            the_block = ruamel.yaml.safe_load(block)
+                            the_block = safeyaml.load(block)
                             if isinstance(the_block, dict) and 'metadata' in the_block:
                                 the_metadata = the_block['metadata']
                                 result['title'] = the_metadata.get('title', the_metadata.get('short title', word('Untitled')))
@@ -2316,7 +2327,7 @@ def get_examples():
                     with open(example_list_file['fullpath'], 'r', encoding='utf-8') as fp:
                         content = fp.read()
                         content = fix_tabs.sub('  ', content)
-                        proc_example_list(ruamel.yaml.safe_load(content), the_package, the_directory, examples)
+                        proc_example_list(safeyaml.load(content), the_package, the_directory, examples)
                 except Exception as the_err:
                     logmessage("There was an error loading the Playground examples:" + str(the_err))
     # logmessage("Examples: " + str(examples))
@@ -11126,7 +11137,7 @@ def index(action_argument=None, refer=None):
         //   e.preventDefault();
         //   $(this).tab('show');
         // });
-        $("input.dafile").fileinput({theme: "fas", language: document.documentElement.lang});
+        $("input.dafile").fileinput({theme: "fas", language: document.documentElement.lang, allowedPreviewTypes: ['image']});
         $(".datableup,.databledown").click(function(e){
           e.preventDefault();
           $(this).blur();
@@ -19307,9 +19318,9 @@ def config_page():
     python_version = daconfig.get('python version', word('Unknown'))
     system_version = daconfig.get('system version', word('Unknown'))
     if python_version == system_version:
-        version = word("Version ") + str(python_version)
+        version = word("Version") + " " + str(python_version)
     else:
-        version = word("Version ") + str(python_version) + ' (Python); ' + str(system_version) + ' (' + word('system') + ')'
+        version = word("Version") + " " + str(python_version) + ' (Python); ' + str(system_version) + ' (' + word('system') + ')'
     response = make_response(render_template('pages/config.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.min.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      daCodeMirror.setOption("viewportMargin", Infinity);\n    </script>'), form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -22207,7 +22218,7 @@ def playground_select():
 @login_required
 @roles_required(['developer', 'admin'])
 def get_pg_var_cache():
-    response = make_response(ruamel.yaml.safe_dump(pg_code_cache, default_flow_style=False, default_style='"', allow_unicode=True, width=10000).encode('utf-8'), 200)
+    response = make_response(altyaml.dump_to_bytes(pg_code_cache), 200)
     response.headers['Content-Disposition'] = 'attachment; filename=pgcodecache.yml'
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     response.headers['Content-Type'] = 'text/plain; charset=utf-8'
@@ -23719,7 +23730,7 @@ def utilities():
                         result[language][the_word] = 'XYZNULLXYZ'
                     uses_null = True
             if form.systemfiletype.data == 'YAML':
-                word_box = ruamel.yaml.safe_dump(result, default_flow_style=False, default_style='"', allow_unicode=True, width=1000)
+                word_box = altyamlstring.dump_to_string(result)
                 word_box = re.sub(r'"XYZNULLXYZ"', r'null', word_box)
             elif form.systemfiletype.data == 'XLSX':
                 temp_file = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
@@ -29212,7 +29223,7 @@ def api_config():
                 data = json.loads(post_data['config'])
             except:
                 return jsonify_with_status("Configuration was not valid JSON.", 400)
-        yaml_data = ruamel.yaml.safe_dump(data, default_flow_style=False, default_style='"', allow_unicode=True, width=10000)
+        yaml_data = altyamlstring.dump_to_string(data)
         if cloud is not None:
             key = cloud.get_key('config.yml')
             key.set_contents_from_string(yaml_data)
@@ -29244,7 +29255,7 @@ def api_config():
             except:
                 return jsonify_with_status("Configuration changes were not valid JSON.", 400)
         data.update(new_data)
-        yaml_data = ruamel.yaml.safe_dump(data, default_flow_style=False, default_style='"', allow_unicode=True, width=10000)
+        yaml_data = altyamlstring.dump_to_string(data)
         if cloud is not None:
             key = cloud.get_key('config.yml')
             key.set_contents_from_string(yaml_data)

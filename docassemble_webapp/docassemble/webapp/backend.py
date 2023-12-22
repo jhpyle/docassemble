@@ -56,6 +56,8 @@ TypeType = type(type(None))
 NoneType = type(None)
 DEBUG = daconfig.get('debug', False)
 
+safeyaml = ruamel.yaml.YAML(typ='safe', pure=True)
+
 # def elapsed(name_of_function):
 #     def elapse_decorator(func):
 #         def time_func(*pargs, **kwargs):
@@ -478,7 +480,7 @@ def fix_words():
             if filename.lower().endswith('.yaml') or filename.lower().endswith('.yml'):
                 with open(filename, 'r', encoding='utf-8') as stream:
                     try:
-                        for document in ruamel.yaml.safe_load_all(stream):
+                        for document in safeyaml.load_all(stream):
                             if document and isinstance(document, dict):
                                 for lang, words in document.items():
                                     if isinstance(words, dict):

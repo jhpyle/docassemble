@@ -23,7 +23,7 @@ from types import CodeType, FunctionType
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from itertools import groupby, chain
-from ruamel import yaml
+import ruamel.yaml
 from jinja2 import ChainableUndefined
 from jinja2.runtime import StrictUndefined, UndefinedError
 from jinja2.exceptions import TemplateError
@@ -58,6 +58,17 @@ from docassemble.base.mako.template import Template as MakoTemplate
 from docassemble.base.mako.exceptions import SyntaxException, CompileException
 from docassemble.base.astparser import myvisitnode
 
+prettyyaml = ruamel.yaml.YAML(typ=['safe', 'string'], pure=True)
+prettyyaml.indent(mapping=2, sequence=4, offset=2)
+prettyyaml.default_flow_style = False
+prettyyaml.default_style = '|'
+prettyyaml.allow_unicode = True
+altyaml = ruamel.yaml.YAML(typ=['safe', 'string'], pure=True)
+altyaml.indent(mapping=2, sequence=4, offset=2)
+altyaml.default_flow_style = False
+altyaml.default_style = '|'
+altyaml.allow_unicode = False
+safeyaml = ruamel.yaml.YAML(typ=['safe', 'string'], pure=True)
 equals_byte = bytes('=', 'utf-8')
 RangeType = type(range(1, 2))
 NoneType = type(None)
@@ -2031,9 +2042,9 @@ class Question:
     def idebug(self, data):
         if hasattr(self, 'from_source') and hasattr(self, 'package'):
             if isinstance(self.line_number, int):
-                return f"\nIn file {self.from_source.path} in the block on line {self.line_number} from package {self.package}:\n\n" + yaml.dump(data)
-            return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n\n" + yaml.dump(data)
-        return yaml.dump(data)
+                return f"\nIn file {self.from_source.path} in the block on line {self.line_number} from package {self.package}:\n\n" + safeyaml.dump_to_string(data)
+            return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n\n" + safeyaml.dump_to_string(data)
+        return safeyaml.dump_to_string(data)
 
     def __init__(self, orig_data, caller, **kwargs):
         if not isinstance(orig_data, dict):
@@ -6791,7 +6802,7 @@ class Question:
                     if not uses_value_label:
                         result_dict['label'] = TextObject(key, question=self)
                     self.embeds = True
-                    result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=codecs.decode(bytearray(yaml.safe_dump(value, default_flow_style=False, default_style='|', allow_unicode=True), encoding='utf-8'), 'utf-8'))
+                    result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=prettyyaml.dump_to_string(value))
                 elif isinstance(value, str):
                     if value in ('exit', 'logout', 'exit_logout', 'leave') and 'url' in the_dict:
                         self.embeds = True
@@ -7534,7 +7545,7 @@ class Question:
                                     modified_metadata[key] = data + str('[END]')
                                 else:
                                     modified_metadata[key] = data
-                            the_markdown += '---\n' + codecs.decode(bytearray(yaml.safe_dump(modified_metadata, default_flow_style=False, default_style='|', allow_unicode=False), encoding='utf-8'), 'utf-8') + "...\n"
+                            the_markdown += '---\n' + altyaml.dump_to_string(modified_metadata) + "\n...\n"
                         docassemble.base.functions.set_context('pandoc')
                         the_markdown += the_content.text(the_user_dict)
                         # logmessage("Markdown is:\n" + repr(the_markdown) + "END")
@@ -8214,7 +8225,7 @@ class Interview:
             if source.testing:
                 try:
                     # logmessage("Package is " + str(source_package))
-                    document = yaml.safe_load(source_code)
+                    document = safeyaml.load(source_code)
                     if document is not None:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code, line_number=line_number)
                         self.names_used.update(question.fields_used)
@@ -8222,7 +8233,7 @@ class Interview:
                     # logmessage(str(source_code))
                     try:
                         # Correct line numbers to be global to the YAML
-                        if isinstance(errMess, yaml.error.MarkedYAMLError):
+                        if isinstance(errMess, safeyaml.error.MarkedYAMLError):
                             if errMess.context_mark is not None:
                                 errMess.context_mark.line += (line_number - 1)
                             if errMess.problem_mark is not None:
@@ -8232,21 +8243,18 @@ class Interview:
                         try:
                             logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error was:\n\n{errMess}')
                         except:
-                            if isinstance(errMess, yaml.error.MarkedYAMLError):
-                                logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error type was:\n\n{errMess.problem}')
-                            else:
-                                logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error type was:\n\n' + errMess.__class__.__name__)
+                            logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error type was:\n\n' + errMess.__class__.__name__)
                     self.success = False
             else:
                 try:
-                    document = yaml.safe_load(source_code)
+                    document = safeyaml.load(source_code)
                 except Exception as errMess:
                     self.success = False
                     # logmessage("Error: " + str(source_code))
                     # str(source_code)
                     try:
                         # Correct line numbers to be global to the YAML
-                        if isinstance(errMess, yaml.error.MarkedYAMLError):
+                        if isinstance(errMess, safeyaml.error.MarkedYAMLError):
                             if errMess.context_mark is not None:
                                 errMess.context_mark.line += (line_number - 1)
                             if errMess.problem_mark is not None:

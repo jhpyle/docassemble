@@ -36,9 +36,9 @@ touch /var/run/docassemble/da_running
 
 export DEBIAN_FRONTEND=noninteractive
 if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
-    echo "initialize: running apt-get clean" >&2
+    echo "initialize: Running apt-get clean" >&2
     apt-get clean &> /dev/null
-    echo "initialize: running apt-get update" >&2
+    echo "initialize: Running apt-get update" >&2
     apt-get -q -y update &> /dev/null
 fi
 
@@ -511,6 +511,14 @@ echo "initialize: Checking to see if this is the first time the server was initi
 
 DAINSTALLASROOT=true
 
+if [ "${DAROOTOWNED:-false}" == "true" ]; then
+    if [ "${DAALLOWUPDATES:-true}" == "true" ] || [ "${DAENABLEPLAYGROUND:-true}" == "true" ]; then
+        DAINSTALLASROOT=false
+    fi
+else
+    DAINSTALLASROOT=false
+fi
+
 if [ "${DASUPERVISORUSERNAME:-null}" != "null" ]; then
     export SUPERVISORCMD="supervisorctl --serverurl http://localhost:9001 --username ${DASUPERVISORUSERNAME} --password ${DASUPERVISORPASSWORD}"
 else
@@ -524,7 +532,6 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
             if [ "${DAALLOWUPDATES:-true}" == "true" ] \
                    || [ "${DAENABLEPLAYGROUND:-true}" == "true" ]; then
                 chown -R www-data:www-data /usr/share/docassemble/local3.10
-                DAINSTALLASROOT=false
             else
                 echo "initialize: Python virtual environment is read-only" >&2
             fi
@@ -546,7 +553,6 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
             chown -R www-data:www-data /usr/share/docassemble/local3.10
             chown -R www-data:www-data /usr/share/docassemble/config \
                   /usr/share/docassemble/webapp/docassemble.wsgi
-            DAINSTALLASROOT=false
         fi
         touch /etc/hasbeeninitialized
     else

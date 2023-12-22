@@ -9995,4 +9995,4 @@ Feature: Example interviews
     Then I should see the phrase "Select a language to see the installed fonts for that language."
     And I choose "Albanian"
     And I click the button "Continue"
-    Then I should see the phrase "AR PL UMing CN"
+    Then I should see the phrase "Maiden Orange"

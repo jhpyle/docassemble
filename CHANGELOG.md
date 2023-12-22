@@ -1,11 +1,12 @@
 # Change Log
 
-## [1.4.89] - 2023-12-21
+## [1.4.89] - 2023-12-23
 
 ### Added
 - The `invite_user()` function.
 
 ### Changed
+- Upgraded dependencies.
 - The `/api/user/<user_id>` PATCH endpoint now allows changing whether
   the user is `active`.
 - Changed the background color of the signature canvas to grey when

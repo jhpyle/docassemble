@@ -55,7 +55,6 @@
 "API Keys": Null
 "Apply": Null
 "App": Null
-"A QR code": Null
 ", are attached": Null
 "A reset password email has been sent to '%(email)s'. Open that email and follow the instructions to reset your password.": Null
 "are you": Null
@@ -788,6 +787,7 @@
 "PyPI package": Null
 "PyPI Password": Null
 "PyPI Username": Null
+"Python version %s": Null
 "Qatar": Null
 "question": Null
 "Question": Null
@@ -1194,7 +1194,6 @@
 "Verification code": Null
 "Verify": Null
 "Verify your phone": Null
-"Version ": Null
 "Version": Null
 "Version number does not conform to PEP 440": Null
 "Viet Nam": Null
