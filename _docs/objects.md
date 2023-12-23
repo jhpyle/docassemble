@@ -3606,7 +3606,7 @@ The `DAWebError` object has the following attributes:
 * `exception_text`: the text of the exception, if a call to [`requests`]
   returned an exception
 * `cookies_before`: a dictionary containing the cookies that were sent
-  with the request`
+  with the request
 * `cookies_after`: the cookies that were returned in the response
 * `success`: `True` or `False` indicating whether the request was successful
 

@@ -3,6 +3,20 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.89](https://github.com/jhpyle/docassemble/releases/tag/v1.4.89) - 2023-12-23
+
+
+### Added
+- The `invite_user()` function.
+
+
+### Changed
+- Upgraded dependencies.
+- The `/api/user/<user_id>` PATCH endpoint now allows changing whether
+  the user is `active`.
+- Changed the background color of the signature canvas to grey when
+  dark mode is in effect.
+
 ## [1.4.88](https://github.com/jhpyle/docassemble/releases/tag/v1.4.88) - 2023-12-03
 
 

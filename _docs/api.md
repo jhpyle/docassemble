@@ -816,6 +816,11 @@ Data:
    supplied when `password` is supplied, the user's encrypted
    information will be converted from the old encryption key to the
    new encryption key.
+ - `active` (optional): whether the user should be active or
+   inactive. The active status of the current user or the original
+   `admin` user cannot be changed. Note that the
+   [`DELETE` method](#user_user_id_delete) can also be used to
+   make a user inactive.
 
 Required privileges:
 
@@ -825,7 +830,8 @@ Required privileges:
  - [permissions] of `access_user_info` and `edit_user_info` for
    editing user information other than the password; [permissions]
    of `access_user_info`, `edit_user_info`, and `edit_user_password`
-   for changing a user's password
+   for changing a user's password; [permissions] of
+   `edit_user_active_status` for editing a user's active status.
 
 Only users with `admin` privileges can edit users with `admin`,
 `developer`, or `advocate` privileges.
@@ -848,9 +854,16 @@ Responses on failure:
  - [400] "Error obtaining user information" if there was a problem
    retrieving information about the user.
  - [404] "User not found" if the user ID did not exist.
- - [400] "You do not have sufficient privileges to edit user
+ - [403] "You do not have sufficient privileges to edit user
    information" if the API is called by a user without `admin`
-   privileges, or without .
+   privileges, or without the `edit_user_info` permission.
+ - [403] "The active status of this user account cannot be changed" if
+   `active` is present in the data and the user being modified is the
+   current user or the original `admin` user.
+ - [403] "You do not have sufficient privileges to change the active
+   status of user accounts." if the API is called by a user wihtout
+   `admin` privileges, or without the `edit_user_active_status`
+   permission.
 
 Response on success: [204]
 

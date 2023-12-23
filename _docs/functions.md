@@ -4797,6 +4797,42 @@ To set this information after the user account is created, use
 
 For an [API] version of this function, see [`/api/user/new`].
 
+## <a name="invite_user"></a>invite_user()
+
+The [`invite_user()`] function allows an administrator to create an
+invitation for a user with a given email address to create an account
+on the server.
+
+Creating the invitation does not create an account; it generates a
+token that can be transmitted to the user. The user can use that token
+when registering. The administrator can indicate that the user should
+be given a specific privilege upon registering.
+
+{% highlight python %}
+url = invite_user('testuser@example.com', privilege='advocate', send=False)
+{% endhighlight %}
+
+This will return a URL that can be shared with a user. The URL is the
+URL of the registration screen of the server with a `token`
+parameter. When the user visits the URL, they will go to the
+registration page and they will be able to register there even if
+[`allow registration`] is false.
+
+When the user chooses a password and submits the registration form, a
+new user account will be created. If a `privilege` was indicated, the
+user will have that privilege. Only one privilege may be defined
+through the invitation process.
+
+If `send` is set to `True`, which is the default, the
+[`invite_user()`] function will email the URL to the email address and
+`None` will be returned. If `send` is `False`, the registration URL is
+returned.
+
+Only users with [privileges] of `admin` or users with a custom
+privilege with the `create_user` [permission] can use this function.
+
+For an [API] version of this function, see [`/api/user_invite`].
+
 ## <a name="get_user_list"></a>get_user_list()
 
 The [`get_user_list()`] function returns a list of registered users on
@@ -8712,6 +8748,7 @@ Note that you should only attach a `daPageLoad` listener from a
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [write your own functions]: #yourown
 [`create_user()`]: #create_user
+[`invite_user()`]: #create_user
 [privileges]: {{ site.baseurl }}/docs/users.html
 [privilege]: {{ site.baseurl }}/docs/users.html
 [upgrade to Python 3]: {{ site.baseurl }}/docs/twotothree.html
@@ -8786,3 +8823,5 @@ Note that you should only attach a `daPageLoad` listener from a
 [multiple e-mail configurations]: {{ site.baseurl }}/docs/config.html#mail multiple
 [`email config`]: {{ site.baseurl }}/docs/initial.html#email config
 [`/api/login_url`]: {{ site.baseurl }}/docs/api.html#login_url
+[`allow registration`]: {{ site.baseurl }}/docs/config.html#allow registration
+[`/api/user_invite`]: {{ site.baseurl }}/docs/api.html#user_invite

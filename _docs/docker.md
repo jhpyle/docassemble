@@ -620,9 +620,10 @@ The `/etc/cron.daily/docassemble` script does the following:
       Configuration directive is false.
 * If [S3] or [Azure Blob Storage] is used, the rolling backup is
   copied to the cloud.
-* Old rolling backup directories are deleted locally and in the cloud
-  according to the value of the [`backup days`] Configuration
-  directive.
+* Rolling backup directories in `/usr/share/docassemble/backup` with
+  modification times older than [`backup days`] days old are
+  deleted. If [S3] or [Azure Blob Storage] is used, the same rolling
+  backup directories are deleted from the cloud as well.
 
 The `cron` process also calls `logrotate`, which rotates log
 files.
