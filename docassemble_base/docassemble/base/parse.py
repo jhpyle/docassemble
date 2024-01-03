@@ -76,10 +76,10 @@ da_arch = platform.machine()
 standard_types = set(['integer', 'number', 'currency', 'float', 'file', 'files', 'range', 'multiselect', 'checkboxes', 'object_multiselect', 'object_checkboxes', 'user', 'camera', 'environment', 'date', 'datetime', 'time', 'email', 'microphone', 'ml', 'mlarea', 'noyes', 'noyesmaybe', 'noyesradio', 'noyeswide', 'yesno', 'yesnomaybe', 'yesnoradio', 'yesnowide', 'text', 'password', 'object'])
 
 DEBUG = True
-import_core = compile("from docassemble.base.util import objects_from_file, objects_from_structure", '<code block>', 'exec')
-import_util = compile('from docassemble.base.util import *', '<code block>', 'exec')
-import_process_action = compile('from docassemble.base.util import process_action', '<code block>', 'exec')
-run_process_action = compile('process_action()', '<code block>', 'exec')
+import_core = compile("from docassemble.base.util import objects_from_file, objects_from_structure", '<parse.py global>', 'exec')
+import_util = compile('from docassemble.base.util import *', '<parse.py global>', 'exec')
+import_process_action = compile('from docassemble.base.util import process_action', '<parse.py global>', 'exec')
+run_process_action = compile('process_action()', '<parse.py global>', 'exec')
 match_process_action = re.compile(r'process_action\(')
 match_mako = re.compile(r'<%|\${|% if|% for|% while|\#\#')
 emoji_match = re.compile(r':([^ ]+):')
@@ -2046,6 +2046,16 @@ class Question:
             return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n\n" + safeyaml.dump_to_string(data)
         return safeyaml.dump_to_string(data)
 
+    def id_debug(self, data):
+        """One liner info about a YAML block. Used in `compile` for later error reporting."""
+        if hasattr(self, 'from_source'):
+            if isinstance(self.line_number, int):
+                return f"{self.from_source.path}, block on line {self.line_number}"
+            return f"{self.from_source.path}, id:{data.get('id')}"
+        if hasattr(self, 'package'):
+            return f"{self.package}, id:{data.get('id')}"
+        return data.get("id") or ""
+
     def __init__(self, orig_data, caller, **kwargs):
         if not isinstance(orig_data, dict):
             raise DAError("A block must be in the form of a dictionary." + self.idebug(orig_data))
@@ -3188,7 +3198,7 @@ class Question:
         if 'validation code' in data:
             if not isinstance(data['validation code'], str):
                 raise DAError("A validation code statement must be text." + self.idebug(data))
-            self.validation_code = compile(data['validation code'], '<code block>', 'exec')
+            self.validation_code = compile(data['validation code'], f'<validation code, {self.id_debug(data)}>', 'exec')
             self.find_fields_in(data['validation code'])
         if 'require' in data:
             if isinstance(data['require'], list):
@@ -3827,7 +3837,7 @@ class Question:
                 if not self.interview.calls_process_action and match_process_action.search(data['code']):
                     self.interview.calls_process_action = True
                 try:
-                    self.compute = compile(data['code'], '<code block>', 'exec')
+                    self.compute = compile(data['code'], f'<code block, {self.id_debug(data)}>', 'exec')
                     self.sourcecode = data['code']
                 except:
                     logmessage("Question: compile error in code:\n" + str(data['code']) + "\n" + str(sys.exc_info()[0]))
