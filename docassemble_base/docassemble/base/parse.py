@@ -8233,7 +8233,7 @@ class Interview:
                     # logmessage(str(source_code))
                     try:
                         # Correct line numbers to be global to the YAML
-                        if isinstance(errMess, safeyaml.error.MarkedYAMLError):
+                        if isinstance(errMess, ruamel.yaml.error.MarkedYAMLError):
                             if errMess.context_mark is not None:
                                 errMess.context_mark.line += (line_number - 1)
                             if errMess.problem_mark is not None:
@@ -8254,7 +8254,7 @@ class Interview:
                     # str(source_code)
                     try:
                         # Correct line numbers to be global to the YAML
-                        if isinstance(errMess, safeyaml.error.MarkedYAMLError):
+                        if isinstance(errMess, ruamel.yaml.error.MarkedYAMLError):
                             if errMess.context_mark is not None:
                                 errMess.context_mark.line += (line_number - 1)
                             if errMess.problem_mark is not None:
