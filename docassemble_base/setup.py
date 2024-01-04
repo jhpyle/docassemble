@@ -129,6 +129,7 @@ install_requires = [
     "isodate==0.6.1",
     "itsdangerous==2.1.2",
     "jaraco.classes==3.3.0",
+    "javascripthon==0.12",
     "jdcal==1.4.1",
     "jeepney==0.8.0",
     "jellyfish==0.11.2",

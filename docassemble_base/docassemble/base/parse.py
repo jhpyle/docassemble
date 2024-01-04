@@ -59,6 +59,15 @@ from docassemble.base.mako.template import Template as MakoTemplate
 from docassemble.base.mako.exceptions import SyntaxException, CompileException
 from docassemble.base.astparser import myvisitnode
 
+from metapensiero.pj.js_ast.util import _check_keywords
+# Monkey patch pj library to wrap the names of variables in 'val("...")'
+def emit(self, name):
+  _check_keywords(self, name)
+  yield self.part(f'val("{name}")', name=True)
+import metapensiero.pj.js_ast.expressions
+metapensiero.pj.js_ast.expressions.JSName.emit = emit
+from metapensiero.pj.__main__ import transform_string
+
 prettyyaml = ruamel.yaml.YAML(typ=['safe', 'string'])
 prettyyaml.indent(mapping=2, sequence=4, offset=2)
 prettyyaml.default_flow_style = False
@@ -4081,6 +4090,26 @@ class Question:
                         else:
                             field_info['extras']['disabled'] = {'compute': compile(field[key], '<disabled code>', 'eval'), 'sourcecode': field[key]}
                             self.find_fields_in(field[key])
+                    elif key in ('jspy show if', 'jspy hide if', 'jspy enable if', 'jspy disable if'):
+                        if not isinstance(field[key], str):
+                            raise DAError("A jspy show if or jspy hide if expression must be a string" + self.idebug(data))
+                        js_info = {}
+                        if key in ('jspy show if', 'jspy enable if'):
+                            js_info['sign'] = True
+                        else:
+                            js_info['sign'] = False
+                        if key in ('jspy enable if', 'jspy disable if'):
+                          js_info['mode'] = 1
+                        else:
+                          js_info['mode'] = 0
+                        js_expr = transform_string(str(field[key]).strip())
+                        with open("/tmp/brycew_testing_tmp", "a") as f:
+                          f.write(f"{js_expr=}, {definitions=}")
+                        js_info['expression'] = TextObject(definitions + js_expr, question=self, translate=False)
+                        js_info['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', js_expr) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', js_expr))
+                        if 'extras' not in field_info:
+                            field_info['extras'] = {}
+                        field_info['extras']['show_if_js'] = js_info
                     elif key in ('js show if', 'js hide if'):
                         if not isinstance(field[key], str):
                             raise DAError("A js show if or js hide if expression must be a string" + self.idebug(data))
