@@ -56,7 +56,7 @@ TypeType = type(type(None))
 NoneType = type(None)
 DEBUG = daconfig.get('debug', False)
 
-safeyaml = ruamel.yaml.YAML(typ='safe', pure=True)
+safeyaml = ruamel.yaml.YAML(typ='safe')
 
 # def elapsed(name_of_function):
 #     def elapse_decorator(func):

@@ -58,17 +58,17 @@ from docassemble.base.mako.template import Template as MakoTemplate
 from docassemble.base.mako.exceptions import SyntaxException, CompileException
 from docassemble.base.astparser import myvisitnode
 
-prettyyaml = ruamel.yaml.YAML(typ=['safe', 'string'], pure=True)
+prettyyaml = ruamel.yaml.YAML(typ=['safe', 'string'])
 prettyyaml.indent(mapping=2, sequence=4, offset=2)
 prettyyaml.default_flow_style = False
 prettyyaml.default_style = '|'
 prettyyaml.allow_unicode = True
-altyaml = ruamel.yaml.YAML(typ=['safe', 'string'], pure=True)
+altyaml = ruamel.yaml.YAML(typ=['safe', 'string'])
 altyaml.indent(mapping=2, sequence=4, offset=2)
 altyaml.default_flow_style = False
 altyaml.default_style = '|'
 altyaml.allow_unicode = False
-safeyaml = ruamel.yaml.YAML(typ=['safe', 'string'], pure=True)
+safeyaml = ruamel.yaml.YAML(typ=['safe', 'string'])
 equals_byte = bytes('=', 'utf-8')
 RangeType = type(range(1, 2))
 NoneType = type(None)
@@ -8233,7 +8233,7 @@ class Interview:
                     # logmessage(str(source_code))
                     try:
                         # Correct line numbers to be global to the YAML
-                        if isinstance(errMess, safeyaml.error.MarkedYAMLError):
+                        if isinstance(errMess, ruamel.yaml.error.MarkedYAMLError):
                             if errMess.context_mark is not None:
                                 errMess.context_mark.line += (line_number - 1)
                             if errMess.problem_mark is not None:
@@ -8254,7 +8254,7 @@ class Interview:
                     # str(source_code)
                     try:
                         # Correct line numbers to be global to the YAML
-                        if isinstance(errMess, safeyaml.error.MarkedYAMLError):
+                        if isinstance(errMess, ruamel.yaml.error.MarkedYAMLError):
                             if errMess.context_mark is not None:
                                 errMess.context_mark.line += (line_number - 1)
                             if errMess.problem_mark is not None:

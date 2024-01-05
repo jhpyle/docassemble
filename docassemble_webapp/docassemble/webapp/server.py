@@ -636,13 +636,13 @@ mimetypes.add_type('application/x-yaml', '.yaml')
 if DEBUG_BOOT:
     boot_log("server: creating session store")
 
-safeyaml = ruamel.yaml.YAML(typ='safe', pure=True)
-altyaml = ruamel.yaml.YAML(typ=['safe', 'bytes'], pure=True)
+safeyaml = ruamel.yaml.YAML(typ='safe')
+altyaml = ruamel.yaml.YAML(typ=['safe', 'bytes'])
 altyaml.default_flow_style = False
 altyaml.default_style = '"'
 altyaml.allow_unicode = True
 altyaml.width = 10000
-altyamlstring = ruamel.yaml.YAML(typ=['safe', 'string'], pure=True)
+altyamlstring = ruamel.yaml.YAML(typ=['safe', 'string'])
 altyamlstring.default_flow_style = False
 altyamlstring.default_style = '"'
 altyamlstring.allow_unicode = True
