@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.90](https://github.com/jhpyle/docassemble/releases/tag/v1.4.90) - 2024-01-05
+
+
+### Fixed
+- Error when YAML parsing did not succeed.
+
 ## [1.4.89](https://github.com/jhpyle/docassemble/releases/tag/v1.4.89) - 2023-12-23
 
 
