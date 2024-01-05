@@ -195,7 +195,7 @@ install_requires = [
     "pyasn1-modules==0.3.0",
     "pycountry==23.12.11",
     "pycparser==2.21",
-    "pycryptodome==3.19.0",
+    "pycryptodome==3.19.1",
     "pycryptodomex==3.19.0",
     "pycurl==7.45.2",
     "Pygments==2.17.2",
