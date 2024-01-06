@@ -2128,7 +2128,7 @@ class Question:
             if directive in data:
                 num_directives += 1
         if num_directives > 1:
-            raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, yesnomaybe, noyesmaybe, fields, buttons, choices, dropdown, combobox, and signature." + self.idebug(data))
+            raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, yesnomaybe, noyesmaybe, fields, buttons, choices, dropdown, combobox, signature, and review" + self.idebug(data))
         if num_directives > 0 and 'question' not in data:
             raise DAError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
