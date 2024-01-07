@@ -3,10 +3,10 @@ import socket
 import time
 import sys
 from contextlib import contextmanager
-from docassemble.base.config import daconfig
-from docassemble.base.logger import logmessage
 from celery import Celery
 from celery.result import result_from_tuple
+from docassemble.base.config import daconfig
+from docassemble.base.logger import logmessage
 
 backend = daconfig.get('redis', None)
 if backend is None:

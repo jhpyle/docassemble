@@ -16,6 +16,7 @@ import array
 import tempfile
 import json
 import platform
+import textwrap
 from urllib.request import urlretrieve
 from io import StringIO
 from collections import abc, OrderedDict, namedtuple
@@ -67,7 +68,7 @@ altyaml = ruamel.yaml.YAML(typ=['safe', 'string'])
 altyaml.indent(mapping=2, sequence=4, offset=2)
 altyaml.default_flow_style = False
 altyaml.default_style = '|'
-altyaml.allow_unicode = False
+altyaml.allow_unicode = True
 safeyaml = ruamel.yaml.YAML(typ=['safe', 'string'])
 equals_byte = bytes('=', 'utf-8')
 RangeType = type(range(1, 2))
@@ -7803,6 +7804,42 @@ def normalize_background_response(response):
     return [new_dict, 'fields']
 
 
+def format_yaml_mark(mark, filename, line_number):
+    if isinstance(mark, ruamel.yaml.error.StreamMark) or mark.__class__.__name__ == 'Mark':
+        return f'  in {filename!s}, line {line_number + mark.line:d}, column {mark.column + 1:d}'
+    if isinstance(mark, ruamel.yaml.error.StringMark):
+        snippet = mark.get_snippet()
+        where = f'  in {filename!s}, line {line_number + mark.line:d}, column {mark.column + 1:d}'
+        if snippet is not None:
+            where += ':\n' + snippet
+        return where
+    return str(mark)
+
+
+def format_yaml_errmess(errMess, filename, line_number):
+    if isinstance(errMess, ruamel.yaml.error.MarkedYAMLError):
+        lines = []
+        if errMess.context is not None:
+            lines.append(errMess.context)
+        if errMess.context_mark is not None and (
+            errMess.problem is None
+            or errMess.problem_mark is None
+            or errMess.context_mark.name != errMess.problem_mark.name
+            or errMess.context_mark.line != errMess.problem_mark.line
+            or errMess.context_mark.column != errMess.problem_mark.column
+        ):
+            lines.append(format_yaml_mark(errMess.context_mark, filename, line_number))
+        if errMess.problem is not None:
+            lines.append(errMess.problem)
+        if errMess.problem_mark is not None:
+            lines.append(format_yaml_mark(errMess.problem_mark, filename, line_number))
+        if errMess.note is not None and errMess.note:
+            note = textwrap.dedent(errMess.note)
+            lines.append(note)
+        return '\n'.join(lines)
+    return str(errMess)
+
+
 class Interview:
 
     def __init__(self, **kwargs):
@@ -8242,13 +8279,7 @@ class Interview:
                 except Exception as errMess:
                     # logmessage(str(source_code))
                     try:
-                        # Correct line numbers to be global to the YAML
-                        if isinstance(errMess, ruamel.yaml.error.MarkedYAMLError):
-                            if errMess.context_mark is not None:
-                                errMess.context_mark.line += (line_number - 1)
-                            if errMess.problem_mark is not None:
-                                errMess.problem_mark.line += (line_number - 1)
-                        logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}\nDocument source code was:\n\n---\n{source_code}---\n\nError was:\n\n{errMess}')
+                        logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n{format_yaml_errmess(errMess, source.path, line_number)}')
                     except:
                         try:
                             logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error was:\n\n{errMess}')
@@ -8260,18 +8291,11 @@ class Interview:
                     document = safeyaml.load(source_code)
                 except Exception as errMess:
                     self.success = False
-                    # logmessage("Error: " + str(source_code))
-                    # str(source_code)
                     try:
-                        # Correct line numbers to be global to the YAML
-                        if isinstance(errMess, ruamel.yaml.error.MarkedYAMLError):
-                            if errMess.context_mark is not None:
-                                errMess.context_mark.line += (line_number - 1)
-                            if errMess.problem_mark is not None:
-                                errMess.problem_mark.line += (line_number - 1)
-                        raise DAError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code}---\n\nError was:\n\n{errMess}')
-                    except (UnicodeDecodeError, UnicodeEncodeError):
-                        raise DAError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code}---\n\nError was:\n\n' + str(errMess.__class__.__name__))
+                        error_to_raise = DAError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n{format_yaml_errmess(errMess, source.path, line_number)}')
+                    except:
+                        error_to_raise = DAError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n' + str(errMess.__class__.__name__))
+                    raise error_to_raise
                 if document is not None:
                     try:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code, line_number=line_number)

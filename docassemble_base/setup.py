@@ -174,7 +174,7 @@ install_requires = [
     "pycountry==23.12.11",
     "pycparser==2.21",
     "pycryptodome==3.19.1",
-    "pycryptodomex==3.19.0",
+    "pycryptodomex==3.19.1",
     "pycurl==7.45.2",
     "Pygments==2.17.2",
     "PyJWT==2.8.0",
