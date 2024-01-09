@@ -77,7 +77,7 @@ def da_js_name(t, x):
   cls = {'True': JSTrue, 'False': JSFalse,}.get(x.id)
   if cls:
     return cls()
-  # yesnounknown radios return "None" the string, so we need to match python's semantics to what that expects
+  # yesnomaybe radios return "None" the string, so we need to match python's semantics to what that expects
   if x.id == "None":
     return JSStr("None")
   else:
@@ -90,7 +90,7 @@ def da_js_name_constant(t, x):
   cls = {True: JSTrue, False: JSFalse,}.get(x.value)
   if cls:
     return cls()
-  # yesnounknown radios return "None" the string, so we need to match python's semantics to what that expects
+  # yesnomaybe radios return "None" the string, so we need to match python's semantics to what that expects
   return JSStr("None")
 
 metapensiero.pj.transformations.obvious.Name_default = da_js_name
@@ -776,8 +776,9 @@ class InterviewStatus:
                                 self.extras['show_if_js'][the_field.number]['expression'] = re.sub(iterator_re, '[' + str(list_indexno) + ']', self.extras['show_if_js'][the_field.number]['expression'])
                             if the_field.extras['show_if_js']['expression'].uses_mako:
                                 the_field.extras['show_if_js']['expression'].template = MakoTemplate(the_field.extras['show_if_js']['expression'].original_text, strict_undefined=True, input_encoding='utf-8')
+                            # NOTE: If the user is trying to dynamically add the names of vars with Mako, the below won't work.
                             js_expr = the_field.extras['show_if_js']['expression'].text()
-                            if the_field.extras['show_if_js']['is_python']:
+                            if the_field.extras['show_if_js'].get('is_python'):
                               js_expr = transform_string(js_expr)
                             the_field.extras['show_if_js']['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', js_expr) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', js_expr))
                             for ii in range(len(the_field.extras['show_if_js']['vars'])):
@@ -6022,11 +6023,11 @@ class Question:
                     if 'show_if_js' in field.extras:
                         if 'show_if_js' not in extras:
                             extras['show_if_js'] = {}
-                        js_expr = field.extras['show_if_js']['expression'].text()
+                        js_expr = field.extras['show_if_js']['expression'].text(user_dict)
                         if field.extras['show_if_js'].get('is_python'):
                             js_expr = transform_string(js_expr)
                         field.extras['show_if_js']['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', js_expr) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', js_expr))
-                        extras['show_if_js'][field.number] = {'expression': field.extras['show_if_js']['expression'].text(user_dict), 'vars': copy.deepcopy(field.extras['show_if_js']['vars']), 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
+                        extras['show_if_js'][field.number] = {'expression': js_expr, 'vars': copy.deepcopy(field.extras['show_if_js']['vars']), 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
                     if 'field metadata' in field.extras:
                         if 'field metadata' not in extras:
                             extras['field metadata'] = {}
