@@ -59,13 +59,44 @@ from docassemble.base.mako.template import Template as MakoTemplate
 from docassemble.base.mako.exceptions import SyntaxException, CompileException
 from docassemble.base.astparser import myvisitnode
 
-from metapensiero.pj.js_ast.util import _check_keywords
-# Monkey patch pj library to wrap the names of variables in 'val("...")'
-def emit(self, name):
-  _check_keywords(self, name)
-  yield self.part(f'val("{name}")', name=True)
-import metapensiero.pj.js_ast.expressions
-metapensiero.pj.js_ast.expressions.JSName.emit = emit
+# Monkey patch pj library to wrap the names of variables/exprs in 'val("...")'
+import metapensiero.pj.transformations.obvious
+from metapensiero.pj.transformations import _normalize_name
+from metapensiero.pj.js_ast.expressions import JSCall, JSName
+from metapensiero.pj.js_ast.literals import JSStr, JSNull, JSTrue, JSFalse
+
+def da_js_attribute(t, x):
+  return JSCall("val", [JSStr(ast.unparse(x))])
+metapensiero.pj.transformations.obvious.Attribute_default = da_js_attribute
+
+def da_js_subscript(t, x):
+  return JSCall("val", [JSStr(ast.unparse(x))])
+metapensiero.pj.transformations.obvious.Subscript_default = da_js_subscript
+
+def da_js_name(t, x):
+  cls = {'True': JSTrue, 'False': JSFalse,}.get(x.id)
+  if cls:
+    return cls()
+  # yesnounknown radios return "None" the string, so we need to match python's semantics to what that expects
+  if x.id == "None":
+    return JSStr("None")
+  else:
+    n = _normalize_name(x.id)
+    if x.ctx == ast.Store():
+      return JSName(n)
+    else:
+      return JSCall("val", [JSStr(n)])
+def da_js_name_constant(t, x):
+  cls = {True: JSTrue, False: JSFalse,}.get(x.value)
+  if cls:
+    return cls()
+  # yesnounknown radios return "None" the string, so we need to match python's semantics to what that expects
+  return JSStr("None")
+
+metapensiero.pj.transformations.obvious.Name_default = da_js_name
+metapensiero.pj.transformations.obvious.NameConstant = da_js_name_constant
+
+
 from metapensiero.pj.__main__ import transform_string
 
 prettyyaml = ruamel.yaml.YAML(typ=['safe', 'string'])
@@ -745,6 +776,10 @@ class InterviewStatus:
                                 self.extras['show_if_js'][the_field.number]['expression'] = re.sub(iterator_re, '[' + str(list_indexno) + ']', self.extras['show_if_js'][the_field.number]['expression'])
                             if the_field.extras['show_if_js']['expression'].uses_mako:
                                 the_field.extras['show_if_js']['expression'].template = MakoTemplate(the_field.extras['show_if_js']['expression'].original_text, strict_undefined=True, input_encoding='utf-8')
+                            js_expr = the_field.extras['show_if_js']['expression'].text()
+                            if the_field.extras['show_if_js']['is_python']:
+                              js_expr = transform_string(js_expr)
+                            the_field.extras['show_if_js']['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', js_expr) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', js_expr))
                             for ii in range(len(the_field.extras['show_if_js']['vars'])):
                                 the_field.extras['show_if_js']['vars'][ii] = re.sub(iterator_re, '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['vars'][ii])
                             if the_field.number in self.extras['show_if_js']:
@@ -4090,23 +4125,21 @@ class Question:
                         else:
                             field_info['extras']['disabled'] = {'compute': compile(field[key], '<disabled code>', 'eval'), 'sourcecode': field[key]}
                             self.find_fields_in(field[key])
-                    elif key in ('jspy show if', 'jspy hide if', 'jspy enable if', 'jspy disable if'):
+                    elif key in ('live show if', 'live hide if', 'live enable if', 'live disable if'):
                         if not isinstance(field[key], str):
-                            raise DAError("A jspy show if or jspy hide if expression must be a string" + self.idebug(data))
+                            raise DAError("A `live show if` or `live hide if` expression must be a string: " + self.idebug(data))
                         js_info = {}
-                        if key in ('jspy show if', 'jspy enable if'):
+                        if key in ('live show if', 'live enable if'):
                             js_info['sign'] = True
                         else:
                             js_info['sign'] = False
-                        if key in ('jspy enable if', 'jspy disable if'):
+                        if key in ('live enable if', 'live disable if'):
                           js_info['mode'] = 1
                         else:
                           js_info['mode'] = 0
-                        js_expr = transform_string(str(field[key]).strip())
-                        with open("/tmp/brycew_testing_tmp", "a") as f:
-                          f.write(f"{js_expr=}, {definitions=}")
-                        js_info['expression'] = TextObject(definitions + js_expr, question=self, translate=False)
-                        js_info['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', js_expr) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', js_expr))
+                        py_expr = str(field[key]).strip()
+                        js_info['expression'] = TextObject(definitions + py_expr, question=self, translate=False)
+                        js_info["is_python"] = True
                         if 'extras' not in field_info:
                             field_info['extras'] = {}
                         field_info['extras']['show_if_js'] = js_info
@@ -4120,7 +4153,6 @@ class Question:
                             js_info['sign'] = False
                         js_info['mode'] = 0
                         js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
-                        js_info['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', field[key]) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', field[key]))
                         if 'extras' not in field_info:
                             field_info['extras'] = {}
                         field_info['extras']['show_if_js'] = js_info
@@ -4134,7 +4166,6 @@ class Question:
                             js_info['sign'] = False
                         js_info['mode'] = 1
                         js_info['expression'] = TextObject(definitions + str(field[key]).strip(), question=self, translate=False)
-                        js_info['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', field[key]) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', field[key]))
                         if 'extras' not in field_info:
                             field_info['extras'] = {}
                         field_info['extras']['show_if_js'] = js_info
@@ -5991,6 +6022,10 @@ class Question:
                     if 'show_if_js' in field.extras:
                         if 'show_if_js' not in extras:
                             extras['show_if_js'] = {}
+                        js_expr = field.extras['show_if_js']['expression'].text()
+                        if field.extras['show_if_js'].get('is_python'):
+                            js_expr = transform_string(js_expr)
+                        field.extras['show_if_js']['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', js_expr) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', js_expr))
                         extras['show_if_js'][field.number] = {'expression': field.extras['show_if_js']['expression'].text(user_dict), 'vars': copy.deepcopy(field.extras['show_if_js']['vars']), 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
                     if 'field metadata' in field.extras:
                         if 'field metadata' not in extras:
@@ -6590,7 +6625,11 @@ class Question:
                         if 'show_if_js' in field.extras:
                             if 'show_if_js' not in extras:
                                 extras['show_if_js'] = {}
-                            extras['show_if_js'][field.number] = {'expression': field.extras['show_if_js']['expression'].text(user_dict), 'vars': copy.deepcopy(field.extras['show_if_js']['vars']), 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
+                            js_expr = field.extras['show_if_js']['expression'].text(user_dict)
+                            if field.extras["show_if_js"].get("is_python"):
+                              js_expr = transform_string(js_expr)
+                            field.extras['show_if_js']['vars'] = process_js_vars(re.findall(r'(?:val|getField|daGetField)\(\'([^\)]+)\'\)', js_expr) + re.findall(r'(?:val|getField|daGetField)\("([^\)]+)"\)', js_expr))
+                            extras['show_if_js'][field.number] = {'expression': js_expr, 'vars': copy.deepcopy(field.extras['show_if_js']['vars']), 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
                         if 'field metadata' in field.extras:
                             if 'field metadata' not in extras:
                                 extras['field metadata'] = {}
