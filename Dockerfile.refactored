@@ -1,0 +1,147 @@
+FROM jhpyle/docassemble-os
+
+LABEL MAINTAINER="Jonathan Pyle <jhpyle@gmail.com>"
+
+# Set Dockerfile variables
+ARG COPY_ROOT=/tmp/docassemble
+
+# Update OS
+RUN apt-get --yes update
+
+# softlink mail to root
+RUN ln -s /var/mail/mail /var/mail/root
+
+# Put files where they need to be
+COPY . $COPY_ROOT/
+RUN cp $COPY_ROOT/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
+RUN cp $COPY_ROOT/Docker/*.sh /usr/share/docassemble/webapp/
+RUN cp $COPY_ROOT/Docker/VERSION /usr/share/docassemble/webapp/
+RUN cp $COPY_ROOT/Docker/pip.conf /usr/share/docassemble/local3.10/
+RUN cp $COPY_ROOT/Docker/config/* /usr/share/docassemble/config/
+RUN cp $COPY_ROOT/Docker/cgi-bin/index.sh /usr/lib/cgi-bin/
+RUN cp $COPY_ROOT/Docker/syslog-ng.conf /usr/share/docassemble/webapp/syslog-ng.conf
+RUN cp $COPY_ROOT/Docker/syslog-ng-docker.conf /usr/share/docassemble/webapp/syslog-ng-docker.conf
+RUN cp $COPY_ROOT/Docker/docassemble-syslog-ng.conf /usr/share/docassemble/webapp/docassemble-syslog-ng.conf
+RUN cp $COPY_ROOT/Docker/apache.logrotate /etc/logrotate.d/apache2
+RUN cp $COPY_ROOT/Docker/nginx.logrotate /etc/logrotate.d/nginx
+RUN cp $COPY_ROOT/Docker/docassemble.logrotate /etc/logrotate.d/docassemble
+RUN cp $COPY_ROOT/Docker/cron/docassemble-cron-monthly.sh /etc/cron.monthly/docassemble
+RUN cp $COPY_ROOT/Docker/cron/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble
+RUN cp $COPY_ROOT/Docker/cron/docassemble-cron-daily.sh /etc/cron.daily/docassemble
+RUN cp $COPY_ROOT/Docker/cron/docassemble-cron-hourly.sh /etc/cron.hourly/docassemble
+RUN cp $COPY_ROOT/Docker/cron/syslogng-cron-daily.sh /etc/cron.daily/logrotatepost
+RUN cp $COPY_ROOT/Docker/cron/donothing /usr/share/docassemble/cron/donothing
+RUN cp $COPY_ROOT/Docker/docassemble.conf /etc/apache2/conf-available/
+RUN cp $COPY_ROOT/Docker/docassemble-behindlb.conf /etc/apache2/conf-available/
+RUN cp $COPY_ROOT/Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
+RUN cp $COPY_ROOT/Docker/ssl/* /usr/share/docassemble/certs/
+RUN cp -r $COPY_ROOT/Docker/ssl /usr/share/docassemble/config/defaultcerts
+RUN cp $COPY_ROOT/Docker/rabbitmq.config /etc/rabbitmq/
+RUN cp $COPY_ROOT/Docker/config/exim4-router /etc/exim4/conf.d/router/101_docassemble
+RUN cp $COPY_ROOT/Docker/config/exim4-filter /etc/exim4/docassemble-filter
+RUN cp $COPY_ROOT/Docker/config/exim4-main /etc/exim4/conf.d/main/01_docassemble
+RUN cp $COPY_ROOT/Docker/config/exim4-acl /etc/exim4/conf.d/acl/29_docassemble
+RUN cp $COPY_ROOT/Docker/config/exim4-update /etc/exim4/update-exim4.conf.conf
+RUN cp $COPY_ROOT/Docker/nascent.html /var/www/nascent/index.html
+RUN cp $COPY_ROOT/Docker/daunoconv /usr/bin/daunoconv
+
+# CHMOD files
+RUN chmod og-rwx \
+    /usr/share/docassemble/certs/* \
+    /usr/share/docassemble/config/defaultcerts/*
+RUN chmod ogu+rx /usr/bin/daunoconv
+# RUN chmod ogu+rx update-exim4.conf  # This file cannot be found in the OS.
+RUN chown -R www-data:www-data \
+   /usr/share/docassemble/log \
+   /usr/share/docassemble/files
+RUN chmod ogu+r /usr/share/docassemble/config/config.yml.dist
+RUN chmod 755 /etc/ssl/docassemble
+
+# Python install stuff
+RUN /usr/bin/pip3 install unoconv
+RUN cp /usr/local/bin/unoconv /usr/bin/unoconv
+
+# Build venv and install packages into that
+RUN /usr/bin/python3 -m venv --copies /usr/share/docassemble/local3.10
+RUN /usr/share/docassemble/local3.10/bin/pip3 install -U -r $COPY_ROOT/requirements_venv.txt
+RUN /usr/share/docassemble/local3.10/bin/pip3 install \
+   $COPY_ROOT/docassemble \
+   $COPY_ROOT/docassemble_base \
+   $COPY_ROOT/docassemble_demo \
+   $COPY_ROOT/docassemble_webapp
+
+# Move and softlink files.
+RUN mv /etc/crontab /usr/share/docassemble/cron/crontab
+RUN ln -s /usr/share/docassemble/cron/crontab /etc/crontab
+
+RUN mv /etc/cron.daily/apache2 /usr/share/docassemble/cron/apache2
+RUN ln -s /usr/share/docassemble/cron/apache2 /etc/cron.daily/apache2
+
+RUN mv /etc/cron.daily/exim4-base /usr/share/docassemble/cron/exim4-base
+RUN ln -s /usr/share/docassemble/cron/exim4-base /etc/cron.daily/exim4-base
+
+RUN mv /etc/syslog-ng/syslog-ng.conf /usr/share/docassemble/syslogng/syslog-ng.conf
+RUN ln -s /usr/share/docassemble/syslogng/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
+
+# Use our mod_wsgi cypthon file
+RUN cp /usr/share/docassemble/local3.10/lib/python3.10/site-packages/mod_wsgi/server/mod_wsgi-py310.cpython-310-x86_64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.10
+
+# Remove daily apt-compat
+RUN rm -f /etc/cron.daily/apt-compat
+
+# sed config into files
+RUN sed -i -e 's/^\(daemonize\s*\)yes\s*$/\1no/g' -e 's/^bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
+RUN sed -i -e 's/#APACHE_ULIMIT_MAX_FILES/APACHE_ULIMIT_MAX_FILES/' -e 's/ulimit -n 65536/ulimit -n 8192/' /etc/apache2/envvars
+RUN sed -i '/session    required     pam_loginuid.so/c\#session    required   pam_loginuid.so' /etc/pam.d/cron
+
+# Configure Apache modules
+RUN a2dismod ssl
+RUN a2enmod rewrite
+RUN a2enmod xsendfile
+RUN a2enmod proxy
+RUN a2enmod proxy_http
+RUN a2enmod proxy_wstunnel
+RUN a2enmod headers
+RUN a2enconf docassemble
+
+# Set TERM (it is an ENV in docassemble-os already)
+RUN echo 'export TERM=xterm' >> /etc/bash.bashrc
+
+# nltk stuff
+USER www-data
+RUN /usr/share/docassemble/local3.10/bin/python $COPY_ROOT/Docker/nltkdownload.py
+WORKDIR /var/www/nltk_data/corpora
+RUN unzip -o wordnet.zip
+RUN unzip -o omw-1.4.zip
+
+# revert to root user and cleanup
+WORKDIR /
+USER root
+RUN rm -rf $COPY_ROOT
+
+# Ports
+EXPOSE 80 443 9001 514 25 465 8080 8081 8082 5432 6379 4369 5671 5672 25672
+
+# ENV
+ENV CONTAINERROLE="all"
+ENV LOCALE="en_US.UTF-8 UTF-8"
+ENV TIMEZONE="America/New_York"
+ENV EC2=""
+ENV S3ENABLE=""
+ENV S3BUCKET=""
+ENV S3ACCESSKEY=""
+ENV S3SECRETACCESSKEY=""
+ENV S3REGION=""
+ENV DAHOSTNAME=""
+ENV USEHTTPS=""
+ENV USELETSENCRYPT=""
+ENV LETSENCRYPTEMAIL=""
+ENV BEHINDHTTPSLOADBALANCER=""
+ENV DBHOST=""
+ENV LOGSERVER=""
+ENV REDIS=""
+ENV RABBITMQ=""
+ENV DASUPERVISORUSERNAME=""
+ENV DASUPERVISORPASSWORD=""
+
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
