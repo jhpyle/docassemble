@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.4.92] - 2024-01-17
+
+### Fixed
+- The `reconsider` and `need` modifiers were not active on all
+  `mandatory` blocks.
+- The `depends on` and `on change` features did not work on all `code`
+  blocks executed during `process_action()`.
+- Playground raised exception if `playground examples` is an empty
+  list.
+
 ## [1.4.91] - 2024-01-07
 
 ### Changed

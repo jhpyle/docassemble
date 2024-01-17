@@ -3,7 +3,7 @@ metadata:
   short title: Actions
   documentation: "https://docassemble.org/docs/functions.html#url_action"
   example start: 1
-  example end: 9
+  example end: 12
 ---
 mandatory: True
 question: Actions
@@ -18,6 +18,8 @@ subquestion: |
   [event question](${ url_action('fruit_info') })
 
   [Variable defined by code](${ url_action('vegetable_asked_about') })
+
+  [Variable defined by code and question](${ url_action('legume_rationale') })
 
   [event code](${ url_action('increment_counter') })
 
@@ -57,6 +59,32 @@ question: |
   What is your favorite vegetable?
 fields:
   - Favorite vegetable: favorite_vegetable
+---
+question: |
+  What is your favorite legume?
+fields:
+  - Legume: favorite_legume
+---
+question: |
+  Why do you like ${ favorite_legume }?
+subquestion: |
+  Note that `legume_rationale` has already been defined by a
+  `code` block during this action, but this `question` is
+  being asked anyway.
+
+  An `action` will continue past a `code` block that defines a
+  variable and will seek a `question` that defines the same
+  variable, if such a `question` exists.
+fields:
+  - label: |
+      Reason liking ${ favorite_legume }
+    field: legume_rationale
+    label above field: True
+    input type: area
+---
+code: |
+  favorite_legume
+  legume_rationale = "because legumes are good"
 ---
 event: increment_counter
 code: |

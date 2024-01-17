@@ -4923,10 +4923,19 @@ class Question:
         if len(iterators) > 0:
             for indexno, item in enumerate(iterators):
                 exec(list_of_indices[indexno] + " = " + item, the_user_dict)
-        for the_field in self.undefine:
+        for the_field in [substitute_vars(item, is_generic, the_x, iterators) for item in self.undefine]:
             docassemble.base.functions.undefine(the_field)
         if len(self.reconsider) > 0:
             docassemble.base.functions.reconsider(*[substitute_vars(item, is_generic, the_x, iterators) for item in self.reconsider])
+        if self.need is not None:
+            for need_code in self.need:
+                eval(need_code, the_user_dict)
+
+    def exec_setup_mandatory(self, the_user_dict):
+        for the_field in self.undefine:
+            docassemble.base.functions.undefine(the_field)
+        if len(self.reconsider) > 0:
+            docassemble.base.functions.reconsider(*self.reconsider)
         if self.need is not None:
             for need_code in self.need:
                 eval(need_code, the_user_dict)
@@ -8597,6 +8606,7 @@ class Interview:
                             if self.debug:
                                 interview_status.seeking.append({'question': question, 'reason': 'initial', 'time': time.time()})
                             docassemble.base.functions.this_thread.current_question = question
+                            question.exec_setup_mandatory(user_dict)
                             exec_with_trap(question, user_dict)
                             continue
                         if question.name and question.name in user_dict['_internal']['answered']:
@@ -8606,6 +8616,7 @@ class Interview:
                             if question.question_type == "data":
                                 if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'data', 'time': time.time()})
+                                question.exec_setup_mandatory(user_dict)
                                 if isinstance(question.gathered, (bool, NoneType)):
                                     gathered = question.gathered
                                 else:
@@ -8624,6 +8635,7 @@ class Interview:
                             if question.question_type == "data_from_code":
                                 if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'data', 'time': time.time()})
+                                question.exec_setup_mandatory(user_dict)
                                 if isinstance(question.gathered, (bool, NoneType)):
                                     gathered = question.gathered
                                 else:
@@ -8642,6 +8654,7 @@ class Interview:
                             if question.question_type == "objects_from_file":
                                 if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'objects from file', 'time': time.time()})
+                                question.exec_setup_mandatory(user_dict)
                                 if isinstance(question.use_objects, (bool, NoneType)):
                                     use_objects = bool(question.use_objects)
                                 else:
@@ -8657,6 +8670,7 @@ class Interview:
                                     interview_status.seeking.append({'question': question, 'reason': 'objects', 'time': time.time()})
                                 # logmessage("Going into objects")
                                 docassemble.base.functions.this_thread.current_question = question
+                                question.exec_setup_mandatory(user_dict)
                                 for keyvalue in question.objects:
                                     for variable in keyvalue:
                                         object_type_name = keyvalue[variable]
@@ -8677,6 +8691,7 @@ class Interview:
                                 # logmessage("Running some code:\n\n" + question.sourcecode)
                                 # logmessage("Question name is " + question.name)
                                 docassemble.base.functions.this_thread.current_question = question
+                                question.exec_setup_mandatory(user_dict)
                                 exec_with_trap(question, user_dict)
                                 # logmessage("Code completed")
                                 if question.name:
@@ -8691,6 +8706,7 @@ class Interview:
                                         interview_status.seeking.append({'question': the_question, 'reason': 'result of multiple choice', 'time': time.time()})
                                     if the_question.question_type in ["code", "event_code"]:
                                         docassemble.base.functions.this_thread.current_question = the_question
+                                        question.exec_setup_mandatory(user_dict)
                                         exec_with_trap(the_question, user_dict)
                                         interview_status.mark_tentative_as_answered(user_dict)
                                         continue
@@ -9485,12 +9501,12 @@ class Interview:
                             eval(missing_var, user_dict)
                             if was_defined:
                                 exec("del __oldvariable__", user_dict)
+                            question.invalidate_dependencies(user_dict, old_values)
                             if seeking_question:
                                 continue
                             # question.mark_as_answered(user_dict)
                             docassemble.base.functions.pop_current_variable()
                             docassemble.base.functions.pop_event_stack(origMissingVariable)
-                            question.invalidate_dependencies(user_dict, old_values)
                             return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
                         except:
                             if was_defined:
