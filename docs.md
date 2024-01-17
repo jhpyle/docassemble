@@ -203,7 +203,7 @@ to decide to ask that question.
 {% for section in site.data.docs %}
 <li>{{ section.title }}</li>
 <ul>
-{% include docs_section.html items=section.docs %}
+{% include toc_section.html items=section.docs %}
 </ul>
 {% endfor %}
 </ul>

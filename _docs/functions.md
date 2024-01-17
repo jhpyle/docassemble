@@ -13,13 +13,13 @@ For example:
 {% include side-by-side.html demo="function" %}
 
 Functions allow you to do a lot of different things in
-**docassemble**.  This section explains the standard **docassemble**
-functions.  If you know how to write [Python] code, you can [write your
+**docassemble**. This section explains the standard **docassemble**
+functions. If you know how to write [Python] code, you can [write your
 own functions] and include them in your interview using a [`modules`]
 block.
 
 These functions are available automatically in **docassemble**
-interviews (unless you set [`suppress loading util`]).  To use them in
+interviews (unless you set [`suppress loading util`]). To use them in
 a [Python module], put a line like this at the top of your .py file to
 indicate which functions you want to import:
 
@@ -47,11 +47,11 @@ The `defined()` function takes as its argument the name of a variable.
 {% include side-by-side.html demo="defined" %}
 
 It is essential that you use quotation marks around the name of the
-variable.  If you don't, it is as if you are referring to the variable.
+variable. If you don't, it is as if you are referring to the variable.
 
 You should only use `defined()` in situations where it is absolutely
-necessary.  Your [interview logic] should be based on the values of
-real variables, not the defined-ness of a variable.  For example,
+necessary. Your [interview logic] should be based on the values of
+real variables, not the defined-ness of a variable. For example,
 suppose you have an interview like this:
 
 {% highlight yaml %}
@@ -75,11 +75,11 @@ You might be tempted to write something like this in a DOCX template:
 {: .blockquote}
 
 This will work if your interview does not allow the user to go back
-and edit answers.  But if you allow the user to edit answers, what if
+and edit answers. But if you allow the user to edit answers, what if
 the user initially answered "Yes" to "Are you married?" and filled out
 "Marriage date," but then went back and changed the answer to the
 "Are you married?" question to "No"?  Now the value of
-`date_of_marriage` is obsolete, but it is still exists.  Because the
+`date_of_marriage` is obsolete, but it is still exists. Because the
 logic of your document is based on the defined-ness of a variable,
 rather than the true fact of whether the user is married, it contains
 an error.
@@ -93,12 +93,12 @@ The solution is to always base your logic off of actual facts:
 By analogy, suppose that a lawyer worked on a case and wrote on a
 notepad: "we are still within the statute of limitations period; ok to
 bring tort claim."  Then, some time later, the lawyer is drafting a
-complaint, and wonders if he can raise a tort claim.  Would he look at
+complaint, and wonders if he can raise a tort claim. Would he look at
 his notepad and see the words "ok to bring tort claim" and then
 conclude that he can bring a tort claim?  No, he would analyze the
 facts _as they currently stand_ and evaluate whether it was ok to
-bring a tort claim.  The fact that something was once written on a
-notepad is not legally significant.  What is legally significant is
+bring a tort claim. The fact that something was once written on a
+notepad is not legally significant. What is legally significant is
 reality.
 
 So, the `defined()` function is available, but using it is not
@@ -133,8 +133,8 @@ code: |
 {% endhighlight %}
 
 Note that `value(meaning_of_life)` and `value("meaning_of_life")` are
-entirely different.  The first will treat the value of the
-`meaning_of_life` variable as a variable name.  So if you set
+entirely different. The first will treat the value of the
+`meaning_of_life` variable as a variable name. So if you set
 `meaning_of_life = 'chocolate'`, then `value(meaning_of_life)` will
 attempt to find the value of the variable `chocolate`.
 
@@ -144,24 +144,24 @@ the user pressed the Back button, `value()` will look in the previous
 set of interview answers (the set that was deleted by pressing the
 Back button) for the value of the variable.
 
-The `value()` function is relatively inefficient.  If you can use
+The `value()` function is relatively inefficient. If you can use
 regular Python expressions instead of `value()`, you should do so.
 `value()` can be particularly helpful when called from a function
-within a module.  However, if you can rewrite your code so that the
+within a module. However, if you can rewrite your code so that the
 variable's value is passed to the function, or is available as an
 object attribute, you should do so.
 
 ## <a name="define"></a>define()
 
-The `define()` function defines a variable.  The first argument is the
+The `define()` function defines a variable. The first argument is the
 name of the variable (as a string) and the second argument is the
-value you want the variable to have.  Running
+value you want the variable to have. Running
 `define('meaning_of_life', 42)` has the same effect as running
 `meaning_of_life = 42`.
 
 {% include side-by-side.html demo="define" %}
 
-Note that the second argument is the value itself.  If you wanted to
+Note that the second argument is the value itself. If you wanted to
 do the equivalent of `my_favorite_fruit = your_favorite_fruit`, it
 would be incorrect to do `define('my_favorite_fruit',
 'your_favorite_fruit')`; you should instead do
@@ -170,8 +170,8 @@ would be incorrect to do `define('my_favorite_fruit',
 
 ## <a name="undefine"></a>undefine()
 
-The `undefine()` function makes a variable undefined.  The name
-of the variable must be provided as a string.  If the variable is not
+The `undefine()` function makes a variable undefined. The name
+of the variable must be provided as a string. If the variable is not
 defined to begin with, the function does not do anything.
 
 {% highlight python %}
@@ -210,7 +210,7 @@ or you want a [`mandatory`] block to run again, you need to run
 `forget_result_of()` on the [`id`] of the block.
 
 The `forget_result_of()` function takes one or more [`id`]s of blocks
-as input and causes the results of those blocks to be forgotten.  If
+as input and causes the results of those blocks to be forgotten. If
 the [`id`] does not exist, or if the block has not yet been processed,
 no error will be raised.
 
@@ -226,7 +226,7 @@ The `forget_result_of()` function can also be used to reset a
 {% include side-by-side.html demo="forget-result-of-mandatory" %}
 
 After resetting a `mandatory` block, you may want to call
-[`re_run_logic()`].  Otherwise, the `mandatory` block will not have a
+[`re_run_logic()`]. Otherwise, the `mandatory` block will not have a
 chance to run again until the next time the screen loads.
 
 ## <a name="set_variables"></a>set_variables()
@@ -235,7 +235,7 @@ The `set_variables()` function is somewhat similar to `define()`,
 except that instead of setting a particular variable name, it simply
 updates the interview answers using a dictionary that you provide as
 input, where the dictionary keys represent variable names and the
-dictionary values represent values of those variables.  For example,
+dictionary values represent values of those variables. For example,
 if `trustee` is an [`Individual`], and you do:
 
 {% highlight python %}
@@ -254,7 +254,7 @@ favorite_fruit = 'apple'
 is `False`. If `process_objects` is `True`, then the dictionary will
 be transformed from **docassemble**'s "serializable" representation of
 objects (see the [`.as_serializable()`] method) into actual Python
-objects.  For example, suppose you run the following code:
+objects. For example, suppose you run the following code:
 
 {% highlight python %}
 my_json = """\
@@ -282,7 +282,7 @@ object, where `user.name` is an [`IndividualName`] object and
 When `process_objects` is `True`, any dictionary with a `_class` item
 is converted into a Python object of the class represented by
 `_class`, and the other items of the dictionary are converted into
-attributes of that object.  In addition, if any string looks like a
+attributes of that object. In addition, if any string looks like a
 date or time (e.g. `2022-01-01`, `23:15:00`), an attempt will be made
 to convert it into a [`DADateTime`] or [`datetime.time`] object.
 
@@ -294,7 +294,7 @@ used to import basic **docassemble** data structures.
 ## <a name="re_run_logic"></a>re_run_logic()
 
 The `re_run_logic()` function causes code to stop executing and causes
-the interview logic to be evaluated from the beginning.  You might
+the interview logic to be evaluated from the beginning. You might
 want to use this in cases when, after you make changes to variables,
 you want the [`initial`] and not-yet-completed [`mandatory`] blocks to
 be re-run in light of the changes you made.
@@ -310,12 +310,12 @@ For an example of this in action, see the code example in the
 ## <a name="reconsider"></a>reconsider()
 
 The `reconsider()` function is similar to the [`reconsider`] modifier
-on a [`code`] block.  Each argument to `reconsider()` needs to be a
-variable name, as text.  E.g., `reconsider('number_of_fruit',
+on a [`code`] block. Each argument to `reconsider()` needs to be a
+variable name, as text. E.g., `reconsider('number_of_fruit',
 'number_of_vegetables')`.
 
 When `reconsider()` is run, it will undefine the given variables and
-then seek their definitions.  However, it will only do this once
+then seek their definitions. However, it will only do this once
 in a given assembly process (i.e., once each time a screen loads).
 Thus, even if your [`code`] block executes multiple times in a given
 assembly process, each variable will only be recomputed one time.
@@ -326,7 +326,7 @@ assembly process, each variable will only be recomputed one time.
 
 The `need()` function takes one or more variables as arguments and
 causes **docassemble** to ask questions to define each of the
-variables if the variables are not already defined.  Note that with
+variables if the variables are not already defined. Note that with
 `need()`, you do _not_ put quotation marks around the variable name.
 
 For example, this [`mandatory`] code block expresses [interview logic]
@@ -348,7 +348,7 @@ code: |
   user_shown_final_screen
 {% endhighlight %}
 
-So the `need()` function does not "do" anything.  However, writing
+So the `need()` function does not "do" anything. However, writing
 `need()` functions in your code probably makes your code more readable
 because it helps you convey in "natural language" that your interview
 "needs" these variables to be defined.
@@ -356,7 +356,7 @@ because it helps you convey in "natural language" that your interview
 ## <a name="force_ask"></a>force_ask()
 
 Usually, **docassemble** only asks a question when it encounters a
-variable that is not defined.  However, with the `force_ask` function,
+variable that is not defined. However, with the `force_ask` function,
 you can cause such a condition to happen manually, even when a
 variable is already defined.
 
@@ -365,8 +365,8 @@ question that has already been asked.
 
 {% include side-by-side.html demo="force-ask-full" %}
 
-This may be useful in particular circumstances.  However,
-`force_ask()` cannot be used with all types of questions.  For
+This may be useful in particular circumstances. However,
+`force_ask()` cannot be used with all types of questions. For
 example, it cannot be relied upon to re-ask questions that:
 
 * Use the [`generic object`] modifier (and the special variable `x`)
@@ -374,17 +374,17 @@ example, it cannot be relied upon to re-ask questions that:
 * Contain [embedded blocks].
 
 The use of `force_ask()` is discouraged, unless you are an expert and
-you know what you are doing.  Usually, there is a more elegant way to
-craft your interview logic than by using `force_ask()`.  If the
+you know what you are doing. Usually, there is a more elegant way to
+craft your interview logic than by using `force_ask()`. If the
 `question` you want to ask is a single-variable question (`field` with
 `choices`, `field` with `buttons`, `yesno`, `noyes`), you can use
-[`reconsider()`].  If the `question` has `fields`, you can set a
-[`continue button field`].  You might also find it useful to use the
+[`reconsider()`]. If the `question` has `fields`, you can set a
+[`continue button field`]. You might also find it useful to use the
 [`undefine()`] and [`re_run_logic()`] functions.
 
-Note that variable names given to force_ask must be in quotes.  If
+Note that variable names given to force_ask must be in quotes. If
 your variable is `favorite_fruit`, you need to write
-`force_ask('favorite_fruit')`.  If you write
+`force_ask('favorite_fruit')`. If you write
 `force_ask(favorite_fruit)`, **docassemble** will assume that, for
 example, `apples` is a variable in your interview.
 
@@ -394,17 +394,17 @@ that in a multi-user interview, `force_ask()` only changes the current
 action, or list of active actions.
 
 Note also that no code that comes after `force_ask()` will ever be
-executed.  Once the `force_ask()` function is called, the code stops
+executed. Once the `force_ask()` function is called, the code stops
 running, and the question indicated by the variable name will be
-shown.  That is why, in the example above, we set
+shown. That is why, in the example above, we set
 `user_reconsidering_communism` to `False` _before_ calling
-`force_ask()`.  The variable `user_reconsidering_communism`, which had
+`force_ask()`. The variable `user_reconsidering_communism`, which had
 been set to `True` by the "I suggest you reconsider your answer"
 question, is set to `False` before the call to `force_ask` so that the
 [`mandatory`] code block does not get stuck in an infinite loop.
 
 A different way to reask a question is to use the built-in Python
-operator `del`.  This makes the variable undefined.  Instead of
+operator `del`. This makes the variable undefined. Instead of
 writing:
 
 {% include side-by-side.html demo="force-ask" %}
@@ -414,26 +414,26 @@ we could have written:
 {% include side-by-side.html demo="del" %}
 
 This will also cause the `user_is_communist` question to be asked
-again.  This is more robust than using `force_ask` because the user
+again. This is more robust than using `force_ask` because the user
 cannot get past the question simply by refeshing the screen.
 
 The `force_ask()` function can also be given the names of variables
-that refer to [`event`] blocks.  The screen will be shown, but no
+that refer to [`event`] blocks. The screen will be shown, but no
 variable will be defined.
 
-You can use `force_ask()` to ask a series of questions.  Just list
+You can use `force_ask()` to ask a series of questions. Just list
 each variable one after another.
 
 {% include side-by-side.html demo="force-ask-multiple" %}
 
 The second and subsequent arguments to `force_ask()` can specify
-[actions] with arguments.  If an argument to `force_ask()` is a
+[actions] with arguments. If an argument to `force_ask()` is a
 [Python dictionary] with keys `action` and `arguments`, the specified
-action will be run.  (Internally, **docassemble** uses the [actions]
+action will be run. (Internally, **docassemble** uses the [actions]
 mechanism to force the interview to ask these questions.)
 
 If you give `force_ask()` the name of a variable that no [`question`]
-can define, then `force_ask()` will quietly ignore it.  Thus you can
+can define, then `force_ask()` will quietly ignore it. Thus you can
 use conditional logic within a `force_ask()` sequence by adding [`if`]
 modifiers to each [`question`] that specify under what conditions the
 [`question`] should be asked.
@@ -517,14 +517,14 @@ Normally, you will not need to use either [`force_ask()`] or
 [`force_gather()`]; you can just mention the name of a variable in
 your [`question`]s or [`code`] blocks, as part of your [interview
 logic], and **docassemble** will make sure that the variables get
-defined.  The [`force_ask()`] and [`force_gather()`] functions are
+defined. The [`force_ask()`] and [`force_gather()`] functions are
 primarily useful when you are using [actions] to do things that are
 outside the normal course of the [interview logic].
 
 ## <a name="dispatch"></a>dispatch()
 
 The `dispatch()` function provides logic so that an interview can
-present a menu system within a screen.  For example:
+present a menu system within a screen. For example:
 
 {% include side-by-side.html demo="dispatch" %}
 
@@ -532,19 +532,19 @@ To make a menu, you need to add a few components to your interview:
 
 * Some code that runs `dispatch()` in order to launch the menu at a
   particular place in your interview logic.
-* A screen that shows the menu.  This is typically a
+* A screen that shows the menu. This is typically a
   [multiple-choice question] in which each choice represents a screen
   that the user can visit.
-* Screens corresponding to each choice.  These can be standalone
+* Screens corresponding to each choice. These can be standalone
   screens, or they can be sub-menus.
 
 In the example above, the main menu is a [multiple-choice question]
 that sets the variable `main_menu_selection`.
 
 When the interview logic calls `dispatch('main_menu_selection')`, it
-looks for a definition of the variable `main_menu_selection`.  It
+looks for a definition of the variable `main_menu_selection`. It
 finds a [multiple-choice question] that offers to define
-`main_menu_selection`.  This question will set the variable
+`main_menu_selection`. This question will set the variable
 to one of four values:
 
 * `fruit_menu`
@@ -553,22 +553,22 @@ to one of four values:
 * `Null`
 
 The first three values are the names of other variables in the
-interview.  Note that in the interview, `fruit_menu` and
+interview. Note that in the interview, `fruit_menu` and
 `vegetable_menu` are variables defined by [`code`] blocks, and
-`rocks_page` is defined by a [`question`] block.  If the user selects
+`rocks_page` is defined by a [`question`] block. If the user selects
 one of these choices, the interview will look for a definition of the
-selected variable.  This all done by the `dispatch()` function.
+selected variable. This all done by the `dispatch()` function.
 
-The last value, `Null`, is special; it ends the menu.  (Note that
+The last value, `Null`, is special; it ends the menu. (Note that
 `Null` or `null` is a special value in [YAML]; it becomes `None` in
 [Python].)  When the user selects "Continue," the `dispatch()`
-function will end.  In this sample interview, the next step after the
-menu is to show the `final_screen`.  Thus, when the user selects
-"Continue," the user sees the `final_screen` question.  If you want
+function will end. In this sample interview, the next step after the
+menu is to show the `final_screen`. Thus, when the user selects
+"Continue," the user sees the `final_screen` question. If you want
 the interview logic to be able to move past the `dispatch()` function,
 you must include a `Null` option.
 
-This sample interview features two sub-menus.  You can tell this
+This sample interview features two sub-menus. You can tell this
 because the variable `fruit_menu` is defined with:
 
 {% highlight python %}
@@ -582,38 +582,38 @@ vegetable_menu = dispatch('vegetable_menu_selection')
 {% endhighlight %}
 
 If the user selects "Fruit" from the main menu, the interview will
-seek a definition of `fruit_menu`.  This in turn leads to calling the
-`dispatch()` function on `'fruit_menu_selection'`.  This leads to
-seeking a definition of the variable `fruit_menu_selection`.  If the
+seek a definition of `fruit_menu`. This in turn leads to calling the
+`dispatch()` function on `'fruit_menu_selection'`. This leads to
+seeking a definition of the variable `fruit_menu_selection`. If the
 user selects the `Null` option on this menu, the user will go back to
 the main menu.
 
 If the user selects "Rocks" from the main menu, the interview will
-seek a definition of `rocks_page`.  In this case, the block that
+seek a definition of `rocks_page`. In this case, the block that
 offers to define `rocks_page` is a [`question`] with a "Continue"
-button.  When the user presses "Continue" on the "Rocks screen," the
+button. When the user presses "Continue" on the "Rocks screen," the
 user will return to the menu.
 
 Note that when the interview seeks definitions of variables and
-displays screens, it will ask questions to satisfy prerequisites.  For
+displays screens, it will ask questions to satisfy prerequisites. For
 example, when the user selects "Apple" from the "Fruit menu," the
 interview will seek the definition of `apple`, but in order to pose
 the `question` that defines `apple`, it needs the definition of
-`likes_apples`.  So it will stop and ask "Do you like apples?" before
+`likes_apples`. So it will stop and ask "Do you like apples?" before
 proceeding to the `question` that defines `apple`.
 
 One very important thing to know about the `dispatch()` function is
 that the variables it uses to navigate among the screens are
-temporary.  After the call to `dispatch('main_menu_selection')`, the
+temporary. After the call to `dispatch('main_menu_selection')`, the
 variables `main_menu_selection`, `fruit_menu`, `fruit_menu_selection`,
-`apple`, `rocks_page`, etc., will all be undefined.  However,
+`apple`, `rocks_page`, etc., will all be undefined. However,
 questions _will_ be able to access these variables from within the
-`dispatch()` function.  For example, the "Peaches screen" successfully
+`dispatch()` function. For example, the "Peaches screen" successfully
 accesses the values of `main_menu_selection` and
 `fruit_menu_selection`.
 
 If you want to gather information about what screens your user visited
-or did not visit, you can use prerequisites to do so.  Here is an
+or did not visit, you can use prerequisites to do so. Here is an
 example that uses the [`need` specifier] to run a code block when a
 user selects a menu item.
 
@@ -627,19 +627,19 @@ the interview session as a simplified [Python dictionary].
 {% include side-by-side.html demo="all_variables" %}
 
 The resulting [Python dictionary] is suitable for conversion to [JSON]
-or other formats.  Each [object] is converted to a [Python
-dictionary].  Each [`datetime`] or [`DADateTime`] object is converted
-to its `isoformat()`.  Other objects are converted to `None`.
+or other formats. Each [object] is converted to a [Python
+dictionary]. Each [`datetime`] or [`DADateTime`] object is converted
+to its `isoformat()`. Other objects are converted to `None`.
 
 If you want the raw [Python] dictionary representing the variables
 defined in the interview session, you can call
-`all_variables(simplify=False)`.  The result is not suitable for
-conversion to [JSON].  This raw [Python] dictionary will be linked to
+`all_variables(simplify=False)`. The result is not suitable for
+conversion to [JSON]. This raw [Python] dictionary will be linked to
 the current interview answers, so that if you use the [Python] `is`
 operator to test for equivalence between objects, you will see that
-they are equivalent.  Therefore, if you try to edit the output of
+they are equivalent. Therefore, if you try to edit the output of
 `all_variables(simplify=False)`, you may be affecting the interview
-variables in unwanted ways.  If you want the result of
+variables in unwanted ways. If you want the result of
 `all_variables(simplify=False)` to be a distinct copy of the interview
 answers, call it using `all_variables(simplify=False,
 make_copy=True)`.
@@ -647,8 +647,8 @@ make_copy=True)`.
 **docassemble** keeps a dictionary called `_internal` in the interview
 variables and uses it for a variety of internal purposes. There is
 also an object called `nav` that is used for tracking which sections
-of an interview the user has visited.  By default, `_internal` and
-`nav` are not included in the output of [`all_variables()`].  If you
+of an interview the user has visited. By default, `_internal` and
+`nav` are not included in the output of [`all_variables()`]. If you
 want `_internal` and `nav` to be included, set the optional keyword
 parameter `include_internal` to `True`.
 
@@ -659,7 +659,7 @@ The [`all_variables()`] function also has three special behaviors:
   [`set_parts()`] function.
 * `all_variables(special='metadata')` will return a dictionary
   representing the "metadata" indicated in the [`metadata` initial
-  block]s of the interview.  (If multiple blocks exist, information is
+  block]s of the interview. (If multiple blocks exist, information is
   "layered" so that keys in later blocks overwrite keys in earlier
   blocks.)  Unlike the `'titles'` option, the information returned
   here is not updated to take into account changes made
@@ -681,10 +681,10 @@ By default, the user will be offered an "exit" button and a "restart"
 button, but these choices can be configured.
 
 The first argument is the title of the screen the user will see (the
-[`question`]).  The second argument, which is optional, indicates the
+[`question`]). The second argument, which is optional, indicates the
 text that will follow the title (the [`subquestion`]).
 
-The `message()` function also takes keyword arguments.  The following
+The `message()` function also takes keyword arguments. The following
 do the same thing:
 
 * `message("This is the big part of the question", "This is the
@@ -711,39 +711,39 @@ The optional keyword arguments influence the appearance of the screen:
 ## <a name="response"></a>response()
 
 The `response()` command allows the interview developer to use code to
-send a special HTTP response.  Instead of seeing a new **docassemble**
+send a special HTTP response. Instead of seeing a new **docassemble**
 screen, the user will see raw content as an HTTP response, or be
-redirected to another web site.  As soon as **docassemble** runs the
+redirected to another web site. As soon as **docassemble** runs the
 `response()` command, it stops what it is doing and returns the
 response.
 
 There are four different types of responses, which you can invoke by
 using one of four keyword arguments: `response`, `binaryresponse`,
-`file`, and `url`.  There is also an optional keyword argument
+`file`, and `url`. There is also an optional keyword argument
 `content_type`, which determines the setting of the [Content-Type
-header].  (This is not used for `url` responses, though.)  The
+header]. (This is not used for `url` responses, though.)  The
 `response()` function accepts the optional keyword parameter
-`response_code`.  The default HTTP response code is 200 but you can
+`response_code`. The default HTTP response code is 200 but you can
 use `response_code` to set it to a different value.
 
 The four response types are:
 
-* `response`: This is treated as text and encoded to UTF-8.  For
+* `response`: This is treated as text and encoded to UTF-8. For
   example, if you have some data in a dictionary `info` and you want
   to return it in [JSON] format, you could do
   `response(response=json.dumps(info),
-  content_type='application/json')`.  If the `content_type` keyword
+  content_type='application/json')`. If the `content_type` keyword
   argument is omitted, the [Content-Type header] defaults to
   `text/plain; charset=utf-8`.
 * `binaryresponse`: This is like `response`, except that the data
   provided as the `binaryresponse` is treated as binary bytes rather
-  than text, and it is passed directly without any modification.  You
+  than text, and it is passed directly without any modification. You
   could use this to transmit images that are created using a software
-  library like the [Python Imaging Library].  If the `content_type`
+  library like the [Python Imaging Library]. If the `content_type`
   keyword argument is omitted, the [Content-Type header] defaults to
   `text/plain; charset=utf-8`.
 * `file`: The contents of the specified file will be delivered in
-  response to the HTTP request.  You can supply one of two types of
+  response to the HTTP request. You can supply one of two types of
   file designators: a [`DAFile`] object (e.g., an assembled document
   or an uploaded file), or a reference to a file in a **docassemble**
   package (e.g., `'moon_stars.jpg'` for a file in the static files
@@ -770,17 +770,17 @@ returns data in [JSON] format.
 Note the following about this interview.
 
 1. We set [`multi_user`] to `True` in order to disable server-side
-   encrpytion.  This allows an external application to access the
+   encrpytion. This allows an external application to access the
    interview without logging in as the user.
 2. The `query_fruit` [`event`] code will be run as an [action] when
    someone accesses the link created by [`interview_url_action()`].
 
 The `response()` command can be used to integrate a **docassemble**
-interview with another application.  For example, the other
+interview with another application. For example, the other
 application could call **docassemble** with a URL that includes an
 interview file name (argument `i`) along with a number of
-[URL arguments].  The interview would process the information passed
-through the URLs, but would not ask any questions.  It would instead
+[URL arguments]. The interview would process the information passed
+through the URLs, but would not ask any questions. It would instead
 return an assembled document using `response()`.
 
 {% highlight yaml %}
@@ -798,16 +798,16 @@ code: |
   response(file=the_file.pdf)
 {% endhighlight %}
 
-Here is a link that runs this interview.  Notice how the name "Fred" is
-embedded in the URL.  The result is an immediate PDF document.
+Here is a link that runs this interview. Notice how the name "Fred" is
+embedded in the URL. The result is an immediate PDF document.
 
 > [{{ site.demourl }}/interview?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred]({{ site.demourl }}/interview?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred){:target="_blank"}
 {: .blockquote}
 
 When you write code that runs in a [scheduled task], you can use
-`response()` to finish the scheduled task.  In this context, you can
+`response()` to finish the scheduled task. In this context, you can
 pass the optional keyword argument `sleep` with a number of seconds
-that you want to pause after the task is finished.  This can be useful
+that you want to pause after the task is finished. This can be useful
 when your [scheduled tasks] would overwhelm your SQL server if
 executed one after another without pauses.
 
@@ -842,7 +842,7 @@ example above, except that is returns all of the variables in the
 {% include side-by-side.html demo="variables_as_json" %}
 
 The `variables_as_json()` function simplifies the interview variables
-in the same way that the [`all_variables()`] function does.  Like
+in the same way that the [`all_variables()`] function does. Like
 [`all_variables()`], it takes an optional keyword argument
 `include_internal`, which is `False` by default, but when `True`,
 includes the internal variables `_internal` and `nav` in the output.
@@ -870,18 +870,18 @@ The first argument to `command()` is one of the following:
 * `'signin'`: redirects the user to the sign-in screen.
 
 The optional keyword argument `url` provides a URL to which the user
-should be redirected.  The value of [`exitpage`] will be used if no
+should be redirected. The value of [`exitpage`] will be used if no
 `url` is provided.
 
 Note that the [special buttons] perform a similar function to
-`command()`.  See also the [starting an interview from the beginning]
+`command()`. See also the [starting an interview from the beginning]
 subsection for URL parameters that reset interview sessions.
 
 One use of `command()` is to delete interviews after a period of
-inactivity.  See [scheduled tasks] for more information.  In the
+inactivity. See [scheduled tasks] for more information. In the
 context of [scheduled tasks], you can pass the optional keyword
 argument `sleep` with a number of seconds that you want to pause after
-the session is deleted.  This can be useful when your [scheduled
+the session is deleted. This can be useful when your [scheduled
 tasks] would overwhelm your SQL server if executed one after another
 without pauses.
 
@@ -972,9 +972,9 @@ attachment:
 ## <a name="single_to_double_newlines"></a>single_to_double_newlines()
 
 Under the rules of [Markdown], you need to insert two newlines to
-break a paragraph.  Sometimes you have text where one newline
+break a paragraph. Sometimes you have text where one newline
 represents a paragraph, but you want the single newlines to count as
-paragraph breaks.  The function `single_to_double_newlines()` will
+paragraph breaks. The function `single_to_double_newlines()` will
 convert the text for you.
 
 {% include side-by-side.html demo="single_to_double_newlines" %}
@@ -982,7 +982,7 @@ convert the text for you.
 ## <a name="single_paragraph"></a>single_paragraph()
 
 `single_paragraph(user_supplied_text)` will replace any linebreaks in
-`user_supplied_text` with spaces.  This allows you to do things like:
+`user_supplied_text` with spaces. This allows you to do things like:
 
 {% highlight yaml %}
 question: Summary of your answers
@@ -1002,8 +1002,8 @@ first paragraph of the answer would be indented.
 
 If you are inserting user-supplied input into a document or onto the
 screen, it is possible that the text may contain characters that will
-result in undesired formatting changes.  For example, the input may
-contain Markdown codes, HTML codes, or LaTeX codes.  To avoid the
+result in undesired formatting changes. For example, the input may
+contain Markdown codes, HTML codes, or LaTeX codes. To avoid the
 effects of such characters, wrap the text with the `verbatim()`
 function.
 
@@ -1019,10 +1019,10 @@ appears as a quotation.
 ## <a name="indent"></a>indent()
 
 The `indent()` function adds four spaces to the beginning of each line
-of the given [Markdown] to text.  This needs to be used if you are
+of the given [Markdown] to text. This needs to be used if you are
 inserting a [table] or a paragraph of user text into the context of a
 [Markdown] bullet-point or itemized list, and you want the text to be
-part of an item.  If you do not indent the text, the text will be
+part of an item. If you do not indent the text, the text will be
 treated as a new paragraph that ends the list.
 
 {% include side-by-side.html demo="indent" %}
@@ -1030,8 +1030,8 @@ treated as a new paragraph that ends the list.
 ## <a name="fix_punctuation"></a>fix_punctuation()
 
 The `fix_punctuation()` function ensures that the given text ends with
-a punctuation mark.  It will add a `.` to the end of the text if no
-punctuation is present at the end.  To use a different punctuation
+a punctuation mark. It will add a `.` to the end of the text if no
+punctuation is present at the end. To use a different punctuation
 mark, set the optional keyword argument `mark` to the text you want to
 use.
 
@@ -1047,10 +1047,10 @@ A call to `fix_punctuation(reason)` will return:
 ## <a name="redact"></a>redact()
 
 The `redact()` function is used when preparing redacted and unredacted
-versions of a document.  For example, instead of referring to
+versions of a document. For example, instead of referring to
 `client.ssn` in a document, you can refer to `redact(client.ssn)`.
 Then, in the final document, a redaction mark will be included instead
-of the client's Social Security number.  However, if the document is
+of the client's Social Security number. However, if the document is
 assembled with [`redact: False`], the Social Security number will be
 included.
 
@@ -1070,11 +1070,11 @@ Here is the same example, but with a [`pdf template file`] named
 {% include demo-side-by-side.html demo="redact-pdf" %}
 
 The `redact()` function is intended to be called the markup of
-documents, as demonstrated in the various examples above.  It is only
+documents, as demonstrated in the various examples above. It is only
 in this context that the `redact()` function knows whether you have
-set `redact: False` or not.  The `redact()` function can be from other
+set `redact: False` or not. The `redact()` function can be from other
 contexts, but the result may not be what you want; for example, you
-may see redactions even though you set `redact: False`.  If you define
+may see redactions even though you set `redact: False`. If you define
 a variable `ssn_text = redact(user.ssn)`, and the `ssn_text` variable
 is already defined by the time **docassemble** gets around to
 assembling a document with the `redact` option set to `False`, then
@@ -1093,13 +1093,13 @@ definitions of those variables.
 
 Sometimes, however, you may want to direct **docassemble** to perform
 a specific task other than evaluating the current state of the
-[interview logic].  The mechanism for doing that is called the
+[interview logic]. The mechanism for doing that is called the
 "actions" mechanism.
 
 An "action" is similar to a function call in computer programming.
 When you call a function, you might call `cancel_application()` or
-`submit_application(user, details)`.  Running `cancel_application()`
-just runs a function called `cancel_application`.  Running
+`submit_application(user, details)`. Running `cancel_application()`
+just runs a function called `cancel_application`. Running
 `submit_application(user, details)` runs a function called
 `submit_application`, and passes `user` and `details` to the function;
 these are referred to as the "arguments" of the function.
@@ -1120,10 +1120,10 @@ def submit_application(user, details):
 {% endhighlight %}
 
 In **docassemble**, an "action" consists of an action name and an
-optional [dictionary] of arguments.  When you call the action
+optional [dictionary] of arguments. When you call the action
 `cancel_application`, **docassemble** will seek out a block in your
 [YAML] that offers to define `cancel_application`, and will run that
-`block`.  To locate this block, it uses the same process that it uses
+`block`. To locate this block, it uses the same process that it uses
 when it seeks a block that defines an undefined variable.
 
 Here is how you would implement the functions above as "actions" in
@@ -1140,7 +1140,7 @@ code: |
 {% endhighlight %}
 
 Writing `event: cancel_application` means "this block advertises that
-it defines `cancel_application`.  You may have seen [`event`] used
+it defines `cancel_application`. You may have seen [`event`] used
 before in a context like this:
 
 {% highlight yaml %}
@@ -1158,7 +1158,7 @@ subquestion: |
 
 When a variable name is referenced, its definition will be sought if
 the variable is undefined, but if the variable is defined, it will
-continue running the Python code.  The `final_screen` [`question`] is
+continue running the Python code. The `final_screen` [`question`] is
 different, though, because it is a dead end; `final_screen` is a
 variable name that will never actually get defined.
 
@@ -1185,46 +1185,63 @@ The `url_action()` function allows users to interact with
 
 `url_action()` returns a URL that, when clicked, will perform an
 "action" within **docassemble**, such as running some code or asking a
-question.  Typically the URL will be part of a [Markdown] link inside
+question. Typically the URL will be part of a [Markdown] link inside
 of a [question], in a `note` within a set of [fields], or it might be
 the URL of an [`action_button_html()`].
 
 The [`process_action()`] function processes "actions."  The
 [`process_action()`] function is typically called for you,
 behind-the-scenes, right before the interview logic is
-evaluated. However, you can call it explicitly if you want to control
-exactly when (and if) it is called.
+evaluated. (However, you can call it explicitly if you want to control
+exactly when (and if) it is called, and it is important to do so under
+certain circumstances.)
 
-Here is an example:
+Here is an example of using "action" URLs in an interview:
 
 {% include side-by-side.html demo="lucky-number" %}
 
-When the user clicks one of the links, the interview will load as
-usual (much as if the user refreshed the web browser page).  The only
-difference is that **docassemble** sees the additional information
-stored in the URL and makes that information available to the
-interview logic.
+When the user clicks on the "Edit" link generated by
+`url_action('lucky_color')`, the interview will load as normal, much
+as if the user reloaded the screen. However, before [`initial`] and
+[`mandatory`] blocks are processed, **docassemble** runs the function
+`process_action()`. The `process_action()` function checks to see if
+any "actions" have been requested. If no actions have been requested,
+`process_action()` returns without doing anything. In this case,
+`process_action()` will see that the `'lucky_color'` action has been
+requested. As a result, the `process_action()` function will look for
+a [`question`] or [`code`] block that defines
+`lucky_color`. (Internally, it calls [`force_ask()`].) Since there is
+a `question` in the interview that offers to define `lucky_color`,
+that `question` will be asked.
 
-In the above example, when the user clicks on the link generated by
-`url_action('lucky_color')`, the interview will load as normal.
-Before [`initial`] and [`mandatory`] blocks are processed,
-**docassemble** will run the function `process_action()`.  The
-`process_action` function will check to see if any "actions" have been
-requested.  In this case, it will find that the `'lucky_color'` action
-has been requested.  As a result, **docassemble** will look for a
-[`question`] or [`code`] block that defines `lucky_color`.  (Internally,
-it calls [`force_ask()`].)  Since there is a question in the interview
-that offers to define `lucky_color`, that question will be asked.
+If the user refreshes the screen when the "What is your lucky color?"
+question is showing, the user will arrive at the "What is your lucky
+color?" question again. Docassemble remembers that the `'lucky_color'`
+action was pending, and the `process_action()` function will continue
+sending the user to the "What is your lucky color?" question until the
+user answers it. It does this even though the interview logic (the
+`mandatory` block) does not require a definition of `lucky_color`. The
+"action" is a diversion from the interview logic. When the user
+answers the "What is your lucky color?" question, the action is
+satisfied, and is no longer considered pending. `process_action()`
+returns without forcing a question to be asked, the normal interview
+logic is evaluated, and the "Please confirm the following information"
+`question` is shown.
+
+Even if the variable `lucky_color` is already defined, the
+`'lucky_color'` action will always cause the "What is your lucky
+color?" `question` to be shown. This makes "actions" useful for
+allowing users to revisit questions they may have already answered.
 
 When the user clicks on the link generated by
 `url_action('set_number_event', increment=1)`, the `process_action()`
 function will look for a [`question`] or [`code`] block that defines
-`set_number_event`.  It will find the `code` block that was labeled
-with `event: set_number_event`.  (See [Setting Variables] for more
-information about [`event`]s.)  It will then run that code block.
-Note how the [Python] code within that block knows the value of
-`increment` which had been specified in the `url_action` function: it
-retrieves it with [`action_argument()`].
+`set_number_event`. It will find the `code` block that was labeled
+with `event: set_number_event`. (See [Setting Variables] for more
+information about [`event`]s.)  It will then run that code block.  The
+[Python] code within that block uses [`action_argument()`] to retrieve
+the value of `increment` that had been specified in as a parameter to
+the `url_action()` function call.
 
 By default, the `process_action()` function runs right before
 **docassemble** starts processing your [`initial`] and [`mandatory`]
@@ -1238,8 +1255,44 @@ multi-lingual interview and you have an `initial` block that calls
 language was initialized, and as a result [`question`]s might appear in
 the wrong language.
 
-If there is no action waiting to execute, `process_action()` returns
-quickly without doing anything.
+{% highlight yaml %}
+mandatory: True
+code: |
+  multi_user = True
+---
+question: |
+  Language/Idioma/Langue
+field: user_local.language
+choices:
+  - English: en
+  - Español: es
+  - Français: fr
+---
+initial: True
+code: |
+  set_language(user_local.language)
+  process_action()
+{% endhighlight %}
+
+Note that an [`initial`] block is just like a [`mandatory`] block
+except that it always runs, even if it has already run to completion
+in the interview session before. In this example, the `mandatory`
+block runs first, and because it runs to completion, it will not run
+again. The `initial` block will run every time the screen loads. This
+is a multi-user interview, and the operative language will be set to
+whatever language the current user speaks. (See [`user_local`] for
+more information about that special object.)
+
+Calling `process_action()` manually in an `initial` block can also be
+useful for security purposes. You might want to ensure that actions
+can only be carried out if the user is logged in:
+
+{% highlight yaml %}
+initial: True
+code: |
+  if user_logged_in():
+    process_action()
+{% endhighlight %}
 
 You can pass as many named parameters as you like to an "action."  For
 example:
@@ -1263,18 +1316,6 @@ code: |
 In this example, we use [`action_arguments()`] to retrieve all of the
 arguments to [`url_action()`] as a [Python dictionary].
 
-You can control whether and when the "action" will be performed by
-placing the `process_action()` statement in a particular place in your
-[`initial`] code.  For example, you might want to ensure that actions
-can only be carried out if the user is logged in:
-
-{% highlight yaml %}
-initial: True
-code: |
-  if user_logged_in():
-    process_action()
-{% endhighlight %}
-
 You can think of "actions" as temporary diversions from the regular
 interview logic. When the action is over, the regular interview logic
 resumes. When the action is considered to be over depends on what the
@@ -1287,16 +1328,24 @@ action refers to.
   action will be over when the user clicks a `continue` button on the
   `question`. If the `question` does not have a `continue` button, the
   `question` will be a dead end and the action will never be over.
-* If the action refers to a variable defined by a `code` block, the
-  action will be considered "over" only when the `code` block runs
-  through to completion without raising any exceptions.
 * If the action refers to the `event` name of a `code` block,
   **docassemble** will run the `code` and it will consider the action
   to be over no matter what the `code` block does. From within such a
   `code` block, you can call `force_ask()` to cause additional actions
   to run.
+* If the action refers to a variable defined by a `code` block, the
+  code will be run in a more "persistent" manner than `code`
+  designated as an `event`. If the `code` stops running, for example
+  because an undefined variable is encountered and a `question` needs
+  to be asked, the `process_action()` function will continue to run
+  the action the next time the screen loads. When the `code` runs
+  through to completion, **docassemble** will continue looking
+  backward through the YAML for other blocks that offer to define the
+  variable, and if it finds any, it will process those blocks
+  according to these four rules.
 
-You can test this out in the following interview:
+You can test out different types of actions in the following
+interview:
 
 {% include side-by-side.html demo="actions-demo" %}
 
@@ -1308,9 +1357,10 @@ You can test this out in the following interview:
 
 {% include side-by-side.html demo="forget-prior" %}
 
-Note that when you press a Continue button, you are taken back to
-where you were when you clicked on the action link; you complete the
-current action and "fall back" to the previous incomplete action.
+Note that when you press a Continue button in this interview, you are
+taken back to where you were when you clicked on the action link; you
+complete the current action and "fall back" to the previous incomplete
+action.
 
 The `url_action()` function accepts an optional keyword parameter
 `_forget_prior`. If set to `True`, then when the action is run, any
@@ -1321,17 +1371,28 @@ then when you click Continue, you go back to the first page of the
 interview; launching the action to go to the fourth page wipes out all
 of the prior actions.
 
-Note that `url_action()` links will only work for the current user,
-whose access credentials are stored in a cookie in his or her browser.
-It is possible for actions to be run by a "third party," though; for
-information on how to do this, see [`interview_url_action()`] and
-[scheduled tasks].
+Using `_forget_prior=True` is useful when you have an action that
+serves a navigation-related purpose. If the user clicks links to
+navigate through screens, the "stacking" aspect of actions is not what
+the user expects.
+
+Note that the "current action" or the current "stack" of actions is
+specific to the user. In a multi-user interview, if one user has a
+pending action, other users will not see that pending action, even
+though the normal interview logic may take both users to the same
+screen. The action "stack" that is effective for a user is based on
+access credentials stored in a cookie in the browser. If a user is not
+logged in, these credentials are tied to the user's session in their
+browser.
+
+See [`interview_url_action()`] and [scheduled tasks] for information
+about triggering actions externally.
 
 ## <a name="action_menu_item"></a>action_menu_item()
 
 One way to let the user trigger "[actions]" is to provide a selection in
-the menu of the web app.  You can do this by setting the `menu_items`
-list.  See [special variables] section for more information about
+the menu of the web app. You can do this by setting the `menu_items`
+list. See [special variables] section for more information about
 setting menu items.
 
 {% highlight yaml %}
@@ -1357,30 +1418,30 @@ code: |
                  action_menu_item('Get less', 'change_count', increment=-1) ]
 {% endhighlight %}
 
-One keyword parameter has special meaning.  If you set `_screen_size`
+One keyword parameter has special meaning. If you set `_screen_size`
 to `'small'`, then the menu item will only appear on small screens.
-If you set it to `'large'`, it will only appear on large screens.  A
+If you set it to `'large'`, it will only appear on large screens. A
 "large" screen is [Bootstrap] `md` size or above.
 
 ## <a name="interview_url"></a>interview_url()
 
 The `interview_url()` function returns a URL to the interview that
 provides a direct link to the interview and the current variable
-store.  This is used in [multi-user interviews] to invite additional
+store. This is used in [multi-user interviews] to invite additional
 users to participate.
 
 {% include side-by-side.html demo="interview-url" %}
 
 People who click on the link (other than the current user) will not be
 able to access the interview answers unless [`multi_user`] is set to
-`True`.  This is because interviews are encrypted on the server by
-default.  Setting [`multi_user`] to `True` disables this encryption.
+`True`. This is because interviews are encrypted on the server by
+default. Setting [`multi_user`] to `True` disables this encryption.
 Note that the communication between **docassemble** and the browser
 will always be encrypted if the site is configured to use [HTTPS].
 The server-side encryption merely protects against the scenario in
 which the server running **docassemble** is compromised.
 
-You can include keyword arguments to `interview_url()`.  These will be
+You can include keyword arguments to `interview_url()`. These will be
 included as additional URL parameters. When the user visits the URL,
 **docassemble** will store the names and values in the [`url_args`]
 dictionary of the interview, and the interview logic of the interview
@@ -1388,7 +1449,7 @@ can access the names and values by inspecting [`url_args`].
 
 The keyword argument `i` is special: you can set this to the name of
 an interview (e.g., `docassemble.demo:data/questions/questions.yml`)
-and this interview will be used instead of the current interview.  In
+and this interview will be used instead of the current interview. In
 this case, the `session` parameter is omitted and the URL functions as
 a referral to a different interview, with a fresh variable
 store. Interview filenames relative to the current package are valid
@@ -1397,7 +1458,7 @@ store. Interview filenames relative to the current package are valid
 The keyword argument `session` is also special: you can set this to
 the known session ID of an interview (e.g., obtained from
 [`interview_list()`]), and also set `i` to the filename of the
-interview corresponding with the session.  Then the link will point
+interview corresponding with the session. Then the link will point
 not to the current session, but to the session indicated by the
 session ID.
 
@@ -1413,20 +1474,20 @@ information about how this works, see the documentation for the
 
 
 The keyword argument `local` is also special: set this to `True` if
-you want the URL to be relative (i.e., it will start with `?`).  Note
+you want the URL to be relative (i.e., it will start with `?`). Note
 that for purposes of the "copy link" feature of web browsers, this
 does not matter; the web browser will provide a full URL even if the
-underlying URL is relative.  However, **docassemble** treats URLs
+underlying URL is relative. However, **docassemble** treats URLs
 differently if they begin with `http:`/`https:` or `?`: links that
 begin with `http` will open in another tab.
 
 The keyword argument `style` is also special: set this to `'short'` if
-you want the URL to begin with `/run` instead of `/interview`.  This
+you want the URL to begin with `/run` instead of `/interview`. This
 will use `/run/shortcutname` format if the interview is listed in
 [`dispatch`], and otherwise will use `/run/packagename/filename`
-format.  In the absence of a `style` argument, the URL returned by
+format. In the absence of a `style` argument, the URL returned by
 `interview_url()` in the context of the web application will use the
-style of the URL that is in the location bar of the web browser.  If
+style of the URL that is in the location bar of the web browser. If
 the URL in the location bar is `/run/packagename/filename`, the URL
 returned by `interview_url()` will be `/run/packagename/filename`.
 However, if `interview_url()` is called by a background process or a
@@ -1436,18 +1497,18 @@ default, unless a `style` is specified.
 
 There are security risks with URLs created using `interview_url()`.
 The URLs contain a `session` key, and if `multi_user` is `True`,
-anyone with that `session` key can access the interview session.  If
+anyone with that `session` key can access the interview session. If
 you e-mail the result of `interview_url()`, the `session` key may be
 stored permanently in the person's e-mail account, where a third party
 may see it.
 
 One way around this potential security risk is to set the keyword argument
-`temporary`.  Then a special URL will be returned, which will contain
-a code that will expire after a certain number of hours.  For example,
+`temporary`. Then a special URL will be returned, which will contain
+a code that will expire after a certain number of hours. For example,
 if you add `temporary=48` to the keyword arguments, the link will
-expire after 48 hours.  When the user clicks visits the link, the user
+expire after 48 hours. When the user clicks visits the link, the user
 will be redirected to the location that `interview_url()` would return
-if `temporary` was not set.  By using a temporary URL, you will avoid
+if `temporary` was not set. By using a temporary URL, you will avoid
 sharing the actual session ID, and you will protect against any
 unauthorized access that would take place after 48 hours have expired.
 
@@ -1457,56 +1518,56 @@ If you set `temporary` to `0` or to a non-number, the expiration
 period will default to 24 hours.
 
 You can add additional security by using the keyword argument
-`once_temporary` instead of the keyword argument `temporary`.  This
+`once_temporary` instead of the keyword argument `temporary`. This
 works the same way as `temporary`, except the link will also expire
 immediately after it is used for the first time.
 
 ## <a name="interview_url_as_qr"></a>interview_url_as_qr()
 
 `interview_url_as_qr()` is like `interview_url()`, except it inserts
-into the markup a [QR code] linking to the interview.  The resulting
+into the markup a [QR code] linking to the interview. The resulting
 [QR code] can be used to pass control from a web browser or a paper
 handout to a mobile device.
 
 ## <a name="interview_url_action"></a>interview_url_action()
 
 `interview_url_action()` is like [`interview_url()`], except that it
-also has the effect of running [`url_action()`].  You will want to use
+also has the effect of running [`url_action()`]. You will want to use
 this instead of [`url_action()`] if you want the user to be able to
 share the URL with other people, or run it unattended.
 
 {% include side-by-side.html demo="interview_url_action" %}
 
-Note that in this example, [`multi_user`] is set to `True`.  This
-disables server-side encryption of answers.  This is necessary because
+Note that in this example, [`multi_user`] is set to `True`. This
+disables server-side encryption of answers. This is necessary because
 the encryption uses an decryption key, and a decryption key should not
 be embedded in a URL.
 
 The first argument to `interview_url_action()` is the name of the
-action.  The keyword arguments are the arguments of the action.  In
+action. The keyword arguments are the arguments of the action. In
 this respect, `interview_url_action()` is similar to
-[`url_action()`].  However, the following keyword arguments have
+[`url_action()`]. However, the following keyword arguments have
 special meaning:
 
 * `i` - if you set an `i` parameter, `interview_url_action()` will
-  form a URL for an interview other than the current interview.  The
+  form a URL for an interview other than the current interview. The
   current session ID will not be included by default in the URL.
 * `session`: if you set a `session` parameter, the value of `session`
-  will be used as the session ID.  This will allow the user of the URL
+  will be used as the session ID. This will allow the user of the URL
   to resume an existing interview session other than the current
-  interview session.  By default, if `i` is not set, the session ID of
+  interview session. By default, if `i` is not set, the session ID of
   the current session is included in the URL, which allows the user of
   the URL to resume the current interview session
 * `local`: if you set the `local` parameter to a true value, then a
-  relative URL will be returned.  By default, `interview_url_action()`
+  relative URL will be returned. By default, `interview_url_action()`
   returns a complete URL.
 * `new_session`: if you set the `new_session` parameter to a true
-  value, then `new_session=1` will be included in the URL.  Set this
+  value, then `new_session=1` will be included in the URL. Set this
   if you are providing an `i` parameter and you want to make sure that the
   user of the URL starts a new session rather than resuming an
   existing one.
 * `reset`: if you set the `reset` parameter to a true value, then
-  `reset=1` will be included in the URL.  Set this if you are
+  `reset=1` will be included in the URL. Set this if you are
   providing an `i` parameter and you want the user of the URL to
   restart any existing session they may be using in the interview
   indicated by `i`.
@@ -1525,7 +1586,7 @@ interview, with the specified actions.
 
 Note that there is a limit to the number of characters a [QR code] can
 hold, and you might run up against this limit if you try to add too
-many arguments to the URL.  Using the `temporary` keyword parameter is
+many arguments to the URL. Using the `temporary` keyword parameter is
 one way around this limitation.
 
 ## <a name="action_arguments"></a>action_arguments()
@@ -1566,12 +1627,12 @@ code: |
 If you are writing an [`initial`] block that calls `process_action()`
 and you want to know the name of the action itself before you call
 `process_action()`, you can retrieve the name of the action by calling
-`action_argument()` without an argument.  This will return the name of
-the action itself.  If the result is `None`, then no action was called
+`action_argument()` without an argument. This will return the name of
+the action itself. If the result is `None`, then no action was called
 for the current request (and `process_action()` will not do anything).
 
 You can only retrieve the action name with `action_argument()` before
-you call `process_action()`.  During the processing of the action, and
+you call `process_action()`. During the processing of the action, and
 after `process_action()` returns, `action_argument()` will always
 return `None`.
 
@@ -1614,7 +1675,7 @@ The `url_of()` function also has a few special uses.
 * If applied to a [`DAFile`] object, it will return a URL to the file.
 * `url_of('help')` returns a URL that causes the help tab to be shown,
   if there is a help tab.
-* `url_of('login')` returns a URL to the sign-in page.  It takes an
+* `url_of('login')` returns a URL to the sign-in page. It takes an
   optional keyword parameter `next`, which you can set to a URL if you
   want the user to be directed to a particular URL after they log in.
 * `url_of('signin')` does the same thing as `url_of('login')`.
@@ -1629,12 +1690,12 @@ The `url_of()` function also has a few special uses.
   begin with a package name, the current package will be
   substituted. (See also [`interview_url()`], which does something
   similar but with more features.)
-* `url_of('logout')` returns a URL that logs the user out.  It accepts
+* `url_of('logout')` returns a URL that logs the user out. It accepts
   a `next` parameter.
 * `url_of('exit_logout')` returns a URL that deletes the interview session,
   logs the user out (if the user is logged in), and redirects to the
   [`exitpage`].
-* `url_of('leave')` redirects to the [`exitpage`].  It does not log
+* `url_of('leave')` redirects to the [`exitpage`]. It does not log
   the user out or delete the interview session.
 * `url_of('register')` returns a URL to the user registration page.
   It accepts a `next` parameter.
@@ -1673,10 +1734,10 @@ However, if you want a full URL, you can call, e.g., `url_of('root',
 _external=True)`.
 
 You can set `_attachment=True` if you want the user to download the
-file.  This only works when `url_of()` refers to a file.
+file. This only works when `url_of()` refers to a file.
 
 The `url_of()` function can also be used to format URLs with
-parameters.  For example, `url_of('https://example.com', query="Hello, world!")`
+parameters. For example, `url_of('https://example.com', query="Hello, world!")`
 becomes `https://example.com?query=Hello%2C+world%21`.
 
 You can also use this feature to format `mailto:` URLs:
@@ -1747,26 +1808,26 @@ parameters:
 * `username`: the user name of the user.
 * `password`: the password of the user.
 * `i` (optional): the filename of an interview to which the user will
-   be redirected after they log in.  E.g.,
+   be redirected after they log in. E.g.,
    `docassemble.demo:data/questions/questions.yml`.
 * `session` (optional): the session ID for the interview session (if
-  `i` is also provided).  Providing this here rather than in the
+  `i` is also provided). Providing this here rather than in the
   `url_args` prevents sending the session ID to the user's browser.
 * `resume_existing` (optional): set this to `1` if you do not know
    the `session` code but you are providing an `i` filename and you
    want the user to resume an existing session in that interview, if
    they have one.
 * `expire` (optional): the number of seconds after which the URL will
-   expire.  The default is 15 seconds.
+   expire. The default is 15 seconds.
 * `url_args` (optional): a dictionary containing additional URL
    arguments that should be included in the URL to which the user is
    directed after they log in.
 * `next` (optional): if the user should be directed after login to a
    page that is not an interview, you can omit `i` and instead set
    this parameter to a value like `playground` (for the [Playground])
-   or `config` (for the [Configuration] page).  For a list of all
+   or `config` (for the [Configuration] page). For a list of all
    possible values, see above (these are the "special uses" of
-   [`url_of()`]).  If `url_args` are supplied, these will be included
+   [`url_of()`]). If `url_args` are supplied, these will be included
    in the resulting URL.
 
 In addition to expiring after `expire` seconds, the URL expires
@@ -1786,7 +1847,7 @@ An API version of the `login_url` feature is available at
 The `url_ask()` function is like [`url_action()`], except instead
 of accepting a single action name and optional arguments, it accepts a
 single data structure, which is treated like the `fields` specifier
-inside an item of a [`review`] block.  It returns a URL that will
+inside an item of a [`review`] block. It returns a URL that will
 result in the asking of certain [`question`]s when the user visits it.
 
 * `url_ask('favorite_fruit')` - Ask the [`question`] that defines `favorite_fruit`.
@@ -1819,7 +1880,7 @@ subsection on [customizing the display of `review` options].
 
 The `action_button_html()` function returns the HTML of a
 Bootstrap-formatted button (an `<a>` tag styled as a button) that
-visits a given URL.  It is often given the output of [`url_ask()`] or
+visits a given URL. It is often given the output of [`url_ask()`] or
 [`url_action()`], but you can give it any URL.
 
 {% include side-by-side.html demo="action-button-html" %}
@@ -1827,21 +1888,21 @@ visits a given URL.  It is often given the output of [`url_ask()`] or
 It accepts the following optional keyword arguments:
 
 * `icon` - this is the name of the [Font Awesome] icon to use at the
-  start of the button.  It can take a value like `'pencil-alt'`.  By
+  start of the button. It can take a value like `'pencil-alt'`. By
   default, the icon is assumed to be in the "solid" collection
-  (`fas`).  To use a different collection, specify a name such as
+  (`fas`). To use a different collection, specify a name such as
   `fab-fa-windows` for the `windows` icon in the "brand" collection.
-  If you do not want any icon, set `icon` to `None`.  The default is
+  If you do not want any icon, set `icon` to `None`. The default is
   `None`.
-* `color` - this is the Bootstrap color of the button.  The options
+* `color` - this is the Bootstrap color of the button. The options
   are `primary`, `secondary`, `success`, `danger`, `warning`, `info`,
-  `light`, `link`, and `dark`.  The default is `'dark'`.  The actual
+  `light`, `link`, and `dark`. The default is `'dark'`. The actual
   colors depend on the Bootstrap theme.
-* `size` - this is the Bootstrap size of the button.  The options are
-  `'sm'`, `'md'`, and `'lg'`.  The default is `'sm'`.
+* `size` - this is the Bootstrap size of the button. The options are
+  `'sm'`, `'md'`, and `'lg'`. The default is `'sm'`.
 * `block` - if set to `True`, the button will fill the width of the
   question area.
-* `label` - this is the text on the button.  It passes through the
+* `label` - this is the text on the button. It passes through the
   [`word()`]  function, so you can use the translation system to
   handle different languages.
 * `classname` - set this to one or more class names (separated by a
@@ -1860,7 +1921,7 @@ It accepts the following optional keyword arguments:
   will ensure that the response is handled appropriately.
 * `id_tag` - if you want your button to have an `id` so that you can
   manipulate it with [JavaScript], set `id_tag` to the `id` you want
-  to use.  For example, if you don't want the button to actually visit
+  to use. For example, if you don't want the button to actually visit
   a link, you can do `action_button_html('#', label="Click me",
   id_tag="mybutton")` and then write [JavaScript] code that does something
   like `$("#mybutton").click(function(e){e.preventDefault();
@@ -1916,7 +1977,7 @@ filter:
 {: .blockquote}
 
 Note that if you want to include a QR code that points to an interview
-or an interview action, there are shorthand functions for that.  See
+or an interview action, there are shorthand functions for that. See
 [`interview_url_as_qr()`](#interview_url_as_qr) and
 [`interview_url_action_as_qr()`](#interview_url_action_as_qr).
 
@@ -1927,28 +1988,28 @@ a [Python list] with the encoded text string or strings.
 
 {% include side-by-side.html demo="read-qr" %}
 
-The first argument must be a [`DAFile`] or [`DAFileList`] object.  If
+The first argument must be a [`DAFile`] or [`DAFileList`] object. If
 the argument is a [`DAFileList`] with more than one file, all files
 (and all pages within all files) will be scanned for QR codes.
 
 The function accepts image files (JPEG, PNG, etc.) as well as PDF
-files.  If you provide PDF files, the following optional parameters
+files. If you provide PDF files, the following optional parameters
 customize the reading of the PDF files (they are passed directly to
 [pdftoppm]).
 
-* `f` indicates the first page of the PDF file to read.  By
+* `f` indicates the first page of the PDF file to read. By
   default, all pages are read.
-* `l` indicates the last page of the PDF file to read.  By
+* `l` indicates the last page of the PDF file to read. By
   default, all pages are read.
-* `x`: for cropping PDF pages.  Indicates the x-coordinate of the crop
-  area's top left corner, in pixels.  (By default, PDF files are
+* `x`: for cropping PDF pages. Indicates the x-coordinate of the crop
+  area's top left corner, in pixels. (By default, PDF files are
   converted at 300 dpi unless another value is given by the
   [`ocr dpi`] configuration directive.)
-* `y`: for cropping PDF pages.  Indicates the y-coordinate of the crop
+* `y`: for cropping PDF pages. Indicates the y-coordinate of the crop
   area's top left corner, in pixels.
-* `W`: for cropping PDF pages.  Indicates the width of the crop area
+* `W`: for cropping PDF pages. Indicates the width of the crop area
   in pixels (default is 0).
-* `H`: for cropping PDF pages.  Indicates the height of the crop area
+* `H`: for cropping PDF pages. Indicates the height of the crop area
   in pixels (default is 0).
 
 The function returns a [Python list] with the codes found, in the
@@ -1965,42 +2026,42 @@ The `send_email()` function sends an e-mail.
 All of the arguments to `send_email()` are [keyword arguments]:
 
 * `to` expects a list of [`Individual`]s, or [`Person`]s,
-  [`DAEmailRecipient`]s, or plain e-mail addresses.  It also accepts a
+  [`DAEmailRecipient`]s, or plain e-mail addresses. It also accepts a
   single item of any of these.
-* `sender` expects a single [`Individual`].  If not set, the
+* `sender` expects a single [`Individual`]. If not set, the
   `default_sender` information from the [configuration] is used.
-* `reply_to` expects a single [`Individual`], or `None`.  This sets
+* `reply_to` expects a single [`Individual`], or `None`. This sets
   the (optional) `Reply-To` header of the e-mail, which determines the
   e-mail address to which replies are directed.
 * `cc` expects a [list] of [`Individual`]s, or `None`.
 * `bcc` expects a [list] of [`Individual`]s, or `None`.
-* `body` expects text, or `None`.  Will set the plain text content of
+* `body` expects text, or `None`. Will set the plain text content of
   the e-mail.
-* `html` expects text, or `None`.  Will set the (optional) [HTML]
+* `html` expects text, or `None`. Will set the (optional) [HTML]
   content of the e-mail.
-* `subject` expects text, or `None`.  Will set the subject of the
-  e-mail.  The default is `""`.
-* `template` expects a [`template`] object, or `None`.  These
+* `subject` expects text, or `None`. Will set the subject of the
+  e-mail. The default is `""`.
+* `template` expects a [`template`] object, or `None`. These
   templates can be created in an interview file using the `template`
-  specifier.  If this [keyword argument] is supplied, both the plain
+  specifier. If this [keyword argument] is supplied, both the plain
   text and [HTML] contents of the e-mail will be set by converting the
   [Markdown] text of the template into [HTML] and by converting the
-  [HTML] to plain text (using [html2text]).  In addition, the subject
-  of the e-mail will be set to the subject of the template.  You can
+  [HTML] to plain text (using [html2text]). In addition, the subject
+  of the e-mail will be set to the subject of the template. You can
   override any of these behaviors by manually specifying `body`,
   `html`, or `subject`.
-* `task` expects the name of a [task].  If this argument is provided,
+* `task` expects the name of a [task]. If this argument is provided,
   and if sending the e-mail is successful, the task will be marked as
   having been performed (i.e., [`mark_task_as_performed()`] will be
-  called).  Alternatively, you can handle this in your own code, but
+  called). Alternatively, you can handle this in your own code, but
   you might find it convenient to let the `send_email()` function
   handle it for you.
 * `task_persistent`: if you set a `task`, you can optionally set
   the "persistence" of the task by setting this to `True` or a value
-  like `'user'`.  For more information, see the documentation for the
+  like `'user'`. For more information, see the documentation for the
   [task-related functions](#tasks).
 * `attachments` expects a [list] of [`DAFile`], [`DAFileList`], or
-  [`DAFileCollection`] objects.  You can include:
+  [`DAFileCollection`] objects. You can include:
   * Images generated by `signature` blocks (objects of class
   [`DAFile`]);
   * File uploads generated by including [fields] of [`datatype: file`] or
@@ -2008,12 +2069,12 @@ All of the arguments to `send_email()` are [keyword arguments]:
   * [Documents] generated by [`attachments`] to a [`question`] for which a
   `variable` was provided (objects of class [`DAFileCollection`]).
 * `mailgun_variables` expects a [dictionary] of [user variables] that
-  should be passed to the [Mailgun API].  This is only applicable if
+  should be passed to the [Mailgun API]. This is only applicable if
   you are using the [Mailgun API] for [e-mail sending].
 * `dry_run` can be set to `True` if you want to do a "dry run" of the
-  e-mail sending process.  You would use this if you wanted to make
+  e-mail sending process. You would use this if you wanted to make
   sure that all of the variables `send_email()` needs are defined
-  before you actually send the e-mail.  The default is `False`.
+  before you actually send the e-mail. The default is `False`.
 * `config` can be set to the `name` of an e-mail configuration if you
   are using [multiple e-mail configurations] in your
   [Configuration]. This allows you to contol which e-mail server or
@@ -2028,7 +2089,7 @@ use the `name` and `email` attributes of the listed [`Individual`]s to
 form e-mail addresses.
 
 `send_email()` returns `False` if an error prevented the e-mail from
-being delivered to the mail server; otherwise it returns `True`.  Note
+being delivered to the mail server; otherwise it returns `True`. Note
 that this function might return `True` even though no e-mail is
 actually delivered to the recipient; the return value indicates only
 whether there was a problem sending the e-mail with [Flask-Mail].
@@ -2040,15 +2101,15 @@ Here is an example of sending an attachment via e-mail:
 
 {% include side-by-side.html demo="send-email-with-attachment" %}
 
-Sending e-mail can be slow.  If you call `send_email()` from within
-your interview logic, the user might have to look at a spinner.  In
+Sending e-mail can be slow. If you call `send_email()` from within
+your interview logic, the user might have to look at a spinner. In
 order to provide a better experience to users, you may wish to call
 `send_email()` from within a [background process].
 
 ## <a name="interview_email"></a>interview_email()
 
 The `interview_email()` function returns an e-mail address that the
-user can use to send a message to the interview.  For more information
+user can use to send a message to the interview. For more information
 about how users can send e-mails to interview sessions, see the
 documentation for the [e-mail to interview] feature.
 
@@ -2057,25 +2118,25 @@ If the [`incoming mail domain`] directive in your [configuration] is
 like `kgjeir@help.example.com`.
 
 The address returned by `interview_email()` is a unique random
-sequence of six lowercase letters.  If any e-mails are received at
+sequence of six lowercase letters. If any e-mails are received at
 this e-mail address, **docassemble** will associate them with the
 user's session and the e-mails can be retrieved with [`get_emails()`].
 
 The result returned by `interview_email()` will be unique to the
-session.  Every time your interview calls `interview_email()`, the
+session. Every time your interview calls `interview_email()`, the
 same e-mail address will be returned.
 
 You can also associate more than one e-mail address with the session,
-if you wish.  For example, in a litigation application, you may want
+if you wish. For example, in a litigation application, you may want
 to have one e-mail address for receiving evidence from the client and
-another address for corresponding with opposing counsel.  You can
+another address for corresponding with opposing counsel. You can
 obtain these different e-mail addresses using the optional keyword
-argument `key`.  For example, `interview_email(key='evidence')` and
+argument `key`. For example, `interview_email(key='evidence')` and
 `interview_email(key='opposing counsel')` will return different unique
 addresses.
 
 If you are using a `key` to get an e-mail address, you can also
-set the optional keyword argument `index` to an integer.  For example,
+set the optional keyword argument `index` to an integer. For example,
 if there are multiple opposing counsel and you want a separate e-mail
 address for each one, you can use `interview_email(key='opposing
 counsel', index=1)`, `interview_email(key='opposing
@@ -2084,7 +2145,7 @@ counsel', index=2)`, etc.
 ## <a name="get_emails"></a>get_emails()
 
 The `get_emails()` function returns a [list] of objects representing
-e-mail addresses generated with [`interview_email()`].  For more
+e-mail addresses generated with [`interview_email()`]. For more
 information about how users can send e-mails to interview sessions,
 see the documentation for the [e-mail to interview] feature.
 
@@ -2101,9 +2162,9 @@ attributes:
 
 If you used `key` with [`interview_email()`], you can use the optional
 `key` and `index` keyword arguments to `get_emails()` in order to
-filter the results.  For example, `get_emails(key='evidence')` will
+filter the results. For example, `get_emails(key='evidence')` will
 only return information about e-mail addresses created with
-`interview_email(key='evidence')`.  Calling
+`interview_email(key='evidence')`. Calling
 `get_emails(key='evidence', index=2)` will limit the [list] even further
 to the e-mail address created by `interview_email(key='evidence',
 index=2)`.
@@ -2112,7 +2173,7 @@ index=2)`.
 
 ## <a name="send_fax"></a>send_fax()
 
-The `send_fax()` function sends a PDF document as a fax.  This
+The `send_fax()` function sends a PDF document as a fax. This
 function requires you to create an account with a [fax provider].
 
 `send_fax()` takes two arguments, a destination and a file.
@@ -2147,16 +2208,16 @@ question: |
 reload: True
 {% endhighlight %}
 
-The destination can be a [`Person`] or a fax number.  If it is a
+The destination can be a [`Person`] or a fax number. If it is a
 [`Person`], the fax number will be obtained from the `fax_number`
-attribute of the object.  The `send_fax()` function will convert the
-fax number to [E.164] format.  To do so, it will need to determine the
-appropriate [country calling code] for the phone number.  This country
+attribute of the object. The `send_fax()` function will convert the
+fax number to [E.164] format. To do so, it will need to determine the
+appropriate [country calling code] for the phone number. This country
 code will be based on the `country` attribute of the object, or the
 `address.country` attribute, but if neither of these attributes is
-already defined, the value of [`get_country()`] will be used.  If you
+already defined, the value of [`get_country()`] will be used. If you
 want to use a specific country, you can call `send_fax()` with the
-optional keyword parameter `country`.  The format of the `country`
+optional keyword parameter `country`. The format of the `country`
 attribute and the keyword parameter is expected to be [ISO 3166-1
 alpha-2] format.
 
@@ -2165,7 +2226,7 @@ The second argument, the file, must be a file object such as a
 object.
 
 The `send_fax()` function returns an object that represents the status
-of the fax sending.  The object has the following methods:
+of the fax sending. The object has the following methods:
 
 * `.status()` - this will represent the status of the sending of the
   fax. The available values depend on your fax provider. If there is a
@@ -2174,7 +2235,7 @@ of the fax sending.  The object has the following methods:
 * `.info()` - this will be a [dictionary] containing information about
   the fax. The format depends on which fax provider you are using.
 * `.received()` - this will be `True` or `False` depending on whether
-  the fax has been received yet.  It will be `None` if no result is
+  the fax has been received yet. It will be `None` if no result is
   available.
 * `.pages()` - if the fax is successfully delivered, this will return
   the number of pages sent.
@@ -2194,43 +2255,43 @@ task] that checks in hourly.
 
 ## <a name="map_of"></a>map_of()
 
-The `map_of()` function inserts a Google Map into question text.  (It
+The `map_of()` function inserts a Google Map into question text. (It
 does not work within documents.)  The arguments are expected to be
-**docassemble** [objects].  Different objects are mapped differently:
+**docassemble** [objects]. Different objects are mapped differently:
 
 * [`Address`] objects: if an [`Address`] object is provided as an argument
   to `map_of()`, a map marker will be placed at the geocoded
-  coordinates of the address.  The description of the address will be
+  coordinates of the address. The description of the address will be
   the address itself.
   * _Technical details_: if the object is called `address`, the marker
     will be placed at the coordinates `address.location.latitude` and
-    `address.location.longitude`.  (The attribute `address.location`
+    `address.location.longitude`. (The attribute `address.location`
     is a [`LatitudeLongitude`] object.)  The description of the marker
-    will be set to `address.location.description`.  These fields are
+    will be set to `address.location.description`. These fields are
     set automatically during the geocoding process, which will take
     place the first time **docassemble** runs `map_of()`, if it has
-    not taken place already.  The marker icon can be customized by
+    not taken place already. The marker icon can be customized by
     setting `address.icon`.
 * [`Organization`] objects: map markers will be placed at the
-  locations of each of the organization's offices.  For example, if
+  locations of each of the organization's offices. For example, if
   the object name is `company`, markers will be placed on the map for
   each address in `company.office` (which is a list of [`Address`]es).
   The icon for the `i`th office will be `company.office[i].icon`, or,
   if that is not defined, it will be `company.icon` if that is
-  defined.  The description of each marker will be the organization's
+  defined. The description of each marker will be the organization's
   name (`company.name.full()`) followed by
   `company.office[i].location.description`.
 * [`Person`] objects: a map marker will be placed at the person's
-  address.  The description will be the person's name, followed by the
-  address.  The marker icon can be customized by setting `person.icon`
-  (for a [`Person`] object called `person`).  If the [`Person`] object
+  address. The description will be the person's name, followed by the
+  address. The marker icon can be customized by setting `person.icon`
+  (for a [`Person`] object called `person`). If the [`Person`] object
   is the user, the default icon is a blue circle.
 
 {% include demo-side-by-side.html demo="testgeolocate" %}
 
 In order for maps to appear, you will need to configure a
-[Google API key].  From the [`google`] section of the [configuration],
-the `google maps api key` will be used if it exists.  If a
+[Google API key]. From the [`google`] section of the [configuration],
+the `google maps api key` will be used if it exists. If a
 `google maps api key` is not present, the `api key` will be used.
 
 ## <a name="location_known"></a>location_known()
@@ -2246,7 +2307,7 @@ location.
 
 Returns `True` or `False` depending on whether an attempt has yet been
 made to transmit the user's GPS location from the browser to
-docassemble.  Will return true even if the attempt was not successful
+docassemble. Will return true even if the attempt was not successful
 or the user refused to consent to the transfer.
 
 See [`track_location`] and [`LatitudeLongitude`] for
@@ -2286,7 +2347,7 @@ can return other things depending on the optional keyword parameter
 The `countries_list()` function returns a list of dictionaries, where
 each dictionary contains a single key-value pair mapping a two-letter,
 capitalized country abbreviation to the name of the country (in
-English).  This function is primarily useful when asking a user to
+English). This function is primarily useful when asking a user to
 specify his or her country.
 
 The `country_name()` function returns the name of a country (in
@@ -2304,16 +2365,16 @@ The data come from the [`pycountry` package].
 ## <a name="states_list"></a><a name="state_name"></a>states_list() and state_name()
 
 The `states_list()` function returns a dictionary that maps state
-abbreviations to state names.  This function is primarily useful when
+abbreviations to state names. This function is primarily useful when
 asking a user to specify his or her state.
 
 The function takes an optional keyword argument `country_code`, which is
 expected to be a country abbreviation ([ISO 3166-1 alpha-2], e.g.,
-`'SE'` for Sweden).  If the `country_code` is not provided, it is assumed
+`'SE'` for Sweden). If the `country_code` is not provided, it is assumed
 to be the default country (the value returned by [`get_country()`]).
 For countries other than the United States, the geographic areas
-returned are the first-level subdivisions within the country.  The
-name of these subdivisions varies.  The [`subdivision_type()`]
+returned are the first-level subdivisions within the country. The
+name of these subdivisions varies. The [`subdivision_type()`]
 function can be used to find the name of the major subdivision, and
 also to find if the country has any subdivisions at all.
 
@@ -2343,7 +2404,7 @@ returns the name of the primary subdivision within that country.
 
 {% include side-by-side.html demo="subdivision-type" %}
 
-Note that some countries have no subdivisions at all.  In that case,
+Note that some countries have no subdivisions at all. In that case,
 this function will return `None`.
 
 The data come from the [`pycountry` package].
@@ -2364,14 +2425,14 @@ calling `get_progress()`.
 ## <a name="set_progress"></a>set_progress()
 
 You can set the numeric value of the progress bar by calling, e.g.,
-`set_progress(20)`.  If you run `set_progress(None)`, the progress
-meter will be hidden.  You can also use the [`progress`] modifier on a
+`set_progress(20)`. If you run `set_progress(None)`, the progress
+meter will be hidden. You can also use the [`progress`] modifier on a
 [`question`] to set the progress meter to a particular value.
 
 ## <a name="DANav.get_section"></a>nav.get_section()
 
 The [navigation bar] is controlled by a [special variable] called
-`nav`.  This is a special [Python object] of type [`DANav`].  Access
+`nav`. This is a special [Python object] of type [`DANav`]. Access
 to the [navigation bar] is achieved by [methods] that act upon this
 object.
 
@@ -2380,7 +2441,7 @@ object.
 You can retrieve the current section by calling `nav.get_section()`.
 This will return the keyword corresponding to the current section.
 To get the displayed name of the section, call it using
-`nav.get_section(display=True)`.  When you call it with
+`nav.get_section(display=True)`. When you call it with
 `display=True`, you can also use the optional keyword parameter
 `language` to indicate a language to use, if you want the display name
 for a language other than the current language.
@@ -2403,11 +2464,11 @@ defined using the [`sections`] initial block or the
 ## <a name="DANav.set_sections"></a>nav.set_sections()
 
 You can programmatically set the list of sections using
-`nav.set_sections()`.  It takes one argument, the [Python list]
-containing the sections defintion.  The list should have the same
+`nav.set_sections()`. It takes one argument, the [Python list]
+containing the sections defintion. The list should have the same
 structure as a sections definition using the [`sections`] initial
 block (except it should be a [Python] data structure rather than
-[YAML] text).  This method takes an optional keyword argument
+[YAML] text). This method takes an optional keyword argument
 `language` that you can specify if you want to define the section
 names for a language other than the current language.
 
@@ -2417,18 +2478,18 @@ names for a language other than the current language.
 
 To display the section list to the user in the body of a question, you
 can include the `nav` variable in a [Mako] template like so:
-`${ nav }`.  This has the effect of doing
-`${ nav.show_sections(style='inline') }`.  This method takes the optional
+`${ nav }`. This has the effect of doing
+`${ nav.show_sections(style='inline') }`. This method takes the optional
 keyword arguments `style`, the options for which are `None` or
 `'inline'`, and `show_links`, which you can set to `True` if you want
 users to be able to click on section names.
 
 ## <a name="DANav.hide"></a>nav.hide()
 
-If you want to hide the main navigation bar, run `nav.hide()`.  The
+If you want to hide the main navigation bar, run `nav.hide()`. The
 sections system will still work, and you can still insert `nav` into
 the body of a question, but the main navigation bar will not be shown
-on the screen.  The navigation bar is shown by default if sections are
+on the screen. The navigation bar is shown by default if sections are
 defined.
 
 ## <a name="DANav.unhide"></a>nav.unhide()
@@ -2439,9 +2500,9 @@ Calling `nav.unhide()` will undo the effect of `nav.hide()`.
 
 The result of `nav.visible()` will be `False` if the navigation bar
 has been hidden with `nav.hide()`, and it will return `False` if no
-sections have been defined.  `nav.visible()` takes an optional keyword
+sections have been defined. `nav.visible()` takes an optional keyword
 argument `language`, and when determining whether no sections have
-been defined, it will look to that language.  If sections are defined
+been defined, it will look to that language. If sections are defined
 and the navigation bar has not been hidden with `nav.hide()`,
 `nav.visible()` will return `True`.
 
@@ -2457,7 +2518,7 @@ Calling `nav.enable()` will undo the effect of calling `nav.disable()`.
 ## <a name="DANav.enabled"></a>nav.enabled()
 
 To test whether clickable links in the navigation bar are currently
-enabled or disabled, call `nav.enabled()`.  `True` will be returned
+enabled or disabled, call `nav.enabled()`. `True` will be returned
 unless the navigation bar had been disabled with `nav.disable()`.
 
 # <a name="globalvars"></a>Functions for managing global variables
@@ -2471,7 +2532,7 @@ interview, but you do not want to have to pass a lot of variables to
 every function you call, you can use "global" variables.
 
 You set "global" variables in **docassemble** by calling [`set_info()`]
-and you retrieve them by calling [`get_info()`].  Note that
+and you retrieve them by calling [`get_info()`]. Note that
 **docassemble** will forget the values of these variables every time
 the screen loads, so you will have to make sure they are set by
 setting them in [`initial`] code, which runs every time the screen
@@ -2480,7 +2541,7 @@ loads.
 ## <a name="set_info"></a>set_info()
 
 This function is used to store information for later retrieval by
-`get_info()`.  You pass it one or more [keyword arguments]:
+`get_info()`. You pass it one or more [keyword arguments]:
 
 {% highlight yaml %}
 ---
@@ -2492,7 +2553,7 @@ code: |
 
 Some of the [functions] and [methods] will behave differently
 depending on who the interviewee is and what the interviewee's role
-is.  For example, if `trustee` is an object of the class
+is. For example, if `trustee` is an object of the class
 [`Individual`], and you call `trustee.do_question('have')`, the result
 will be "do you have" if if the interviewee is the trustee, but
 otherwise the result will be "does Fred Jones have" (or whatever the
@@ -2528,7 +2589,7 @@ code: |
 {% endhighlight %}
 
 (See [initial blocks] for an explanation of [`objects`] and [`default
-role`].  See the [roles] section for an explanation of how user roles
+role`]. See the [roles] section for an explanation of how user roles
 work in **docassemble**.)
 
 ## <a name="get_info"></a>get_info()
@@ -2555,8 +2616,8 @@ If the item was never set, `get_info()` will return `None`.
 
 The `interface()` function returns `'web'` if the user is accessing
 the interview through a web browser and `'sms'` if the user is using
-[SMS].  If the web interface is used, but `&json=1` is added to the
-URL, then `interface()` will return `'json'`.  If the API is being
+[SMS]. If the web interface is used, but `&json=1` is added to the
+URL, then `interface()` will return `'json'`. If the API is being
 used, `interface()` will return `'api'`.
 
 {% include side-by-side.html demo="interface" %}
@@ -2567,7 +2628,7 @@ by a [scheduled task], and will return `'worker'` if it is being
 accessed by a [background process].
 
 You might want to use this function to provide special instructions to
-users depending on the way they access the interview.  For example,
+users depending on the way they access the interview. For example,
 the following will show a special instruction screen to users who are
 accessing the interview through [SMS].
 
@@ -2612,25 +2673,25 @@ the user can finish your interview:
 {% include side-by-side.html demo="user-logged-in" %}
 
 This function uses the [`url_of()`] function and the
-[`interview_url()`] function.  The `next` parameter is set to a URL
-for the session.  The URL returned by [`interview_url()`] takes the
+[`interview_url()`] function. The `next` parameter is set to a URL
+for the session. The URL returned by [`interview_url()`] takes the
 user back to the original session.
 
 ## <a name="user_privileges"></a>user_privileges()
 
 The `user_privileges()` function returns the user's [privileges] as a
-list.  If the user is not logged in, the result is `['user']`.  If the
+list. If the user is not logged in, the result is `['user']`. If the
 user is a "user" as well as a "customer," the result is `['user',
-'customer']`.  If the interview is running a [scheduled task], the
+'customer']`. If the interview is running a [scheduled task], the
 result is `['cron']`.
 
 ## <a name="user_has_privilege"></a>user_has_privilege()
 
 The `user_has_privilege()` function returns `True` if the user has any
-of the given [privileges], and `False` otherwise.  For example, if the
+of the given [privileges], and `False` otherwise. For example, if the
 user has the [privilege] of "customer," `user_has_privilege('customer')`
-will return `True`.  A list can also be provided, in which case `True`
-will be returned if the user has any of the given [privileges].  For
+will return `True`. A list can also be provided, in which case `True`
+will be returned if the user has any of the given [privileges]. For
 example, if the user has the [privilege] of "developer",
 `user_has_privilege(['developer', 'admin'])` will return `True`.
 
@@ -2670,7 +2731,7 @@ attributes describing the current user:
 * `timezone` the user's time zone, in a format like `America/New_York`
 
 All of these attributes, with the exception of `session` and
-`filename`, are set by the user on the [Profile page].  They can also
+`filename`, are set by the user on the [Profile page]. They can also
 be set by the [`set_user_info()`] function.
 
 For example:
@@ -2678,7 +2739,7 @@ For example:
 {% highlight yaml %}
 ---
 question: |
-  Your e-mail address is ${ user_info().email }.  Is that
+  Your e-mail address is ${ user_info().email }. Is that
   the best way to reach you?
 yesno: email_is_best
 ---
@@ -2687,23 +2748,23 @@ yesno: email_is_best
 ## <a name="set_save_status"></a>set_save_status()
 
 The `set_save_status()` function is useful in `code` that replies to
-[actions].  By default, running an [action] will create a new step in
+[actions]. By default, running an [action] will create a new step in
 the interview history (which the user can undo by clicking the Back
-button).  However, sometimes this can be a source of confusion.  When
+button). However, sometimes this can be a source of confusion. When
 the user undoes something, the user will expect to see something
 different; but if you are using [actions], undoing an [action] might
-not change anything visibly on the screen.  You can use
+not change anything visibly on the screen. You can use
 `set_save_status()` to tell the interview to save the result of the
-action, but not create a new step.  Or, if you want to run a "read
+action, but not create a new step. Or, if you want to run a "read
 only" action that does not change the interview answers at all, you
-can use `set_save_status()` for that.  This can be useful for
+can use `set_save_status()` for that. This can be useful for
 actions that return a JSON response.
 
 The function takes one of three parameters:
 
 * `set_save_status('new')` - the changes made during the processing of
   the interview logic are saved, and a new step is created in the
-  interview history.  This is the default.
+  interview history. This is the default.
 * `set_save_status('overwrite')` - the changes made during the
   processing of the interview logic are saved, but the
   current step is overwritten.
@@ -2714,13 +2775,13 @@ The function takes one of three parameters:
 
 The `set_parts()` function allows you to configure text on various
 parts of the screen, which is displayed in the "My Interviews" list
-and in the navigation bar.  It is also used to set certain
+and in the navigation bar. It is also used to set certain
 interview-level default values.
 
 It accepts any of the following optional keyword arguments:
 
-* `title` - this is the main title of the interview.  It should be
-  plain text.  It is displayed in the navigation bar if there is no `logo`.
+* `title` - this is the main title of the interview. It should be
+  plain text. It is displayed in the navigation bar if there is no `logo`.
 * `logo` - this can be used for raw HTML that you want to go into the
   navigation bar in place of the plain text title of the interview.
   If you include an image, you should size it to be about 20 pixels in
@@ -2732,16 +2793,16 @@ It accepts any of the following optional keyword arguments:
   which is displayed in the navigation bar when the screen is small.
 * `short_title` does the same thing as `short`.
 * `subtitle` - for the subtitle of the interview, which is displayed
-  in the "Interviews" list.  The subtitle is not visible on the screen
+  in the "Interviews" list. The subtitle is not visible on the screen
   of the interview itself.
-* `tab` - for the [HTML] title of the web page.  This is typically
+* `tab` - for the [HTML] title of the web page. This is typically
   displayed in the browser tab.
 * `tab_title` does the same thing as `tab`.
 * `exit_link` - can be set to `'exit'` or `'leave'` in order to
   control the behavior of the "Exit" menu option, which is displayed
-  when [`show login`] is `False`.  If set to `'exit'`, then clicking
-  "Exit" will delete the user's answers.  If set to `'leave'`, the
-  user's answers will not be deleted.  The default behavior is `'exit'`.
+  when [`show login`] is `False`. If set to `'exit'`, then clicking
+  "Exit" will delete the user's answers. If set to `'leave'`, the
+  user's answers will not be deleted. The default behavior is `'exit'`.
 * `exit_label` - can be used to change the appearance of the "Exit"
   menu option.
 * `pre` - can be set to HTML that will be inserted before
@@ -2791,13 +2852,13 @@ of the screens during interviews, see the [screen parts] section.
 Every interview and interview session can be "tagged" with "tags."  If
 you include a `tags` specifier in your interview's [`metadata`], and
 the `tags` specifier is a [list], then you will define the tags for
-the interview itself.  These tags can be seen on the
+the interview itself. These tags can be seen on the
 [list of available interviews] that can be started (`/list`) and on
 the list of saved interviews that can be resumed (`/interviews`).
 
 The tags associated with an interview session can be edited using
-[Python] code.  The function `session_tags()` returns a [Python set]
-representing the tags.  It isn't technically a [Python set], but it
+[Python] code. The function `session_tags()` returns a [Python set]
+representing the tags. It isn't technically a [Python set], but it
 works just like one, and it allows you to read and write the
 tags associated with the interview session.
 
@@ -2806,18 +2867,18 @@ tags associated with the interview session.
 ## <a name="set_status"></a>set_status()
 
 The `set_status()` function allows you to configure global settings
-for the interview session.  You give it keyword arguments for one or
+for the interview session. You give it keyword arguments for one or
 more settings, and it will save the values for the session.
 
 Currently, there is only one setting available, `variable_access`,
 which turns off the [`get_interview_variables()`] feature on a
-production server.  By default, the [`get_interview_variables()`]
+production server. By default, the [`get_interview_variables()`]
 function can be called from [JavaScript] and all of the variables in
-the interview answers will be returned in [JSON] format.  While this
+the interview answers will be returned in [JSON] format. While this
 function is useful for many applications, it also poses a risk of
 revealing confidential information, particularly in [multi-user
 interviews] where users should not be able to find out other users'
-answers.  Setting `variable_access` to `False` with `set_status()`
+answers. Setting `variable_access` to `False` with `set_status()`
 will disable this feature.
 
 {% highlight yaml %}
@@ -2833,7 +2894,7 @@ effect.
 ## <a name="get_status"></a>get_status()
 
 If you set a value using `set_status()`, you can retrieve the value
-using `get_status()`.  For example:
+using `get_status()`. For example:
 
 {% highlight yaml %}
 field: variable_access_shown
@@ -2857,16 +2918,16 @@ interview-wide [`terms`] or [`auto terms`] using [Python] code.
 {% include side-by-side.html demo="update-terms" %}
 
 `update_terms()` has one required parameter, a [Python dictionary]
-that maps terms to definitions.  It also accepts two optional keyword
+that maps terms to definitions. It also accepts two optional keyword
 parameters:
 
-* `auto`: whether to update `auto terms` or `terms`.  Set to `True`
-  for `auto terms`.  The default behavior of `update_terms()` is to
+* `auto`: whether to update `auto terms` or `terms`. Set to `True`
+  for `auto terms`. The default behavior of `update_terms()` is to
   update the interview-wide `terms`, not the interview-wide `auto terms`.
-* `language`: the language to update.  For example, to update the
-  French translations of terms, set `language` to `fr`.  If you leave
+* `language`: the language to update. For example, to update the
+  French translations of terms, set `language` to `fr`. If you leave
   `language` unset, the terms you will update are the terms associated
-  with the default language `*`.  If your interview uses a [`default
+  with the default language `*`. If your interview uses a [`default
   language`] initial block or uses the [`language`] modifier, you
   should set a specific `language` when you call `update_terms()`.
 
@@ -2875,14 +2936,14 @@ parameters:
 ## <a name="language_from_browser"></a>language_from_browser()
 
 The `language_from_browser()` function returns a language code
-representing the preferred language of the user.  Most browsers allow
-users to select one or more preferred languages.  These languages are
-transmitted to web sites using the [Accept-Language header].  The
+representing the preferred language of the user. Most browsers allow
+users to select one or more preferred languages. These languages are
+transmitted to web sites using the [Accept-Language header]. The
 `language_from_browser()` function reads this header and extracts the
 language from it.
 
 The code will be in [ISO-639-1], [ISO-639-2], or [ISO-639-3] format
-and will be in lower case.  If multiple languages are listed in the
+and will be in lower case. If multiple languages are listed in the
 [Accept-Language header], the first recogized language will be
 returned.
 
@@ -2894,8 +2955,8 @@ if the [Accept-Language header] is missing, or if no valid
 [Accept-Language header].
 
 Optionally, you can call `language_from_browser()` with arguments,
-where the arguments are valid languages.  The first valid language
-will be returned.  If none of the languages in the
+where the arguments are valid languages. The first valid language
+will be returned. If none of the languages in the
 [Accept-Language header] is in the list, `None` will be returned.
 
 {% include side-by-side.html demo="language_from_browser_restricted" %}
@@ -2913,7 +2974,7 @@ documentation for the [user-agents] library.
 If **docassemble** cannot determine information about the user's
 browser, this function will return `None`.
 
-You can also use this function to obtain the user's IP address.  If
+You can also use this function to obtain the user's IP address. If
 you call the function using `device(ip=True)`, the IP address is
 returned:
 
@@ -2921,7 +2982,7 @@ returned:
 
 # <a name="langlocale"></a>Language and locale functions()
 
-These functions access and change the active language and locale.  See
+These functions access and change the active language and locale. See
 [language support] for more information about these features.
 
 ## <a name="get_language"></a>get_language()
@@ -2931,13 +2992,13 @@ If the language is set to English, `get_language()` returns `en`.
 ## <a name="set_language"></a>set_language()
 
 This sets the language that will be used in the web application and in
-[language-specific functions] of **docassemble**.  It does not change
-the active [Python locale].  See `update_locale()` for information on
+[language-specific functions] of **docassemble**. It does not change
+the active [Python locale]. See `update_locale()` for information on
 changing the [Python locale].
 
 If you need to set the language to something other than the language
 set in the [configuration], you need to call `set_language()` within
-[`initial`] code.  For example:
+[`initial`] code. For example:
 
 {% highlight yaml %}
 initial: True
@@ -2954,12 +3015,12 @@ choices:
 {% endhighlight %}
 
 The value given to `set_language()` must be a lowercase [ISO-639-1] or
-[ISO-639-3] code.  For example in [ISO-639-1], Spanish is `es`, French
+[ISO-639-3] code. For example in [ISO-639-1], Spanish is `es`, French
 is `fr`, and Arabic is `ar`.
 
 Using the optional `dialect` and `voice` keyword arguments, you can
 also set the dialect and/or voice of the language that should be used
-for the text-to-speech engine.  For example:
+for the text-to-speech engine. For example:
 
 {% highlight yaml %}
 ---
@@ -2990,7 +3051,7 @@ code: |
 {% endhighlight %}
 
 By default, [`process_action()`] is called automatically, prior to the
-execution of any [`mandatory`] or [`initial`] blocks.  However, in
+execution of any [`mandatory`] or [`initial`] blocks. However, in
 cases where your [actions] have a prerequisite, you need to indicate
 exactly where in the interview logic [actions] should be executed.
 
@@ -3004,7 +3065,7 @@ be.
 
 Given a [ISO-639-1] or [ISO-639-3] language code, such as `'en'`,
 `'de'`, `'eng'`, or `'deu'`, `language_name()` returns the name of the
-language, such as `'English'` or `'German'`.  The database of
+language, such as `'English'` or `'German'`. The database of
 languages comes from the [`pycountry` package].
 
 The language name is passed through the [`word()`] function, so that
@@ -3024,18 +3085,18 @@ to the [`set_language()`] function.
 ## <a name="get_country"></a>get_country()
 
 Returns the current country as a two-digit [ISO 3166-1 alpha-2]
-country code.  The default country is `'US'`, unless a different
+country code. The default country is `'US'`, unless a different
 default is set using the [`country` configuration setting].
 
 ## <a name="set_country"></a>set_country()
 
-Sets the current country.  Expects a two-digit, uppercase country code
+Sets the current country. Expects a two-digit, uppercase country code
 ([ISO 3166-1 alpha-2] format) such as `'US'`, `'GB'`, or `'DE'`.
 
 ## <a name="set_locale"></a>set_locale()
 
 If you run `set_locale('FR.utf8')`, then [`get_locale()`] will return
-`FR.utf8`.  The only effect is to remember the value; there are no
+`FR.utf8`. The only effect is to remember the value; there are no
 side effects.
 
 The actual [Python locale] will not change unless you run
@@ -3044,7 +3105,7 @@ The actual [Python locale] will not change unless you run
 
 The information you set with `set_locale()`, like the language you set
 with [`set_language()`], is only remembered for the duration of a page
-load.  Thus, you can use `set_locale()` and [`get_locale()`], without
+load. Thus, you can use `set_locale()` and [`get_locale()`], without
 [`update_locale()`], for your own purposes, as a way of passing a
 locale identifier to custom functions and methods without having to
 pass the locale identifier as an argument or setting an object
@@ -3052,9 +3113,9 @@ attribute.
 
 A second use of `set_locale()` is to set a default currency symbol for
 use in an interview session, if the default currency symbol associated
-with the locale is not appropriate.  To indicate what currency symbol
+with the locale is not appropriate. To indicate what currency symbol
 should be used, you can call `set_locale()` with a `currency_symbol`
-keyword parameter.  You need to call this in an [`initial`] block, in
+keyword parameter. You need to call this in an [`initial`] block, in
 much the same way as you use [`set_language()`] to indicate what
 language to use.
 
@@ -3086,7 +3147,7 @@ of the `locale` Python package.
 
 Another way to change the currency symbol that users see is to set the
 [`currency symbol` field specifier] on the [`datatype: currency`]
-fields you use to collect currency values.  You can also provide a
+fields you use to collect currency values. You can also provide a
 `symbol` keyword parameter to the [`currency()`] function.
 
 ## <a name="get_locale"></a>get_locale()
@@ -3117,7 +3178,7 @@ then the [Python locale] will be changed to `fr_FR.utf8`.
 Running `update_locale()` is necessary in order to affect the behavior
 of functions like [`currency()`] and [`currency_symbol()`].
 
-Note that changes to the locale are not [thread-safe].  This means that
+Note that changes to the locale are not [thread-safe]. This means that
 there is a risk that between the time **docassemble** runs
 `update_locale()` and the time it runs [`currency_symbol()`], another
 user on the same server may cause **docassemble** to run
@@ -3127,7 +3188,7 @@ If you want to host different interviews that use different locale
 settings on the same server (e.g., to format a numbers as 1,000,000 in
 one interview, but 1.000.000 in another), you will need to make sure
 you run the **docassemble** web server in a multi-process, single-thread
-configuration.  (See [installation] for instructions on how to do
+configuration. (See [installation] for instructions on how to do
 that.)  Then you would need to begin each interview with [`initial`]
 code such as:
 
@@ -3145,8 +3206,8 @@ code: |
 # <a name="time"></a>Access time functions
 
 Internally, **docassemble** keeps track of the last time the interview
-session was accessed.  The following functions retrieve information
-about access times.  These functions are particularly useful in
+session was accessed. The following functions retrieve information
+about access times. These functions are particularly useful in
 [scheduled tasks].
 
 ## <a name="start_time"></a>start_time()
@@ -3154,7 +3215,7 @@ about access times.  These functions are particularly useful in
 `start_time()` returns a [`DADateTime`] object representing the time
 the interview session was started.
 
-The time is expressed in the [UTC] time zone.  If you would
+The time is expressed in the [UTC] time zone. If you would
 like to localize the time to a particular time zone, you can set the
 optional keyword parameter `timezone` (e.g., to `'America/New_York'`).
 
@@ -3164,14 +3225,14 @@ optional keyword parameter `timezone` (e.g., to `'America/New_York'`).
 last time the interview session was accessed by a user other than the
 special [cron user].
 
-The time is expressed in the [UTC] time zone.  (Note: before version
+The time is expressed in the [UTC] time zone. (Note: before version
 0.2.27, the object returned was a [UTC] datetime without a time zone;
-as of 0.2.27, the object returned is [UTC] with a time zone).  If you
+as of 0.2.27, the object returned is [UTC] with a time zone). If you
 would like to localize the time to a particular time zone, you can set
 the optional keyword parameter `timezone` (e.g., to
 `'America/New_York'`).
 
-Optionally, a [privilege] name or a list of [privilege] names can be provided.  In
+Optionally, a [privilege] name or a list of [privilege] names can be provided. In
 this case, the function will return the latest access time by any user
 holding one of the [privileges].
 
@@ -3188,7 +3249,7 @@ The first argument can also be written as a keyword parameter
 * `last_access_time(include_privileges='client')`: same as `last_access_time('client')`.
 
 By default, `last_access_time()` will ignore session access by the
-[cron user].  However, if you do not wish to ignore access by the
+[cron user]. However, if you do not wish to ignore access by the
 [cron user], you can call `last_access_time()` with the optional
 keyword argument `include_cron` equal to `True`:
 
@@ -3197,7 +3258,7 @@ keyword argument `include_cron` equal to `True`:
   session.
 
 You can also provide a list of [privileges] you want the method to ignore,
-using the `exclude_privileges` keyword parameter.  This can be useful
+using the `exclude_privileges` keyword parameter. This can be useful
 because users can have multiple [privileges].
 
 * `last_access_time(include_privileges='advocate',
@@ -3205,7 +3266,7 @@ because users can have multiple [privileges].
   an `advocate` but not a `developer` accessed the interview.
 
 The `last_access_time()` function takes an optional keyword argument
-`timezone`.  If `timezone` is provided (e.g.,
+`timezone`. If `timezone` is provided (e.g.,
 `timezone='America/New_York'`), the [`DADateTime`] object will be
 expressed in the given time zone.
 
@@ -3235,7 +3296,7 @@ current time and the last access time.
 
 The function [`returning_user()`] returns `True` if the user has not
 accessed the interview session in at least six hours, and otherwise
-returns `False`.  To use a different time limit, you can set one of
+returns `False`. To use a different time limit, you can set one of
 the optional keyword arguments.
 
 * `returning_user(minutes=5)`
@@ -3258,7 +3319,7 @@ number.
 ## <a name="format_date"></a>format_date()
 
 The `format_date()` function takes as input a date and returns the
-date formatted appropriately for the current language.  It can be
+date formatted appropriately for the current language. It can be
 given a piece of text containing a time, a [`DADateTime`] object, a
 [`datetime.datetime`] object, or a [`datetime.time`] object.
 
@@ -3301,20 +3362,20 @@ used in date formatting by `babel.dates.format_date()` are based on
 [Unicode Technical Standard #35].
 
 If you do not provide a `format` argument, the default `date format`
-will be used.  This default can be set in the interview [`metadata`]
-or overridden using [`set_parts()`].  If no default is set, `'long'`
+will be used. This default can be set in the interview [`metadata`]
+or overridden using [`set_parts()`]. If no default is set, `'long'`
 is used.
 
 The date formatting will be different depending on the current
-language.  For example, if you run `set_language('es')`, then
-`format_date('4/5/2014')` returns `5 de abril de 2014`.  If you run
+language. For example, if you run `set_language('es')`, then
+`format_date('4/5/2014')` returns `5 de abril de 2014`. If you run
 `set_language('fr')`, then `format_date('4/5/2014')` returns `5 avril
 2014`.
 
 ## <a name="format_time"></a>format_time()
 
 The `format_time()` function works just like [`format_date()`], except
-it returns a time, rather than a date.  It can be given a piece of
+it returns a time, rather than a date. It can be given a piece of
 text containing a time, a [`DADateTime`] object, a
 [`datetime.datetime`] object, or a [`datetime.time`] object.
 
@@ -3340,19 +3401,19 @@ The time formatting is provided by the
 package.
 
 The `format` argument is passed directly
-to the `babel.dates.format_time()` function.  The
+to the `babel.dates.format_time()` function. The
 [patterns](http://babel.pocoo.org/en/latest/dates.html#time-fields)
 used in time formatting are based on [Unicode Technical Standard #35].
 
 If you do not provide a `format` argument, the default `time format`
-will be used.  This default can be set in the interview [`metadata`]
-or overridden using [`set_parts()`].  If no default is set, `'short'`
+will be used. This default can be set in the interview [`metadata`]
+or overridden using [`set_parts()`]. If no default is set, `'short'`
 is used.
 
 ## <a name="format_datetime"></a>format_datetime()
 
 The `format_datetime()` function works like a combination of
-[`format_date()`] and [`format_time()`].  It is different only in that
+[`format_date()`] and [`format_time()`]. It is different only in that
 it allows date and time to be joined in the same output.
 
 * `format_datetime('4/5/2014 07:30')` returns `April 5, 2014 at
@@ -3361,8 +3422,8 @@ it allows date and time to be joined in the same output.
   April'`.
 
 If you do not provide a `format` argument, the default `datetime
-format` will be used.  This default can be set in the interview
-[`metadata`] or overridden using [`set_parts()`].  If no default is
+format` will be used. This default can be set in the interview
+[`metadata`] or overridden using [`set_parts()`]. If no default is
 set, `'long'` is used.
 
 ## <a name="today"></a>today()
@@ -3372,7 +3433,7 @@ set, `'long'` is used.
 Returns a [`DADateTime`] object representing today's date at midnight.
 It takes an optional keyword argument `timezone`, which refers to one
 of the time zone names in [`timezone_list()`] (e.g.,
-`'America/New_York'`).  If the `timezone` is not supplied, the default
+`'America/New_York'`). If the `timezone` is not supplied, the default
 time zone will be used.
 
 Since the result is a [`DADateTime`] object, if `today()` is included
@@ -3391,13 +3452,13 @@ becomes, for example:
 {: .blockquote}
 
 The fact that the object is a [`DADateTime`] object means you can use
-methods on it.  For example, you can write things like `Your term
+methods on it. For example, you can write things like `Your term
 paper is due in a week, so make sure you give it to me by ${
 today().plus(weeks=1) }!`
 
 The `today()` function also takes an optional keyword parameter
-`format`.  If a `format` is provided, then `today()` returns text, not
-an object.  So this:
+`format`. If a `format` is provided, then `today()` returns text, not
+an object. So this:
 
 {% highlight text %}
 Today's date is ${ today(format='M/d/YYYY') }.
@@ -3413,8 +3474,8 @@ becomes, for example:
 {% include side-by-side.html demo="timezone-list" %}
 
 The `timezone_list()` function returns a list of time zones that the
-other date-related functions in **docassemble** understand.  The list
-is generated from the [`pytz`] module.  The primary purpose of this
+other date-related functions in **docassemble** understand. The list
+is generated from the [`pytz`] module. The primary purpose of this
 function is to include in a multiple choice question.
 
 Note that the items in this list are strings, like `America/New_York`.
@@ -3424,7 +3485,7 @@ Note that the items in this list are strings, like `America/New_York`.
 {% include side-by-side.html demo="get-default-timezone" %}
 
 The `get_default_timezone()` function returns the default timezone
-(e.g., `'America/New_York'`).  This is the time zone of the server,
+(e.g., `'America/New_York'`). This is the time zone of the server,
 unless the default timezone is set using the [`timezone`
 configuration].
 
@@ -3433,7 +3494,7 @@ configuration].
 {% include side-by-side.html demo="as-datetime" %}
 
 The `as_datetime()` function expresses a date as a [`DADateTime`]
-object with a time zone.  It takes an optional keyword argument,
+object with a time zone. It takes an optional keyword argument,
 `timezone`, which will override the default time zone.
 
 * `as_datetime('12/25/2018')` returns midnight on Christmas.
@@ -3453,7 +3514,7 @@ function can be used to create objects of type [`datetime.time`].
 {% include side-by-side.html demo="current-datetime" %}
 
 The `current_datetime()` function returns the current date and time as
-a [`DADateTime`] object.  It takes an optional keyword argument,
+a [`DADateTime`] object. It takes an optional keyword argument,
 `timezone` (e.g., `'America/New_York'`), which will override the
 default time zone.
 
@@ -3463,12 +3524,12 @@ default time zone.
 
 The `date_difference()` function returns the difference between two
 dates as an object with attributes that express the difference using
-different units.  The function takes two keyword arguments: `starting`
-and `ending`.  If either is omitted, the `current_datetime()` is used
+different units. The function takes two keyword arguments: `starting`
+and `ending`. If either is omitted, the `current_datetime()` is used
 in its place.
 
 If you do `date_difference(starting=a, ending=b)`, then if date `a` comes
-before date `b`, the resulting values will be positive.  But if date
+before date `b`, the resulting values will be positive. But if date
 `b` comes before date `a`, the values will be negative.
 
 For example, if you set `z = date_difference(starting='1/1/2015',
@@ -3484,12 +3545,12 @@ ending='1/3/2015')`, then:
   difference between the times.
 
 Dates without time zones are localized into the default time zone
-before the calculation takes place.  You can supply the optional
+before the calculation takes place. You can supply the optional
 keyword argument `timezone` (e.g., `'America/New_York'`) to use a
 different time zone.
 
 The object returned by `date_difference()` has a method
-`.describe()`.  If you set
+`.describe()`. If you set
 `z = date_difference(starting='1/1/2014', ending='4/3/2015')`, then:
 
 * `z.describe()` returns `one year, three months, and one day`.
@@ -3506,7 +3567,7 @@ running `.describe()` on the object.
 {% include side-by-side.html demo="date-interval" %}
 
 The `date_interval()` function can be used to perform calculations on
-a date.  For example,
+a date. For example,
 
 * `current_datetime() + date_interval(days=1)` represents 24 hours in
   the future.
@@ -3529,24 +3590,24 @@ This function is a direct wrapper around
 
 # <a name="phone"></a>Functions for working with phone numbers
 
-The following functions help with mangaging phone numbers.  They rely
+The following functions help with mangaging phone numbers. They rely
 on the [`phonenumbers`] package in [Python].
 
 ## <a name="phone_number_in_e164"></a>phone_number_in_e164()
 
 The `phone_number_in_e164()` function takes a phone number and formats
-it into [E.164] format.  It takes an optional keyword argument
+it into [E.164] format. It takes an optional keyword argument
 `country`, which is expected to be a country abbreviation ([ISO 3166-1
-alpha-2] format, e.g., `'SE'` for Sweden).  (See the [`pycountry`
+alpha-2] format, e.g., `'SE'` for Sweden). (See the [`pycountry`
 package] for the list of codes.)  The `country` code is used to
-determine the country code for the phone number.  If `country` is not
+determine the country code for the phone number. If `country` is not
 provided, the [`get_country()`] function is used to determine the
 applicable country.
 
 ## <a name="phone_number_formatted"></a>phone_number_formatted()
 
 The `phone_number_formatted()` function is use to rewrite a number in
-a standard phone number format according to national conventions.  It
+a standard phone number format according to national conventions. It
 works like `phone_number_in_e164()`, except that it returns the format
 in the national format for the country, rather than [E.164].
 
@@ -3554,10 +3615,10 @@ in the national format for the country, rather than [E.164].
 
 The `phone_number_is_valid()` function takes a phone number and
 returns `True` or `False` depending on whether the phone number is
-valid.  It takes an optional keyword argument `country` that is used
+valid. It takes an optional keyword argument `country` that is used
 to determine the country whose phone number standards should be used
-to determine the validity of the phone number.  The `country` must be
-expressed in [ISO 3166-1 alpha-2] format.  If `country` is not
+to determine the validity of the phone number. The `country` must be
+expressed in [ISO 3166-1 alpha-2] format. If `country` is not
 provided, the [`get_country()`] function is used to determine the
 applicable country.
 
@@ -3572,22 +3633,22 @@ of a phone number.
 
 The function takes an optional keyword argument `country`, a [ISO
 3166-1 alpha-2] country code, that is used to format the phone number
-according to the national conventions.  If `country` is not provided,
+according to the national conventions. If `country` is not provided,
 the [`get_country()`] function is used to determine the applicable
 country.
 
 # <a name="tasks"></a>Functions for tracking tasks
 
 These are helpful functions for keeping track of whether certain tasks
-have been performed.  For example, if your interview logic sends an
+have been performed. For example, if your interview logic sends an
 e-mail to the user about something, but you want to avoid sending the
 e-mail more than once, you can give the "task" a name and use these
 functions in your code to make sure your interview logic only sends
 the e-mail if it has never been successfuly sent before.
 
 Instead of using these functions, you could use your own variables to
-keep track of whether tasks have been carried out or not.  These
-functions do not do anything besides keep track of information.  A
+keep track of whether tasks have been carried out or not. These
+functions do not do anything besides keep track of information. A
 good reason to use these functions is to increase the readability of
 your code.
 
@@ -3603,7 +3664,7 @@ return `False` until
 ## <a name="task_not_yet_performed"></a>task_not_yet_performed()
 
 The `task_not_yet_performed()` function returns `True` if the task has
-never been performed, otherwise `False`.  It is simply the opposite of
+never been performed, otherwise `False`. It is simply the opposite of
 [`task_performed()`].
 
 ## <a name="mark_task_as_performed"></a>mark_task_as_performed()
@@ -3624,7 +3685,7 @@ If you call `mark_task_as_performed('remind_user')` again,
 
 The `times_task_performed()` function returns the number of times the
 task has been performed (i.e., the number of times
-[`mark_task_as_performed()`] is called).  If the task has never been
+[`mark_task_as_performed()`] is called). If the task has never been
 performed, `0` is returned.
 
 ## <a name="set_task_counter"></a>set_task_counter()
@@ -3638,10 +3699,10 @@ number of times the task has been performed.
 ## <a name="persistent tasks"></a>Persistent task results
 
 The above functions for tracking "tasks" store data in the interview
-answers.  When the user presses the "Back" button to undo the results
+answers. When the user presses the "Back" button to undo the results
 of answering questions, the record of a task being completed will also
-be undone.  Thus, if the user goes back and changes a variable on
-which the task depends, the task will be re-run.  If you do not want a
+be undone. Thus, if the user goes back and changes a variable on
+which the task depends, the task will be re-run. If you do not want a
 task to be re-run, you can set the optional keyword parameter
 `persistent` on your functions.
 
@@ -3656,14 +3717,14 @@ the task completion would be forgotten along with the value of
 
 When `persistent` is true, the task functions use a `DAStore` instead
 of the interview answers to store information about whether tasks have
-been completed.  Specifically, the functions use a `DAStore` with a
+been completed. Specifically, the functions use a `DAStore` with a
 `base` of `'session'` within that `DAStore`, they use a value called
-`tasks`.  If you set `persistent` to something other than `True`, the
-`DAStore` will use this value as the `base`.  Thus, if you call
+`tasks`. If you set `persistent` to something other than `True`, the
+`DAStore` will use this value as the `base`. Thus, if you call
 `mark_task_as_performed('fruit_gathered', persistent='interview')`,
 then the result of task completion will apply across all sessions in
-the same interview.  If you set `persistent` to `'user'`, the results
-will apply across all sessions of the user.  If you set `persistent`
+the same interview. If you set `persistent` to `'user'`, the results
+will apply across all sessions of the user. If you set `persistent`
 to `'global'`, the results will apply across all sessions of the
 server.
 
@@ -3676,9 +3737,9 @@ one right way to do this; nor is there a way that this process can be
 feasibly automated.
 
 The functions in this subsection may be of use for explaining
-reasoning.  They allow you to write "comment"-like phrases in your
+reasoning. They allow you to write "comment"-like phrases in your
 code that are saved into a list as the user goes through the
-interview.  Then you can present the user with the list of phrases.
+interview. Then you can present the user with the list of phrases.
 
 Here is an illustrative example:
 
@@ -3711,27 +3772,27 @@ If the same phrase, verbatim, already exists in the list, the phrase
 is not added.
 
 The `explain()` function takes an optional keyword argument,
-`category`.  This allows you to keep track of more than one list of
-explanations.  By default, the `category` is `'default'`.  The two
+`category`. This allows you to keep track of more than one list of
+explanations. By default, the `category` is `'default'`. The two
 category names that are reserved are `'default'` and `'all'`.
 
 ## <a name="clear_explanations"></a>clear_explanations()
 
-The `clear_explanations()` function resets the explanation list.  It
+The `clear_explanations()` function resets the explanation list. It
 takes an optional keyword argument `category`, which resets the given
-list.  If you set `category` to `'all'`, every list is reset.
+list. If you set `category` to `'all'`, every list is reset.
 
 It is a good idea to call `clear_explanations()` every time the screen
-loads.  If your users can edit their answers, then reasoning that has
+loads. If your users can edit their answers, then reasoning that has
 been made obsolete by changes to the variables may persist in the
-explanations list.  Clearing the history and running through all of
+explanations list. Clearing the history and running through all of
 the logic every time the screen loads will help make sure that the
 explanations are corrected.
 
 ## <a name="logic_explanation"></a>logic_explanation()
 
 The `logic_explanation()` function returns the explanation list as a [Python
-list].  If the list does not exist, an empty list is returned.  This
+list]. If the list does not exist, an empty list is returned. This
 function takes an optional keyword argument `category`, which
 indicates the category of explanation list you would like to be
 returned.
@@ -3742,8 +3803,8 @@ returned.
 
 `word()` is a general-purpose translation function that is used in the
 code of the web application to ensure that the text the user sees is
-translated into the user's language.  It is also available for use
-inside interviews.  It is not the only mechanism for [translating]
+translated into the user's language. It is also available for use
+inside interviews. It is not the only mechanism for [translating]
 your interviews into different languages, but it is one of the
 essential components of [language support] in **docassemble**.
 
@@ -3783,7 +3844,7 @@ choices:
 Finally, suppose that the user selected "Español" as their language.
 
 Thereafter, if code in your interview runs `word("cow")`, the
-returned value will be `'vaca'`.  However, if the user had selected
+returned value will be `'vaca'`. However, if the user had selected
 "English" as their language, the returned value would have been
 `'cow'`.
 
@@ -3797,7 +3858,7 @@ returned.
 
 <a name="update_word_collection"></a>In addition to using the
 [`words`] directive in the [Configuration], you can a [Python module]
-to change the translations.  The function
+to change the translations. The function
 `docassemble.base.util.update_word_collection()` takes a language and
 a [Python dictionary] as parameters and updates the translation
 tables, which are kept in memory.
@@ -3814,14 +3875,14 @@ code that runs when the module loads.
 # <a name="linguistic"></a>Language-specific functions
 
 These functions behave differently according to the language and
-locale.  You can write functions for different languages, or reprogram
+locale. You can write functions for different languages, or reprogram
 the default functions, by
 using `import docassemble.base.util` and
 then running
 `docassemble.base.util.update_language_function()`.
 
 For example, suppose you had a Spanish linguistic package that you
-wanted to use for writing possessives.  You could include the
+wanted to use for writing possessives. You could include the
 following in a [Python module] that you include in your interview:
 
 {% highlight python %}
@@ -3835,13 +3896,13 @@ docassemble.base.util.update_language_function('es', 'possessify', possessify_es
 {% endhighlight %}
 
 This means that whenever the current language is Spanish, the function
-`possessify_es` should be substituted for the default function.  The
+`possessify_es` should be substituted for the default function. The
 first argument is the name of the language, the second argument is the
 name of the standard language function, and the third argument is a
 reference to your function.
 
 If you want to override the default function, use `'*'` as the
-language.  This will be used if no language-specific function exists.
+language. This will be used if no language-specific function exists.
 
 If you want to create a new language function that does not already
 exist in **docassemble**, you can use the
@@ -3867,29 +3928,29 @@ docassemble.base.util.update_language_function('fr', 'closing', closing_fr)
 
 When writing a language function, do not use named keyword parameters.
 Instead, using `**kwargs` so that the function accepts any combination
-of keyword parameters.  This is necessary because language functions
+of keyword parameters. This is necessary because language functions
 can be called with an optional parameter `language`, which forces the
-use of a language other than the default language.  It is also helpful
-so that other developers can extend your language function.  For
+use of a language other than the default language. It is also helpful
+so that other developers can extend your language function. For
 example, suppose someone wants to add a Japanese version of
 `closing()`, but in Japanese there are formal and informal ways of
-saying goodbye.  In interviews, the developer will want to write
+saying goodbye. In interviews, the developer will want to write
 things like `closing(client, formal=False)` or `closing(judge,
-formal=True)` to use these different forms.  The developer would
-create a module that imports your module.  Then they would write a
+formal=True)` to use these different forms. The developer would
+create a module that imports your module. Then they would write a
 function called `closing_ja` and call
 `docassemble.base.util.update_language_function('ja', 'closing',
-closing_ja)`.  Unless `**kwargs` is used, the keyword parameter
+closing_ja)`. Unless `**kwargs` is used, the keyword parameter
 `formal` would trigger an error when used outside of a Japanese context.
 
 Note that updates to language functions are not [thread-safe]; they
-have a server-wide effect.  `update_language_function()` needs to be
+have a server-wide effect. `update_language_function()` needs to be
 called in main body of a module so that it has an effect on all
-threads.  The code needs to run when the server starts and loads
-modules.  Module files are only loaded when the server starts if 1)
+threads. The code needs to run when the server starts and loads
+modules. Module files are only loaded when the server starts if 1)
 they contain a `class` definition; 2) they contain the literal text
 `docassemble.base.util.update` somewhere; or 3) they contain a line
-that starts with `# pre-load`.  Therefore, if your module runs
+that starts with `# pre-load`. Therefore, if your module runs
 `from docassemble.base.util import update_language_function`, then you
 need to include a line that starts with `# pre-load`.
 
@@ -3902,11 +3963,11 @@ customized.
 
 If `favorite_food` is defined as "spaghetti marinara," then
 `capitalize(favorite_food)` will return `Spaghetti marinara`.
-This is often used when a variable value begins a sentence.  For example:
+This is often used when a variable value begins a sentence. For example:
 
 {% highlight yaml %}
 question: |
-  ${ capitalize(favorite_food) } is being served for dinner.  Will you
+  ${ capitalize(favorite_food) } is being served for dinner. Will you
   eat it?
 yesno: user_will_eat_dinner
 {% endhighlight %}
@@ -3961,7 +4022,7 @@ appended to all other items.
 * `end_mark`: default is `'.'`
 
 The function is also available as a [Jinja2] filter called
-`add_separators`.  In the above example, the [`add-separators.docx`]
+`add_separators`. In the above example, the [`add-separators.docx`]
 file contains:
 
 > You like:<br>
@@ -3980,10 +4041,10 @@ If the locale is `US.utf8`, `currency(45.2)` returns `$45.20`.
 returns `$45`.
 
 With `decimals` unset or equal to `True`, this function uses the
-[`locale`] module to express the currency.  However, `currency(x,
+[`locale`] module to express the currency. However, `currency(x,
 decimals=False)` will simply return [`currency_symbol()`] followed by
 `x` formatted as an integer, which might not be correct in your
-locale.  This is due to a limitation in the [locale module].  If the
+locale. This is due to a limitation in the [locale module]. If the
 `currency` function does not meet your currency formatting needs, you
 may want to define your own.
 
@@ -3992,7 +4053,7 @@ If you defined a currency symbol in an [`initial`] block by calling
 locale-specific currency formatting function is not used.
 
 The `currency()` function accepts an optional keyword parameter
-`symbol`.  If this is set, then the [`locale`]-specific currency formatter
+`symbol`. If this is set, then the [`locale`]-specific currency formatter
 function is not used, and instead the provided symbol is used.
 
 {% include side-by-side.html demo="money-field-euro" %}
@@ -4065,7 +4126,7 @@ through to the `pluralize()` function of [pattern.en].
 * `noun_plural('fish')` returns `fish`
 * `noun_plural('moose')` returns `mooses`
 
-You can also pass a number as a second argument to the function.  If
+You can also pass a number as a second argument to the function. If
 the number is 1, the first argument will be returned as a singular noun;
 otherwise, the pluralized version of the first argument will be returned.
 
@@ -4073,8 +4134,8 @@ otherwise, the pluralized version of the first argument will be returned.
   `number_friends` is `1`, otherwise it returns `friends`.
 
 Instead of a number, you can pass a list, dictionary, or set as the
-second argument to the function.  If the number of items in the group
-is `1`, the singular will be used.  Otherwise, the plural will be
+second argument to the function. If the number of items in the group
+is `1`, the singular will be used. Otherwise, the plural will be
 used.
 
 ## <a name="quantity_noun"></a>quantity_noun()
@@ -4082,7 +4143,7 @@ used.
 {% include side-by-side.html demo="quantity-noun" %}
 
 This function combines [`nice_number()`] and [`noun_plural()`] into a
-single function.  It will round the number to the nearest integer unless
+single function. It will round the number to the nearest integer unless
 you add the optional keyword argument `as_integer=False`.
 
 * `quantity_noun(2, "apple")` returns `two apples`.
@@ -4100,17 +4161,17 @@ through to the `singularize()` function of [pattern.en].
 * `noun_singular('fishes')` returns `fish`
 * `noun_singular('mooses')` returns `moose`
 
-You can also pass a number as a second argument to the function.  If
+You can also pass a number as a second argument to the function. If
 the number is 1, the singularized version of the first argument will
-be returned.  Otherwise, the first argument will be returned,
+be returned. Otherwise, the first argument will be returned,
 untouched.
 
 * `noun_singular('friends', number_friends)` return `friend` if
   `number_friends` is `1`, otherwise it returns `friends`.
 
 Instead of a number, you can pass a list, dictionary, or set as the
-second argument to the function.  If the number of items in the group
-is `1`, the singular will be used.  Otherwise, the plural will be
+second argument to the function. If the number of items in the group
+is `1`, the singular will be used. Otherwise, the plural will be
 used.
 
 ## <a name="ordinal_number"></a>ordinal_number()
@@ -4159,12 +4220,12 @@ code that runs when the module loads.
 
 ## <a name="ordinal"></a>ordinal()
 
-`ordinal(x)` returns `ordinal_number(x + 1)`.  This is useful when
+`ordinal(x)` returns `ordinal_number(x + 1)`. This is useful when
 working with indexes that start at zero.
 
 ## <a name="alpha"></a>alpha()
 
-`alpha(x)` returns `x + 1` as an alphabetical character.  This is
+`alpha(x)` returns `x + 1` as an alphabetical character. This is
 intended to be used with indexes that start at zero.
 
 * `alpha(0)` returns `A`.
@@ -4175,7 +4236,7 @@ intended to be used with indexes that start at zero.
 
 ## <a name="roman"></a>roman()
 
-`roman(x)` returns `x + 1` as a Roman numeral.  This is intended to be
+`roman(x)` returns `x + 1` as a Roman numeral. This is intended to be
 used with indexes that start at zero.
 
 * `roman(0)` returns `I`.
@@ -4184,9 +4245,9 @@ used with indexes that start at zero.
 
 ## <a name="item_label"></a>item_label()
 
-`item_label(x)` returns `x + 1` as a label for a list item.  This is
-intended to be used with indexes that start at zero.  It takes an
-optional second argument indicating a level between 0 and 6.  It takes
+`item_label(x)` returns `x + 1` as a label for a list item. This is
+intended to be used with indexes that start at zero. It takes an
+optional second argument indicating a level between 0 and 6. It takes
 an optional keyword argument `punctuation` indicating whether
 punctuation should be provided or not.
 
@@ -4217,7 +4278,7 @@ amounts.
 
 The text in the default `period_list()` function can be translated to
 different languages using the
-[`docassemble.base.util.update_word_collection()`] function.  If you
+[`docassemble.base.util.update_word_collection()`] function. If you
 want to customizes the choices available, you can override the default
 function by including something like the following in your
 [Python module]:
@@ -4343,8 +4404,8 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 ## <a name="yesno"></a>yesno()
 
 The `yesno()` function returns `'Yes'` or `'No'` depending on the
-truth value of the argument.  This is useful for filling in checkboxes
-in [PDF templates].  It takes an optional keyword argument `invert`,
+truth value of the argument. This is useful for filling in checkboxes
+in [PDF templates]. It takes an optional keyword argument `invert`,
 which, if set to true, returns `'No'` in place of `'Yes'` and
 vice-versa.
 
@@ -4356,14 +4417,14 @@ thing as `yesno(some_fact, invert=True)`.
 ## <a name="split"></a>split()
 
 The `split()` function splits a phrase into parts that are a certain
-number of characters long.  It splits on word breaks when it can.
+number of characters long. It splits on word breaks when it can.
 This is useful for filling in [PDF templates] when a single phrase
 must be typed into more than one field.
 
-The first argument is the phrase.  The second argument is a list of
-maximum character lengths of each part.  If there are two numbers,
-there will be at most three parts.  The third argument is the index of
-the part you want.  The first index is `0`.
+The first argument is the phrase. The second argument is a list of
+maximum character lengths of each part. If there are two numbers,
+there will be at most three parts. The third argument is the index of
+the part you want. The first index is `0`.
 
 In this example, the first part should be no more than 12 characters
 and the second part should be no more than 20 characters.
@@ -4389,7 +4450,7 @@ phrase was too short, empty text (`''`) is returned.
 
 To figure out what character lengths you should use, one method is to
 test the PDF file to see how many letter `M`s you can fit into a
-field.  If you can fit 10 `M`s into the first field and 22 `M`s in
+field. If you can fit 10 `M`s into the first field and 22 `M`s in
 into the second field, the second argument to `split()` would be
 `[10, 22]`.
 
@@ -4402,7 +4463,7 @@ condition is true, and otherwise returns empty text (`''`).
   variable `favorite_fruit`, but only if the variable `likes_fruit` is
   true.
 
-Note that the first argument must be a variable name in quotes.  This
+Note that the first argument must be a variable name in quotes. This
 ensures that a definition of the variable will not be sought unless
 the condition is true.
 
@@ -4437,7 +4498,7 @@ Back button) to see if the variable was defined.
 
 If the current user is logged in, [`interview_list()`] returns a list
 of dictionaries indicating information about the user's interview
-sessions.  This function provides a programmatic version of the screen
+sessions. This function provides a programmatic version of the screen
 available at `/interviews`.
 
 `interview_list()` takes the following optional keyword parameters:
@@ -4466,8 +4527,8 @@ available at `/interviews`.
 * `query` - this can be set to a query expression if you want to do a
   complex query. The syntax is explained below.
 * `include_dict` - if `True`, then `interview_list()` will return the
-  interview answers in the response.  If you are not going to use the
-  interview answers, it is best to set this to `False`.  The default
+  interview answers in the response. If you are not going to use the
+  interview answers, it is best to set this to `False`. The default
   is `True`.
 * `delete_shared` - this can be set to `True` if you set `action` to
   `'delete_all'` or `'delete'`, in which case all of the interview
@@ -4481,15 +4542,15 @@ sessions deleted. Otherwise, `interview_list()` returns a list of
 sessions.
 
 Since the list of sessions may be very long, `interview_list()` uses
-pagination.  When you first call `interview_list()`, up to 100 records
+pagination. When you first call `interview_list()`, up to 100 records
 are returned in the first item in the tuple. The number of records
 returned is configurable using the [`pagination limit`] Configuration
-directive.  If additional records exist, the second item in the tuple
-will be a code.  To obtain the next page of records, call
+directive. If additional records exist, the second item in the tuple
+will be a code. To obtain the next page of records, call
 `interview_list()` again, this time with the `next_id` optional
-keyword parameter set to the second item in the tuple.  By making
+keyword parameter set to the second item in the tuple. By making
 multiple calls to `interview_list()`, you can obtain the complete list
-of user records.  For example:
+of user records. For example:
 
 {% highlight python %}
 from docassemble.base.util import interview_list
@@ -4517,7 +4578,7 @@ are:
   session, if any.
 * `temp_user_id`: the temporary user ID of the anonymous user
   associated with the session, if the user was not logged
-  in.  (Note that these IDs do not correspond in any way with the IDs
+  in. (Note that these IDs do not correspond in any way with the IDs
   of logged-in users.)
 * `filename`: the filename of the interview, e.g.,
   `docassemble.demo:data/questions/questions.yml`
@@ -4531,7 +4592,7 @@ are:
 * `subtitle`: the [subtitle](#get_title) of the session.
 * `utc_modtime`: the modification time of the session, in [UTC].
 * `utc_starttime`: the start time of the session, in [UTC].
-* `valid`: whether the interview session can be resumed.  This will be
+* `valid`: whether the interview session can be resumed. This will be
   `False` if there is an error with the interview that prevents it
   from being resumed, or the [interview session dictionary] is not able
   to be decrypted.
@@ -4585,7 +4646,7 @@ subquestion: |
 Since the information about each session could include the interview
 session dictionary, to avoid storing all of this information in your
 own dictionary, it is a good idea to avoid keeping interview
-information around when you are done using it.  For example, this
+information around when you are done using it. For example, this
 interview runs `del` to ensure that the variable `info` is not left
 over when the for loop completes its work:
 
@@ -4601,43 +4662,43 @@ You can also refrain from obtaining the interview session dictionary
 by setting the optional keyword parameter `include_dict` to `False`.
 
 The [`interview_list()`] function takes an optional keyword argument
-`exclude_invalid`.  If this is set to `False`, a session will be
+`exclude_invalid`. If this is set to `False`, a session will be
 included even if there is an error that would prevent the session from
-being resumed.  By default, `exclude_invalid` is `True`, meaning that
-sessions will only be included if they can be resumed.  You can check
+being resumed. By default, `exclude_invalid` is `True`, meaning that
+sessions will only be included if they can be resumed. You can check
 whether a session can be resumed by checking the value of the `valid`
-key.  The most common reason for a session not to be `valid` is that
+key. The most common reason for a session not to be `valid` is that
 the current user does not have an encryption key that decrypts the
 interview answers; so a session belonging to someone else might be not
 `valid` for you, but it would be `valid` for the user who started that
 session.
 
 The [`interview_list()`] function can be useful in interviews that
-replace the standard list of sessions.  See the [`session list
+replace the standard list of sessions. See the [`session list
 interview`] configuration directive for more information.
 
 Note that more than one user can be associated with any given session.
 Unless server-side encryption prevents it, any user who has the
 session ID of a session can join that interview by visiting a URL with
-the `i` and `session` parameters set.  This will associate the user
-with the session.  Thus, if a session has been joined by more than one
+the `i` and `session` parameters set. This will associate the user
+with the session. Thus, if a session has been joined by more than one
 user, it will show up multiple times in the list returned by
 `interview_list(user_id='all')`.
 
-You can use [`interview_list()`] to delete sessions.  If you set the
+You can use [`interview_list()`] to delete sessions. If you set the
 optional keyword parameter `action` to `'delete_all'`, all of the
-user's sessions will be deleted.  Or, if you want to delete all of the
+user's sessions will be deleted. Or, if you want to delete all of the
 sessions belonging to any user, you can set `user_id` to `'all'` and
-set `action` to `'delete_all'`.  You can delete a particular session
+set `action` to `'delete_all'`. You can delete a particular session
 by setting `action` to `'delete'`, with optional keyword parameter
 `filename` set to the filename of the session's interview, and
-optional keyword parameter `session` set to the ID of the session.  By
+optional keyword parameter `session` set to the ID of the session. By
 default, the underlying session data associated with a particular user
-will not be deleted if it is shared by another user.  For example, if
+will not be deleted if it is shared by another user. For example, if
 there was an interview with [`multi_user`] set to `True`, and two
 users accessed a session of this interview, and then one user deletes
 the session, the other user will still be able to access the session
-and all of its data.  However, if you set the optional keyword
+and all of its data. However, if you set the optional keyword
 parameter `delete_shared` to `True`, then the session and its data
 will be deleted regardless of whether it is shared by one or more
 other users.
@@ -4715,7 +4776,7 @@ For [API] versions of this function, see [`/api/interviews`],
 The `interview_menu()` function returns a list of dictionaries
 indicating information about interviews available on the web site.
 See the [`dispatch`] configuration directive for information about
-setting up this menu.  This function provides a programmatic version
+setting up this menu. This function provides a programmatic version
 of the screen available at `/list`.
 
 The keys in each dictionary are:
@@ -4741,7 +4802,7 @@ rather than relative, so that the HTML can be used from a web site on
 another server.
 
 If `start_new` is set to `True`, then the URLs will have `&reset=1` at
-the end.  Thus, even if the user has already started an interview,
+the end. Thus, even if the user has already started an interview,
 clicking the link will start the interview at the beginning again.
 
 If `tag` is set to `'estates'` (for example), then `interview_menu()`
@@ -4749,7 +4810,7 @@ will only return interviews that have `'estates'` defined as a `tag`
 in the interview [`metadata`].
 
 This function can be useful in interviews that replace the standard
-list of available interviews.  See the [`dispatch interview`]
+list of available interviews. See the [`dispatch interview`]
 configuration directive for more information.
 
 For an [API] version of this function, see [`/api/list`].
@@ -4764,7 +4825,7 @@ new_user_id = create_user('testuser@example.com', 'xxxsecretxxx')
 {% endhighlight %}
 
 This will create an account with the e-mail address `testuser@example.com`
-and the password `xxxsecretxxx`.  The variable `new_user_id` will be
+and the password `xxxsecretxxx`. The variable `new_user_id` will be
 set to the user ID of the newly-created account.
 
 Only users with [privileges] of `admin` or users with a custom
@@ -4778,7 +4839,7 @@ privileges of `admin`, `developer`, or `advocate`.
 
 The function also accepts an optional keyword parameter `info`, which
 is expected to be a dictionary containing information about the new
-user.  The `info` dictionary can contain any of the following keys:
+user. The `info` dictionary can contain any of the following keys:
 
  - `country`: user's country code ([ISO 3166-1 alpha-2] format).
  - `first_name`: user's first name.
@@ -4836,7 +4897,7 @@ For an [API] version of this function, see [`/api/user_invite`].
 ## <a name="get_user_list"></a>get_user_list()
 
 The [`get_user_list()`] function returns a list of registered users on
-the server.  If the optional keyword parameter `include_inactive` is
+the server. If the optional keyword parameter `include_inactive` is
 set to `True`, then any inactive users are included in the results;
 otherwise they are excluded.
 
@@ -4848,7 +4909,7 @@ The function returns a two-item tuple. The first item in the tuple is
 a [Python list] of [Python dictionaries], where each dictionary has
 the following keys:
 
- - `active`: whether the user is active.  This is only included if the
+ - `active`: whether the user is active. This is only included if the
    `include_inactive` parameter is set.
  - `country`: user's country code ([ISO 3166-1 alpha-2] format).
  - `email`: user's e-mail address.
@@ -4868,14 +4929,14 @@ the following keys:
 
 The second item in the tuple is a code that is used for pagination.
 Since the list of users may be very long, `get_user_list()` uses
-pagination.  When you first call `get_user_list()`, up to 100 records
+pagination. When you first call `get_user_list()`, up to 100 records
 are returned in the first item in the tuple (configurable using the
-[`pagination limit`] Configuration directive).  If additional records
-exist, the second item in the tuple will be a code.  To obtain the
+[`pagination limit`] Configuration directive). If additional records
+exist, the second item in the tuple will be a code. To obtain the
 next page of records, call `get_user_list()` again, this time with the
 `next_id` optional keyword parameter set to the second item in the
-tuple.  By making multiple calls to `get_user_list()`, you can obtain
-the complete list of user records.  For example:
+tuple. By making multiple calls to `get_user_list()`, you can obtain
+the complete list of user records. For example:
 
 {% highlight python %}
 from docassemble.base.util import get_user_list
@@ -4894,13 +4955,13 @@ For an [API] version of this function, see [`/api/user_list`].
 ## <a name="get_user_info"></a>get_user_info()
 
 The [`get_user_info()`] function is like [`get_user_list()`], except
-it only returns information about one user at a time.  If called
+it only returns information about one user at a time. If called
 without arguments, it returns a [Python dictionary] of information
-about the current user.  The function can also take a user ID as an
+about the current user. The function can also take a user ID as an
 argument (e.g., `get_user_info(user_id=22)`), or an e-mail address as
 an argument (e.g., `get_user_info(email='jsmith@example.com')`, in
 which case it returns information about the user with that user ID or
-e-mail address.  If no user is found, `None` is returned.
+e-mail address. If no user is found, `None` is returned.
 
 This function will only work if the user running the interview that
 calls the function is logged in. If the user is not logged in, `None`
@@ -4911,7 +4972,7 @@ In order to see information about other users, the user must have
 `access_user_info` [permissions].
 
 For [API] versions of this function, see [`/api/user`] and
-[`/api/user/<user_id>`].  (Searching by e-mail address is not
+[`/api/user/<user_id>`]. (Searching by e-mail address is not
 supported in the [API].)
 
 ## <a name="set_user_info"></a>set_user_info()
@@ -4935,12 +4996,12 @@ are optional:
  - `old_password`: user's old password. If this is supplied when
    `password` is supplied, the user's encrypted information will be
    converted from the old encryption key to the new encryption key.
- - `account_type`: the type of login the user used.  This is `local`
+ - `account_type`: the type of login the user used. This is `local`
    for the username/password system, `auth0` for Auth0, `google` for
    Google, etc.
 
 The current user's profile will be updated with the values of the
-parameters.  Note that the `user_id` and `email` attributes cannot be
+parameters. Note that the `user_id` and `email` attributes cannot be
 changed using this function; these attributes are used only for
 selecting the user whose information is going to be changed.
 
@@ -4969,7 +5030,7 @@ code: |
 
 If the user running the interview that calls the function has
 appropriate [privileges], then the function can be used to change the
-profiles of other users.  A user account can be indicated by the
+profiles of other users. A user account can be indicated by the
 inclusion of an additional keyword parameter, `user_id` or `email`,
 that identifies the user whose profile should be changed.
 
@@ -5006,7 +5067,7 @@ not supported in the [API].)
 
 The [`get_user_secret()`] function takes an e-mail address and a
 password as arguments and returns a decryption key if the e-mail
-address/password combination is valid.  You will need this decryption
+address/password combination is valid. You will need this decryption
 key in order to use [`get_session_variables()`] and
 [`set_session_variables()`] with interview answers that are encrypted.
 
@@ -5015,15 +5076,15 @@ secret = get_user_secret('jsmith@example.com', 'xx_Secr3t_xx')
 {% endhighlight %}
 
 Note that you need to keep decryption keys secret, or else you defeat
-the purpose of server-side encryption.  The idea behind server-side
+the purpose of server-side encryption. The idea behind server-side
 encryption is that if a system's security is breached, and all the
 data on the server is revealed, the information would still be
-protected because it is encrypted.  But if the decryption key is
+protected because it is encrypted. But if the decryption key is
 stored on the server in an accessible place, then the information
 would no longer be protected, since someone who found the decryption
-key could decrypt the data.  Thus, you would not want to store the
+key could decrypt the data. Thus, you would not want to store the
 result of [`get_user_secret()`] in the [interview session dictionary] of
-an interview that sets [`multi_user`] to `True`.  Also, even if your
+an interview that sets [`multi_user`] to `True`. Also, even if your
 interview answers are encrypted, it is still a good idea to
 avoid storing passwords or decryption keys in an interview session
 dictionary.
@@ -5033,15 +5094,15 @@ For an [API] version of this function, see [`/api/secret`].
 ## <a name="get_session_variables"></a>get_session_variables()
 
 The [`get_session_variables()`] function retrieves the dictionary for
-an interview session.  It has two required arguments: an interview
+an interview session. It has two required arguments: an interview
 filename (e.g., `'docassemble.demo:data/questions/questions.yml'`), a
-session ID (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`).  In addition,
+session ID (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`). In addition,
 it can take a third argument, an encryption key for decrypting the
-interview answers.  If the interview answers are encrypted, the third
+interview answers. If the interview answers are encrypted, the third
 argument is required.
 
 If the third argument is omitted, but the interview answers are
-encrypted, the current user's decryption key will be tried.  To obtain
+encrypted, the current user's decryption key will be tried. To obtain
 an encryption key for a different user, you can use
 [`get_user_secret()`].
 
@@ -5056,7 +5117,7 @@ function.
 Like the [`all_variables()`] function, [`get_session_variables()`]
 simplifies the dictionary (converting objects to dictionaries, for
 example), so that it is safe to convert the result to a format like
-[JSON].  If you want the raw [Python dictionary], you can call
+[JSON]. If you want the raw [Python dictionary], you can call
 [`get_session_variables()`] with the optional keyword parameter
 `simplify` set to `False`.
 
@@ -5089,9 +5150,9 @@ interview for which you want to create a session.
 * `url_args`
 
 The parameter `secret` can be set to the output of
-`get_user_secret()`.  If the target interview does not use server-side
+`get_user_secret()`. If the target interview does not use server-side
 encryption ([`multi_user`] is set to `True`), then the `secret`
-parameter is not important.  If you do not provide a `secret`
+parameter is not important. If you do not provide a `secret`
 parameter and the target interview uses server-side encryption, then
 the current user's decryption key will be used, and only the current
 user will be able to access the session.
@@ -5102,9 +5163,9 @@ the session when it starts.
 
 After setting the `url_args` (if any), `create_session()` will
 evaluate the interview logic in the session and save the interview
-answers for the session.  Thus, if `mandatory` or `initial` blocks in
+answers for the session. Thus, if `mandatory` or `initial` blocks in
 the interview cause side effects, these side effects will be triggered
-by the call to `create_session()`.  Also, note that when this code
+by the call to `create_session()`. Also, note that when this code
 executes, the user for purposes of this code execution will be the
 same as the user who ran `create_session()`.
 
@@ -5112,7 +5173,7 @@ same as the user who ran `create_session()`.
 
 The [`set_session_variables()`] function allows you to write changes
 to any [interview session dictionary] (except the current interview
-session).  It has three required parameters: an interview filename (e.g.,
+session). It has three required parameters: an interview filename (e.g.,
 `'docassemble.demo:data/questions/questions.yml'`), a session ID
 (e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`), and a [Python
 dictionary] containing the variables you want to set.
@@ -5137,9 +5198,9 @@ Note that if you pass [`DAFile`], [`DAFileList`], or
 the other interview will not be able to read the files unless the
 [`.set_attributes()`] method has been used to either change the
 `session` and `filename` to match the destination interview session,
-or the `private` attribute has been set to `False`.  Note that if the
+or the `private` attribute has been set to `False`. Note that if the
 `session` and `filename` are changed, then the first interview session
-will no longer be able to access the file.  Note also that if
+will no longer be able to access the file. Note also that if
 `private` is set to `False`, then the file will be accessible on the
 internet from a URL.
 
@@ -5153,16 +5214,16 @@ parameters:
 * `delete`
 
 If you set `question_name` to the ID of a question in the interview,
-the question will be marked as answered.  You can obtain the ID of a
+the question will be marked as answered. You can obtain the ID of a
 question from the `questionName` attribute in the question data using
 [`get_question_data()`] or the [`/api/session/question`] API method.
 It is only necessary to specify a `question_name` when you are setting
-a variable for purposes of answering a [`mandatory`] question.  You
+a variable for purposes of answering a [`mandatory`] question. You
 can tell if a question is [`mandatory`] by checking for the presence
 of the attribute `mandatory` in the question data.
 
 The keyword parameter `secret` can be an encryption key for decrypting
-the interview answers.  If no `secret` is provided, the encryption key
+the interview answers. If no `secret` is provided, the encryption key
 of the current user is used.
 
 The parameter `overwrite` can be set to `True` if you do not want to
@@ -5217,11 +5278,11 @@ parameters:
    If no `secret` is provided, the encryption key of the current user
    is used.
 * `persistent`: set this to `True` if you intend the action to show a
-   `question`, as opposed to merely execute some code.  The default
+   `question`, as opposed to merely execute some code. The default
    behavior is for the [action] to run in a non-persistent fashion.
 * `overwrite`: if set to `True`, then when the interview answers are
    saved, they will overwrite the previous interview answers instead
-   of creating a new step in the session.  The default behavior is to
+   of creating a new step in the session. The default behavior is to
    create a new step in the session.
 
 Here is an example interview that uses `run_action_in_session()`,
@@ -5234,10 +5295,10 @@ For an [API] version of this function, see the [POST method of `/api/session/act
 ## <a name="get_question_data"></a>get_question_data()
 
 The `get_question_data()` function returns data about the current
-question of an interview session.  It has two required parameters: an
+question of an interview session. It has two required parameters: an
 interview filename (e.g.,
 `'docassemble.demo:data/questions/questions.yml'`) and a session ID
-(e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`).  If the interview
+(e.g., `'iSqmBovRpMeTcUBqBvPkyaKGiARLswDv'`). If the interview
 session is encrypted, you must supply a third parameter (or the
 keyword parameter `secret`) containing the encryption key for
 decrypting the interview answers.
@@ -5250,7 +5311,7 @@ code: |
 {% endhighlight %}
 
 The function returns a [Python dictionary] containing information
-about the question.  The format of the dictionary varies by question
+about the question. The format of the dictionary varies by question
 type.
 
 You can only use this function to access the question data for an
@@ -5261,9 +5322,9 @@ For an [API] version of this function, see the [`/api/session/question`].
 ## <a name="go_back_in_session"></a>go_back_in_session()
 
 The [`go_back_in_session()`] function has the effect of clicking the
-Back button in another interview session.  It has two required
+Back button in another interview session. It has two required
 parameters: the interview filename and the session ID of the other
-session.  It also accepts an optional keyword parameter `secret`,
+session. It also accepts an optional keyword parameter `secret`,
 which is the encryption key to use to decrypt the [interview session
 dictionary], if it is encrypted.
 
@@ -5307,7 +5368,7 @@ For an [API] version of this function, see [`/api/privileges`].
 
 <a name="DAValidationError"></a>The `validation_error()` function
 takes an error message as a parameter and [`raise`]s a
-`DAValidationError` exception with that error message.  This means
+`DAValidationError` exception with that error message. This means
 that any code that follows the call to `validation_error()` will not
 be executed.
 
@@ -5330,7 +5391,7 @@ don't have a good knowledge of [Python], so you might want to keep
 them out of your interview files.
 
 `validation_error()` accepts an optional keyword argument `field`,
-which should refer to a variable name on the screen.  If you call
+which should refer to a variable name on the screen. If you call
 `validation_error()` from [`validation code`] and reference a `field`,
 the error message will be placed next to the indicated field.
 
@@ -5343,32 +5404,32 @@ whether the server has particular features enabled.
 
 The keys are:
 
-* `sms` - whether SMS messaging is available.  See the [`twilio`]
+* `sms` - whether SMS messaging is available. See the [`twilio`]
   configuration.
-* `fax` - whether fax sending is available.  See the [`twilio`]
+* `fax` - whether fax sending is available. See the [`twilio`]
   configuration.
-* `google_login` - whether logging in with Google is available.  See
+* `google_login` - whether logging in with Google is available. See
   the [`oauth`] configuration.
 * `facebook_login` - whether logging in with Facebook is available.
   See the [`oauth`] configuration.
 * `twitter_login` - whether logging in with Twitter is available.
   See the [`oauth`] configuration.
 * `phone_login` - whether logging in with an [SMS] security code is
-  available.  See the [`phone login`] configuration.
-* `voicerss` - whether the text-to-speech feature is available.  See
+  available. See the [`phone login`] configuration.
+* `voicerss` - whether the text-to-speech feature is available. See
   the [`voicerss`] configuration.
-* `s3` - whether [Amazon S3] is enabled.  See the [`s3`]
+* `s3` - whether [Amazon S3] is enabled. See the [`s3`]
   configuration.
-* `azure` - whether [Azure blob storage] is enabled.  See the [`azure`]
+* `azure` - whether [Azure blob storage] is enabled. See the [`azure`]
   configuration.
 * `googledrive` - whether [Google Drive synchronization] is
-  available.  See the [`googledrive`] configuration.
+  available. See the [`googledrive`] configuration.
 * `github` - whether developers have the option of integrating their
-  [Playground]s with [GitHub].  See the [`github`] configuration.
+  [Playground]s with [GitHub]. See the [`github`] configuration.
 * `pypi` - whether developers have the option of integrating their
-  [Playground]s with [PyPI].  See the [`pypi`] configuration.
+  [Playground]s with [PyPI]. See the [`pypi`] configuration.
 * `google_maps` - whether the Google Maps API (used in the [`map_of()`]
-  function and the [`geocode()`] method) is available.  See the
+  function and the [`geocode()`] method) is available. See the
   [`google`] configuration.
 
 ## <a name="referring_url"></a>referring_url()
@@ -5377,13 +5438,13 @@ Returns the URL that the user was visiting when the user clicked on a
 link to go to the interview (if that click initiated the interview).
 
 Under some circumstances, this URL (which comes from the [referer
-header]) cannot be obtained.  For example, if the user started the
+header]) cannot be obtained. For example, if the user started the
 interview by typing a URL directly into the location bar of the
 browser, or if the user has a browser setting that blocks the [referer
 header], then the URL will not be available.
 
 If the URL cannot be obtained, then the URL indicated by the optional
-keyword parameter `default` will be returned.  If no `default` URL is
+keyword parameter `default` will be returned. If no `default` URL is
 provided, or `default` is `None`, then the value of the configuration
 directive [`exitpage`] will be used.
 
@@ -5393,7 +5454,7 @@ they started at the end of the interview.
 {% include side-by-side.html demo="exit-url-referer" %}
 
 If you just want to find out the referring URL, make sure to set the
-`default` parameter to something you can test.  For example, the
+`default` parameter to something you can test. For example, the
 following blocks will set the variable `how_user_heard_of_us` either
 by obtaining the referring URL or, if the URL is not available, by
 asking the user "How did you hear about us?"
@@ -5416,8 +5477,8 @@ return the `Referer` of the current request, if available.
 
 {% include side-by-side.html demo="static_image" %}
 
-Returns appropriate markup to include a static image.  If you know the
-image path, you can just use the `[FILE ...]` [markup] statement.  The
+Returns appropriate markup to include a static image. If you know the
+image path, you can just use the `[FILE ...]` [markup] statement. The
 `static_image()` function is primarily useful when you want to
 assemble the image path using code.
 
@@ -5430,7 +5491,7 @@ static_image('docassemble.demo:crawling.png', width='2in'))
 
 ## <a name="get_config"></a>get_config()
 
-Returns a value from the **docassemble** configuration file.  If the
+Returns a value from the **docassemble** configuration file. If the
 value is not defined, returns None.
 
 See the explanation of this function in the
@@ -5440,13 +5501,13 @@ for more information.
 ## <a name="prevent_going_back"></a>prevent_going_back()
 
 **docassemble**'s back button helps users when they make a mistake and
-want to go back and correct it.  But sometimes, we want to prevent
-users from going back.  For example, if the interview code causes an
+want to go back and correct it. But sometimes, we want to prevent
+users from going back. For example, if the interview code causes an
 e-mail to be sent, or data to be written to a database, allowing the
 user to go back and do the process again would create confusion.
 
 You can call `prevent_going_back()` to instruct the web application to
-prevent the user from going back past that point.  See also the
+prevent the user from going back past that point. See also the
 [modifier] of the same name.
 
 {% include side-by-side.html demo="prevent-back" %}
@@ -5455,9 +5516,9 @@ prevent the user from going back past that point.  See also the
 
 This is used in multiple choice questions in `fields` lists where the
 `datatype` is `object`, `object_radio`, or `object_list` and the list
-of selections is created by embedded `code`.  The function takes one
+of selections is created by embedded `code`. The function takes one
 or more arguments and outputs an appropriately formatted list of
-objects.  If any of the arguments is a list, the list is unpacked and
+objects. If any of the arguments is a list, the list is unpacked and
 its elements are added to the list of selections.
 
 ## <a name="objects_from_file"></a>objects_from_file()
@@ -5468,7 +5529,7 @@ including objects.
 The import acts like a standard [YAML] import, except that when an
 [associative array] (dictionary) is encountered that has the keys
 `object` and `items`, then the [associative array] is converted into a
-list of objects (specifically, a [`DAList`]).  In addition, if an
+list of objects (specifically, a [`DAList`]). In addition, if an
 [associative array] is encountered that has the keys `object` and
 `item`, then the [associative array] is converted into a single
 object.
@@ -5567,7 +5628,7 @@ If there is one [YAML] "[document]" and it is something other than an
 `item`, then the data structure will be returned.
 
 There is an optional keyword argument `name` that will be used to set
-the [`.instanceName`] attribute of the resulting object.  If you do
+the [`.instanceName`] attribute of the resulting object. If you do
 not pass a `name` parameter, the object/data structure returned by
 `objects_from_file()` will still be readable, but it will not be
 writable by **docassemble** questions.
@@ -5616,7 +5677,7 @@ class Food(DAObject):
     pass
 {% endhighlight %}
 
-Suppose you want to import some objects of type `Halibut`.  You can
+Suppose you want to import some objects of type `Halibut`. You can
 create a [YAML] file called [`fishes.yml`] with the following
 contents:
 
@@ -5643,7 +5704,7 @@ items:
 {% endhighlight %}
 
 Note the inclusion of `module: .fish` along with each `object`
-specifier.  This indicates that the `Halibut` and `Food` classes are
+specifier. This indicates that the `Halibut` and `Food` classes are
 defined in the module `.fish`.
 
 The following interview will import these two `Halibut` objects into
@@ -5653,7 +5714,7 @@ the interview:
 
 Note that the `.` in front of the module name (`.fish`) is
 [standard Python notation] for indicating that the module is part of
-the current package.  In this example, the interview lives in the
+the current package. In this example, the interview lives in the
 [`docassemble.demo`] package, so we could have written the full module
 name, `docassemble.demo.fish`, instead of `.fish`.
 
@@ -5673,14 +5734,14 @@ When the interview calls `objects_from_file('fishes.yml')`, the
 if your interview is running in the [Playground]).
 
 The `objects_from_file()` function can also be given explicit
-references.  For example, calling
+references. For example, calling
 `objects_from_file('docassemble.demo:data/sources/fishes.yml')` would
 have the same effect.
 
 ### Preventing recursive object conversion
 
 By default, `objects_from_file()` will comb through the data structure
-looking for objects to convert.  If you only want it to convert
+looking for objects to convert. If you only want it to convert
 objects that are specified in an [associative array] at the very top
 level, you can set the keyword parameter `recursive` to `False`.
 
@@ -5689,7 +5750,7 @@ level, you can set the keyword parameter `recursive` to `False`.
 ### How objects are created
 
 The `objects_from_file()` creates objects by passing keyword arguments
-to the object constructor.  In the "fishes" example above, the first
+to the object constructor. In the "fishes" example above, the first
 object was effectively created by calling:
 
 {% highlight python %}
@@ -5704,7 +5765,7 @@ Halibut(name='Larry Halibut', scales=600, food=[Food(name='seaweed', calories=2)
 
 Therefore, object attributes will only be initialized if the object
 supports initialization of attributes through keyword arguments passed
-to the constructor.  All objects that are instances of the
+to the constructor. All objects that are instances of the
 [`DAObject`] class have this property.
 
 However, if you are using objects that are not [`DAObject`]s, but you
@@ -5723,7 +5784,7 @@ initiates the object attributes in special ways in response to keyword
 parameters.
 
 You can use `objects_from_file()` to import other kinds of objects
-that allow initialization through keyword parameters.  For example,
+that allow initialization through keyword parameters. For example,
 [`datetime.datetime`] objects can be created by doing:
 
 {% highlight python %}
@@ -5764,7 +5825,7 @@ Here is an interview that imports this file:
 {% include demo-side-by-side.html demo="objects-from-file-dadict" %}
 
 By default, any groups that are populated by importing will be marked
-as [gathered].  If you want **docassemble** to ask the user if more
+as [gathered]. If you want **docassemble** to ask the user if more
 elements should be added, you can set the optional keyword argument
 `gathered` to `False`:
 
@@ -5790,10 +5851,10 @@ becomes this in [Python]:
 {% endhighlight %}
 
 Note that the newline after the word "entitled" was treated
-literally (`\n`), and a newline was added at the end.  This is not a problem
+literally (`\n`), and a newline was added at the end. This is not a problem
 when your text is treated as [Markdown], because [Markdown] treats
 single newlines as though they were spaces and only breaks a line when
-it sees two newlines together.  However, if you are inserting text
+it sees two newlines together. However, if you are inserting text
 into a [`docx template file`], the newlines will cause paragraph
 breaks, which may be what you want, or it may not be what you want.
 
@@ -5872,7 +5933,7 @@ also becomes:
 {'claim': 'The landlord is not entitled to collect back rent.'}
 {% endhighlight %}
 
-The quotation marks do not change the text in this case.  Quotation
+The quotation marks do not change the text in this case. Quotation
 marks can still be useful, however, if your text contains any
 punctuation marks that have special meaning in [YAML].
 
@@ -5909,31 +5970,31 @@ For more information, see [The YAML Format].
 ## <a name="ocr_file"></a>ocr_file()
 
 Given a PDF file, `ocr_file()` uses [optical character recognition] (OCR) to
-read the text of the file.  In the text returned, pages are
+read the text of the file. In the text returned, pages are
 separated by the [form feed character].
 
 {% include side-by-side.html demo="ocr" %}
 
-The first argument must be a [`DAFile`] or [`DAFileList`] object.  If
+The first argument must be a [`DAFile`] or [`DAFileList`] object. If
 the argument is a [`DAFileList`] with more than one file, all files
 will be OCRed, and the text of all the pages will be returned.
 
 The following optional keyword arguments affect the way OCR is
 performed.
 
-* `language` indicates the language of the document.  If not
-  specified, the language returned by `get_language()` is used.  The
+* `language` indicates the language of the document. If not
+  specified, the language returned by `get_language()` is used. The
   language must be a lowercase [ISO-639-1]/[ISO-639-3] code or a
   language code that [Tesseract] uses.
-* `psm` indicates the [Tesseract] page segmentation mode.  The default
-is 6 ("assume a uniform block of text").  The choices are:
+* `psm` indicates the [Tesseract] page segmentation mode. The default
+is 6 ("assume a uniform block of text"). The choices are:
     * 0: Orientation and script detection (OSD) only.
     * 1: Automatic page segmentation with OSD.
     * 2: Automatic page segmentation, but no OSD, or OCR.
     * 3: Fully automatic page segmentation, but no OSD.
     * 4: Assume a single column of text of variable sizes.
     * 5: Assume a single uniform block of vertically aligned text.
-    * 6: Assume a single uniform block of text.  (Default)
+    * 6: Assume a single uniform block of text. (Default)
     * 7: Treat the image as a single text line.
     * 8: Treat the image as a single word.
     * 9: Treat the image as a single word in a circle.
@@ -5942,19 +6003,19 @@ is 6 ("assume a uniform block of text").  The choices are:
 In addition, the following optional parameters, which are passed to
 [pdftoppm], customize the conversion of PDF files:
 
-* `f` indicates the first page of the PDF file to read.  By
+* `f` indicates the first page of the PDF file to read. By
   default, all pages are read.
-* `l` indicates the last page of the PDF file to read.  By
+* `l` indicates the last page of the PDF file to read. By
   default, all pages are read.
-* `x`: for cropping PDF pages.  Indicates the x-coordinate of the crop
-  area's top left corner, in pixels.  (By default, PDF files are
+* `x`: for cropping PDF pages. Indicates the x-coordinate of the crop
+  area's top left corner, in pixels. (By default, PDF files are
   converted at 300 dpi unless another value is given by the
   [`ocr dpi`] configuration directive.)
-* `y`: for cropping PDF pages.  Indicates the y-coordinate of the crop
+* `y`: for cropping PDF pages. Indicates the y-coordinate of the crop
   area's top left corner, in pixels.
-* `W`: for cropping PDF pages.  Indicates the width of the crop area
+* `W`: for cropping PDF pages. Indicates the width of the crop area
   in pixels (default is 0).
-* `H`: for cropping PDF pages.  Indicates the height of the crop area
+* `H`: for cropping PDF pages. Indicates the height of the crop area
   in pixels (default is 0).
 
 If you want a [PDF] with embedded OCRed text, see the [`make_ocr_pdf()`]
@@ -5962,7 +6023,7 @@ method of [`DAFile`].
 
 By default, the `ocr_file()` function uses [Tesseract] to do optical
 character recognition. Optionally, you can use [Google Cloud Vision]
-instead.  To do so, call `ocr_file()` with the keyword parameter
+instead. To do so, call `ocr_file()` with the keyword parameter
 `use_google=True`.
 
 {% highlight python %}
@@ -6018,17 +6079,17 @@ looking at a spinner, for what may be an inconvenient period of time.
 The user may think that the application has crashed.
 
 The best practice is to run OCR tasks in the background, using the
-[`ocr_file_in_background()`] function.  This function is a cross
+[`ocr_file_in_background()`] function. This function is a cross
 between [`ocr_file()`] and [`background_action()`].
 
 To control the details of the OCR process, you can set optional
-keyword parameters `language`, `psm`, `x`, `y`, `W`, and `H`.  (See
+keyword parameters `language`, `psm`, `x`, `y`, `W`, and `H`. (See
 [`ocr_file()`] for information about what these do.)
 
 Like [`background_action()`], it immediately returns an object
-representing a background task.  You can call `.ready()` on this
+representing a background task. You can call `.ready()` on this
 object to see if the task is still running in the background, and you
-can call `.get()` to obtain the result of the OCR task.  (See
+can call `.get()` to obtain the result of the OCR task. (See
 [`background_action()`] for more information about these methods.)
 
 Here is an example of how [`ocr_file_in_background()`] can be used.
@@ -6036,22 +6097,22 @@ Here is an example of how [`ocr_file_in_background()`] can be used.
 {% include side-by-side.html demo="ocr-chord" %}
 
 This example demonstrates a technique for avoiding making the user
-wait.  First, the user uploads a document.  Then,
+wait. First, the user uploads a document. Then,
 [`ocr_file_in_background()`] is called on the uploaded file, which
-starts the OCR process in the background.  Then, the user is asked a
-question ("What is your nickname?").  Then is the user sent to a
-screen that displays the text obtained through OCR.  Hopefully, the
+starts the OCR process in the background. Then, the user is asked a
+question ("What is your nickname?"). Then is the user sent to a
+screen that displays the text obtained through OCR. Hopefully, the
 question about the nickname took enough time that the results of the
-OCR are ready by the time this screen appears in the interview.  Just
+OCR are ready by the time this screen appears in the interview. Just
 in case there wasn't enough time, the interview question calls
-`.ready()` to check to see if the task is done.  If it is not done,
+`.ready()` to check to see if the task is done. If it is not done,
 the user is asked to wait, and to press "Refresh."  If the process has
 completed by then, `.ready()` will be `True`, and the user can see the
 text obtained through OCR.
 
 It is safe to call `.get()` without first ensuring that `.ready()` is
-`True`.  The `.get()` method will cause the system to wait until the
-OCR text is available.  The user will see a spinner in the meantime.
+`True`. The `.get()` method will cause the system to wait until the
+OCR text is available. The user will see a spinner in the meantime.
 
 Other questions could be asked, in addition to the nickname question,
 in order to give the computer more time to finish the OCR process.
@@ -6060,16 +6121,16 @@ If you do not want to stall for time by asking questions, but you want
 to give the user a user-friendly screen to look at while they wait and
 you don't want to make the user press a Refresh button, you can use
 the optional second argument to the [`ocr_file_in_background()`]
-function.  This second argument acts like the second argument to
-[`background_action()`].  In this example, we set it to `refresh`:
+function. This second argument acts like the second argument to
+[`background_action()`]. In this example, we set it to `refresh`:
 
 {% include side-by-side.html demo="ocr-chord-refresh" %}
 
 Be careful about combining the use of `refresh` with the method of
-asking questions of the user to pass the time.  If any of the
+asking questions of the user to pass the time. If any of the
 questions call for the user to type something in, the user will be
 very annoyed if the screen refreshes while they are typing; they will
-lose what they have typed.  However, if you are only asking questions
+lose what they have typed. However, if you are only asking questions
 that require buttons to be pressed, then the user will not notice if
 the screen refreshes.
 
@@ -6080,17 +6141,17 @@ You can also use other notification methods, such as:
 
 These notification methods show a Javascript alert or a message
 "flashed" at the top of the screen when the background task is
-complete.  The message is "OCR succeeded" unless you override the
+complete. The message is "OCR succeeded" unless you override the
 message using the optional keyword argument `message`.
 
 See the documentation of [`background_action()`] for more information
 about notification methods.
 
-The value returned by `.get()` is an object, not a piece of text.  If
+The value returned by `.get()` is an object, not a piece of text. If
 the attribute `.ok` is `True`, the text can be found in the `.content`
-attribute of this object.  If the attribute `.ok` is `False`, then
+attribute of this object. If the attribute `.ok` is `False`, then
 there was an error during the OCR process, and the error message can
-be found in the attribute `.error_message`.  When you put the output
+be found in the attribute `.error_message`. When you put the output
 of `.get()` inside of a `${ ... }` [Mako] tag, the object is forced to
 be text, in which case either `.content` or `.error_message` is used,
 depending on the success of the OCR process.
@@ -6112,14 +6173,14 @@ Note that it is also possible to use [`ocr_file()`] within
 {% include side-by-side.html demo="ocr-background" %}
 
 However, the advantage of [`ocr_file_in_background()`] is that it can
-be a lot faster if there is more than one page image.  The
+be a lot faster if there is more than one page image. The
 [`ocr_file()`] function OCRs one page at a time, using a single CPU
-core.  The [`ocr_file_in_background()`] function, by constrast,
+core. The [`ocr_file_in_background()`] function, by constrast,
 assigns each page image to a separate background task, and these tasks
-are then distributed across all the CPU cores in your system.  If your
+are then distributed across all the CPU cores in your system. If your
 **docassemble** installation has two application servers, each with
 four CPU cores, the system will process the OCR job eight pages at a
-time rather than one page at a time.  For a large document,
+time rather than one page at a time. For a large document,
 [`ocr_file_in_background()`] will get the whole job done much faster.
 
 ### Running OCR with languages other than English
@@ -6201,18 +6262,18 @@ The `language` parameter is flexible; you can set it to a language
 code that [Tesseract] supports (e.g., `eng`, `chi-sim`, `chi-tra`,
 `slk-frak`), or you can give it a two-character [ISO-639-1] code, in
 which case **docassemble** will convert it to the corresponding
-[Tesseract] code.  If [Tesseract] does not support the language,
-English will be used.  If the `language` parameter is not supplied,
+[Tesseract] code. If [Tesseract] does not support the language,
+English will be used. If the `language` parameter is not supplied,
 **docassemble** will use the default language (the result of
 `get_language()`).
 
-For some languages, there is more than one variant.  For example, if
+For some languages, there is more than one variant. For example, if
 you specify Chinese, `zh`, **docassemble** will use `chi-tra`
-(traditional Chinese).  If this is not what you want, you can specify
+(traditional Chinese). If this is not what you want, you can specify
 an explicit `language` parameter, such as `chi-sim` (simplified
-Chinese).  Alternatively, you can override the mapping between
+Chinese). Alternatively, you can override the mapping between
 [ISO-639-1] codes and [Tesseract] codes by editing the
-[`ocr languages`] directive in the [configuration].  For example, if
+[`ocr languages`] directive in the [configuration]. For example, if
 you wanted all Chinese to be interpreted as Simplified Chinese, and
 all Uzbek to be interpreted as the Cyrillic form, you could set the
 following:
@@ -6248,13 +6309,13 @@ functions right away.
 
 Note, however, that paths obtained from [`DAFile`] objects, file
 numbers, and URLs, will not necessarily be stable from request to
-request.  If you save a path to a variable at one time, and expect to
+request. If you save a path to a variable at one time, and expect to
 use it later in a subsequent question, you may find that the path does
-not exist.  This is because temporary files can be deleted, and
+not exist. This is because temporary files can be deleted, and
 subsequent user screens may be handled by different servers.
 
 If you want a file that persists from request to request, you should
-store its contents to a [`DAFile`] object.  When a [`DAFile`] object
+store its contents to a [`DAFile`] object. When a [`DAFile`] object
 is assigned to a variable, you can reliably obtain the file path by
 calling the [`.path()`] method on the variable.
 
@@ -6275,21 +6336,21 @@ being run from the command line, and returns the output of the command
 from running the command.
 
 The first argument, which is required, is the name of the module.
-This can be expressed in a few ways.  If it is the name of a file
+This can be expressed in a few ways. If it is the name of a file
 ending in .py, it is assumed to be a module in the same package as the
-interview file.  Or, if you are using the [Playground], it is assumed
-to be a file in the [modules folder].  The module file is executed as
+interview file. Or, if you are using the [Playground], it is assumed
+to be a file in the [modules folder]. The module file is executed as
 you would execute a module file by using `python modulename.py` from
-the command line.  If the first argument is the name of a module, that
+the command line. If the first argument is the name of a module, that
 module will be run, much as you would execute a module by using `python
 -m modulename` from the command line.
 
 The function returns a tuple of two variables: the output of the
-command (text) and the return value (an integer).  If the command
+command (text) and the return value (an integer). If the command
 was successful, the return value will be zero.
 
 The following three example interviews refer to a very simple
-[Python module] file, [`hello.py`].  The contents of this file are:
+[Python module] file, [`hello.py`]. The contents of this file are:
 
 {% highlight python %}
 print "Hello, world!"
@@ -6321,7 +6382,7 @@ passed to the module.
 
 The following example demonstrates how you can use
 `run_python_module()` to run unit tests using the standard
-[`unittest` framework].  The interview, the [`tests.py`] file it
+[`unittest` framework]. The interview, the [`tests.py`] file it
 refers to, and the [`my_name_suffix`] module that is being tested in
 [`tests.py`], are all in [`docassemble.demo`] package.
 
@@ -6330,7 +6391,7 @@ The command line argument `-v` results in "verbose" output.
 {% include demo-side-by-side.html demo="run-python-module-tests" %}
 
 The [`indent()`] function is used here because it indents each line in
-the output by four spaces.  In [Markdown], this causes the text to be
+the output by four spaces. In [Markdown], this causes the text to be
 displayed in a monospace font.
 
 ## <a name="pdf_concatenate"></a>pdf_concatenate()
@@ -6339,8 +6400,8 @@ The `pdf_concatenate()` function accepts one or more file objects
 ([`DAFile`], [`DAStaticFile`], [`DAFileList`], or
 [`DAFileCollection`]) as input (raw file paths are also accepted) and
 returns a [`DAFile`] containing the files concatenated into a single
-[PDF] file.  Image files and word processing files (.doc, .docx, .rtf,
-and .odt) will be converted to [PDF].  If any of the arguments is a
+[PDF] file. Image files and word processing files (.doc, .docx, .rtf,
+and .odt) will be converted to [PDF]. If any of the arguments is a
 list, it will be unpacked.
 
 {% include side-by-side.html demo="pdf-concatenate" %}
@@ -6348,9 +6409,9 @@ list, it will be unpacked.
 `pdf_concatenate()` supports the following optional keyword parameters:
 
 * `filename`: if provided, this will be the name of the resulting
-  file.  If not provided, the file will be named `file.pdf`.
+  file. If not provided, the file will be named `file.pdf`.
 * `pdfa`: if `True`, the [PDF] file will be converted to [PDF/A]
-  format.  The default is `False`.
+  format. The default is `False`.
 * `password`: if provided, the [PDF] file will be protected. If
   `password` is a string, the password will be a "user password." To
   supply an "owner password," you can set `password=[owner_pw, user_pw]`
@@ -6366,8 +6427,8 @@ The `docx_concatenate()` function accepts one or more file objects
 ([`DAFile`], [`DAStaticFile`], [`DAFileList`], or
 [`DAFileCollection`]) as input (raw file paths are also accepted) and
 returns a [`DAFile`] containing the files concatenated into a single
-DOCX file.  Only word processing files (.doc, .docx, .rtf, and .odt)
-are accepted.  If any of the arguments is a list, it will be unpacked.
+DOCX file. Only word processing files (.doc, .docx, .rtf, and .odt)
+are accepted. If any of the arguments is a list, it will be unpacked.
 
 `docx_concatenate()` takes an optional keyword parameter `filename`,
 which, if provided, will be used as the name of the resulting file.
@@ -6385,8 +6446,8 @@ The `overlay_pdf()` function overlays a single page from a PDF file on
 top of the pages of another PDF file.
 
 It has two mandatory parameters: a main document, and an overlay
-document.  The parameters can be [`DAFileCollection`], [`DAFileList`],
-or [`DAFile`] objects.  They can also be file paths for files on the
+document. The parameters can be [`DAFileCollection`], [`DAFileList`],
+or [`DAFile`] objects. They can also be file paths for files on the
 file system.
 
 The function returns a [`DAFile`] containing a PDF file where the
@@ -6396,13 +6457,13 @@ main document.
 {% include demo-side-by-side.html demo="overlay-pdf" %}
 
 The `overlay_pdf()` function accepts several optional keyword
-parameters.  If you only want to overlay on top of some of the pages
+parameters. If you only want to overlay on top of some of the pages
 of the main document, you can indicate a `first_page` and/or a
 `last_page`, which will instruct `overlay_pdf()` to start at a given
-page number and/or end at a given page number.  By default,
+page number and/or end at a given page number. By default,
 `overlay_pdf()` starts on the first page and ends on the last page.
 If you only want to overlay over even-numbered pages, set `only` to
-`'even'`.  If you only want to overlay over odd-numbered pages, set
+`'even'`. If you only want to overlay over odd-numbered pages, set
 `only` to `'odd'`.
 
 If your document containing the logo has more than one page, you can
@@ -6411,7 +6472,7 @@ the page you want to use.
 
 The optional keyword parameter `multi` is used when you want to
 overlay two PDF files with the same number of pages on top of one
-another.  (That is, page 1 of document A will be overlayed with page 1
+another. (That is, page 1 of document A will be overlayed with page 1
 of document B, page 2 of document a will be overlayed with page 2 of
 document B, etc.)
 
@@ -6433,7 +6494,7 @@ except it returns a [ZIP file] archive of the files.
 `zip_file()` has two optional keyword parameters:
 
 * `filename`: if provided, this will be the name of the resulting
-  file.  If not provided, the file will be named `file.zip`.
+  file. If not provided, the file will be named `file.zip`.
 * `output_to`: if this refers to a [`DAFile`] object, the output of
   `zip_file()` will be saved to this [`DAFile`]. By default,
   `zip_file()` returns a new [`DAFile`] with a random instance name.
@@ -6454,8 +6515,8 @@ contains two files from the "static" folder of the interview's
 The `log()` function allows you to log a message to the server log, to
 the browser console, or to the user's screen.
 
-The first parameter is the message you want to send.  The second
-parameter, which is optional, is the "priority" of the message.  The
+The first parameter is the message you want to send. The second
+parameter, which is optional, is the "priority" of the message. The
 default priority is `'log'`.
 
 {% include side-by-side.html demo="log" %}
@@ -6464,19 +6525,19 @@ The options for the `priority` are:
 
 * `'log'` - a message is immediately logged to the server logs.
 * `'console'` - when the next screen loads in the user's browser, the
-  message will appear in the browser log.  (This uses the
+  message will appear in the browser log. (This uses the
   [`console.log` JavaScript function].)
 * `'javascript'` - like `'console'`, except that the contents of the
   "message" will be passed to the [`eval` JavaScript function] instead
-  of the [`console.log` JavaScript function].  This allows you to log
-  a message in the front end in your own custom fashion.  It can also
+  of the [`console.log` JavaScript function]. This allows you to log
+  a message in the front end in your own custom fashion. It can also
   be used for tasks other than logging messages.
 * `'success'` - when the next screen loads in the user's browser, a
   popup message (a [Bootstrap alert]) will appear at the top of the
   page, using the [Bootstrap] color associated with "success"
-  (typically green).  The message will disappear after a few seconds.
+  (typically green). The message will disappear after a few seconds.
 * `'info'` - like `'success'`, except it uses the "info" [Bootstrap]
-  color.  The message will not disappear.
+  color. The message will not disappear.
 * Other [Bootstrap] color names besides `'info'` and `'success'`.
 
 The [Bootstrap] color names are as follows:
@@ -6530,7 +6591,7 @@ Using the `mmdc()` function, you can use the [mermaid] diagram-drawing
 system to produce a [`DAFile`] containing a completed diagram.
 
 The `mmdc()` function is defined in the `docassemble.base.mermaid`
-package.  To use it, you will need to include the
+package. To use it, you will need to include the
 `docassemble.base.mermaid` module in your interview:
 
 {% highlight yaml %}
@@ -6545,7 +6606,7 @@ Then you can call the `mmdc()` function on a text string or a
 
 If you installed **docassemble** with the standard [Docker]
 installation, then the [mermaid] executable (`mmdc`) should be
-available on the standard system path.  You can set a precise location
+available on the standard system path. You can set a precise location
 by setting the `mmdc path` directive in the [Configuration].
 
 {% highlight yaml %}
@@ -6568,7 +6629,7 @@ dictionaries of the form generated by [`.as_serializable()`] into
 ## <a name="send_sms"></a>send_sms()
 
 The `send_sms()` function is similar to `send_email()`, except it
-sends a text message (also known as an [SMS] message).  This requires
+sends a text message (also known as an [SMS] message). This requires
 a [Twilio] account.
 
 All of its arguments are [keyword arguments], the defaults of which
@@ -6578,32 +6639,32 @@ are:
 send_sms(to=None, body=None, template=None, task=None, attachments=None, config='default')
 {% endhighlight %}
 
-* `to` expects a [list] of recipients.  The list can consist of
+* `to` expects a [list] of recipients. The list can consist of
   [`Individual`]s (or any other [`Person`]s), objects of type
   [`phonenumbers.PhoneNumber`], or a simple string containing a phone
-  number.  If the number begins with `whatsapp:`, then [WhatsApp] will
-  be used to send the message.  If the recipient is a [`Person`], then
+  number. If the number begins with `whatsapp:`, then [WhatsApp] will
+  be used to send the message. If the recipient is a [`Person`], then
   the [`sms_number()`] method will be used to obtain the person's number.
-* `body` expects text, or `None`.  If provided, it will be the content
-  of the message.  Markdown will be converted to plain text.
-* `template` expects a [`template`] object, or `None`.  These
+* `body` expects text, or `None`. If provided, it will be the content
+  of the message. Markdown will be converted to plain text.
+* `template` expects a [`template`] object, or `None`. These
   templates can be created in an interview file using the `template`
-  specifier.  The "subject" of the template, if provided, will be the first
+  specifier. The "subject" of the template, if provided, will be the first
   line of the message.
-* `task` expects the name of a [task].  If this argument is provided,
+* `task` expects the name of a [task]. If this argument is provided,
   and if sending the text message is successful, the task will be
   marked as having been performed (i.e., [`mark_task_as_performed()`]
-  will be called).  Alternatively, you can handle this in your own
+  will be called). Alternatively, you can handle this in your own
   code, but you might find it convenient to let the `send_email()`
   function handle it for you.
 * `task_persistent`: if you set a `task`, you can optionally set
   the "persistence" of the task by setting this to `True` or a value
-  like `'user'`.  For more information, see the documentation for the
+  like `'user'`. For more information, see the documentation for the
   [task-related functions](#tasks).
 * `attachments` expects a [list] of [`DAFile`] objects, [`DAFileList`]
-  objects, [`DAFileCollection`] objects, or ordinary URLs.  If
+  objects, [`DAFileCollection`] objects, or ordinary URLs. If
   provided, the message will be an [MMS] message containing the
-  attached files.  No more than 10 attachments may be added.  You can
+  attached files. No more than 10 attachments may be added. You can
   include:
   * Images generated by `signature` blocks (objects of class
   [`DAFile`]);
@@ -6612,14 +6673,14 @@ send_sms(to=None, body=None, template=None, task=None, attachments=None, config=
   * [Documents] generated by [`attachments`] to a [`question`] for which a
   `variable` was provided (objects of class [`DAFileCollection`]).
 * `config` indicates the section of the [`twilio`] configuration that
-  should be used when sending the text message.  If you only have one
-  [Twilio] phone number, you do not need to set this parameter.  This
+  should be used when sending the text message. If you only have one
+  [Twilio] phone number, you do not need to set this parameter. This
   will determine which [Twilio] phone number will be used to send the
   text.
 * `dry_run` can be set to `True` if you want to do a "dry run" of the
-  SMS sending process.  You would use this if you wanted to make
+  SMS sending process. You would use this if you wanted to make
   sure that all of the variables `send_sms()` needs are defined
-  before you actually send the SMS message.  The default is `False`.
+  before you actually send the SMS message. The default is `False`.
 
 When the recipients are [`Individual`]s or [`Person`]s, the
 `mobile_number` attribute will be used, but only if it already exists.
@@ -6628,13 +6689,13 @@ is not already defined.
 
 Note that [Twilio] expects the phone number to be expressed in [E.164]
 format, which includes the [country calling code] (e.g., 1 for the
-United States).  However, users do not typically write phone numbers
-in such a way.  Therefore, the [`phonenumbers`] package is used to
-convert phone numbers to [E.164] based on the applicable country.  If
+United States). However, users do not typically write phone numbers
+in such a way. Therefore, the [`phonenumbers`] package is used to
+convert phone numbers to [E.164] based on the applicable country. If
 an [`Individual`] or [`Person`] is the recipient, the `country`
 attribute, if it exists, will be used to determine the country.
 Otherwise, the [`get_country()`] function is used to determine the
-applicable country.  Your interview can use [`set_country()`] in
+applicable country. Your interview can use [`set_country()`] in
 [`initial`] code to set a default country, or you can set a default on
 a server level by setting the [`country` configuration directive].
 The country must be specified as a two-letter, capitalized
@@ -6648,7 +6709,7 @@ See the [`twilio` configuration directive] for information about how to configur
 ## <a name="get_sms_session"></a>get_sms_session()
 
 When someone sends a text message to one of your [Twilio] numbers, the
-[SMS interface] is invoked.  The interview session is tracked based on
+[SMS interface] is invoked. The interview session is tracked based on
 the user's phone number and the [Twilio] number with which the user
 interacts.
 
@@ -6662,14 +6723,14 @@ keys:
 * `secret` - the encryption key for decrypting the interview answers
 * `encrypted` - a `True` or `False` value indicating whether the
 interview answers are encrypted.
-* `email` - the e-mail address of the user.  If the user is not
-  authenticated, this is `None`.  Note that authentication of [SMS]
+* `email` - the e-mail address of the user. If the user is not
+  authenticated, this is `None`. Note that authentication of [SMS]
   users is only possible if the interview session is started with
   [`initiate_sms_session()`].
 
 The `get_sms_session()` functions takes an optional keyword argument
 `config`, which indicates a section of the [`twilio`] configuration
-that should be used.  A single [SMS] user can have multiple sessions
+that should be used. A single [SMS] user can have multiple sessions
 with the [SMS interface] if there is
 [more than one `twilio` configuration directive].
 
@@ -6686,37 +6747,37 @@ The following optional keyword arguments alter the way the function
 works:
 
 * `yaml_filename` - this controls which interview the [SMS] user will
-  be placed into.  If `yaml_filename` is not specified, the current
+  be placed into. If `yaml_filename` is not specified, the current
   interview will be used.
 * `email` - this controls the identity of the [SMS] user in
   [user login system], which may affect the interview questions that
-  the [SMS] user sees.  If `email` is not specified, the [SMS] user
+  the [SMS] user sees. If `email` is not specified, the [SMS] user
   will have the same identity as the user who was using the interview
   when the call to `initiate_sms_session()` was made.
 * `new` - this controls whether the [SMS] user will join an ongoing
-  interview session or start a fresh session.  Set this to `True` if
-  you want the [SMS] user to start a fresh session.  If `new` is not
+  interview session or start a fresh session. Set this to `True` if
+  you want the [SMS] user to start a fresh session. If `new` is not
   specified, the [SMS] user will join the session that was ongoing
   when the call to `initiate_sms_session()` was made.
 * `send` - this controls whether the invitation message should be sent
-  or not.  If `send` is not specified, the message will be sent.  Set
-  this to `False` to suppress sending the message.  If `send` is
-  `False`, the [SMS] session will still be created.  The fact that the
+  or not. If `send` is not specified, the message will be sent. Set
+  this to `False` to suppress sending the message. If `send` is
+  `False`, the [SMS] session will still be created. The fact that the
   session is created means that if an [SMS] message is received from
   the given phone number, the [SMS] user will receive a response as if
-  the interview session had already been started.  The user's initial
+  the interview session had already been started. The user's initial
   message will not be interpreted as a choice of an interview from the
   `dispatch` section of the [`twilio`] configuration.
 * `config` - this controls which [Twilio] phone number is used for
-  communication.  You would only need to use this if you have more
+  communication. You would only need to use this if you have more
   than [more than one `twilio` configuration directive] set up in your
   [configuration].
 
 If you are not using `new=True`, note that there may be a delay
 between the time the message is sent to the [SMS] user and the time
-the [SMS] user sees the message and responds.  The [SMS] user will
+the [SMS] user sees the message and responds. The [SMS] user will
 join the interview at whatever state the interview session is in at
-the time the [SMS] user responds.  **docassemble** does not make a
+the time the [SMS] user responds. **docassemble** does not make a
 copy of the interview state when the call to `initiate_sms_session()`
 is made.
 
@@ -6779,7 +6840,7 @@ terminate_sms_session("202-555-1212")
 
 After the above code executes, then if a message is received from
 202-555-1212, it will be treated as a selection of an interview from
-the `dispatch` section of the [`twilio`] configuration.  If the [SMS]
+the `dispatch` section of the [`twilio`] configuration. If the [SMS]
 user had been in the middle of an interview session, the user will not
 be able to get back to that session again.
 
@@ -6790,7 +6851,7 @@ be able to get back to that session again.
 If you do not know what a [Redis] server is, skip this section!
 
 The [background processes] feature of **docassemble** depends on a
-[Redis] server being available.  The server is also used to facilitate
+[Redis] server being available. The server is also used to facilitate
 [live chat].
 
 Interview developers may want to make use of the [Redis] server for
@@ -6800,7 +6861,7 @@ interview, keeping usage statistics, or other purposes.
 {% include side-by-side.html demo="redis" %}
 
 To use the [Redis] server, use an [`objects`] section to create an
-object of type [`DARedis`].  This object can now be used to
+object of type [`DARedis`]. This object can now be used to
 communicate with the redis server, much as though it had been created
 by calling `redis.StrictRedis()`.
 
@@ -6809,21 +6870,21 @@ by calling `redis.StrictRedis()`.
 Since [Redis] is an [in-memory database], it is not appropriate for
 long-term storage or for the storage of large amounts of data.
 
-An alternative is to store data in SQL.  **docassemble** provides
+An alternative is to store data in SQL. **docassemble** provides
 an object called [`DAStore`] that is similar to [`DARedis`], except it
 uses SQL instead of [Redis], and it supports encryption.
 
 {% include side-by-side.html demo="dastore" %}
 
 In the above example, the user's preferences are stored in the
-database using a key that is specific to the user.  The first time the
+database using a key that is specific to the user. The first time the
 user uses the interview, the user is asked for their favorite fruit.
 If the user restarts the interview (which permanently erases the
 interview answers), the user's favorite fruit will be retrieved from
-the `DAStore`, and it will not need to be asked of the user.  The
+the `DAStore`, and it will not need to be asked of the user. The
 object stored in the database is a [`DAObject`], and the favorite
-fruit is an attribute of that object.  In the database, the object is
-stored under key called `prefs`.  This key is specific to the user, so
+fruit is an attribute of that object. In the database, the object is
+stored under key called `prefs`. This key is specific to the user, so
 that each user will have their own personal `prefs` entry in the
 database.
 
@@ -6832,17 +6893,17 @@ For more information, see the [`DAStore`] documentation.
 ### <a name="sql">write_record(), read_records(), and delete_record()</a>
 
 There are also three functions, `write_record()`, `read_records()`, and
-`delete_record()`, for managing data in SQL.  These functions are
+`delete_record()`, for managing data in SQL. These functions are
 useful when you want to store a list of one or more "records" under a
 single "key."  Encryption is not used.
 
 {% include side-by-side.html demo="database_storage" %}
 
 <a name="write_record"></a>When you call `write_record(key, data)`,
-the variable `data` is stored in a SQL database.  The function returns
-the integer unique ID for the record.  The `data` variable can be any
+the variable `data` is stored in a SQL database. The function returns
+the integer unique ID for the record. The `data` variable can be any
 type of data, such as a number, some text, an [object], a
-[Python dictionary], or something else.  The only limitation is that
+[Python dictionary], or something else. The only limitation is that
 the information in the variable needs to be able to be [pickled].
 
 <a name="read_records"></a>When you call `read_records(key)`, you will
@@ -6856,7 +6917,7 @@ was saved and `id` is the unique ID integer of the record.
 
 Note that all interviews on the server will have access to the data
 stored with `write_record()`, and the data are not encrypted on the
-server.  It is important to choose your `key` names wisely because if
+server. It is important to choose your `key` names wisely because if
 you use a simple name like `mydata`, another interview developer might
 have chosen the same key, and then your data will become intermingled.
 It is a good idea to include your interview package name in the `key`
@@ -6870,7 +6931,7 @@ names you choose.
 
 Suppose you have an interview that your user might complete several
 times for different situations, but you do not want the user to have
-to re-enter the same information more than once.  You can use
+to re-enter the same information more than once. You can use
 [`read_records()`] and [`write_record()`] to accomplish this.
 
 Here is an example:
@@ -6952,7 +7013,7 @@ code: |
 {% endhighlight %}
 
 The first time the user goes through the interview, the interview will
-ask for the user's name and favorite fruit.  The second time the user
+ask for the user's name and favorite fruit. The second time the user
 goes through the interview, the interview does not ask for the name
 and favorite fruit, because it already knows the information -- even
 though the user's second interview is a separate session with a
@@ -6962,9 +7023,9 @@ The interview accomplishes this using [`write_record()`] and
 [`read_records()`].
 
 When the interview is done asking questions, it calls
-[`write_record()`] to store the object `user` to SQL.  It records this
+[`write_record()`] to store the object `user` to SQL. It records this
 information using a unique "key" that is based on the e-mail address
-of the user (e.g., `workers_comp_user:fred@example.com`).  To get the
+of the user (e.g., `workers_comp_user:fred@example.com`). To get the
 e-mail address of the user, the interview requires the user to log in,
 and uses `user_info().email` to get the e-mail address.
 
@@ -6974,7 +7035,7 @@ something stored, then the `user` object is retrieved from storage.
 If there is nothing stored, `user` is initialized as an object of type
 [`Individual`].
 
-Note that the timing of when `user` is stored is important.  The
+Note that the timing of when `user` is stored is important. The
 [`write_record()`] function will store a "snapshot" of the object, so
 if `user` is stored before the necessary information (name and
 favorite fruit) have been gathered, then the interview will not work
@@ -6994,12 +7055,12 @@ code: |
 
 Note that neither of these blocks is [`mandatory`]; when the interview
 needs to know the definition of `user`, it will try the [`code`] block
-first (because it is later in the [YAML]).  If `user` is still
+first (because it is later in the [YAML]). If `user` is still
 undefined, the interview will "fall back" to trying the `objects`
 block, which will initialize a fresh object of class [`Individual`].
 
 The [`read_records()`] function always returns a [Python dictionary],
-because you can store more than one record under a single key.  But in
+because you can store more than one record under a single key. But in
 this interview, we are only storing one record under the key
 `user_key`.
 
@@ -7036,33 +7097,33 @@ code: |
 {% endhighlight %}
 
 First, the code deletes any existing records under `user_key`, and
-then stores the `user` object.  This means that even if the interview
+then stores the `user` object. This means that even if the interview
 session started off by retrieving `user` from storage, it will save a
-new copy of the `user` object to storage.  Thus, the interview can
+new copy of the `user` object to storage. Thus, the interview can
 make changes to the `user` object if necessary, and those changes will
 be saved.
 
 This interview also uses [`set_parts()`] and [`session_tags()`] to
 change the title and tags of the interview, so that when the user goes
 to "My Interviews," the user will see a different title and different
-tags based on their interview answers.  Using a technique like this
+tags based on their interview answers. Using a technique like this
 might help your users in case your users want to resume their
 interview session.
 
 Now, suppose you have a variety of interviews, all of which relate to
-the same topic (e.g., workers compensation).  If any one of these
+the same topic (e.g., workers compensation). If any one of these
 interviews is the first interview that the user uses, you want the
-basic questions (name, favorite fruit) to be asked.  And if the user
+basic questions (name, favorite fruit) to be asked. And if the user
 launches another interview, you don't want to re-ask those basic
 questions.
 
 You can do this using interviews like the above, but each interview
 would need to contain the same blocks that force the user to log in,
 retrieves `user` from storage, saves `user` to storage at the end,
-etc.  It is inconvenient to maintain the same code in several
+etc. It is inconvenient to maintain the same code in several
 different files.
 
-You can avoid this problem by using [`include`].  You can create a
+You can avoid this problem by using [`include`]. You can create a
 "common" [YAML] file called [`wc_common.yml`], which contains the
 following:
 
@@ -7102,7 +7163,7 @@ code: |
 {% endhighlight %}
 
 Then your actual interview file will just incorporate this by
-reference.  For example, you could have a file called
+reference. For example, you could have a file called
 [`wc_side_of_bed.yml`], which looks like this:
 
 {% highlight yaml %}
@@ -7159,7 +7220,7 @@ code: |
 {% endhighlight %}
 
 You could then create other [YAML] files that follow the same pattern,
-all of which [`include`] the [`wc_common.yml`] file.  Any time you
+all of which [`include`] the [`wc_common.yml`] file. Any time you
 wanted to change a "common" question, you would only need to make the
 change in one place.
 
@@ -7168,14 +7229,14 @@ change in one place.
 If you want to "run reports" on the interview answers of multiple
 sessions, you can use `store_variables_snapshot()` in your interview
 logic to save an unencrypted copy of the interview answers in [JSON]
-format to a SQL table.  If you use [PostgreSQL], you can
+format to a SQL table. If you use [PostgreSQL], you can
 conveniently run SQL queries on the contents of interview answers.
 Using [PostgreSQL] syntax for working with [JSON] data, you can
 extract, filter, and order by specific variables embedded in the
 interview answers of sessions.
 
 Here is an example of an interview that asks the user a question and
-then saves the interview answers in [JSON] format to a SQL table.  Then,
+then saves the interview answers in [JSON] format to a SQL table. Then,
 using a function `analyze()` that was defined in the
 [`read_snapshot.py`] module, the final question of the interview reads
 the interview answers of all sessions that have been completed on this
@@ -7206,24 +7267,24 @@ def analyze():
 
 The `analyze()` function imports the `variables_snapshot_connection()`
 function from [`docassemble.base.util`] and calls it in order to get a
-SQL connection object.  If your database is [PostgreSQL], this will be
-a [`psycopg2`] connection object.  Note that
+SQL connection object. If your database is [PostgreSQL], this will be
+a [`psycopg2`] connection object. Note that
 `variables_snapshot_connection()` is not available for use inside
-interview [YAML] the way `store_variables_snapshot()` is.  If you
+interview [YAML] the way `store_variables_snapshot()` is. If you
 tried to call `variables_snapshot_connection()` from inside of a
-[`code`] block, you would get an error.  Always call
+[`code`] block, you would get an error. Always call
 `variables_snapshot_connection()` from a function or method defined in
 a [Python module].
 
 When using [PostgreSQL], the data type used for the [JSON] `data` is
-[JSONB].  This allows for the use of the special [PostgreSQL]
+[JSONB]. This allows for the use of the special [PostgreSQL]
 operators `->` and `->>` to efficiently probe inside the data
-structure.  For more information on how these operators work, see the
+structure. For more information on how these operators work, see the
 documentation for the [JSONB] data type.
 
 Note that the [JSON] snapshots created by `store_variables_snapshot()`
-are tied to the underlying interview session.  When the session is
-deleted, the snapshot is deleted.  (However, see the discussion of
+are tied to the underlying interview session. When the session is
+deleted, the snapshot is deleted. (However, see the discussion of
 `persistent` below.)
 
 If you call `store_variables_snapshot()` multiple times, each time you
@@ -7231,9 +7292,9 @@ will overwrite the stored [JSON] snapshot of the interview answers.
 (However, see the discussion of `key` below.)
 
 Note that the snapshot is a copy of the interview answers, not the
-interview answers themselves.  The [JSON] snapshot does not
+interview answers themselves. The [JSON] snapshot does not
 automatically synchronize with the current state of the interview
-answers.  In **docassemble**, the interview answers are stored in a
+answers. In **docassemble**, the interview answers are stored in a
 Python-specific object format, not [JSON]; it is not possible for
 [JSON] to serve as the format for **docassemble** interview answers
 because **docassemble** allows interview answers to contain complex
@@ -7242,9 +7303,9 @@ The conversion from Python objects to [JSON] is one-way, and is a
 simplification; Python objects cannot be recreated from [JSON].
 
 Because of this, the `store_variables_snapshot()` is not as useful as
-other data storage options for many applications.  You should use
+other data storage options for many applications. You should use
 `store_variables_snapshot()` if you want to run SQL queries on
-multiple sessions belonging to different users.  You should use other
+multiple sessions belonging to different users. You should use other
 methods, such as [`DAStore`], for storing reusable global data.
 
 The `store_variables_snapshot()` accepts the optional keyword
@@ -7252,10 +7313,10 @@ parameters, `key`, `persistent`, `include_internal`, and `data`.
 
 If you want to save multiple snapshots during the course of the
 interview, you can set `key` when you call
-`store_variables_snapshot()`.  For example, you might want to save a
+`store_variables_snapshot()`. For example, you might want to save a
 snapshot after the user completes an initial section of an interview,
 and save another snapshot after the user completes the entire
-interview.  You could write:
+interview. You could write:
 
 {% highlight yaml %}
 mandatory: True
@@ -7271,23 +7332,23 @@ code: |
 
 This will allow you to run queries on two populations of users: a
 large population of users who started but may not have finished, and a
-smaller population of users who finished.  The `key` is similar to a
+smaller population of users who finished. The `key` is similar to a
 key in [Redis]; it uniquely identifies a snapshot within the interview
 session.
 
 If you do not want the interview snapshot (or snapshots) to be deleted
 when the session is deleted, call
-`store_variables_snapshot(persistent=True)`.  Note that this means
+`store_variables_snapshot(persistent=True)`. Note that this means
 that if a user restarts an interview session, the user may have
 multiple sessions in [JSON] data table.
 
 By default, `store_variables_snapshot()` does not save the "internal"
 portion of the interview answers; this is a data structure under the
-`_internal` key that **docassemble** uses internally.  (The data
+`_internal` key that **docassemble** uses internally. (The data
 structure is not documented and the design may change at any time, but
 you are welcome to use it at your own risk.)
 `store_variables_snapshot()` also does not store the `nav` variable,
-which stores information about which sections have been visited.  If
+which stores information about which sections have been visited. If
 you want to include the `_internal` data and the `nav` varialbe in the
 [JSON] snapshot, call `store_variables_snapshot()` with
 `include_internal=True`.
@@ -7300,12 +7361,12 @@ representing the interview answers.
 
 While the example above shows how the [JSON] data table can be queried
 from within an interview, you will probably find that it is easiest to
-query the data tables from outside of **docassemble**.  You can set up
+query the data tables from outside of **docassemble**. You can set up
 your server's [`db`] configuration to use an external SQL database,
 and then query the `jsonstorage` table in that database using the
-credentials for the **docassemble** SQL database.  However, there are
+credentials for the **docassemble** SQL database. However, there are
 many other tables in this database, and it may be preferable to use a
-separate database for [JSON] snapshots.  If you define a [`variables
+separate database for [JSON] snapshots. If you define a [`variables
 snapshot db`] in your [Configuration], a `jsonstorage` table will be
 created in the referenced database, and `store_variables_snapshot()`
 and `variables_snapshot_connection()` will use this database instead
@@ -7324,12 +7385,12 @@ The columns in the `jsonstorage` table are as follows.
 * `persistent` - whether the row should be preserved when the session
   is deleted.
 
-Note that there is no [API] for querying the [JSON] data.  The best
+Note that there is no [API] for querying the [JSON] data. The best
 way to access the data is by using a [PostgreSQL] client because it
 provides an extremely powerful and flexible query language.
 
 Note that unlike [`DAStore`], `store_variables_snapshot()` cannot use
-server-side encryption.  If the interview itself uses server-side
+server-side encryption. If the interview itself uses server-side
 encryption, calling `store_variables_snapshot()` will effectively
 defeat the purpose of server-side encryption by storing user data in a
 way that would allow anyone with shell access on the server to read
@@ -7364,7 +7425,7 @@ def some_function(id, thing):
 {% endhighlight %}
 
 This assumes the [`db`] configuration refers to a [PostgreSQL]
-database.  If you connect to the database with the credentials from
+database. If you connect to the database with the credentials from
 [`db`], you have the power to create and drop tables.
 
 # <a name="stash_data"></a><a name="retrieve_stashed_data"></a>Temporarily stashing encrypted data
@@ -7396,7 +7457,7 @@ if stored_data is not None:
 {% endhighlight %}
 
 If the data cannot be retrieved, `retrieve_stashed_data()` returns
-`None`.  This example uses the [`set_variables()`] function to set the
+`None`. This example uses the [`set_variables()`] function to set the
 variable `user` in the interview answers.
 
 `retrieve_stashed_data()` accepts the optional keyword parameter
@@ -7434,22 +7495,22 @@ The file [`sub_document.docx`] looks like this:
 ![include_docx_template_sub]({{ site.baseurl }}/img/include_docx_template_sub.png)
 
 Note that it is important to use the `p` form of [Jinja2] markup, or
-else the contents of the included document will not be visible.  The
+else the contents of the included document will not be visible. The
 template text must also be by itself on a line, and the
 `include_docx_template()` function must be by itself within a [Jinja2]
 `p` tag, and not combined with the `+` operator with any other text.
 
 The filename that you give to `include_docx_template()` must be a file
-that exists in the templates folder of the current package.  You can
+that exists in the templates folder of the current package. You can
 also refer to templates in other packages using a full package
 filename reference, such as
-`docassemble.demo:data/templates/sub_document.docx`.  You can also
+`docassemble.demo:data/templates/sub_document.docx`. You can also
 give the function a [`DAFile`], a [`DAFileList`], a
 [`DAFileCollection`], or a [`DAStaticFile`] object.
 
 The `include_docx_template()` function also accepts optional keyword
-parameters.  These values become variables that you can use in
-[Jinja2] inside the DOCX file you are including.  This can be useful
+parameters. These values become variables that you can use in
+[Jinja2] inside the DOCX file you are including. This can be useful
 if you have a "sub-document" that you want to include multiple times,
 but you want to use different variable values each time you include
 the "sub-document."
@@ -7468,13 +7529,13 @@ The file [`sub_doc_params.docx`] looks like this:
 
 In this example, the variables `grantor`, `grantee`, and `stuff` are
 set by the keyword parameters of the `include_docx_template()`
-function.  Note that in your sub-document you can still refer to
+function. Note that in your sub-document you can still refer to
 ordinary interview variables in addition to variables created by
 keyword parameters; in this example, the sub-document references the
 variable `planet`, which is set by the interview.
 
 The effect of including keyword parameters is to insert [Jinja2] `set`
-commands at the start of the included document.  For example, the
+commands at the start of the included document. For example, the
 first call to `include_docx_template()` might result in the following:
 
 {% highlight text %}
@@ -7488,17 +7549,17 @@ and evaluated behind the scenes.
 
 Note that if the values of any of your keyword arguments are objects
 other than [`DAObject`]s, they will be converted to their [`repr()`]
-representation _before being included_.  This means that there may be
+representation _before being included_. This means that there may be
 some objects that you cannot pass through to your sub-documents.
 
 When a `docx template file` document contains a call to
 `include_docx_template()`, the document is assembled in multiple
-"passes."  On the first pass, all of the [Jinja2] is evaluated.  The
+"passes."  On the first pass, all of the [Jinja2] is evaluated. The
 effect of `include_docx_template()` is to insert any `set` statements
 based on keyword parameters, along the verbatim contents of the file.
 Then, on the second pass, any remaining [Jinja2] code is evaluated;
 this would be any [Jinja2] code contained in sub-documents, as well as
-the `set` statements included by `include_docx_template()`.  If any of
+the `set` statements included by `include_docx_template()`. If any of
 the sub-documents contain calls to `include_docx_template()`, a third
 pass will be done, and so on, until the document is fully assembled.
 (The number of passes is limited to 10 in order to protect against
@@ -7506,14 +7567,14 @@ accidentally creating an infinite loop of document inclusion.)
 
 There is a special keyword parameter `change_numbering` that when set
 to `False` will refrain from fixing up the numbering of lists in the
-included documents.  You should set `change_numbering=False` when your
+included documents. You should set `change_numbering=False` when your
 included document only contains list items, and you want the list
 items to merge into a list in the main document.
 
 <a name="include_docx_template_inline"></a>As discussed above,
 `include_docx_template()` needs to be used with {% raw %}{{p ... }}{%
 endraw %} because it returns the paragraphs from the included
-document.  If you would like to include "inline" text from a secondary
+document. If you would like to include "inline" text from a secondary
 DOCX file, you can do so by setting the `_inline` keyword parameter.
 You can create a DOCX file called (for example) `statement.docx` that
 only contains one paragraph, and then include something like the
@@ -7524,7 +7585,7 @@ following in your main document:
 
 Note the use of {% raw %}{{r{% endraw %}; this is necessary because
 when `include_docx_template()` is called with `_inline=True`, it
-returns character-level content.  (Similarly, when you use the
+returns character-level content. (Similarly, when you use the
 `inline_markdown` filter, you need to use {% raw %}{{r{% endraw %}.)
 When you use `_inline=True`, only the first paragraph of the included
 document matters; other paragraphs will be ignored.
@@ -7537,14 +7598,14 @@ template using the `code` or `field code` methods.
 
 Normally, all values that you transfer to a DOCX template with `code`
 or `field code` are converted so that they display appropriately in
-your DOCX file.  For example, if the value is a [`DAFile`] graphics
-image, it will be displayed in the DOCX file as an image.  Or, if the
+your DOCX file. For example, if the value is a [`DAFile`] graphics
+image, it will be displayed in the DOCX file as an image. Or, if the
 value contains [document markup] codes that indicate line breaks,
 these will display as actual line breaks in the DOCX file, rather
 than as codes like `[BR]`.
 
 However, if your DOCX file uses advanced template features, such as
-for loops, this conversion might cause problems for you.  By passing a
+for loops, this conversion might cause problems for you. By passing a
 value `val` as `raw(val)`, you will ensure that the template sees the
 original value of `val`, not a converted value.
 
@@ -7587,7 +7648,7 @@ Don't forget to bring {{ fruit }}!
 {% endhighlight %}
 
 In this case, the variable `list_of_fruit` is a literal piece of text,
-`apples and oranges`.  The `for` loop will loop over each character,
+`apples and oranges`. The `for` loop will loop over each character,
 and you will get:
 
 > Don't forget to bring a!
@@ -7596,7 +7657,7 @@ and you will get:
 > Don't forget to bring l!
 {: .blockquote}
 
-and so on.  That is certainly not what you want!
+and so on. That is certainly not what you want!
 
 You can prevent the conversion of `fruit_list` into text by wrapping
 it in the `raw()` function, as follows:
@@ -7635,12 +7696,12 @@ This is an advanced function, so in the vast majority of
 circumstances, you should instead use an [`attachments`] block.
 
 The `assemble_docx()` takes a single positional parameter, which needs
-to be a file.  The format is flexible; it can be a [`DAFile`] or
+to be a file. The format is flexible; it can be a [`DAFile`] or
 related object, or a template reference like
 `'data/templates/mytemplate.docx'`.
 
 The function returns a path to a temporary file in DOCX format,
-representing the assembled document.  This file needs to be processed
+representing the assembled document. This file needs to be processed
 right away, because it is not guaranteed to persist across HTTP
 requests.
 
@@ -7649,8 +7710,8 @@ It also takes the following optional keyword parameters:
 * `fields`: this can be set to a [Python dictionary] in which the keys
   are variable names and the values are the values of those variables.
   This allows you to superimpose particular variables on top of the
-  interview answers for purposes of document assembly.  The values are
-  not saved in the interview answers.  The keys can only be simple
+  interview answers for purposes of document assembly. The values are
+  not saved in the interview answers. The keys can only be simple
   [Python] variable names (`favorite_fruit`, `type_of_document`),
   not indices (`fruits[0]`, `favorite['fruit']`) or attributes
   (`favorite_vegetable.color`, `apple.seeds`).
@@ -7659,7 +7720,7 @@ It also takes the following optional keyword parameters:
   `output_path` to the path to which you want `assemble_docx` to
   write.
 * `output_format`: if you want the assembled document to be converted
-  to PDF, set `output_format` to `'pdf'`.  If you want it assembled to
+  to PDF, set `output_format` to `'pdf'`. If you want it assembled to
   [Markdown], set `output_format` to `'md'`.
 * `pdf_options`: if you are setting `output_format` to `'pdf'`, you
   can also set options for the way the PDF conversion is conducted by
@@ -7668,16 +7729,16 @@ It also takes the following optional keyword parameters:
   created, `password` (a password for securing the PDF), `update_refs`
   (if you want references to be updated in the DOCX file before
   conversion), `tagged` (if you want LibreOffice to produce a tagged
-  PDF).  For more information about these options, see the [Documents]
+  PDF). For more information about these options, see the [Documents]
   section.
 * `return_content`: if you want the contents of the file to be
   returned, instead of a file path, set `return_content` to `True`.
 
 Here is an example of an interview that uses `assemble_docx()` in a
-contract assembly interview.  All of the clauses of the contract are
+contract assembly interview. All of the clauses of the contract are
 in the [`contract.docx`] DOCX template file, but they are written in
 such a way that they can be extracted from the DOCX file using
-`assemble_docx()` and converted into [Markdown].  Extracting clauses
+`assemble_docx()` and converted into [Markdown]. Extracting clauses
 in [Markdown] format is useful because:
 
 * It allows you to manage your contract clauses as a list of
@@ -7702,12 +7763,12 @@ purposes:
 2. Assembling the contract itself.
 
 The template uses the variable `clause` to determine which clause to
-assemble, or whether to assemble the contract itself.  In the
+assemble, or whether to assemble the contract itself. In the
 interview answers, `clause` is set to `None`, but the `fields`
 parameter passed to `assemble_docx()` will override that value for
 purposes of assembling a single clause.
 
-The DOCX file uses the `macro` feature of [Jinja2].  The DOCX template
+The DOCX file uses the `macro` feature of [Jinja2]. The DOCX template
 could be written without the use of `macro` definitions, but they are
 useful so that if you want, you can insert clauses into the contract
 without converting them to [Markdown] and back again.
@@ -7718,23 +7779,23 @@ There are two ways that you can write your own functions in
 **docassemble**.
 
 The first way is to use the `<%def></%def>` feature of [Mako] in order
-to use "functions" in your templates.  These are not true
+to use "functions" in your templates. These are not true
 [Python functions] because they are based around [Mako] templates, but
-they are similar to [Python functions].  The `<%def></%def>` feature
-is documented on the [Mako web site].  **docassemble**'s [`def` block]
+they are similar to [Python functions]. The `<%def></%def>` feature
+is documented on the [Mako web site]. **docassemble**'s [`def` block]
 makes it easy to re-use [`def` blocks] in your interviews.
 
 The second way, which is usually more elegant, is to write a
 [Python module] containing a definition of a [Python function], and
 then include that module in your interview using the
-[`modules` block].  This allows you to use your function both in
+[`modules` block]. This allows you to use your function both in
 [Mako] templates and in [`code`] blocks.
 
 Here is a brief tutorial on how to write a function `plus_one()` that
-takes a number and returns the number plus one.  For example,
+takes a number and returns the number plus one. For example,
 `plus_one(3)` should return `4`.
 
-First, go to the [Playground].  (This requires that you have a
+First, go to the [Playground]. (This requires that you have a
 developer account on the server.)
 
 Then, go to the [modules folder] of the [Playground].
@@ -7752,10 +7813,10 @@ The screen should look like this:
 
 ![sample function]({{ site.baseurl }}/img/docassemble-sample-function.png)
 
-Then, press the "Save" button at the bottom of the screen.  This will
-create a [Python module] called `test`.  (The text file is called
+Then, press the "Save" button at the bottom of the screen. This will
+create a [Python module] called `test`. (The text file is called
 `test.py` in the [modules folder] because files containing Python code
-have the extension `.py` in their file names.  Within [Python], you
+have the extension `.py` in their file names. Within [Python], you
 refer to modules using the file name without the file extension.)
 
 Then click the "Back to Playground" button to leave the "Modules"
@@ -7767,7 +7828,7 @@ doing something like:
 {% include side-by-side.html demo="sample-function" %}
 
 The `.` in front of the module name is [Python]'s way of referring to
-modules that are in the current package.  If you put your module
+modules that are in the current package. If you put your module
 within a [package] called `docassemble.simplemath`, then you could
 write, instead:
 
@@ -7826,7 +7887,7 @@ pickle the database connection object, which is not possible.
 If you write your own functions and they are called from markup inside
 `docx template file` functions, beware that [Jinja2] will send your
 functions objects in place of arguments when the arguments are
-undefined.  For example, consider a a template that contains:
+undefined. For example, consider a a template that contains:
 
 {% highlight text %}
 {% raw %}
@@ -7840,13 +7901,13 @@ If `demand_interest` is undefined, and `claiming_damages` is true,
 **docassemble** should seek out a block that defines `amount_owed`.
 However, when [Jinja2] sees that `demand_interest` is undefined, it
 creates an object `amount_owed` of the class
-`jinja2.runtime.Undefined`.  If the only way `compute_damages()` acts
+`jinja2.runtime.Undefined`. If the only way `compute_damages()` acts
 upon `demand_interest` is by evaluating the conditional expression
 `demand_interest is True`, the expression will evaluate to `False`,
 even though your interview has not actually defined
 `demand_interest`.
 
-This is different to how [Python] normally works.  Normally, if the
+This is different to how [Python] normally works. Normally, if the
 code is `compute_damages(amount_owed, demand_interest)` and
 `demand_interest` is undefined, a [`NameError`] is raised before
 `compute_damages()` is even called.
@@ -7855,7 +7916,7 @@ The behavior of [Jinja2] might not be a problem if your function does
 arithmetic with the variable, calls `unicode()` on the variable or
 does other things with the variable that access its "value"; in those
 situations, an exception will be raised and **docassemble** will seek
-out a definition of the undefined variable.  However, if your function
+out a definition of the undefined variable. However, if your function
 uses [`try`/`except`] on the operations, this exception may not be
 passed on to **docassemble**.
 
@@ -7891,7 +7952,7 @@ create an "app."  Within this app, you will need to create a "service
 account."  (More information is available on the internet about what a
 "service account" is and how you create one.)  When you create the
 service account, you will be provided with "credentials."  Download
-the [JSON] (not p12) credential file for the service account.  Also
+the [JSON] (not p12) credential file for the service account. Also
 make a note of the e-mail address of the service account.
 
 Within the [Google Developers Console], enable the [Google Drive API]
@@ -7899,16 +7960,16 @@ and the [Google Sheets API].
 
 Go to [Google Sheets], pick a spreadsheet that you want to use, and
 share it with the e-mail address of the service account, just like you
-were sharing it with a real person.  (When you share the spreadsheet
+were sharing it with a real person. (When you share the spreadsheet
 with this e-mail address, you will get an e-mail notification from
-Google about an undeliverable e-mail.  This is because Google will try
+Google about an undeliverable e-mail. This is because Google will try
 to e-mail the service account, but the service account does not
-actually have an e-mail account.  To avoid getting this e-mail, click
+actually have an e-mail account. To avoid getting this e-mail, click
 the "Advanced" link on the sharing screen and uncheck "Notify people.")
 
 Go to the [Configuration] and set the [`service account credentials`]
-subdirective under the [`google`] directive.  Set it to the contents of
-the [JSON] file you downloaded.  The directive will look something
+subdirective under the [`google`] directive. Set it to the contents of
+the [JSON] file you downloaded. The directive will look something
 like this:
 
 {% highlight yaml %}
@@ -7929,7 +7990,7 @@ google:
 {% endhighlight %}
 
 Next, go to the [modules folder] of the [Playground] and add a new
-module called `google_sheets.py`.  Set the contents to:
+module called `google_sheets.py`. Set the contents to:
 
 {% highlight python %}
 import gspread
@@ -7971,7 +8032,7 @@ subquestion: |
 In this example, a [Google Sheet] called "Country Data" has been
 shared with the "service account" that owns the credentials in the
 `service account credentials` subdirective under the `google`
-directive.  The first worksheet in the spreadsheet (index 0) contains
+directive. The first worksheet in the spreadsheet (index 0) contains
 a table with headings for `name` and `longitude`, among other columns.
 The `read_sheet` function returns a list of dictionaries representing
 the contents of the table.
@@ -7983,7 +8044,7 @@ documentation for the [gspread] module.
 
 The following example interview extends the system developed in the
 previous section by adding functionality for writing data to the
-worksheet.  This interview asks the interviewee some questions
+worksheet. This interview asks the interviewee some questions
 and then stores the results in a [Google Sheet], much like [Google
 Forms] would.
 
@@ -8006,8 +8067,8 @@ block that first requires a definition of
 
 The variable `data_stored_in_google_sheet` is defined by a [`code`]
 block that calls `append_to_sheet()`, which is a function defined in
-the [`google_sheets` module].  This module is in the same [Python]
-package as the interview (`docassemble.demo`).  (The [`google_sheets`
+the [`google_sheets` module]. This module is in the same [Python]
+package as the interview (`docassemble.demo`). (The [`google_sheets`
 module] is based on the [Python] module described in the previous
 section.)
 
@@ -8023,7 +8084,7 @@ def append_to_sheet(sheet_name, vals, worksheet_index=0):
 {% endhighlight %}
 
 There is a handy method in [gspread] called `append_row()`, which adds
-a row to the end of a spreadsheet.  If you use a method like this
+a row to the end of a spreadsheet. If you use a method like this
 yourself, please note in [Google Sheets], spreadsheets by default have
 several hundred rows, so if you append data to them, you might not see
 the data that you have appended unless you scroll all the way down.
@@ -8086,7 +8147,7 @@ conflict.
 
 If you need the value of one of the HTML inputs on the screen, you can
 call `val()`, passing as the sole parameter the variable name of the
-field as a string.  The variable name must be written exactly as it
+field as a string. The variable name must be written exactly as it
 appears in the underlying [`question`].
 
 {% include side-by-side.html demo="val" %}
@@ -8094,7 +8155,7 @@ appears in the underlying [`question`].
 This function is essential for using the [`js show if`] feature.
 
 Note that `val()` only works with fields that exist on the screen; the
-[JavaScript] environment is not aware of the Python environment.  If
+[JavaScript] environment is not aware of the Python environment. If
 you want to pass variable values from Python to JavaScript, see the
 [recipe on the topic].
 
@@ -8147,9 +8208,9 @@ conflict.
 
 ## <a name="js_setField"></a>setField() JavaScript function
 
-The `setField()` function sets the value of a field.  The first
-parameter is the the variable name of the field, as a string.  The
-second parameter is the value that the variable should have.  The
+The `setField()` function sets the value of a field. The first
+parameter is the the variable name of the field, as a string. The
+second parameter is the value that the variable should have. The
 variable name must be written exactly as it appears in the underlying
 [`question`].
 
@@ -8193,7 +8254,7 @@ conflict.
 ## <a name="js_url_action"></a>url_action() JavaScript function
 
 The `url_action()` function, like its [Python namesake](#url_action),
-returns a URL that will run a particular action in the interview.  The
+returns a URL that will run a particular action in the interview. The
 first parameter is the [action] to run, and the second
 parameter is an object containing the arguments to provide to the
 action (to be read with [`action_argument()`]), and the third
@@ -8216,9 +8277,9 @@ user's web browser to run the action.
 
 The [JavaScript] function takes three arguments:
 
-1. The [action] to take.  This corresponds with the name of an
+1. The [action] to take. This corresponds with the name of an
    [`event`] in your interview.
-2. An object containing arguments to pass to the [action].  In your
+2. An object containing arguments to pass to the [action]. In your
    interview, you can use the [`action_argument()`] function to read
    these values.
 3. (optional) A boolean value representing whether the action should
@@ -8232,15 +8293,15 @@ You can also access this function under the name
 
 The `action_call()` function is like [`url_action()`](#js_url_action),
 except it makes an [Ajax] call to the URL and runs a callback function
-when the server responds to the request.  In combination with
+when the server responds to the request. In combination with
 [`json_response()`], this can allow you to write [JavaScript] code
 that interacts with "APIs" within your interview.
 
 The [JavaScript] function takes three arguments:
 
-1. The [action] to take.  This corresponds with the name of an
+1. The [action] to take. This corresponds with the name of an
    [`event`] in your interview.
-2. An object containing arguments to pass to the [action].  In your
+2. An object containing arguments to pass to the [action]. In your
    interview, you can use the [`action_argument()`] function to read
    these values.
 3. A callback function that will be run when the [Ajax] call returns.
@@ -8252,7 +8313,7 @@ The [JavaScript] function takes three arguments:
 {% include side-by-side.html demo="js_action_call" %}
 
 This example takes advantage of the [CSS] classes `btn` and
-`btn-primary` that are available in [Bootstrap].  See the
+`btn-primary` that are available in [Bootstrap]. See the
 [Bootstrap documentation] for more information about using these
 classes.
 
@@ -8578,6 +8639,7 @@ Note that you should only attach a `daPageLoad` listener from a
 [tuple]: https://en.wikibooks.org/wiki/Python_Programming/Tuples
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
 [`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
+[`user_local`]: {{ site.baseurl }}/docs/special.html#user_local
 [`ocr_file()`]: #ocr_file
 [`ocr_file_in_background()`]: #ocr_file_in_background
 [tesseract-ocr-all]: https://packages.debian.org/stretch/tesseract-ocr-all
