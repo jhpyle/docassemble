@@ -605,7 +605,9 @@ class InterviewStatus:
                     if not hasattr(field, 'choicetype'):
                         datatypes[field.saveas] = field.datatype
                     if field.datatype == 'boolean':
-                        if field.sign > 0:
+                        if not self.extras['required'][field.number]:
+                            checkboxes[field.saveas] = 'None'
+                        elif field.sign > 0:
                             checkboxes[field.saveas] = 'False'
                         else:
                             checkboxes[field.saveas] = 'True'
@@ -7574,9 +7576,11 @@ class Question:
                         result['markdown'][doc_format] = the_markdown
                         docassemble.base.functions.reset_context()
                 elif doc_format in ['html']:
+                    docassemble.base.functions.set_context('html')
                     result['markdown'][doc_format] = the_content.text(the_user_dict)
                     if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
                         result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
+                    docassemble.base.functions.reset_context()
                     # logmessage("output was:\n" + repr(result['content'][doc_format]))
         except:
             if old_language is not None:

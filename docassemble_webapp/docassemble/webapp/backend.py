@@ -600,8 +600,6 @@ def fix_words():
 if DEBUG_BOOT:
     boot_log("backend: processing translations")
 
-fix_words()
-
 if 'currency symbol' in daconfig:
     docassemble.base.functions.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 

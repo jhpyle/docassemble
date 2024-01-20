@@ -31836,6 +31836,7 @@ def initialize():
         if DEBUG_BOOT:
             boot_log("server: entering request context")
         with app.test_request_context(base_url=url_root, path=url):
+            docassemble.webapp.backend.fix_words()
             app.config['USE_FAVICON'] = test_favicon_file('favicon.ico')
             app.config['USE_APPLE_TOUCH_ICON'] = test_favicon_file('apple-touch-icon.png')
             app.config['USE_FAVICON_MD'] = test_favicon_file('favicon-32x32.png')

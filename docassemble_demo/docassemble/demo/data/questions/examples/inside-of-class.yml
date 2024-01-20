@@ -1,0 +1,38 @@
+metadata:
+  title: Testing for context
+  short title: Context
+  documentation: "https://docassemble.org/docs/recipes.html#inside_of_class"
+  example start: 1
+  example end: 4
+---
+modules:
+  - .contexttest
+---
+objects:
+  - user: AltIndividual
+---
+question: |
+  What is your name?
+fields:
+  - First: user.name.first
+  - Middle: user.name.middle
+    required: False
+  - Last: user.name.last
+  - Suffix: user.name.suffix
+    required: False
+    code: name_suffix()
+---
+mandatory: True
+question: |
+  Thanks, ${ user }!
+subquestion: |
+  Here is your document.
+attachment:
+  name: Affidavit
+  filename: affidavit
+  content: |
+    [CENTER] Affidavit of ${ user }
+
+    ${ user } attests, under the pains
+    and penalties of perjury, that the
+    sky is blue.

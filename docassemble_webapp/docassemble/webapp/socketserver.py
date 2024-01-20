@@ -5,7 +5,7 @@ import random
 import re
 import sys
 import time
-import trio
+import trio  # noqa: E402,F401 # pylint: disable=unused-import
 import eventlet
 eventlet.sleep()
 eventlet.monkey_patch()
@@ -22,14 +22,14 @@ from docassemble.webapp.app_socket import app, db, socketio  # noqa: E402
 from docassemble.webapp.backend import nice_utc_date, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj, get_session  # noqa: E402
 from docassemble.webapp.daredis import r as rr, redis_host, redis_port, redis_offset  # noqa: E402
 from docassemble.webapp.users.models import UserModel, ChatLog  # noqa: E402
-from docassemblekvsession import KVSessionExtension  # noqa: E402
-from flask import session, request  # noqa: E402
-from flask_socketio import join_room  # noqa: E402
-from simplekv.memory.redisstore import RedisStore  # noqa: E402
-from sqlalchemy import select  # noqa: E402
-from sqlalchemy.orm import sessionmaker, joinedload  # noqa: E402
-import netifaces as ni  # noqa: E402 # pylint: disable=import-error
-import redis  # noqa: E402
+from docassemblekvsession import KVSessionExtension  # noqa: E402 # pylint: disable=wrong-import-error
+from flask import session, request  # noqa: E402 # pylint: disable=wrong-import-error
+from flask_socketio import join_room  # noqa: E402 # pylint: disable=wrong-import-error
+from simplekv.memory.redisstore import RedisStore  # noqa: E402 # pylint: disable=wrong-import-error
+from sqlalchemy import select  # noqa: E402 # pylint: disable=wrong-import-error
+from sqlalchemy.orm import sessionmaker, joinedload  # noqa: E402 # pylint: disable=wrong-import-error
+import netifaces as ni  # noqa: E402 # pylint: disable=import-error # pylint: disable=wrong-import-error
+import redis  # noqa: E402 # pylint: disable=wrong-import-error
 
 store = RedisStore(docassemble.webapp.daredis.r_store)
 kv_session = KVSessionExtension(store, app)
