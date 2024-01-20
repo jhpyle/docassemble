@@ -2744,6 +2744,39 @@ Here is an example of using `js show if` with `datatype: yesnomaybe`.
 
 {% include demo-side-by-side.html demo="jsshowifmaybe" %}
 
+# <a name="inside_of_class"></a>A subclass of Individual that reduces to text differently depending on the context
+
+Normally, when you reduce an object of class `Individual` to text, the
+result is the same as when you call `.name.full()` on the
+object. You can make a subclass of `Individual` that reduces to text
+in a different way.
+
+Here is an example module that uses `current_context().inside_of` to
+detect whether the object representing an individual is being reduced
+to text inside of a document that is being assembled. If it is, the
+`.name_full()` name is returned, but if the object is being reduced to
+text for purposes of displaying in the web app, the first name is
+returned.
+
+{% highlight python %}
+from docassemble.base.util import current_context, Individual, log
+
+__all__ = ['AltIndividual']
+
+
+class AltIndividual(Individual):
+
+    def __str__(self):
+        if current_context().inside_of != 'standard':
+            return self.name.full()
+        return self.name.familiar()
+{% endhighlight %}
+
+Here is an interview that demonstrates the use of the `AltIndividual`
+class.
+
+{% include demo-side-by-side.html demo="new-or-existing" %}
+
 [`sections`]: {{ site.baseurl }}/docs/initial.html#sections
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if

@@ -1006,6 +1006,17 @@ writing
 The `paragraphs` filter runs the text through the
 [`single_to_double_newlines()`] function.
 
+If you insert Markdown hyperlinks into the DOCX file, it is important
+that you prepare your DOCX template file so that it can use hyperlinks
+properly. To do this, use Word or LibreOffice to edit your DOCX
+template, type some text, highlight the text, and convert the text
+into a hyperlink. You can then delete the hyperlink. This will have a
+side effect on the DOCX file that will prepare it to accept
+hyperlinks. See [character style of hyperlinks in DOCX
+files](#hyperlink style) for more information about how hyperlinks
+appear in DOCX files. If you do not do this, hyperlinks will not work
+properly in documents converted from DOCX to PDF.
+
 Since 2020, there have been changes to the way the `markdown` filter
 works. If you installed **docassemble** before these changes went into
 effect, you will not see these changes unless you update your
@@ -1771,6 +1782,12 @@ save the file, and then delete the hyperlink.  When you create the
 link, [Microsoft Word] will create the character style `Hyperlink` and
 it the character style will persist even after you delete the
 hyperlink.
+
+It is important to set up your template in this way; insert a
+hyperlink into the document, and then delete it. If you do not do
+this, the hyperlinks that you insert through Markdown will not
+function as hyperlinks if LibreOffice converts the resulting DOCX file
+to PDF.
 
 If you want to manually specify a character style to be used for
 hyperlinks, you can set a `hyperlink style`.

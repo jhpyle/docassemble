@@ -2695,21 +2695,12 @@ will be returned if the user has any of the given [privileges]. For
 example, if the user has the [privilege] of "developer",
 `user_has_privilege(['developer', 'admin'])` will return `True`.
 
-## <a name="user_info"></a>user_info()
+## <a name="current_context"></a>current_context()
 
-The `user_info()` function will return an object with the following
-attributes describing the current user:
+The `current_context()` function will return an object with the
+following attributes describing information about the context in which
+Python code is executing:
 
-* `id` the integer ID of the user, which is used in the API and
-  appears in the URLs of Playground files.
-* `first_name`
-* `last_name`
-* `email`
-* `country` (will be an official [ISO 3166-1 alpha-2] country code like `US`)
-* `subdivision_first` (e.g., state)
-* `subdivision_second` (e.g., county)
-* `subdivision_third` (e.g., municipality)
-* `organization` (e.g., company or non-profit organization)
 * `session` the session ID of the current interview session
 * `filename` the filename of the current interview session
 * `package` the package of the current filename
@@ -2726,13 +2717,37 @@ attributes describing the current user:
   Python code needs to know the `section` modifier of the `question`
   that **docassemble** is currently trying to display (which might not
   be the same `question` that ultimately is displayed).
+* `inside_of` the document assembly context, if any. The possible
+  values are `'standard'`, `'docx'`, `'pdf'`, `'pandoc'`, `'raw'`,
+  `'md'`, and `'html'`. The default context is `'standard'`; the other
+  contexts are in effect if code is executing to assemble a file using
+  the `docx template file`, `pdf template file`, Pandoc document
+  assembly system, raw text file assembly, creation of a Markdown
+  file, or creation of an HTML version of a Markdown file (typically
+  used with the Pandoc document assembly system as an HTML preview of
+  the output).
+
+## <a name="user_info"></a>user_info()
+
+The `user_info()` function will return an object with the following
+attributes describing the current user:
+
+* `id` the integer ID of the user, which is used in the API and
+  appears in the URLs of Playground files.
+* `first_name`
+* `last_name`
+* `email`
+* `country` (will be an official [ISO 3166-1 alpha-2] country code like `US`)
+* `subdivision_first` (e.g., state)
+* `subdivision_second` (e.g., county)
+* `subdivision_third` (e.g., municipality)
+* `organization` (e.g., company or non-profit organization)
 * `language` the user's language, if set (an [ISO-639-1] or
   [ISO-639-3] code)
 * `timezone` the user's time zone, in a format like `America/New_York`
 
-All of these attributes, with the exception of `session` and
-`filename`, are set by the user on the [Profile page]. They can also
-be set by the [`set_user_info()`] function.
+All of these attributes are set by the user on the [Profile
+page]. They can also be set by the [`set_user_info()`] function.
 
 For example:
 
@@ -2744,6 +2759,10 @@ question: |
 yesno: email_is_best
 ---
 {% endhighlight %}
+
+If the user is not logged in, the first name will be `'Anonymous'`,
+the last name will be `'User'`, and the other attributes will be
+`None`.
 
 ## <a name="set_save_status"></a>set_save_status()
 

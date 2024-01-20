@@ -3,6 +3,54 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.93](https://github.com/jhpyle/docassemble/releases/tag/v1.4.93) - 2024-01-
+
+
+### Added
+- The `current_context()` function, which is the new function to use
+  in place of `user_info()` for attributes that are not related to the
+  logged in user. The object returned by `current_context()` also has
+  a new attribute, `inside_of`, which can be used to detect whether
+  the Python code that is currently executing is executing inside of a
+  particular type of document assembly process.
+
+
+### Changed
+- The `user_info()` function had previously provided much of the
+  information that the `current_context()` function now
+  provides. However, the name `user_info()` was not suitable for that
+  information. A deprecation warning will be logged if code accesses
+  the attributes of `user_info()` that do not relate to the logged-in
+  user. In a future version, accessing these attributes will raise an
+  exception.
+- The behavior of the object returned from `user_info()` is different,
+  which might be a breaking change if you used `user_info()` in a
+  certain way. Previously, `user_info()` returned an object with
+  static attributes. Now, the attributes of the object returned by
+  `user_info()` are dynamic attributes (using the `@property`
+  decorator). If you set `u = user_info()` and `u` becomes a variable
+  in the interview answers, `u.id` will always return the user id of
+  the current logged-in user, not necessarily the user who was logged
+  in when `u` was defined.
+- The new function `current_context()` works the same way. If you set
+  `c = current_context()` then `c.current_section` will be the current
+  section at the time the attribute was accessed, not the time that
+  `c` was defined.
+- Another difference in the way that `user_info()` operates is that if
+  the user is not logged in, the attributes other than `first_name`
+  and `last_name` will exist, but will be `None`. Previously, those
+  attributes did not exist, and accessing them would raise an
+  `AttributeError`. If you want to test whether the user is logged in,
+  use `user_logged_in()`.
+
+
+### Fixed
+- A non-`required` boolean field value that was not filled out was set
+  to `False` instead of `None` as the documentation specified. The
+  default value is now `None`.
+- The `words` directive was unable to load translations from
+  Playground packages.
+
 ## [1.4.92](https://github.com/jhpyle/docassemble/releases/tag/v1.4.92) - 2024-01-17
 
 

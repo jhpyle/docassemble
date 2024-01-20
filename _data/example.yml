@@ -18716,6 +18716,43 @@
       (unfinished)
         % endif
       % endfor
+"inside-of-class":
+  "height": !!int |-
+    338
+  "width": !!int |-
+    488
+  "yaml": |-
+    modules:
+      - .contexttest
+    ---
+    objects:
+      - user: AltIndividual
+    ---
+    question: |
+      What is your name?
+    fields:
+      - First: user.name.first
+      - Middle: user.name.middle
+        required: False
+      - Last: user.name.last
+      - Suffix: user.name.suffix
+        required: False
+        code: name_suffix()
+    ---
+    mandatory: True
+    question: |
+      Thanks, ${ user }!
+    subquestion: |
+      Here is your document.
+    attachment:
+      name: Affidavit
+      filename: affidavit
+      content: |
+        [CENTER] Affidavit of ${ user }
+
+        ${ user } attests, under the pains
+        and penalties of perjury, that the
+        sky is blue.
 "interview_in_interview":
   "height": !!int |-
     292
