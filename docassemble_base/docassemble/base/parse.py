@@ -605,7 +605,7 @@ class InterviewStatus:
                     if not hasattr(field, 'choicetype'):
                         datatypes[field.saveas] = field.datatype
                     if field.datatype == 'boolean':
-                        if not self.extras['required'][field.number]:
+                        if not self.extras['required'][field.number] and hasattr(field, 'inputtype') and field.inputtype in ('yesnomaybe', 'noyesmaybe', 'yesnoradio', 'noyesradio'):
                             checkboxes[field.saveas] = 'None'
                         elif field.sign > 0:
                             checkboxes[field.saveas] = 'False'
