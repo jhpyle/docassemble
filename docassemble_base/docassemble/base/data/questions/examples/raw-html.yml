@@ -1,0 +1,16 @@
+metadata:
+  title: Raw HTML
+  documentation: "https://docassemble.org/docs/fields.html#raw html"
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - raw html: |
+      <div class="p-4 mb-3 rounded bg-danger">
+  - Favorite fruit: favorite_fruit
+  - raw html: |
+      </div>
+---
+mandatory: True
+question: |
+  Your favorite fruit is ${ favorite_fruit }.

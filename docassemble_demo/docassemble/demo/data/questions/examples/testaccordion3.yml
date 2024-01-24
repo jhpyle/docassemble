@@ -1,0 +1,63 @@
+metadata:
+  title: Accordion
+  short title: Accordion
+  documentation: "https://docassemble.org/docs/recipes.html#accordion"
+  example start: 1
+  example end: 2
+---
+modules:
+  - docassemble.demo.accordion
+---
+question: |
+  Welcome to the interview.
+subquestion:
+  This interview will determine a recommended direction
+  for your life.
+  
+  ${ start_accordion('What do I need to know before starting?') }
+
+  Modernipsum dolor sit amet illusionism cubo-futurism international
+  gothic historicism, neo-minimalism divisionism cobra intervention
+  art art nouveau. Installation art futurism les nabis academic hudson
+  river school young british artists, romanticism neo-expressionism
+  street art orphism, lyrical abstraction avant-garde remodernism
+  vorticism. Divisionism caravaggisti die brücke tachisme
+  impressionism, gothic art luminism illusionism op art neoclassicism,
+  street art situationist international neoism. Orphism russian
+  symbolism academic ego-futurism kinetic art neo-dada dada stuckism
+  international gründerzeit, post-impressionism impressionism
+  postmodernism maximalism precisionism post-painterly
+  abstraction. Russian symbolism superflat new media art jugendstil
+  maximalism illusionism, gründerzeit scuola romana merovingian
+  rayonism secularism, existentialism op art action painting lyrical
+  abstraction.
+  
+  ${ next_accordion('What do I do after I finish the interview?') }
+
+  Metaphysical art barbizon school carolingian neo-minimalism
+  primitivism superflat neo-minimalism naturalism, der blaue reiter
+  hard-edge painting new media art fluxus superstroke
+  monumentalism. Art deco russian futurism cubo-futurism pop art
+  relational art neo-expressionism, synchromism pre-raphaelites sound
+  art photorealism classicism, surrealism gothic art hudson river
+  school scuola romana. Rococo biedermeier cloisonnism secularism
+  hudson river school fluxus, modernism, ego-futurism formalism
+  manierism, gründerzeit deformalism abstract expressionism
+  postmodernism. Classicism postminimalism superstroke lowbrow
+  tonalism fauvism color field painting systems art, biedermeier
+  post-impressionism hyperrealism structuralism neoclassicism. Dada
+  tachisme luminism manierism surrealism, avant-garde performance art
+  neoclassicism hard-edge painting neo-impressionism, nouveau realisme
+  eclecticism tonalism.
+  
+  ${ end_accordion() }
+continue button field: intro
+---
+mandatory: True
+code: |
+  intro
+  final_screen
+---
+event: final_screen
+question: |
+  This concludes the interview.

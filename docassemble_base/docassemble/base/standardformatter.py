@@ -279,13 +279,16 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
             if hasattr(the_field, 'datatype'):
                 if the_field.datatype in ['script', 'css']:  # why did I ever comment this out?
                     continue
-                if the_field.datatype in ['html', 'note'] and field is not None:
+                if the_field.datatype in ['html', 'raw html', 'note'] and field is not None:
                     continue
                 if the_field.datatype == 'note':
                     info_message = to_text(markdown_to_html(status.extras['note'][the_field.number], status=status), terms, links)
                     continue
                 if the_field.datatype == 'html':
                     info_message = to_text(process_target(status.extras['html'][the_field.number].rstrip()), terms, links)
+                    continue
+                if the_field.datatype == 'raw html':
+                    info_message = to_text(process_target(status.extras['raw html'][the_field.number].rstrip()), terms, links)
                     continue
             # logmessage("field number is " + str(the_field.number))
             if not hasattr(the_field, 'saveas'):
@@ -328,7 +331,7 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
                 elif hasattr(immediate_next_field, 'datatype'):
                     if immediate_next_field.datatype in ['note']:
                         next_label = ' (' + word("Next will be") + ' ' + to_text(markdown_to_html(status.extras['note'][immediate_next_field.number], trim=False, status=status, strip_newlines=True), terms, links) + ')'
-                    elif immediate_next_field.datatype in ['html']:
+                    elif immediate_next_field.datatype in ['html', 'raw html']:
                         next_label = ' (' + word("Next will be") + ' ' + to_text(status.extras['html'][immediate_next_field.number].rstrip(), terms, links) + ')'
         if hasattr(field, 'label') and status.labels[field.number] != "no label":
             label = to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), terms, links)
@@ -1011,6 +1014,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         for field in status.get_field_list():
             if 'html' in status.extras and field.number in status.extras['html']:
                 side_note_content = status.extras['html'][field.number].rstrip()
+            elif 'raw html' in status.extras and field.number in status.extras['raw html']:
+                side_note_content = status.extras['raw html'][field.number].rstrip()
             elif 'note' in status.extras and field.number in status.extras['note']:
                 side_note_content = markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True)
             else:
@@ -1043,6 +1048,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                             fieldlist.append('                <tr class="da-field-container da-field-container-note da-review"><td colspan="2">' + side_note_content + '</td></tr>\n')
                         else:
                             fieldlist.append('                <div class="da-form-group row da-field-container da-field-container-note da-review"><div class="col"><div>' + side_note_content + '</div></div></div>\n')
+                    continue
+                if field.datatype == 'raw html' and 'raw html' in status.extras and field.number in status.extras['raw html'] and side_note_content:
+                    fieldlist.append('                ' + side_note_content + '\n')
                     continue
                 if field.datatype == 'note' and 'note' in status.extras and field.number in status.extras['note']:
                     if field.number in status.helptexts:
@@ -1175,6 +1183,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         for field in field_list:
             if 'html' in status.extras and field.number in status.extras['html']:
                 note_fields[field.number] = process_target(status.extras['html'][field.number].rstrip())
+            elif 'raw html' in status.extras and field.number in status.extras['raw html']:
+                note_fields[field.number] = process_target(status.extras['raw html'][field.number].rstrip())
             elif 'note' in status.extras and field.number in status.extras['note']:
                 note_fields[field.number] = markdown_to_html(status.extras['note'][field.number], status=status, embedder=embed_input)
             if hasattr(field, 'saveas'):
@@ -1339,13 +1349,19 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                             fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"><hr><span class="dacollectnum">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_UNDELETE + ' float-end dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button>' + da_remove_existing + '</div></div>\n')
                     else:
                         if field.number in note_fields:
-                            if field.number in status.helptexts:
-                                fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + class_def + extra_container_class, content_classes='col', content=help_wrap(note_fields[field.number], status.helptexts[field.number], status), under_text=under_text))
-                                # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row da-field-container da-field-container-note' + class_def + extra_container_class + '"><div class="col">' + help_wrap(note_fields[field.number], status.helptexts[field.number], status) + '</div></div>\n')
+                            if field.datatype == 'raw html':
+                                fieldlist.append(note_fields[field.number])
                             else:
-                                fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + class_def + extra_container_class, content_classes='col', content='<div>' + note_fields[field.number] + '</div>', under_text=under_text))
-                                # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row da-field-container da-field-container-note' + class_def + extra_container_class + '"><div class="col"><div>' + note_fields[field.number] + '</div></div></div>\n')
+                                if field.number in status.helptexts:
+                                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + class_def + extra_container_class, content_classes='col', content=help_wrap(note_fields[field.number], status.helptexts[field.number], status), under_text=under_text))
+                                    # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row da-field-container da-field-container-note' + class_def + extra_container_class + '"><div class="col">' + help_wrap(note_fields[field.number], status.helptexts[field.number], status) + '</div></div>\n')
+                                else:
+                                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + class_def + extra_container_class, content_classes='col', content='<div>' + note_fields[field.number] + '</div>', under_text=under_text))
+                                    # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row da-field-container da-field-container-note' + class_def + extra_container_class + '"><div class="col"><div>' + note_fields[field.number] + '</div></div></div>\n')
                     # continue
+                elif field.datatype == 'raw html':
+                    if field.number in note_fields:
+                        fieldlist.append(note_fields[field.number])
                 elif field.datatype == 'note':
                     if field.number in note_fields:
                         if field.number in status.helptexts:

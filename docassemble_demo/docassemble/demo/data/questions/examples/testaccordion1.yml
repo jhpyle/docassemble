@@ -1,0 +1,89 @@
+metadata:
+  title: Accordion Review
+  short title: Accordion
+  documentation: "https://docassemble.org/docs/recipes.html#accordion"
+  example start: 2
+  example end: 3
+---
+mandatory: True
+code: |
+  favorite_cat = 'Tabby'
+  favorite_dog = 'Spaniel'
+  favorite_fruit = 'Apple'
+  favorite_vegetable = 'Turnip'
+  fashion_aesthetic = 'Goth'
+  decor_aesthetic = 'Victorian'
+---
+modules:
+  - docassemble.demo.accordion
+---
+event: review_screen
+question: |
+  Please review your answers.
+review:
+  - raw html: |
+      ${ start_accordion('Pets', showing=True) }
+  - Edit: favorite_cat
+    button: |
+      You said your favorite cat was
+      **${ favorite_fruit }**.
+  - Edit: favorite_vegetable
+    button: |
+      You said your favorite dog was
+      **${ favorite_dog }**.
+  - raw html: |
+      ${ next_accordion('Food') }
+  - Edit: favorite_fruit
+    button: |
+      You said your favorite fruit was
+      **${ favorite_fruit }**.
+  - Edit: favorite_vegetable
+    button: |
+      You said your favorite vegetable was
+      **${ favorite_vegetable }**.
+  - raw html: |
+      ${ next_accordion('Aesthetics') }
+  - Edit: fashion_aesthetic
+    button: |
+      You said your fashion aesthetic was
+      **${ fashion_aesthetic }**.
+  - Edit: decor_aesthetic
+    button: |
+      You said your home decor aesthetic was
+      **${ decor_aesthetic }**.
+  - raw html: |
+      ${ end_accordion() }
+---
+mandatory: True
+code: |
+  review_screen
+---
+question: |
+  What is your favorite cat?
+fields:
+  - Favorite cat: favorite_cat
+---
+question: |
+  What is your favorite dog?
+fields:
+  - Favorite dog: favorite_dog
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite vegetable: favorite_vegetable
+---
+question: |
+  How would you describe your preferred fashion for clothing?
+fields:
+  - Fashion aesthetic: fashion_aesthetic
+---
+question: |
+  How would you describe your choice of home decor?
+fields:
+  - Decor aesthetic: decor_aesthetic

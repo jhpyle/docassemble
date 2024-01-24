@@ -1,0 +1,39 @@
+metadata:
+  title: Accordion Fields
+  short title: Accordion
+  documentation: "https://docassemble.org/docs/recipes.html#accordion"
+  example start: 1
+  example end: 2
+---
+modules:
+  - docassemble.demo.accordion
+---
+question: |
+  Tell me about your preferences
+fields:
+  - raw html: |
+      ${ start_accordion('Pets', showing=True) }
+  - Favorite cat: favorite_cat
+  - Favorite dog: favorite_dog
+  - raw html: |
+      ${ next_accordion('Food') }
+  - Favorite fruit: favorite_fruit
+    required: False
+  - Favorite vegetable: favorite_vegetable
+    required: False
+  - Favorite meat dish: favorite_meat_dish
+    show if:
+      variable: favorite_dog
+      is: spaniel
+  - raw html: |
+      ${ next_accordion('Aesthetics') }
+  - Fashion aesthetic: fashion_aesthetic
+    required: False
+  - Decor aesthetic: decor_aesthetic
+    required: False
+  - raw html: ${ end_accordion() }
+---
+mandatory: True
+question: |
+  Your favorite cat is ${ favorite_cat } and
+  your favorite dog is ${ favorite_dog }.
