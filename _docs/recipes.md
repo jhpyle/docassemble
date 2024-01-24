@@ -228,6 +228,50 @@ def prog_disclose(template, classname=None):
 
 This uses the [collapse feature] of [Bootstrap].
 
+# <a name="accordion"></a>Accordion user interface
+
+Helper functions defined in a module file can be useful for inserting
+complex HTML into your `question` blocks without making the `question`
+blocks less readable.
+
+In the [`docassemble.demo`] package, there is a module,
+[`docassemble.demo.accordion`], which demonstrates a set of functions,
+`start_accordion()`, `next_accordion()`, and `end_accordion()`, that
+return HTML.
+
+The following example demonstrates how to use the functions exported
+by [`docassemble.demo.accordion`] to create an accordion interface in
+a `review` screen, using the [accordion feature] of [Bootstrap].
+
+{% include demo-side-by-side.html demo="testaccordion1" %}
+
+The same could be done with a `fields` list.
+
+{% include demo-side-by-side.html demo="testaccordion2" %}
+
+The above two examples make use of the [`raw html`] feature that was
+introduced in version 1.4.94.
+
+The functions in [`docassemble.demo.accordion`] can also be used in
+other parts of a screen, such as the `subquestion`.
+
+{% include demo-side-by-side.html demo="testaccordion3" %}
+
+When using functions like these that change the HTML structure of the
+screen, it is very important not to forget to call the functions that
+insert closing HTML tags, like `end_accordion()` in this example. If
+the correct functions are not called, the HTML of the screen could be
+invalid.
+
+**docassemble** add-on packages could be created that offer user
+interface enhancements invoked through functions. In the examples
+above, the functionality was imported through a `modules` block, but
+it would also be possible to instruct users of an add-on package to
+use an `include` block to activate the functionality. The `include`
+block could point to a file in the `questions` folder of the add-on
+package that contains a `modules` block that imports the functions, as
+well as a `features` block that activates custom JavaScript and CSS.
+
 # <a name="cards"></a>Displaying cards
 
 [Bootstrap] has a component called a [Card] that puts text in a box
@@ -2918,3 +2962,7 @@ class.
 [`background_action()`]: {{ site.baseurl }}/docs/background.html#background_action
 [`celery modules`]: {{ site.baseurl }}/docs/config.html#celery modules
 [`upload-handler.yml`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/questions/examples/upload-handler.yml
+[`raw html`]: {{ site.baseurl }}/docs/fields.html#raw html
+[accordion feature]: https://getbootstrap.com/docs/5.3/components/accordion/
+[`docassemble.demo`]: https://github.com/jhpyle/docassemble/tree/master/docassemble_demo
+[`docassemble.demo.accordion`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/accordion.py

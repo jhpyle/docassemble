@@ -2013,6 +2013,24 @@ the HTML will appear after the field:
 
 {% include side-by-side.html demo="side-html" %}
 
+## <a name="raw html"></a>`raw html`
+
+`raw html` is like [`html`](#html), except that the HTML is not placed
+into a `<div>`; it is simply inserted into the page without any
+enclosing elements. This allows you to alter the structure of the HTML
+in the list of fields.
+
+{% include side-by-side.html demo="raw-html" %}
+
+The `help` and `under text` modifiers have no effect on a `raw html`
+field. If `raw html` is used as a modifier for a field, it will act
+just like `html`.
+
+Note that when using the `tabular` form of a `review` list, the `raw
+html` will go into the `<tbody>` of the `<table>`, where a `<tr>`
+would normally be placed. Otherwise, the `raw html` will be inserted
+into the `<form>` element.
+
 ## <a name="no label"></a>`no label`
 
 If you use `no label` as the label for your variable, the label will

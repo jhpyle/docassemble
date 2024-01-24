@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.94](https://github.com/jhpyle/docassemble/releases/tag/v1.4.94) - 2024-01-23
+
+
+### Added
+- The `raw html` special field type under `fields` and `review`. This
+  is similar to `html` but allows modification of the structure of the
+  HTML in the list as a whole.
+
 ## [1.4.93](https://github.com/jhpyle/docassemble/releases/tag/v1.4.93) - 2024-01-20
 
 
