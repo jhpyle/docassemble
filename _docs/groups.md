@@ -484,7 +484,7 @@ class Fish(DAObject):
         self.scales
         self.species
 
-    def __unicode__(self):
+    def __str__(self):
         return self.common_name
 {% endhighlight %}
 
