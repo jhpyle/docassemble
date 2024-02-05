@@ -3,6 +3,15 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.95](https://github.com/jhpyle/docassemble/releases/tag/v1.4.95) - 2024-02-04
+
+
+### Fixed
+- The `small screen navigation` option under `features` could not be
+  overridden to `True`.
+- The `nice_number()` function sometimes did not properly detect
+  whether a number was an integer.
+
 ## [1.4.94](https://github.com/jhpyle/docassemble/releases/tag/v1.4.94) - 2024-01-23
 
 
