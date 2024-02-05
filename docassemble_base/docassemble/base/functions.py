@@ -2925,6 +2925,8 @@ def nice_number_default(the_number, **kwargs):
         language_to_use = '*'
     else:
         language_to_use = 'en'
+    if isinstance(the_number, float):
+        the_number = float(decimal.Context(prec=8).create_decimal_from_float(the_number))
     if int(float(the_number)) == float(the_number):
         the_number = int(float(the_number))
         is_integer = True

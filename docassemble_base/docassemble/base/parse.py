@@ -2175,9 +2175,8 @@ class Question:
             if 'small screen navigation' in data['features']:
                 if data['features']['small screen navigation'] == 'dropdown':
                     self.interview.use_navigation_on_small_screens = 'dropdown'
-                else:
-                    if not data['features']['small screen navigation']:
-                        self.interview.use_navigation_on_small_screens = False
+                elif data['features']['small screen navigation'] is not None:
+                    self.interview.use_navigation_on_small_screens = bool(data['features']['small screen navigation'])
             if 'centered' in data['features'] and isinstance(data['features']['centered'], bool):
                 self.interview.flush_left = not data['features']['centered']
             if 'wide side by side' in data['features'] and isinstance(data['features']['wide side by side'], bool):
