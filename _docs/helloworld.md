@@ -17,6 +17,11 @@ mandatory: True
 
 To run this, first set up your server using [Docker].
 
+To get **docassemble** up and running in your web browser, visit 
+[http://localhost](http://localhost) if you are running **docassemble** locally (i.e., 
+using Docker Desktop on your computer), or else navigate to your 
+**docassemble** server URL).
+
 Once **docassemble** is up and running in your web browser, click "Log
 in" in the upper right hand corner.  The default username and password
 are:
