@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.96] - 2024-02-14
+
+### Fixed
+- Issue with installation of SSL certificates stored on S3.
+
 ## [1.4.95] - 2024-02-04
 
 ### Fixed

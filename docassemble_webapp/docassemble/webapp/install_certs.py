@@ -50,7 +50,11 @@ def main():
             if not os.path.isdir(dest):
                 os.makedirs(dest)
             for key in cloud.list_keys(prefix=prefix):
+                if not key.name:
+                    continue
                 filename = re.sub(r'.*/', '', key.name)
+                if not filename:
+                    continue
                 fullpath = os.path.join(dest, filename)
                 logmessage("install_certs: saving " + str(key.name) + " to " + str(fullpath))
                 key.get_contents_to_filename(fullpath)
