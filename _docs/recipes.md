@@ -824,11 +824,17 @@ function idleTimerIncrement() {
 }
 {% endhighlight %}
 
-In your interview, include `idle.js` in a [`features`] block.
+In your interview, include `idle.js` in a [`features`] block and
+include an `event: log_user_out` block that executes
+`command('logout')`.
 
 {% highlight yaml %}
 features:
   javascript: idle.js
+---
+event: log_user_out
+code: |
+  command('logout')
 ---
 mandatory: True
 code: |
@@ -842,10 +848,6 @@ field: welcome_screen_seen
 event: final_screen
 question: |
   You are done with the interview.
----
-event: log_user_out
-code: |
-  command('logout')
 {% endhighlight %}
 
 This logs the user out after 60 minutes of inactivity in the browser.
