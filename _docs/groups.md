@@ -415,9 +415,10 @@ The order of the questions is:
 questions about each individual be asked together, you can use the
 `.complete_attribute` attribute to tell **docassemble** that an item
 is not completely gathered until a particular attribute of that item
-is defined.  You can then write a [`code` block] that defines this
-attribute.  You can use this [`code` block] to ensure that all the
-questions you want to be asked are asked during the gathering process.
+(usually `.complete`) is defined.  You can then write a [`code` block]
+that defines this attribute.  You can use this [`code` block] to
+ensure that all the questions you want to be asked are asked during
+the gathering process.
 
 In the above example, we can accomplish this by doing
 `friend.complete_attribute = 'complete'`.  Then we include a `code`
@@ -456,6 +457,15 @@ this case, the item will be considered complete when it has a
 definition for each attribute in the list of of attributes.
 
 {% include side-by-side.html demo="gather-list-friend-good-order-2" %}
+
+It is a best practice to set `complete_attribute='complete'` and to
+specify a `code` block that sets the `.complete` attribute of the list
+item to `True`. This will facilitate the use of a `table` for editing
+the list. Every time the user edits a list item in a `table`, the
+`.complete` attribute will be undefined if `complete_attribute` is
+`'complete'`, and then the definition of `.complete` will be sought
+again. Thus the "completeness" of the list item will always be
+recomputed if the user changes something.
 
 When you write your own class definitions, you can set a
 default `complete_attribute` that is not really an attribute, but a method
