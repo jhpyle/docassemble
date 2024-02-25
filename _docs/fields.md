@@ -998,10 +998,12 @@ or enter a value of their own.
 
 ## <a name="ajax"></a>Combobox that fetches choices from the server
 
-`input type: ajax` looks like a [`combobox`], but retrieves its
-choices from the server using [Ajax], based on what the user types.
-It is useful when the number of possible values is too large to send
-to the browser all at once.
+`input type: ajax` looks like a [`combobox`], but is really a dropdown
+selector that retrieves its choices from the server using [Ajax],
+based on what the user types. It is useful when the number of possible
+values in the dropdown is too large to send to the browser all at
+once, and you want to allow the user to find the item they want to
+select by typing the start of a word or phrase.
 
 To use `input type: ajax`, you also need to supply an `action`
 specifier.  The browser will use the [JavaScript] function
@@ -1458,7 +1460,8 @@ a field is required, it will be marked with a red asterisk, and input
 validation will be enforced to make sure the user provides a value.
 
 If the user skips a non-required field, the variable will be blank for
-text-based fields and `None` for multiple-choice and yes/no fields.
+text-based fields, `0.0` for `number` and `currency` fields, `0` for
+`integer` fields, and `None` for multiple-choice and yes/no fields.
 
 Some `datatype`s are never marked with a red asterisk.  For example,
 [`range`](#range) and [`yesno`](#fields yesno) fields are set to real
