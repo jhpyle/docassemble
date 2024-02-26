@@ -617,6 +617,12 @@
 
         case 9: // tab
         case 13: // enter
+          if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+          }
+          daFetchAjaxTimeoutFetchAfter = false;
+          daFetchAcceptIncoming = false;
           if (!this.shown) {
             return;
           }
@@ -638,6 +644,12 @@
           break;
 
         case 27: // escape
+          if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+          }
+          daFetchAjaxTimeoutFetchAfter = false;
+          daFetchAcceptIncoming = false;
           if (!this.shown) {
             return;
           }
