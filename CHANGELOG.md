@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.4.98] - 2024-02-29
+### Fixed
+- Issue with one of the fixes in 1.4.97.
+
 ## [1.4.97] - 2024-02-29
 
 ### Added
