@@ -10,6 +10,9 @@ import time
 import random
 import mimetypes
 import urllib.request
+import convertapi
+import requests
+from pikepdf import Pdf
 import docassemble.base.filter
 import docassemble.base.functions
 from docassemble.base.config import daconfig
@@ -17,9 +20,6 @@ from docassemble.base.logger import logmessage
 from docassemble.base.pdfa import pdf_to_pdfa
 from docassemble.base.pdftk import pdf_encrypt
 from docassemble.base.error import DAError, DAException
-import convertapi
-import requests
-from pikepdf import Pdf
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
@@ -802,13 +802,31 @@ def concatenate_files(path_list, pdfa=False, password=None, owner_password=None)
             new_path_list.append(path)
     if len(new_path_list) == 0:
         raise DAError("concatenate_files: no valid files to concatenate")
+
     if len(new_path_list) == 1:
         shutil.copyfile(new_path_list[0], pdf_file.name)
     else:
         with Pdf.open(new_path_list[0]) as original:
+            need_appearances = False
+            try:
+                if original.Root.AcroForm.NeedAppearances:
+                    need_appearances = True
+            except:
+                pass
             for additional_file in new_path_list[1:]:
                 with Pdf.open(additional_file) as additional_pdf:
+                    if need_appearances is False:
+                        try:
+                            if additional_pdf.Root.AcroForm.NeedAppearances:
+                                need_appearances = True
+                        except:
+                            pass
                     original.pages.extend(additional_pdf.pages)
+            if need_appearances:
+                try:
+                    original.Root.AcroForm.NeedAppearances = True
+                except:
+                    logmessage("concatenate_files: an additional file had an AcroForm with NeedAppearances but setting NeedAppearances on the final document resulted in an error")
             original.save(pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)

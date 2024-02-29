@@ -122,7 +122,13 @@ RUN bash -c \
 && python /tmp/docassemble/Docker/nltkdownload.py \
 && cd /var/www/nltk_data/corpora \
 && unzip -o wordnet.zip \
-&& unzip -o omw-1.4.zip"
+&& unzip -o omw-1.4.zip \
+&& cd /tmp \
+&& mkdir -p /tmp/conv \
+&& pandoc --pdf-engine=lualatex -M latextmpdir=./conv -M pdfa=false /usr/share/docassemble/local3.10/lib/python3.10/site-packages/docassemble/base/data/templates/Legal-Template.yml --template=/usr/share/docassemble/local3.10/lib/python3.10/site-packages/docassemble/base/data/templates/Legal-Template.tex --from=markdown+raw_tex-latex_macros -s -o /tmp/temp.pdf /usr/share/docassemble/local3.10/lib/python3.10/site-packages/docassemble/base/data/templates/hello.md \
+&& rm /tmp/temp.pdf \
+&& pandoc --pdf-engine=lualatex -M latextmpdir=./conv -M pdfa=false --template=/usr/share/docassemble/local3.10/lib/python3.10/site-packages/docassemble/base/data/templates/Legal-Template.rtf -s -o /tmp/temp.rtf /usr/share/docassemble/local3.10/lib/python3.10/site-packages/docassemble/base/data/templates/hello.md \
+&& rm /tmp/temp.rtf"
 
 USER root
 RUN rm -rf /tmp/docassemble

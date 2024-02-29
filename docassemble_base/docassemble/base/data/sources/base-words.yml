@@ -311,6 +311,7 @@
 "Falkland Islands (Malvinas)": Null
 "false": Null
 "Faroe Islands": Null
+"Field cannot contain HTML": Null
 "Fiji": Null
 "File could not be converted: ": Null
 "File deleted.": Null
@@ -1031,6 +1032,7 @@
 "There is already a username and password on this system with the e-mail address": Null
 "The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.": Null
 "There was an error.": Null
+"There was an error. Please contact the system administrator.": Null
 "There was an error updating the packages.": Null
 "There was an error with the synchronization.": Null
 "There was a problem connecting to GitHub. Please check your GitHub configuration and try again.": Null

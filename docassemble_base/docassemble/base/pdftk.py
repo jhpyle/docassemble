@@ -160,7 +160,7 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix='', parent_ft=N
                 outfields.append((prefix, default, pageno, rect, field_type, export_value))
 
 
-def fill_template(template, data_strings=None, data_names=None, hidden=None, readonly=None, images=None, pdf_url=None, editable=True, pdfa=False, password=None, owner_password=None, template_password=None, default_export_value=None, replacement_font=None):
+def fill_template(template, data_strings=None, data_names=None, hidden=None, readonly=None, images=None, pdf_url=None, editable=True, pdfa=False, password=None, owner_password=None, template_password=None, default_export_value=None, replacement_font=None, use_pdftk=False):
     if data_strings is None:
         data_strings = []
     if data_names is None:
@@ -219,7 +219,7 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
     for key, val in data_strings:
         data_dict[key] = val
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-    if pdfa or not editable:
+    if pdfa or not editable or use_pdftk:
         fdf = Xfdf(pdf_url, data_dict)
         # fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
         fdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".xfdf", delete=False)
@@ -251,7 +251,10 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
         if len(images) > 0:
             subprocess_arguments.append('need_appearances')
         else:
-            subprocess_arguments.append('flatten')
+            if pdfa or not editable:
+                subprocess_arguments.append('flatten')
+            else:
+                subprocess_arguments.append('need_appearances')
         completed_process = None
         try:
             completed_process = subprocess.run(subprocess_arguments, timeout=600, check=False, capture_output=True)
@@ -272,7 +275,6 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
             pdf = Pdf.open(template, password=template_password)
         else:
             pdf = Pdf.open(template)
-        pdf.Root.AcroForm.NeedAppearances = True
         for page in pdf.pages:
             if not hasattr(page, 'Annots'):
                 continue
@@ -320,6 +322,9 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                         the_string = pikepdf.String(value)
                         annot.V = the_string
                         annot.DV = the_string
+        pdf.Root.AcroForm.NeedAppearances = True
+        pdf.generate_appearance_streams()
+        pdf.Root.AcroForm.NeedAppearances = True
         if len(images) == 0:
             pdf.save(pdf_file.name)
             pdf.close()

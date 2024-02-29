@@ -2,6 +2,7 @@ import re
 from flask_wtf import FlaskForm
 from docassemble.base.functions import LazyWord as word
 from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField, BooleanField
+from docassemble.webapp.validators import html_validator
 import packaging
 
 
@@ -37,21 +38,21 @@ def validate_package_name(form, field):  # pylint: disable=unused-argument
 
 class CreatePackageForm(FlaskForm):
     name = StringField(word('Package name'), validators=[
-        validators.DataRequired(word('Package name is required')), validate_name])
+        validators.DataRequired(word('Package name is required')), validate_name, html_validator])
     submit = SubmitField(word('Get template'))
 
 
 class CreatePlaygroundPackageForm(FlaskForm):
     name = SelectField(word('Package'), validators=[
-        validators.DataRequired(word('Package name is required')), validate_name])
+        validators.DataRequired(word('Package name is required')), validate_name, html_validator])
     submit = SubmitField(word('Get package'))
 
 
 class UpdatePackageForm(FlaskForm):
-    giturl = StringField(word('GitHub URL'))
-    gitbranch = SelectField(word('GitHub Branch'))
+    giturl = StringField(word('GitHub URL'), validators=[html_validator])
+    gitbranch = SelectField(word('GitHub Branch'), validators=[html_validator])
     zipfile = FileField(word('Zip File'))
-    pippackage = StringField(word('Package on PyPI'))
+    pippackage = StringField(word('Package on PyPI'), validators=[html_validator])
     submit = SubmitField(word('Update'))
 
 
@@ -64,7 +65,7 @@ class ConfigForm(FlaskForm):
 class PlaygroundForm(FlaskForm):
     status = StringField('Status')
     original_playground_name = StringField(word('Original Name'))
-    playground_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
+    playground_name = StringField(word('Name'), [validators.Length(min=1, max=255), html_validator])
     playground_content = TextAreaField(word('Playground YAML'))
     search_term = StringField(word('Search'))
     submit = SubmitField(word('Save'))
@@ -108,7 +109,7 @@ class PlaygroundFilesEditForm(FlaskForm):
     purpose = StringField('Purpose')
     section = StringField(word('Section'))
     original_file_name = StringField(word('Original Name'))
-    file_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
+    file_name = StringField(word('Name'), [validators.Length(min=1, max=255), html_validator])
     search_term = StringField(word('Search'))
     file_content = TextAreaField(word('File Text'))
     active_file = StringField(word('Active File'))
@@ -118,7 +119,7 @@ class PlaygroundFilesEditForm(FlaskForm):
 
 class RenameProject(FlaskForm):
     name = StringField(word('New Name'), validators=[
-        validators.DataRequired(word('Project name is required')), validate_project_name])
+        validators.DataRequired(word('Project name is required')), validate_project_name, html_validator])
     submit = SubmitField(word('Rename'))
 
 
@@ -128,29 +129,29 @@ class DeleteProject(FlaskForm):
 
 class NewProject(FlaskForm):
     name = StringField(word('Name'), validators=[
-        validators.DataRequired(word('Project name is required')), validate_project_name])
+        validators.DataRequired(word('Project name is required')), validate_project_name, html_validator])
     submit = SubmitField(word('Save'))
 
 
 class PullPlaygroundPackage(FlaskForm):
-    github_url = StringField(word('GitHub URL'))
-    github_branch = SelectField(word('GitHub Branch'))
-    pypi = StringField(word('PyPI package'))
+    github_url = StringField(word('GitHub URL'), validators=[html_validator])
+    github_branch = SelectField(word('GitHub Branch'), validators=[html_validator])
+    pypi = StringField(word('PyPI package'), validators=[html_validator])
     pull = SubmitField(word('Pull'))
     cancel = SubmitField(word('Cancel'))
 
 
 class PlaygroundPackagesForm(FlaskForm):
-    original_file_name = StringField(word('Original Name'))
+    original_file_name = StringField(word('Original Name'), validators=[html_validator])
     file_name = StringField(word('Package Name'), validators=[validators.Length(min=1, max=50),
                                                               validators.DataRequired(word('Package Name is required')),
-                                                              validate_package_name])
-    license = StringField(word('License'), default='The MIT License (MIT)', validators=[validators.Length(min=0, max=255)])
-    author_name = StringField(word('Author Name'), validators=[validators.Length(min=0, max=255)])
-    author_email = StringField(word('Author E-mail'), validators=[validators.Length(min=0, max=255)])
-    description = StringField(word('Description'), validators=[validators.Length(min=0, max=255)], default="A docassemble extension.")
-    version = StringField(word('Version'), validators=[validators.Length(min=0, max=255), validate_package_version], default="0.0.1")
-    url = StringField(word('URL'), validators=[validators.Length(min=0, max=255)], default="")
+                                                              validate_package_name, html_validator])
+    license = StringField(word('License'), default='The MIT License (MIT)', validators=[validators.Length(min=0, max=255), html_validator])
+    author_name = StringField(word('Author Name'), validators=[validators.Length(min=0, max=255), html_validator])
+    author_email = StringField(word('Author E-mail'), validators=[validators.Length(min=0, max=255), html_validator])
+    description = StringField(word('Description'), validators=[validators.Length(min=0, max=255), html_validator], default="A docassemble extension.")
+    version = StringField(word('Version'), validators=[validators.Length(min=0, max=255), validate_package_version, html_validator], default="0.0.1")
+    url = StringField(word('URL'), validators=[validators.Length(min=0, max=255), html_validator], default="")
     dependencies = SelectMultipleField(word('Dependencies'))
     interview_files = SelectMultipleField(word('Interview files'))
     template_files = SelectMultipleField(word('Template files'))
@@ -159,7 +160,7 @@ class PlaygroundPackagesForm(FlaskForm):
     sources_files = SelectMultipleField(word('Source files'))
     readme = TextAreaField(word('README file'), default='')
     github_branch = NonValidatingSelectField(word('Branch'))
-    github_branch_new = StringField(word('Name of new branch'))
+    github_branch_new = StringField(word('Name of new branch'), validators=[html_validator])
     commit_message = StringField(word('Commit message'), default="")
     pypi_also = BooleanField(word('Publish on PyPI also'))
     install_also = BooleanField(word('Install package on this server also'))
@@ -222,7 +223,7 @@ class APIKey(FlaskForm):
     action = HiddenField()
     key = HiddenField()
     security = HiddenField()
-    name = StringField(word('Name'), validators=[validators.Length(min=1, max=255)])
+    name = StringField(word('Name'), validators=[validators.Length(min=1, max=255), html_validator])
     method = SelectField(word('Security Method'))
     permissions = SelectMultipleField(word('Limited Permissions'))
     submit = SubmitField(word('Create'))

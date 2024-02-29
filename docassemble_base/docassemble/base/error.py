@@ -27,6 +27,9 @@ class DAError(Exception):
         return str(self.value)
 
 
+class DASourceError(DAError):
+    pass
+
 class DANotFoundError(Exception):
     pass
 

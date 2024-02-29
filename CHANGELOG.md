@@ -1,5 +1,32 @@
 # Change Log
 
+## [1.4.97] - 2024-02-29
+
+### Added
+- The `pdftk` option under `attachment` and `features` for filling in
+  `pdf template file` attachments using pdftk instead of pikepdf.
+### Changed
+- During the Docker image build process, `pandoc` will run once, so
+  that the first user to assemble a document with `pandoc` will not
+  experience slowness due to LaTeX needing to generate files.
+- Appearance streams will be generated when using `pdf template file`.
+- Error messages related to problems in the source code will no longer
+  be displayed to the user unless the user is an administrator or
+  developer. If you want these error messages to appear to all users,
+  set `debug: True` and `development site is protected: True` in the
+  Configuration. The error messages will be available in
+  `docassemble.log`.
+### Fixed
+- Fixed security issue identified by Riyush Ghimire, affecting
+  versions 1.4.53 to 1.4.96, that could cause contents of files in the
+  filesystem to be revealed. This is a high severity issue and
+  upgrading as soon as possible is recommended.
+- Fixed security issue identified by Riyush Ghimire, affecting
+  versions up to 1.4.96, that allowed an open redirect URL to be formed.
+- Fixed security issue identified by Riyush Ghimire, affecting
+  versions up to 1.4.96, that would allow HTML or JavaScript
+  injection.
+
 ## [1.4.96] - 2024-02-14
 
 ### Fixed

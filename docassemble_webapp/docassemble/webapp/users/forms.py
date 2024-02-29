@@ -5,6 +5,9 @@ from flask_wtf import FlaskForm
 from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, validators, TextAreaField
 from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
+from flask import flash, current_app, request, abort
+from flask_login import current_user
+from sqlalchemy import select
 from docassemble.base.functions import LazyWord as word, LazyArray
 from docassemble.base.config import daconfig
 from docassemble.base.generate_key import random_alphanumeric
@@ -12,9 +15,7 @@ from docassemble.base.logger import logmessage
 from docassemble.webapp.daredis import r
 from docassemble.webapp.db_object import db
 from docassemble.webapp.users.models import UserModel, Role
-from flask import flash, current_app, request, abort
-from flask_login import current_user
-from sqlalchemy import select
+from docassemble.webapp.validators import html_validator
 try:
     import ldap
 except ImportError:
@@ -207,21 +208,22 @@ def da_registration_restrict_validator(form, field):  # pylint: disable=unused-a
 
 
 class MyRegisterForm(RegisterForm):
-    first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
-    last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
-    country = StringField(word('Country code'), [validators.Length(min=0, max=2)])
-    subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=0, max=64)])
-    subdivisionsecond = StringField(word('Second subdivision'), [validators.Length(min=0, max=64)])
-    subdivisionthird = StringField(word('Third subdivision'), [validators.Length(min=0, max=64)])
-    organization = StringField(word('Organization'), [validators.Length(min=0, max=64)])
-    language = StringField(word('Language'), [validators.Length(min=0, max=64)])
-    timezone = SelectField(word('Time Zone'), [validators.Length(min=0, max=64)])
-    nickname = StringField(word('Nickname'), [fix_nickname])
+    first_name = StringField(word('First name'), [validators.Length(min=0, max=255), html_validator])
+    last_name = StringField(word('Last name'), [validators.Length(min=0, max=255), html_validator])
+    country = StringField(word('Country code'), [validators.Length(min=0, max=2), html_validator])
+    subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=0, max=64), html_validator])
+    subdivisionsecond = StringField(word('Second subdivision'), [validators.Length(min=0, max=64), html_validator])
+    subdivisionthird = StringField(word('Third subdivision'), [validators.Length(min=0, max=64), html_validator])
+    organization = StringField(word('Organization'), [validators.Length(min=0, max=64), html_validator])
+    language = StringField(word('Language'), [validators.Length(min=0, max=64), html_validator])
+    timezone = SelectField(word('Time Zone'), [validators.Length(min=0, max=64), html_validator])
+    nickname = StringField(word('Nickname'), [fix_nickname, html_validator])
     email = StringField(word('Email'), validators=[
         validators.DataRequired(word('Email is required')),
         validators.Email(word('Invalid Email')),
         da_unique_email_validator,
-        da_registration_restrict_validator])
+        da_registration_restrict_validator,
+        html_validator])
 
 
 def length_two(form, field):  # pylint: disable=unused-argument
@@ -236,16 +238,16 @@ class NewPrivilegeForm(FlaskForm):
 
 
 class UserProfileForm(FlaskForm):
-    first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
-    last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
-    country = StringField(word('Country code'), [validators.Length(min=0, max=2)])
-    subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=0, max=64)])
-    subdivisionsecond = StringField(word('Second subdivision'), [validators.Length(min=0, max=64)])
-    subdivisionthird = StringField(word('Third subdivision'), [validators.Length(min=0, max=64)])
-    organization = StringField(word('Organization'), [validators.Length(min=0, max=64)])
-    language = StringField(word('Language'), [validators.Length(min=0, max=64)])
-    timezone = SelectField(word('Time Zone'), [validators.Length(min=0, max=64)])
-    pypi_username = StringField(word('PyPI Username'), [validators.Length(min=0, max=255)])
+    first_name = StringField(word('First name'), [validators.Length(min=0, max=255), html_validator])
+    last_name = StringField(word('Last name'), [validators.Length(min=0, max=255), html_validator])
+    country = StringField(word('Country code'), [validators.Length(min=0, max=2), html_validator])
+    subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=0, max=64), html_validator])
+    subdivisionsecond = StringField(word('Second subdivision'), [validators.Length(min=0, max=64), html_validator])
+    subdivisionthird = StringField(word('Third subdivision'), [validators.Length(min=0, max=64), html_validator])
+    organization = StringField(word('Organization'), [validators.Length(min=0, max=64), html_validator])
+    language = StringField(word('Language'), [validators.Length(min=0, max=64), html_validator])
+    timezone = SelectField(word('Time Zone'), [validators.Length(min=0, max=64), html_validator])
+    pypi_username = StringField(word('PyPI Username'), [validators.Length(min=0, max=255), html_validator])
     pypi_password = StringField(word('PyPI Password'), [validators.Length(min=0, max=255)])
     confirmed_at = DateField(word('Confirmation Date'))
     submit = SubmitField(word('Save'))
@@ -253,7 +255,7 @@ class UserProfileForm(FlaskForm):
 
 
 class EditUserProfileForm(UserProfileForm):
-    email = StringField(word('E-mail'))
+    email = StringField(word('E-mail'), validators=[Email(word('Must be a valid e-mail address')), html_validator])
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     active = BooleanField(word('Active'))
     uses_mfa = BooleanField(word('Uses two-factor authentication'))
@@ -299,11 +301,11 @@ class PhoneUserProfileForm(UserProfileForm):
                     flash(word("Please choose a different e-mail address."), 'error')
                     return False
         return super().validate()
-    email = StringField(word('E-mail'), validators=[Optional(), Email(word('Must be a valid e-mail address'))])
+    email = StringField(word('E-mail'), validators=[Optional(), Email(word('Must be a valid e-mail address')), html_validator])
 
 
 class RequestDeveloperForm(FlaskForm):
-    reason = StringField(word('Reason for needing developer account (optional)'))
+    reason = StringField(word('Reason for needing developer account (optional)'), validators=[html_validator])
     submit = SubmitField(word('Submit'))
 
 
@@ -334,21 +336,21 @@ class UserAddForm(FlaskForm):
     email = StringField(word('E-mail'), validators=[
         validators.InputRequired(word('E-mail is required')),
         validators.Email(word('Invalid E-mail'))])
-    first_name = StringField(word('First name'), [validators.Length(min=0, max=255)])
-    last_name = StringField(word('Last name'), [validators.Length(min=0, max=255)])
+    first_name = StringField(word('First name'), [validators.Length(min=0, max=255), html_validator])
+    last_name = StringField(word('Last name'), [validators.Length(min=0, max=255), html_validator])
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     password = StringField(word('Password'), widget=PasswordInput(hide_value=False), validators=[password_validator])
     submit = SubmitField(word('Add'))
 
 
 class PhoneLoginForm(FlaskForm):
-    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255)])
+    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255), html_validator])
     submit = SubmitField(word('Go'))
 
 
 class PhoneLoginVerifyForm(FlaskForm):
-    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255)])
-    verification_code = StringField(word('Verification code'), [validators.Length(min=daconfig['verification code digits'], max=daconfig['verification code digits'])])
+    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255), html_validator])
+    verification_code = StringField(word('Verification code'), [validators.Length(min=daconfig['verification code digits'], max=daconfig['verification code digits']), html_validator])
     submit = SubmitField(word('Verify'))
 
     def validate(self):  # pylint: disable=arguments-differ
@@ -404,7 +406,7 @@ class MFAChooseForm(FlaskForm):
 
 
 class MFASMSSetupForm(FlaskForm):
-    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255)])
+    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255), html_validator])
     submit = SubmitField(word('Verify'))
 
 
@@ -416,8 +418,8 @@ class MFAVerifySMSSetupForm(FlaskForm):
 class MyResendConfirmEmailForm(FlaskForm):
     email = StringField(word('Your e-mail address'), validators=[
         validators.DataRequired(word('E-mail address is required')),
-        validators.Email(word('Invalid e-mail address')),
-        ])
+        validators.Email(word('Invalid e-mail address'))
+    ])
     submit = SubmitField(word('Send confirmation email'))
 
 

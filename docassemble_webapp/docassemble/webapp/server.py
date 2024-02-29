@@ -49,7 +49,7 @@ import docassemble.webapp.setup
 from docassemble.webapp.setup import da_version
 import docassemble.base.astparser
 from docassemble.webapp.api_key import encrypt_api_key
-from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError, DAException, DANotFoundError, DAInvalidFilename
+from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError, DAException, DANotFoundError, DAInvalidFilename, DASourceError
 import docassemble.base.functions
 from docassemble.base.functions import get_default_timezone, ReturnValue, word
 import docassemble.base.DA
@@ -157,7 +157,6 @@ docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning
 docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearning.MachineLearningEntry)
 docassemble.base.util.set_random_forest_machine_learner(docassemble.webapp.machinelearning.RandomForestMachineLearner)
 docassemble.base.util.set_svm_machine_learner(docassemble.webapp.machinelearning.SVMMachineLearner)
-
 
 
 min_system_version = '1.2.0'
@@ -1178,12 +1177,17 @@ def my_default_url(error, endpoint, values):  # pylint: disable=unused-argument
 
 
 def make_safe_url(url):
+    if url in ('help', 'login', 'signin', 'restart', 'new_session', 'exit', 'interview', 'logout', 'exit_logout', 'leave', 'register', 'profile', 'change_password', 'interviews', 'dispatch', 'manage', 'config', 'playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'configuration', 'root', 'temp_url', 'login_url', 'exit_endpoint', 'interview_start', 'interview_list', 'playgroundfiles', 'create_playground_package', 'run', 'run_interview_in_package', 'run_dispatch', 'run_new', 'run_new_dispatch'):
+        return url
     parts = urlsplit(url)
     safe_url = parts.path
     if parts.query != '':
         safe_url += '?' + parts.query
     if parts.fragment != '':
         safe_url += '#' + parts.fragment
+    if len(safe_url) > 0 and safe_url[0] not in ('?', '#', '/'):
+        safe_url = '/' + safe_url
+    safe_url = re.sub(r'^//+', '/', safe_url)
     return safe_url
 
 
@@ -1237,6 +1241,7 @@ lm.anonymous_user = AnonymousUserModel
 
 if DEBUG_BOOT:
     boot_log("server: finished setting up Flask")
+
 
 def url_for_interview(**args):
     for k, v in daconfig.get('dispatch').items():
@@ -5840,7 +5845,7 @@ def github_oauth_callback():
         return ('File not found', 404)
     setup_translation()
     failed = False
-    do_redirect = False
+    do_a_redirect = False
     if not app.config['USE_GITHUB']:
         logmessage('github_oauth_callback: server does not use github')
         failed = True
@@ -5853,14 +5858,14 @@ def github_oauth_callback():
         if 'code' not in request.args or 'state' not in request.args:
             logmessage('github_oauth_callback: code and state not in args')
             failed = True
-            do_redirect = True
+            do_a_redirect = True
         elif request.args['state'] != github_next['state']:
             logmessage('github_oauth_callback: state did not match')
             failed = True
     if failed:
         r.delete('da:github:userid:' + str(current_user.id))
         r.delete('da:using_github:userid:' + str(current_user.id))
-        if do_redirect:
+        if do_a_redirect:
             flash(word("There was a problem connecting to GitHub. Please check your GitHub configuration and try again."), 'danger')
             return redirect(url_for('github_menu'))
         return ('File not found', 404)
@@ -8265,7 +8270,7 @@ def index(action_argument=None, refer=None):
                     the_field = validation_error.field
                     logmessage("field is " + the_field)
                     if the_field not in key_to_orig_key:
-                        for item in key_to_orig_key.keys():
+                        for item in key_to_orig_key:
                             if item.startswith(the_field + '['):
                                 the_field = item
                                 break
@@ -10915,7 +10920,7 @@ def index(action_argument=None, refer=None):
         $(query).each(function(){
           var showIfParent = $(this).parents('.dashowif,.dajsshowif');
           if (!(showIfParent.length && ($(showIfParent[0]).data('isVisible') == '0' || !$(showIfParent[0]).is(":visible")))){
-            if ($(this).hasClass('combobox')){
+            if ($(this).prop('tagName') == 'INPUT' && $(this).hasClass('combobox')){
               if (value){
                 daComboBoxes[$(this).attr('id')].disable();
               }
@@ -14001,7 +14006,7 @@ def observer():
         $(query).each(function(){
           var showIfParent = $(this).parents('.dashowif, .dajsshowif');
           if (!(showIfParent.length && ($(showIfParent[0]).data('isVisible') == '0' || !$(showIfParent[0]).is(":visible")))){
-            if ($(this).hasClass('combobox')){
+            if ($(this).prop('tagName') == 'INPUT' && $(this).hasClass('combobox')){
               if (value){
                 daComboBoxes[$(this).attr('id')].disable();
               }
@@ -23043,7 +23048,14 @@ def server_error(the_error):
     else:
         the_history = None
     the_vars = None
-    if isinstance(the_error, (DAError, DANotFoundError, DAInvalidFilename)):
+    if isinstance(the_error, DASourceError):
+        if (DEBUG and daconfig.get('development site is protected', False)) or (current_user.is_authenticated and current_user.has_role('admin', 'developer')):
+            errmess = str(the_error)
+        else:
+            errmess = word("There was an error. Please contact the system administrator.")
+        the_trace = None
+        logmessage(str(the_error))
+    elif isinstance(the_error, (DAError, DANotFoundError, DAInvalidFilename)):
         errmess = str(the_error)
         the_trace = None
         logmessage(errmess)
@@ -23073,7 +23085,10 @@ def server_error(the_error):
             errmess += "\nIn field index number " + str(docassemble.base.functions.this_thread.misc['current_field'])
         if hasattr(the_error, 'da_line_with_error'):
             errmess += "\nIn line: " + str(the_error.da_line_with_error)
-
+        try:
+            logmessage(errmess)
+        except:
+            logmessage("Could not log the error message")
         logmessage(the_trace)
     if isinstance(the_error, DAError):
         error_code = the_error.error_code
@@ -23296,7 +23311,7 @@ def server_error(the_error):
         if 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata:
             session['in error'] = True
             return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': {'error_message': orig_errmess, 'error_history': the_history, 'error_trace': the_trace}}, refer=['error'])
-    show_debug = not bool((not DEBUG) and isinstance(the_error, (DAError, DAInvalidFilename)))
+    show_debug = not bool((not (DEBUG and daconfig.get('development site is protected', False))) and isinstance(the_error, (DAError, DAInvalidFilename)))
     if int(int(error_code)/100) == 4:
         show_debug = False
     if error_code == 404:
@@ -26999,6 +27014,7 @@ def invite_user(email_address, privilege=None, send=True):
             raise DAError("Invitation email failed to send")
         return None
     return accept_invite_link
+
 
 @app.route('/api/user_invite', methods=['POST'])
 @csrf.exempt
