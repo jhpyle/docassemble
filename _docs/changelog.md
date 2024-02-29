@@ -3,6 +3,11 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.98](https://github.com/jhpyle/docassemble/releases/tag/v1.4.98) - 2024-02-29
+
+### Fixed
+- Issue with one of the fixes in 1.4.97.
+
 ## [1.4.97](https://github.com/jhpyle/docassemble/releases/tag/v1.4.97) - 2024-02-29
 
 
