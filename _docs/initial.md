@@ -2346,6 +2346,20 @@ features:
   cache documents: False
 {% endhighlight %}
 
+## <a name="pdftk"></a>Using pdftk to fill in PDF form fields
+
+If you want the [PDF] files filled in by `pdf template file` in your
+interview to be produced by [pdftk] instead of [pikepdf], set `pdftk`
+to `True`.
+
+{% highlight yaml %}
+features:
+  pdftk: True
+{% endhighlight %}
+
+The setting can also be made on a per-attachment basis by setting the
+[`pdftk` attachment setting].
+
 ## <a name="pdfa"></a>Producing PDF/A files
 
 If you want the [PDF] files produced by your interview to be in
@@ -2571,6 +2585,7 @@ This will cause the web application to run the JavaScript for the
 [`referring_url()`]: {{ site.baseurl }}/docs/functions.html#referring_url
 [iframe]: https://www.w3schools.com/TAgs/tag_iframe.asp
 [`pdf/a` attachment setting]: {{ site.baseurl }}/docs/documents.html#pdfa
+[`pdftk` attachment setting]: {{ site.baseurl }}/docs/documents.html#pdftk
 [`tagged pdf` attachment setting]: {{ site.baseurl }}/docs/documents.html#tagged pdf
 [`pdf/a` configuration directive]: {{ site.baseurl }}/docs/config.html#pdfa
 [`tagged pdf` configuration directive]: {{ site.baseurl }}/docs/config.html#tagged pdf
@@ -2804,3 +2819,5 @@ This will cause the web application to run the JavaScript for the
 [`mail`]: {{ site.baseurl }}/docs/config.html#mail multiple
 [GitHub repository]: {{ site.github.repository_url }}
 [combining multiple interviews into one]: {{ site.baseurl }}/docs/logic.html#multiple interviews
+[pikepdf]: https://pikepdf.readthedocs.io/en/latest/
+[pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/

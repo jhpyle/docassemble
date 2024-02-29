@@ -1281,6 +1281,42 @@ If you want to prevent users from editing the forms created through
 
 {% include side-by-side.html demo="pdf-fill-not-editable" %}
 
+## <a name="pdftk"></a>Using pdftk to fill the fields
+
+By default, **docassemble** uses [pikepdf] to fill in fields. If you
+want **docassemble** to use [pdftk] to fill in the fields, use `pdftk:
+True`.
+
+{% highlight yaml %}
+question: |
+  Here is your PDF form
+attachment:
+  name: A filled-in form
+  filename: filled-form
+  pdf template file: sample-form.pdf
+  pdftk: True
+  fields:
+    Your Name: |
+      ${ user }
+    Your Organization: |
+      ${ user.organization }
+    Apple Checkbox: |
+      ${ likes_apples }
+    Orange Checkbox: |
+      ${ likes_oranges }
+    Pear Checkbox: |
+      ${ likes_pears }
+    Toast Checkbox: |
+      ${ likes_toast }
+{% endhighlight %}
+
+If `pdftk` is not specified, the default behavior is determined by the
+interview's [`pdftk` features setting]. If there is no such `feature`,
+the default is not to use [pdftk].
+
+Although [pdftk] is slower than [pikepdf], it can render more accurate
+appearance streams.
+
 ## <a name="rendering font"></a>Changing the font used when rendering fields as text
 
 If you use `editable: false` or `pdf/a: True`, form fields will be
@@ -2169,6 +2205,7 @@ interview, see the [`cache documents` feature].
 [dictionary]: {{ site.baseurl }}/docs/groups.html#gather dictionary
 [`pdf/a` features setting]: {{ site.baseurl }}/docs/initial.html#pdfa
 [`tagged pdf` features setting]: {{ site.baseurl }}/docs/initial.html#tagged pdf
+[`pdftk` features setting]: {{ site.baseurl }}/docs/initial.html#pdftk
 [PDF]: https://en.wikipedia.org/wiki/Portable_Document_Format
 [PDF/A]: https://en.wikipedia.org/wiki/PDF/A
 ["Templates" folder]: {{ site.baseurl }}/docs/playground.html#templates
@@ -2217,3 +2254,5 @@ interview, see the [`cache documents` feature].
 [`Legal-Template.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.docx
 [Python expression]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [font list tool]: https://demo.docassemble.org/start/demo/fontlist/
+[pikepdf]: https://pikepdf.readthedocs.io/en/latest/
+
