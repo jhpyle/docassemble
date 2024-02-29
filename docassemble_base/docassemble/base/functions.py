@@ -121,7 +121,7 @@ class ReturnValue:
 
 
 def filename_invalid(filename):
-    if '../' in filename:
+    if '../' in filename or filename.startswith('/'):
         return True
     if re.search(r'[^A-Za-z0-9\_\.\-\/ ]', filename):
         return True
