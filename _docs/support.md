@@ -21,8 +21,7 @@ allow you to receive important announcements if you don't check the
 # <a name="help"></a>Help with deployment and development
 
 If deploying a web app and writing "code" are barriers, there are
-[third party providers] who provide platforms based on **docassemble**
-and offer "no code" tools for deployment and development.
+[more detailed instructions, as well as consultants] who can help with deployment and development.
 
 # <a name="tutorials"></a>Tutorials
 
@@ -76,7 +75,7 @@ is a good idea to ask a question about the error message first.
 [Rina Padua]: https://github.com/Rinapadua
 [Greater Boston Legal Services]: https://www.gbls.org/
 [Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
-[third party providers]: {{ site.baseurl }}/deploy.html
+[more detailed instructions, as well as consultants]: {{ site.baseurl }}/deploy.html
 [ttamg]: https://github.com/ttamg
 [Digital Ocean]: https://www.digitalocean.com
 [Docker Compose]: https://docs.docker.com/compose/
