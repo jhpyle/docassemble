@@ -15,7 +15,7 @@ install_requires = [
     'docassemble.demo==1.4.98',
     "3to2==1.1.1",
     "acme==2.8.0",
-    "aiohttp==3.9.1",
+    "aiohttp==3.9.2",
     "aiohttp-retry==2.8.3",
     "aiosignal==1.3.1",
     "airtable-python-wrapper==0.15.3",
