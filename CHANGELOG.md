@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.4.99] - 2024-03-
+
+### Changed
+- `DAWeb` no longer requires the `data` parameter to be a dictionary;
+  it will pass the `data` parameter directly to `requests`.
+
 ## [1.4.98] - 2024-02-29
 ### Fixed
 - Issue with one of the fixes in 1.4.97.

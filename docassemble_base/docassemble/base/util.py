@@ -6337,8 +6337,8 @@ class DAWeb(DAObject):
             data = {}
         if isinstance(data, DADict):
             data = data.elements
-        if json_body is False and not isinstance(data, dict):
-            raise DAError("DAWeb.call: data must be a dictionary")
+        # if json_body is False and not isinstance(data, dict):
+        #     raise DAError("DAWeb.call: data must be a dictionary")
         if params is None:
             params = {}
         if isinstance(params, DADict):
