@@ -147,6 +147,22 @@ interview` is initially set to
 `debug: False`, you should change `default interview` to one of your
 own interviews.
 
+## <a name="development site is protected"></a>Whether error messages should appear in the web browser
+
+By default, error messages that relate to the YAML source code display
+in the browser if the user is logged in and has `admin` or `developer`
+privileges, but otherwise they only display in the `docassemble.log`
+file. If you have a development server with [`debug`] set to `True`
+that is not accessible to the internet, you might wish for these error
+messages to display in the browser even if the user is anonymous or
+does not have `admin` or `developer` privileges. If so, you can set
+`development site is protected` to `True`, and then all users will see
+these informational error messages.
+
+{% highlight yaml %}
+development site is protected: True
+{% endhighlight %}
+
 ## <a name="allow demo"></a>Allowing sample interviews in production mode
 
 By default, when `debug` is `False`, users without the privileges of
@@ -2828,8 +2844,11 @@ The default setting is `True`.
 ## <a name="maximum content length"></a>Limiting size of HTTP requests
 
 By default, as a security precaution, the web application rejects any
-HTTP request larger than 16 megabytes. This limit can be extended by
-setting `maximum content length` to a different number of bytes.
+HTTP request larger than 16 megabytes. If you encounter this limit,
+you may see an error like "413 Request Entity Too Large."
+
+This limit can be extended by setting `maximum content length` to a
+different number of bytes.
 
 {% highlight yaml %}
 maximum content length: 26214400
