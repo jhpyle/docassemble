@@ -1,10 +1,11 @@
 # Change Log
 
-## [1.4.99] - 2024-03-
+## [1.4.99] - 2024-03-02
 
 ### Changed
 - `DAWeb` no longer requires the `data` parameter to be a dictionary;
   it will pass the `data` parameter directly to `requests`.
+- Upgraded `redis`, `celery`, `aiohttp`, and `Pillow`.
 
 ## [1.4.98] - 2024-02-29
 ### Fixed
