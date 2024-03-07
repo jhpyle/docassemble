@@ -8200,7 +8200,7 @@ If you call `val()` on a field with a `datatype` of `yesnomaybe` or
 choice is selected, the function will return `"None"`.
 
 The `val()` function returns `null` if the field for the given
-variable is disabled.
+variable is disabled or non-existent.
 
 You can also access this function under the name `da_val()`, which can
 be useful if you are embedding **docassemble** and there is a name

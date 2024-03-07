@@ -1932,23 +1932,30 @@ Python, but with some similarities.
 The string that is passed to [`val()`] must perfectly match the
 variable name that is used in the underlying [`question`].
 
-You can use any JavaScript expression that evaluates to `true` or `false` with
-the `js show if` feature, but your expression **must** mention the variable that
-you want to watch with the `val()` function at least once. Docassemble scans
-your expression for the use of `val("some_variable")` in order to know which
-variables on-screen need to be monitored for changes.
+You can use any JavaScript expression that evaluates to `true` or
+`false` with the `js show if` feature, but your expression **must**
+contain at least one `val()` reference to a field that is actually on
+the screen. **docassemble** scans your expression for the use of
+`val("some_variable")` in order to know which on-screen variables need
+to be monitored for changes. If your expression does not use `val()`
+to refer to a field that is actually on the screen, **docassemble**
+will not be able to tie the field to the appropriate event triggers,
+and the field will always be hidden.
 
 The variable mentioned inside `val()` must be a literal string to tell
-Docassemble to monitor it. Your expression is parsed, but is not evaluated, when
-determining what fields your expression references with [`val()`].  Thus, if you
-pass something other than a literal string to [`val()`], you may find that the
-showing or hiding is not triggered, even though [`val()`] would return the
-appropriate value.
+Docassemble to monitor it. Your expression is parsed, but is not
+evaluated, when determining what fields your expression references
+with [`val()`].  Thus, if you pass something other than a literal
+string to [`val()`], you may find that the showing or hiding is not
+triggered, even though [`val()`] would return the appropriate value.
 
-If you do not actually want to get the value of the variable in your expression,
-you can get around this by adding `& (val("variable") || !val("variable"))`
-to the expression (replacing "variable" with the name of the relevant
-variable that is on the screen).
+It is possible to write a `js show if` that is not actually
+conditional on the value of a variable on the screen, but you still
+need to reference a field on the screen. For example, your condition
+could be `someCondition && (true || val("variable"))` (where
+`variable` is the name of a field on the screen). This JavaScript
+expression will be evaluated when the screen loads and whenever the
+value of the `variable` field changes.
 
 ## <a name="js hide if"></a>`js hide if`
 
