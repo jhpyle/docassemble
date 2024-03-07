@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.4.100] - 2024-03-07
+
+### Fixed
+- Problems with comboboxes and `disable others`.
+- Problem with TIFF to PDF conversion not using compression.
+- Problem with `show if` when comparing a `variable` to the empty
+  string.
+- An empty `js show if` caused the field not to be shown, instead of
+  being ignored.
+
 ## [1.4.99] - 2024-03-02
 
 ### Changed

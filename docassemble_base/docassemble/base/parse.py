@@ -557,7 +557,7 @@ class InterviewStatus:
             for field in the_field_list:
                 if hasattr(field, 'saveas'):
                     varnames[safeid('_field_' + str(field.number))] = field.saveas
-                    if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in self.extras) or 'show_if_js' in field.extras)) or (hasattr(field, 'disableothers') and field.disableothers):
+                    if (hasattr(field, 'extras') and (('show_if_var' in field.extras and 'show_if_val' in self.extras) or ('show_if_js' in field.extras and 'show_if_js' in self.extras and field.number in self.extras['show_if_js']))) or (hasattr(field, 'disableothers') and field.disableothers):
                         the_saveas = safeid('_field_' + str(field.number))
                     else:
                         the_saveas = field.saveas
@@ -1307,7 +1307,9 @@ class InterviewStatus:
                     the_field['show_if_var'] = from_safeid(field.extras['show_if_var'])
                     the_field['show_if_val'] = self.extras['show_if_val'][field.number]
                 if 'show_if_js' in field.extras:
-                    the_field['show_if_js'] = {'expression': field.extras['show_if_js']['expression'].text(the_user_dict), 'vars': field.extras['show_if_js']['vars'], 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
+                    the_expression = field.extras['show_if_js']['expression'].text(the_user_dict).strip()
+                    if the_expression:
+                        the_field['show_if_js'] = {'expression': the_expression, 'vars': field.extras['show_if_js']['vars'], 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
             if 'note' in self.extras and field.number in self.extras['note']:
                 the_field['note'] = docassemble.base.filter.markdown_to_html(self.extras['note'][field.number], status=self, verbatim=(not encode))
             if 'html' in self.extras and field.number in self.extras['html']:
@@ -5984,9 +5986,11 @@ class Question:
                     extras['action'][field.number] = json.dumps(substitute_vars_action(field.action, self.is_generic, the_x, iterators))
                 if hasattr(field, 'extras'):
                     if 'show_if_js' in field.extras:
-                        if 'show_if_js' not in extras:
-                            extras['show_if_js'] = {}
-                        extras['show_if_js'][field.number] = {'expression': field.extras['show_if_js']['expression'].text(user_dict), 'vars': copy.deepcopy(field.extras['show_if_js']['vars']), 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
+                        the_expression = field.extras['show_if_js']['expression'].text(user_dict).strip()
+                        if the_expression != '':
+                            if 'show_if_js' not in extras:
+                                extras['show_if_js'] = {}
+                            extras['show_if_js'][field.number] = {'expression': the_expression, 'vars': copy.deepcopy(field.extras['show_if_js']['vars']), 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
                     if 'field metadata' in field.extras:
                         if 'field metadata' not in extras:
                             extras['field metadata'] = {}
@@ -6586,9 +6590,11 @@ class Question:
                                 extras['sub_fields'] = {}
                             extras['sub_fields'][field.number] = the_question.fields
                         if 'show_if_js' in field.extras:
-                            if 'show_if_js' not in extras:
-                                extras['show_if_js'] = {}
-                            extras['show_if_js'][field.number] = {'expression': field.extras['show_if_js']['expression'].text(user_dict), 'vars': copy.deepcopy(field.extras['show_if_js']['vars']), 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
+                            the_expression = field.extras['show_if_js']['expression'].text(user_dict).strip()
+                            if the_expression != '':
+                                if 'show_if_js' not in extras:
+                                    extras['show_if_js'] = {}
+                                extras['show_if_js'][field.number] = {'expression': the_expression, 'vars': copy.deepcopy(field.extras['show_if_js']['vars']), 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
                         if 'field metadata' in field.extras:
                             if 'field metadata' not in extras:
                                 extras['field metadata'] = {}
@@ -6600,7 +6606,7 @@ class Question:
                                 extras[key][field.number] = field.extras[key].text(user_dict)
                                 if isinstance(extras[key][field.number], str):
                                     extras[key][field.number] = extras[key][field.number].strip()
-                                    if extras[key][field.number] == '':
+                                    if extras[key][field.number] == '' and key != 'show_if_val':
                                         del extras[key][field.number]
                         for key in ('ml_train',):
                             if key in field.extras:

@@ -2508,6 +2508,7 @@ def additional_scripts(interview_status, yaml_filename, as_javascript=False):
           }
           gtag('set', 'page_path', """ + json.dumps(interview_package + "/" + interview_filename + "/") + """ + idToUse.replace(/[^A-Za-z0-9]+/g, '_'));
           gtag('event', 'page_view', {'page_path': """ + json.dumps(interview_package + "/" + interview_filename + "/") + """ + idToUse.replace(/[^A-Za-z0-9]+/g, '_')});
+          //gtag('event', 'page_view', {'page_title': document.title, 'page_location': location.protocol + "//" + location.host + """ + json.dumps("/" + interview_package + "/" + interview_filename + "/") + """ + idToUse.replace(/[^A-Za-z0-9]+/g, '_')});
         }
       }
 """
@@ -10918,7 +10919,7 @@ def index(action_argument=None, refer=None):
       }
       function daDisableIfNotHidden(query, value){
         $(query).each(function(){
-          var showIfParent = $(this).parents('.dashowif,.dajsshowif');
+          var showIfParent = $(this).parents('.dashowif, .dajsshowif');
           if (!(showIfParent.length && ($(showIfParent[0]).data('isVisible') == '0' || !$(showIfParent[0]).is(":visible")))){
             if ($(this).prop('tagName') == 'INPUT' && $(this).hasClass('combobox')){
               if (value){
@@ -10947,6 +10948,12 @@ def index(action_argument=None, refer=None):
             else {
               $(this).prop("disabled", value);
             }
+            if (value){
+              $(this).parents(".da-form-group").addClass("dagreyedout");
+            }
+            else {
+              $(this).parents(".da-form-group").removeClass("dagreyedout");
+            }
           }
         });
       }
@@ -10964,7 +10971,7 @@ def index(action_argument=None, refer=None):
           showIfVal = parseInt(showIfVal);
         }
         if (typeof theVal == 'string' || typeof showIfVal == 'string'){
-          if (String(showIfVal) == 'None' && String(theVal) == ''){
+          if (String(showIfVal) == 'None' && (String(theVal) == '' || theVal === null)){
             return true;
           }
           return (String(theVal) == String(showIfVal));
@@ -14033,6 +14040,12 @@ def observer():
             else {
               $(this).prop("disabled", value);
             }
+            if (value){
+              $(this).parents(".da-form-group").addClass("dagreyedout");
+            }
+            else {
+              $(this).parents(".da-form-group").removeClass("dagreyedout");
+            }
           }
         });
       }
@@ -14050,7 +14063,7 @@ def observer():
           showIfVal = parseInt(showIfVal);
         }
         if (typeof theVal == 'string' || typeof showIfVal == 'string'){
-          if (String(showIfVal) == 'None' && String(theVal) == ''){
+          if (String(showIfVal) == 'None' && (String(theVal) == '' || theVal === null)){
             return true;
           }
           return (String(theVal) == String(showIfVal));

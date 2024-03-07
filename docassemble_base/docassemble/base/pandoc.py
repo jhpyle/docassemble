@@ -775,7 +775,10 @@ def concatenate_files(path_list, pdfa=False, password=None, owner_password=None)
         mimetype, encoding = mimetypes.guess_type(path)  # pylint: disable=unused-variable
         if mimetype.startswith('image'):
             new_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-            args = [daconfig.get('imagemagick', 'convert'), path, new_pdf_file.name]
+            args = [daconfig.get('imagemagick', 'convert')]
+            if mimetype == 'image/tiff':
+                args += ['-compress', 'LZW']
+            args += [path, new_pdf_file.name]
             try:
                 result = subprocess.run(args, timeout=60, check=False).returncode
             except subprocess.TimeoutExpired:

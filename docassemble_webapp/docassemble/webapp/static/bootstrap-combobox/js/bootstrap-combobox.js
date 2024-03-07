@@ -82,17 +82,21 @@
     },
 
     disable: function () {
-      //console.log('disable');
+      console.log("disable");
       this.$element.prop("disabled", true);
       this.$button.attr("disabled", true);
+      this.$target.prop("disabled", true);
+      this.$source.prop("disabled", true);
       this.disabled = true;
       this.$container.addClass("combobox-disabled");
     },
 
     enable: function () {
-      //console.log('enable');
+      console.log("enable");
       this.$element.prop("disabled", false);
       this.$button.attr("disabled", false);
+      this.$target.prop("disabled", false);
+      this.$source.prop("disabled", false);
       this.disabled = false;
       this.$container.removeClass("combobox-disabled");
     },
@@ -158,7 +162,7 @@
         this.$element.attr("id", this.$source.attr("id"));
         this.$source.attr(
           "id",
-          this.$source.attr("id") + this.options.appendId
+          this.$source.attr("id") + this.options.appendId,
         );
         daComboBoxes[this.$element.attr("id")] = this;
       }
@@ -170,11 +174,11 @@
       this.$button.attr("aria-label", this.$source.attr("aria-label"));
       this.$button.attr(
         "aria-labelledby",
-        this.$source.attr("aria-labelledby")
+        this.$source.attr("aria-labelledby"),
       );
       this.$button.attr(
         "aria-describedby",
-        this.$source.attr("aria-describedby")
+        this.$source.attr("aria-describedby"),
       );
       this.$element.attr("placeholder", this.options.placeholder);
       this.$target.prop("name", this.$source.prop("name"));
@@ -365,7 +369,7 @@
         new RegExp("(" + query + ")", "ig"),
         function ($1, match) {
           return "<b>" + match + "</b>";
-        }
+        },
       );
     },
 
