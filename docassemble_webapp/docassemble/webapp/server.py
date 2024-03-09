@@ -3304,6 +3304,10 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
             custom_menu = ""
         if ALLOW_REGISTRATION:
             sign_in_text = word('Sign in or sign up to save answers')
+            if daconfig.get('resume interview after login', False):
+                register_url = url_for('user.register', next=url_for('index', **index_params))
+            else:
+                register_url = url_for('user.register')
         else:
             sign_in_text = word('Sign in to save answers')
         if daconfig.get('resume interview after login', False):
@@ -3322,12 +3326,8 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                 else:
                     if daconfig.get('login link style', 'normal') == 'button':
                         if ALLOW_REGISTRATION:
-                            if daconfig.get('resume interview after login', False):
-                                register_url = url_for('user.register', next=url_for('index', **index_params))
-                            else:
-                                register_url = url_for('user.register')
-                            navbar += '              <li class="nav-item"><a class="nav-link" href="' + register_url + '">' + word('Sign up') + '</a></li>'
-                            navbar += '              <li class="nav-item"><a class="nav-link d-block d-md-none" href="' + login_url + '">' + word('Sign in') + '</a>'
+                            navbar += '              <li class="nav-item"><a class="nav-link d-block d-md-none" href="' + register_url + '">' + word('Sign up') + '</a></li>'
+                        navbar += '              <li class="nav-item"><a class="nav-link d-block d-md-none" href="' + login_url + '">' + word('Sign in') + '</a>'
                     else:
                         navbar += '              <li class="nav-item"><a class="nav-link" href="' + login_url + '">' + sign_in_text + '</a></li>'
             elif current_user.is_authenticated:
@@ -3381,6 +3381,8 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
         navbar += """
             </ul>"""
         if daconfig.get('login link style', 'normal') == 'button' and show_login and current_user.is_anonymous and not custom_menu:
+            if ALLOW_REGISTRATION:
+                navbar += '\n            <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ms-3 d-none d-md-block" href="' + register_url + '">' + word('Sign up') + '</a>'
             navbar += '\n            <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ms-3 d-none d-md-block" href="' + login_url + '">' + word('Sign in') + '</a>'
         navbar += """
           </div>"""
