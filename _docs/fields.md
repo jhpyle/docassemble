@@ -2453,11 +2453,6 @@ If the input is invalid, the user will see a message at the top of the
 screen containing the error message passed to [`validation_error()`],
 or the error message for the error that was otherwise [`raise`]d.
 
-Code under `validation code` is very different from code in a [`code`]
-block.  If you refer to an undefined variable in `validation code`,
-**docassemble** will not try to fetch the definition for you, as it
-normally does; instead, the user will see an error.
-
 In addition to validating user input by raising an exception if
 something is wrong, you can use `validation code` to transform values
 before they are saved in the interview answers.
@@ -2483,6 +2478,17 @@ specific field on the screen, you can call `validation_error()` with
 the optional keyword argument `field` set to the name of the field.
 
 {% include demo-side-by-side.html demo="phone-number-2" %}
+
+Code under `validation code` is very different from code in a [`code`]
+block. It is not [interview logic] and cannot function as [interview
+logic]; it can only be used to validate or transform user input before
+the interview answers are updated. If you refer to an undefined
+variable in `validation code`, **docassemble** will not try to fetch
+the definition for you, as it normally does; instead, the user will
+see an error. You cannot use functions like `force_ask()` or
+`command()`, which operate by raising exceptions. If you try to make
+`validation code` do the work of [interview logic], you will be
+disappointed.
 
 ## <a name="address autocomplete"></a>Address autocomplete
 
