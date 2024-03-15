@@ -3551,8 +3551,7 @@ If you do `date_difference(starting=a, ending=b)`, then if date `a` comes
 before date `b`, the resulting values will be positive. But if date
 `b` comes before date `a`, the values will be negative.
 
-For example, if you set `z = date_difference(starting='1/1/2015',
-ending='1/3/2015')`, then:
+For example, if you set `z = date_difference(starting='1/1/2025', ending='1/3/2025')`, then:
 
 * `z.years` returns `0.005475814013977016`.
 * `z.weeks` returns `0.2857142857142857`.
@@ -3570,16 +3569,44 @@ different time zone.
 
 The object returned by `date_difference()` has a method
 `.describe()`. If you set
-`z = date_difference(starting='1/1/2014', ending='4/3/2015')`, then:
+`z = date_difference(starting='1/1/2024', ending='4/3/2025')`, then:
 
-* `z.describe()` returns `one year, three months, and one day`.
-* `z.describe(capitalize=True)` returns `One year, three months, and one day`.
+* `z.describe()` returns `one year, three months, and two days`.
+* `z.describe(capitalize=True)` returns `One year, three months, and two days`.
 * `z.describe(specificity='year')` returns `one year`.
 * `z.describe(specificity='month')` returns `one year and three months`.
-* `z.describe(nice=False)` returns `1 year, 3 months, and 1 day`
+* `z.describe(nice=False)` returns `1 year, 3 months, and 2 days`
 
-If you reduce the resulting object to text, this has the effect of
-running `.describe()` on the object.
+If you set
+`z = date_difference(starting='1/1/2022 23:22:35', ending='4/3/2023 21:45:22')`, then:
+
+* `z.describe()` returns `one year, three months, and one day`.
+* `z.describe(specificity='second')` returns `one year, three months, one day, 22 hours, and 47 seconds`.
+
+If you set
+`z = date_difference(starting='4/3/2025 20:45:22', ending='4/3/2025 23:22:35')`, then:
+
+* `z.describe()` returns `two hours`
+* `z.describe(specificity='minute')` returns `two hours and 37 minutes`
+
+If you set
+`z = date_difference(starting='4/3/2025 21:45:22', ending='4/3/2025 23:22:35')`, then:
+
+* `z.describe()` returns `one hour and 37 minutes`
+* `z.describe(specificity='hour')` returns `one hour`
+
+If you set
+`z = date_difference(starting='4/3/2025 22:45:22', ending='4/3/2025 23:22:35')`, then:
+
+* `z.describe()` returns `37 minutes`
+
+If you set
+`z = date_difference(starting='4/3/2025 23:22:22', ending='4/3/2025 23:22:35')`, then:
+
+* `z.describe()` returns `13 seconds`
+
+If you reduce the result of `date_difference()` to text, this has the
+effect of running `.describe()` on the object.
 
 ## <a name="date_interval"></a>date_interval()
 
@@ -4156,6 +4183,16 @@ Instead of a number, you can pass a list, dictionary, or set as the
 second argument to the function. If the number of items in the group
 is `1`, the singular will be used. Otherwise, the plural will be
 used.
+
+The `noun_plural()` function can accept a noun that is either singular
+or plural. For example, `noun_plural('barrel')` and
+`noun_plural('barrels')` both return `'barrels'`. The function handles
+this by passing the first argument through [`noun_singular()`], and
+then using the `pluralize()` function of [pattern.en] on the
+result. In some circumstances, this can lead to an incorrect word
+being returned. If you know that the noun you are providing is
+singular, you can call `noun_plural('barrel', noun_is_singular=True)`
+and `noun_plural()` will not call [`noun_singular()`] on the noun.
 
 ## <a name="quantity_noun"></a>quantity_noun()
 
@@ -8906,3 +8943,4 @@ Note that you should only attach a `daPageLoad` listener from a
 [`/api/login_url`]: {{ site.baseurl }}/docs/api.html#login_url
 [`allow registration`]: {{ site.baseurl }}/docs/config.html#allow registration
 [`/api/user_invite`]: {{ site.baseurl }}/docs/api.html#user_invite
+[`noun_singular()`]: #noun_singular

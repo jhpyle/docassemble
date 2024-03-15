@@ -3,6 +3,25 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.101](https://github.com/jhpyle/docassemble/releases/tag/v1.4.101) - 2024-03-15
+
+
+### Added
+- The `noun_is_singular` keyword parameter to the `noun_plural()`
+  function.
+
+
+### Changed
+- The `date_difference()` function's `describe()` method will now
+  describe times.
+- In error messages from YAML parsing, fall back to displaying YAML
+  with `repr()` if displaying the YAML as YAML fails.
+
+
+### Fixed
+- Bug with `ip address ban enabled`.
+- Bug with displaying interview logic history.
+
 ## [1.4.100](https://github.com/jhpyle/docassemble/releases/tag/v1.4.100) - 2024-03-07
 
 
