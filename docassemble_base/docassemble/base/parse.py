@@ -2047,11 +2047,18 @@ def process_js_vars(expr):
 class Question:
 
     def idebug(self, data):
-        if hasattr(self, 'from_source') and hasattr(self, 'package'):
-            if isinstance(self.line_number, int):
-                return f"\nIn file {self.from_source.path} in the block on line {self.line_number} from package {self.package}:\n\n" + safeyaml.dump_to_string(data)
-            return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n\n" + safeyaml.dump_to_string(data)
-        return safeyaml.dump_to_string(data)
+        try:
+            if hasattr(self, 'from_source') and hasattr(self, 'package'):
+                if isinstance(self.line_number, int):
+                    return f"\nIn file {self.from_source.path} in the block on line {self.line_number} from package {self.package}:\n\n" + safeyaml.dump_to_string(data)
+                return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n\n" + safeyaml.dump_to_string(data)
+            return safeyaml.dump_to_string(data)
+        except:
+            if hasattr(self, 'from_source') and hasattr(self, 'package'):
+                if isinstance(self.line_number, int):
+                    return f"\nIn file {self.from_source.path} in the block on line {self.line_number} from package {self.package}:\n\n" + repr(data)
+                return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n\n" + repr(data)
+            return repr(data)
 
     def id_debug(self, data):
         """One liner info about a YAML block. Used in `compile` for later error reporting."""

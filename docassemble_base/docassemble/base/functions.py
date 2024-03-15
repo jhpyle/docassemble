@@ -3150,7 +3150,10 @@ def number_or_length(target):
 
 def noun_plural_en(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    noun = noun_singular_en(pargs[0])
+    if kwargs.get('noun_is_singular', False):
+        noun = pargs[0]
+    else:
+        noun = noun_singular_en(pargs[0])
     if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.en.pluralize(str(noun))
@@ -3209,7 +3212,10 @@ def verb_past_es(*pargs, **kwargs):
 
 def noun_plural_es(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    noun = noun_singular_es(pargs[0])
+    if kwargs.get('noun_is_singular', False):
+        noun = pargs[0]
+    else:
+        noun = noun_singular_es(pargs[0])
     if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.es.pluralize(str(noun))
@@ -3268,7 +3274,10 @@ def verb_past_de(*pargs, **kwargs):
 
 def noun_plural_de(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    noun = noun_singular_de(pargs[0])
+    if kwargs.get('noun_is_singular', False):
+        noun = pargs[0]
+    else:
+        noun = noun_singular_de(pargs[0])
     if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.de.pluralize(str(noun))
@@ -3327,7 +3336,10 @@ def verb_past_fr(*pargs, **kwargs):
 
 def noun_plural_fr(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    noun = noun_singular_fr(pargs[0])
+    if kwargs.get('noun_is_singular', False):
+        noun = pargs[0]
+    else:
+        noun = noun_singular_fr(pargs[0])
     if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.fr.pluralize(str(noun))
@@ -3386,7 +3398,10 @@ def verb_past_it(*pargs, **kwargs):
 
 def noun_plural_it(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    noun = noun_singular_it(pargs[0])
+    if kwargs.get('noun_is_singular', False):
+        noun = pargs[0]
+    else:
+        noun = noun_singular_it(pargs[0])
     if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.it.pluralize(str(noun))
@@ -3445,7 +3460,10 @@ def verb_past_nl(*pargs, **kwargs):
 
 def noun_plural_nl(*pargs, **kwargs):
     ensure_definition(*pargs, **kwargs)
-    noun = noun_singular_nl(pargs[0])
+    if kwargs.get('noun_is_singular', False):
+        noun = pargs[0]
+    else:
+        noun = noun_singular_nl(pargs[0])
     if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
         return str(noun)
     output = docassemble_pattern.nl.pluralize(str(noun))

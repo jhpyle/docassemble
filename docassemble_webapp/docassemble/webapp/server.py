@@ -23324,7 +23324,7 @@ def server_error(the_error):
         if 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata:
             session['in error'] = True
             return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': {'error_message': orig_errmess, 'error_history': the_history, 'error_trace': the_trace}}, refer=['error'])
-    show_debug = not bool((not (DEBUG and daconfig.get('development site is protected', False))) and isinstance(the_error, (DAError, DAInvalidFilename)))
+    show_debug = not bool((not ((DEBUG and daconfig.get('development site is protected', False)) or (current_user.is_authenticated and current_user.has_role('admin', 'developer')))) and isinstance(the_error, (DAError, DAInvalidFilename)))
     if int(int(error_code)/100) == 4:
         show_debug = False
     if error_code == 404:

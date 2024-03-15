@@ -6784,11 +6784,24 @@ class DateTimeDelta:
         output = []
         diff = dateutil.relativedelta.relativedelta(self.end, self.start)
         if diff.years != 0:
-            output.append((abs(diff.years), noun_plural(word('year'), abs(diff.years))))
+            output.append((abs(diff.years), noun_plural(word('year'), abs(diff.years), noun_is_singular=True)))
         if diff.months != 0 and specificity != 'year':
-            output.append((abs(diff.months), noun_plural(word('month'), abs(diff.months))))
+            output.append((abs(diff.months), noun_plural(word('month'), abs(diff.months), noun_is_singular=True)))
         if diff.days != 0 and specificity not in ('year', 'month'):
-            output.append((abs(diff.days), noun_plural(word('day'), abs(diff.days))))
+            output.append((abs(diff.days), noun_plural(word('day'), abs(diff.days), noun_is_singular=True)))
+        if len(output) == 0 or specificity in ('hour', 'minute', 'second'):
+            if diff.hours != 0 and specificity not in ('year', 'month', 'day'):
+                output.append((abs(diff.hours), noun_plural(word('hour'), abs(diff.hours), noun_is_singular=True)))
+            if (abs(diff.hours) < 2 or specificity in ('minute', 'second')) and diff.minutes != 0 and specificity not in ('year', 'month', 'day', 'hour'):
+                output.append((abs(diff.minutes), noun_plural(word('minute'), abs(diff.minutes), noun_is_singular=True)))
+        if len(output) == 0 or specificity == 'second':
+            if diff.seconds != 0 and specificity not in ('year', 'month', 'day', 'hour', 'minute'):
+                output.append((abs(diff.seconds), noun_plural(word('second'), abs(diff.seconds), noun_is_singular=True)))
+        if len(output) == 0:
+            if specificity is None:
+                output.append((0, noun_plural(word('second'), 0, noun_is_singular=True)))
+            else:
+                output.append((0, noun_plural(word(specificity), 0, noun_is_singular=True)))
         if kwargs.get('nice', True):
             return_value = comma_and_list(["%s %s" % (nice_number(y[0]), y[1]) for y in output])
             if kwargs.get('capitalize', False):

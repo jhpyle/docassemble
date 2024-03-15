@@ -82,6 +82,7 @@ class MySignInForm(LoginForm):
         return username, password
 
     def validate(self):
+        failed_attempts = None
         if BAN_IP_ADDRESSES:
             key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
             failed_attempts = r.get(key)
