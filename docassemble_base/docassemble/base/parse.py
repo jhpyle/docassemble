@@ -4155,6 +4155,8 @@ class Question:
                         elif isinstance(field[key], list):
                             raise DASourceError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
                         elif isinstance(field[key], str):
+                            if 'js show if' in field or 'js hide if' in field:
+                                raise DASourceError("You cannot mix js show if and non-js show if" + self.idebug(data))
                             field_info['extras']['show_if_var'] = safeid(field[key].strip())
                             field_info['extras']['show_if_val'] = TextObject('True')
                         else:

@@ -82,7 +82,6 @@ class MySignInForm(LoginForm):
         return username, password
 
     def validate(self):
-        failed_attempts = None
         if BAN_IP_ADDRESSES:
             key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
             failed_attempts = r.get(key)
@@ -170,11 +169,12 @@ class MySignInForm(LoginForm):
             # logmessage("Trying super validate")
             result = super().validate()
             # logmessage("Super validate response was " + repr(result))
-        if result is False:
-            r.incr(key)
-            r.expire(key, daconfig['ban period'])
-        elif failed_attempts is not None:
-            r.delete(key)
+        if BAN_IP_ADDRESSES:
+            if result is False:
+                r.incr(key)
+                r.expire(key, daconfig['ban period'])
+            elif failed_attempts is not None:
+                r.delete(key)
         return result
 
 

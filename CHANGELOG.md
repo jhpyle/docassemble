@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.102] - 2024-03-18
+
+### Fixed
+- Bug with `ip address ban enabled`.
+
 ## [1.4.101] - 2024-03-15
 
 ### Added
