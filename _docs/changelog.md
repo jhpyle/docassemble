@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.102](https://github.com/jhpyle/docassemble/releases/tag/v1.4.102) - 2024-03-18
+
+
+### Fixed
+- Bug with `ip address ban enabled`.
+
 ## [1.4.101](https://github.com/jhpyle/docassemble/releases/tag/v1.4.101) - 2024-03-15
 
 
