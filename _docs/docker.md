@@ -486,7 +486,7 @@ The `initialize` script does the following.
 * The [NGINX] site configuration files are created based on the
   Configuration and Let's Encrypt data.
 * The `/etc/locale.gen` file is updated and the `update-locale` and
-  `locale-gen` utilities are run based on the [`locale`] specified in
+  `locale-gen` utilities are run based on the [`os locale`] specified in
   the Configuration.
 * Ubuntu packages specified in the [`ubuntu packages`] Configuration
   directive are installed with `apt-get`.
