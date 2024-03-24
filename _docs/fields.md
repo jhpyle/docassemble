@@ -1557,10 +1557,11 @@ use [Mako] templates in `default` text.
 ## <a name="choices"></a>`choices`
 
 The `choices` field modifier is used with multiple-choice fields.  It
-must refer to a list of possible options.  Can be a list of key/value
-pairs (key is what the variable will be set to; value is the label
-seen by the user) or a list of plain text items (in which case the
-label and the variable value are the same).
+must refer to a list of possible options. The list can be a list can
+be a list of plain text items (in which case the label and the
+variable value are the same) or a list of key/value pairs (in which the
+key is the label seen by the user and the value is the value to which
+the variable will be set).
 
 {% include side-by-side.html demo="fields-choices" %}
 
