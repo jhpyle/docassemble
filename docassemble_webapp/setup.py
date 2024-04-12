@@ -88,7 +88,7 @@ install_requires = [
     "docxtpl==0.16.7",
     "email-validator==2.1.0.post1",
     "et-xmlfile==1.1.0",
-    "eventlet==0.34.1",
+    "eventlet==0.35.2",
     "exceptiongroup==1.2.0",
     "Flask==3.0.0",
     "flask-babel==4.0.0",
