@@ -121,7 +121,7 @@ install_requires = [
     "guess-language-spirit==0.5.3",
     "httplib2==0.22.0",
     "Hyphenate==1.1.0",
-    "idna==3.6",
+    "idna==3.7",
     "img2pdf==0.5.1",
     "importlib-metadata==7.0.0",
     "importlib-resources==6.1.1",
