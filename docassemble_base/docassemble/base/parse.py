@@ -6954,16 +6954,14 @@ class Question:
                                 result[key][doc_format] = getattr(the_file, key)
                         if hasattr(the_file, 'number'):
                             result['file'][doc_format] = the_file.number
-                # logmessage("finalize_attachment: returning " + attachment['variable_name'] + " from cache")
                 for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'use_pdftk', 'convert_to_tagged_pdf', 'password', 'owner_password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
                     if key in result:
                         del result[key]
                 return result
             except:
                 pass
-            # logmessage("finalize_attachment: " + attachment['variable_name'] + " was not in cache")
-        # logmessage("In finalize where redact is " + repr(result['redact']))
-        docassemble.base.functions.this_thread.misc['redact'] = result['redact']
+        docassemble.base.functions.this_thread.misc['redact'] = bool(result['redact'])
+        docassemble.base.functions.this_thread.misc['attachment_info'] = {k: result[k] for k in ('name', 'filename', 'description', 'update_references', 'convert_to_pdf_a', 'convert_to_tagged_pdf') if k in result}
         if 'language' in attachment['options']:
             old_language = docassemble.base.functions.get_language()
             docassemble.base.functions.set_language(attachment['options']['language'])
@@ -7158,9 +7156,13 @@ class Question:
         except:
             if old_language is not None:
                 docassemble.base.functions.set_language(old_language)
+            docassemble.base.functions.this_thread.misc.pop('redact', None)
+            docassemble.base.functions.this_thread.misc.pop('attachment_info', None)
             raise
         if old_language is not None:
             docassemble.base.functions.set_language(old_language)
+        docassemble.base.functions.this_thread.misc.pop('redact', None)
+        docassemble.base.functions.this_thread.misc.pop('attachment_info', None)
         return result
 
     def prepare_attachment(self, attachment, the_user_dict):
@@ -7220,7 +7222,8 @@ class Question:
                 result['editable'] = eval(attachment['options']['editable'], the_user_dict)
             else:
                 result['editable'] = True
-            docassemble.base.functions.this_thread.misc['redact'] = result['redact']
+            docassemble.base.functions.this_thread.misc['redact'] = bool(result['redact'])
+            docassemble.base.functions.this_thread.misc['attachment_info'] = {k: result[k] for k in ('name', 'filename', 'description', 'update_references', 'convert_to_pdf_a', 'convert_to_tagged_pdf') if k in result}
             result['markdown'] = {}
             result['content'] = {}
             result['extension'] = {}
@@ -7623,9 +7626,13 @@ class Question:
         except:
             if old_language is not None:
                 docassemble.base.functions.set_language(old_language)
+            docassemble.base.functions.this_thread.misc.pop('redact', None)
+            docassemble.base.functions.this_thread.misc.pop('attachment_info', None)
             raise
         if old_language is not None:
             docassemble.base.functions.set_language(old_language)
+        docassemble.base.functions.this_thread.misc.pop('redact', None)
+        docassemble.base.functions.this_thread.misc.pop('attachment_info', None)
         return result
 
     def process_selections_manual(self, data):

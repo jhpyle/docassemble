@@ -45,8 +45,7 @@ class SigningProcess(DAObject):
             return
         self.rationalize()
         for code, info in self.info_by_code.items():
-            if not info['signed']:
-                send_email(to=info['signer'], template=self.initial_notification_email[code], dry_run=True)
+            send_email(to=info['signer'], template=self.initial_notification_email[code], dry_run=True)
             send_email(to=info['signer'], template=self.final_notification_email[code], dry_run=True)
         for person in self.additional_people_to_notify:
             send_email(to=person, template=self.final_notification_email_to_others, dry_run=True)
@@ -59,21 +58,18 @@ class SigningProcess(DAObject):
             return
         self.rationalize()
         for code, info in self.info_by_code.items():
-            if not info['signed']:
-                str(self.initial_notification_email[code])
+            str(self.initial_notification_email[code])
         if len(self.additional_people_to_notify) > 0:
             str(self.final_notification_email_to_others)
         for code, info in self.info_by_code.items():
             if not info['signed']:
                 send_email(to=info['signer'], template=self.initial_notification_email[code])
-        for person in self.additional_people_to_notify:
-            send_email(to=person, template=self.final_notification_email_to_others)
         self.initial_notification_sent = True
         if interface() == 'worker':
             background_response()
 
     def sign_for(self, signer, signature):
-        code = self._code_for(self, signer)
+        code = self._code_for(signer)
         if self.info_by_code[code]['signed']:
             return
         self.signature[code] = signature
@@ -165,7 +161,7 @@ class SigningProcess(DAObject):
         self.check_if_final()
 
     def check_if_final(self):
-        if self.final_notification_triggered or self.final_notification_sent:
+        if not self.initial_notification_triggered or not self.initial_notification_sent or self.final_notification_triggered or self.final_notification_sent:
             return
         if self.all_signatures_in():
             background_action(self.attr_name('background_final_notification'))

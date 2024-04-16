@@ -1177,6 +1177,8 @@ def my_default_url(error, endpoint, values):  # pylint: disable=unused-argument
 
 
 def make_safe_url(url):
+    if url is None:
+        return url
     if url in ('help', 'login', 'signin', 'restart', 'new_session', 'exit', 'interview', 'logout', 'exit_logout', 'leave', 'register', 'profile', 'change_password', 'interviews', 'dispatch', 'manage', 'config', 'playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'configuration', 'root', 'temp_url', 'login_url', 'exit_endpoint', 'interview_start', 'interview_list', 'playgroundfiles', 'create_playground_package', 'run', 'run_interview_in_package', 'run_dispatch', 'run_new', 'run_new_dispatch'):
         return url
     parts = urlsplit(url)
@@ -7642,6 +7644,7 @@ def index(action_argument=None, refer=None):
             else:
                 if isinstance(raw_data, str):
                     raw_data = BeautifulSoup(raw_data, "html.parser").get_text('\n')
+                    raw_data = re.sub(r'\\', '', raw_data)
                 if raw_data == "None" and set_to_empty is not None:
                     test_data = None
                     data = "None"
@@ -7764,11 +7767,23 @@ def index(action_argument=None, refer=None):
                         continue
                     test_data = info['class'].transform(raw_data)
                     data = repr(test_data)
+            elif known_datatypes[orig_key] == 'raw':
+                if raw_data == "None" and set_to_empty is not None:
+                    test_data = None
+                    data = "None"
+                else:
+                    test_data = raw_data
+                    data = repr(raw_data)
             else:
                 if isinstance(raw_data, str):
-                    raw_data = raw_data.strip()
-                test_data = raw_data
-                data = repr(raw_data)
+                    raw_data = BeautifulSoup(raw_data.strip(), "html.parser").get_text('\n')
+                    raw_data = re.sub(r'\\', '', raw_data)
+                if raw_data == "None" and set_to_empty is not None:
+                    test_data = None
+                    data = "None"
+                else:
+                    test_data = raw_data
+                    data = repr(raw_data)
         elif key == "_multiple_choice":
             data = "int(" + repr(raw_data) + ")"
         else:
@@ -19546,12 +19561,14 @@ def playground_office_addin():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     playground_user = get_playground_user()
-    current_project = get_current_project()
+    project_to_use = werkzeug.utils.secure_filename(request.args.get('project', get_current_project()))
     if request.args.get('fetchfiles', None):
         playground = SavedFile(playground_user.id, fix=True, section='playground')
-        the_directory = directory_for(playground, current_project)
+        the_directory = directory_for(playground, project_to_use)
+        if not os.path.isdir(the_directory):
+            return ('File not found', 404)
         files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
-        return jsonify(success=True, files=files)
+        return jsonify(success=True, files=files, projects=get_list_of_projects(playground_user.id))
     pg_var_file = request.args.get('pgvars', None)
     # logmessage("playground_office_addin: YAML file is " + str(pg_var_file))
     use_html = request.args.get('html', False)
@@ -19580,30 +19597,30 @@ def playground_office_addin():
                 return jsonify({'success': True, 'variables_json': [], 'vocab_list': []})
     if pg_var_file is not None:
         playground = SavedFile(playground_user.id, fix=True, section='playground')
-        the_directory = directory_for(playground, current_project)
+        the_directory = directory_for(playground, project_to_use)
         files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
         if pg_var_file in files:
             # logmessage("playground_office_addin: file " + str(pg_var_file) + " was found")
-            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(playground_user.id) + project_name(current_project) + ':' + pg_var_file)
+            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(playground_user.id) + project_name(project_to_use) + ':' + pg_var_file)
             interview_source.set_testing(True)
         else:
             # logmessage("playground_office_addin: file " + str(pg_var_file) + " was not found")
-            if pg_var_file == '' and current_project == 'default':
+            if pg_var_file == '' and project_to_use == 'default':
                 pg_var_file = 'test.yml'
             content = "modules:\n  - docassemble.base.util\n---\nmandatory: True\nquestion: hi"
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(playground_user.id) + project_name(current_project), path="docassemble.playground" + str(playground_user.id) + project_name(current_project) + ":" + pg_var_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, package="docassemble.playground" + str(playground_user.id) + project_name(project_to_use), path="docassemble.playground" + str(playground_user.id) + project_name(project_to_use) + ":" + pg_var_file, testing=True)
         interview = interview_source.get_interview()
-        ensure_ml_file_exists(interview, pg_var_file, current_project)
-        the_current_info = current_info(yaml='docassemble.playground' + str(playground_user.id) + project_name(current_project) + ':' + pg_var_file, req=request, action=None, device_id=request.cookies.get('ds', None))
+        ensure_ml_file_exists(interview, pg_var_file, project_to_use)
+        the_current_info = current_info(yaml='docassemble.playground' + str(playground_user.id) + project_name(project_to_use) + ':' + pg_var_file, req=request, action=None, device_id=request.cookies.get('ds', None))
         docassemble.base.functions.this_thread.current_info = the_current_info
         interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
         if use_html:
-            variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True, current_project=current_project)
-            return jsonify({'success': True, 'current_project': current_project, 'variables_html': variables_html, 'vocab_list': list(vocab_list), 'vocab_dict': vocab_dict})
-        variables_json, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, current_project=current_project)
+            variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True, current_project=project_to_use)
+            return jsonify({'success': True, 'current_project': project_to_use, 'variables_html': variables_html, 'vocab_list': list(vocab_list), 'vocab_dict': vocab_dict})
+        variables_json, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, current_project=project_to_use)
         return jsonify({'success': True, 'variables_json': variables_json, 'vocab_list': list(vocab_list)})
     parent_origin = re.sub(r'^(https?://[^/]+)/.*', r'\1', daconfig.get('office addin url', get_base_url()))
-    response = make_response(render_template('pages/officeaddin.html', current_project=current_project, page_title=word("Docassemble Office Add-in"), tab_title=word("Office Add-in"), parent_origin=parent_origin, form=uploadform), 200)
+    response = make_response(render_template('pages/officeaddin.html', current_project=project_to_use, page_title=word("Docassemble Office Add-in"), tab_title=word("Office Add-in"), parent_origin=parent_origin, form=uploadform), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 

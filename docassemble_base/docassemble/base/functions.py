@@ -746,6 +746,9 @@ def user_has_privilege(*pargs):
     return False
 
 
+class AttachmentInfo:
+    pass
+
 class TheContext:
 
     @property
@@ -804,6 +807,27 @@ class TheContext:
             return this_thread.evaluation_context or 'standard'
         except:
             return 'standard'
+
+    @property
+    def attachment(self):
+        info = AttachmentInfo()
+        if 'attachment_info' in this_thread.misc:
+            info.name = this_thread.misc['attachment_info'].get('name', '')
+            info.filename = this_thread.misc['attachment_info'].get('filename', '')
+            info.description = this_thread.misc['attachment_info'].get('description', '')
+            info.update_references = bool(this_thread.misc['attachment_info'].get('update_references', False))
+            info.redact = this_thread.misc.get('redact', True)
+            info.pdfa = bool(this_thread.misc['attachment_info'].get('convert_to_pdf_a', False))
+            info.tagged = bool(this_thread.misc['attachment_info'].get('convert_to_tagged_pdf', False))
+        else:
+            info.name = ''
+            info.filename = ''
+            info.description = ''
+            info.update_references = False
+            info.redact = True
+            info.pdfa = False
+            info.tagged = False
+        return info
 
 
 warnings_given = {}
@@ -3512,6 +3536,12 @@ language_functions = {
     'is_word': {
         'en': prefix_constructor('is ')
     },
+    'my': {
+        'en': prefix_constructor('my ')
+    },
+    'our': {
+        'en': prefix_constructor('our ')
+    },
     'their': {
         'en': prefix_constructor('their ')
     },
@@ -3519,6 +3549,9 @@ language_functions = {
         'en': prefix_constructor('of the ')
     },
     'your': {
+        'en': prefix_constructor('your ')
+    },
+    'your_plural': {
         'en': prefix_constructor('your ')
     },
     'some': {
@@ -3596,7 +3629,9 @@ language_functions = {
         'en': indefinite_article_en,
         'es': indefinite_article_es,
         'de': indefinite_article_de,
-        'it': indefinite_article_it
+        'fr': indefinite_article_fr,
+        'it': indefinite_article_it,
+        'nl': indefinite_article_nl
     },
     'currency_symbol': {
         '*': currency_symbol_default
@@ -3674,7 +3709,10 @@ her = language_function_constructor('her')
 his = language_function_constructor('his')
 is_word = language_function_constructor('is_word')
 their = language_function_constructor('their')
+lang_my = language_function_constructor('my')
+lang_our = language_function_constructor('our')
 your = language_function_constructor('your')
+your_plural = language_function_constructor('your_plural')
 its = language_function_constructor('its')
 of_the = language_function_constructor('of_the')
 the = language_function_constructor('the')

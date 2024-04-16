@@ -1027,7 +1027,13 @@ class DAObject:
 
     def pronoun_possessive(self, target, **kwargs):
         """Returns "its <target>." """
-        output = its(target, **kwargs)
+        person = str(kwargs.get('person', '3'))
+        if person == '2':
+            output = your(target, **kwargs)
+        elif person = '1':
+            output = docassemble.base.functions.lang_my(target, **kwargs)
+        else:
+            output = its(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -2368,11 +2374,24 @@ class DAList(DAObject):
         return set(self.elements).issuperset(setify(other_set))
 
     def pronoun_possessive(self, target, **kwargs):
-        """Given a word like "fish," returns "her fish," "his fish," or "their fish," as appropriate."""
+        """Given a word like "fish," returns "her fish," "his fish,"
+        "its fish", or "their fish," as appropriate. That is, if the
+        list has one element, it is as though the pronoun_possessive
+        method was called on that element. Otherwise, "their fish" is
+        returned. However, if the optional keyword parameter person is
+        set, "our fish" is returned when person is 1 and "your fish"
+        is returned when person is 2.
+        """
         if self.number() == 1:
             self._trigger_gather()
             return self.elements[0].pronoun_possessive(target, **kwargs)
-        output = their(target, **kwargs)
+        person = str(kwargs.get('person', '3'))
+        if person == '3':
+            output = their(target, **kwargs)
+        elif person == '2':
+            output = docassemble.base.functions.your_plural(target, **kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.my(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output

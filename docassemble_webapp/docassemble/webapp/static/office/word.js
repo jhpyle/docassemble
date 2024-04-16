@@ -5,6 +5,8 @@ var pythonVariableChar = /[A-Za-z0-9\_]/g;
 var daServer = null;
 var daFullServer = null;
 var daYAML = null;
+var daProject = null;
+var daProjectList = [];
 var daVocab = [];
 var daVocabDict = Object();
 var daUploadStatus = "waiting";
@@ -22,7 +24,7 @@ function flash(message, priority) {
   }
   if (!$("#daflash").length) {
     $("body").append(
-      '<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"></div>'
+      '<div class="datopcenter dacol-centered col-sm-7 col-md-6 col-lg-5" id="daflash"></div>',
     );
   } else {
     $("#daflash").empty();
@@ -32,7 +34,7 @@ function flash(message, priority) {
       priority +
       ' daalert-interlocutory">' +
       message +
-      "</div>"
+      "</div>",
   );
   $("#daflash").append(newMessage);
   setTimeout(function () {
@@ -61,6 +63,7 @@ function fetchVarsEtc() {
   var action = Object();
   action.action = "fetchVarsEtc";
   action.file = daYAML;
+  action.project = daProject || defaultProject;
   //console.log("fetchVarsEtc: getting " + daYAML);
   document.getElementById("server").contentWindow.postMessage(action, daServer);
 }
@@ -69,6 +72,7 @@ function fetchFiles() {
   //console.log("Got to fetchFiles");
   var action = Object();
   action.action = "fetchFiles";
+  action.project = daProject || defaultProject;
   document.getElementById("server").contentWindow.postMessage(action, daServer);
 }
 
@@ -76,7 +80,12 @@ function receiveMessage(event) {
   //console.log("receiveMessage");
   //console.log("receiveMessage " + JSON.stringify(event.data));
   if (event.origin !== daServer) {
-    //console.log("Message received from improper origin " + event.origin + ", which is not " + daServer);
+    /* console.log(
+     *   "Message received from improper origin " +
+     *     event.origin +
+     *     ", which is not " +
+     *     daServer,
+     * ); */
     return;
   }
   //console.log("Received outer action " + event.data.action);
@@ -87,6 +96,10 @@ function receiveMessage(event) {
     daYAML = Cookies.get("daYAML");
     if (typeof daYAML == "undefined") {
       daYAML = null;
+    }
+    daProject = Cookies.get("daProject");
+    if (typeof daProject == "undefined") {
+      daProject = event.data.project || defaultProject;
     }
     if (daYAML == null) {
       fetchFiles();
@@ -103,6 +116,18 @@ function receiveMessage(event) {
         });
       }
       fetchVarsEtc();
+    });
+    $("#daProjects").on("change", function () {
+      if ($(this).val() != daProject) {
+        daProject = $(this).val();
+        daYAML = null;
+        Cookies.set("daProject", daProject, {
+          expires: 999999,
+          secure: true,
+          sameSite: "None",
+        });
+      }
+      fetchFiles();
     });
     if (!onDesktop) {
       $("#autocompletediv").show();
@@ -134,20 +159,14 @@ function receiveMessage(event) {
       });
       Office.context.document.addHandlerAsync(
         Office.EventType.DocumentSelectionChanged,
-        SelectionChanged
+        SelectionChanged,
       );
       //autocompleteInterval = setInterval(maybeUpdateAutocomplete, 3000);
     }
   } else if (event.data.action == "files") {
     var pgYAML = $("#daVariables");
     pgYAML.empty();
-    //var newOpt = $("<option></option>");
-    //newOpt.val("");
-    //newOpt.html("{{ word('-- Select a file --') }}");
-    //newOpt.appendTo(pgYAML);
-    var arr = Array();
     var n = event.data.files.length;
-    //console.log("daYAML is " + daYAML + " and n is " + n);
     var need_to_fetch_vars;
     if (daYAML == null) {
       need_to_fetch_vars = true;
@@ -155,7 +174,6 @@ function receiveMessage(event) {
       need_to_fetch_vars = false;
     }
     if (daYAML == null && n > 0) {
-      //console.log("since null, set to first file");
       daYAML = event.data.files[0];
       Cookies.set("daYAML", daYAML, {
         expires: 999999,
@@ -165,7 +183,6 @@ function receiveMessage(event) {
     }
     var found = false;
     for (var i = 0; i < n; i++) {
-      //console.log("Considering " + event.data.files[i]);
       var newOpt = $("<option></option>");
       newOpt.val(event.data.files[i]);
       newOpt.html(event.data.files[i]);
@@ -176,9 +193,7 @@ function receiveMessage(event) {
       newOpt.appendTo(pgYAML);
     }
     if (!found) {
-      //console.log("file not found");
       if (n > 0) {
-        //console.log("since not found, set to first file");
         daYAML = event.data.files[0];
         Cookies.set("daYAML", daYAML, {
           expires: 999999,
@@ -198,11 +213,49 @@ function receiveMessage(event) {
     if (need_to_fetch_vars) {
       fetchVarsEtc();
     }
+  } else if (event.data.action == "projects") {
+    var pgProjects = $("#daProjects");
+    pgProjects.empty();
+    var n = event.data.projects.length;
+    if (n == 0) {
+      $("#projectsDiv").hide();
+    } else {
+      var found = false;
+      $("#projectsDiv").show();
+      var newOpt = $("<option></option>");
+      newOpt.val("default");
+      newOpt.html(defaultPlaygroundName);
+      if (daProject == "default") {
+        newOpt.prop("selected", true);
+        found = true;
+      }
+      newOpt.appendTo(pgProjects);
+      for (var i = 0; i < n; i++) {
+        //console.log("Considering " + event.data.files[i]);
+        newOpt = $("<option></option>");
+        newOpt.val(event.data.projects[i]);
+        newOpt.html(event.data.projects[i]);
+        if (event.data.projects[i] == daProject) {
+          newOpt.prop("selected", true);
+          found = true;
+        }
+        newOpt.appendTo(pgProjects);
+      }
+      if (!found) {
+        $("#daProjects").val($("#daProjects option:first").val());
+        daProject = "default";
+        Cookies.set("daProject", daProject, {
+          expires: 999999,
+          secure: true,
+          sameSite: "None",
+        });
+      }
+    }
   } else if (event.data.action == "varsetc") {
     //console.log("Got to varsetc.");
     if (event.data.uploaded && daUploadStatus != "uploading") {
       console.log(
-        "Got varsetc message with uploaded when not uploading.  Ignoring."
+        "Got varsetc message with uploaded when not uploading.  Ignoring.",
       );
       return;
     }
@@ -275,7 +328,7 @@ function receiveMessage(event) {
 function showIframe() {
   $("#server").attr(
     "src",
-    daFullServer + "/officeaddin?nm=1&project=" + currentProject
+    daFullServer + "/officeaddin?nm=1&project=" + (daProject || defaultProject),
   );
   $("#iframeDiv").show();
 }
@@ -308,7 +361,7 @@ function arraysSame(a, b) {
 
 Office.initialize = function (reason) {
   $(document).ready(function () {
-    //console.log("Starting script during document ready");
+    console.log("Starting script during document ready");
     if (!Office.context.requirements.isSetSupported("WordApi", "1.3")) {
       onDesktop = true;
       //console.log("On desktop");
@@ -339,6 +392,7 @@ Office.initialize = function (reason) {
       $("#iframeDiv").hide();
       $("#changeServerDiv").hide();
       $("#variablesDiv").hide();
+      $("#projectsDiv").hide();
       event.preventDefault();
       return false;
     });
@@ -581,10 +635,10 @@ function getDocumentAsCompressed(successCallback) {
           gotAllSlices,
           docdataSlices,
           slicesReceived,
-          successCallback
+          successCallback,
         );
       }
-    }
+    },
   );
 }
 
@@ -595,7 +649,7 @@ function getSliceAsync(
   gotAllSlices,
   docdataSlices,
   slicesReceived,
-  successCallback
+  successCallback,
 ) {
   file.getSliceAsync(nextSlice, function (sliceResult) {
     if (sliceResult.status == "succeeded") {
@@ -614,7 +668,7 @@ function getSliceAsync(
           gotAllSlices,
           docdataSlices,
           slicesReceived,
-          successCallback
+          successCallback,
         );
       }
     } else {
@@ -635,6 +689,7 @@ function uploadTemplateFile() {
       var action = Object();
       action.action = "uploadFile";
       action.yamlFile = daYAML;
+      action.project = daProject;
       action.fileName = fileName;
       getDocumentAsCompressed(function (docdataSlices) {
         var docdata = [];

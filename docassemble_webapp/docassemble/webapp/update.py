@@ -370,7 +370,10 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
             update_versions(start_time=start_time)
     logmessage("check_for_updates: 11 after " + str(time.time() - start_time) + " seconds")
     for package in packages_to_delete:
-        db.session.delete(package)
+        try:
+            db.session.delete(package)
+        except:
+            logmessage("check_for_updates: unable to uninstall package")
     logmessage("check_for_updates: 12 after " + str(time.time() - start_time) + " seconds")
     db.session.commit()
     logmessage("check_for_updates: finished uninstalling and installing after " + str(time.time() - start_time) + " seconds")

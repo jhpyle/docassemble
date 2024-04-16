@@ -27,6 +27,9 @@
         <div id="iframeDiv" class="iframeDiv" style="display:none;">
             <iframe id="server" src="{{ url_for('static', filename='app/blank.html') }}" /></iframe>
         </div>
+        <div id="projectsDiv" style="display:none;">
+          <select id="daProjects" class="form-select" aria-label="{{ word('Select the project') }}"></select>
+        </div>
         <div id="variablesDiv" style="display:none;">
             <div id="playgroundbox" class="card bg-light">
                 <div class="card-header">
@@ -53,14 +56,14 @@
         </div>
         <script src="{{ url_for('static', filename='app/jquery.min.js', v=config['DA_VERSION']) }}"></script>
         <script src="{{ url_for('static', filename='app/js.cookie.min.js', v=config['DA_VERSION']) }}"></script>
-        <script src="{{ url_for('static', filename='popper/umd/popper.min.js', v=config['DA_VERSION']) }}"></script>
         <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js', v=config['DA_VERSION']) }}"></script>
         <script src="{{ url_for('static', filename='office/polyfill.js', v=config['DA_VERSION']) }}"></script>
         <script>
           var defaultServer = "{{ defaultDaServer }}";
-          var currentProject = "default";
+          var defaultProject = "default";
           var fileErrorMessage = "{{ word("There was a problem uploading the file.") }}";
           var fileSuccessMessage = "{{ word("The file was uploaded to the Templates folder.") }}";
+          var defaultPlaygroundName = "{{ word("Default Playground") }}";
         </script>
         <script src="{{ url_for('static', filename='office/word.js', v=config['DA_VERSION']) }}"></script>{{ extra_js }}
     </body>

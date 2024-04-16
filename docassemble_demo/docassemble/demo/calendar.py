@@ -24,8 +24,8 @@ def make_event(title=None, location=None, description=None, begin_date=None, beg
     if len(attendees) > 0:
         e.attendees = [Attendee(common_name=attendee.name.full(), email=attendee.email) for attendee in attendees]
     e.name = str(title)
-    e.begin = as_datetime(begin_date.replace_time(begin_time), timezone='UTC').format_datetime('yyyy-MM-dd hh:mm:ss')
-    e.end = as_datetime(end_date.replace_time(end_time), timezone='UTC').format_datetime('yyyy-MM-dd hh:mm:ss')
+    e.begin = as_datetime(begin_date.replace_time(begin_time), timezone='UTC').format_datetime('yyyy-MM-dd HH:mm:ss')
+    e.end = as_datetime(end_date.replace_time(end_time), timezone='UTC').format_datetime('yyyy-MM-dd HH:mm:ss')
     if location not in (None, ''):
         e.location = str(location)
     if description not in (None, ''):
